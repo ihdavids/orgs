@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/rpc"
@@ -8,12 +9,17 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/ihdavids/orgs/internal/app/orgs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
 func main() {
-	http.HandleFunc("/org", serveWs)
-	err := http.ListenAndServe(":8010", nil)
+	// Force config parsing right up front
+	orgs.Conf()
+	var db = orgs.NewOrgDb()
+	db.RebuildDb()
+	http.HandleFunc(orgs.Conf().ServePath, serveWs)
+	err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
