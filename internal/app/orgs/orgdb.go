@@ -107,6 +107,7 @@ func (self *OrgDb) RebuildDb() {
 	for _, dir := range dirs {
 		files := self.ListFilesInDir(dir)
 		for _, file := range files {
+			// fmt.Println("Loading: ", file)
 			self.LoadFile(file)
 		}
 	}
@@ -114,4 +115,14 @@ func (self *OrgDb) RebuildDb() {
 
 func (self *OrgDb) GetFiles() []string {
 	return self.Filenames
+}
+
+var odb *OrgDb = nil
+
+func GetDb() *OrgDb {
+	if odb == nil {
+		odb = NewOrgDb()
+		odb.RebuildDb()
+	}
+	return odb
 }

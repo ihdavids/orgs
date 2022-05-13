@@ -16,8 +16,7 @@ import (
 func main() {
 	// Force config parsing right up front
 	orgs.Conf()
-	var db = orgs.NewOrgDb()
-	db.RebuildDb()
+	orgs.GetDb()
 	http.HandleFunc(orgs.Conf().ServePath, serveWs)
 	err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), nil)
 	if err != nil {
@@ -34,6 +33,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	log.Println("serveWs")
 
 	if r.Method != "GET" {
+		log.Println("Method not allowed")
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
@@ -85,6 +85,8 @@ func handle(ws *websocket.Conn) {
 	s := rpc.NewServer()
 	comm := &Comm{}
 	s.Register(comm)
+	db := &Db{}
+	s.Register(db)
 	s.ServeCodec(jsonrpc.NewServerCodec(rwc))
-	// s.ServeConn(rwc)
+	//s.ServeConn(rwc)
 }

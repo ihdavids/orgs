@@ -6,39 +6,15 @@ import (
 	"net/rpc"
 
 	"net/rpc/jsonrpc"
-	"path/filepath"
-
-	"io/ioutil"
 
 	"github.com/gorilla/websocket"
+	"github.com/ihdavids/orgs/internal/app/orgc"
 	"github.com/ihdavids/orgs/internal/common"
-	yaml "gopkg.in/yaml.v2"
 )
 
-type Config struct {
-	Url string `yaml:"url"`
-}
-
-func (self *Config) Defaults() {
-	self.Url = "ws://localhost:8010/org"
-}
-
-func (self *Config) ParseConfig() {
-	self.Defaults()
-	filename, _ := filepath.Abs("orgc.yaml")
-	yamlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		err = yaml.Unmarshal(yamlFile, self)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
 func main() {
-	var c Config
-	c.ParseConfig()
-	ws, res, err := dialer.Dial(c.Url, http.Header{})
+	orgc.Conf()
+	ws, res, err := dialer.Dial(orgc.Conf().Url, http.Header{})
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
@@ -65,13 +41,24 @@ func handle(ws *websocket.Conn) {
 	// c := rpc.NewClient(rwc)
 
 	for {
-		args := &common.HelloArgs{Msg: "Hello, World"}
-		var reply common.HelloReply
-		err := c.Call("Comm.Hello", args, &reply)
+		/*
+			args := &common.HelloArgs{Msg: "Hello, World"}
+			var reply common.HelloReply
+			err := c.Call("Comm.Hello", args, &reply)
+			if err != nil {
+				log.Printf("%v", err)
+				break
+			}
+			log.Printf("%v", reply)
+		*/
+		var reply common.FileList
+		err := c.Call("Db.GetFileList", nil, &reply)
 		if err != nil {
 			log.Printf("%v", err)
 			break
+		} else {
+			log.Printf("%v", reply)
+			break
 		}
-		log.Printf("%v", reply)
 	}
 }
