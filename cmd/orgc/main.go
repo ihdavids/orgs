@@ -38,27 +38,28 @@ func handle(ws *websocket.Conn) {
 	rwc := &common.ReadWriteCloser{WS: ws}
 	codec := jsonrpc.NewClientCodec(rwc)
 	c := rpc.NewClientWithCodec(codec)
-	// c := rpc.NewClient(rwc)
 
-	for {
-		/*
-			args := &common.HelloArgs{Msg: "Hello, World"}
-			var reply common.HelloReply
-			err := c.Call("Comm.Hello", args, &reply)
-			if err != nil {
-				log.Printf("%v", err)
-				break
-			}
-			log.Printf("%v", reply)
-		*/
-		var reply common.FileList
-		err := c.Call("Db.GetFileList", nil, &reply)
+	orgc.Conf().Dispatch(c)
+	/*
+		args := &common.HelloArgs{Msg: "Hello, World"}
+		var reply common.HelloReply
+		err := c.Call("Comm.Hello", args, &reply)
 		if err != nil {
 			log.Printf("%v", err)
 			break
-		} else {
-			log.Printf("%v", reply)
-			break
 		}
-	}
+		log.Printf("%v", reply)
+	*/
+	/*
+			var reply common.FileList
+			err := c.Call("Db.GetFileList", nil, &reply)
+			if err != nil {
+				log.Printf("%v", err)
+				break
+			} else {
+				log.Printf("%v", reply)
+				break
+			}
+		}
+	*/
 }

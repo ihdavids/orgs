@@ -16,7 +16,11 @@ import (
 func main() {
 	// Force config parsing right up front
 	orgs.Conf()
-	orgs.GetDb()
+	orgs.GetDb().Watch()
+	defer func() {
+		orgs.GetDb().Close()
+	}()
+	fmt.Println("STARTING SERVER")
 	http.HandleFunc(orgs.Conf().ServePath, serveWs)
 	err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), nil)
 	if err != nil {

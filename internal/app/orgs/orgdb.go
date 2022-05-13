@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/niklasfasching/go-org/org"
@@ -18,6 +19,7 @@ type OrgFile struct {
 type OrgDb struct {
 	ByFile    map[string]OrgFile
 	Filenames []string
+	dblock    sync.RWMutex
 
 	watcher     *fsnotify.Watcher
 	watcherdone chan bool
@@ -56,8 +58,10 @@ func (self *OrgDb) LoadFile(filename string) {
 			filename: filename,
 			doc:      d,
 		}
+		self.dblock.Lock()
 		self.ByFile[filename] = ofile
 		self.Filenames = append(self.Filenames, filename)
+		self.dblock.Unlock()
 	} else {
 		fmt.Println("Failed to parse file {}", filename)
 	}
@@ -84,7 +88,8 @@ func (self *OrgDb) Watch() {
 				if !ok {
 					return
 				}
-				log.Printf("%s %s\n", event.Name, event.Op)
+				//log.Printf("EVENT %s %s\n", event.Name, event.Op)
+				self.LoadFile(event.Name)
 			case err, ok := <-self.watcher.Errors:
 				if !ok {
 					return
@@ -95,10 +100,12 @@ func (self *OrgDb) Watch() {
 
 	}()
 
-	// TODO: Make this our config directories
-	err = self.watcher.Add("./")
-	if err != nil {
-		log.Fatal("Add failed:", err)
+	var dirs []string = Conf().OrgDirs
+	for _, dir := range dirs {
+		err = self.watcher.Add(dir)
+		if err != nil {
+			log.Fatal("Watcher add failed:", err)
+		}
 	}
 }
 
@@ -114,7 +121,11 @@ func (self *OrgDb) RebuildDb() {
 }
 
 func (self *OrgDb) GetFiles() []string {
-	return self.Filenames
+	var filenames []string
+	self.dblock.RLock()
+	filenames = self.Filenames
+	self.dblock.RUnlock()
+	return filenames
 }
 
 var odb *OrgDb = nil

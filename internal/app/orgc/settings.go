@@ -3,7 +3,7 @@ package orgc
 import (
 	"flag"
 	"io/ioutil"
-	"log"
+	"net/rpc"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -11,6 +11,14 @@ import (
 
 type Config struct {
 	Url string `yaml:"url"`
+	// Dispatch commands
+	FileList bool
+}
+
+func (self *Config) Dispatch(c *rpc.Client) {
+	if self.FileList {
+		ShowFileList(c)
+	}
 }
 
 func (self *Config) Defaults() {
@@ -25,6 +33,7 @@ func (self *Config) ParseCommandLine() {
 	//       value of the structure. Avoid using a default here
 	//       instead specify it in Defaults up above.
 	flag.StringVar(&self.Url, "url", self.Url, "how to connect to server")
+	flag.BoolVar(&self.FileList, "filelist", self.FileList, "Query for the full list of files")
 	flag.Parse()
 }
 
@@ -34,7 +43,7 @@ func (self *Config) ParseConfig() {
 
 	// Parse our config file next if present.
 	filename, _ := filepath.Abs("orgc.yaml")
-	log.Println("Loading: ", filename)
+	//log.Println("Loading: ", filename)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err == nil {
 		err = yaml.Unmarshal(yamlFile, self)
