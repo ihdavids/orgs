@@ -17,17 +17,19 @@ type OrgFile struct {
 }
 
 type OrgDb struct {
-	ByFile    map[string]OrgFile
-	Filenames []string
-	dblock    sync.RWMutex
+	ByFile      map[string]*OrgFile
+	Filenames   []string
+	ReloadIndex uint64
 
+	dblock      sync.RWMutex
 	watcher     *fsnotify.Watcher
 	watcherdone chan bool
 }
 
 func NewOrgDb() *OrgDb {
 	var db *OrgDb = new(OrgDb)
-	db.ByFile = make(map[string]OrgFile)
+	db.ByFile = make(map[string]*OrgFile)
+	db.ReloadIndex = 0
 	return db
 }
 
@@ -54,13 +56,14 @@ func (self *OrgDb) ListFilesInDir(dirname string) []string {
 func (self *OrgDb) LoadFile(filename string) {
 	if r, err := os.Open(filename); err == nil {
 		d := org.New().Parse(r, filename)
-		ofile := OrgFile{
-			filename: filename,
-			doc:      d,
-		}
+		ofile := new(OrgFile)
+		ofile.filename = filename
+		ofile.doc = d
 		self.dblock.Lock()
 		self.ByFile[filename] = ofile
 		self.Filenames = append(self.Filenames, filename)
+		// We increment this with each reload to tell if the DB is dirty or not.
+		self.ReloadIndex += 1
 		self.dblock.Unlock()
 	} else {
 		fmt.Println("Failed to parse file {}", filename)
@@ -126,6 +129,14 @@ func (self *OrgDb) GetFiles() []string {
 	filenames = self.Filenames
 	self.dblock.RUnlock()
 	return filenames
+}
+
+func (self *OrgDb) GetFile(filename string) *OrgFile {
+	var file *OrgFile
+	self.dblock.RLock()
+	file = self.ByFile[filename]
+	self.dblock.RUnlock()
+	return file
 }
 
 var odb *OrgDb = nil

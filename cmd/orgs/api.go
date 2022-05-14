@@ -23,3 +23,8 @@ func (s *Db) GetFileList(args *common.Empty, reply *common.FileList) error {
 	*reply = orgs.GetDb().GetFiles()
 	return nil
 }
+
+func (s *Db) QueryTodos(args *common.Query, reply *common.Todos) error {
+	*reply = orgs.QueryTodos(args)
+	return nil
+}

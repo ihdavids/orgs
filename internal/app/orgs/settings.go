@@ -10,9 +10,10 @@ import (
 )
 
 type Config struct {
-	ServePath string   `yaml:"servepath"`
-	Port      int      `yaml:"port"`
-	OrgDirs   []string `yaml:"orgDirs"`
+	ServePath         string   `yaml:"servepath"`
+	Port              int      `yaml:"port"`
+	OrgDirs           []string `yaml:"orgDirs"`
+	UseTagForProjects bool     `yaml:"useProjectTag"`
 }
 
 func (self *Config) Defaults() {

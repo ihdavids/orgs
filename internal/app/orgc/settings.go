@@ -12,12 +12,20 @@ import (
 type Config struct {
 	Url string `yaml:"url"`
 	// Dispatch commands
-	FileList bool
+	FileList    bool
+	TodoList    bool
+	ProjectList bool
 }
 
 func (self *Config) Dispatch(c *rpc.Client) {
 	if self.FileList {
 		ShowFileList(c)
+	}
+	if self.TodoList {
+		ShowAllTodos(c)
+	}
+	if self.ProjectList {
+		ShowAllProjects(c)
 	}
 }
 
@@ -34,6 +42,8 @@ func (self *Config) ParseCommandLine() {
 	//       instead specify it in Defaults up above.
 	flag.StringVar(&self.Url, "url", self.Url, "how to connect to server")
 	flag.BoolVar(&self.FileList, "filelist", self.FileList, "Query for the full list of files")
+	flag.BoolVar(&self.TodoList, "todolist", self.TodoList, "List all todos in all org files")
+	flag.BoolVar(&self.ProjectList, "projectlist", self.ProjectList, "List all projects in all org files")
 	flag.Parse()
 }
 
