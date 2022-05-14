@@ -39,6 +39,9 @@ func handle(ws *websocket.Conn) {
 	codec := jsonrpc.NewClientCodec(rwc)
 	c := rpc.NewClientWithCodec(codec)
 
+	core := orgc.NewCore(c)
+	core.Start()
+
 	orgc.Conf().Dispatch(c)
 	/*
 		args := &common.HelloArgs{Msg: "Hello, World"}
