@@ -29,7 +29,7 @@ func NewCommandPalette(core *Core) *CommandPalette {
 
 	cmd.
 		view.
-		SetLabel("/").
+		SetLabel(":").
 		SetText(cmd.cmdText).
 		SetChangedFunc(onSearch)
 		/*

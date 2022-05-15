@@ -3,6 +3,7 @@ package orgc
 import (
 	"time"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -10,6 +11,10 @@ import (
 type StatusBar struct {
 	*tview.Pages
 	message   *tview.TextView
+	quit      *tview.TextView
+	navigate  *tview.TextView
+	stepback  *tview.TextView
+	newtask   *tview.TextView
 	container *tview.Application
 	command   *CommandPalette
 	grid      *tview.Grid
@@ -33,15 +38,16 @@ func prepareStatusBar(core *Core) *StatusBar {
 		command:   NewCommandPalette(core),
 	}
 	core.statusBar = statusBar
+	statusBar.navigate = tview.NewTextView().SetText("Navigate List: ↓,↑ / j,k")
+	statusBar.quit = tview.NewTextView().SetText("Quit: Ctrl+C").SetTextAlign(tview.AlignRight)
+	statusBar.newtask = tview.NewTextView().SetText("New Task/Project: n").SetTextAlign(tview.AlignCenter)
+	statusBar.stepback = tview.NewTextView().SetText("Step back: Esc").SetTextAlign(tview.AlignCenter)
 	statusBar.AddPage(messagePage, statusBar.message, true, true)
 	statusBar.grid =
 		tview.NewGrid(). // Content will not be modified, So, no need to declare explicitly
 					SetColumns(0, 0, 0, 0).
-					SetRows(0).
-					AddItem(tview.NewTextView().SetText("Navigate List: ↓,↑ / j,k"), 0, 0, 1, 1, 0, 0, false).
-					AddItem(tview.NewTextView().SetText("New Task/Project: n").SetTextAlign(tview.AlignCenter), 0, 1, 1, 1, 0, 0, false).
-					AddItem(tview.NewTextView().SetText("Step back: Esc").SetTextAlign(tview.AlignCenter), 0, 2, 1, 1, 0, 0, false).
-					AddItem(tview.NewTextView().SetText("Quit: Ctrl+C").SetTextAlign(tview.AlignRight), 0, 3, 1, 1, 0, 0, false)
+					SetRows(0)
+	statusBar.showBasicPanels()
 	statusBar.AddPage(defaultPage,
 		statusBar.grid,
 		true,
@@ -51,14 +57,46 @@ func prepareStatusBar(core *Core) *StatusBar {
 	return statusBar
 }
 
+func (bar *StatusBar) showBasicPanels() {
+	bar.grid.AddItem(bar.navigate, 0, 0, 1, 1, 0, 0, false).
+		AddItem(bar.newtask, 0, 1, 1, 1, 0, 0, false).
+		AddItem(bar.stepback, 0, 2, 1, 1, 0, 0, false).
+		AddItem(bar.quit, 0, 3, 1, 1, 0, 0, false)
+}
+
+func (bar *StatusBar) hideBasicPanels() {
+	bar.grid.RemoveItem(bar.navigate).
+		RemoveItem(bar.newtask).
+		RemoveItem(bar.stepback).
+		RemoveItem(bar.quit)
+}
+
 func (bar *StatusBar) restore() {
 	bar.container.QueueUpdateDraw(func() {
 		bar.SwitchToPage(defaultPage)
 	})
 }
 
+func (self *StatusBar) cleanupCommandPalette() {
+	self.grid.RemoveItem(self.command.view)
+	self.showBasicPanels()
+	self.command.core.app.SetFocus(self.command.core.projectPane)
+}
+
 func (self *StatusBar) commandPalette() {
+	self.hideBasicPanels()
 	self.grid.AddItem(self.command.view, 0, 3, 1, 1, 0, 0, true)
+	self.command.core.app.SetFocus(self.command.view)
+	self.command.view.SetDoneFunc(func(key tcell.Key) {
+		switch key {
+		case tcell.KeyEnter:
+			self.command.core.statusBar.showForSeconds("[cyan::]Executing..."+self.command.cmdText, 5)
+			self.cleanupCommandPalette()
+			//pane.addNewProject()
+		case tcell.KeyEsc:
+			self.cleanupCommandPalette()
+		}
+	})
 }
 
 func (bar *StatusBar) showForSeconds(message string, timeout int) {
