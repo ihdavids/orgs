@@ -18,6 +18,8 @@ type StatusBar struct {
 	container *tview.Application
 	command   *CommandPalette
 	grid      *tview.Grid
+	core      *Core
+	curCmd    Command
 }
 
 // Name of page keys
@@ -36,6 +38,8 @@ func prepareStatusBar(core *Core) *StatusBar {
 		message:   tview.NewTextView().SetDynamicColors(true).SetText("Loading..."),
 		container: core.app,
 		command:   NewCommandPalette(core),
+		core:      core,
+		curCmd:    nil,
 	}
 	core.statusBar = statusBar
 	statusBar.navigate = tview.NewTextView().SetText("Navigate List: ↓,↑ / j,k")
@@ -85,12 +89,26 @@ func (self *StatusBar) cleanupCommandPalette() {
 
 func (self *StatusBar) commandPalette() {
 	self.hideBasicPanels()
-	self.grid.AddItem(self.command.view, 0, 3, 1, 1, 0, 0, true)
+	self.grid.AddItem(self.command.view, 0, 0, 1, 2, 0, 0, true)
 	self.command.core.app.SetFocus(self.command.view)
 	self.command.view.SetDoneFunc(func(key tcell.Key) {
 		switch key {
 		case tcell.KeyEnter:
-			self.command.core.statusBar.showForSeconds("[cyan::]Executing..."+self.command.cmdText, 5)
+			if cmd, e := GetCmdRegistry().FindCommand(self.command.cmdText); e == nil {
+				self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 5)
+				if self.curCmd != nil {
+					self.curCmd.ExitTasks(self.core)
+					self.curCmd.ExitProjects(self.core)
+					self.curCmd.Exit(self.core)
+					self.curCmd = cmd
+					self.curCmd.Enter(self.core)
+					self.curCmd.EnterProjects(self.core)
+					self.curCmd.EnterTasks(self.core)
+					self.curCmd.Execute(self.core)
+				}
+			} else {
+				self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 5)
+			}
 			self.cleanupCommandPalette()
 			//pane.addNewProject()
 		case tcell.KeyEsc:
