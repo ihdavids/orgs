@@ -9,8 +9,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type TodoFilterConfig struct {
+	HeadlineRe string
+	Status     []string
+	Tags       []string
+	Priorities []string
+	IsProject  bool
+}
+
 type Config struct {
-	Url string `yaml:"url"`
+	Url       string                      `yaml:"url"`
+	TodoViews map[string]TodoFilterConfig `yaml:"todo_views"`
 	// Dispatch commands
 	FileList    bool
 	TodoList    bool

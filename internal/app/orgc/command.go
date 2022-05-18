@@ -38,3 +38,7 @@ func (self *CommandRegistry) FindCommand(name string) (Command, error) {
 func (self *CommandRegistry) SetupRegistry() {
 	// This is where you add new commands
 }
+
+func (self *CommandRegistry) RegisterCommand(name string, cmd Command) {
+	self.commands[name] = cmd
+}
