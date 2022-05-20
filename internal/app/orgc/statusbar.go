@@ -95,11 +95,14 @@ func (self *StatusBar) commandPalette() {
 		switch key {
 		case tcell.KeyEnter:
 			if cmd, e := GetCmdRegistry().FindCommand(self.command.cmdText); e == nil {
-				self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 5)
 				if self.curCmd != nil {
+					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 5)
 					self.curCmd.ExitTasks(self.core)
 					self.curCmd.ExitProjects(self.core)
 					self.curCmd.Exit(self.core)
+				}
+				if cmd != nil {
+					self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 5)
 					self.curCmd = cmd
 					self.curCmd.Enter(self.core)
 					self.curCmd.EnterProjects(self.core)

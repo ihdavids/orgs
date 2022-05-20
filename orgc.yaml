@@ -1,0 +1,12 @@
+todo_views:
+  alltasks:
+    type: "and"
+    dep:
+      - query:
+        type: "isproject"
+        val:  
+          bool: false
+      - query:
+        type: "status"
+        val:
+          string: "TODO"

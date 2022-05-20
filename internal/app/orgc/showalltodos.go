@@ -1,12 +1,6 @@
 package orgc
 
-import (
-	"log"
-	"net/rpc"
-
-	"github.com/ihdavids/orgs/internal/common"
-)
-
+/*
 func ShowAllTodos(c *rpc.Client) {
 	var reply common.Todos
 	var q common.Query = common.Query{
@@ -22,3 +16,4 @@ func ShowAllTodos(c *rpc.Client) {
 		}
 	}
 }
+*/

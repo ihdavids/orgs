@@ -6,15 +6,12 @@ import (
 	"net/rpc"
 	"path/filepath"
 
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/yaml.v2"
 )
 
 type TodoFilterConfig struct {
-	HeadlineRe string
-	Status     []string
-	Tags       []string
-	Priorities []string
-	IsProject  bool
+	Query common.Query `yaml:"cmd"`
 }
 
 type Config struct {
@@ -26,16 +23,24 @@ type Config struct {
 	ProjectList bool
 }
 
+func (self *Config) AddCommands() {
+	for key, val := range self.TodoViews {
+		NewCommandTodo(key, &val)
+	}
+}
+
 func (self *Config) Dispatch(c *rpc.Client) {
-	if self.FileList {
-		ShowFileList(c)
-	}
-	if self.TodoList {
-		ShowAllTodos(c)
-	}
-	if self.ProjectList {
-		ShowAllProjects(c)
-	}
+	/*
+		if self.FileList {
+			ShowFileList(c)
+		}
+		if self.TodoList {
+			ShowAllTodos(c)
+		}
+		if self.ProjectList {
+			ShowAllProjects(c)
+		}
+	*/
 }
 
 func (self *Config) Defaults() {
@@ -76,6 +81,7 @@ func (self *Config) ParseConfig() {
 	// Validate that all required parameters are present for
 	// us to start up.
 	self.Validate()
+	self.AddCommands()
 }
 
 var config *Config
@@ -83,6 +89,7 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
+		config.TodoViews = make(map[string]TodoFilterConfig)
 		config.ParseConfig()
 	}
 	return config

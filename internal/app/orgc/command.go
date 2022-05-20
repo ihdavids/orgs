@@ -3,6 +3,7 @@ package orgc
 import "errors"
 
 type Command interface {
+	GetName() string
 	Enter(core *Core)
 	EnterProjects(core *Core)
 	EnterTasks(core *Core)
@@ -36,6 +37,7 @@ func (self *CommandRegistry) FindCommand(name string) (Command, error) {
 }
 
 func (self *CommandRegistry) SetupRegistry() {
+	self.commands = make(map[string]Command)
 	// This is where you add new commands
 }
 
