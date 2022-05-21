@@ -111,7 +111,7 @@ func Eval(self *common.Query, v *org.Section) bool {
 	return true
 }
 
-func EvalString(expString *common.StringQuery, v *org.Section) bool {
+func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression, error) {
 	functions := map[string]govaluate.ExpressionFunction{
 		"IsProject": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
@@ -152,15 +152,42 @@ func EvalString(expString *common.StringQuery, v *org.Section) bool {
 			}
 		},
 	}
+	//expString := "strlen('someReallyLongInputString') <= 16"
+	return govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
+}
+
+func EvalString(expression *govaluate.EvaluableExpression, v *org.Section) bool {
 	parameters := make(map[string]interface{}, 8)
 	parameters["v"] = v
-	//expString := "strlen('someReallyLongInputString') <= 16"
-	expression, _ := govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
-
 	result, _ := expression.Evaluate(parameters)
 	return result.(bool)
 }
 
+func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
+	var todos common.Todos
+	files := GetDb().GetFiles()
+	exp, err := ParseString(query)
+	if err != nil {
+		return todos, err
+	}
+	for _, file := range files {
+		f := GetDb().GetFile(file)
+		for _, v := range f.doc.Outline.Children {
+			res := EvalString(exp, v)
+			if res {
+				var title string
+				for _, n := range v.Headline.Title {
+					title += n.String()
+				}
+				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags}
+				todos = append(todos, t)
+			}
+		}
+	}
+	return todos, nil
+}
+
+// TODO OLD API DEPRECATED
 func QueryTodos(query *common.Query) common.Todos {
 	var todos common.Todos
 	files := GetDb().GetFiles()
