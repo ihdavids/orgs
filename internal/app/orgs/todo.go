@@ -133,6 +133,12 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 			s := args[1].(string)
 			return p.Headline.Status == s, nil
 		},
+
+		"IsTodo": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			return IsTodoStatus(p), nil
+		},
+
 		"IsPriority": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
 			s := args[1].(string)
