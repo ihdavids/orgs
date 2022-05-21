@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/niklasfasching/go-org v1.6.2
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
+	golang.org/x/tools/gopls v0.8.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
