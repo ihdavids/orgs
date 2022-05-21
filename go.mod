@@ -3,6 +3,7 @@ module github.com/ihdavids/orgs
 go 1.16
 
 require (
+	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gdamore/tcell v1.4.0 // indirect

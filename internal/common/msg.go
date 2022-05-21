@@ -113,3 +113,7 @@ type Query struct {
 	Value    ValueNode `yaml:"val"`
 	Children []Query   `yaml:"dep"`
 }
+
+type StringQuery struct {
+	Query string `yaml:"query"`
+}

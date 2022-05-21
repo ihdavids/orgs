@@ -3,6 +3,7 @@ package orgs
 import (
 	"regexp"
 
+	"github.com/Knetic/govaluate"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/niklasfasching/go-org/org"
 )
@@ -108,6 +109,56 @@ func Eval(self *common.Query, v *org.Section) bool {
 		return IsProject(v) == self.Value.Bool
 	}
 	return true
+}
+
+func EvalString(expString *common.StringQuery, v *org.Section) bool {
+	functions := map[string]govaluate.ExpressionFunction{
+		"IsProject": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			return IsProject(p), nil
+		},
+		"HasTags": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			ok := true
+			for _, tagi := range args[1:] {
+				tag := tagi.(string)
+				if ok = ok && StringInSlice(tag, p.Headline.Tags); !ok {
+					break
+				}
+			}
+			return ok, nil
+		},
+		"IsStatus": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			s := args[1].(string)
+			return p.Headline.Status == s, nil
+		},
+		"IsPriority": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			s := args[1].(string)
+			return p.Headline.Priority == s, nil
+		},
+		"MatchHeadline": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			s := args[1].(string)
+			var title string
+			for _, n := range p.Headline.Title {
+				title += n.String()
+			}
+			if ok, err := regexp.MatchString(s, title); err == nil && ok {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		},
+	}
+	parameters := make(map[string]interface{}, 8)
+	parameters["v"] = v
+	//expString := "strlen('someReallyLongInputString') <= 16"
+	expression, _ := govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
+
+	result, _ := expression.Evaluate(parameters)
+	return result.(bool)
 }
 
 func QueryTodos(query *common.Query) common.Todos {
