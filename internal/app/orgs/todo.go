@@ -157,6 +157,16 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 				return false, nil
 			}
 		},
+		"Today": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			s := args[1].(string)
+			return p.Headline.Priority == s, nil
+		},
+		"Yesterday": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			s := args[1].(string)
+			return p.Headline.Priority == s, nil
+		},
 	}
 	//expString := "strlen('someReallyLongInputString') <= 16"
 	return govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
