@@ -9,7 +9,8 @@ require (
 	github.com/gdamore/tcell v1.4.0 // indirect
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/gorilla/websocket v1.5.0
-	github.com/niklasfasching/go-org v1.6.2
+	github.com/ihdavids/go-org v1.6.3-0.20220522050915-6fe04d7a55ba
+	github.com/niklasfasching/go-org v1.6.2 // indirect
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/tools/gopls v0.8.4 // indirect

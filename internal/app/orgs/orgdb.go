@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/niklasfasching/go-org/org"
+	"github.com/ihdavids/go-org/org"
 )
 
 type OrgFile struct {

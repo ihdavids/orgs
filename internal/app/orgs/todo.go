@@ -4,8 +4,8 @@ import (
 	"regexp"
 
 	"github.com/Knetic/govaluate"
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
-	"github.com/niklasfasching/go-org/org"
 )
 
 func IsTodoStatus(n *org.Section) bool {
