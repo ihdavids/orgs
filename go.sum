@@ -34,6 +34,8 @@ github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWm
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/ihdavids/go-org v1.6.3-0.20220522050915-6fe04d7a55ba h1:cAXX5p1TFB/xz72frcdVgHxRRVyaOKOm01/RhP8t/H0=
 github.com/ihdavids/go-org v1.6.3-0.20220522050915-6fe04d7a55ba/go.mod h1:yxQAnwvK98L9AHEenE6M9X/SDohUk+w76uaNrNyUW5o=
+github.com/ihdavids/go-org v1.6.3-0.20220529061924-bbf1117be680 h1:6rb6aePtqzgh9mvQJFfgjVykPrubBqLsUK5DjdRfyyg=
+github.com/ihdavids/go-org v1.6.3-0.20220529061924-bbf1117be680/go.mod h1:XCJvpDQ2oVtQNs3twa0V+tPvHYdMpzGDzIFoWex7WN8=
 github.com/jba/printsrc v0.2.2/go.mod h1:1xULjw59sL0dPdWpDoVU06TIEO/Wnfv6AHRpiElTwYM=
 github.com/jba/templatecheck v0.6.0/go.mod h1:/1k7EajoSErFI9GLHAsiIJEaNLt3ALKNw2TV7z2SYv4=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
@@ -67,6 +69,8 @@ github.com/sergi/go-diff v1.1.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNX
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/teambition/rrule-go v1.8.0 h1:a/IX5s56hGkFF+nRlJUooZU/45OTeeldBGL29nDKIHw=
+github.com/teambition/rrule-go v1.8.0/go.mod h1:Ieq5AbrKGciP1V//Wq8ktsTXwSwJHDD5mD/wLBGl3p4=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
