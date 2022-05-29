@@ -9,6 +9,19 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+func GetBeginOfDay(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
+}
+
+func Today() time.Time {
+	return GetBeginOfDay(time.Now())
+}
+
+func Yesterday() time.Time {
+	return GetBeginOfDay(time.Now().AddDate(0, 0, -1))
+}
+
 func IsOn(p *org.Section, t time.Time) bool {
 	if p != nil && p.Headline != nil {
 		// If we are closed we do not show up after the close date
@@ -197,13 +210,13 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 		},
 		"Today": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
-			now := time.Now()
+			now := Today()
 			return IsOn(p, now), nil
 		},
 		"Yesterday": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
-			s := args[1].(string)
-			return p.Headline.Priority == s, nil
+			now := Yesterday()
+			return IsOn(p, now), nil
 		},
 	}
 	//expString := "strlen('someReallyLongInputString') <= 16"
