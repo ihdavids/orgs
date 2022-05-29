@@ -2,11 +2,34 @@ package orgs
 
 import (
 	"regexp"
+	"time"
 
 	"github.com/Knetic/govaluate"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )
+
+func IsOn(p *org.Section, t time.Time) bool {
+	if p != nil && p.Headline != nil {
+		// If we are closed we do not show up after the close date
+		if p.Headline.HasClosed() {
+			if t.After(p.Headline.Closed.Date.Start) {
+				return false
+			}
+		}
+
+		if p.Headline.HasScheduled() && p.Headline.Scheduled.Date.Before(t) {
+			return true
+		}
+
+		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.OnDay(t) {
+			return true
+		}
+
+		// TODO: Handle deadlines in here properly.
+	}
+	return false
+}
 
 func IsTodoStatus(n *org.Section) bool {
 	if n != nil && n.Headline != nil {
@@ -30,6 +53,17 @@ func IsProjectByTag(p *org.Section) bool {
 	if p != nil && p.Headline != nil {
 		for _, t := range p.Headline.Tags {
 			if t == "PROJECT" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func IsArchived(p *org.Section) bool {
+	if p != nil && p.Headline != nil {
+		for _, t := range p.Headline.Tags {
+			if t == "ARCHIVED" {
 				return true
 			}
 		}
@@ -138,6 +172,10 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 			p := args[0].(*org.Section)
 			return IsTodoStatus(p), nil
 		},
+		"IsArchived": func(args ...interface{}) (interface{}, error) {
+			p := args[0].(*org.Section)
+			return IsArchived(p), nil
+		},
 
 		"IsPriority": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
@@ -159,8 +197,8 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 		},
 		"Today": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
-			s := args[1].(string)
-			return p.Headline.Priority == s, nil
+			now := time.Now()
+			return IsOn(p, now), nil
 		},
 		"Yesterday": func(args ...interface{}) (interface{}, error) {
 			p := args[0].(*org.Section)
