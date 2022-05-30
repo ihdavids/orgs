@@ -158,14 +158,23 @@ func Eval(self *common.Query, v *org.Section) bool {
 	return true
 }
 
-func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression, error) {
+type Expr struct {
+	Expression *govaluate.EvaluableExpression
+	Sec        *org.Section
+}
+
+func ParseString(expString *common.StringQuery) (*Expr, error) {
+	var exp *Expr = new(Expr)
+	exp.Sec = nil
 	functions := map[string]govaluate.ExpressionFunction{
 		"IsProject": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
 			return IsProject(p), nil
 		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
 			ok := true
 			for _, tagi := range args[1:] {
 				tag := tagi.(string)
@@ -176,28 +185,33 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 			return ok, nil
 		},
 		"IsStatus": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
-			s := args[1].(string)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			s := args[0].(string)
 			return p.Headline.Status == s, nil
 		},
 
 		"IsTodo": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
 			return IsTodoStatus(p), nil
 		},
 		"IsArchived": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
 			return IsArchived(p), nil
 		},
 
 		"IsPriority": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
-			s := args[1].(string)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			s := args[0].(string)
 			return p.Headline.Priority == s, nil
 		},
 		"MatchHeadline": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
-			s := args[1].(string)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			s := args[0].(string)
 			var title string
 			for _, n := range p.Headline.Title {
 				title += n.String()
@@ -209,24 +223,30 @@ func ParseString(expString *common.StringQuery) (*govaluate.EvaluableExpression,
 			}
 		},
 		"Today": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
 			now := Today()
 			return IsOn(p, now), nil
 		},
 		"Yesterday": func(args ...interface{}) (interface{}, error) {
-			p := args[0].(*org.Section)
+			p := exp.Sec
+			//p := args[0].(*org.Section)
 			now := Yesterday()
 			return IsOn(p, now), nil
 		},
 	}
 	//expString := "strlen('someReallyLongInputString') <= 16"
-	return govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
+	var err error
+	exp.Expression, err = govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
+	return exp, err
 }
 
-func EvalString(expression *govaluate.EvaluableExpression, v *org.Section) bool {
+func EvalString(exp *Expr, v *org.Section) bool {
 	parameters := make(map[string]interface{}, 8)
-	parameters["v"] = v
-	result, _ := expression.Evaluate(parameters)
+	parameters["section"] = v
+	// This is the implicit this pointer of our expressions
+	exp.Sec = v
+	result, _ := exp.Expression.Evaluate(parameters)
 	return result.(bool)
 }
 

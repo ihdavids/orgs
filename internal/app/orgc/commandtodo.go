@@ -7,17 +7,17 @@ import (
 )
 
 type CommandTodo struct {
-	Query *common.Query
+	Query *common.StringQuery
 	Name  string
 	Reply common.Todos
 	Error error
 }
 
-func NewCommandTodo(name string, view *TodoFilterConfig) {
+func NewCommandTodo(name string, view *string) {
 	var todo *CommandTodo = new(CommandTodo)
 	todo.Name = name
-	todo.Query = new(common.Query)
-	*todo.Query = view.Query
+	todo.Query = new(common.StringQuery)
+	todo.Query.Query = *view
 	GetCmdRegistry().RegisterCommand(name, todo)
 }
 
@@ -26,7 +26,7 @@ func (self *CommandTodo) GetName() string {
 }
 
 func (self *CommandTodo) Enter(core *Core) {
-	self.Error = core.ws.Call("Db.QueryTodos", self.Query, &self.Reply)
+	self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
 }
 func (self *CommandTodo) EnterProjects(core *Core) {}
 func (self *CommandTodo) EnterTasks(core *Core) {

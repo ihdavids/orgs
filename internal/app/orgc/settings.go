@@ -6,17 +6,12 @@ import (
 	"net/rpc"
 	"path/filepath"
 
-	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/yaml.v2"
 )
 
-type TodoFilterConfig struct {
-	Query common.Query `yaml:"cmd"`
-}
-
 type Config struct {
-	Url       string                      `yaml:"url"`
-	TodoViews map[string]TodoFilterConfig `yaml:"todo_views"`
+	Url       string            `yaml:"url"`
+	TodoViews map[string]string `yaml:"todo_views"`
 	// Dispatch commands
 	FileList    bool
 	TodoList    bool
@@ -89,7 +84,7 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
-		config.TodoViews = make(map[string]TodoFilterConfig)
+		config.TodoViews = make(map[string]string)
 		config.ParseConfig()
 	}
 	return config
