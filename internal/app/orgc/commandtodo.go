@@ -35,8 +35,15 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 		//pane.list.AddItem("- Today", "", 0, func() { taskPane.LoadDynamicList("today") })
 		core.taskPane.list.AddItem("ERROR - could not query data", "", 0, nil)
 	}
+	core.projectPane.SetTitle("[::u]<P>[::-] " + self.GetName())
+
 	for _, v := range self.Reply {
-		core.taskPane.list.AddItem(v.Headline, strings.Join(v.Tags, ","), 0, nil)
+		item := core.projectPane.list.AddItem(v.Headline, strings.Join(v.Tags, ","), 0, nil)
+		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+			if index < len(self.Reply) {
+				core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 1)
+			}
+		})
 	}
 	/*
 		if err != nil {

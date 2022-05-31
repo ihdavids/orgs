@@ -12,8 +12,8 @@ import (
 type ProjectPane struct {
 	*tview.Flex
 	//projects            []model.Project
-	list       *tview.List
-	newProject *tview.InputField
+	list *tview.List
+	//newProject *tview.InputField
 	//repo                repository.ProjectRepository
 	//activeProject       *model.Project
 	projectListStarting int // The index in list where project names starts
@@ -23,24 +23,25 @@ type ProjectPane struct {
 // NewProjectPane initializes
 func NewProjectPane(core *Core) *ProjectPane {
 	pane := ProjectPane{
-		Flex:       tview.NewFlex().SetDirection(tview.FlexRow),
-		core:       core,
-		list:       tview.NewList().ShowSecondaryText(false),
-		newProject: makeLightTextInput("+[New Project]"),
+		Flex: tview.NewFlex().SetDirection(tview.FlexRow),
+		core: core,
+		list: tview.NewList().ShowSecondaryText(false),
+		//newProject: makeLightTextInput("+[New Project]"),
 		//repo:       repo,
 	}
 
-	pane.newProject.SetDoneFunc(func(key tcell.Key) {
-		switch key {
-		case tcell.KeyEnter:
-			pane.addNewProject()
-		case tcell.KeyEsc:
-			pane.core.app.SetFocus(pane.core.projectPane)
-		}
-	})
-
-	pane.AddItem(pane.list, 0, 1, true).
-		AddItem(pane.newProject, 1, 0, false)
+	/*
+		pane.newProject.SetDoneFunc(func(key tcell.Key) {
+			switch key {
+			case tcell.KeyEnter:
+				pane.addNewProject()
+			case tcell.KeyEsc:
+				pane.core.app.SetFocus(pane.core.projectPane)
+			}
+		})
+	*/
+	pane.AddItem(pane.list, 0, 1, true)
+	//AddItem(pane.newProject, 1, 0, false)
 
 	pane.SetBorder(true).SetTitle("[::u]P[::-]rojects")
 	pane.loadListItems(false)
@@ -69,7 +70,7 @@ func (pane *ProjectPane) addNewProject() {
 }
 
 func (pane *ProjectPane) addDynamicLists() {
-	pane.addSection("Dynamic Lists")
+	//pane.addSection("Dynamic Lists")
 	/*
 		pane.list.AddItem("- Today", "", 0, func() { pane.core.taskPane.LoadDynamicList("today") })
 		pane.list.AddItem("- Tomorrow", "", 0, func() { pane.core.taskPane.LoadDynamicList("tomorrow") })
@@ -125,9 +126,9 @@ func (pane *ProjectPane) handleShortcuts(event *tcell.EventKey) *tcell.EventKey 
 	case 'k':
 		pane.list.SetCurrentItem(pane.list.GetCurrentItem() - 1)
 		return nil
-	case 'n':
-		pane.core.app.SetFocus(pane.newProject)
-		return nil
+		//case 'n':
+		//	pane.core.app.SetFocus(pane.newProject)
+		//	return nil
 	}
 
 	return event
