@@ -14,12 +14,33 @@ func GetBeginOfDay(t time.Time) time.Time {
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
 }
 
+func GetEndOfDay(t time.Time) time.Time {
+	year, month, day := t.Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, t.Location()).AddDate(0, 0, 1)
+}
+
 func Today() time.Time {
 	return GetBeginOfDay(time.Now())
 }
 
+func EndOfToday() time.Time {
+	return GetEndOfDay(time.Now())
+}
+
 func Yesterday() time.Time {
 	return GetBeginOfDay(time.Now().AddDate(0, 0, -1))
+}
+
+func TheDayBefore(from time.Time) time.Time {
+	return from.AddDate(0, 0, -1)
+}
+
+func AWeekAgo() time.Time {
+	return GetBeginOfDay(time.Now().AddDate(0, 0, -7))
+}
+
+func AWeekAgoFrom(from time.Time) time.Time {
+	return from.AddDate(0, 0, -7)
 }
 
 func IsOn(p *org.Section, t time.Time) bool {
@@ -36,6 +57,34 @@ func IsOn(p *org.Section, t time.Time) bool {
 		}
 
 		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.OnDay(t) {
+			return true
+		}
+
+		// TODO: Handle deadlines in here properly.
+	}
+	return false
+}
+
+func IsIn(p *org.Section, start time.Time, end time.Time) bool {
+	if p != nil && p.Headline != nil {
+		// If we are closed we do not show up after the close date
+		if p.Headline.HasClosed() && end.After(p.Headline.Closed.Date.Start) {
+			end = p.Headline.Closed.Date.Start
+		}
+		// Handle end before we start case
+		if end.Before(start) {
+			return false
+		}
+		// If we closed before we started
+		if p.Headline.HasClosed() && start.After(p.Headline.Closed.Date.Start) {
+			return false
+		}
+
+		if p.Headline.HasScheduled() && p.Headline.Scheduled.Date.Start.Before(end) {
+			return true
+		}
+
+		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.After(start) && p.Headline.Timestamp.Time.Before(end) {
 			return true
 		}
 
@@ -184,6 +233,11 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			}
 			return ok, nil
 		},
+		"NoTags": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			return len(p.Headline.Tags) <= 0, nil
+		},
 		"IsStatus": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
@@ -233,6 +287,13 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			//p := args[0].(*org.Section)
 			now := Yesterday()
 			return IsOn(p, now), nil
+		},
+		"ThisWeek": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			start := AWeekAgo()
+			now := EndOfToday()
+			return IsIn(p, start, now), nil
 		},
 	}
 	//expString := "strlen('someReallyLongInputString') <= 16"
