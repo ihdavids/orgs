@@ -31,6 +31,7 @@ func (self *CommandTodo) Enter(core *Core) {
 func (self *CommandTodo) EnterProjects(core *Core) {}
 func (self *CommandTodo) EnterTasks(core *Core) {
 	core.taskPane.list.Clear()
+	core.projectPane.list.Clear()
 	if self.Error != nil {
 		//pane.list.AddItem("- Today", "", 0, func() { taskPane.LoadDynamicList("today") })
 		core.taskPane.list.AddItem("ERROR - could not query data", "", 0, nil)
@@ -42,6 +43,8 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 			if index < len(self.Reply) {
 				core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 1)
+				//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
+				core.taskPane.list.Clear()
 			}
 		})
 	}

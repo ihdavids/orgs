@@ -18,6 +18,7 @@ type OrgFile struct {
 
 type OrgDb struct {
 	ByFile      map[string]*OrgFile
+	ByHash      map[string]*org.Section
 	Filenames   []string
 	ReloadIndex uint64
 
@@ -29,8 +30,20 @@ type OrgDb struct {
 func NewOrgDb() *OrgDb {
 	var db *OrgDb = new(OrgDb)
 	db.ByFile = make(map[string]*OrgFile)
+	db.ByHash = make(map[string]*org.Section)
 	db.ReloadIndex = 0
 	return db
+}
+
+func (self *OrgDb) RegisterSection(hash string, v *org.Section) {
+	self.ByHash[hash] = v
+}
+
+func (self *OrgDb) FindByHash(hash string) *org.Section {
+	if v, ok := self.ByHash[hash]; ok {
+		return v
+	}
+	return nil
 }
 
 func (self *OrgDb) ListFilesInDir(dirname string) []string {

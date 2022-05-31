@@ -21,6 +21,8 @@ github.com/ihdavids/go-org v1.6.3-0.20220529061924-bbf1117be680 h1:6rb6aePtqzgh9
 github.com/ihdavids/go-org v1.6.3-0.20220529061924-bbf1117be680/go.mod h1:XCJvpDQ2oVtQNs3twa0V+tPvHYdMpzGDzIFoWex7WN8=
 github.com/ihdavids/go-org v1.6.3-0.20220529064057-5ed58f3b6d31 h1:xOuU1CbzcpMQT9Tzoy5LEhi/bP30hjqyYFj6Xu7qjrY=
 github.com/ihdavids/go-org v1.6.3-0.20220529064057-5ed58f3b6d31/go.mod h1:XCJvpDQ2oVtQNs3twa0V+tPvHYdMpzGDzIFoWex7WN8=
+github.com/ihdavids/go-org v1.6.3-0.20220531063609-3833c9eadce3 h1:DupXalh3t8eqKTwgQ2S9nC6XhM+Pp3Ss5fL29MYZsJM=
+github.com/ihdavids/go-org v1.6.3-0.20220531063609-3833c9eadce3/go.mod h1:XCJvpDQ2oVtQNs3twa0V+tPvHYdMpzGDzIFoWex7WN8=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=
 github.com/kr/pretty v0.3.0/go.mod h1:640gp4NfQd8pI5XOwp5fnNeVWj67G7CFk/SaSQn7NBk=

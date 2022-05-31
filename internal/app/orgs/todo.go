@@ -321,13 +321,14 @@ func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 	for _, file := range files {
 		f := GetDb().GetFile(file)
 		for _, v := range f.doc.Outline.Children {
+			GetDb().RegisterSection(v.Hash, v)
 			res := EvalString(exp, v)
 			if res {
 				var title string
 				for _, n := range v.Headline.Title {
 					title += n.String()
 				}
-				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags}
+				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash}
 				todos = append(todos, t)
 			}
 		}

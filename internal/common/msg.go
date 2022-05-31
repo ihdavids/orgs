@@ -20,6 +20,7 @@ type FileList []string
 type Todo struct {
 	Headline string
 	Tags     []string
+	Hash     string
 }
 
 type Todos []Todo

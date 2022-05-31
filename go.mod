@@ -7,7 +7,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/gorilla/websocket v1.5.0
-	github.com/ihdavids/go-org v1.6.3-0.20220529064057-5ed58f3b6d31
+	github.com/ihdavids/go-org v1.6.3-0.20220531063609-3833c9eadce3
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/niklasfasching/go-org v1.6.2 // indirect
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
