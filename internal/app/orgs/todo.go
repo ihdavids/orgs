@@ -1,6 +1,7 @@
 package orgs
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 
@@ -309,6 +310,33 @@ func EvalString(exp *Expr, v *org.Section) bool {
 	exp.Sec = v
 	result, _ := exp.Expression.Evaluate(parameters)
 	return result.(bool)
+}
+
+func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
+	var td common.FullTodo
+	if s, ok := GetDb().ByHash[(string)(*query)]; ok {
+		var title string
+		for _, n := range s.Headline.Title {
+			title += n.String()
+		}
+		td.Headline = title
+		td.Hash = s.Hash
+		td.Priority = s.Headline.Priority
+		td.Tags = s.Headline.Tags
+		var contentNodes []org.Node
+		for i, n := range s.Headline.Children {
+			switch n.(type) {
+			case org.Headline:
+				contentNodes = s.Headline.Children[0:i]
+				break
+			}
+		}
+		w := org.NewOrgWriter()
+		org.WriteNodes(w, contentNodes...)
+		td.Content = w.String()
+		return td, nil
+	}
+	return td, fmt.Errorf("failed to find todo by hash")
 }
 
 func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {

@@ -23,6 +23,16 @@ type Todo struct {
 	Hash     string
 }
 
+type FullTodo struct {
+	Headline string
+	Content  string
+	Tags     []string
+	Hash     string
+	Priority string
+}
+
+type TodoHash string
+
 type Todos []Todo
 
 type NodeType int16

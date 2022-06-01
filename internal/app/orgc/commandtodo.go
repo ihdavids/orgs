@@ -7,10 +7,11 @@ import (
 )
 
 type CommandTodo struct {
-	Query *common.StringQuery
-	Name  string
-	Reply common.Todos
-	Error error
+	Query     *common.StringQuery
+	Name      string
+	Reply     common.Todos
+	TaskReply common.FullTodo
+	Error     error
 }
 
 func NewCommandTodo(name string, view *string) {
@@ -44,7 +45,9 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 			if index < len(self.Reply) {
 				core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 1)
 				//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
+				self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
 				core.taskPane.list.Clear()
+				core.taskPane.list.AddItem(self.TaskReply.Headline, self.TaskReply.Content, 0, nil)
 			}
 		})
 	}

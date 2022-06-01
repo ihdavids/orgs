@@ -35,3 +35,9 @@ func (s *Db) QueryTodosExp(args *common.StringQuery, reply *common.Todos) error 
 	*reply, err = orgs.QueryStringTodos(args)
 	return err
 }
+
+func (s *Db) QueryFullTodo(args *common.TodoHash, reply *common.FullTodo) error {
+	var err error = nil
+	*reply, err = orgs.QueryFullTodo(args)
+	return err
+}
