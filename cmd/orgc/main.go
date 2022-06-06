@@ -3,16 +3,34 @@ package main
 import (
 	"log"
 	"net/http"
-	"net/rpc"
+	//"net/rpc"
+	//"io"
+	"os"
 
-	"net/rpc/jsonrpc"
+	//"net/rpc/jsonrpc"
 
 	"github.com/gorilla/websocket"
 	"github.com/ihdavids/orgs/internal/app/orgc"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+func logToFile() *os.File {
+	f, err := os.OpenFile("orgc.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	//defer f.Close()
+	//wrt := io.MultiWriter(os.Stdout, f)
+	//log.SetOutput(wrt)
+	log.SetOutput(f)
+	log.Println("--- [OrgC] ----------------------------------")
+	return f
+}
+
+
 func main() {
+	f := logToFile()
+	defer f.Close()
 	orgc.Conf()
 	ws, res, err := dialer.Dial(orgc.Conf().Url, http.Header{})
 	if err != nil {
@@ -35,14 +53,14 @@ func handle(ws *websocket.Conn) {
 		ws.Close()
 	}()
 
-	rwc := &common.ReadWriteCloser{WS: ws}
-	codec := jsonrpc.NewClientCodec(rwc)
-	c := rpc.NewClientWithCodec(codec)
+	//rwc := &common.ReadWriteCloser{WS: ws}
+	//codec := jsonrpc.NewClientCodec(rwc)
+	//c := rpc.NewClientWithCodec(codec)
 
-	core := orgc.NewCore(c)
+	core := orgc.NewCore(nil,ws)
 	core.Start()
 
-	orgc.Conf().Dispatch(c)
+	orgc.Conf().Dispatch(nil)
 	/*
 		args := &common.HelloArgs{Msg: "Hello, World"}
 		var reply common.HelloReply

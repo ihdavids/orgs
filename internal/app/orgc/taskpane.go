@@ -31,7 +31,8 @@ func NewTaskPane(core *Core) *TaskPane {
 		core: core,
 	}
 
-	pane.list.SetSelectedBackgroundColor(tcell.ColorDarkBlue)
+	pane.list.SetSelectedBackgroundColor(tcell.ColorBlack)
+	pane.list.SetSelectedTextColor(tcell.ColorYellow)
 	pane.list.SetDoneFunc(func() {
 		pane.core.app.SetFocus(pane.core.projectPane)
 	})

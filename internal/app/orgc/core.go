@@ -3,9 +3,22 @@ package orgc
 import (
 	"net/rpc"
 	"unicode"
+	"time"
+	//"bytes"
+	"strings"
+	"log"
+	"runtime"
+	"fmt"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/gorilla/websocket"
+	"github.com/gorilla/rpc/json"
+)
+
+var (
+	newline = []byte{'\n'}
+	space   = []byte{' '}
 )
 
 type Core struct {
@@ -13,27 +26,175 @@ type Core struct {
 	layout, contents *tview.Flex
 
 	ws          *rpc.Client
+	conn        *websocket.Conn
 	statusBar   *StatusBar
 	projectPane *ProjectPane
 	taskPane    *TaskPane
+	Messages    chan string
+	Send        chan []byte
+
 	//taskDetailPane    *TaskDetailPane
 	//projectDetailPane *ProjectDetailPane
 }
 
-func NewCore(c *rpc.Client) *Core {
+func NewCore(c *rpc.Client, ws *websocket.Conn) *Core {
 	core := new(Core)
 	core.app = tview.NewApplication()
 	core.layout = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(makeTitleBar(), 2, 1, false).
 		AddItem(prepareContentPages(core), 0, 2, true).
 		AddItem(prepareStatusBar(core), 1, 1, false)
-	core.ws = c
+	//core.ws = c
+	core.conn = ws
 	setKeyboardShortcuts(core)
 
 	return core
 }
 
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 1024*64
+)
+
+func T(format string, args ...interface{}) {
+	//return
+	if _, file, line, ok := runtime.Caller(1); ok {
+		msg := fmt.Sprintf(format, args...)
+		log.Printf("%s:%d:%s", file, line, msg)
+	} else {
+		log.Printf("?:?:"+format, args...)
+	}
+}
+
+
+// readPump pumps messages from the websocket connection to the hub.
+//
+// The application runs readPump in a per-connection goroutine. The application
+// ensures that there is at most one reader on a connection by executing all
+// reads from this goroutine.
+func (self *Core) readPump() {
+	defer func() {
+		//self.Messages <- c
+		//self.ws.Close()
+		self.conn.Close()
+	}()
+	self.conn.SetReadLimit(maxMessageSize)
+	self.conn.SetReadDeadline(time.Now().Add(pongWait))
+	self.conn.SetPongHandler(func(string) error { self.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	for {
+		_, message, err := self.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+			break
+		}
+		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		//c.hub.broadcast <- message
+		T("READ: %s",message)
+		self.Messages <- (string)(message)
+	}
+}
+
+func Decode[T any](data string, obj *T) {
+	json.DecodeClientResponse(strings.NewReader(data), obj)
+}
+
+func ReceiveAndDecode[RESP any](core *Core, obj *RESP) {
+    select {
+    case res := <-core.Messages:
+		T(" GOT MESSAGE (ReceiveAndDecode)")
+		json.DecodeClientResponse(strings.NewReader(res), obj)
+    case <-time.After(15 * time.Second):
+		T("Failed to read after 15 seconds")
+		log.Panic("Failed to read after X seconds")
+    }
+}
+
+func EncodeAndSend[T any](core *Core, name string, args *T) {
+	r,err := json.EncodeClientRequest(name, args)
+	if err != nil {
+		log.Println("ERROR: ",err)
+	}
+	core.SendData(r)
+}
+
+func SendReceiveRpc[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
+	T("SEND: %s",name)
+	EncodeAndSend(core, name, args)
+
+	T("RCV: %s",name)
+	ReceiveAndDecode(core, resp)
+}
+
+// writePump pumps messages from the hub to the websocket connection.
+//
+// A goroutine running writePump is started for each connection. The
+// application ensures that there is at most one writer to a connection by
+// executing all writes from this goroutine.
+func (self *Core) writePump() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		self.conn.Close()
+	}()
+	for {
+		select {
+		case message, ok := <-self.Send:
+			self.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				// The hub closed the channel.
+				self.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			w, err := self.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				return
+			}
+			w.Write(message)
+
+			// Add queued chat messages to the current websocket message.
+			n := len(self.Send)
+			for i := 0; i < n; i++ {
+				w.Write(newline)
+				w.Write(<-self.Send)
+			}
+
+			if err := w.Close(); err != nil {
+				return
+			}
+		case <-ticker.C:
+			self.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := self.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (self *Core) SendData(data []byte) {
+	self.Send <- data
+}
+
 func (self *Core) Start() {
+	self.Messages = make(chan string)
+	self.Send = make(chan []byte)
+	go func () {
+		self.readPump()
+	}()
+	go func() {
+		self.writePump()
+	}()
 	if err := self.app.SetRoot(self.layout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}

@@ -75,7 +75,7 @@ func handle(ws *websocket.Conn) {
 	})
 
 	go func() {
-		ticker := time.Tick(common.PongWait / 2)
+		ticker := time.Tick(common.PongWait / 4)
 		for range ticker {
 			if err := wsping(ws, common.PongWait); err != nil {
 				log.Println("Ping failed:", err)

@@ -1,6 +1,6 @@
 todo_views:
-  alltasks:   "!IsProject() && IsTodo()"
-  today:      "!IsProject() && IsTodo() && Today()"
-  untagged:   "!IsProject() && IsTodo() && NoTags()"
-  next:       "!IsProject() && IsTodo() && IsStatus('NEXT')"
-  projects:   "IsProject()"
+  alltasks: "!IsProject() && IsTodo()"
+  today:    "!IsProject() && IsTodo() && Today()"
+  untagged: "!IsProject() && IsTodo() && NoTags()"
+  next:     "!IsProject() && IsTodo() && IsStatus('NEXT')"
+  projects: "IsProject()"

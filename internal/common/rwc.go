@@ -10,7 +10,7 @@ import (
 )
 
 func T(format string, args ...interface{}) {
-	return
+	//return
 	if _, file, line, ok := runtime.Caller(1); ok {
 		msg := fmt.Sprintf(format, args...)
 		log.Printf("%s:%d:%s", file, line, msg)
@@ -36,8 +36,10 @@ func (rwc *ReadWriteCloser) Read(p []byte) (n int, err error) {
 		}
 		T("%s:%d", "Read", messageType)
 	}
+	T("Starting read loop")
 	for n = 0; n < len(p); {
 		var m int
+		T("Before read")
 		m, err = rwc.r.Read(p[n:])
 		T("%s:%d:%v:%s", "Read", m, err, string(p))
 		n += m
@@ -73,9 +75,11 @@ func (rwc *ReadWriteCloser) Write(p []byte) (n int, err error) {
 			break
 		}
 	}
+
 	if err != nil || n == len(p) {
 		err = rwc.Close()
 	}
+
 	T("%s:%d:%v", "Write", n, err)
 	return
 }

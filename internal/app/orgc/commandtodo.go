@@ -27,7 +27,8 @@ func (self *CommandTodo) GetName() string {
 }
 
 func (self *CommandTodo) Enter(core *Core) {
-	self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
+	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
+	SendReceiveRpc(core, "Db.QueryTodosExp", &self.Query, &self.Reply)
 }
 func (self *CommandTodo) EnterProjects(core *Core) {}
 func (self *CommandTodo) EnterTasks(core *Core) {
@@ -43,9 +44,10 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 		item := core.projectPane.list.AddItem(v.Headline, strings.Join(v.Tags, ","), 0, nil)
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 			if index < len(self.Reply) {
-				core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 1)
+				core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
 				//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
-				self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
+				SendReceiveRpc(core, "Db.QueryFullTodo", &self.Reply[index].Hash, &self.TaskReply)
+				//self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
 				core.taskPane.list.Clear()
 				core.taskPane.list.AddItem(self.TaskReply.Headline, self.TaskReply.Content, 0, nil)
 			}
