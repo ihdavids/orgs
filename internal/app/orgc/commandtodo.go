@@ -3,16 +3,18 @@ package orgc
 import (
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/rivo/tview"
 )
 
 type CommandTodo struct {
-	Query     *common.StringQuery
-	Name      string
+	Query       *common.StringQuery
+	Name        string
 	Description string
-	Reply     common.Todos
-	TaskReply common.FullTodo
-	Error     error
+	Reply       common.Todos
+	TaskReply   common.FullTodo
+	Error       error
 }
 
 func NewCommandTodo(name string, view *string, desc *string) {
@@ -54,8 +56,13 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 				//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
 				SendReceiveRpc(core, "Db.QueryFullTodo", &self.Reply[index].Hash, &self.TaskReply)
 				//self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
-				core.taskPane.list.Clear()
-				core.taskPane.list.AddItem(self.TaskReply.Headline, self.TaskReply.Content, 0, nil)
+				//core.taskPane.list.Clear()
+				core.taskPane.text.Clear()
+				core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
+				core.taskPane.text.SetBorder(true)
+				//core.taskPane.list.AddItem(self.TaskReply.Headline, "", 0, nil)
+				core.taskPane.text.SetTitle(self.TaskReply.Headline)
+				core.taskPane.text.SetText(self.TaskReply.Content)
 			}
 		})
 	}

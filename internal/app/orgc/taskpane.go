@@ -15,7 +15,7 @@ type TaskPane struct {
 	newTask *tview.InputField
 	//projectRepo repository.ProjectRepository
 	//taskRepo    repository.TaskRepository
-	hint *tview.TextView
+	text *tview.TextView
 	core *Core
 }
 
@@ -27,7 +27,7 @@ func NewTaskPane(core *Core) *TaskPane {
 		//newTask: makeLightTextInput("+[New Task]"),
 		//projectRepo: projectRepo,
 		//taskRepo:    taskRepo,
-		hint: tview.NewTextView().SetTextColor(tcell.ColorYellow).SetTextAlign(tview.AlignCenter),
+		text: tview.NewTextView().SetTextColor(tcell.ColorYellow).SetTextAlign(tview.AlignCenter),
 		core: core,
 	}
 
@@ -62,10 +62,10 @@ func NewTaskPane(core *Core) *TaskPane {
 		})
 	*/
 	pane.
-		AddItem(pane.list, 0, 1, true).
-		AddItem(pane.hint, 0, 1, false)
+		//AddItem(pane.list, 0, 1, true).
+		AddItem(pane.text, 0, 1, true)
 
-	pane.SetBorder(true).SetTitle("[::u]T[::-]asks")
+	//pane.SetBorder(true).SetTitle("[::u]T[::-]asks")
 	//pane.setHintMessage()
 
 	return &pane
