@@ -9,21 +9,27 @@ import (
 type CommandTodo struct {
 	Query     *common.StringQuery
 	Name      string
+	Description string
 	Reply     common.Todos
 	TaskReply common.FullTodo
 	Error     error
 }
 
-func NewCommandTodo(name string, view *string) {
+func NewCommandTodo(name string, view *string, desc *string) {
 	var todo *CommandTodo = new(CommandTodo)
 	todo.Name = name
 	todo.Query = new(common.StringQuery)
 	todo.Query.Query = *view
+	todo.Description = *desc
 	GetCmdRegistry().RegisterCommand(name, todo)
 }
 
 func (self *CommandTodo) GetName() string {
 	return self.Name
+}
+
+func (self *CommandTodo) GetDescription() string {
+	return self.Description
 }
 
 func (self *CommandTodo) Enter(core *Core) {

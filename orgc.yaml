@@ -1,6 +1,7 @@
 todo_views:
-  alltasks: "!IsProject() && IsTodo()"
+  alltasks: "!IsArchived() && !IsProject() && IsTodo()// Lists all tasks found"
   today:    "!IsProject() && IsTodo() && Today()"
   untagged: "!IsProject() && IsTodo() && NoTags()"
   next:     "!IsProject() && IsTodo() && IsStatus('NEXT')"
   projects: "IsProject()"
+  atest: "!IsProject() && IsTodo() && !IsArchived() && MatchHeadline('A.*')"
