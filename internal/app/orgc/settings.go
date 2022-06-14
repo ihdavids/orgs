@@ -21,6 +21,7 @@ type Config struct {
 
 func (self *Config) AddCommands() {
 	NewCommandHelp()
+	NewCommandAgenda()
 	
 	for key, val := range self.TodoViews {
 		vals := strings.Split(val, "//")
