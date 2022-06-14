@@ -323,7 +323,7 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 		td.Hash = s.Hash
 		td.Priority = s.Headline.Priority
 		td.Tags = s.Headline.Tags
-		var contentNodes []org.Node
+		var contentNodes []org.Node = s.Headline.Children
 		for i, n := range s.Headline.Children {
 			switch n.(type) {
 			case org.Headline:
