@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/ihdavids/go-org/org"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,6 +22,7 @@ type Todo struct {
 	Headline string
 	Tags     []string
 	Hash     string
+	Date     org.OrgDate
 }
 
 type FullTodo struct {

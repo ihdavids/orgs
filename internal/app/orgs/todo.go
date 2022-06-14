@@ -3,8 +3,8 @@ package orgs
 import (
 	"fmt"
 	"regexp"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/Knetic/govaluate"
 	"github.com/ihdavids/go-org/org"
@@ -13,7 +13,7 @@ import (
 
 func HasTag(name string, p *org.Section, d *org.Document) bool {
 	ftagstr := d.Get("FILETAGS")
-	ftags := strings.Split(ftagstr,":")
+	ftags := strings.Split(ftagstr, ":")
 	nname := strings.ToLower(name)
 	for _, t := range ftags {
 		t = strings.ToLower(strings.TrimSpace(t))
@@ -66,7 +66,6 @@ func AWeekAgo() time.Time {
 func AWeekAgoFrom(from time.Time) time.Time {
 	return from.AddDate(0, 0, -7)
 }
-
 
 func IsOn(p *org.Section, t time.Time) bool {
 	if p != nil && p.Headline != nil {
@@ -147,9 +146,8 @@ func IsProjectByTag(p *org.Section) bool {
 	return false
 }
 
-
 func IsArchived(p *org.Section, d *org.Document) bool {
-	return HasTag("archive",p,d)
+	return HasTag("archive", p, d)
 }
 
 func IsProject(p *org.Section) bool {
@@ -377,7 +375,14 @@ func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 				for _, n := range v.Headline.Title {
 					title += n.String()
 				}
-				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash}
+				var date org.OrgDate
+				if v.Headline.Scheduled != nil {
+					date = *v.Headline.Scheduled.Date
+				}
+				if v.Headline.Timestamp != nil {
+					date = *v.Headline.Timestamp.Time
+				}
+				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date}
 				todos = append(todos, t)
 			}
 		}

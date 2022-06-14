@@ -90,13 +90,11 @@ func (self *OrgDb) Close() {
 
 func (self *OrgDb) Watch() {
 	var err error
-	fmt.Printf("WATCHER STARTED")
 	self.watcher, err = rfsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal("NewWatcher failed: ", err)
 	}
 
-	fmt.Printf("WATCHER CREATING CHANNEL")
 	self.watcherdone = make(chan bool)
 	go func() {
 		defer close(self.watcherdone)
@@ -105,23 +103,12 @@ func (self *OrgDb) Watch() {
 			select {
 			case event, ok := <-self.watcher.Events:
 				if !ok {
-					fmt.Printf("WATCHER KILLED")
-					fmt.Printf("WATCHER KILLED")
-					fmt.Printf("WATCHER KILLED")
-					fmt.Printf("WATCHER KILLED")
-					fmt.Printf("WATCHER KILLED")
-					fmt.Printf("WATCHER KILLED")
 					return
 				}
-				log.Printf("EVENT %s %s\n", event.Name, event.Op)
+				//log.Printf("EVENT %s %s\n", event.Name, event.Op)
 				self.LoadFile(event.Name)
 			case err, ok := <-self.watcher.Errors:
 				if !ok {
-					fmt.Printf("WATCHER PPPPPP")
-					fmt.Printf("WATCHER PPPPPP")
-					fmt.Printf("WATCHER PPPPPP")
-					fmt.Printf("WATCHER PPPPPP")
-					fmt.Printf("WATCHER PPPPPP")
 					return
 				}
 				log.Println("!!!!!!!!!!!!!!! error:", err)
@@ -132,7 +119,7 @@ func (self *OrgDb) Watch() {
 
 	var dirs []string = Conf().OrgDirs
 	for _, dir := range dirs {
-		fmt.Printf("WATCHING: %s", dir)
+		fmt.Printf("WATCHING: %s\n", dir)
 		err = self.watcher.AddRecursive(dir)
 		if err != nil {
 			log.Fatal("Watcher add failed:", err)
