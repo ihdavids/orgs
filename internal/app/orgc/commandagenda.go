@@ -30,7 +30,9 @@ func (self *CommandAgenda) GetDescription() string {
 }
 
 func (self *CommandAgenda) Enter(core *Core) {
-	query := "!IsProject && !IsArchived() && IsTodo() && Today()"
+
+	query := new(common.StringQuery)
+	query.Query = `!IsProject() && !IsArchived() && IsTodo() && Today()`
 	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
 	SendReceiveRpc(core, "Db.QueryTodosExp", &query, &self.Reply)
 }

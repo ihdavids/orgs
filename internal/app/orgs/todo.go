@@ -80,6 +80,9 @@ func IsOn(p *org.Section, t time.Time) bool {
 			return true
 		}
 
+		if p.Headline.HasTimestamp() {
+			fmt.Printf("*** Have timestamp %v vs %v", t, p.Headline.Timestamp.Time)
+		}
 		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.OnDay(t) {
 			return true
 		}
