@@ -71,6 +71,7 @@ func IsOn(p *org.Section, t time.Time) bool {
 	if p != nil && p.Headline != nil {
 		// If we are closed we do not show up after the close date
 		if p.Headline.HasClosed() {
+			fmt.Printf("*** HAVE CLOSED %v vs %v %s", t, p.Headline.Timestamp.Time, p.Headline.Title[0])
 			if t.After(p.Headline.Closed.Date.Start) {
 				return false
 			}
@@ -361,6 +362,30 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 	return td, fmt.Errorf("failed to find todo by hash")
 }
 
+func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (common.Todos, error) {
+	GetDb().RegisterSection(v.Hash, v)
+	res := EvalString(exp, v, f.doc)
+	if res {
+		var title string
+		for _, n := range v.Headline.Title {
+			title += n.String()
+		}
+		var date org.OrgDate
+		if v.Headline.Scheduled != nil {
+			date = *v.Headline.Scheduled.Date
+		}
+		if v.Headline.Timestamp != nil {
+			date = *v.Headline.Timestamp.Time
+		}
+		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date}
+		todos = append(todos, t)
+	}
+	for _, c := range v.Children {
+		todos, _ = ProcessNode(exp, c, f, todos)
+	}
+	return todos, nil
+}
+
 func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 	var todos common.Todos
 	files := GetDb().GetFiles()
@@ -371,23 +396,7 @@ func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 	for _, file := range files {
 		f := GetDb().GetFile(file)
 		for _, v := range f.doc.Outline.Children {
-			GetDb().RegisterSection(v.Hash, v)
-			res := EvalString(exp, v, f.doc)
-			if res {
-				var title string
-				for _, n := range v.Headline.Title {
-					title += n.String()
-				}
-				var date org.OrgDate
-				if v.Headline.Scheduled != nil {
-					date = *v.Headline.Scheduled.Date
-				}
-				if v.Headline.Timestamp != nil {
-					date = *v.Headline.Timestamp.Time
-				}
-				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date}
-				todos = append(todos, t)
-			}
+			todos, _ = ProcessNode(exp, v, f, todos)
 		}
 	}
 	return todos, nil
