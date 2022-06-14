@@ -11,6 +11,28 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+func HasTag(name string, p *org.Section, d *org.Document) bool {
+	ftagstr := d.Get("FILETAGS")
+	ftags := strings.Split(ftagstr,":")
+	nname := strings.ToLower(name)
+	for _, t := range ftags {
+		t = strings.ToLower(strings.TrimSpace(t))
+		if t != "" && (t == nname) {
+			return true
+		}
+	}
+
+	if p != nil && p.Headline != nil {
+		for _, t := range p.Headline.Tags {
+			t = strings.ToLower(strings.TrimSpace(t))
+			if t != "" && (t == nname) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func GetBeginOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()
 	return time.Date(year, month, day, 0, 0, 0, 0, t.Location())
@@ -125,25 +147,9 @@ func IsProjectByTag(p *org.Section) bool {
 	return false
 }
 
-func IsArchived(p *org.Section, d *org.Document) bool {
-	ftagstr := d.Get("FILETAGS")
-	ftags := strings.Split(ftagstr,":")
-	for _, t := range ftags {
-		t = strings.ToLower(strings.TrimSpace(t))
-		if t != "" && (t == "archived" || t == "archive") {
-			return true
-		}
-	}
 
-	if p != nil && p.Headline != nil {
-		for _, t := range p.Headline.Tags {
-			t = strings.ToLower(strings.TrimSpace(t))
-			if t != "" && (t == "archived" || t == "archive") {
-				return true
-			}
-		}
-	}
-	return false
+func IsArchived(p *org.Section, d *org.Document) bool {
+	return HasTag("archive",p,d)
 }
 
 func IsProject(p *org.Section) bool {
@@ -242,7 +248,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			ok := true
 			for _, tagi := range args[1:] {
 				tag := tagi.(string)
-				if ok = ok && StringInSlice(tag, p.Headline.Tags); !ok {
+				if ok = ok && HasTag(tag, p, exp.Doc); !ok {
 					break
 				}
 			}
