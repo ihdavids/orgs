@@ -4,11 +4,34 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+	"strings"
 
 	"github.com/Knetic/govaluate"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )
+
+func HasTag(name string, p *org.Section, d *org.Document) bool {
+	ftagstr := d.Get("FILETAGS")
+	ftags := strings.Split(ftagstr,":")
+	nname := strings.ToLower(name)
+	for _, t := range ftags {
+		t = strings.ToLower(strings.TrimSpace(t))
+		if t != "" && (t == nname) {
+			return true
+		}
+	}
+
+	if p != nil && p.Headline != nil {
+		for _, t := range p.Headline.Tags {
+			t = strings.ToLower(strings.TrimSpace(t))
+			if t != "" && (t == nname) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 func GetBeginOfDay(t time.Time) time.Time {
 	year, month, day := t.Date()
@@ -43,6 +66,7 @@ func AWeekAgo() time.Time {
 func AWeekAgoFrom(from time.Time) time.Time {
 	return from.AddDate(0, 0, -7)
 }
+
 
 func IsOn(p *org.Section, t time.Time) bool {
 	if p != nil && p.Headline != nil {
@@ -123,15 +147,9 @@ func IsProjectByTag(p *org.Section) bool {
 	return false
 }
 
-func IsArchived(p *org.Section) bool {
-	if p != nil && p.Headline != nil {
-		for _, t := range p.Headline.Tags {
-			if t == "ARCHIVED" {
-				return true
-			}
-		}
-	}
-	return false
+
+func IsArchived(p *org.Section, d *org.Document) bool {
+	return HasTag("archive",p,d)
 }
 
 func IsProject(p *org.Section) bool {
@@ -211,11 +229,13 @@ func Eval(self *common.Query, v *org.Section) bool {
 type Expr struct {
 	Expression *govaluate.EvaluableExpression
 	Sec        *org.Section
+	Doc        *org.Document
 }
 
 func ParseString(expString *common.StringQuery) (*Expr, error) {
 	var exp *Expr = new(Expr)
 	exp.Sec = nil
+	exp.Doc = nil
 	functions := map[string]govaluate.ExpressionFunction{
 		"IsProject": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -228,7 +248,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			ok := true
 			for _, tagi := range args[1:] {
 				tag := tagi.(string)
-				if ok = ok && StringInSlice(tag, p.Headline.Tags); !ok {
+				if ok = ok && HasTag(tag, p, exp.Doc); !ok {
 					break
 				}
 			}
@@ -254,7 +274,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"IsArchived": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			return IsArchived(p), nil
+			return IsArchived(p, exp.Doc), nil
 		},
 
 		"IsPriority": func(args ...interface{}) (interface{}, error) {
@@ -303,11 +323,12 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 	return exp, err
 }
 
-func EvalString(exp *Expr, v *org.Section) bool {
+func EvalString(exp *Expr, v *org.Section, d *org.Document) bool {
 	parameters := make(map[string]interface{}, 8)
 	parameters["section"] = v
 	// This is the implicit this pointer of our expressions
 	exp.Sec = v
+	exp.Doc = d
 	result, _ := exp.Expression.Evaluate(parameters)
 	return result.(bool)
 }
@@ -350,7 +371,7 @@ func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 		f := GetDb().GetFile(file)
 		for _, v := range f.doc.Outline.Children {
 			GetDb().RegisterSection(v.Hash, v)
-			res := EvalString(exp, v)
+			res := EvalString(exp, v, f.doc)
 			if res {
 				var title string
 				for _, n := range v.Headline.Title {

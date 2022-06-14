@@ -4,6 +4,7 @@ import "errors"
 
 type Command interface {
 	GetName() string
+	GetDescription() string
 	Enter(core *Core)
 	EnterProjects(core *Core)
 	EnterTasks(core *Core)
@@ -16,7 +17,7 @@ type Command interface {
 }
 
 type CommandRegistry struct {
-	commands map[string]Command
+	Commands map[string]Command
 }
 
 var registry *CommandRegistry
@@ -30,17 +31,17 @@ func GetCmdRegistry() *CommandRegistry {
 }
 
 func (self *CommandRegistry) FindCommand(name string) (Command, error) {
-	if c, found := self.commands[name]; found {
+	if c, found := self.Commands[name]; found {
 		return c, nil
 	}
 	return nil, errors.New("Failed to find index " + name)
 }
 
 func (self *CommandRegistry) SetupRegistry() {
-	self.commands = make(map[string]Command)
+	self.Commands = make(map[string]Command)
 	// This is where you add new commands
 }
 
 func (self *CommandRegistry) RegisterCommand(name string, cmd Command) {
-	self.commands[name] = cmd
+	self.Commands[name] = cmd
 }

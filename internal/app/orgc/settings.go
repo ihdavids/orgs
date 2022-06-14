@@ -2,6 +2,7 @@ package orgc
 
 import (
 	"flag"
+	"strings"
 	"io/ioutil"
 	"net/rpc"
 	"path/filepath"
@@ -19,8 +20,17 @@ type Config struct {
 }
 
 func (self *Config) AddCommands() {
+	NewCommandHelp()
+	NewCommandAgenda()
+	
 	for key, val := range self.TodoViews {
-		NewCommandTodo(key, &val)
+		vals := strings.Split(val, "//")
+		if len(vals) > 1 {
+			NewCommandTodo(key, &vals[0], &vals[1])
+		} else {
+			desc := "Undocumented command"
+			NewCommandTodo(key, &val, &desc)
+		}
 	}
 }
 
