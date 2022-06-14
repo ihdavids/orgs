@@ -7,7 +7,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/fsnotify/fsnotify"
+	//"github.com/fsnotify/fsnotify"
+	"github.com/dietsche/rfsnotify"
 	"github.com/ihdavids/go-org/org"
 )
 
@@ -23,7 +24,7 @@ type OrgDb struct {
 	ReloadIndex uint64
 
 	dblock      sync.RWMutex
-	watcher     *fsnotify.Watcher
+	watcher     *rfsnotify.RWatcher
 	watcherdone chan bool
 }
 
@@ -79,7 +80,7 @@ func (self *OrgDb) LoadFile(filename string) {
 		self.ReloadIndex += 1
 		self.dblock.Unlock()
 	} else {
-		fmt.Println("Failed to parse file {}", filename)
+		fmt.Println("****** Failed to parse file {}", filename)
 	}
 }
 
@@ -89,11 +90,13 @@ func (self *OrgDb) Close() {
 
 func (self *OrgDb) Watch() {
 	var err error
-	self.watcher, err = fsnotify.NewWatcher()
+	fmt.Printf("WATCHER STARTED")
+	self.watcher, err = rfsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal("NewWatcher failed: ", err)
 	}
 
+	fmt.Printf("WATCHER CREATING CHANNEL")
 	self.watcherdone = make(chan bool)
 	go func() {
 		defer close(self.watcherdone)
@@ -102,15 +105,26 @@ func (self *OrgDb) Watch() {
 			select {
 			case event, ok := <-self.watcher.Events:
 				if !ok {
+					fmt.Printf("WATCHER KILLED")
+					fmt.Printf("WATCHER KILLED")
+					fmt.Printf("WATCHER KILLED")
+					fmt.Printf("WATCHER KILLED")
+					fmt.Printf("WATCHER KILLED")
+					fmt.Printf("WATCHER KILLED")
 					return
 				}
-				//log.Printf("EVENT %s %s\n", event.Name, event.Op)
+				log.Printf("EVENT %s %s\n", event.Name, event.Op)
 				self.LoadFile(event.Name)
 			case err, ok := <-self.watcher.Errors:
 				if !ok {
+					fmt.Printf("WATCHER PPPPPP")
+					fmt.Printf("WATCHER PPPPPP")
+					fmt.Printf("WATCHER PPPPPP")
+					fmt.Printf("WATCHER PPPPPP")
+					fmt.Printf("WATCHER PPPPPP")
 					return
 				}
-				log.Println("error:", err)
+				log.Println("!!!!!!!!!!!!!!! error:", err)
 			}
 		}
 
@@ -118,7 +132,8 @@ func (self *OrgDb) Watch() {
 
 	var dirs []string = Conf().OrgDirs
 	for _, dir := range dirs {
-		err = self.watcher.Add(dir)
+		fmt.Printf("WATCHING: %s", dir)
+		err = self.watcher.AddRecursive(dir)
 		if err != nil {
 			log.Fatal("Watcher add failed:", err)
 		}

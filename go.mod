@@ -14,6 +14,11 @@ require (
 )
 
 require (
+	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f // indirect
+	gopkg.in/fsnotify.v1 v1.4.7 // indirect
+)
+
+require (
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.0.1 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
