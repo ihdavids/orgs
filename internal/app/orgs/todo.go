@@ -296,6 +296,18 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 				return false, nil
 			}
 		},
+		"OnDate": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			tm := args[0].(string)
+			//p := args[0].(*org.Section)
+			var now time.Time
+			var err error
+			if now, err = time.Parse("2006 02 01", tm); err != nil {
+				return false, err
+			}
+
+			return IsOn(p, now), nil
+		},
 		"Today": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
@@ -386,6 +398,7 @@ func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (com
 func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 	var todos common.Todos
 	files := GetDb().GetFiles()
+	fmt.Printf("QUERY WAS: %s\n", query.Query)
 	exp, err := ParseString(query)
 	if err != nil {
 		return todos, err

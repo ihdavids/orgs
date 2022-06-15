@@ -21,6 +21,8 @@ func (self *CommandHelp) GetDescription() string {
 	return "returns this help message"
 }
 
+func (self *CommandHelp) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey { return event }
+
 func (self *CommandHelp) Enter(core *Core)         {}
 func (self *CommandHelp) EnterProjects(core *Core) {}
 func (self *CommandHelp) EnterTasks(core *Core) {

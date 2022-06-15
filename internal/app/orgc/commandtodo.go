@@ -34,6 +34,7 @@ func (self *CommandTodo) GetDescription() string {
 	return self.Description
 }
 
+func (self *CommandTodo) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey { return event }
 func (self *CommandTodo) Enter(core *Core) {
 	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
 	SendReceiveRpc(core, "Db.QueryTodosExp", &self.Query, &self.Reply)

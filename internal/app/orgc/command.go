@@ -1,6 +1,10 @@
 package orgc
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 type Command interface {
 	GetName() string
@@ -14,6 +18,8 @@ type Command interface {
 	ExitTasks(core *Core)
 	ExitProjects(core *Core)
 	Exit(core *Core)
+
+	HandleShortcuts(event *tcell.EventKey) *tcell.EventKey
 }
 
 type CommandRegistry struct {

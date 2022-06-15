@@ -2,18 +2,19 @@ package orgc
 
 import (
 	"net/rpc"
-	"unicode"
 	"time"
+	"unicode"
+
 	//"bytes"
-	"strings"
+	"fmt"
 	"log"
 	"runtime"
-	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-	"github.com/gorilla/websocket"
 	"github.com/gorilla/rpc/json"
+	"github.com/gorilla/websocket"
+	"github.com/rivo/tview"
 )
 
 var (
@@ -62,7 +63,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 1024*64
+	maxMessageSize = 1024 * 64
 )
 
 func T(format string, args ...interface{}) {
@@ -74,7 +75,6 @@ func T(format string, args ...interface{}) {
 		log.Printf("?:?:"+format, args...)
 	}
 }
-
 
 // readPump pumps messages from the websocket connection to the hub.
 //
@@ -100,7 +100,7 @@ func (self *Core) readPump() {
 		}
 		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		//c.hub.broadcast <- message
-		T("READ: %s",message)
+		T("READ: %s", message)
 		self.Messages <- (string)(message)
 	}
 }
@@ -110,29 +110,29 @@ func Decode[T any](data string, obj *T) {
 }
 
 func ReceiveAndDecode[RESP any](core *Core, obj *RESP) {
-    select {
-    case res := <-core.Messages:
+	select {
+	case res := <-core.Messages:
 		T(" GOT MESSAGE (ReceiveAndDecode)")
 		json.DecodeClientResponse(strings.NewReader(res), obj)
-    case <-time.After(15 * time.Second):
+	case <-time.After(15 * time.Second):
 		T("Failed to read after 15 seconds")
 		log.Panic("Failed to read after X seconds")
-    }
+	}
 }
 
 func EncodeAndSend[T any](core *Core, name string, args *T) {
-	r,err := json.EncodeClientRequest(name, args)
+	r, err := json.EncodeClientRequest(name, args)
 	if err != nil {
-		log.Println("ERROR: ",err)
+		log.Println("ERROR: ", err)
 	}
 	core.SendData(r)
 }
 
 func SendReceiveRpc[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
-	T("SEND: %s",name)
+	T("SEND: %s", name)
 	EncodeAndSend(core, name, args)
 
-	T("RCV: %s",name)
+	T("RCV: %s", name)
 	ReceiveAndDecode(core, resp)
 }
 
@@ -189,7 +189,7 @@ func (self *Core) SendData(data []byte) {
 func (self *Core) Start() {
 	self.Messages = make(chan string)
 	self.Send = make(chan []byte)
-	go func () {
+	go func() {
 		self.readPump()
 	}()
 	go func() {
@@ -269,6 +269,9 @@ func setKeyboardShortcuts(core *Core) *tview.Application {
 		case core.projectPane.HasFocus():
 			event = core.projectPane.handleShortcuts(event)
 		case core.taskPane.HasFocus():
+			if core.statusBar.curCmd != nil {
+				core.statusBar.curCmd.HandleShortcuts(event)
+			}
 			//event = core.taskPane.handleShortcuts(event)
 			/*
 				if event != nil && projectDetailPane.isShowing() {

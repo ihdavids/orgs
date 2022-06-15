@@ -6,8 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"unicode"
 
 	//"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rivo/tview"
 )
@@ -16,10 +18,13 @@ type CommandAgenda struct {
 	Reply     common.Todos
 	TaskReply common.FullTodo
 	Error     error
+	CurDate   time.Time
+	Core      *Core
 }
 
 func NewCommandAgenda() {
 	var todo *CommandAgenda = new(CommandAgenda)
+	todo.CurDate = time.Now()
 	GetCmdRegistry().RegisterCommand("agenda", todo)
 }
 
@@ -74,12 +79,30 @@ func (self *CommandAgenda) RenderAgendaEntry(v common.Todo) string {
 	}
 	return fmt.Sprintf("[%s]     %-15s [white:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 }
-func (self *CommandAgenda) Enter(core *Core)         {}
-func (self *CommandAgenda) EnterProjects(core *Core) {}
-func (self *CommandAgenda) EnterTasks(core *Core) {
+
+func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey {
+	switch unicode.ToLower(event.Rune()) {
+	case ',':
+		self.CurDate = self.CurDate.AddDate(0, 0, 1)
+		self.ShowAgendaPane(self.Core)
+		return nil
+	case '.':
+		self.CurDate = self.CurDate.AddDate(0, 0, -1)
+		self.ShowAgendaPane(self.Core)
+		return nil
+	case 'n':
+		self.CurDate = time.Now()
+		self.ShowAgendaPane(self.Core)
+		return nil
+	}
+	return event
+}
+func (self *CommandAgenda) ShowAgendaPane(core *Core) {
+	self.Core = core
 	query := new(common.StringQuery)
-	query.Query = `!IsProject() && !IsArchived() && IsTodo() && Today()`
+	query.Query = fmt.Sprintf(`!IsProject() && !IsArchived() && IsTodo() && OnDate("%s")`, self.CurDate.Format("2006 02 01"))
 	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
+	self.Reply = common.Todos{}
 	SendReceiveRpc(core, "Db.QueryTodosExp", &query, &self.Reply)
 	core.taskPane.text.Clear()
 	core.projectPane.list.Clear()
@@ -90,7 +113,7 @@ func (self *CommandAgenda) EnterTasks(core *Core) {
 		//core.taskPane.list.AddItem("ERROR - could not query data", "", 0, nil)
 	}
 	core.projectPane.SetTitle(fmt.Sprintf("[::u]<P>[::-] %s [%d]", self.GetName(), len(self.Reply)))
-	tm := time.Now()
+	tm := self.CurDate
 	txt := "     [blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
 	start := 8
 	end := 20
@@ -111,35 +134,12 @@ func (self *CommandAgenda) EnterTasks(core *Core) {
 		}
 	}
 	core.taskPane.text.SetText(txt)
-	/*
-		for _, v := range self.Reply {
-			item := core.projectPane.list.AddItem(v.Headline, strings.Join(v.Tags, ","), 0, nil)
-			item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
-				if index < len(self.Reply) {
-					core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
-					//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
-					SendReceiveRpc(core, "Db.QueryFullTodo", &self.Reply[index].Hash, &self.TaskReply)
-					//self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
-					//core.taskPane.list.Clear()
-					core.taskPane.text.Clear()
-					core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
-					core.taskPane.text.SetBorder(true)
-					//core.taskPane.list.AddItem(self.TaskReply.Headline, "", 0, nil)
-					core.taskPane.text.SetTitle(self.TaskReply.Headline)
-					core.taskPane.text.SetText(self.TaskReply.Content)
-				}
-			})
-		}
-	*/
-	/*
-		if err != nil {
-			log.Printf("%v", err)
-		} else {
-			for _, v := range reply {
-				log.Printf("%v", v.Headline)
-			}
-		}
-	*/
+}
+
+func (self *CommandAgenda) Enter(core *Core)         {}
+func (self *CommandAgenda) EnterProjects(core *Core) {}
+func (self *CommandAgenda) EnterTasks(core *Core) {
+	self.ShowAgendaPane(core)
 }
 
 func (self *CommandAgenda) Execute(core *Core) {}
