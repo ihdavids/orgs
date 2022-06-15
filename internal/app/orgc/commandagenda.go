@@ -7,7 +7,7 @@ import (
 
 	//"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/internal/common"
-	//"github.com/rivo/tview"
+	"github.com/rivo/tview"
 )
 
 type CommandAgenda struct {
@@ -29,6 +29,33 @@ func (self *CommandAgenda) GetDescription() string {
 	return "return todays agenda"
 }
 
+func (self *CommandAgenda) BuildAgendaBlocks(v common.Todo) string {
+	// TODO
+	return ""
+}
+
+func (self *CommandAgenda) BuildDeadlineDisplay(v common.Todo) string {
+	// D: Overdue
+	// D: Due Today
+	// D: @DATE
+	return ""
+}
+
+func (self *CommandAgenda) BuildHabitDisplay(v common.Todo) string {
+	//  habitbar = "[_____________________]"
+	return ""
+}
+
+func (self *CommandAgenda) RenderAgendaEntry(filename string, v common.Todo) string {
+	fname := filename + ":"
+	if len(filename) > 14 {
+		fname = filename[:14] + ":"
+	}
+	h := v.Date.Start.Hour()
+	m := v.Date.Start.Minute()
+	todo := ""
+	return fmt.Sprintf("[red]     %-15s %02d:%02d %-7s %s %-45s %s%s\n", fname, h, m, self.BuildAgendaBlocks(v), todo, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+}
 func (self *CommandAgenda) Enter(core *Core) {
 
 	query := new(common.StringQuery)
@@ -41,22 +68,23 @@ func (self *CommandAgenda) EnterTasks(core *Core) {
 	core.taskPane.text.Clear()
 	core.projectPane.list.Clear()
 	core.taskPane.text.SetDynamicColors(true)
+	core.taskPane.text.SetTextAlign(tview.AlignLeft)
 	if self.Error != nil {
 		//pane.list.AddItem("- Today", "", 0, func() { taskPane.LoadDynamicList("today") })
 		//core.taskPane.list.AddItem("ERROR - could not query data", "", 0, nil)
 	}
 	core.projectPane.SetTitle(fmt.Sprintf("[::u]<P>[::-] %s [%d]", self.GetName(), len(self.Reply)))
 	tm := time.Now()
-	txt := "[blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
+	txt := "     [blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
 	start := 8
 	end := 20
 	for i := start; i < end; i += 1 {
 		for _, v := range self.Reply {
 			if v.Date.Start.Hour() == i {
-				txt += fmt.Sprintf("%s", v.Headline)
+				txt += self.RenderAgendaEntry("file", v)
 			}
 		}
-		txt += fmt.Sprintf("                [grey]%2d:00 ........ ---------------------------\n", i)
+		txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)
 	}
 	core.taskPane.text.SetText(txt)
 	/*
