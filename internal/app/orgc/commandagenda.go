@@ -3,6 +3,8 @@ package orgc
 import (
 	//"strings"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 
 	//"github.com/gdamore/tcell/v2"
@@ -46,25 +48,35 @@ func (self *CommandAgenda) BuildHabitDisplay(v common.Todo) string {
 	return ""
 }
 
-func (self *CommandAgenda) RenderAgendaEntry(filename string, v common.Todo) string {
-	fname := filename + ":"
-	if len(filename) > 14 {
-		fname = filename[:14] + ":"
+func FileNameWithoutExt(fileName string) string {
+	return strings.TrimSuffix(filepath.Base(fileName), filepath.Ext(fileName))
+}
+
+func (self *CommandAgenda) RenderAgendaEntry(v common.Todo) string {
+	fname := FileNameWithoutExt(v.Filename)
+	if len(fname) > 14 {
+		fname = fname[:14]
 	}
+	fname += ":"
 	h := v.Date.Start.Hour()
 	m := v.Date.Start.Minute()
-	todo := ""
-	return fmt.Sprintf("[red]     %-15s %02d:%02d %-7s %s %-45s %s%s\n", fname, h, m, self.BuildAgendaBlocks(v), todo, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+	todo := "    "
+	if v.Status != "" {
+		todo = v.Status
+		if len(v.Status) > 4 {
+			todo = v.Status[:4]
+		}
+		todo = "[green]" + todo
+	}
+	return fmt.Sprintf("[red]     %-15s %02d:%02d %-8s %s [yellow]%-45s %s%s\n", fname, h, m, self.BuildAgendaBlocks(v), todo, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 }
-func (self *CommandAgenda) Enter(core *Core) {
-
+func (self *CommandAgenda) Enter(core *Core)         {}
+func (self *CommandAgenda) EnterProjects(core *Core) {}
+func (self *CommandAgenda) EnterTasks(core *Core) {
 	query := new(common.StringQuery)
 	query.Query = `!IsProject() && !IsArchived() && IsTodo() && Today()`
 	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
 	SendReceiveRpc(core, "Db.QueryTodosExp", &query, &self.Reply)
-}
-func (self *CommandAgenda) EnterProjects(core *Core) {}
-func (self *CommandAgenda) EnterTasks(core *Core) {
 	core.taskPane.text.Clear()
 	core.projectPane.list.Clear()
 	core.taskPane.text.SetDynamicColors(true)
@@ -81,7 +93,7 @@ func (self *CommandAgenda) EnterTasks(core *Core) {
 	for i := start; i < end; i += 1 {
 		for _, v := range self.Reply {
 			if v.Date.Start.Hour() == i {
-				txt += self.RenderAgendaEntry("file", v)
+				txt += self.RenderAgendaEntry(v)
 			}
 		}
 		txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)

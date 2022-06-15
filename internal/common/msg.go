@@ -23,6 +23,8 @@ type Todo struct {
 	Tags     []string
 	Hash     string
 	Date     org.OrgDate
+	Status   string
+	Filename string
 }
 
 type FullTodo struct {

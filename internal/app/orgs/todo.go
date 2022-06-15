@@ -81,9 +81,6 @@ func IsOn(p *org.Section, t time.Time) bool {
 			return true
 		}
 
-		if p.Headline.HasTimestamp() {
-			fmt.Printf("*** Have timestamp %v vs %v", t, p.Headline.Timestamp.Time)
-		}
 		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.OnDay(t) {
 			return true
 		}
@@ -377,7 +374,7 @@ func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (com
 		if v.Headline.Timestamp != nil {
 			date = *v.Headline.Timestamp.Time
 		}
-		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date}
+		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Status: v.Headline.Status, Filename: f.filename}
 		todos = append(todos, t)
 	}
 	for _, c := range v.Children {
