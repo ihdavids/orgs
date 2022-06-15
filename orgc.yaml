@@ -4,4 +4,5 @@ todo_views:
   untagged: "!IsProject() && IsTodo() && NoTags()"
   next:     "!IsProject() && IsTodo() && IsStatus('NEXT')"
   projects: "IsProject()"
+  romark: "!IsArchived() && !IsProject() && IsTodo() && (IsPartOfProject('.*ROMARK.*') || HasTags('RoMark'))"
   atest: "!IsProject() && IsTodo() && !IsArchived() && MatchHeadline('A.*')"

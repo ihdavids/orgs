@@ -11,7 +11,8 @@ import (
 )
 
 func LaunchEditor(filename string, line int) {
-	var eargs []string = Conf().EditorTemplate
+	eargs := make([]string, len(Conf().EditorTemplate))
+	copy(eargs, Conf().EditorTemplate)
 	for i, v := range eargs {
 		eargs[i] = strings.Replace(strings.Replace(v, "{filename}", filename, -1), "{linenum}", fmt.Sprintf("%d", line), -1)
 	}
@@ -80,8 +81,9 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 		})
 
 		item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
+
 			LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum)
-			//core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
+			core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", index)+" "+self.Reply[index].Headline, 5)
 		})
 	}
 	/*

@@ -124,6 +124,26 @@ func IsTodoStatus(n *org.Section) bool {
 	}
 	return false
 }
+func HeadingMatchesRe(p *org.Section, headingRe string) bool {
+	var title string
+	for _, n := range p.Headline.Title {
+		title += n.String()
+	}
+	if ok, err := regexp.MatchString(headingRe, title); err == nil && ok {
+		return true
+	}
+	return false
+}
+
+func IsPartOfProject(p *org.Section, projectRe string) bool {
+	if p != nil && p.Headline != nil && p.Parent != nil {
+		if !IsProject(p.Parent) {
+			return false
+		}
+		return HeadingMatchesRe(p.Parent, projectRe)
+	}
+	return false
+}
 
 func IsProjectByChildren(p *org.Section) bool {
 	if p != nil && p.Headline != nil {
@@ -241,17 +261,22 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			//p := args[0].(*org.Section)
 			return IsProject(p), nil
 		},
+		"IsPartOfProject": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			return IsPartOfProject(p, args[0].(string)), nil
+		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			ok := true
-			for _, tagi := range args[1:] {
+			for _, tagi := range args {
 				tag := tagi.(string)
 				if ok = ok && HasTag(tag, p, exp.Doc); !ok {
 					break
 				}
 			}
-			return ok, nil
+			return (ok && len(p.Headline.Tags) > 0), nil
 		},
 		"NoTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -284,17 +309,8 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		},
 		"MatchHeadline": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
-			//p := args[0].(*org.Section)
 			s := args[0].(string)
-			var title string
-			for _, n := range p.Headline.Title {
-				title += n.String()
-			}
-			if ok, err := regexp.MatchString(s, title); err == nil && ok {
-				return true, nil
-			} else {
-				return false, nil
-			}
+			return HeadingMatchesRe(p, s), nil
 		},
 		"OnDate": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
