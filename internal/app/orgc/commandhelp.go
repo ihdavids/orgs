@@ -31,7 +31,7 @@ func (self *CommandHelp) EnterTasks(core *Core) {
 		item := core.projectPane.list.AddItem(k, "", 0, nil)
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 			if index > 0 && index < len(GetCmdRegistry().Commands) {
-				core.statusBar.showForSeconds("HELP: "+mainText, 5)
+				core.statusBar.showForSeconds("HELP: "+mainText, 1)
 				//core.taskPane.list.Clear()
 				core.taskPane.text.Clear()
 				//core.taskPane.list.AddItem(mainText, "", 0, nil)

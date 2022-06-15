@@ -89,6 +89,7 @@ func (self *StatusBar) cleanupCommandPalette() {
 
 func (self *StatusBar) commandPalette() {
 	self.hideBasicPanels()
+
 	self.grid.AddItem(self.command.view, 0, 0, 1, 2, 0, 0, true)
 	self.command.core.app.SetFocus(self.command.view)
 	self.command.view.SetDoneFunc(func(key tcell.Key) {
@@ -96,13 +97,13 @@ func (self *StatusBar) commandPalette() {
 		case tcell.KeyEnter:
 			if cmd, e := GetCmdRegistry().FindCommand(self.command.cmdText); e == nil {
 				if self.curCmd != nil {
-					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 5)
+					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 1)
 					self.curCmd.ExitTasks(self.core)
 					self.curCmd.ExitProjects(self.core)
 					self.curCmd.Exit(self.core)
 				}
 				if cmd != nil {
-					self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 5)
+					self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 1)
 					self.curCmd = cmd
 					self.curCmd.Enter(self.core)
 					self.curCmd.EnterProjects(self.core)
@@ -110,7 +111,7 @@ func (self *StatusBar) commandPalette() {
 					self.curCmd.Execute(self.core)
 				}
 			} else {
-				self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 5)
+				self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 1)
 			}
 			self.cleanupCommandPalette()
 			//pane.addNewProject()

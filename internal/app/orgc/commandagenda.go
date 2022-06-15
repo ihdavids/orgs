@@ -63,12 +63,16 @@ func (self *CommandAgenda) RenderAgendaEntry(v common.Todo) string {
 	todo := "    "
 	if v.Status != "" {
 		todo = v.Status
+		color := "red"
+		if c, ok := Conf().AgendaStatusColors[todo]; ok {
+			color = c
+		}
 		if len(v.Status) > 4 {
 			todo = v.Status[:4]
 		}
-		todo = "[green]" + todo
+		todo = "[" + color + "]" + todo
 	}
-	return fmt.Sprintf("[red]     %-15s %02d:%02d %-8s %s [yellow]%-45s %s%s\n", fname, h, m, self.BuildAgendaBlocks(v), todo, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+	return fmt.Sprintf("[%s]     %-15s [white:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 }
 func (self *CommandAgenda) Enter(core *Core)         {}
 func (self *CommandAgenda) EnterProjects(core *Core) {}
@@ -91,12 +95,20 @@ func (self *CommandAgenda) EnterTasks(core *Core) {
 	start := 8
 	end := 20
 	for i := start; i < end; i += 1 {
+		displayTime := true
+		for _, v := range self.Reply {
+			if v.Date.Start.Hour() == i && v.Date.Start.Minute() == 0 {
+				displayTime = false
+			}
+		}
+		if displayTime {
+			txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)
+		}
 		for _, v := range self.Reply {
 			if v.Date.Start.Hour() == i {
 				txt += self.RenderAgendaEntry(v)
 			}
 		}
-		txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)
 	}
 	core.taskPane.text.SetText(txt)
 	/*

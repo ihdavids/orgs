@@ -52,7 +52,7 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 		item := core.projectPane.list.AddItem(v.Headline, strings.Join(v.Tags, ","), 0, nil)
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 			if index < len(self.Reply) {
-				core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
+				//core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
 				//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
 				SendReceiveRpc(core, "Db.QueryFullTodo", &self.Reply[index].Hash, &self.TaskReply)
 				//self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)

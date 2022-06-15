@@ -2,10 +2,10 @@ package orgc
 
 import (
 	"flag"
-	"strings"
 	"io/ioutil"
 	"net/rpc"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,15 +14,19 @@ type Config struct {
 	Url       string            `yaml:"url"`
 	TodoViews map[string]string `yaml:"todo_views"`
 	// Dispatch commands
-	FileList    bool
-	TodoList    bool
-	ProjectList bool
+	FileList            bool
+	TodoList            bool
+	ProjectList         bool
+	AgendaTextColor     string
+	AgendaFilenameColor string
+	AgendaStatusColors  map[string]string
+	AgendaBlockColors   []string
 }
 
 func (self *Config) AddCommands() {
 	NewCommandHelp()
 	NewCommandAgenda()
-	
+
 	for key, val := range self.TodoViews {
 		vals := strings.Split(val, "//")
 		if len(vals) > 1 {
@@ -50,6 +54,18 @@ func (self *Config) Dispatch(c *rpc.Client) {
 
 func (self *Config) Defaults() {
 	self.Url = "ws://localhost:8010/org"
+
+	self.AgendaTextColor = "yellow"
+	self.AgendaFilenameColor = "darkcyan"
+	self.AgendaStatusColors = make(map[string]string)
+	self.AgendaStatusColors["TODO"] = "pink"
+	self.AgendaStatusColors["DONE"] = "green"
+	self.AgendaStatusColors["PHONE"] = "magenta"
+	self.AgendaStatusColors["NEXT"] = "blue"
+	self.AgendaStatusColors["WAITING"] = "orange"
+	self.AgendaStatusColors["BLOCKED"] = "red"
+	self.AgendaStatusColors["CANCELLED"] = "grey"
+	self.AgendaBlockColors = []string{"red", "green", "blue", "darkcyan", "orange", "grey", "magenta", "white", "yellow"}
 }
 
 func (self *Config) Validate() {
