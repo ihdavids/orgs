@@ -386,7 +386,7 @@ func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (com
 		if v.Headline.Timestamp != nil {
 			date = *v.Headline.Timestamp.Time
 		}
-		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Status: v.Headline.Status, Filename: f.filename}
+		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Status: v.Headline.Status, Filename: f.filename, LineNum: v.Headline.Pos.Row}
 		todos = append(todos, t)
 	}
 	for _, c := range v.Children {

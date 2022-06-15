@@ -21,6 +21,7 @@ type Config struct {
 	AgendaFilenameColor string
 	AgendaStatusColors  map[string]string
 	AgendaBlockColors   []string
+	EditorTemplate      []string
 }
 
 func (self *Config) AddCommands() {
@@ -66,6 +67,7 @@ func (self *Config) Defaults() {
 	self.AgendaStatusColors["BLOCKED"] = "red"
 	self.AgendaStatusColors["CANCELLED"] = "grey"
 	self.AgendaBlockColors = []string{"red", "green", "blue", "darkcyan", "orange", "grey", "magenta", "white", "yellow"}
+	self.EditorTemplate = []string{"code", "-g", "{filename}:{linenum}"}
 }
 
 func (self *Config) Validate() {

@@ -25,6 +25,7 @@ type Todo struct {
 	Date     org.OrgDate
 	Status   string
 	Filename string
+	LineNum  int
 }
 
 type FullTodo struct {

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	//"github.com/fsnotify/fsnotify"
@@ -47,6 +48,14 @@ func (self *OrgDb) FindByHash(hash string) *org.Section {
 	return nil
 }
 
+func IsOrgFile(filename string) bool {
+	return filepath.Ext(filename) == ".org"
+}
+
+func IsInGitDir(filename string) bool {
+	return strings.Contains(filename, ".git")
+}
+
 func (self *OrgDb) ListFilesInDir(dirname string) []string {
 	var files []string
 	err := filepath.Walk(dirname,
@@ -56,7 +65,7 @@ func (self *OrgDb) ListFilesInDir(dirname string) []string {
 			}
 			// We only add files, and we should only add org files as well
 			// NOTE: This will need to be configurable eventually.
-			if !info.IsDir() && filepath.Ext(path) == ".org" {
+			if !info.IsDir() && IsOrgFile(path) {
 				files = append(files, path)
 			}
 			return nil
@@ -68,6 +77,12 @@ func (self *OrgDb) ListFilesInDir(dirname string) []string {
 }
 
 func (self *OrgDb) LoadFile(filename string) {
+	// We expressely forbid trying to load anything that is not an org file.
+	// That may bite us in the but later. We also DO NOT want to parse things
+	// in our ignore directory, the notification system is indescriminate at the moment.
+	if !IsOrgFile(filename) || IsInGitDir(filename) {
+		return
+	}
 	if r, err := os.Open(filename); err == nil {
 		d := org.New().Parse(r, filename)
 		ofile := new(OrgFile)

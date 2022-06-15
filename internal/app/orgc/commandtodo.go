@@ -1,12 +1,24 @@
 package orgc
 
 import (
+	"fmt"
+	"os/exec"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rivo/tview"
 )
+
+func LaunchEditor(filename string, line int) {
+	var eargs []string = Conf().EditorTemplate
+	for i, v := range eargs {
+		eargs[i] = strings.Replace(strings.Replace(v, "{filename}", filename, -1), "{linenum}", fmt.Sprintf("%d", line), -1)
+	}
+	cmnd := exec.Command(eargs[0], eargs[1:]...)
+	//cmnd.Run() // and wait
+	cmnd.Start()
+}
 
 type CommandTodo struct {
 	Query       *common.StringQuery
@@ -65,6 +77,11 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 				core.taskPane.text.SetTitle(self.TaskReply.Headline)
 				core.taskPane.text.SetText(self.TaskReply.Content)
 			}
+		})
+
+		item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
+			LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum)
+			//core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
 		})
 	}
 	/*
