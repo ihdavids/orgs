@@ -54,7 +54,10 @@ rules:
     - special: "^(---+|===+|___+|\\*\\*\\*+)\\s*$"
 
       # headlines
-    - special:  "^#{1,6}.*"
+    - special:  "^\\*{1,6}.*"
+
+      # tags
+    - special:  "[:][#@a-zA-Z0-9]+[:]"
 
       # lists
     - identifier:   "^[[:space:]]*[\\*+-] |^[[:space:]]*[0-9]+\\. "
@@ -63,19 +66,29 @@ rules:
     - preproc:   "(\\(([CcRr]|[Tt][Mm])\\)|\\.{3}|(^|[[:space:]])\\-\\-($|[[:space:]]))"
 
       # links
-    - constant: "\\[[^]]+\\]"
-    - constant: "\\[([^][]|\\[[^]]*\\])*\\]\\([^)]+\\)"
+    - constant: "\\[\\[[^]]+\\]\\[[^]]+\\]\\]"
 
       # images
     - underlined: "!\\[[^][]*\\](\\([^)]+\\)|\\[[^]]+\\])"
 
       # urls
-    - underlined: "https?://[^ )>]+"
+    - underlined: "https?://[^ )>]]+"
 
 `
 
+//    - constant: "\\[([^][]|\\[[^]]*\\])*\\]\\([^)]+\\)"
+
 func FormatText(text string) string {
-	d, _ := highlight.ParseDef([]byte(syntaxfile))
+	if text == "" {
+		return ""
+	}
+
+	d, err := highlight.ParseDef([]byte(syntaxfile))
+
+	if err != nil {
+		return "[red]" + err.Error()
+	}
+
 	h := highlight.NewHighlighter(d)
 	var out string = ""
 
@@ -91,27 +104,29 @@ func FormatText(text string) string {
 				if group != curGroup {
 					// There are more possible groups available than just these ones
 					if group == highlight.Groups["statement"] {
-						c += "[green]"
+						c = "[green]" + c
 					} else if group == highlight.Groups["identifier"] {
-						c += "[blue]"
+						c = "[blue]" + c
 					} else if group == highlight.Groups["preproc"] {
-						c += "[red]"
+						c = "[red]" + c
 					} else if group == highlight.Groups["special"] {
-						c += "[red]"
+						c = "[red]" + c
 					} else if group == highlight.Groups["constant.string"] {
-						c += "[darkblue]"
+						c = "[darkblue]" + c
 					} else if group == highlight.Groups["constant"] {
-						c += "[darkblue]"
+						c = "[darkblue]" + c
 					} else if group == highlight.Groups["constant.specialChar"] {
-						c += "[magenta]"
+						c = "[magenta]" + c
 					} else if group == highlight.Groups["type"] {
-						c += "[yellow]"
+						c = "[yellow]" + c
 					} else if group == highlight.Groups["constant.number"] {
-						c += "[blue]"
+						c = "[blue]" + c
 					} else if group == highlight.Groups["comment"] {
-						c += "[grey]"
+						c = "[grey]" + c
+					} else if group == highlight.Groups["underline"] {
+						c = "[grey]" + c
 					} else {
-						c += "[none]"
+						c = "[none]" + c
 					}
 
 				}
@@ -124,7 +139,7 @@ func FormatText(text string) string {
 				out += "[none]"
 			}
 		}
-		out += "\n"
+		out += "[none]\n"
 	}
 	return out
 }
