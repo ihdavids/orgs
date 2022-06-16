@@ -82,7 +82,7 @@ func (self *CommandAgenda) RenderAgendaEntry(v common.Todo, index int) string {
 	if self.Selected == index {
 		return fmt.Sprintf("[%s]     %-15s [white:yellow]%02d:%02d[:none] %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 	} else {
-		return fmt.Sprintf("[%s]     %-15s [white:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+		return fmt.Sprintf("[%s]     %-15s [green:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 	}
 }
 
@@ -145,6 +145,7 @@ func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 	txt := "     [blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
 	start := 8
 	end := 20
+	index := 0
 	for i := start; i < end; i += 1 {
 		displayTime := true
 		for _, v := range self.Reply {
@@ -155,7 +156,6 @@ func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 		if displayTime {
 			txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)
 		}
-		index := 0
 		for _, v := range self.Reply {
 			if v.Date.Start.Hour() == i {
 				index += 1
