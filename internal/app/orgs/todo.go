@@ -2,6 +2,8 @@ package orgs
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -423,7 +425,7 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 }
 
 func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (common.Todos, error) {
-	GetDb().RegisterSection(v.Hash, v)
+	GetDb().RegisterSection(v.Hash, v, f)
 	res := EvalString(exp, v, f.doc)
 	if res {
 		var title string
@@ -501,4 +503,23 @@ func QueryProjects() common.Todos {
 		}
 	}
 	return todos
+}
+
+func WriteOutOrgFile(f *OrgFile) bool {
+	// Need the doc to serialize and write it out.
+	w := org.NewOrgWriter()
+	org.WriteNodes(w, f.doc.Nodes...)
+	err := ioutil.WriteFile(f.filename, []byte(w.String()), os.ModePerm)
+	return err == nil
+}
+
+func ChangeStatus(query *common.TodoStatusChange) (common.Result, error) {
+	didWrite := true
+	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+		// Change the status
+		s.Headline.Status = query.Status
+		didWrite = WriteOutOrgFile(GetDb().ByHashToFile[(string)(query.Hash)])
+
+	}
+	return common.Result{didWrite}, nil
 }

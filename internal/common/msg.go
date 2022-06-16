@@ -37,6 +37,10 @@ type FullTodo struct {
 }
 
 type TodoHash string
+type TodoStatusChange struct {
+	Hash   string
+	Status string
+}
 
 type Todos []Todo
 
@@ -132,4 +136,8 @@ type Query struct {
 
 type StringQuery struct {
 	Query string `yaml:"query"`
+}
+
+type Result struct {
+	Ok bool `yaml: "status"`
 }

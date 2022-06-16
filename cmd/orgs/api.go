@@ -41,3 +41,9 @@ func (s *Db) QueryFullTodo(args *common.TodoHash, reply *common.FullTodo) error 
 	*reply, err = orgs.QueryFullTodo(args)
 	return err
 }
+
+func (s *Db) ChangeStatus(args *common.TodoStatusChange, reply *common.Result) error {
+	var err error = nil
+	*reply, err = orgs.ChangeStatus(args)
+	return err
+}

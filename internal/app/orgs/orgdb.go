@@ -19,10 +19,11 @@ type OrgFile struct {
 }
 
 type OrgDb struct {
-	ByFile      map[string]*OrgFile
-	ByHash      map[string]*org.Section
-	Filenames   []string
-	ReloadIndex uint64
+	ByFile       map[string]*OrgFile
+	ByHash       map[string]*org.Section
+	ByHashToFile map[string]*OrgFile
+	Filenames    []string
+	ReloadIndex  uint64
 
 	dblock      sync.RWMutex
 	watcher     *rfsnotify.RWatcher
@@ -32,13 +33,15 @@ type OrgDb struct {
 func NewOrgDb() *OrgDb {
 	var db *OrgDb = new(OrgDb)
 	db.ByFile = make(map[string]*OrgFile)
+	db.ByHashToFile = make(map[string]*OrgFile)
 	db.ByHash = make(map[string]*org.Section)
 	db.ReloadIndex = 0
 	return db
 }
 
-func (self *OrgDb) RegisterSection(hash string, v *org.Section) {
+func (self *OrgDb) RegisterSection(hash string, v *org.Section, d *OrgFile) {
 	self.ByHash[hash] = v
+	self.ByHashToFile[hash] = d
 }
 
 func (self *OrgDb) FindByHash(hash string) *org.Section {

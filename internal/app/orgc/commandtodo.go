@@ -192,6 +192,17 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 			LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum+1)
 			core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", self.Reply[index].LineNum)+" "+self.Reply[index].Headline, 5)
 		})
+		item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
+
+			send := common.TodoStatusChange{Hash: self.Reply[index].Hash, Status: "DONE"}
+			var reply common.Result = common.Result{}
+			SendReceiveRpc(core, "Db.ChangeStatus", &send, &reply)
+			res := "Ok"
+			if !reply.Ok {
+				res = "FAILED"
+			}
+			core.statusBar.showForSeconds("STATE: "+self.Reply[index].Headline+fmt.Sprint("%s", res), 5)
+		})
 	}
 	/*
 		if err != nil {
