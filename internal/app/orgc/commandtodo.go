@@ -2,24 +2,12 @@ package orgc
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rivo/tview"
 )
-
-func LaunchEditor(filename string, line int) {
-	eargs := make([]string, len(Conf().EditorTemplate))
-	copy(eargs, Conf().EditorTemplate)
-	for i, v := range eargs {
-		eargs[i] = strings.Replace(strings.Replace(v, "{filename}", filename, -1), "{linenum}", fmt.Sprintf("%d", line), -1)
-	}
-	cmnd := exec.Command(eargs[0], eargs[1:]...)
-	//cmnd.Run() // and wait
-	cmnd.Start()
-}
 
 type CommandTodo struct {
 	Query       *common.StringQuery

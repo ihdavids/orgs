@@ -1,7 +1,10 @@
 package orgc
 
 import (
+	"fmt"
+	"os/exec"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -9,6 +12,17 @@ import (
 )
 
 var blankCell = tview.NewTextView()
+
+func LaunchEditor(filename string, line int) {
+	eargs := make([]string, len(Conf().EditorTemplate))
+	copy(eargs, Conf().EditorTemplate)
+	for i, v := range eargs {
+		eargs[i] = strings.Replace(strings.Replace(v, "{filename}", filename, -1), "{linenum}", fmt.Sprintf("%d", line), -1)
+	}
+	cmnd := exec.Command(eargs[0], eargs[1:]...)
+	//cmnd.Run() // and wait
+	cmnd.Start()
+}
 
 func makeHorizontalLine(lineChar rune, color tcell.Color) *tview.TextView {
 	hr := tview.NewTextView()

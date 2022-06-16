@@ -20,11 +20,13 @@ type CommandAgenda struct {
 	Error     error
 	CurDate   time.Time
 	Core      *Core
+	Selected  int
 }
 
 func NewCommandAgenda() {
 	var todo *CommandAgenda = new(CommandAgenda)
 	todo.CurDate = time.Now()
+	todo.Selected = 0
 	GetCmdRegistry().RegisterCommand("agenda", todo)
 }
 
@@ -57,7 +59,7 @@ func FileNameWithoutExt(fileName string) string {
 	return strings.TrimSuffix(filepath.Base(fileName), filepath.Ext(fileName))
 }
 
-func (self *CommandAgenda) RenderAgendaEntry(v common.Todo) string {
+func (self *CommandAgenda) RenderAgendaEntry(v common.Todo, index int) string {
 	fname := FileNameWithoutExt(v.Filename)
 	if len(fname) > 14 {
 		fname = fname[:14]
@@ -77,22 +79,47 @@ func (self *CommandAgenda) RenderAgendaEntry(v common.Todo) string {
 		}
 		todo = "[" + color + "]" + todo
 	}
-	return fmt.Sprintf("[%s]     %-15s [white:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+	if self.Selected == index {
+		return fmt.Sprintf("[%s]     %-15s [white:yellow]%02d:%02d[:none] %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+	} else {
+		return fmt.Sprintf("[%s]     %-15s [white:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+	}
 }
 
 func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey {
 	switch unicode.ToLower(event.Rune()) {
-	case ',':
+	case '.':
 		self.CurDate = self.CurDate.AddDate(0, 0, 1)
 		self.ShowAgendaPane(self.Core)
 		return nil
-	case '.':
+	case ',':
 		self.CurDate = self.CurDate.AddDate(0, 0, -1)
+		self.ShowAgendaPane(self.Core)
+		return nil
+	case 'j':
+		self.Selected += 1
+		if self.Selected >= len(self.Reply) {
+			self.Selected = len(self.Reply)
+		}
+		self.ShowAgendaPane(self.Core)
+		return nil
+	case 'k':
+		self.Selected -= 1
+		if self.Selected <= 0 {
+			self.Selected = 0
+		}
 		self.ShowAgendaPane(self.Core)
 		return nil
 	case 'n':
 		self.CurDate = time.Now()
 		self.ShowAgendaPane(self.Core)
+		return nil
+	case '\n':
+		self.ShowAgendaPane(self.Core)
+
+		if self.Selected > 0 {
+			LaunchEditor(self.Reply[self.Selected-1].Filename, self.Reply[self.Selected-1].LineNum+1)
+		}
 		return nil
 	}
 	return event
@@ -127,9 +154,11 @@ func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 		if displayTime {
 			txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)
 		}
+		index := 0
 		for _, v := range self.Reply {
 			if v.Date.Start.Hour() == i {
-				txt += self.RenderAgendaEntry(v)
+				index += 1
+				txt += self.RenderAgendaEntry(v, index)
 			}
 		}
 	}
