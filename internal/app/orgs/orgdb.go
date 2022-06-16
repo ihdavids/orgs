@@ -90,7 +90,19 @@ func (self *OrgDb) LoadFile(filename string) {
 		ofile.doc = d
 		self.dblock.Lock()
 		self.ByFile[filename] = ofile
-		self.Filenames = append(self.Filenames, filename)
+		// Unique append to our filenames list.
+		// NOTE: Reload, it's important to try to maintain the ordering of this list
+		//       as it can impact the ordering of todos on requery
+		have := false
+		for _, f := range self.Filenames {
+			if f == filename {
+				have = true
+				break
+			}
+		}
+		if !have {
+			self.Filenames = append(self.Filenames, filename)
+		}
 		// We increment this with each reload to tell if the DB is dirty or not.
 		self.ReloadIndex += 1
 		self.dblock.Unlock()
