@@ -285,33 +285,68 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		},
 		"IsStatus": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
-			//p := args[0].(*org.Section)
 			s := args[0].(string)
 			return p.Headline.Status == s, nil
 		},
-
+		// Checks if this headline status is present and in the active state
 		"IsTodo": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsTodoStatus(p), nil
 		},
+		// Syntatical sugar for the following:
+		// !IsArchived() && IsTodo() && !IsProject()
+		"IsTask": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return (!IsArchived(p, exp.Doc) && !IsProject(p) && IsTodoStatus(p)), nil
+		},
+		// Check if a headline is in the archived state or not
 		"IsArchived": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsArchived(p, exp.Doc), nil
 		},
-
+		// Check if the priority matches a specific value.
 		"IsPriority": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			s := args[0].(string)
 			return p.Headline.Priority == s, nil
 		},
+		// Returns true if the headline has the specific property
+		"HasProperty": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			s := args[0].(string)
+			if _, ok := p.Headline.Properties.Get(s); ok {
+				return true, nil
+			}
+			return false, nil
+		},
+		// MatchProperty(NAME, REGEX)
+		// returns true if the property value matches the implied regex
+		"MatchProperty": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			name := args[0].(string)
+			test := args[1].(string)
+			if val, ok := p.Headline.Properties.Get(name); ok {
+				if ok, err := regexp.MatchString(test, val); err == nil && ok {
+					return true, nil
+				}
+			}
+			return false, nil
+		},
+		// Run an RE against each headline and check for a match
 		"MatchHeadline": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			s := args[0].(string)
 			return HeadingMatchesRe(p, s), nil
 		},
+
+		// -----------------------------------------------
+		// DATE TIME QUERIES
+		// -----------------------------------------------
+
+		// Check if a todo is targetting a specific date
 		"OnDate": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			tm := args[0].(string)

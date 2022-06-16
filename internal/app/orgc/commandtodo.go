@@ -82,8 +82,9 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 
 		item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
 
-			LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum)
-			core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", index)+" "+self.Reply[index].Headline, 5)
+			// 0 offset or 1 offset needs to be handled
+			LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum+1)
+			core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", self.Reply[index].LineNum)+" "+self.Reply[index].Headline, 5)
 		})
 	}
 	/*
