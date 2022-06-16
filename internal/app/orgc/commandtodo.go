@@ -7,6 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rivo/tview"
+	"github.com/zyedidia/highlight"
 )
 
 type CommandTodo struct {
@@ -25,6 +26,107 @@ func NewCommandTodo(name string, view *string, desc *string) {
 	todo.Query.Query = *view
 	todo.Description = *desc
 	GetCmdRegistry().RegisterCommand(name, todo)
+}
+
+var syntaxfile string = `
+filetype: org
+
+detect:
+    filename: "\\.(org)$"
+
+rules:
+    # Tables (Github extension)
+    - type: ".*[ :]\\|[ :].*"
+
+      # quotes
+    - statement:  "^>.*"
+
+      # Emphasis
+    - type: "(^|[[:space:]])(_[^ ][^_]*_|\\*[^ ][^*]*\\*)"
+
+      # Strong emphasis
+    - type: "(^|[[:space:]])(__[^ ][^_]*__|\\*\\*[^ ][^*]*\\*\\*)"
+
+      # strike-through
+    - type: "(^|[[:space:]])~~[^ ][^~]*~~"
+
+      # horizontal rules
+    - special: "^(---+|===+|___+|\\*\\*\\*+)\\s*$"
+
+      # headlines
+    - special:  "^#{1,6}.*"
+
+      # lists
+    - identifier:   "^[[:space:]]*[\\*+-] |^[[:space:]]*[0-9]+\\. "
+
+      # misc
+    - preproc:   "(\\(([CcRr]|[Tt][Mm])\\)|\\.{3}|(^|[[:space:]])\\-\\-($|[[:space:]]))"
+
+      # links
+    - constant: "\\[[^]]+\\]"
+    - constant: "\\[([^][]|\\[[^]]*\\])*\\]\\([^)]+\\)"
+
+      # images
+    - underlined: "!\\[[^][]*\\](\\([^)]+\\)|\\[[^]]+\\])"
+
+      # urls
+    - underlined: "https?://[^ )>]+"
+
+`
+
+func FormatText(text string) string {
+	d, _ := highlight.ParseDef([]byte(syntaxfile))
+	h := highlight.NewHighlighter(d)
+	var out string = ""
+
+	matches := h.HighlightString(string(text))
+
+	lines := strings.Split(string(text), "\n")
+	var curGroup highlight.Group
+	for lineN, l := range lines {
+		colN := 0
+		for _, ch := range l {
+			var c string = string(ch)
+			if group, ok := matches[lineN][colN]; ok {
+				if group != curGroup {
+					// There are more possible groups available than just these ones
+					if group == highlight.Groups["statement"] {
+						c += "[green]"
+					} else if group == highlight.Groups["identifier"] {
+						c += "[blue]"
+					} else if group == highlight.Groups["preproc"] {
+						c += "[red]"
+					} else if group == highlight.Groups["special"] {
+						c += "[red]"
+					} else if group == highlight.Groups["constant.string"] {
+						c += "[darkblue]"
+					} else if group == highlight.Groups["constant"] {
+						c += "[darkblue]"
+					} else if group == highlight.Groups["constant.specialChar"] {
+						c += "[magenta]"
+					} else if group == highlight.Groups["type"] {
+						c += "[yellow]"
+					} else if group == highlight.Groups["constant.number"] {
+						c += "[blue]"
+					} else if group == highlight.Groups["comment"] {
+						c += "[grey]"
+					} else {
+						c += "[none]"
+					}
+
+				}
+			}
+			out += string(c)
+			colN++
+		}
+		if group, ok := matches[lineN][colN]; ok {
+			if group != curGroup && (group == highlight.Groups["default"] || group == highlight.Groups[""]) {
+				out += "[none]"
+			}
+		}
+		out += "\n"
+	}
+	return out
 }
 
 func (self *CommandTodo) GetName() string {
@@ -61,10 +163,11 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 				//core.taskPane.list.Clear()
 				core.taskPane.text.Clear()
 				core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
+				core.taskPane.text.SetDynamicColors(true)
 				core.taskPane.text.SetBorder(true)
 				//core.taskPane.list.AddItem(self.TaskReply.Headline, "", 0, nil)
 				core.taskPane.text.SetTitle(self.TaskReply.Headline)
-				core.taskPane.text.SetText(self.TaskReply.Content)
+				core.taskPane.text.SetText(FormatText(self.TaskReply.Content))
 			}
 		})
 
