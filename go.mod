@@ -15,6 +15,7 @@ require (
 
 require (
 	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f // indirect
+	github.com/zyedidia/highlight v0.0.0-20200217010119-291680feaca1 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 )
 
