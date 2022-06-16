@@ -114,7 +114,8 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 		self.CurDate = time.Now()
 		self.ShowAgendaPane(self.Core)
 		return nil
-	case '\n':
+	}
+	if event.Key() == tcell.KeyEnter {
 		self.ShowAgendaPane(self.Core)
 
 		if self.Selected > 0 {
