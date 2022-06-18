@@ -8,7 +8,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/gorilla/rpc v1.2.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/ihdavids/go-org v1.6.3-0.20220617045034-20ec7acb7c0c
+	github.com/ihdavids/go-org v1.6.3-0.20220618064414-3cc8fefc77a4
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
 	gopkg.in/yaml.v2 v2.4.0
 )
