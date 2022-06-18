@@ -8,13 +8,14 @@ require (
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/gorilla/rpc v1.2.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/ihdavids/go-org v1.6.3-0.20220605014523-33f8ffd7e5b3
+	github.com/ihdavids/go-org v1.6.3-0.20220617045034-20ec7acb7c0c
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f // indirect
+	github.com/niklasfasching/go-org v1.6.5 // indirect
 	github.com/zyedidia/highlight v0.0.0-20200217010119-291680feaca1 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 )

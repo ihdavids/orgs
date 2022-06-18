@@ -508,7 +508,8 @@ func QueryProjects() common.Todos {
 func WriteOutOrgFile(f *OrgFile) bool {
 	// Need the doc to serialize and write it out.
 	w := org.NewOrgWriter()
-	org.WriteNodes(w, f.doc.Nodes...)
+	//w.Indent = "  "
+	f.doc.Write(w)
 	err := ioutil.WriteFile(f.filename, []byte(w.String()), os.ModePerm)
 	return err == nil
 }
