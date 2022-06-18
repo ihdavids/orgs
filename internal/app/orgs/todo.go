@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -514,13 +515,72 @@ func WriteOutOrgFile(f *OrgFile) bool {
 	return err == nil
 }
 
+func ToStructPtr(obj interface{}) interface{} {
+
+	fmt.Println("obj is a", reflect.TypeOf(obj).Name())
+
+	// Create a new instance of the underlying type
+	vp := reflect.New(reflect.TypeOf(obj))
+
+	// Should be a *Cat and Cat respectively
+	fmt.Println("vp is", vp.Type(), " to a ", vp.Elem().Type())
+
+	vp.Elem().Set(reflect.ValueOf(obj))
+
+	// NOTE: `vp.Elem().Set(reflect.ValueOf(&obj).Elem())` does not work
+
+	// Return a `Cat` pointer to obj -- i.e. &obj.(*Cat)
+	return vp.Interface()
+}
+
+func SetStatusChildren(n *org.Headline, s *org.Section, status string) bool {
+	for i, _ := range n.Children {
+		switch nn := n.Children[i].(type) {
+		case org.Headline:
+			if nn.Index == s.Headline.Index {
+				fmt.Printf("SETTING OUR STATUS TO: %s\n", status)
+				ToStructPtr(n.Children[i]).(*org.Headline).Status = status
+				//nn.Status = status
+				return true
+			}
+			if SetStatusChildren(&nn, s, status) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// We have to set the status on the node in the chain (the core struct)
+func SetStatus(f *OrgFile, s *org.Section, status string) bool {
+	for i, _ := range f.doc.Nodes {
+		switch n := f.doc.Nodes[i].(type) {
+		case org.Headline:
+			if n.Index == s.Headline.Index {
+				fmt.Printf("SETTING OUR STATUS TO: %s\n", status)
+				ToStructPtr(f.doc.Nodes[i]).(*org.Headline).Status = status
+				//n.Status = status
+				return true
+			}
+			if SetStatusChildren(&n, s, status) {
+				return true
+			}
+		}
+	}
+	fmt.Printf("DID NOT FIND HEADLINE: %s\n", status)
+	return false
+}
+
 func ChangeStatus(query *common.TodoStatusChange) (common.Result, error) {
 	didWrite := true
 	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
 		// Change the status
-		s.Headline.Status = query.Status
-		didWrite = WriteOutOrgFile(GetDb().ByHashToFile[(string)(query.Hash)])
-
+		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		if set := SetStatus(f, s, query.Status); set {
+			fmt.Printf("WRITING OUR STATUS\n")
+			didWrite = WriteOutOrgFile(f)
+			fmt.Printf("DID SET AND WRITE OUR STATUS\n")
+		}
 	}
 	return common.Result{didWrite}, nil
 }
