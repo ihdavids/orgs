@@ -539,8 +539,9 @@ func SetStatusChildren(n *org.Headline, s *org.Section, status string) bool {
 		case org.Headline:
 			if nn.Index == s.Headline.Index {
 				fmt.Printf("SETTING OUR STATUS TO: %s\n", status)
-				ToStructPtr(n.Children[i]).(*org.Headline).Status = status
-				//nn.Status = status
+				//ToStructPtr(n.Children[i]).(*org.Headline).Status = status
+				nn.Status = status
+				n.Children[i] = nn
 				return true
 			}
 			if SetStatusChildren(&nn, s, status) {
@@ -558,8 +559,9 @@ func SetStatus(f *OrgFile, s *org.Section, status string) bool {
 		case org.Headline:
 			if n.Index == s.Headline.Index {
 				fmt.Printf("SETTING OUR STATUS TO: %s\n", status)
-				ToStructPtr(f.doc.Nodes[i]).(*org.Headline).Status = status
-				//n.Status = status
+				//ToStructPtr(f.doc.Nodes[i]).(*org.Headline).Status = status
+				n.Status = status
+				f.doc.Nodes[i] = n
 				return true
 			}
 			if SetStatusChildren(&n, s, status) {
