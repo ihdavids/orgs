@@ -193,7 +193,7 @@ func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 		})
 		item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
 
-			send := common.TodoStatusChange{Hash: self.Reply[index].Hash, Status: "DONE"}
+			send := common.TodoItemChange{Hash: self.Reply[index].Hash, Value: "DONE"}
 			var reply common.Result = common.Result{}
 			SendReceiveRpc(core, "Db.ChangeStatus", &send, &reply)
 			res := "Ok"

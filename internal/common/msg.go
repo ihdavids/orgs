@@ -37,9 +37,9 @@ type FullTodo struct {
 }
 
 type TodoHash string
-type TodoStatusChange struct {
-	Hash   string
-	Status string
+type TodoItemChange struct {
+	Hash  string
+	Value string
 }
 
 type Todos []Todo

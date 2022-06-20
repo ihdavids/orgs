@@ -12,6 +12,7 @@ import (
 	"github.com/Knetic/govaluate"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/prometheus/common/log"
 )
 
 func HasTag(name string, p *org.Section, d *org.Document) bool {
@@ -533,18 +534,15 @@ func ToStructPtr(obj interface{}) interface{} {
 	return vp.Interface()
 }
 
-func SetStatusChildren(n *org.Headline, s *org.Section, status string) bool {
+func SetThingChildren(n *org.Headline, s *org.Section, doit func(head *org.Headline) org.Headline) bool {
 	for i, _ := range n.Children {
 		switch nn := n.Children[i].(type) {
 		case org.Headline:
 			if nn.Index == s.Headline.Index {
-				fmt.Printf("SETTING OUR STATUS TO: %s\n", status)
-				//ToStructPtr(n.Children[i]).(*org.Headline).Status = status
-				nn.Status = status
-				n.Children[i] = nn
+				n.Children[i] = doit(&nn)
 				return true
 			}
-			if SetStatusChildren(&nn, s, status) {
+			if SetThingChildren(&nn, s, doit) {
 				return true
 			}
 		}
@@ -553,35 +551,77 @@ func SetStatusChildren(n *org.Headline, s *org.Section, status string) bool {
 }
 
 // We have to set the status on the node in the chain (the core struct)
-func SetStatus(f *OrgFile, s *org.Section, status string) bool {
+func SetThing(f *OrgFile, s *org.Section, doit func(head *org.Headline) org.Headline) bool {
 	for i, _ := range f.doc.Nodes {
 		switch n := f.doc.Nodes[i].(type) {
 		case org.Headline:
 			if n.Index == s.Headline.Index {
-				fmt.Printf("SETTING OUR STATUS TO: %s\n", status)
-				//ToStructPtr(f.doc.Nodes[i]).(*org.Headline).Status = status
-				n.Status = status
-				f.doc.Nodes[i] = n
+				f.doc.Nodes[i] = doit(&n)
 				return true
 			}
-			if SetStatusChildren(&n, s, status) {
+			if SetThingChildren(&n, s, doit) {
 				return true
 			}
 		}
 	}
-	fmt.Printf("DID NOT FIND HEADLINE: %s\n", status)
+	log.Errorf("Did not find headline in update\n")
 	return false
 }
 
-func ChangeStatus(query *common.TodoStatusChange) (common.Result, error) {
+func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	didWrite := true
 	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
 		// Change the status
 		f := GetDb().ByHashToFile[(string)(query.Hash)]
-		if set := SetStatus(f, s, query.Status); set {
-			fmt.Printf("WRITING OUR STATUS\n")
+		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
+			n.Status = query.Value
+			return *n
+		}); set {
 			didWrite = WriteOutOrgFile(f)
-			fmt.Printf("DID SET AND WRITE OUR STATUS\n")
+		}
+	}
+	return common.Result{didWrite}, nil
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
+}
+
+func findStr(s []string, str string) int {
+	for i, v := range s {
+		if v == str {
+			return i
+		}
+	}
+	return -1
+}
+
+func remove(slice []string, s string) []string {
+	if i := findStr(slice, s); i >= 0 {
+		return append(slice[:i], slice[i+1:]...)
+	}
+	return slice
+}
+
+func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
+	didWrite := true
+	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+		// Change a tag
+		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
+			if contains(n.Tags, query.Value) {
+				n.Tags = remove(n.Tags, query.Value)
+			} else {
+				n.Tags = append(n.Tags, query.Value)
+			}
+			return *n
+		}); set {
+			didWrite = WriteOutOrgFile(f)
 		}
 	}
 	return common.Result{didWrite}, nil

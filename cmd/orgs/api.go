@@ -42,8 +42,15 @@ func (s *Db) QueryFullTodo(args *common.TodoHash, reply *common.FullTodo) error 
 	return err
 }
 
-func (s *Db) ChangeStatus(args *common.TodoStatusChange, reply *common.Result) error {
+// Change the status TODO,DONE etc in a todo head by hash
+func (s *Db) ChangeStatus(args *common.TodoItemChange, reply *common.Result) error {
 	var err error = nil
 	*reply, err = orgs.ChangeStatus(args)
+	return err
+}
+
+func (s *Db) ToggleTags(args *common.TodoItemChange, reply *common.Result) error {
+	var err error = nil
+	*reply, err = orgs.ToggleTag(args)
 	return err
 }
