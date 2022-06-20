@@ -3,8 +3,8 @@ package orgs
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -12,7 +12,6 @@ import (
 	"github.com/Knetic/govaluate"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
-	"github.com/prometheus/common/log"
 )
 
 func HasTag(name string, p *org.Section, d *org.Document) bool {
@@ -197,54 +196,6 @@ func AllStringsInSlice(alist []string, list []string) bool {
 		if !StringInSlice(a, list) {
 			return false
 		}
-	}
-	return true
-}
-
-func Eval(self *common.Query, v *org.Section) bool {
-	switch self.NodeType {
-	case common.And:
-		ok := true
-		for _, x := range self.Children {
-			ok = ok && Eval(&x, v)
-		}
-		return ok
-	case common.Or:
-		ok := false
-		for _, x := range self.Children {
-			ok = Eval(&x, v)
-			if ok {
-				return true
-			}
-		}
-		return false
-	case common.Not:
-		if len(self.Children) > 0 {
-			return !(Eval(&self.Children[0], v))
-		}
-		return true
-	case common.Tag:
-		return self.Value.String != "" && StringInSlice(self.Value.String, v.Headline.Tags)
-	case common.Status:
-		return self.Value.String != "" && self.Value.String == v.Headline.Status
-	case common.Priority:
-		return self.Value.String != "" && self.Value.String == v.Headline.Priority
-
-	case common.HeadlineRe:
-		if self.Value.String != "" {
-			var title string
-			for _, n := range v.Headline.Title {
-				title += n.String()
-			}
-			if ok, err := regexp.MatchString(self.Value.String, title); err == nil && ok {
-				return true
-			} else {
-				return false
-			}
-		}
-		return true
-	case common.IsProject:
-		return IsProject(v) == self.Value.Bool
 	}
 	return true
 }
@@ -467,27 +418,6 @@ func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {
 	return todos, nil
 }
 
-// TODO OLD API DEPRECATED
-func QueryTodos(query *common.Query) common.Todos {
-	var todos common.Todos
-	files := GetDb().GetFiles()
-	for _, file := range files {
-		f := GetDb().GetFile(file)
-		for _, v := range f.doc.Outline.Children {
-			res := Eval(query, v)
-			if res {
-				var title string
-				for _, n := range v.Headline.Title {
-					title += n.String()
-				}
-				var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags}
-				todos = append(todos, t)
-			}
-		}
-	}
-	return todos
-}
-
 func QueryProjects() common.Todos {
 	var todos common.Todos
 	files := GetDb().GetFiles()
@@ -514,24 +444,6 @@ func WriteOutOrgFile(f *OrgFile) bool {
 	f.doc.Write(w)
 	err := ioutil.WriteFile(f.filename, []byte(w.String()), os.ModePerm)
 	return err == nil
-}
-
-func ToStructPtr(obj interface{}) interface{} {
-
-	fmt.Println("obj is a", reflect.TypeOf(obj).Name())
-
-	// Create a new instance of the underlying type
-	vp := reflect.New(reflect.TypeOf(obj))
-
-	// Should be a *Cat and Cat respectively
-	fmt.Println("vp is", vp.Type(), " to a ", vp.Elem().Type())
-
-	vp.Elem().Set(reflect.ValueOf(obj))
-
-	// NOTE: `vp.Elem().Set(reflect.ValueOf(&obj).Elem())` does not work
-
-	// Return a `Cat` pointer to obj -- i.e. &obj.(*Cat)
-	return vp.Interface()
 }
 
 func SetThingChildren(n *org.Headline, s *org.Section, doit func(head *org.Headline) org.Headline) bool {
@@ -564,7 +476,7 @@ func SetThing(f *OrgFile, s *org.Section, doit func(head *org.Headline) org.Head
 			}
 		}
 	}
-	log.Errorf("Did not find headline in update\n")
+	log.Printf("Did not find headline in update\n")
 	return false
 }
 

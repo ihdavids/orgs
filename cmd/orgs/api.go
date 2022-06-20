@@ -24,12 +24,6 @@ func (s *Db) GetFileList(args *common.Empty, reply *common.FileList) error {
 	return nil
 }
 
-// OLD API DEPRECATED AND REMOVE
-func (s *Db) QueryTodos(args *common.Query, reply *common.Todos) error {
-	*reply = orgs.QueryTodos(args)
-	return nil
-}
-
 func (s *Db) QueryTodosExp(args *common.StringQuery, reply *common.Todos) error {
 	var err error = nil
 	*reply, err = orgs.QueryStringTodos(args)
