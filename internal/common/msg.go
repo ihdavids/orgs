@@ -22,6 +22,7 @@ type Todo struct {
 	Status   string
 	Filename string
 	LineNum  int
+	IsActive bool
 }
 
 type FullTodo struct {

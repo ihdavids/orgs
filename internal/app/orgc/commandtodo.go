@@ -175,6 +175,35 @@ func (self *CommandTodo) Enter(core *Core, params []string) {
 	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
 	SendReceiveRpc(core, "Db.QueryTodosExp", &self.Query, &self.Reply)
 }
+
+var ActiveColorList []string = []string{"[red]", "[yellow]", "[orange]", "[magenta]"}
+var InactiveColorList []string = []string{"[green]", "[blue]", "[grey]"}
+
+var ActiveColors map[string]string = make(map[string]string)
+var InactiveColors map[string]string = make(map[string]string)
+
+func GetStatusColor(t *common.Todo) string {
+	prefix := "[green]"
+	if t.IsActive {
+		if x, ok := ActiveColors[t.Status]; ok {
+			return x
+		} else {
+			col := ActiveColorList[len(ActiveColors)%len(ActiveColorList)]
+			ActiveColors[t.Status] = col
+			return col
+		}
+	} else {
+		if x, ok := InactiveColors[t.Status]; ok {
+			return x
+		} else {
+			col := InactiveColorList[len(InactiveColors)%len(InactiveColorList)]
+			InactiveColors[t.Status] = col
+			return col
+		}
+	}
+	return prefix
+}
+
 func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 	core.taskPane.list.Clear()
 	core.projectPane.list.Clear()
@@ -185,7 +214,8 @@ func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 	core.projectPane.SetTitle("[::u]<P>[::-] " + self.GetName())
 
 	for _, v := range self.Reply {
-		item := core.projectPane.list.AddItem(v.Headline, strings.Join(v.Tags, ","), 0, nil)
+		prefix := GetStatusColor(&v)
+		item := core.projectPane.list.AddItem(prefix+v.Status+"[white] "+v.Headline, strings.Join(v.Tags, ","), 0, nil)
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 			if index < len(self.Reply) {
 				self.Selected = index
@@ -198,8 +228,9 @@ func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 				core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
 				core.taskPane.text.SetDynamicColors(true)
 				core.taskPane.text.SetBorder(true)
+				prefix = GetStatusColor(&self.Reply[index])
 				//core.taskPane.list.AddItem(self.TaskReply.Headline, "", 0, nil)
-				core.taskPane.text.SetTitle(self.TaskReply.Headline)
+				core.taskPane.text.SetTitle(prefix + self.Reply[index].Status + "[white] " + self.TaskReply.Headline)
 				core.taskPane.text.SetText(FormatText(self.TaskReply.Content))
 			}
 		})

@@ -121,9 +121,9 @@ func IsIn(p *org.Section, start time.Time, end time.Time) bool {
 	return false
 }
 
-func IsTodoStatus(n *org.Section) bool {
+func IsTodoStatus(n *org.Section, f *OrgFile) bool {
 	if n != nil && n.Headline != nil {
-		return n.Headline.Status == "TODO"
+		return IsActive(n, f)
 	}
 	return false
 }
@@ -138,9 +138,9 @@ func HeadingMatchesRe(p *org.Section, headingRe string) bool {
 	return false
 }
 
-func IsPartOfProject(p *org.Section, projectRe string) bool {
+func IsPartOfProject(p *org.Section, projectRe string, f *OrgFile) bool {
 	if p != nil && p.Headline != nil && p.Parent != nil {
-		if !IsProject(p.Parent) {
+		if !IsProject(p.Parent, f) {
 			return false
 		}
 		return HeadingMatchesRe(p.Parent, projectRe)
@@ -148,11 +148,11 @@ func IsPartOfProject(p *org.Section, projectRe string) bool {
 	return false
 }
 
-func IsProjectByChildren(p *org.Section) bool {
+func IsProjectByChildren(p *org.Section, f *OrgFile) bool {
 	if p != nil && p.Headline != nil {
 		var childHasTodo bool = false
 		for _, c := range p.Children {
-			childHasTodo = childHasTodo || IsTodoStatus(c)
+			childHasTodo = childHasTodo || IsTodoStatus(c, f)
 		}
 		return childHasTodo
 	}
@@ -174,11 +174,11 @@ func IsArchived(p *org.Section, d *org.Document) bool {
 	return HasTag("archive", p, d)
 }
 
-func IsProject(p *org.Section) bool {
+func IsProject(p *org.Section, f *OrgFile) bool {
 	if Conf().UseTagForProjects {
 		return IsProjectByTag(p)
 	} else {
-		return IsProjectByChildren(p)
+		return IsProjectByChildren(p, f)
 	}
 }
 
@@ -204,22 +204,24 @@ type Expr struct {
 	Expression *govaluate.EvaluableExpression
 	Sec        *org.Section
 	Doc        *org.Document
+	File       *OrgFile
 }
 
 func ParseString(expString *common.StringQuery) (*Expr, error) {
 	var exp *Expr = new(Expr)
 	exp.Sec = nil
 	exp.Doc = nil
+	exp.File = nil
 	functions := map[string]govaluate.ExpressionFunction{
 		"IsProject": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			return IsProject(p), nil
+			return IsProject(p, exp.File), nil
 		},
 		"IsPartOfProject": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			return IsPartOfProject(p, args[0].(string)), nil
+			return IsPartOfProject(p, args[0].(string), exp.File), nil
 		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -247,13 +249,13 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"IsTodo": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			return IsTodoStatus(p), nil
+			return IsTodoStatus(p, exp.File), nil
 		},
 		// Syntatical sugar for the following:
 		// !IsArchived() && IsTodo() && !IsProject()
 		"IsTask": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
-			return (!IsArchived(p, exp.Doc) && !IsProject(p) && IsTodoStatus(p)), nil
+			return (!IsArchived(p, exp.Doc) && !IsProject(p, exp.File) && IsTodoStatus(p, exp.File)), nil
 		},
 		// Check if a headline is in the archived state or not
 		"IsArchived": func(args ...interface{}) (interface{}, error) {
@@ -340,12 +342,13 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 	return exp, err
 }
 
-func EvalString(exp *Expr, v *org.Section, d *org.Document) bool {
+func EvalString(exp *Expr, v *org.Section, f *OrgFile) bool {
 	parameters := make(map[string]interface{}, 8)
 	parameters["section"] = v
 	// This is the implicit this pointer of our expressions
 	exp.Sec = v
-	exp.Doc = d
+	exp.Doc = f.doc
+	exp.File = f
 	result, _ := exp.Expression.Evaluate(parameters)
 	return result.(bool)
 }
@@ -379,7 +382,7 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 
 func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (common.Todos, error) {
 	GetDb().RegisterSection(v.Hash, v, f)
-	res := EvalString(exp, v, f.doc)
+	res := EvalString(exp, v, f)
 	if res {
 		var title string
 		for _, n := range v.Headline.Title {
@@ -392,7 +395,7 @@ func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (com
 		if v.Headline.Timestamp != nil {
 			date = *v.Headline.Timestamp.Time
 		}
-		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Status: v.Headline.Status, Filename: f.filename, LineNum: v.Headline.Pos.Row}
+		var t common.Todo = common.Todo{Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Status: v.Headline.Status, Filename: f.filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f)}
 		todos = append(todos, t)
 	}
 	for _, c := range v.Children {
@@ -424,7 +427,7 @@ func QueryProjects() common.Todos {
 	for _, file := range files {
 		f := GetDb().GetFile(file)
 		for _, v := range f.doc.Outline.Children {
-			if IsProject(v) {
+			if IsProject(v, f) {
 				var title string
 				for _, n := range v.Headline.Title {
 					title += n.String()
@@ -575,33 +578,42 @@ func ParseTodoStates(ftagstr string) ([]string, []string) {
 	return active, done
 }
 
+func ValidStatusFromFile(f *OrgFile) ([]string, []string) {
+	var active []string
+	var done []string
+	if f != nil {
+		// #+TODO: REPORT BUG KNOWNCAUSE | FIXED
+		ftagstr := f.doc.Get("TODO")
+		if ftagstr != "" {
+			active, done = ParseTodoStates(ftagstr)
+		} else {
+			active, done = ParseTodoStates(Conf().DefaultTodoStates)
+		}
+	} else {
+		active, done = ParseTodoStates(Conf().DefaultTodoStates)
+	}
+	return active, done
+}
+
 func ValidStatus(query *common.TodoHash) (common.TodoStatesResult, error) {
-	fmt.Printf("VALID STATES CALLED: %s\n", *query)
-	fmt.Printf("VALID GLOBAL STATES: %s\n", Conf().DefaultTodoStates)
 	var active []string
 	var done []string
 	if _, ok := GetDb().ByHash[(string)(*query)]; ok {
 		f := GetDb().ByHashToFile[(string)(*query)]
 		if f != nil {
-			// #+TODO: REPORT BUG KNOWNCAUSE | FIXED
-			// File tags
-			fmt.Printf("FILE TODO!: %s\n", Conf().DefaultTodoStates)
-			ftagstr := f.doc.Get("TODO")
-			if ftagstr != "" {
-				active, done = ParseTodoStates(ftagstr)
-			} else {
-				active, done = ParseTodoStates(Conf().DefaultTodoStates)
-			}
-		} else {
-			fmt.Printf("NO LOCAL FILE!: %s\n", Conf().DefaultTodoStates)
-			active, done = ParseTodoStates(Conf().DefaultTodoStates)
+			active, done = ValidStatusFromFile(f)
 		}
 	} else {
-		fmt.Printf("NO FILE!: %s\n", Conf().DefaultTodoStates)
 		active, done = ParseTodoStates(Conf().DefaultTodoStates)
 	}
 	states := common.TodoStatesResult{Active: active, Done: done}
 	return states, nil
+}
+
+func IsActive(v *org.Section, f *OrgFile) bool {
+	status := v.Headline.Status
+	active, _ := ValidStatusFromFile(f)
+	return contains(active, status)
 }
 
 func IsStatusValid(query *common.TodoHash, status string) bool {
