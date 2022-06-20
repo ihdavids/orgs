@@ -28,6 +28,10 @@ type Selectable interface {
 	GetSelectedHash() string
 }
 
+type AutoCompleteable interface {
+	AutoComplete(core *Core, cmdTxt string) []string
+}
+
 type CommandRegistry struct {
 	Commands map[string]Command
 }

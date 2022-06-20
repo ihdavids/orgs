@@ -2,6 +2,7 @@ package orgs
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -51,6 +52,20 @@ func (self *OrgDb) FindByHash(hash string) *org.Section {
 	return nil
 }
 
+func GetConfig() *org.Configuration {
+	return &org.Configuration{
+		AutoLink:            true,
+		MaxEmphasisNewLines: 1,
+		DefaultSettings: map[string]string{
+			"TODO":         Conf().DefaultTodoStates,
+			"EXCLUDE_TAGS": "noexport",
+			"OPTIONS":      "toc:t <:t e:t f:t pri:t todo:t tags:t title:t ealb:nil",
+		},
+		Log:      log.New(os.Stderr, "orgs: ", 0),
+		ReadFile: ioutil.ReadFile,
+	}
+}
+
 func IsOrgFile(filename string) bool {
 	return filepath.Ext(filename) == ".org"
 }
@@ -87,7 +102,7 @@ func (self *OrgDb) LoadFile(filename string) {
 		return
 	}
 	if r, err := os.Open(filename); err == nil {
-		d := org.New().Parse(r, filename)
+		d := GetConfig().Parse(r, filename)
 		ofile := new(OrgFile)
 		ofile.filename = filename
 		ofile.doc = d

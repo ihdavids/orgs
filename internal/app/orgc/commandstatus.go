@@ -20,6 +20,23 @@ func (self *CommandStatus) GetDescription() string {
 	return "Set status on current item\n  > stat <TAGNAME>"
 }
 
+func (self *CommandStatus) AutoComplete(core *Core, cmdTxt string) []string {
+	var result []string
+	if cmd, ok := core.statusBar.curCmd.(Selectable); ok {
+		var query common.TodoHash
+		query = common.TodoHash(cmd.GetSelectedHash())
+		var reply common.TodoStatesResult
+		SendReceiveRpc(core, "Db.QueryValidStatus", &query, &reply)
+		for _, v := range reply.Active {
+			result = append(result, "stat "+v)
+		}
+		for _, v := range reply.Done {
+			result = append(result, "stat "+v)
+		}
+	}
+	return result
+}
+
 func (self *CommandStatus) IsTransient() bool { return true }
 
 func (self *CommandStatus) Enter(core *Core, params []string) {

@@ -14,6 +14,7 @@ type Config struct {
 	Port              int      `yaml:"port"`
 	OrgDirs           []string `yaml:"orgDirs"`
 	UseTagForProjects bool     `yaml:"useProjectTag"`
+	DefaultTodoStates string   `yaml:"defaultTodoStates"`
 }
 
 func (self *Config) Defaults() {
@@ -63,6 +64,7 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
+		config.DefaultTodoStates = "TODO | DONE"
 		config.ParseConfig()
 	}
 	return config

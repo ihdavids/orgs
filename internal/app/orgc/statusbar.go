@@ -91,11 +91,34 @@ func (self *StatusBar) cleanupCommandPalette() {
 	self.command.core.app.SetFocus(self.command.core.projectPane)
 }
 
-func autoCompleteFunc(curTxt string) []string {
+func autoCompleteFunc(core *Core, curTxt string) []string {
 	var cmds []string
 	for k, c := range GetCmdRegistry().Commands {
 		if curTxt == "" || strings.HasPrefix(k, curTxt) {
 			cmds = append(cmds, fmt.Sprintf("%-15s # %-30s", k, strings.TrimSpace(c.GetDescription())))
+		}
+	}
+	if len(cmds) <= 0 {
+		cmds := strings.Split(curTxt, " ")
+		curCmd := ""
+		if len(cmds) > 0 {
+			curCmd = strings.TrimSpace(cmds[0])
+		}
+		if curCmd != "" {
+			var command Command = nil
+			for k, c := range GetCmdRegistry().Commands {
+				if k == curCmd {
+					command = c
+					break
+				}
+			}
+			if command != nil {
+				if cmd, ok := command.(AutoCompleteable); ok {
+					curTxt = strings.TrimSpace(strings.Replace(curTxt, command.GetName(), "", 1))
+					return cmd.AutoComplete(core, curTxt)
+				}
+			}
+
 		}
 	}
 	return cmds
@@ -105,7 +128,7 @@ func (self *StatusBar) commandPalette() {
 	self.hideBasicPanels()
 
 	self.grid.AddItem(self.command.view, 0, 0, 1, 2, 0, 0, true)
-	self.command.view.SetAutocompleteFunc(autoCompleteFunc)
+	self.command.view.SetAutocompleteFunc(func(cmdTxt string) []string { return autoCompleteFunc(self.command.core, cmdTxt) })
 
 	self.command.core.app.SetFocus(self.command.view)
 	var params []string

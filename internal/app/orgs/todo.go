@@ -482,6 +482,10 @@ func SetThing(f *OrgFile, s *org.Section, doit func(head *org.Headline) org.Head
 
 func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	didWrite := true
+	hh := common.TodoHash(query.Hash)
+	if !IsStatusValid(&hh, query.Value) {
+		return common.Result{false}, fmt.Errorf("Status value is not valid for this item!")
+	}
 	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
 		// Change the status
 		f := GetDb().ByHashToFile[(string)(query.Hash)]
@@ -538,4 +542,72 @@ func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
 		}
 	}
 	return common.Result{didWrite}, nil
+}
+
+func ParseTodoStates(ftagstr string) ([]string, []string) {
+
+	var active []string
+	var done []string
+
+	ss := strings.Split(ftagstr, "|")
+	if len(ss) >= 1 {
+		sss := strings.Fields(ss[0])
+		for _, x := range sss {
+			x = strings.TrimSpace(x)
+			if x != "" {
+				if !contains(active, x) {
+					active = append(active, x)
+				}
+			}
+		}
+	}
+	if len(ss) >= 2 {
+		sss := strings.Fields(ss[1])
+		for _, x := range sss {
+			x = strings.TrimSpace(x)
+			if x != "" {
+				if !contains(done, x) {
+					done = append(done, x)
+				}
+			}
+		}
+	}
+	return active, done
+}
+
+func ValidStatus(query *common.TodoHash) (common.TodoStatesResult, error) {
+	fmt.Printf("VALID STATES CALLED: %s\n", *query)
+	fmt.Printf("VALID GLOBAL STATES: %s\n", Conf().DefaultTodoStates)
+	var active []string
+	var done []string
+	if _, ok := GetDb().ByHash[(string)(*query)]; ok {
+		f := GetDb().ByHashToFile[(string)(*query)]
+		if f != nil {
+			// #+TODO: REPORT BUG KNOWNCAUSE | FIXED
+			// File tags
+			fmt.Printf("FILE TODO!: %s\n", Conf().DefaultTodoStates)
+			ftagstr := f.doc.Get("TODO")
+			if ftagstr != "" {
+				active, done = ParseTodoStates(ftagstr)
+			} else {
+				active, done = ParseTodoStates(Conf().DefaultTodoStates)
+			}
+		} else {
+			fmt.Printf("NO LOCAL FILE!: %s\n", Conf().DefaultTodoStates)
+			active, done = ParseTodoStates(Conf().DefaultTodoStates)
+		}
+	} else {
+		fmt.Printf("NO FILE!: %s\n", Conf().DefaultTodoStates)
+		active, done = ParseTodoStates(Conf().DefaultTodoStates)
+	}
+	states := common.TodoStatesResult{Active: active, Done: done}
+	return states, nil
+}
+
+func IsStatusValid(query *common.TodoHash, status string) bool {
+	r, _ := ValidStatus(query)
+	if contains(r.Active, status) || contains(r.Done, status) {
+		return true
+	}
+	return false
 }
