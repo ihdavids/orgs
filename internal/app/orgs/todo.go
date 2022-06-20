@@ -218,6 +218,16 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			//p := args[0].(*org.Section)
 			return IsProject(p, exp.File), nil
 		},
+		"IsActive": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			return IsActive(p, exp.File), nil
+		},
+		"HasAStatus": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			return strings.TrimSpace(p.Headline.Status) != "", nil
+		},
 		"IsPartOfProject": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)

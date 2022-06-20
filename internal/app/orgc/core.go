@@ -14,6 +14,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/gorilla/rpc/json"
 	"github.com/gorilla/websocket"
+	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rivo/tview"
 )
 
@@ -63,7 +64,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 
 	// Maximum message size allowed from peer.
-	maxMessageSize = 1024 * 64
+	maxMessageSize = common.MaxMessageSize
 )
 
 func T(format string, args ...interface{}) {
@@ -114,7 +115,7 @@ func ReceiveAndDecode[RESP any](core *Core, obj *RESP) {
 	case res := <-core.Messages:
 		T(" GOT MESSAGE (ReceiveAndDecode)")
 		json.DecodeClientResponse(strings.NewReader(res), obj)
-	case <-time.After(15 * time.Second):
+	case <-time.After(60 * time.Second):
 		T("Failed to read after 15 seconds")
 		log.Panic("Failed to read after X seconds")
 	}
