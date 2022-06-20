@@ -15,6 +15,7 @@ import (
 )
 
 type CommandAgenda struct {
+	CommandEmpty
 	Reply     common.Todos
 	TaskReply common.FullTodo
 	Error     error
@@ -166,14 +167,6 @@ func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 	core.taskPane.text.SetText(txt)
 }
 
-func (self *CommandAgenda) Enter(core *Core)         {}
-func (self *CommandAgenda) EnterProjects(core *Core) {}
-func (self *CommandAgenda) EnterTasks(core *Core) {
+func (self *CommandAgenda) EnterTasks(core *Core, params []string) {
 	self.ShowAgendaPane(core)
 }
-
-func (self *CommandAgenda) Execute(core *Core) {}
-
-func (self *CommandAgenda) ExitTasks(core *Core)    {}
-func (self *CommandAgenda) ExitProjects(core *Core) {}
-func (self *CommandAgenda) Exit(core *Core)         {}

@@ -92,10 +92,11 @@ func (self *StatusBar) commandPalette() {
 
 	self.grid.AddItem(self.command.view, 0, 0, 1, 2, 0, 0, true)
 	self.command.core.app.SetFocus(self.command.view)
+	var params []string
 	self.command.view.SetDoneFunc(func(key tcell.Key) {
 		switch key {
 		case tcell.KeyEnter:
-			if cmd, e := GetCmdRegistry().FindCommand(self.command.cmdText); e == nil {
+			if cmd, e := GetCmdRegistry().FindCommand(self.command.cmdText, &params); e == nil {
 				if self.curCmd != nil {
 					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 1)
 					self.curCmd.ExitTasks(self.core)
@@ -105,10 +106,10 @@ func (self *StatusBar) commandPalette() {
 				if cmd != nil {
 					self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 1)
 					self.curCmd = cmd
-					self.curCmd.Enter(self.core)
-					self.curCmd.EnterProjects(self.core)
-					self.curCmd.EnterTasks(self.core)
-					self.curCmd.Execute(self.core)
+					self.curCmd.Enter(self.core, params)
+					self.curCmd.EnterProjects(self.core, params)
+					self.curCmd.EnterTasks(self.core, params)
+					self.curCmd.Execute(self.core, params)
 				}
 			} else {
 				self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 1)

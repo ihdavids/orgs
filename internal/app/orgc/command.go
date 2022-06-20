@@ -2,6 +2,7 @@ package orgc
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -9,11 +10,11 @@ import (
 type Command interface {
 	GetName() string
 	GetDescription() string
-	Enter(core *Core)
-	EnterProjects(core *Core)
-	EnterTasks(core *Core)
+	Enter(core *Core, params []string)
+	EnterProjects(core *Core, params []string)
+	EnterTasks(core *Core, params []string)
 
-	Execute(core *Core)
+	Execute(core *Core, params []string)
 
 	ExitTasks(core *Core)
 	ExitProjects(core *Core)
@@ -36,9 +37,18 @@ func GetCmdRegistry() *CommandRegistry {
 	return registry
 }
 
-func (self *CommandRegistry) FindCommand(name string) (Command, error) {
+func (self *CommandRegistry) FindCommand(name string, params *[]string) (Command, error) {
 	if c, found := self.Commands[name]; found {
 		return c, nil
+	}
+	if len(name) > 0 {
+		fields := strings.FieldsFunc(name, func(c rune) bool { return c == ' ' })
+		if len(fields) > 1 {
+			if c, found := self.Commands[fields[0]]; found {
+				*params = fields[1:]
+				return c, nil
+			}
+		}
 	}
 	return nil, errors.New("Failed to find index " + name)
 }
@@ -51,3 +61,18 @@ func (self *CommandRegistry) SetupRegistry() {
 func (self *CommandRegistry) RegisterCommand(name string, cmd Command) {
 	self.Commands[name] = cmd
 }
+
+type CommandEmpty struct {
+}
+
+func (self *CommandEmpty) GetDescription() string {
+	return "empty command, please override"
+}
+func (self *CommandEmpty) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey { return event }
+func (self *CommandEmpty) Enter(core *Core, params []string)                     {}
+func (self *CommandEmpty) EnterProjects(core *Core, params []string)             {}
+func (self *CommandEmpty) EnterTasks(core *Core, params []string)                {}
+func (self *CommandEmpty) Execute(core *Core, params []string)                   {}
+func (self *CommandEmpty) ExitTasks(core *Core)                                  {}
+func (self *CommandEmpty) ExitProjects(core *Core)                               {}
+func (self *CommandEmpty) Exit(core *Core)                                       {}

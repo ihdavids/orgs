@@ -11,6 +11,7 @@ import (
 )
 
 type CommandTodo struct {
+	CommandEmpty
 	Query       *common.StringQuery
 	Name        string
 	Description string
@@ -152,13 +153,11 @@ func (self *CommandTodo) GetDescription() string {
 	return self.Description
 }
 
-func (self *CommandTodo) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey { return event }
-func (self *CommandTodo) Enter(core *Core) {
+func (self *CommandTodo) Enter(core *Core, params []string) {
 	//self.Error = core.ws.Call("Db.QueryTodosExp", self.Query, &self.Reply)
 	SendReceiveRpc(core, "Db.QueryTodosExp", &self.Query, &self.Reply)
 }
-func (self *CommandTodo) EnterProjects(core *Core) {}
-func (self *CommandTodo) EnterTasks(core *Core) {
+func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 	core.taskPane.list.Clear()
 	core.projectPane.list.Clear()
 	if self.Error != nil {
@@ -214,9 +213,3 @@ func (self *CommandTodo) EnterTasks(core *Core) {
 		}
 	*/
 }
-
-func (self *CommandTodo) Execute(core *Core) {}
-
-func (self *CommandTodo) ExitTasks(core *Core)    {}
-func (self *CommandTodo) ExitProjects(core *Core) {}
-func (self *CommandTodo) Exit(core *Core)         {}

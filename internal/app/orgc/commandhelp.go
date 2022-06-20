@@ -6,6 +6,7 @@ import (
 )
 
 type CommandHelp struct {
+	CommandEmpty
 }
 
 func NewCommandHelp() {
@@ -21,11 +22,7 @@ func (self *CommandHelp) GetDescription() string {
 	return "returns this help message"
 }
 
-func (self *CommandHelp) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey { return event }
-
-func (self *CommandHelp) Enter(core *Core)         {}
-func (self *CommandHelp) EnterProjects(core *Core) {}
-func (self *CommandHelp) EnterTasks(core *Core) {
+func (self *CommandHelp) EnterTasks(core *Core, params []string) {
 	core.taskPane.list.Clear()
 	core.projectPane.list.Clear()
 	core.projectPane.SetTitle("[::u]<P>[::-] " + self.GetName())
@@ -47,9 +44,3 @@ func (self *CommandHelp) EnterTasks(core *Core) {
 
 	}
 }
-
-func (self *CommandHelp) Execute(core *Core) {}
-
-func (self *CommandHelp) ExitTasks(core *Core)    {}
-func (self *CommandHelp) ExitProjects(core *Core) {}
-func (self *CommandHelp) Exit(core *Core)         {}
