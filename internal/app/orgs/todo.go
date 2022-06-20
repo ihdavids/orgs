@@ -521,6 +521,7 @@ func remove(slice []string, s string) []string {
 }
 
 func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
+	fmt.Printf("TOGGLE TAG CALLED: %s\n", query.Value)
 	didWrite := true
 	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
 		// Change a tag

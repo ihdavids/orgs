@@ -1,6 +1,8 @@
 package orgc
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -20,6 +22,7 @@ type StatusBar struct {
 	grid      *tview.Grid
 	core      *Core
 	curCmd    Command
+	curParams []string
 }
 
 // Name of page keys
@@ -40,6 +43,7 @@ func prepareStatusBar(core *Core) *StatusBar {
 		command:   NewCommandPalette(core),
 		core:      core,
 		curCmd:    nil,
+		curParams: nil,
 	}
 	core.statusBar = statusBar
 	statusBar.navigate = tview.NewTextView().SetText("Navigate List: ↓,↑ / j,k")
@@ -87,16 +91,31 @@ func (self *StatusBar) cleanupCommandPalette() {
 	self.command.core.app.SetFocus(self.command.core.projectPane)
 }
 
+func autoCompleteFunc(curTxt string) []string {
+	var cmds []string
+	for k, c := range GetCmdRegistry().Commands {
+		if curTxt == "" || strings.HasPrefix(k, curTxt) {
+			cmds = append(cmds, fmt.Sprintf("%-15s # %-30s", k, strings.TrimSpace(c.GetDescription())))
+		}
+	}
+	return cmds
+}
+
 func (self *StatusBar) commandPalette() {
 	self.hideBasicPanels()
 
 	self.grid.AddItem(self.command.view, 0, 0, 1, 2, 0, 0, true)
+	self.command.view.SetAutocompleteFunc(autoCompleteFunc)
+
 	self.command.core.app.SetFocus(self.command.view)
 	var params []string
 	self.command.view.SetDoneFunc(func(key tcell.Key) {
 		switch key {
 		case tcell.KeyEnter:
-			if cmd, e := GetCmdRegistry().FindCommand(self.command.cmdText, &params); e == nil {
+			// trim off comment (description)
+			cmdTxts := strings.Split(self.command.cmdText, "#")
+			cmdTxt := strings.TrimSpace(cmdTxts[0])
+			if cmd, e := GetCmdRegistry().FindCommand(cmdTxt, &params); e == nil {
 				if self.curCmd != nil {
 					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 1)
 					self.curCmd.ExitTasks(self.core)
@@ -105,11 +124,22 @@ func (self *StatusBar) commandPalette() {
 				}
 				if cmd != nil {
 					self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 1)
-					self.curCmd = cmd
-					self.curCmd.Enter(self.core, params)
-					self.curCmd.EnterProjects(self.core, params)
-					self.curCmd.EnterTasks(self.core, params)
-					self.curCmd.Execute(self.core, params)
+					cmd.Enter(self.core, params)
+					cmd.EnterProjects(self.core, params)
+					cmd.EnterTasks(self.core, params)
+					cmd.Execute(self.core, params)
+					if cmd.IsTransient() {
+						cmd.ExitTasks(self.core)
+						cmd.ExitProjects(self.core)
+						cmd.Exit(self.core)
+						self.curCmd.Enter(self.core, self.curParams)
+						self.curCmd.EnterProjects(self.core, self.curParams)
+						self.curCmd.EnterTasks(self.core, self.curParams)
+						self.curCmd.Execute(self.core, self.curParams)
+					} else {
+						self.curCmd = cmd
+						self.curParams = params
+					}
 				}
 			} else {
 				self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 1)

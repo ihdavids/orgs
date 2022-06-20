@@ -126,6 +126,14 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 	}
 	return event
 }
+
+func (self *CommandAgenda) GetSelectedHash() string {
+	if self.Selected >= 0 && self.Selected < len(self.Reply) {
+		return self.Reply[self.Selected].Hash
+	}
+	return ""
+}
+
 func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 	self.Core = core
 	query := new(common.StringQuery)

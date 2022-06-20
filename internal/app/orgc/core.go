@@ -244,21 +244,36 @@ func (self *Core) AskYesNo(text string, f func()) {
 
 func setKeyboardShortcuts(core *Core) *tview.Application {
 	return core.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		// This has to be firts, it's a clear command for our command palette.
+		if event.Key() == tcell.KeyEscape && core.statusBar.command.view.HasFocus() && core.statusBar.command.view.GetText() != "" {
+			core.statusBar.command.view.SetText("")
+			return nil
+		}
+		if event.Rune() == ' ' && core.statusBar.command.view.HasFocus() && core.statusBar.command.view.GetText() != "" && strings.Contains(core.statusBar.command.view.GetText(), "#") {
+			cmdTxts := strings.Split(core.statusBar.command.cmdText, "#")
+			cmdTxt := strings.TrimSpace(cmdTxts[0])
+			core.statusBar.command.view.SetText(cmdTxt + " ")
+			return nil
+		}
+
 		if ignoreKeyEvt(core) {
 			return event
 		}
 
+		if event.Key() == tcell.KeyTab {
+			if core.taskPane.HasFocus() {
+				core.app.SetFocus(core.projectPane)
+				return nil
+
+			} else if core.projectPane.HasFocus() {
+				core.app.SetFocus(core.taskPane)
+				return nil
+			}
+		}
+
 		// Global shortcuts
 		switch unicode.ToLower(event.Rune()) {
-		case 'p':
-			core.app.SetFocus(core.projectPane)
-			//contents.RemoveItem(taskDetailPane)
-			return nil
-		case 'q':
-		case 't':
-			core.app.SetFocus(core.taskPane)
-			//contents.RemoveItem(taskDetailPane)
-			return nil
 		case ':':
 			core.statusBar.commandPalette()
 			return nil
@@ -267,17 +282,17 @@ func setKeyboardShortcuts(core *Core) *tview.Application {
 		// Handle based on current focus. Handlers may modify event
 		switch {
 		case core.projectPane.HasFocus():
+			if core.statusBar.curCmd != nil {
+				rv := core.statusBar.curCmd.HandleShortcuts(event)
+				if rv == nil {
+					return nil
+				}
+			}
 			event = core.projectPane.handleShortcuts(event)
 		case core.taskPane.HasFocus():
 			if core.statusBar.curCmd != nil {
-				core.statusBar.curCmd.HandleShortcuts(event)
+				return core.statusBar.curCmd.HandleShortcuts(event)
 			}
-			//event = core.taskPane.handleShortcuts(event)
-			/*
-				if event != nil && projectDetailPane.isShowing() {
-					event = projectDetailPane.handleShortcuts(event)
-				}
-			*/
 		}
 		return event
 	})

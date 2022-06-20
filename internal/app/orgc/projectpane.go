@@ -126,9 +126,6 @@ func (pane *ProjectPane) handleShortcuts(event *tcell.EventKey) *tcell.EventKey 
 	case 'k':
 		pane.list.SetCurrentItem(pane.list.GetCurrentItem() - 1)
 		return nil
-		//case 'n':
-		//	pane.core.app.SetFocus(pane.newProject)
-		//	return nil
 	}
 
 	return event

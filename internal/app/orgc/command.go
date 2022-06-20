@@ -21,6 +21,11 @@ type Command interface {
 	Exit(core *Core)
 
 	HandleShortcuts(event *tcell.EventKey) *tcell.EventKey
+	IsTransient() bool // Does this command execute and then we go back into the previous command.
+}
+
+type Selectable interface {
+	GetSelectedHash() string
 }
 
 type CommandRegistry struct {
@@ -76,3 +81,4 @@ func (self *CommandEmpty) Execute(core *Core, params []string)                  
 func (self *CommandEmpty) ExitTasks(core *Core)                                  {}
 func (self *CommandEmpty) ExitProjects(core *Core)                               {}
 func (self *CommandEmpty) Exit(core *Core)                                       {}
+func (self *CommandEmpty) IsTransient() bool                                     { return false }
