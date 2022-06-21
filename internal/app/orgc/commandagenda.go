@@ -22,12 +22,19 @@ type CommandAgenda struct {
 	CurDate   time.Time
 	Core      *Core
 	Selected  int
+	sym       []string
+	symUsed   []int
+	blocks    []*common.Todo
 }
 
 func NewCommandAgenda() {
 	var todo *CommandAgenda = new(CommandAgenda)
 	todo.CurDate = time.Now()
 	todo.Selected = 0
+
+	todo.sym = []string{"[blue]█", "[red]█", "[magenta]█", "[white]█", "[orange]█", "[green]█", "[yellow]█"}
+	todo.symUsed = []int{-1, -1, -1, -1, -1, -1, -1}
+	todo.blocks = []*common.Todo{nil, nil, nil, nil, nil, nil, nil}
 	GetCmdRegistry().RegisterCommand("agenda", todo)
 }
 
@@ -39,9 +46,105 @@ func (self *CommandAgenda) GetDescription() string {
 	return "return todays agenda"
 }
 
-func (self *CommandAgenda) BuildAgendaBlocks(v common.Todo) string {
-	// TODO
-	return ""
+// We search our list of symbols for one that has yet to have been used
+// for this time slot
+func (self *CommandAgenda) GetUnusedSymbol(blk int) int {
+	start := 0
+	for i := 0; i < len(self.symUsed); i++ {
+		if self.symUsed[i] >= 0 {
+			start = i
+			break
+		}
+	}
+	for i := start; i < len(self.symUsed); i++ {
+		if self.symUsed[i] < 0 {
+			self.symUsed[i] = blk
+			return i
+		}
+	}
+	return -1
+}
+
+func (self *CommandAgenda) ReleaseSymbol(blk int) {
+	for i := 0; i < len(self.symUsed); i++ {
+		if self.symUsed[i] == blk {
+			self.symUsed[i] = -1
+			break
+		}
+	}
+}
+
+func (self *CommandAgenda) FindSymbol(blk int) int {
+	for i := 0; i < len(self.symUsed); i++ {
+		if self.symUsed[i] == blk {
+			return i
+		}
+	}
+	return 0
+}
+
+func IsInHour(v *common.Todo, hour int, now time.Time) bool {
+	// TODO: Finish this!
+	return false
+}
+
+func (self *CommandAgenda) ClearAgendaBlocks(hour int) {
+	for i := 0; i < len(self.blocks); i++ {
+		v := self.blocks[i]
+		if !IsInHour(v, hour, self.CurDate) {
+			self.ReleaseSymbol(i)
+			self.blocks[i] = nil
+		}
+	}
+}
+
+func (self *CommandAgenda) UpdateWithThisBlock(v *common.Todo, hour int) int {
+	idx := -1
+	for i := 0; i < len(self.blocks); i++ {
+		if idx == -1 && self.blocks[i] == nil {
+			idx = i
+		}
+		if self.blocks[i] == v {
+			idx = -1
+			return i
+		}
+	}
+	if idx != -1 {
+		self.blocks[idx] = v
+		return idx
+	}
+	return 0
+}
+
+func (self *CommandAgenda) BuildAgendaBlocks(v *common.Todo, hour int) string {
+	out := ""
+	if v != nil {
+		symIdx := self.GetUnusedSymbol(0)
+		self.ClearAgendaBlocks(hour)
+		myIdx := self.UpdateWithThisBlock(v, hour)
+		self.symUsed[symIdx] = myIdx
+	} else {
+		self.ClearAgendaBlocks(hour)
+	}
+
+	spaceSym := "."
+	for i := 0; i < len(self.blocks); i++ {
+		if self.blocks[i] != nil {
+			spaceSym = " "
+		}
+	}
+	if spaceSym == "." {
+		out = ".."
+	}
+	for i := 0; i < len(self.blocks); i++ {
+		if self.blocks[i] == nil {
+			out = out + spaceSym
+		} else {
+			symIdx := self.FindSymbol(i)
+			out = out + self.sym[symIdx]
+		}
+	}
+	return out
 }
 
 func (self *CommandAgenda) BuildDeadlineDisplay(v common.Todo) string {
@@ -81,9 +184,9 @@ func (self *CommandAgenda) RenderAgendaEntry(v common.Todo, index int) string {
 		todo = "[" + color + "]" + todo
 	}
 	if self.Selected == index {
-		return fmt.Sprintf("[%s]     %-15s [white:yellow]%02d:%02d[:none] %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+		return fmt.Sprintf("[%s]     %-15s [white:yellow]%02d:%02d[:none] %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(&v, h), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 	} else {
-		return fmt.Sprintf("[%s]     %-15s [green:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(v), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
+		return fmt.Sprintf("[%s]     %-15s [green:bu]%02d:%02d %-8s %s [%s]%-45s %s%s\n", Conf().AgendaFilenameColor, fname, h, m, self.BuildAgendaBlocks(&v, h), todo, Conf().AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), self.BuildHabitDisplay(v))
 	}
 }
 
