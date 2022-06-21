@@ -257,6 +257,10 @@ func setKeyboardShortcuts(core *Core) *tview.Application {
 			core.statusBar.command.view.SetText(cmdTxt + " ")
 			return nil
 		}
+		if event.Rune() == ':' && core.statusBar.command.view.HasFocus() {
+			core.statusBar.command.view.SetText(": ")
+			return nil
+		}
 
 		if ignoreKeyEvt(core) {
 			return event

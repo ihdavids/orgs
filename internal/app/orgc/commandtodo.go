@@ -20,6 +20,7 @@ type CommandTodo struct {
 	Error       error
 	Core        *Core
 	Selected    int
+	Filtered    []common.Todo
 }
 
 func NewCommandTodo(name string, view *string, desc *string) {
@@ -149,7 +150,7 @@ func FormatText(text string) string {
 
 func (self *CommandTodo) GetSelectedHash() string {
 	if self.Selected >= 0 && self.Selected < len(self.Reply) {
-		return self.Reply[self.Selected].Hash
+		return self.Filtered[self.Selected].Hash
 	}
 	return ""
 }
@@ -204,33 +205,27 @@ func GetStatusColor(t *common.Todo) string {
 	return prefix
 }
 
-func (self *CommandTodo) EnterTasks(core *Core, params []string) {
-	core.taskPane.list.Clear()
+func (self *CommandTodo) Filter(core *Core, filter string) {
 	core.projectPane.list.Clear()
-	if self.Error != nil {
-		//pane.list.AddItem("- Today", "", 0, func() { taskPane.LoadDynamicList("today") })
-		core.taskPane.list.AddItem("ERROR - could not query data", "", 0, nil)
-	}
-	core.projectPane.SetTitle("[::u]<P>[::-] " + self.GetName())
-
+	self.Filtered = []common.Todo{}
 	for _, v := range self.Reply {
+		if strings.Contains(v.Headline, filter) {
+			self.Filtered = append(self.Filtered, v)
+		}
+	}
+	for _, v := range self.Filtered {
 		prefix := GetStatusColor(&v)
 		item := core.projectPane.list.AddItem(prefix+v.Status+"[white] "+v.Headline, strings.Join(v.Tags, ","), 0, nil)
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
-			if index < len(self.Reply) {
+			if index < len(self.Filtered) {
 				self.Selected = index
-				//core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
-				//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
-				SendReceiveRpc(core, "Db.QueryFullTodo", &self.Reply[index].Hash, &self.TaskReply)
-				//self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
-				//core.taskPane.list.Clear()
+				SendReceiveRpc(core, "Db.QueryFullTodo", &self.Filtered[index].Hash, &self.TaskReply)
 				core.taskPane.text.Clear()
 				core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
 				core.taskPane.text.SetDynamicColors(true)
 				core.taskPane.text.SetBorder(true)
-				prefix = GetStatusColor(&self.Reply[index])
-				//core.taskPane.list.AddItem(self.TaskReply.Headline, "", 0, nil)
-				core.taskPane.text.SetTitle(prefix + self.Reply[index].Status + "[white] " + self.TaskReply.Headline)
+				prefix = GetStatusColor(&self.Filtered[index])
+				core.taskPane.text.SetTitle(prefix + self.Filtered[index].Status + "[white] " + self.TaskReply.Headline)
 				core.taskPane.text.SetText(FormatText(self.TaskReply.Content))
 			}
 		})
@@ -238,8 +233,8 @@ func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 		item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
 
 			// 0 offset or 1 offset needs to be handled
-			LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum+1)
-			core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", self.Reply[index].LineNum)+" "+self.Reply[index].Headline, 5)
+			LaunchEditor(self.Filtered[index].Filename, self.Filtered[index].LineNum+1)
+			core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", self.Filtered[index].LineNum)+" "+self.Filtered[index].Headline, 5)
 		})
 		/*
 			item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
@@ -255,6 +250,61 @@ func (self *CommandTodo) EnterTasks(core *Core, params []string) {
 			})
 		*/
 	}
+}
+
+func (self *CommandTodo) EnterTasks(core *Core, params []string) {
+	core.taskPane.list.Clear()
+	core.projectPane.list.Clear()
+	if self.Error != nil {
+		//pane.list.AddItem("- Today", "", 0, func() { taskPane.LoadDynamicList("today") })
+		core.taskPane.list.AddItem("ERROR - could not query data", "", 0, nil)
+	}
+	core.projectPane.SetTitle("[::u]<P>[::-] " + self.GetName())
+
+	self.Filter(core, "")
+	/*
+		for _, v := range self.Reply {
+			prefix := GetStatusColor(&v)
+			item := core.projectPane.list.AddItem(prefix+v.Status+"[white] "+v.Headline, strings.Join(v.Tags, ","), 0, nil)
+			item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
+				if index < len(self.Reply) {
+					self.Selected = index
+					//core.statusBar.showForSeconds("STAT: "+self.Reply[index].Headline, 5)
+					//self.Error = core.ws.Call("Db.QuerySpecificTodo", self.Query, &self.TaskReply)
+					SendReceiveRpc(core, "Db.QueryFullTodo", &self.Reply[index].Hash, &self.TaskReply)
+					//self.Error = core.ws.Call("Db.QueryFullTodo", self.Reply[index].Hash, &self.TaskReply)
+					//core.taskPane.list.Clear()
+					core.taskPane.text.Clear()
+					core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
+					core.taskPane.text.SetDynamicColors(true)
+					core.taskPane.text.SetBorder(true)
+					prefix = GetStatusColor(&self.Reply[index])
+					//core.taskPane.list.AddItem(self.TaskReply.Headline, "", 0, nil)
+					core.taskPane.text.SetTitle(prefix + self.Reply[index].Status + "[white] " + self.TaskReply.Headline)
+					core.taskPane.text.SetText(FormatText(self.TaskReply.Content))
+				}
+			})
+
+			item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
+
+				// 0 offset or 1 offset needs to be handled
+				LaunchEditor(self.Reply[index].Filename, self.Reply[index].LineNum+1)
+				core.statusBar.showForSeconds("STAT: "+fmt.Sprintf("%d", self.Reply[index].LineNum)+" "+self.Reply[index].Headline, 5)
+			})
+			/*
+				item.SetSelectedFunc(func(index int, mainText string, secText string, shortcut rune) {
+					self.Selected = index
+					send := common.TodoItemChange{Hash: self.Reply[index].Hash, Value: "DONE"}
+					var reply common.Result = common.Result{}
+					SendReceiveRpc(core, "Db.ChangeStatus", &send, &reply)
+					res := "Ok"
+					if !reply.Ok {
+						res = "FAILED"
+					}
+					core.statusBar.showForSeconds("STATE: "+self.Reply[index].Headline+fmt.Sprint("%s", res), 5)
+				})
+	*/
+	//}
 	/*
 		if err != nil {
 			log.Printf("%v", err)

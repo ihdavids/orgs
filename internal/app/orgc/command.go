@@ -32,6 +32,10 @@ type AutoCompleteable interface {
 	AutoComplete(core *Core, cmdTxt string) []string
 }
 
+type Filterable interface {
+	Filter(core *Core, filter string)
+}
+
 type CommandRegistry struct {
 	Commands map[string]Command
 }

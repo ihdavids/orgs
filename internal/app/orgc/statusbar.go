@@ -138,6 +138,15 @@ func (self *StatusBar) commandPalette() {
 			// trim off comment (description)
 			cmdTxts := strings.Split(self.command.cmdText, "#")
 			cmdTxt := strings.TrimSpace(cmdTxts[0])
+
+			// We are trying to filter our active projects list!
+			// We are locking in the filter
+			cmds := strings.Fields(cmdTxt)
+			if len(cmds) > 1 && cmds[0] == ":" {
+				self.cleanupCommandPalette()
+				return
+			}
+
 			if cmd, e := GetCmdRegistry().FindCommand(cmdTxt, &params); e == nil {
 				if self.curCmd != nil {
 					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 1)
@@ -173,6 +182,31 @@ func (self *StatusBar) commandPalette() {
 			self.cleanupCommandPalette()
 		}
 	})
+
+	self.command.view.SetChangedFunc(func(text string) {
+
+		// Strip off comments
+		if text != "" {
+			cmdTxts := strings.Split(text, "#")
+			text = strings.TrimSpace(cmdTxts[0])
+		}
+
+		// We are trying to filter our active projects list!
+		cmds := strings.Fields(text)
+		if len(cmds) > 1 && cmds[0] == ":" {
+			filter := strings.TrimSpace(strings.Join(cmds[1:], " "))
+			if filter != "" {
+				if self.core.statusBar.curCmd != nil {
+					if op, ok := self.core.statusBar.curCmd.(Filterable); ok {
+						op.Filter(self.core, filter)
+					}
+				}
+			}
+		}
+		self.command.cmdText = text
+
+	})
+
 }
 
 func (bar *StatusBar) showForSeconds(message string, timeout int) {
