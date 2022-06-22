@@ -308,6 +308,7 @@ func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 	start := 8
 	end := 20
 	index := 0
+	now := time.Now()
 	for i := start; i < end; i += 1 {
 		displayTime := true
 		for _, v := range self.Reply {
@@ -317,6 +318,9 @@ func (self *CommandAgenda) ShowAgendaPane(core *Core) {
 		}
 		if displayTime {
 			txt += fmt.Sprintf("                     [grey]%02d:00 ........ ---------------------------\n", i)
+		}
+		if now.Year() == self.CurDate.Year() && now.Month() == self.CurDate.Month() && now.Day() == self.CurDate.Day() && now.Hour() == i {
+			txt += fmt.Sprintf("     [#ee00ee]%-15s %02d:%02d - - - - - - - - - - - - - - - - - - - - - \n", "now =>", now.Hour(), now.Minute())
 		}
 		for _, v := range self.Reply {
 			if v.Date.Start.Hour() == i {
