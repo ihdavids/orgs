@@ -4,6 +4,8 @@ go 1.18
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
+	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f
+	github.com/flosch/pongo2/v5 v5.0.0
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gdamore/tcell/v2 v2.4.1-0.20210905002822-f057f0a857a1
 	github.com/gorilla/rpc v1.2.0
@@ -14,7 +16,6 @@ require (
 )
 
 require (
-	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f // indirect
 	github.com/niklasfasching/go-org v1.6.5 // indirect
 	github.com/zyedidia/highlight v0.0.0-20200217010119-291680feaca1 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
@@ -35,6 +36,6 @@ require (
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
