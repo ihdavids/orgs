@@ -10,32 +10,41 @@ import (
 
 	//"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2"
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rivo/tview"
 )
 
 type CommandAgenda struct {
 	CommandEmpty
-	Reply     common.Todos
-	TaskReply common.FullTodo
-	Error     error
-	CurDate   time.Time
-	Core      *Core
-	Selected  int
-	sym       []string
-	symUsed   []int
-	blocks    []*common.Todo
+	Reply      common.Todos
+	TaskReply  common.FullTodo
+	Error      error
+	CurDate    time.Time
+	Core       *Core
+	Selected   int
+	sym        []string
+	tophalfsym []string
+	bothalfsym []string
+	symUsed    []int
+	blocks     []*common.Todo
 }
 
 func NewCommandAgenda() {
 	var todo *CommandAgenda = new(CommandAgenda)
 	todo.CurDate = time.Now()
 	todo.Selected = 0
-
-	todo.sym = []string{"[blue]█", "[red]█", "[magenta]█", "[white]█", "[orange]█", "[green]█", "[yellow]█"}
-	todo.symUsed = []int{-1, -1, -1, -1, -1, -1, -1}
-	todo.blocks = []*common.Todo{nil, nil, nil, nil, nil, nil, nil}
+	todo.ClearBlockView()
 	GetCmdRegistry().RegisterCommand("agenda", todo)
+}
+
+func (self *CommandAgenda) ClearBlockView() {
+	self.sym = []string{"[#28363d]█", "[#2f575d]█", "[#843b62]█", "[#6d9197]█", "[#99aead]█", "[#474044]█", "[#293132]█", "[#c4cdc1]█", "[#dee1dd]█"}
+	// TODO: Improve algorithm to make blocks show 1/2 for half hour overlap
+	self.tophalfsym = []string{"[#28363d]▀", "[#2f575d]▀", "[#843b62]▀", "[#6d9197]▀", "[#99aead]▀", "[#474044]▀", "[#293132]▀", "[#c4cdc1]▀", "[#dee1dd]▀"}
+	self.bothalfsym = []string{"[#28363d]▄", "[#2f575d]▄", "[#843b62]▄", "[#6d9197]▄", "[#99aead]▄", "[#474044]▄", "[#293132]▄", "[#c4cdc1]▄", "[#dee1dd]▄"}
+	self.symUsed = []int{-1, -1, -1, -1, -1, -1, -1}
+	self.blocks = []*common.Todo{nil, nil, nil, nil, nil, nil, nil}
 }
 
 func (self *CommandAgenda) GetName() string {
@@ -83,8 +92,48 @@ func (self *CommandAgenda) FindSymbol(blk int) int {
 	return 0
 }
 
+func Overlaps(s int, e int, rs int, re int) bool {
+	//   | s e |
+	// +---+
+	if s <= rs && e >= rs && e <= re {
+		return true
+	}
+	// | s e |
+	//    +---+
+	if s >= rs && s < re && e >= re {
+		return true
+	}
+	// | s  e |
+	//   +-+
+	if s >= rs && e <= re {
+		return true
+	}
+	// s |    | e
+	// +-------+
+	if s <= rs && e >= re {
+		return true
+	}
+	return false
+}
+
+func IsInHourBracket(start time.Time, end time.Time, hour int) bool {
+	if end.IsZero() {
+		// TODO: Make this configurable
+		end = start.Add(30 * time.Minute)
+	}
+	return Overlaps(start.Hour()*60+start.Minute(), end.Hour()*60+end.Minute(), hour*60, hour*60+59)
+}
+
 func IsInHour(v *common.Todo, hour int, now time.Time) bool {
-	// TODO: Finish this!
+	if v == nil || v.Date.IsZero() || v.Date.TimestampType != org.Active {
+		return false
+	}
+	// TODO: Handle repeating!
+	if IsInHourBracket(v.Date.Start, v.Date.End, hour) {
+		return true
+	}
+	// TODO: Handle scheduled
+	// TODO: Handle deadline
 	return false
 }
 
@@ -238,6 +287,7 @@ func (self *CommandAgenda) GetSelectedHash() string {
 }
 
 func (self *CommandAgenda) ShowAgendaPane(core *Core) {
+	self.ClearBlockView()
 	self.Core = core
 	query := new(common.StringQuery)
 	query.Query = fmt.Sprintf(`!IsProject() && !IsArchived() && IsTodo() && OnDate("%s")`, self.CurDate.Format("2006 02 01"))
