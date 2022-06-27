@@ -1,6 +1,11 @@
 package orgs
 
 import (
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/flosch/pongo2/v5"
 )
 
@@ -160,7 +165,7 @@ func MathConstants() map[string]float64 {
 	return s
 }
 
-func RenderTemplate(name string, context map[string]string) string {
+func resolveTemplate(name string, context map[string]string) string {
 	tpl, _ := pongo2.FromFile(name)
 	ctx := pongo2.Context{}
 	for k, v := range context {
@@ -168,4 +173,21 @@ func RenderTemplate(name string, context map[string]string) string {
 	}
 	res, _ := tpl.Execute(ctx)
 	return res
+}
+
+func RenderTemplate(name string, context map[string]string) string {
+	tempName, _ := filepath.Abs(name)
+	tempFolderName, _ := filepath.Abs(path.Join(Conf().TemplatePath, name))
+	if _, err := os.Stat(name); err == nil {
+		// Use name
+	}
+	if _, err := os.Stat(tempName); err == nil {
+		// Try abs name of name
+		name = tempName
+	} else if _, err := os.Stat(tempFolderName); err == nil {
+		// Try in the template folder for name
+		name = tempFolderName
+	}
+	fmt.Printf("Trying to open path: %s\n", name)
+	return resolveTemplate(name, context)
 }

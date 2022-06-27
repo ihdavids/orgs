@@ -29,6 +29,7 @@ func (self *Config) AddCommands() {
 	NewCommandAgenda()
 	NewCommandTags()
 	NewCommandStatus()
+	NewCommandDayPage()
 
 	for key, val := range self.TodoViews {
 		vals := strings.Split(val, "//")

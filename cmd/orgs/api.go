@@ -44,3 +44,9 @@ func (s *Db) QueryValidStatus(args *common.TodoHash, reply *common.TodoStatesRes
 	*reply, err = orgs.ValidStatus(args)
 	return err
 }
+
+func (s *Db) CreateDayPage(args *common.TodoHash, reply *common.Result) error {
+	var err error = nil
+	*reply, err = orgs.CreateDayPage()
+	return err
+}

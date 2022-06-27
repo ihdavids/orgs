@@ -10,16 +10,26 @@ import (
 )
 
 type Config struct {
-	ServePath         string   `yaml:"servepath"`
-	Port              int      `yaml:"port"`
-	OrgDirs           []string `yaml:"orgDirs"`
-	UseTagForProjects bool     `yaml:"useProjectTag"`
-	DefaultTodoStates string   `yaml:"defaultTodoStates"`
+	ServePath          string   `yaml:"servepath"`
+	Port               int      `yaml:"port"`
+	OrgDirs            []string `yaml:"orgDirs"`
+	UseTagForProjects  bool     `yaml:"useProjectTag"`
+	DefaultTodoStates  string   `yaml:"defaultTodoStates"`
+	TemplatePath       string   `yaml:"templatePath"`
+	DayPageTemplate    string   `yaml:"dayPageTemplate"`
+	DayPagePath        string   `yaml:"dayPagePath"`
+	DayPageMode        string   `yaml:"dayPageMode"`
+	DayPageModeWeekDay string   `yaml:"dayPageModeWeekDay"`
 }
 
 func (self *Config) Defaults() {
 	self.ServePath = "/org"
 	self.Port = 8010
+	self.TemplatePath = "./templates"
+	self.DayPageTemplate = "today.tpl"
+	self.DayPagePath = "./daypages"
+	self.DayPageMode = "week"
+	self.DayPageModeWeekDay = "Monday"
 }
 
 func (self *Config) Validate() {
