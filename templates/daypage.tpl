@@ -1,4 +1,4 @@
-#+TITLE:  {{today_title}} 
+#+TITLE:  {{day_page_title}} 
 #+AUTHOR: Ian Davids
 
 * Inbox

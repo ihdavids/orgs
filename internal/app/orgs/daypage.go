@@ -38,7 +38,11 @@ func CreateDayPage() (common.Result, error) {
 	title := dt.Format("Mon_2006_01_02")
 	var context map[string]string = make(map[string]string)
 	fmt.Printf("TRYING TO CREATE DAY PAGE: %s\n", title)
-	context["today_title"] = title
+	context["day_page_title"] = title
+	context["weekday"] = dt.Format("Mon")
+	context["day"] = fmt.Sprintf("%d", dt.Day())
+	context["month"] = fmt.Sprintf("%d", dt.Month())
+	context["year"] = fmt.Sprintf("%d", dt.Year())
 	todayData := RenderTemplate(template, context)
 	filename := title + ".org"
 	filename = path.Join(Conf().DayPagePath, filename)

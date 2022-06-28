@@ -26,7 +26,7 @@ func (self *Config) Defaults() {
 	self.ServePath = "/org"
 	self.Port = 8010
 	self.TemplatePath = "./templates"
-	self.DayPageTemplate = "today.tpl"
+	self.DayPageTemplate = "daypage.tpl"
 	self.DayPagePath = "./daypages"
 	self.DayPageMode = "week"
 	self.DayPageModeWeekDay = "Monday"
