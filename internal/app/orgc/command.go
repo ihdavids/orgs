@@ -90,3 +90,21 @@ func (self *CommandEmpty) ExitTasks(core *Core)                                 
 func (self *CommandEmpty) ExitProjects(core *Core)                               {}
 func (self *CommandEmpty) Exit(core *Core)                                       {}
 func (self *CommandEmpty) IsTransient() bool                                     { return false }
+
+type CommandExec struct {
+	Name string
+	Desc string
+	DoIt func(core *Core, params []string)
+}
+
+func (self *CommandExec) GetDescription() string                                { return self.Desc }
+func (self *CommandExec) GetName() string                                       { return self.Name }
+func (self *CommandExec) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey { return event }
+func (self *CommandExec) Enter(core *Core, params []string)                     {}
+func (self *CommandExec) EnterProjects(core *Core, params []string)             {}
+func (self *CommandExec) EnterTasks(core *Core, params []string)                {}
+func (self *CommandExec) Execute(core *Core, params []string)                   { self.DoIt(core, params) }
+func (self *CommandExec) ExitTasks(core *Core)                                  {}
+func (self *CommandExec) ExitProjects(core *Core)                               {}
+func (self *CommandExec) Exit(core *Core)                                       {}
+func (self *CommandExec) IsTransient() bool                                     { return true }

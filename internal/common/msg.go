@@ -1,6 +1,8 @@
 package common
 
 import (
+	"time"
+
 	"github.com/ihdavids/go-org/org"
 )
 
@@ -13,6 +15,8 @@ type Empty struct{}
 type HelloReply string
 
 type FileList []string
+
+type DateTime time.Time
 
 type Todo struct {
 	Headline string

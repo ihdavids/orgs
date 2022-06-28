@@ -164,10 +164,12 @@ func (self *StatusBar) commandPalette() {
 						cmd.ExitTasks(self.core)
 						cmd.ExitProjects(self.core)
 						cmd.Exit(self.core)
-						self.curCmd.Enter(self.core, self.curParams)
-						self.curCmd.EnterProjects(self.core, self.curParams)
-						self.curCmd.EnterTasks(self.core, self.curParams)
-						self.curCmd.Execute(self.core, self.curParams)
+						if self.curCmd != nil {
+							self.curCmd.Enter(self.core, self.curParams)
+							self.curCmd.EnterProjects(self.core, self.curParams)
+							self.curCmd.EnterTasks(self.core, self.curParams)
+							self.curCmd.Execute(self.core, self.curParams)
+						}
 					} else {
 						self.curCmd = cmd
 						self.curParams = params
