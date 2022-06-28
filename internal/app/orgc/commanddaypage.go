@@ -1,6 +1,7 @@
 package orgc
 
 import (
+	"os"
 	"time"
 
 	"github.com/ihdavids/orgs/internal/common"
@@ -20,28 +21,59 @@ func NewCommandDayPage() {
 	GetCmdRegistry().RegisterCommand("daypage", cmd)
 	GetCmdRegistry().RegisterCommand("nextdaypage", &CommandExec{"nextdaypage", "Jump to the next page in the list", func(core *Core, params []string) {
 
-		var reply common.FileList
-		cmd.CurDayPage = cmd.CurDayPage.AddDate(0, 0, 7)
+		dt := cmd.CurDayPage
+		// If we are missing 10 weeks worth of day pages then we abort!
+		for iterations := 0; iterations < 10; iterations++ {
+			var reply common.FileList
+			cmd.CurDayPage = cmd.CurDayPage.AddDate(0, 0, 7)
+			var send common.Date
+			send.Set(cmd.CurDayPage)
 
-		SendReceiveRpc(core, "Db.GetDayPageAt", &cmd.CurDayPage, &reply)
+			SendReceiveRpc(core, "Db.GetDayPageAt", &send, &reply)
 
-		if len(reply) > 0 {
-			LaunchEditor(reply[0], 0)
+			if len(reply) > 0 {
+				if _, err := os.Stat(reply[0]); err == nil {
+					core.statusBar.showForSeconds("[yellow::]GOT..."+reply[0], 1)
+					LaunchEditor(reply[0], 0)
+					return
+				} else {
+					// Did not find anything continue!
+				}
+			} else {
+				core.statusBar.showForSeconds("DID NOT GET ANYTHING FOR: "+cmd.CurDayPage.Format("Mon_2006_02_01"), 5)
+				return
+			}
 		}
+		// Okay we didn't find a day page, restore our counter as that was just a bogus search.
+		cmd.CurDayPage = dt
 	}})
 	GetCmdRegistry().RegisterCommand("prevdaypage", &CommandExec{"prevdaypage", "Jump to the prev page in the list", func(core *Core, params []string) {
 
-		var reply common.FileList
-		cmd.CurDayPage = cmd.CurDayPage.AddDate(0, 0, -7)
+		dt := cmd.CurDayPage
+		// If we are missing 10 weeks worth of day pages then we abort!
+		for iterations := 0; iterations < 10; iterations++ {
+			var reply common.FileList
+			cmd.CurDayPage = cmd.CurDayPage.AddDate(0, 0, -7)
+			var send common.Date
+			send.Set(cmd.CurDayPage)
 
-		SendReceiveRpc(core, "Db.GetDayPageAt", &cmd.CurDayPage, &reply)
+			SendReceiveRpc(core, "Db.GetDayPageAt", &send, &reply)
 
-		if len(reply) > 0 {
-			core.statusBar.showForSeconds("[yellow::]GOT..."+reply[0], 5)
-			LaunchEditor(reply[0], 0)
-		} else {
-			core.statusBar.showForSeconds("DID NOT GET ANYTHING FOR: "+cmd.CurDayPage.Format("Mon_2006_02_01"), 5)
+			if len(reply) > 0 {
+				if _, err := os.Stat(reply[0]); err == nil {
+					core.statusBar.showForSeconds("[yellow::]GOT..."+reply[0], 1)
+					LaunchEditor(reply[0], 0)
+					return
+				} else {
+					// Did not find anything continue!
+				}
+			} else {
+				core.statusBar.showForSeconds("DID NOT GET ANYTHING FOR: "+cmd.CurDayPage.Format("Mon_2006_02_01"), 5)
+				return
+			}
 		}
+		// Okay we didn't find a day page, restore our counter as that was just a bogus search.
+		cmd.CurDayPage = dt
 	}})
 }
 

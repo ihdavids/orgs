@@ -57,7 +57,11 @@ func CreateDayPage() (common.FileList, error) {
 	return []string{filename}, nil
 }
 
-func GetDayPageAt(dt *common.DateTime) (common.FileList, error) {
-	filename, _ := getDayPageFilename(time.Time(*dt))
-	return []string{filename}, nil
+func GetDayPageAt(dts *common.Date) (common.FileList, error) {
+	if dt, err := dts.Get(); err == nil {
+		filename, _ := getDayPageFilename(dt)
+		return []string{filename}, nil
+	} else {
+		return nil, err
+	}
 }

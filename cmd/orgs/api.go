@@ -51,7 +51,7 @@ func (s *Db) CreateDayPage(args *common.TodoHash, reply *common.FileList) error 
 	return err
 }
 
-func (s *Db) GetDayPageAt(args *common.DateTime, reply *common.FileList) error {
+func (s *Db) GetDayPageAt(args *common.Date, reply *common.FileList) error {
 	var err error = nil
 	*reply, err = orgs.GetDayPageAt(args)
 	return err

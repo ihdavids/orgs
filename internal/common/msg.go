@@ -16,7 +16,15 @@ type HelloReply string
 
 type FileList []string
 
-type DateTime time.Time
+type Date string
+
+func (self *Date) Set(dt time.Time) {
+	*self = Date(dt.Format("2006-02-01"))
+}
+
+func (self *Date) Get() (time.Time, error) {
+	return time.Parse("2006-02-01", string(*self))
+}
 
 type Todo struct {
 	Headline string
