@@ -68,7 +68,18 @@ func CreateDayPage() (common.FileList, error) {
 		context["month"] = fmt.Sprintf("%d", dt.Month())
 		context["year"] = fmt.Sprintf("%d", dt.Year())
 
-		//oldFn, _ := getPreviousDayPage(dt)
+		oldFn, _ := getPreviousDayPage(dt)
+		if oldFn != "" {
+			if ofile := GetDb().FindByFile(oldFn); ofile != nil {
+				// nodes, _ := QueryStringNodesOnFile("!IsArchived() && IsTask() && IsActive()", ofile)
+				// TODO: Add nodes to new day page as a context
+
+				// Now go archive the old page since we have a new page to work with.
+				if AddFileTag("ARCHIVE", ofile.doc) {
+					WriteOutOrgFile(ofile)
+				}
+			}
+		}
 
 		todayData := RenderTemplate(template, context)
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)

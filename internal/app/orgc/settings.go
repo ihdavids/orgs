@@ -2,8 +2,10 @@ package orgc
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/rpc"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -92,7 +94,17 @@ func (self *Config) ParseConfig() {
 	self.Defaults()
 
 	// Parse our config file next if present.
-	filename, _ := filepath.Abs("orgc.yaml")
+	execPath, _ := os.Executable()
+	execPath = filepath.Dir(execPath)
+	execPath = filepath.Join(execPath, "orgc.yaml")
+	filename := execPath
+	if _, err := os.Stat(filename); err != nil {
+		filename, _ = filepath.Abs("orgc.yaml")
+		if _, err = os.Stat(filename); err != nil {
+			fmt.Printf("Looks like you do not have an orgc.yaml configuration file. Please add one!")
+			os.Exit(-1)
+		}
+	}
 	//log.Println("Loading: ", filename)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err == nil {
