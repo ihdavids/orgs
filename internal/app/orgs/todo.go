@@ -36,23 +36,36 @@ func AddFileTag(name string, d *org.Document) bool {
 	return false
 }
 
-func HasTag(name string, p *org.Section, d *org.Document) bool {
-	if HasFileTag(name, d) {
-		return true
-	}
-
-	// TODO: Make this recursive!
-	// TODO: Can we cache this?
-	nname := strings.ToLower(name)
+func HeadlineAloneHasTag(name string, p *org.Section) bool {
 	if p != nil && p.Headline != nil {
 		for _, t := range p.Headline.Tags {
 			t = strings.ToLower(strings.TrimSpace(t))
-			if t != "" && (t == nname) {
+			if t != "" && (t == name) {
 				return true
 			}
 		}
 	}
 	return false
+}
+func NodeHasTagRecursive(name string, p *org.Section) bool {
+	if HeadlineAloneHasTag(name, p) {
+		return true
+	}
+	if p.Parent != nil {
+		return NodeHasTagRecursive(name, p.Parent)
+	}
+	return false
+
+}
+
+func HasTag(name string, p *org.Section, d *org.Document) bool {
+	if HasFileTag(name, d) {
+		return true
+	}
+
+	// TODO: Can we cache this?
+	nname := strings.ToLower(name)
+	return NodeHasTagRecursive(nname, p)
 }
 
 func GetBeginOfDay(t time.Time) time.Time {
