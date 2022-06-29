@@ -196,10 +196,6 @@ func (self *Core) Start() {
 	go func() {
 		self.writePump()
 	}()
-	//haveDispatched := 0
-	//evt := tcell.EventTime{}
-	//evt.SetEventTime(time.Now().Add(2 * time.Second))
-	//self.app.QueueEvent(&evt)
 	// HACK: I can't figure out a good way to invade the tcell event queue at the moment.
 	//       So just fire up a goroutine that dispatches command line options for me.
 	//       This is frustrating but the best I can do.
@@ -207,14 +203,6 @@ func (self *Core) Start() {
 		time.Sleep(1 * time.Millisecond)
 		Conf().Dispatch(self, nil)
 	}()
-	/*
-		self.app.SetAfterDrawFunc(func(screen tcell.Screen) {
-			if haveDispatched >= 5 && haveDispatched < 6 {
-				Conf().Dispatch(self, nil)
-			}
-			haveDispatched += 1
-		})
-	*/
 	if err := self.app.SetRoot(self.layout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
