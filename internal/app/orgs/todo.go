@@ -58,6 +58,24 @@ func NodeHasTagRecursive(name string, p *org.Section) bool {
 
 }
 
+func NodeHasNoTagRecursive(p *org.Section) bool {
+	if p.Headline != nil && p.Headline.Tags != nil && len(p.Headline.Tags) > 0 {
+		return false
+	}
+	if p.Parent != nil {
+		return NodeHasNoTagRecursive(p.Parent)
+	}
+	return true
+
+}
+func NoTags(p *org.Section, d *org.Document) bool {
+	if strings.TrimSpace(d.Get("FILETAGS")) != "" {
+		return false
+	}
+
+	return NodeHasNoTagRecursive(p)
+}
+
 func HasTag(name string, p *org.Section, d *org.Document) bool {
 	if HasFileTag(name, d) {
 		return true
@@ -280,7 +298,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"NoTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			return len(p.Headline.Tags) <= 0, nil
+			return NoTags(p, exp.Doc), nil
 		},
 		"IsStatus": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
