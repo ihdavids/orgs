@@ -196,6 +196,13 @@ func (self *Core) Start() {
 	go func() {
 		self.writePump()
 	}()
+	haveDispatched := 0
+	self.app.SetAfterDrawFunc(func(screen tcell.Screen) {
+		if haveDispatched >= 5 && haveDispatched < 6 {
+			Conf().Dispatch(self, nil)
+		}
+		haveDispatched += 1
+	})
 	if err := self.app.SetRoot(self.layout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}

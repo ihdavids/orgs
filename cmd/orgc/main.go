@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+
 	//"net/rpc"
 	//"io"
 	"os"
@@ -26,7 +27,6 @@ func logToFile() *os.File {
 	log.Println("--- [OrgC] ----------------------------------")
 	return f
 }
-
 
 func main() {
 	f := logToFile()
@@ -57,10 +57,10 @@ func handle(ws *websocket.Conn) {
 	//codec := jsonrpc.NewClientCodec(rwc)
 	//c := rpc.NewClientWithCodec(codec)
 
-	core := orgc.NewCore(nil,ws)
+	core := orgc.NewCore(nil, ws)
 	core.Start()
 
-	orgc.Conf().Dispatch(nil)
+	orgc.Conf().Dispatch(core, nil)
 	/*
 		args := &common.HelloArgs{Msg: "Hello, World"}
 		var reply common.HelloReply

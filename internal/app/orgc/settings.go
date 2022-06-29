@@ -24,6 +24,7 @@ type Config struct {
 	AgendaStatusColors  map[string]string
 	AgendaBlockColors   []string
 	EditorTemplate      []string
+	StartupCommands     []string
 }
 
 func (self *Config) AddCommands() {
@@ -44,7 +45,10 @@ func (self *Config) AddCommands() {
 	}
 }
 
-func (self *Config) Dispatch(c *rpc.Client) {
+func (self *Config) Dispatch(core *Core, c *rpc.Client) {
+	for _, cmdTxt := range self.StartupCommands {
+		core.statusBar.ExecuteCommand(cmdTxt)
+	}
 	/*
 		if self.FileList {
 			ShowFileList(c)
@@ -86,6 +90,11 @@ func (self *Config) ParseCommandLine() {
 	flag.BoolVar(&self.FileList, "filelist", self.FileList, "Query for the full list of files")
 	flag.BoolVar(&self.TodoList, "todolist", self.TodoList, "List all todos in all org files")
 	flag.BoolVar(&self.ProjectList, "projectlist", self.ProjectList, "List all projects in all org files")
+	flag.Func("r", "Runs a command right at start", func(s string) error {
+		commands := strings.Split(s, ",")
+		self.StartupCommands = commands
+		return nil
+	})
 	flag.Parse()
 }
 
