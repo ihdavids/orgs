@@ -38,6 +38,22 @@ func getDayPageFilename(from time.Time) (string, string) {
 	return filename, title
 }
 
+func getPreviousDayPage(dt time.Time) (string, string) {
+	offset := -1
+	if Conf().DayPageMode == "week" {
+		offset = -7
+	}
+	for i := 0; i < 10; i++ {
+
+		dt = dt.AddDate(0, 0, offset)
+		filename, title := getDayPageFilename(dt)
+		if _, err := os.Stat(filename); err != nil {
+			return filename, title
+		}
+	}
+	return "", ""
+}
+
 func CreateDayPage() (common.FileList, error) {
 
 	template := Conf().DayPageTemplate
@@ -51,6 +67,9 @@ func CreateDayPage() (common.FileList, error) {
 		context["day"] = fmt.Sprintf("%d", dt.Day())
 		context["month"] = fmt.Sprintf("%d", dt.Month())
 		context["year"] = fmt.Sprintf("%d", dt.Year())
+
+		//oldFn, _ := getPreviousDayPage(dt)
+
 		todayData := RenderTemplate(template, context)
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
