@@ -216,6 +216,10 @@ func (self *StatusBar) commandPalette() {
 }
 
 func (t *StatusBar) HandleEvent(evt tcell.Event) bool {
+	switch evt.(type) {
+	case *tcell.EventTime:
+		Conf().Dispatch(t.core, nil)
+	}
 	return false
 }
 
