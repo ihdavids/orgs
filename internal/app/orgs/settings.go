@@ -2,8 +2,10 @@ package orgs
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -51,8 +53,18 @@ func (self *Config) ParseConfig() {
 	// Setup overall defaults for all options
 	self.Defaults()
 
+	execPath, _ := os.Executable()
+	execPath = filepath.Dir(execPath)
+	execPath = filepath.Join(execPath, "orgs.yaml")
+	filename := execPath
+	if _, err := os.Stat(filename); err != nil {
+		filename, _ = filepath.Abs("orgc.yaml")
+		if _, err = os.Stat(filename); err != nil {
+			fmt.Printf("Looks like you do not have an orgs.yaml configuration file. Please add one!")
+			os.Exit(-1)
+		}
+	}
 	// Parse our config file next if present.
-	filename, _ := filepath.Abs("orgs.yaml")
 	log.Println("Loading: ", filename)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err == nil {
