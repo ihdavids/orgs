@@ -6,4 +6,6 @@ todo_views:
   next:     "!IsProject() && IsTodo() && IsStatus('NEXT')// Tasks marked as next"
   projects: "IsProject()// All Projects"
   romark: "IsTask() && (IsPartOfProject('.*ROMARK.*') || HasTags('RoMark'))// Anything tagged as RoMark"
+  backlog: "IsTask() && (HasTags('Backlog'))// Anything marked for my backlog"
+  active: "IsTask() && (HasTags('ACTIVE'))// Anything marked as an active task"
   atest: "!IsProject() && IsTodo() && !IsArchived() && MatchHeadline('A.*')"

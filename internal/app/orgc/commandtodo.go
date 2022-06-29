@@ -205,6 +205,19 @@ func GetStatusColor(t *common.Todo) string {
 	return prefix
 }
 
+func (self *CommandTodo) ShowDetails(core *Core, filter string, index int, prefix *string) {
+
+	self.Selected = index
+	SendReceiveRpc(core, "Db.QueryFullTodo", &self.Filtered[index].Hash, &self.TaskReply)
+	core.taskPane.text.Clear()
+	core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
+	core.taskPane.text.SetDynamicColors(true)
+	core.taskPane.text.SetBorder(true)
+	*prefix = GetStatusColor(&self.Filtered[index])
+	core.taskPane.text.SetTitle(*prefix + self.Filtered[index].Status + "[white] " + self.TaskReply.Headline)
+	core.taskPane.text.SetText(FormatText(self.TaskReply.Content))
+}
+
 func (self *CommandTodo) Filter(core *Core, filter string) {
 	core.projectPane.list.Clear()
 	self.Filtered = []common.Todo{}
@@ -216,17 +229,10 @@ func (self *CommandTodo) Filter(core *Core, filter string) {
 	for _, v := range self.Filtered {
 		prefix := GetStatusColor(&v)
 		item := core.projectPane.list.AddItem(prefix+v.Status+"[white] "+v.Headline, strings.Join(v.Tags, ","), 0, nil)
+		self.ShowDetails(core, filter, 0, &prefix)
 		item.SetChangedFunc(func(index int, mainText string, secondaryText string, shortcut rune) {
 			if index < len(self.Filtered) {
-				self.Selected = index
-				SendReceiveRpc(core, "Db.QueryFullTodo", &self.Filtered[index].Hash, &self.TaskReply)
-				core.taskPane.text.Clear()
-				core.taskPane.text.SetTextColor(tcell.ColorWhite).SetTextAlign(tview.AlignLeft)
-				core.taskPane.text.SetDynamicColors(true)
-				core.taskPane.text.SetBorder(true)
-				prefix = GetStatusColor(&self.Filtered[index])
-				core.taskPane.text.SetTitle(prefix + self.Filtered[index].Status + "[white] " + self.TaskReply.Headline)
-				core.taskPane.text.SetText(FormatText(self.TaskReply.Content))
+				self.ShowDetails(core, filter, index, &prefix)
 			}
 		})
 

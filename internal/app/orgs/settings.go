@@ -74,7 +74,7 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
-		config.DefaultTodoStates = "TODO | DONE"
+		config.DefaultTodoStates = "TODO INPROGRESS BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
 		config.ParseConfig()
 	}
 	return config
