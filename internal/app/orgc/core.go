@@ -196,6 +196,13 @@ func (self *Core) Start() {
 	go func() {
 		self.writePump()
 	}()
+	// HACK: I can't figure out a good way to invade the tcell event queue at the moment.
+	//       So just fire up a goroutine that dispatches command line options for me.
+	//       This is frustrating but the best I can do.
+	go func() {
+		time.Sleep(1 * time.Millisecond)
+		Conf().Dispatch(self, nil)
+	}()
 	if err := self.app.SetRoot(self.layout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}

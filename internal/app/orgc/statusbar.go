@@ -124,6 +124,54 @@ func autoCompleteFunc(core *Core, curTxt string) []string {
 	return cmds
 }
 
+func (self *StatusBar) ExecuteCommand(cmdTxt string) {
+
+	var params []string
+	// trim off comment (description)
+	cmdTxts := strings.Split(cmdTxt, "#")
+	cmdTxt = strings.TrimSpace(cmdTxts[0])
+
+	// We are trying to filter our active projects list!
+	// We are locking in the filter
+	cmds := strings.Fields(cmdTxt)
+	if len(cmds) > 1 && cmds[0] == ":" {
+		self.cleanupCommandPalette()
+		return
+	}
+	if cmd, e := GetCmdRegistry().FindCommand(cmdTxt, &params); e == nil {
+		if self.curCmd != nil {
+			self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 1)
+			self.curCmd.ExitTasks(self.core)
+			self.curCmd.ExitProjects(self.core)
+			self.curCmd.Exit(self.core)
+		}
+		if cmd != nil {
+			self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 1)
+			cmd.Enter(self.core, params)
+			cmd.EnterProjects(self.core, params)
+			cmd.EnterTasks(self.core, params)
+			cmd.Execute(self.core, params)
+			if cmd.IsTransient() {
+				cmd.ExitTasks(self.core)
+				cmd.ExitProjects(self.core)
+				cmd.Exit(self.core)
+				if self.curCmd != nil {
+					self.curCmd.Enter(self.core, self.curParams)
+					self.curCmd.EnterProjects(self.core, self.curParams)
+					self.curCmd.EnterTasks(self.core, self.curParams)
+					self.curCmd.Execute(self.core, self.curParams)
+				}
+			} else {
+				self.curCmd = cmd
+				self.curParams = params
+			}
+		}
+	} else {
+		self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 1)
+	}
+	self.cleanupCommandPalette()
+}
+
 func (self *StatusBar) commandPalette() {
 	self.hideBasicPanels()
 
@@ -131,54 +179,10 @@ func (self *StatusBar) commandPalette() {
 	self.command.view.SetAutocompleteFunc(func(cmdTxt string) []string { return autoCompleteFunc(self.command.core, cmdTxt) })
 
 	self.command.core.app.SetFocus(self.command.view)
-	var params []string
 	self.command.view.SetDoneFunc(func(key tcell.Key) {
 		switch key {
 		case tcell.KeyEnter:
-			// trim off comment (description)
-			cmdTxts := strings.Split(self.command.cmdText, "#")
-			cmdTxt := strings.TrimSpace(cmdTxts[0])
-
-			// We are trying to filter our active projects list!
-			// We are locking in the filter
-			cmds := strings.Fields(cmdTxt)
-			if len(cmds) > 1 && cmds[0] == ":" {
-				self.cleanupCommandPalette()
-				return
-			}
-
-			if cmd, e := GetCmdRegistry().FindCommand(cmdTxt, &params); e == nil {
-				if self.curCmd != nil {
-					self.command.core.statusBar.showForSeconds("[yellow::]Cleaning up..."+self.curCmd.GetName(), 1)
-					self.curCmd.ExitTasks(self.core)
-					self.curCmd.ExitProjects(self.core)
-					self.curCmd.Exit(self.core)
-				}
-				if cmd != nil {
-					self.command.core.statusBar.showForSeconds("[yellow::]Executing..."+self.command.cmdText, 1)
-					cmd.Enter(self.core, params)
-					cmd.EnterProjects(self.core, params)
-					cmd.EnterTasks(self.core, params)
-					cmd.Execute(self.core, params)
-					if cmd.IsTransient() {
-						cmd.ExitTasks(self.core)
-						cmd.ExitProjects(self.core)
-						cmd.Exit(self.core)
-						if self.curCmd != nil {
-							self.curCmd.Enter(self.core, self.curParams)
-							self.curCmd.EnterProjects(self.core, self.curParams)
-							self.curCmd.EnterTasks(self.core, self.curParams)
-							self.curCmd.Execute(self.core, self.curParams)
-						}
-					} else {
-						self.curCmd = cmd
-						self.curParams = params
-					}
-				}
-			} else {
-				self.command.core.statusBar.showForSeconds("[red::]Unknown Command: "+self.command.cmdText, 1)
-			}
-			self.cleanupCommandPalette()
+			self.ExecuteCommand(self.command.cmdText)
 			//pane.addNewProject()
 		case tcell.KeyEsc:
 			self.cleanupCommandPalette()
@@ -209,6 +213,14 @@ func (self *StatusBar) commandPalette() {
 
 	})
 
+}
+
+func (t *StatusBar) HandleEvent(evt tcell.Event) bool {
+	switch evt.(type) {
+	case *tcell.EventTime:
+		Conf().Dispatch(t.core, nil)
+	}
+	return false
 }
 
 func (bar *StatusBar) showForSeconds(message string, timeout int) {

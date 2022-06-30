@@ -52,6 +52,20 @@ func (self *OrgDb) FindByHash(hash string) *org.Section {
 	return nil
 }
 
+func (self *OrgDb) FindByFile(filename string) *OrgFile {
+	if v, ok := self.ByFile[filename]; ok {
+		return v
+	}
+	fn := filepath.Base(filename)
+	for _, f := range self.Filenames {
+		ff := filepath.Base(f)
+		if ff == fn {
+			return self.ByFile[f]
+		}
+	}
+	return nil
+}
+
 func GetConfig() *org.Configuration {
 	return &org.Configuration{
 		AutoLink:            true,

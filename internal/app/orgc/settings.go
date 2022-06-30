@@ -2,8 +2,10 @@ package orgc
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/rpc"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -22,6 +24,7 @@ type Config struct {
 	AgendaStatusColors  map[string]string
 	AgendaBlockColors   []string
 	EditorTemplate      []string
+	StartupCommands     []string
 }
 
 func (self *Config) AddCommands() {
@@ -42,7 +45,10 @@ func (self *Config) AddCommands() {
 	}
 }
 
-func (self *Config) Dispatch(c *rpc.Client) {
+func (self *Config) Dispatch(core *Core, c *rpc.Client) {
+	for _, cmdTxt := range self.StartupCommands {
+		core.statusBar.ExecuteCommand(cmdTxt)
+	}
 	/*
 		if self.FileList {
 			ShowFileList(c)
@@ -84,6 +90,11 @@ func (self *Config) ParseCommandLine() {
 	flag.BoolVar(&self.FileList, "filelist", self.FileList, "Query for the full list of files")
 	flag.BoolVar(&self.TodoList, "todolist", self.TodoList, "List all todos in all org files")
 	flag.BoolVar(&self.ProjectList, "projectlist", self.ProjectList, "List all projects in all org files")
+	flag.Func("r", "Runs a command right at start", func(s string) error {
+		commands := strings.Split(s, ",")
+		self.StartupCommands = commands
+		return nil
+	})
 	flag.Parse()
 }
 
@@ -92,7 +103,17 @@ func (self *Config) ParseConfig() {
 	self.Defaults()
 
 	// Parse our config file next if present.
-	filename, _ := filepath.Abs("orgc.yaml")
+	execPath, _ := os.Executable()
+	execPath = filepath.Dir(execPath)
+	execPath = filepath.Join(execPath, "orgc.yaml")
+	filename := execPath
+	if _, err := os.Stat(filename); err != nil {
+		filename, _ = filepath.Abs("orgc.yaml")
+		if _, err = os.Stat(filename); err != nil {
+			fmt.Printf("Looks like you do not have an orgc.yaml configuration file. Please add one!")
+			os.Exit(-1)
+		}
+	}
 	//log.Println("Loading: ", filename)
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err == nil {

@@ -14,7 +14,7 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
-func HasTag(name string, p *org.Section, d *org.Document) bool {
+func HasFileTag(name string, d *org.Document) bool {
 	ftagstr := d.Get("FILETAGS")
 	ftags := strings.Split(ftagstr, ":")
 	nname := strings.ToLower(name)
@@ -24,16 +24,66 @@ func HasTag(name string, p *org.Section, d *org.Document) bool {
 			return true
 		}
 	}
+	return false
+}
 
+func AddFileTag(name string, d *org.Document) bool {
+	if !HasFileTag(name, d) {
+		v, _ := d.BufferSettings["FILETAGS"]
+		d.BufferSettings["FILETAGS"] = v + ":" + name + ":"
+		return true
+	}
+	return false
+}
+
+func HeadlineAloneHasTag(name string, p *org.Section) bool {
 	if p != nil && p.Headline != nil {
 		for _, t := range p.Headline.Tags {
 			t = strings.ToLower(strings.TrimSpace(t))
-			if t != "" && (t == nname) {
+			if t != "" && (t == name) {
 				return true
 			}
 		}
 	}
 	return false
+}
+func NodeHasTagRecursive(name string, p *org.Section) bool {
+	if HeadlineAloneHasTag(name, p) {
+		return true
+	}
+	if p.Parent != nil {
+		return NodeHasTagRecursive(name, p.Parent)
+	}
+	return false
+
+}
+
+func NodeHasNoTagRecursive(p *org.Section) bool {
+	if p.Headline != nil && p.Headline.Tags != nil && len(p.Headline.Tags) > 0 {
+		return false
+	}
+	if p.Parent != nil {
+		return NodeHasNoTagRecursive(p.Parent)
+	}
+	return true
+
+}
+func NoTags(p *org.Section, d *org.Document) bool {
+	if strings.TrimSpace(d.Get("FILETAGS")) != "" {
+		return false
+	}
+
+	return NodeHasNoTagRecursive(p)
+}
+
+func HasTag(name string, p *org.Section, d *org.Document) bool {
+	if HasFileTag(name, d) {
+		return true
+	}
+
+	// TODO: Can we cache this?
+	nname := strings.ToLower(name)
+	return NodeHasTagRecursive(nname, p)
 }
 
 func GetBeginOfDay(t time.Time) time.Time {
@@ -248,7 +298,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"NoTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			return len(p.Headline.Tags) <= 0, nil
+			return NoTags(p, exp.Doc), nil
 		},
 		"IsStatus": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -412,6 +462,30 @@ func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (com
 		todos, _ = ProcessNode(exp, c, f, todos)
 	}
 	return todos, nil
+}
+
+func EvalForNodes(exp *Expr, v *org.Section, f *OrgFile, nodes []*org.Section) ([]*org.Section, error) {
+	GetDb().RegisterSection(v.Hash, v, f)
+	res := EvalString(exp, v, f)
+	if res {
+		nodes = append(nodes, v)
+	}
+	for _, c := range v.Children {
+		nodes, _ = EvalForNodes(exp, c, f, nodes)
+	}
+	return nodes, nil
+}
+
+func QueryStringNodesOnFile(query string, file *OrgFile) ([]*org.Section, error) {
+	var nodes []*org.Section
+	exp, err := ParseString(&common.StringQuery{Query: query})
+	if err != nil {
+		return nodes, err
+	}
+	for _, v := range file.doc.Outline.Children {
+		nodes, _ = EvalForNodes(exp, v, file, nodes)
+	}
+	return nodes, nil
 }
 
 func QueryStringTodos(query *common.StringQuery) (common.Todos, error) {

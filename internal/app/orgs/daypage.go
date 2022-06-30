@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -68,18 +69,29 @@ func CreateDayPage() (common.FileList, error) {
 		context["month"] = fmt.Sprintf("%d", dt.Month())
 		context["year"] = fmt.Sprintf("%d", dt.Year())
 
+		var nodes []*org.Section
 		oldFn, _ := getPreviousDayPage(dt)
+		if oldFn != "" {
+			if ofile := GetDb().FindByFile(oldFn); ofile != nil {
+				nodes, _ = QueryStringNodesOnFile("!IsArchived() && IsTask() && IsActive()", ofile)
+
+				// Now go archive the old page since we have a new page to work with.
+				if AddFileTag("ARCHIVE", ofile.doc) {
+					WriteOutOrgFile(ofile)
+				}
+			}
+		}
 
 		todayData := RenderTemplate(template, context)
+		if len(nodes) > 0 {
+			d := GetConfig().Parse(strings.NewReader(todayData), filename)
+			d.Outline.Children = append(d.Outline.Children, nodes...)
+		}
 
-		//d.Outline.Children = append()
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
 	return []string{filename}, nil
 }
-
-//oldOrg := GetDb().GetFile(oldFn)
-//d := GetConfig().Parse(strings.NewReader(todayData), filename)
 
 func GetDayPageAt(dts *common.Date) (common.FileList, error) {
 	if dt, err := dts.Get(); err == nil {
