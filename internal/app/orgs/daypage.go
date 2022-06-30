@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -49,6 +50,7 @@ func getPreviousDayPage(dt time.Time) (string, string) {
 		dt = dt.AddDate(0, 0, offset)
 		filename, title := getDayPageFilename(dt)
 		if _, err := os.Stat(filename); err != nil {
+			filename, _ = filepath.Abs(filename)
 			return filename, title
 		}
 	}
@@ -71,23 +73,32 @@ func CreateDayPage() (common.FileList, error) {
 
 		var nodes []*org.Section
 		oldFn, _ := getPreviousDayPage(dt)
+		fmt.Printf("PREV DAY: %s\n", oldFn)
 		if oldFn != "" {
 			if ofile := GetDb().FindByFile(oldFn); ofile != nil {
 				nodes, _ = QueryStringNodesOnFile("!IsArchived() && IsTask() && IsActive()", ofile)
+				fmt.Printf("WE HAVE %d NODES\n", len(nodes))
 
 				// Now go archive the old page since we have a new page to work with.
 				if AddFileTag("ARCHIVE", ofile.doc) {
+					fmt.Printf("WRITING: %s\n", ofile.filename)
 					WriteOutOrgFile(ofile)
 				}
 			}
 		}
 
 		todayData := RenderTemplate(template, context)
+		fmt.Printf("RENDERING TEMPLATE\n")
 		if len(nodes) > 0 {
+			fmt.Printf("APPENDING NODES\n")
 			d := GetConfig().Parse(strings.NewReader(todayData), filename)
 			d.Outline.Children = append(d.Outline.Children, nodes...)
-		}
 
+			w := org.NewOrgWriter()
+			out, _ := d.Write(w)
+			todayData = out
+		}
+		fmt.Printf("WRITING TEMPLATE\n")
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
 	return []string{filename}, nil
