@@ -68,13 +68,18 @@ func CreateDayPage() (common.FileList, error) {
 		context["month"] = fmt.Sprintf("%d", dt.Month())
 		context["year"] = fmt.Sprintf("%d", dt.Year())
 
-		//oldFn, _ := getPreviousDayPage(dt)
+		oldFn, _ := getPreviousDayPage(dt)
 
 		todayData := RenderTemplate(template, context)
+
+		//d.Outline.Children = append()
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
 	return []string{filename}, nil
 }
+
+//oldOrg := GetDb().GetFile(oldFn)
+//d := GetConfig().Parse(strings.NewReader(todayData), filename)
 
 func GetDayPageAt(dts *common.Date) (common.FileList, error) {
 	if dt, err := dts.Get(); err == nil {
