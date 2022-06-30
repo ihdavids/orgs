@@ -92,13 +92,16 @@ func CreateDayPage() (common.FileList, error) {
 		if len(nodes) > 0 {
 			fmt.Printf("APPENDING NODES\n")
 			d := GetConfig().Parse(strings.NewReader(todayData), filename)
-			d.Outline.Children = append(d.Outline.Children, nodes...)
+			for _, n := range nodes {
+				fmt.Printf("APPENDING: %s\n", n.Headline.Title[0].String())
+				d.Nodes = append(d.Nodes, n.Headline)
+			}
 
 			w := org.NewOrgWriter()
-			out, _ := d.Write(w)
-			todayData = out
+			d.Write(w)
+			todayData = w.String()
 		}
-		fmt.Printf("WRITING TEMPLATE\n")
+		fmt.Printf("WRITING TEMPLATE %s\n", filename)
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
 	return []string{filename}, nil
