@@ -123,6 +123,7 @@ func ReceiveAndDecode[RESP any](core *Core, obj *RESP) {
 
 func EncodeAndSend[T any](core *Core, name string, args *T) {
 	r, err := json.EncodeClientRequest(name, args)
+	//log.Println("REQUEST: ", string(r))
 	if err != nil {
 		log.Println("ERROR: ", err)
 	}

@@ -31,6 +31,7 @@ func main() {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  common.MaxMessageSize,
 	WriteBufferSize: common.MaxMessageSize,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 func serveWs(w http.ResponseWriter, r *http.Request) {

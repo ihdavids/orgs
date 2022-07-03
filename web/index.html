@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script>
+// JSON-RPC over Websocket implementation
+var JSONRPC_TIMEOUT_MS = 1000;
+
+function delay(ms) {
+    return new Promise(resolve => {
+        setTimeout(() => {resolve(); }, ms);
+    })
+}
+
+
+var jsonrpc = function(url, onopen, onclose, onnotification) {
+  var rpcid = 0, pending = {}, ws = new WebSocket(url);
+  if (!ws) return null;
+  ws.onclose = onclose;
+  ws.onmessage = function(ev) {
+    const frame = JSON.parse(ev.data);
+    console.log('rcvd', frame, 'pending:', pending);
+    if (frame.id !== undefined) {
+      if (pending[frame.id] !== undefined) pending[frame.id](frame);  // Resolve
+      delete (pending[frame.id]);
+    } else {
+      if (onnotification) onnotification(frame);
+    }
+  };
+  if (onopen) {
+    ws.onopen = onopen
+  }
+  return {
+    close: () => ws.close(),
+    call: function(method, params) {
+      const id = rpcid++, request = {id, method, params};
+      ws.send(JSON.stringify(request));
+      console.log('sent', request);
+      return new Promise(function(resolve, reject) {
+        setTimeout(JSONRPC_TIMEOUT_MS, function() {
+          if (pending[id] === undefined) return;
+          log('Timing out frame ', JSON.stringify(request));
+          delete (pending[id]);
+          reject();
+        });
+        pending[id] = x => resolve(x);
+      });
+    },
+  };
+};
+    </script>
+</head
+<body>
+
+<script>
+    // Create a Simple-JsonRPC object which can call HTTP JSON-RPC queries against the remote server https://rpc.example.com
+    var jrpc = jsonrpc("ws://localhost:8010/org", () => { 
+        console.log("Connected"); 
+    
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    var myDate = yyyy + " " + mm + " " + dd;
+    // REQUEST:  {"method":"Db.QueryTodosExp","params":[{"Query":"!IsArchived() \u0026\u0026 !IsProject() \u0026\u0026 IsTodo()"}],"id":5577006791947779410}
+	var query = [{'Query': `!IsProject() && !IsArchived() && IsTodo() && OnDate("${myDate}")`}]
+    jrpc.call('Db.QueryTodosExp', query).then(function(res) {
+        console.log("Go something back: " + JSON.stringify(res));
+    });
+    
+    }, () => { console.log("CLOSED");}, msg => { console.log("GOT BACK: " + JSON.stringify(msg));});
+
+    // Equivelent to: {"jsonrpc":"2.0","method":"get_account","id":1,"params":["johndoe"]}
+    //jrpc.waitForConnection().then(function () {
+//});
+    // Equivelent to: {"jsonrpc":"2.0","method":"find_posts","id":2,"params":{"tag":"python","author":"jane.doe"}}
+    /*
+    jrpc.call('find_posts', {tag: 'python', author: 'jane.doe'}).then(function(posts) {
+        for (var p of posts) {
+            console.log("Post title:", p.title)
+            console.log("Post tags:", p.tags)
+            console.log("Post content:", p.content)
+        }
+    });
+    */
+    // Equivelent to: {"jsonrpc":"2.0","method":"status","id":3}
+    /*
+    jrpc.call('status').then(function(status) {
+        console.log(status);
+    });
+    */
+
+</script>
+</body>
+</html>
