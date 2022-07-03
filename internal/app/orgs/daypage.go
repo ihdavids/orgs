@@ -6,9 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -48,6 +50,7 @@ func getPreviousDayPage(dt time.Time) (string, string) {
 		dt = dt.AddDate(0, 0, offset)
 		filename, title := getDayPageFilename(dt)
 		if _, err := os.Stat(filename); err != nil {
+			filename, _ = filepath.Abs(filename)
 			return filename, title
 		}
 	}
@@ -68,20 +71,37 @@ func CreateDayPage() (common.FileList, error) {
 		context["month"] = fmt.Sprintf("%d", dt.Month())
 		context["year"] = fmt.Sprintf("%d", dt.Year())
 
+		var nodes []*org.Section
 		oldFn, _ := getPreviousDayPage(dt)
+		fmt.Printf("PREV DAY: %s\n", oldFn)
 		if oldFn != "" {
 			if ofile := GetDb().FindByFile(oldFn); ofile != nil {
-				// nodes, _ := QueryStringNodesOnFile("!IsArchived() && IsTask() && IsActive()", ofile)
-				// TODO: Add nodes to new day page as a context
+				nodes, _ = QueryStringNodesOnFile("!IsArchived() && IsTask() && IsActive()", ofile)
+				fmt.Printf("WE HAVE %d NODES\n", len(nodes))
 
 				// Now go archive the old page since we have a new page to work with.
 				if AddFileTag("ARCHIVE", ofile.doc) {
+					fmt.Printf("WRITING: %s\n", ofile.filename)
 					WriteOutOrgFile(ofile)
 				}
 			}
 		}
 
 		todayData := RenderTemplate(template, context)
+		fmt.Printf("RENDERING TEMPLATE\n")
+		if len(nodes) > 0 {
+			fmt.Printf("APPENDING NODES\n")
+			d := GetConfig().Parse(strings.NewReader(todayData), filename)
+			for _, n := range nodes {
+				fmt.Printf("APPENDING: %s\n", n.Headline.Title[0].String())
+				d.Nodes = append(d.Nodes, n.Headline)
+			}
+
+			w := org.NewOrgWriter()
+			d.Write(w)
+			todayData = w.String()
+		}
+		fmt.Printf("WRITING TEMPLATE %s\n", filename)
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
 	return []string{filename}, nil

@@ -29,7 +29,22 @@ func HasFileTag(name string, d *org.Document) bool {
 
 func AddFileTag(name string, d *org.Document) bool {
 	if !HasFileTag(name, d) {
-		v, _ := d.BufferSettings["FILETAGS"]
+		v, have := d.BufferSettings["FILETAGS"]
+		if have {
+			for i, n := range d.Nodes {
+				switch kw := n.(type) {
+				case org.Keyword:
+					if kw.Key == "FILETAGS" {
+						kw.Value += ":" + name + ":"
+						d.Nodes[i] = kw
+						break
+					}
+				}
+			}
+		} else {
+			kw := org.Keyword{Key: "FILETAGS", Value: ":" + name + ":"}
+			d.Nodes = append([]org.Node{kw}, d.Nodes...)
+		}
 		d.BufferSettings["FILETAGS"] = v + ":" + name + ":"
 		return true
 	}
