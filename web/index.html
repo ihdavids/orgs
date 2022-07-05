@@ -65,13 +65,13 @@ background-color: #fbfbfb;
 
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#Todos"
+                    aria-expanded="true" aria-controls="Todos">
                     <i class="fas fa-fw fa-cog"></i>
                     <span>Todo Lists</span>
                 </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
+                <div id="Todos" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div id="TodosList" class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Defined Lists:</h6>
                         <a class="collapse-item" onclick="ShowPage('todos_section');return false" href="buttons.html">Buttons</a>
                         <a class="collapse-item" href="cards.html">Cards</a>
@@ -211,7 +211,7 @@ background-color: #fbfbfb;
 
             <p class="h1 text-center mt-3 mb-4 pb-3 text-primary">
               <i class="fas fa-check-square me-1"></i>
-              <u>My Todo-s</u>
+              <u id="TodoListTitle">My Todo-s</u>
             </p>
 
             <div class="pb-2">
