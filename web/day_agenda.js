@@ -14,6 +14,32 @@ function clamp(x) {
   }
   return x
 }
+
+var agenda_section_loaded = (jrpc) => {
+  queryToday(jrpc);
+}
+
+var queryToday = (jrpc) => {
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    var myDate = yyyy + " " + dd + " " + mm;
+    // REQUEST:  {"method":"Db.QueryTodosExp","params":[{"Query":"!IsArchived() \u0026\u0026 !IsProject() \u0026\u0026 IsTodo()"}],"id":5577006791947779410}
+	  var query = [{'Query': `!IsProject() && !IsArchived() && IsTodo() && OnDate("${myDate}")`}]
+    console.log("QUERY: " + JSON.stringify(query));
+    jrpc.call('Db.QueryTodosExp', query).then(function(res) {
+        console.log("Got something back: " + JSON.stringify(res));
+        let events = [];
+        res['result'].forEach( (item) => {
+          let s = new Date(item.Date.Start);
+          let e = new Date(item.Date.End);
+          events.push({headline: item.Headline, start: s, end: e});
+        }); 
+        layOutDay(events);
+    });
+}
+
 // append one event to calendar
 var createEvent = (evt, height, top, left, units) => {
 
