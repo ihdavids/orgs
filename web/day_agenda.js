@@ -15,15 +15,33 @@ function clamp(x) {
   return x
 }
 
+var currentDay = new Date();
+
 var agenda_section_loaded = (jrpc) => {
-  queryToday(jrpc);
+  queryDay(jrpc, currentDay);
 }
 
-var queryToday = (jrpc) => {
-    var today = new Date();
-    var dd = String(today.getDate()).padStart(2, '0');
-    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-    var yyyy = today.getFullYear();
+var showAgendaToday = () => {
+  currentDay = new Date();
+  queryDay(jrpc, currentDay);
+}
+
+function addDays(date, days) {
+  var result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+
+var moveAgendaToTomorrow = () => {
+  currentDay = addDays(currentDay, 1);
+  queryDay(jrpc, currentDay);
+}
+
+var queryDay = (jrpc, day) => {
+    var dd = String(day.getDate()).padStart(2, '0');
+    var mm = String(day.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = day.getFullYear();
     var myDate = yyyy + " " + dd + " " + mm;
     // REQUEST:  {"method":"Db.QueryTodosExp","params":[{"Query":"!IsArchived() \u0026\u0026 !IsProject() \u0026\u0026 IsTodo()"}],"id":5577006791947779410}
 	  var query = [{'Query': `!IsProject() && !IsArchived() && IsTodo() && OnDate("${myDate}")`}]
@@ -31,12 +49,16 @@ var queryToday = (jrpc) => {
     jrpc.call('Db.QueryTodosExp', query).then(function(res) {
         console.log("Got something back: " + JSON.stringify(res));
         let events = [];
+        if (res['result'] != null) {
         res['result'].forEach( (item) => {
           let s = new Date(item.Date.Start);
           let e = new Date(item.Date.End);
           events.push({headline: item.Headline, start: s, end: e});
-        }); 
+        });
         layOutDay(events);
+        } else {
+          layOutDay(null);
+        }
     });
 }
 

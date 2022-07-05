@@ -33,8 +33,33 @@
   display: inline-block;
 }
 
+
+.agd-yesterday {
+  font-weight: 900;
+  content: '\f104';
+  font-family: 'Font Awesome 5 Free';
+  margin-right: 0.1rem;
+  max-width: 5%;
+}
+
+.agd-tomorrow {
+  font-weight: 900;
+  content: '\f104';
+  font-family: 'Font Awesome 5 Free';
+  margin-right: 0.1rem;
+  max-width: 5%;
+}
+.agd-today {
+  font-weight: 900;
+  content: '\f104';
+  font-family: 'Font Awesome 5 Free';
+  margin-right: 0.1rem;
+  max-width: 5%;
+}
+
+
 .agd-container {
-  position: fixed;
+  position: relative;
   margin: 0;
   padding: 0;
   border: 0;

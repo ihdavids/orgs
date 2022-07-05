@@ -144,6 +144,13 @@ background-color: #fbfbfb;
                     <div class="row">
                         <div class ="agd-container" id="agenda"></div>
                     </div>
+                    <div class="row text-center d-done d-md-inline">
+                      <div class="row-cols-5">
+                      <button id="agendaYesterday" class="py-3 rounded-circle agd-yesterday" onclick="moveAgendaToTomorrow();return false"></button>
+                      <button class="agd-today" onclick="showAgendaToday();return false">Today</button>
+                      <button id="agendaTomorrow" class="agd-tomorrow" onclick="moveAgendaToTomorrow();return false"></button>
+                      </div>
+                    </div>
                 </div>
 
 <script>
