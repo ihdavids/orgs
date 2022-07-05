@@ -25,6 +25,7 @@ background-color: #fbfbfb;
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="calendar.js"></script>
     <script src="day_agenda.js"></script>
     <script src="page_switcher.js"></script>
     <script src="myjsonrpc.js"></script>
@@ -138,17 +139,18 @@ background-color: #fbfbfb;
                 <div class="container-fluid" id="agenda_section">
                     <br>
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Agenda</h1>
+                        <h1 id="agendaTitle" class="h3 mb-0 text-gray-800">Agenda</h1>
                     </div>
 
                     <div class="row">
                         <div class ="agd-container" id="agenda"></div>
+                        <div class ="calendar"></div>
                     </div>
-                    <div class="row text-center d-done d-md-inline">
-                      <div class="row-cols-5">
-                      <button id="agendaYesterday" class="py-3 rounded-circle agd-yesterday" onclick="moveAgendaToTomorrow();return false"></button>
-                      <button class="agd-today" onclick="showAgendaToday();return false">Today</button>
-                      <button id="agendaTomorrow" class="agd-tomorrow" onclick="moveAgendaToTomorrow();return false"></button>
+                    <div class="row d-md-inline">
+                      <div class="row-cols-1">
+                      <button id="agendaYesterday" class="rounded-3 agd-yesterday" onclick="moveAgendaToYesterday();return false"></button>
+                      <button id="agendaToday"     class="rounded-3 agd-today" onclick="showAgendaToday();return false"></button>
+                      <button id="agendaTomorrow" class="rounded-3 agd-tomorrow" onclick="moveAgendaToTomorrow();return false"></button>
                       </div>
                     </div>
                 </div>

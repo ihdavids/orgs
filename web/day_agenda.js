@@ -17,6 +17,58 @@ function clamp(x) {
 
 var currentDay = new Date();
 
+var calendar;
+
+function show_calendar() {
+calendar = createCalendar('.calendar', {
+  type: 'month',
+  date: {
+    min: '2000-01-01',
+    max: '2030-12-31',
+    today: new Date('2022-01-07'),
+  },
+  settings: {
+    lang: 'en',
+    iso8601: true,
+    range: {
+      min: '2022-01-01',
+      max: '2022-02-12',
+      disabled: ['2022-01-25'],
+    },
+    selection: {
+      day: 'multiple',
+      month: false,
+      year: false,
+    },
+    selected: {
+      dates: ['2022-01-09', '2022-01-10'],
+      month: 1,
+      year: 2022,
+      holidays: ['2022-01-02', '2022-01-03', '2022-01-04', '2022-01-05'],
+    },
+    visibility: {
+      weekend: false,
+      today: true,
+      disabled: true,
+    },
+  },
+  actions: {
+    clickDay(e) {
+      alert(e.target.dataset.calendarDay);
+    },
+    clickMonth(e) {
+      alert(e.target.dataset.calendarMonth);
+    },
+    clickYear(e) {
+      alert(e.target.dataset.calendarYear);
+    },
+  },
+});
+
+calendar.init();
+}
+
+
 var agenda_section_loaded = (jrpc) => {
   queryDay(jrpc, currentDay);
 }
@@ -38,10 +90,19 @@ var moveAgendaToTomorrow = () => {
   queryDay(jrpc, currentDay);
 }
 
+var moveAgendaToYesterday = () => {
+  currentDay = addDays(currentDay, -1);
+  queryDay(jrpc, currentDay);
+}
+
 var queryDay = (jrpc, day) => {
+  //show_calendar();
     var dd = String(day.getDate()).padStart(2, '0');
     var mm = String(day.getMonth() + 1).padStart(2, '0'); //January is 0!
     var yyyy = day.getFullYear();
+    var wd = day.getDay();
+    var wdlook = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    wd = wdlook[wd];
     var myDate = yyyy + " " + dd + " " + mm;
     // REQUEST:  {"method":"Db.QueryTodosExp","params":[{"Query":"!IsArchived() \u0026\u0026 !IsProject() \u0026\u0026 IsTodo()"}],"id":5577006791947779410}
 	  var query = [{'Query': `!IsProject() && !IsArchived() && IsTodo() && OnDate("${myDate}")`}]
@@ -59,8 +120,14 @@ var queryDay = (jrpc, day) => {
         } else {
           layOutDay(null);
         }
+        let el = document.getElementById("agendaTitle");
+        if (el != null) {
+          el.innerHTML = "Agenda: " + wd + "     (" + yyyy + " " +  mm + " " +  dd + ")"
+        }
     });
 }
+
+
 
 // append one event to calendar
 var createEvent = (evt, height, top, left, units) => {
@@ -74,6 +141,8 @@ var createEvent = (evt, height, top, left, units) => {
   node.style.height = height + "px";
   node.style.top = top + "px";
   node.style.left = 100 + left + "px";
+
+  //node.style['border-left-color'] = '#f00';
 
   document.getElementById("events").appendChild(node);
 }
