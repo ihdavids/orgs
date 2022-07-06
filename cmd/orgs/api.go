@@ -51,6 +51,12 @@ func (s *Db) QueryValidStatus(args *common.TodoHash, reply *common.TodoStatesRes
 	return err
 }
 
+func (s *Db) QueryFullFileHtml(args *common.TodoHash, reply *common.FullTodo) error {
+	var err error = nil
+	*reply, err = orgs.QueryFullFileHtml(args)
+	return err
+}
+
 func (s *Db) CreateDayPage(args *common.TodoHash, reply *common.FileList) error {
 	var err error = nil
 	*reply, err = orgs.CreateDayPage()

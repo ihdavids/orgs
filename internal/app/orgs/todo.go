@@ -482,6 +482,17 @@ func QueryFullTodoHtml(query *common.TodoHash) (common.FullTodo, error) {
 	return td, fmt.Errorf("failed to find todo by hash")
 }
 
+func QueryFullFileHtml(query *common.TodoHash) (common.FullTodo, error) {
+	var td common.FullTodo
+	if f := GetDb().FindByFile((string)(*query)); f != nil {
+		w := org.NewHTMLWriter()
+		org.WriteNodes(w, f.doc.Nodes...)
+		td.Content = w.String()
+		return td, nil
+	}
+	return td, fmt.Errorf("failed to find todo by hash")
+}
+
 func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (common.Todos, error) {
 	GetDb().RegisterSection(v.Hash, v, f)
 	res := EvalString(exp, v, f)

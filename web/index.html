@@ -30,6 +30,7 @@ background-color: #fbfbfb;
     <script src="day_agenda.js"></script>
     <script src="page_switcher.js"></script>
     <script src="myjsonrpc.js"></script>
+    <script src="utilities.js"></script>
 
     <title>Org Portal</title>
 </head>
@@ -50,7 +51,7 @@ background-color: #fbfbfb;
             <!-- Divider -->
             <hr class="sidebar-divider my-0">
 
-            <!-- Nav Item - Dashboard -->
+            <!-- Nav Item - Agenda -->
             <li class="nav-item active">
                 <a class="nav-link" onclick="ShowPage('agenda_section'); return false;">
                     <i class="fas fa-fw fa-calendar-day"></i>
@@ -90,10 +91,12 @@ background-color: #fbfbfb;
                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Custom Utilities:</h6>
-                        <a class="collapse-item" href="utilities-color.html">Colors</a>
+                        <a class="collapse-item" href="#!" onclick="DayPage(); return false;">Day Page</a>
+                        <!--
                         <a class="collapse-item" href="utilities-border.html">Borders</a>
                         <a class="collapse-item" href="utilities-animation.html">Animations</a>
                         <a class="collapse-item" href="utilities-other.html">Other</a>
+                        -->
                     </div>
                 </div>
             </li>
@@ -187,6 +190,11 @@ background-color: #fbfbfb;
     */
 
 </script>
+
+
+<section class="vh-100" style="display: none;" id="page_section">
+  <div id="PageContent"></div>
+</section>
 
 <section class="vh-100" style="display: none;" id="todos_section">
 <style>
