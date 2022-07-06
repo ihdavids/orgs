@@ -75,6 +75,13 @@ var DayPage = () => {
                 ShowPage('page_section');
                 let el = document.getElementById('PageContent');
                 el.innerHTML = content;
+
+                $('[id^=headline-]').on('click',function(e) {
+                    let id = $(this).attr('id');
+                    let divid="#outline-text-" + id;
+                    console.log(divid);
+                    $(divid).toggle();
+                });
             }
         });
       }
