@@ -71,7 +71,7 @@ var DayPage = () => {
             //console.log("Got something back: " + JSON.stringify(res));
             if ('result' in res && 'Content' in res['result']) {
                 let content = res['result']['Content']
-                //console.log(content);
+                console.log(content);
                 ShowPage('page_section');
                 let el = document.getElementById('PageContent');
                 el.innerHTML = content;

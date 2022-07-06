@@ -145,15 +145,65 @@
   font-size: 200%;
 }
 
+.orgdiv 
+{
+  padding: 20px;
+}
 
-.org :is(h1, h2, h3, h4) {
+.org :is(h1, h2, h3, h4) 
+{
   margin: 2.5rem 0 1.5rem 0;
-  line-height: 1.25; }
+  line-height: 1.25; 
+}
 
-.org.title {
+.org .outline-2 
+{
+  padding-left: 0px;
+}
+
+.org .outline-text-2 
+{
+  padding-left: 10px;
+  color: black;
+}
+
+.org .outline-3 
+{
+  padding-left: 20px;
+}
+
+.org .outline-text-3 
+{
+  padding-left: 30px;
+  color: black;
+}
+
+.org .outline-4 
+{
+  padding-left: 40px;
+}
+
+.org .outline-text-4 
+{
+  padding-left: 50px;
+  color: black;
+}
+
+.org .outline-5
+{
+  padding-left: 60px;
+}
+
+.org .outline-text-5
+{
+  padding-left: 70px;
+  color: black;
+}
+
+.org .title {
   font-size: 2.5em; }
 
-.org.subtitle {
+.org .subtitle {
   font-weight: normal;
   font-size: 0.75em;
   color: #666; }
@@ -223,38 +273,43 @@
   margin: 1em 0;
 }
 
-figcaption.org {
+.org :is(figcaption) {
   font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
   font-size: 0.75em;
   text-align: center;
   color: grey; }
 
-.org.footnote-definition sup {
+.org .footnote-definition sup {
   float: left; }
 
-.org.footnote-definition .footnote-body {
+.org .footnote-definition .footnote-body {
   margin: 1em 0;
   padding: 0 1em;
   border: 1px solid rgba(250, 100, 50, 0.3);
   background-color: #ccc; }
-.org.footnote-definition .footnote-body p:only-child {
+.org .footnote-definition .footnote-body p:only-child {
   margin: 0.2em 0; }
 
-.org.align-left   { text-align: left;   }
-.org.align-center { text-align: center; }
-.org.align-right  { text-align: right;  }
+.org .align-left   { text-align: left;   }
+.org .align-center { text-align: center; }
+.org .align-right  { text-align: right;  }
 
 
 dl.org { font-family: monospace, monospace; }
 dl.org > dt { font-weight: bold; }
 dl.org > dd { margin: 1em; }
 
-.org.todo, .org.priority, .org.tags {
+.org .todo, .org .priority {
   font-size: 0.8em;
-  color: lightgrey;
+  color: red;
 }
 
-.org.timestamp {
+.org .tags {
+  font-size: 0.8em;
+  color: cyan;
+}
+
+.org .timestamp {
   background-color: #eee;
   padding: 0.05em 0.2em;
   border: 1px solid #ccc; }
