@@ -30,7 +30,6 @@ background-color: #fbfbfb;
     <script src="day_agenda.js"></script>
     <script src="page_switcher.js"></script>
     <script src="myjsonrpc.js"></script>
-    <script src="utilities.js"></script>
 
     <title>Org Portal</title>
 </head>
@@ -357,5 +356,8 @@ background-color: #fbfbfb;
 </div>
 </div>
 </div> 
+
+<!--This relies on access to the dom so has to be loaded after dom is defined.-->
+<script src="utilities.js"></script>
 </body>
 </html>
