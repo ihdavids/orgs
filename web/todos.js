@@ -17,6 +17,7 @@ var todosInit = () => {
             let v = entry;
 
             node.onclick = () => { console.log(v); ShowTodos(v,todo_lists[v]); return false;};
+            node.setAttribute('href',todo_lists[v])
             el.appendChild(node);
         }
         // <a class="collapse-item" onclick="ShowPage('todos_section');return false" href="buttons.html">Buttons</a>
