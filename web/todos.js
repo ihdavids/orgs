@@ -53,6 +53,28 @@ var todosInit = () => {
             </ul> 
 */
 
+var active = {
+  "TODO": '<i class="fas fa-expand me-0"></i>',
+  "IN-PROGRESS": '<i class="fas fa-spinner me-0"></i>',
+  "INPROGRESS": '<i class="fas fa-spinner me-0"></i>',
+  "MEETING": '<i class="fas fa-clock me-0"></i>',
+  "BLOCKED": '<i class="fas fa-radiation me-0"></i>',
+  "WAITING": '<i class="fas fa-pause me-0"></i>',
+}
+
+var inactive = {
+  "CANCELLED": '<i class="fas fa-times me-0"></i>',
+  "DONE": '<i class="fas fa-check me-0"></i>',
+}
+
+function ChangeStatus(to, item) {
+	var query = [{'Hash': `${item["Hash"]}`, "Value": to}]
+  jrpc.call('Db.ChangeStatus', query).then(function(res) {
+    console.log("Got something back: " + JSON.stringify(res));
+    // TODO: Update display
+  });
+}
+
 function addTodo(tlist, item) {
     let ul = document.createElement('ul');
     ul.className="list-group list-group-horizontal rounded-0 bg-transparent";
@@ -66,13 +88,34 @@ function addTodo(tlist, item) {
     dv.className="form-check";
     li.appendChild(dv);
 
+    /*
     let inpt = document.createElement("input");
     inpt.className="form-check-input me-0";
     inpt.type = "checkbox";
     inpt.value = "";
     //inpt.id = "";
     inpt.setAttribute('aria-label',"...");
-    inpt.setAttribute('checked',value=null);
+    if (item["IsActive"]) {
+      inpt.setAttribute('checked',value=null);
+    }
+    dv.appendChild(inpt);
+*/
+    let inpt = document.createElement("div");
+    inpt.className="text-info me-0";
+
+    if (item["IsActive"]) {
+      let stat = item["Status"];
+      inpt.innerHTML = active[stat];
+      inpt.onclick = () => {
+        ChangeStatus("DONE",item);
+      }
+    } else {
+      let stat = item["Status"];
+      inpt.innerHTML = inactive[stat];
+      inpt.onclick = () => {
+        ChangeStatus("TODO",item);
+      }
+    }
     dv.appendChild(inpt);
 
     // NAME
@@ -81,7 +124,8 @@ function addTodo(tlist, item) {
     ul.appendChild(li);
     
     p = document.createElement('p');
-    p.className="lead fw-normal mb-0";
+    p.className="lead fw-normal mb-0 red";
+    
     p.innerHTML=item["Headline"];
     li.appendChild(p);
 
