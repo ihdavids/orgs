@@ -237,7 +237,7 @@ function addTodo(tlist, item, shouldBeActive) {
       li.appendChild(c);
 
       dv = document.createElement('DIV');
-      dv.className = "card-body py-4 px-md-5";
+      dv.className = "card-body py-4 px-md-5 org";
       dv.innerHTML = item["Content"];
       c.appendChild(dv);
     }
