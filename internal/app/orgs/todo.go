@@ -455,6 +455,33 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 	return td, fmt.Errorf("failed to find todo by hash")
 }
 
+func QueryFullTodoHtml(query *common.TodoHash) (common.FullTodo, error) {
+	var td common.FullTodo
+	if s, ok := GetDb().ByHash[(string)(*query)]; ok {
+		var title string
+		for _, n := range s.Headline.Title {
+			title += n.String()
+		}
+		td.Headline = title
+		td.Hash = s.Hash
+		td.Priority = s.Headline.Priority
+		td.Tags = s.Headline.Tags
+		var contentNodes []org.Node = s.Headline.Children
+		for i, n := range s.Headline.Children {
+			switch n.(type) {
+			case org.Headline:
+				contentNodes = s.Headline.Children[0:i]
+				break
+			}
+		}
+		w := org.NewHTMLWriter()
+		org.WriteNodes(w, contentNodes...)
+		td.Content = w.String()
+		return td, nil
+	}
+	return td, fmt.Errorf("failed to find todo by hash")
+}
+
 func ProcessNode(exp *Expr, v *org.Section, f *OrgFile, todos common.Todos) (common.Todos, error) {
 	GetDb().RegisterSection(v.Hash, v, f)
 	res := EvalString(exp, v, f)

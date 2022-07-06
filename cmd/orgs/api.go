@@ -26,6 +26,12 @@ func (s *Db) QueryFullTodo(args *common.TodoHash, reply *common.FullTodo) error 
 	return err
 }
 
+func (s *Db) QueryFullTodoHtml(args *common.TodoHash, reply *common.FullTodo) error {
+	var err error = nil
+	*reply, err = orgs.QueryFullTodoHtml(args)
+	return err
+}
+
 // Change the status TODO,DONE etc in a todo head by hash
 func (s *Db) ChangeStatus(args *common.TodoItemChange, reply *common.Result) error {
 	var err error = nil

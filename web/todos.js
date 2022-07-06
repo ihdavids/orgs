@@ -82,6 +82,24 @@ function ChangeStatus(to, item, activeStatus) {
   });
 }
 
+function GetTodoHtml(item) {
+  if ("ShowContent" in item && item.ShowContent == true) {
+    item.ShowContent = false;
+    RedrawTodos();
+  } else {
+	  var query = [`${item["Hash"]}`]
+    jrpc.call('Db.QueryFullTodoHtml', query).then(function(res) {
+      console.log("Got something back: " + JSON.stringify(res));
+      if (res != null && res['result']["Content"]) {
+        item["Content"] = res['result']["Content"];
+        item["ShowContent"] = true;
+      }
+      RedrawTodos();
+  });
+
+  }
+}
+
 // Yes a module level variable. This is the currently active list.
 var currentTodos = null;
 
@@ -148,7 +166,10 @@ function addTodo(tlist, item, shouldBeActive) {
    
     // TODO: This should open an HTML view of this node or file.
     //       Need to get creative on how to do that.
-    p.innerHTML=`<a href="file://${item.Filename}">${item.Headline}</a>`;
+    p.innerHTML=item.Headline;
+    p.onclick = () => {
+      GetTodoHtml(item);
+    }
     li.appendChild(p);
 
     // Controls
@@ -193,6 +214,25 @@ function addTodo(tlist, item, shouldBeActive) {
     p.className="small mb-0";
     p.innerHTML='<i class="fas fa-info-circle me-2"></i>blah';
     a.appendChild(p);
+
+    if ("Content" in item && "ShowContent" in item && item.ShowContent == true) {
+      ul = document.createElement('ul');
+      ul.className="list-group list-group-horizontal rounded-0 bg-transparent";
+      tlist.appendChild(ul);
+
+      li = document.createElement('li');
+      li.className = "list-group-item d-flex align-items-center ps-4 pe-5 py-1 rounded-0 border-0 bg-transparent";
+      ul.appendChild(li);
+
+      li = document.createElement('li');
+      li.className = "list-group-item d-flex align-items-center ps-0 pe-3 py-1 rounded-0 border-0 bg-transparent";
+      ul.appendChild(li);
+
+      dv = document.createElement('DIV');
+      dv.className = "card shadow";
+      dv.innerHTML = item["Content"];
+      li.appendChild(dv);
+    }
 }
 
 var RedrawTodos = () => {
