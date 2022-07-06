@@ -24,12 +24,105 @@ var todosInit = () => {
     }
 }
 
-var ShowTodos = (name,query) => {
+/*
+            <ul class="list-group list-group-horizontal rounded-0 bg-transparent">
+              <li
+                class="list-group-item d-flex align-items-center ps-0 pe-3 py-1 rounded-0 border-0 bg-transparent">
+                <div class="form-check">
+                  <input class="form-check-input me-0" type="checkbox" value="" id="flexCheckChecked1"
+                    aria-label="..." checked />
+                </div>
+              </li>
+              <li
+                class="list-group-item px-3 py-1 d-flex align-items-center flex-grow-1 border-0 bg-transparent">
+                <p class="lead fw-normal mb-0">Buy groceries for next week</p>
+              </li>
+              <li class="list-group-item ps-3 pe-0 py-1 rounded-0 border-0 bg-transparent">
+                <div class="d-flex flex-row justify-content-end mb-1">
+                  <a href="#!" class="text-info" data-mdb-toggle="tooltip" title="Edit todo"><i
+                      class="fas fa-pencil-alt me-3"></i></a>
+                  <a href="#!" class="text-danger" data-mdb-toggle="tooltip" title="Delete todo"><i
+                      class="fas fa-trash-alt"></i></a>
+                </div>
+                <div class="text-end text-muted">
+                  <a href="#!" class="text-muted" data-mdb-toggle="tooltip" title="Created date">
+                    <p class="small mb-0"><i class="fas fa-info-circle me-2"></i>28th Jun 2020</p>
+                  </a>
+                </div>
+              </li>
+            </ul> 
+*/
+
+function addTodo(tlist, item) {
+    let ul = document.createElement('ul');
+    ul.className="list-group list-group-horizontal rounded-0 bg-transparent";
+    tlist.appendChild(ul);
+
+    let li = document.createElement('li');
+    li.className ="list-group-item d-flex align-items-center ps-0 pe-3 py-1 rounded-0 border-0 bg-transparent";
+    ul.appendChild(li);
+
+    let dv = document.createElement('DIV');
+    dv.className="form-check";
+    li.appendChild(dv);
+
+    let inpt = document.createElement("input");
+    inpt.className="form-check-input me-0";
+    inpt.type = "checkbox";
+    inpt.value = "";
+    //inpt.id = "";
+    inpt.setAttribute('aria-label',"...");
+    inpt.setAttribute('checked',value=null);
+    dv.appendChild(inpt);
+
+    // NAME
+    li = document.createElement('li');
+    li.className = "list-group-item px-3 py-1 d-flex align-items-center flex-grow-1 border-0 bg-transparent";
+    ul.appendChild(li);
+    
+    p = document.createElement('p');
+    p.className="lead fw-normal mb-0";
+    p.innerHTML=item["Headline"];
+
+    li.appendChild(p);
+}
+
+var ShowTodos = (name,querystr) => {
     console.log(name);
-    console.log(query);
+    console.log(querystr);
     ShowPage("todos_section");
     let tit = document.getElementById('TodoListTitle');
     if (tit != null) {
         tit.innerHTML = name[0].toUpperCase() + name.slice(1);
     }
+
+
+    let tlist = document.getElementById('ActualTodoList');
+    if (tlist != null) {
+        tlist.innerHTML = '';
+        querystr = querystr.split("//")[0];
+	    var query = [{'Query': `${querystr}`}]
+        console.log("QUERY: " + JSON.stringify(query));
+        jrpc.call('Db.QueryTodosExp', query).then(function(res) {
+           console.log("Got something back: " + JSON.stringify(res));
+           let events = [];
+           if (res['result'] != null) {
+           res['result'].forEach( (item) => {
+               addTodo(tlist, item);
+             //let s = new Date(item.Date.Start);
+             //let e = new Date(item.Date.End);
+             //events.push({headline: item.Headline, start: s, end: e});
+           });
+           //layOutDay(events);
+           } else {
+             //layOutDay(null);
+            }
+            //let el = document.getElementById("agendaTitle");
+           //if (el != null) {
+           //  el.innerHTML = "Agenda: " + wd + "     (" + yyyy + " " +  mm + " " +  dd + ")"
+           //}
+        });
+    }
+
+
 }
