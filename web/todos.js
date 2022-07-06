@@ -83,8 +83,50 @@ function addTodo(tlist, item) {
     p = document.createElement('p');
     p.className="lead fw-normal mb-0";
     p.innerHTML=item["Headline"];
-
     li.appendChild(p);
+
+    // Controls
+    li = document.createElement('li');
+    li.className = "list-group-item ps-3 pe-0 py-1 rounded-0 border-0 bg-transparent";
+    ul.appendChild(li);
+   
+    // Icons
+    dv = document.createElement('DIV');
+    dv.className="d-flex flex-row justify-content-end mb-1";
+    li.appendChild(dv);
+
+    a = document.createElement('a');
+    a.className="text-info";
+    a.title="Edit todo";
+    a.setAttribute('data-mdb-toggle','tooltip');
+    a.href="#!";
+    a.innerHTML='<i class="fas fa-pencil-alt me-3"></i>';
+    dv.appendChild(a);
+
+    a = document.createElement('a');
+    a.className="text-danger";
+    a.title="Delete todo";
+    a.setAttribute('data-mdb-toggle','tooltip');
+    a.href="#!";
+    a.innerHTML='<i class="fas fa-trash-alt"></i>';
+    dv.appendChild(a);
+
+    // Date
+    dv = document.createElement('DIV');
+    dv.className="text-end text-muted";
+    li.appendChild(dv);
+    
+    a = document.createElement('a');
+    a.className="text-muted";
+    a.title="Created date";
+    a.setAttribute('data-mdb-toggle','tooltip');
+    a.href="#!";
+    dv.appendChild(a);
+
+    p = document.createElement('p');
+    p.className="small mb-0";
+    p.innerHTML='<i class="fas fa-info-circle me-2"></i>blah';
+    a.appendChild(p);
 }
 
 var ShowTodos = (name,querystr) => {
