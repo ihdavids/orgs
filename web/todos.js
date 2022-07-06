@@ -53,29 +53,48 @@ var todosInit = () => {
             </ul> 
 */
 
-var active = {
+var statusMappings = {
   "TODO": '<i class="fas fa-expand me-0"></i>',
   "IN-PROGRESS": '<i class="fas fa-spinner me-0"></i>',
   "INPROGRESS": '<i class="fas fa-spinner me-0"></i>',
+  "DOING": '<i class="fas fa-spinner me-0"></i>',
   "MEETING": '<i class="fas fa-clock me-0"></i>',
   "BLOCKED": '<i class="fas fa-radiation me-0"></i>',
   "WAITING": '<i class="fas fa-pause me-0"></i>',
-}
+  "PHONE": '<i class="fas fa-phone me-0"></i>',
+  "NEXT": '<i class="fas fa-project-diagram me-0"></i>',
 
-var inactive = {
   "CANCELLED": '<i class="fas fa-times me-0"></i>',
   "DONE": '<i class="fas fa-check me-0"></i>',
+  "UNDEFINED": '<i class="fas fa-slash me-0"></i>',
 }
 
-function ChangeStatus(to, item) {
+
+function ChangeStatus(to, item, activeStatus) {
 	var query = [{'Hash': `${item["Hash"]}`, "Value": to}]
   jrpc.call('Db.ChangeStatus', query).then(function(res) {
     console.log("Got something back: " + JSON.stringify(res));
-    // TODO: Update display
+    if (res != null && res['result']["Ok"]) {
+        item.Status   = to;
+        item.IsActive = activeStatus;
+    }
+    RedrawTodos();
   });
 }
 
-function addTodo(tlist, item) {
+// Yes a module level variable. This is the currently active list.
+var currentTodos = null;
+
+function GetStatus(item) {
+    let stat = item["Status"];
+    let r = statusMappings[stat];
+    if (r === undefined) {
+        r = statusMappings["UNDEFINED"];
+    }
+    return r;
+}
+
+function addTodo(tlist, item, shouldBeActive) {
     let ul = document.createElement('ul');
     ul.className="list-group list-group-horizontal rounded-0 bg-transparent";
     tlist.appendChild(ul);
@@ -104,16 +123,14 @@ function addTodo(tlist, item) {
     inpt.className="text-info me-0";
 
     if (item["IsActive"]) {
-      let stat = item["Status"];
-      inpt.innerHTML = active[stat];
+      inpt.innerHTML = GetStatus(item);
       inpt.onclick = () => {
-        ChangeStatus("DONE",item);
+        ChangeStatus("DONE",item, false);
       }
     } else {
-      let stat = item["Status"];
-      inpt.innerHTML = inactive[stat];
+      inpt.innerHTML = GetStatus(item);
       inpt.onclick = () => {
-        ChangeStatus("TODO",item);
+        ChangeStatus("TODO",item, true);
       }
     }
     dv.appendChild(inpt);
@@ -125,8 +142,13 @@ function addTodo(tlist, item) {
     
     p = document.createElement('p');
     p.className="lead fw-normal mb-0 red";
-    
-    p.innerHTML=item["Headline"];
+    if (shouldBeActive && !item.IsActive) {
+        p.style['text-decoration'] = "line-through";
+    }
+   
+    // TODO: This should open an HTML view of this node or file.
+    //       Need to get creative on how to do that.
+    p.innerHTML=`<a href="file://${item.Filename}">${item.Headline}</a>`;
     li.appendChild(p);
 
     // Controls
@@ -173,6 +195,28 @@ function addTodo(tlist, item) {
     a.appendChild(p);
 }
 
+var RedrawTodos = () => {
+    let numActive = 0;
+    currentTodos.forEach( (item) => {
+        if (item.IsActive) { numActive += 1; }
+    });
+    shouldBeActive = false;
+    if (numActive > (currentTodos.length/4)) {
+        shouldBeActive = true;
+    }
+    let tlist = document.getElementById('ActualTodoList');
+    if (tlist != null) {
+        tlist.innerHTML = '';
+        currentTodos.forEach( (item) => {
+            addTodo(tlist, item, shouldBeActive);
+        });
+    }
+}
+
+function LaunchEditor(item) {
+
+}
+
 var ShowTodos = (name,querystr) => {
     console.log(name);
     console.log(querystr);
@@ -181,7 +225,6 @@ var ShowTodos = (name,querystr) => {
     if (tit != null) {
         tit.innerHTML = name[0].toUpperCase() + name.slice(1);
     }
-
 
     let tlist = document.getElementById('ActualTodoList');
     if (tlist != null) {
@@ -193,12 +236,8 @@ var ShowTodos = (name,querystr) => {
            console.log("Got something back: " + JSON.stringify(res));
            let events = [];
            if (res['result'] != null) {
-           res['result'].forEach( (item) => {
-               addTodo(tlist, item);
-             //let s = new Date(item.Date.Start);
-             //let e = new Date(item.Date.End);
-             //events.push({headline: item.Headline, start: s, end: e});
-           });
+            currentTodos = res['result'];
+            RedrawTodos();
            //layOutDay(events);
            } else {
              //layOutDay(null);
