@@ -212,7 +212,11 @@ function addTodo(tlist, item, shouldBeActive) {
 
     p = document.createElement('p');
     p.className="small mb-0";
-    p.innerHTML='<i class="fas fa-info-circle me-2"></i>blah';
+    if (item.Tags != null) {
+      p.innerHTML=`<i class="fas fa-info-circle me-2"></i>${item.Status} : ${item.Tags}`;
+    } else {
+      p.innerHTML=`<i class="fas fa-info-circle me-2"></i>${item.Status}`;
+    }
     a.appendChild(p);
 
     if ("Content" in item && "ShowContent" in item && item.ShowContent == true) {
@@ -228,10 +232,14 @@ function addTodo(tlist, item, shouldBeActive) {
       li.className = "list-group-item d-flex align-items-center ps-0 pe-3 py-1 rounded-0 border-0 bg-transparent";
       ul.appendChild(li);
 
+      c = document.createElement('DIV');
+      c.className = "card shadow";
+      li.appendChild(c);
+
       dv = document.createElement('DIV');
-      dv.className = "card shadow";
+      dv.className = "card-body py-4 px-md-5";
       dv.innerHTML = item["Content"];
-      li.appendChild(dv);
+      c.appendChild(dv);
     }
 }
 
