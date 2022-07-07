@@ -156,6 +156,34 @@
   line-height: 1.25; 
 }
 
+.org h2::before
+{
+  color: #696969;
+  content: "\f7b9";
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 600;
+  font-size: .65em;
+}
+
+.org h3::before
+{
+  color: #696969;
+  content: "\f085";
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 600;
+  font-size: .6em;
+}
+
+.org h4::before
+{
+  color: #696969;
+  content: "\f06d";
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 600;
+  font-size: .55em;
+}
+
+
 .org .outline-2 
 {
   padding-left: 0px;
@@ -217,9 +245,9 @@
 .org :is(p) {
   margin: 1em 0; }
 .org :is(p, code) {
-  background-color: #eee;
+  background-color: #f5f5f5;
   padding: 0.05em 0.2em;
-  border: 1px solid #ccc; }
+  border: 1px none #ccc; }
 
 .org :is(ol ul) {
   margin: 1em; }
@@ -295,7 +323,7 @@
 .org .align-right  { text-align: right;  }
 
 
-dl.org { font-family: monospace, monospace; }
+/*dl.org { font-family: monospace, monospace; }*/
 dl.org > dt { font-weight: bold; }
 dl.org > dd { margin: 1em; }
 
@@ -305,11 +333,11 @@ dl.org > dd { margin: 1em; }
 }
 
 .org .tags {
-  font-size: 0.8em;
-  color: cyan;
+  font-size: 0.3em;
+  color: #999;
 }
 
 .org .timestamp {
-  background-color: #eee;
+  background-color: #f5f5f5;
   padding: 0.05em 0.2em;
-  border: 1px solid #ccc; }
+  border: 1px none #ccc; }
