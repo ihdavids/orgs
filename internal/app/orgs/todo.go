@@ -35,7 +35,11 @@ func AddFileTag(name string, d *org.Document) bool {
 				switch kw := n.(type) {
 				case org.Keyword:
 					if kw.Key == "FILETAGS" {
-						kw.Value += ":" + name + ":"
+						kw.Value = strings.TrimSpace(kw.Value)
+						if !strings.HasSuffix(kw.Value, ":") {
+							kw.Value += ":"
+						}
+						kw.Value += name + ":"
 						d.Nodes[i] = kw
 						break
 					}
