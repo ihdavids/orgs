@@ -57,6 +57,45 @@
 
 })(jQuery); // End of use strict
 
+function escapeHtml(unsafe)
+{
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+ }
+
+// Convert orgs default output to highlight JS style output.
+function ResetLanguage() {
+  $('[class*=" src-"]').each(function(idx) {
+    let classList = $(this).attr("class");
+    //console.log("SRC BLOCK");
+    var classArr = classList.split(/\s+/);
+    let langName = null;
+    $.each(classArr, function(index, value){
+      //console.log("VAL: ",value,value.indexOf("src-"));
+      if (value.indexOf("src-") == 0) {
+        langName = value.substr(4);
+        //console.log("LANGNAME: ", langName);
+      }
+    });
+    if (langName != null) {
+
+      //console.log("LANGNAME: ", langName);
+      let pres = $(this).children('.highlight').children('pre');
+      let con = escapeHtml(pres.contents().text());
+      pres.empty();
+      //console.log("CONTENTS: " + con);
+      let cod = document.createElement('code');
+      cod.className = "language-" + langName;
+      cod.innerHTML = con;
+      pres.append(cod);
+    }
+  })
+  hljs.highlightAll();
+}
 
 var DayPage = () => {
     //QueryFullFileHtml
@@ -76,12 +115,14 @@ var DayPage = () => {
                 let el = document.getElementById('PageContent');
                 el.innerHTML = content;
 
+
                 $('[id^=headline-]').on('click',function(e) {
                     let id = $(this).attr('id');
                     let divid="#outline-text-" + id;
                     console.log(divid);
                     $(divid).toggle();
                 });
+                ResetLanguage();
             }
         });
       }

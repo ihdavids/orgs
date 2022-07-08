@@ -245,7 +245,6 @@
 .org :is(p) {
   margin: 1em 0; }
 .org :is(p, code) {
-  background-color: #f5f5f5;
   padding: 0.05em 0.2em;
   border: 1px none #ccc; }
 
@@ -338,6 +337,5 @@ dl.org > dd { margin: 1em; }
 }
 
 .org .timestamp {
-  background-color: #f5f5f5;
   padding: 0.05em 0.2em;
   border: 1px none #ccc; }
