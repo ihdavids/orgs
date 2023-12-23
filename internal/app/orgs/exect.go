@@ -225,10 +225,10 @@ func (s *RangeIter) Next() string {
 		s.Idx = 1
 	} else { // This is a cell so return the current cell value from the table!
 		ref := s.Form.Start
-		if ref.Col == -1 {
+		if ref.WildCol {
 			ref.Col = s.Tbl.CurrentCol()
 		}
-		if ref.Row == -1 {
+		if ref.WildRow {
 			ref.Row = s.Tbl.CurrentRow()
 		}
 		s.Val = strings.TrimSpace(s.Tbl.GetValRef(&ref))
