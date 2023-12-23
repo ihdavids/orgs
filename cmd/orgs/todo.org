@@ -1,0 +1,63 @@
+#+title: Todo
+
+* Orgs
+    - [ ] Name comments returns object
+    - [ ] Object hashes
+    - [ ] Table detection and parsing
+    - [ ] Table formula evaluation
+    - [x] JIRA Integration
+    - [x] Convert hashes to base64 encoded hashes
+    - [ ] Backlinks support
+    - [x] Marker support
+    - [ ] Exporters all use templates!
+    - [ ] Document templates
+    - [ ] NewFile creation using template
+** Tables
+    - [ ] Automarkers
+    - [x] Constants
+    - [ ] Execute all
+    - [ ] Cell highlight
+    - [ ] Recursive properties
+    - [ ] Table parameters
+    - [x] Fix vmean et al
+
+** Exporters
+    - [ ] RevealJS Export
+    - [ ] Latex Export
+    - [ ] DnD style exporter
+    - [ ] Stylish HTML Export
+
+** Babel
+    - [ ] Source block execution framework
+
+** Tangle
+    - [ ] Export just source from a file.
+
+** Archive
+    - [x] Refile
+    - [x] Archive
+    - [x] Capture
+
+* Orgc
+    - [ ] Concert to rest API
+    - [ ] Capture Support
+
+* Org Portal
+    - [ ] Integrate React portal
+    - [ ] Integrate agenda into react portal
+    - [ ] Capture Support
+    - [ ] Brainstorm
+    - [ ] Gantt View
+
+* VSCode
+    - [ ] Select Node
+    - [ ] Better Timestamp handling including time
+    - [ ] Shared keybindings file
+    - [ ] Backlinks visualization
+    - [ ] Reveal JS Mode
+    - [ ] DWIM Numerical lists
+    - [ ] Mark Today
+
+* Video Series About Org
+    - [ ] Introduce the plugins
+    - [ ] Setup each plugin
