@@ -1,5 +1,21 @@
 #+TITLE: Org Mode Server
 #+AUTHOR: Ian Davids
 
-* Org Mode
-    Todo Write This!
+* Introduction
+    Org is a difficult subject.
+    Talking about any one aspect of Org Mode is like discussing the peak of an mountain.
+    The roots of Org Mode go very deep.
+
+    Often people will discuss folding and the ability to tab cycle a headings tree. 
+    Or, it is often compared to Markdown. 
+    Org IS a markup and document interchange format like Markdown, but it is also so much more.
+
+    Fundamentally org mode is 2 very *different* things and fairly hard to describe:
+
+    - Org Files - A text based document markup language similar to markdown.
+    - Org Mode - A wide variety of tools for operating on and working with collections of these files.
+    - Org Extensions - I know I said 2 but Org has a wide variety of tools built around the mode 
+                       and api's extending it in many creative ways. Although not org mode itself most people 
+                       refer to these tools when they think of Org Mode.
+
+    
