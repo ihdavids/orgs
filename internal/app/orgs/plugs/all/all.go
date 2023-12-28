@@ -9,5 +9,6 @@ import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/jira"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/mermaid"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/notify"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/revealjs"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todoist"
 )
