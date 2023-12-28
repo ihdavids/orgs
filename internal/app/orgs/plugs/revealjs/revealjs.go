@@ -19,6 +19,8 @@ import (
 
 var rver = "5.0.4"
 var cdn = "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/" + rver
+var hljsver = "11.9.0"
+var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
 var docStart = `
 <!DOCTYPE html>
@@ -27,7 +29,8 @@ var docStart = `
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{.fontfamily}}"> 
   <link rel="stylesheet" href="{{.cdn}}/reveal.min.css">
   <link rel="stylesheet" href="{{.cdn}}/theme/{{.theme}}.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/zenburn.min.css">
+
+  <link rel="stylesheet" href="{{.hljscdn}}/styles/{{.hljsstyle}}.min.css">
 <style>
 {{.stylesheet | css}}
 </style>
@@ -168,7 +171,7 @@ var docEnd = `
 		// - https://github.com/hakimel/reveal.js#configuration
 		// - https://github.com/hakimel/reveal.js#dependencies
 		Reveal.initialize({
-
+			center: false,
 			navigationMode: "grid",
 			dependencies: [
 				{ src: '{{.cdn}}/plugin/markdown/markdown.min.js' },
@@ -213,9 +216,11 @@ type RevealWriter struct {
 func NewRevealWriter() *RevealWriter {
 	rw := RevealWriter{*org.NewHTMLWriter()}
 	rw.HeadlineWriterOverride = &rw
-	rw.HighlightCodeBlock = func(keywords []org.Keyword, source, lang string, inline bool) string {
+	rw.NoWrapCodeBlock = true
+	rw.HighlightCodeBlock = func(keywords []org.Keyword, source, lang string, inline bool, params map[string]string) string {
 		var attribs []string = []string{}
 		for _, key := range keywords {
+			// This does something strange! I don't understand why it centers the text and puts a red box around it
 			if key.Key == "REVEAL_LINES" {
 				attribs = append(attribs, fmt.Sprintf("%s=\"%s\"", "data-line-numbers", key.Value))
 			}
@@ -225,19 +230,53 @@ func NewRevealWriter() *RevealWriter {
 			attribStr = strings.Join(attribs, " ")
 		}
 		if inline {
-			return fmt.Sprintf("<pre><code %s class=\"language-%s\">%s</code></pre>", attribStr, lang, html.EscapeString(source))
+			return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
 		}
-		return fmt.Sprintf("<pre><code %s class=\"language-%s\">%s</code></pre>", attribStr, lang, html.EscapeString(source))
+		return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
 	}
 	return &rw
+}
+
+func GetProp(name, revealName string, h org.Headline, secProps string) string {
+	tran := h.Doc.Get(name)
+	if tmp, ok := h.Properties.Get(name); ok {
+		tran = tmp
+	}
+	if tran != "" {
+		secProps = fmt.Sprintf("%s %s=\"%s\"", secProps, revealName, tran)
+	}
+	return secProps
+}
+
+func GetPropTag(name, revealName string, h org.Headline, secProps string) string {
+	tran := h.Doc.Get(name)
+	if tmp, ok := h.Properties.Get(name); ok {
+		tran = tmp
+	}
+	if tran != "" && tran != "false" && tran != "off" && tran != "f" {
+		secProps = fmt.Sprintf("%s %s", secProps, revealName)
+	}
+	return secProps
 }
 
 func (w *RevealWriter) WriteHeadlineOverride(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
-
-	w.WriteString(`<section>`)
+	// data-auto-animate
+	// none	Switch backgrounds instantly
+	// fade	Cross fade — default for background transitions
+	// slide	Slide between backgrounds — default for slide transitions
+	// convex	Slide at a convex angle
+	// concave	Slide at a concave angle
+	// zoom	Scale the incoming slide up so it grows in from the center of the screen
+	//data-transition="zoom"
+	//data-transition-speed="fast"
+	secProps := ""
+	secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
+	secProps = GetProp("REVEAL_TRANSITION_SPEED", "data-transition-speed", h, secProps)
+	secProps = GetPropTag("REVEAL_AUTO_ANIMATE", "data-auto-animate", h, secProps)
+	w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
 	//w.WriteString(fmt.Sprintf(`<div id="outline-container-%s" class="outline-%d">`, h.ID(), h.Lvl+1) + "\n")
 	//w.WriteString(fmt.Sprintf(`<h%d id="%s">`, h.Lvl+1, h.ID()) + "\n")
@@ -336,6 +375,10 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 		if theme != "" {
 			self.Props["theme"] = theme
 		}
+		style := f.Get("REVEAL_HIGHLIGHT_STYLE")
+		if style != "" {
+			self.Props["hljsstyle"] = style
+		}
 		w := NewRevealWriter()
 		org.WriteNodes(w, f.Nodes...)
 		res := w.String()
@@ -373,6 +416,12 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["cdn"]; !ok {
 		m["cdn"] = cdn
+	}
+	if _, ok := m["hljscdn"]; !ok {
+		m["hljscdn"] = hljscdn
+	}
+	if _, ok := m["hljsstyle"]; !ok {
+		m["hljsstyle"] = "monokai"
 	}
 	if _, ok := m["fontfamily"]; !ok {
 		m["fontfamily"] = "Inconsolata"
