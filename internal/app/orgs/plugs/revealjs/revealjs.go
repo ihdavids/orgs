@@ -200,6 +200,10 @@ var docEnd = `
 		});
 		Reveal.getPlugins();
 	</script>
+	<script type="module">
+	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+	  mermaid.initialize({ startOnLoad: true });
+	</script>
 
 </body>
 </html>
@@ -229,10 +233,14 @@ func NewRevealWriter() *RevealWriter {
 		if len(attribs) > 0 {
 			attribStr = strings.Join(attribs, " ")
 		}
-		if inline {
+		if lang == "mermaid" {
+			return fmt.Sprintf(`<pre class="mermaid">%s</pre>`, html.EscapeString(source))
+		} else {
+			if inline {
+				return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
+			}
 			return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
 		}
-		return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
 	}
 	return &rw
 }
