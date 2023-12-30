@@ -10,7 +10,9 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
@@ -56,10 +58,6 @@ var docStart = `
     text-shadow: 0 2px 2px rgba(0, 0, 0, .1);
 }
 
-h1,h2 {
-	font-size: 120px;
-    font-family: 'Inconsolata';
-}
 
 /*
     ... and we enhance the styles for impress.js.
@@ -125,30 +123,10 @@ h1,h2 {
 .slide q strong {
     white-space: nowrap;
 }
-.impress-progressbar {
-  position: absolute;
-  right: 318px;
-  bottom: 1px;
-  left: 118px;
-  border-radius: 7px;
-  border: 2px solid rgba(100, 100, 100, 0.2);
-}
-.impress-progressbar DIV {
-  width: 0;
-  height: 2px;
-  border-radius: 5px;
-  background: rgba(75, 75, 75, 0.4);
-  transition: width 1s linear;
-}
-.impress-progress {
-  position: absolute;
-  left: 59px;
-  bottom: 1px;
-  text-align: left;
-  opacity: 0.6;
-}
 
-
+  </style>
+  <style>
+  {{.themedata|css}}
   </style>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{.fontfamily}}"> 
   <link rel="stylesheet" href="{{.hljscdn}}/styles/{{.hljsstyle}}.min.css">
@@ -200,7 +178,8 @@ var docEnd = `
 // {{.stylesheet | css}}
 // </style>
 type ImpressExporter struct {
-	Props map[string]interface{}
+	Props     map[string]interface{}
+	ThemePath string
 }
 
 type ImpressWriter struct {
@@ -242,6 +221,19 @@ func GetProp(name, revealName string, h org.Headline, secProps string) string {
 	}
 	if tran != "" {
 		secProps = fmt.Sprintf("%s %s=\"%s\"", secProps, revealName, tran)
+	}
+	return secProps
+}
+
+func GetPropByIndex(name, revealName string, h org.Headline, secProps string) string {
+	tran := h.Doc.Get(name)
+	if tmp, ok := h.Properties.Get(name); ok {
+		tran = tmp
+	}
+	if tran != "" {
+		if nv, err := strconv.ParseFloat(tran, 64); err == nil {
+			secProps = fmt.Sprintf("%s %s=\"%f\"", secProps, revealName, nv*float64(h.Index))
+		}
 	}
 	return secProps
 }
@@ -292,7 +284,7 @@ func (w *ImpressWriter) WriteHeadlineOverride(h org.Headline) {
 	secProps = GetProp("IMPRESS_ROTX", "data-rel-rotate-x", h, secProps)
 	secProps = GetProp("IMPRESS_ROTY", "data-rel-rotate-y", h, secProps)
 	secProps = GetProp("IMPRESS_ROTZ", "data-rel-rotate-z", h, secProps)
-	secProps = GetProp("IMPRESS_ROT", "data-rotate", h, secProps)
+	secProps = GetPropByIndex("IMPRESS_ROT", "data-rotate", h, secProps)
 	defX := GetPropVal("IMPRESS_X", ".6", h)
 	defY := GetPropVal("IMPRESS_Y", ".6", h)
 
@@ -380,6 +372,15 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	}
 }
 
+func (e *ImpressExporter) ExpandThemePath(tname string) string {
+	name := "impress_theme_" + tname + ".css"
+	tempFolderName, _ := filepath.Abs(path.Join(e.ThemePath, name))
+	if _, err := os.Stat(tempFolderName); err == nil {
+		name = tempFolderName
+	}
+	return name
+}
+
 func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
@@ -394,9 +395,19 @@ func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts str
 
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("IMPRESS_THEME")
+		if theme == "" {
+			theme = "impressdefault"
+		}
 		if theme != "" {
 			self.Props["theme"] = theme
+			fname := self.ExpandThemePath(theme)
+			fmt.Printf("THEME PATH: %s\n", fname)
+			if tdata, ferr := os.ReadFile(fname); ferr == nil {
+				fmt.Printf("THEME DATA: %s\n", tdata)
+				self.Props["themedata"] = string(tdata)
+			}
 		}
+
 		style := f.Get("IMPRESS_HIGHLIGHT_STYLE")
 		if style != "" {
 			self.Props["hljsstyle"] = style
@@ -466,6 +477,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 // init function is called at boot
 func init() {
 	plugs.AddExporter("impressjs", func() plugs.Exporter {
-		return &ImpressExporter{Props: ValidateMap(map[string]interface{}{})}
+		return &ImpressExporter{Props: ValidateMap(map[string]interface{}{}), ThemePath: "./templates"}
 	})
 }
