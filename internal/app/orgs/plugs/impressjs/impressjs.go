@@ -183,11 +183,15 @@ type ImpressExporter struct {
 }
 
 type ImpressWriter struct {
-	org.HTMLWriter
+	*org.HTMLWriter
 }
 
 func NewImpressWriter() *ImpressWriter {
-	rw := ImpressWriter{*org.NewHTMLWriter()}
+	// This lovely circular reference ensures overrides are called when calling write node.
+	rw := ImpressWriter{org.NewHTMLWriter()}
+	rw.ExtendingWriter = &rw
+
+	// This was a bad idea and needs to be removed!
 	rw.HeadlineWriterOverride = &rw
 	rw.NoWrapCodeBlock = true
 	rw.HighlightCodeBlock = func(keywords []org.Keyword, source, lang string, inline bool, params map[string]string) string {

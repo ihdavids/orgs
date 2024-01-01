@@ -214,12 +214,19 @@ type RevealExporter struct {
 }
 
 type RevealWriter struct {
-	org.HTMLWriter
+	*org.HTMLWriter
 }
 
 func NewRevealWriter() *RevealWriter {
-	rw := RevealWriter{*org.NewHTMLWriter()}
-	rw.HeadlineWriterOverride = &rw
+	// This lovely bit of circular reference ensures that we get called when exporting for any methods
+	// we have overwritten
+	rw := RevealWriter{org.NewHTMLWriter()}
+	rw.ExtendingWriter = &rw
+
+	// This version was a bad idea and needs to get removed!
+	//rw.HeadlineWriterOverride = &rw
+
+	// This we should probably just replace with an override as well! Way better
 	rw.NoWrapCodeBlock = true
 	rw.HighlightCodeBlock = func(keywords []org.Keyword, source, lang string, inline bool, params map[string]string) string {
 		var attribs []string = []string{}
@@ -267,7 +274,8 @@ func GetPropTag(name, revealName string, h org.Headline, secProps string) string
 	return secProps
 }
 
-func (w *RevealWriter) WriteHeadlineOverride(h org.Headline) {
+// OVERRIDE: This overrides the core method
+func (w *RevealWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
