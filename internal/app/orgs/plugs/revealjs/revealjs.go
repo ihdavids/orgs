@@ -10,7 +10,6 @@ import (
 	"html/template"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
@@ -22,24 +21,6 @@ var rver = "5.0.4"
 var cdn = "https://cdnjs.cloudflare.com/ajax/libs/reveal.js/" + rver
 var hljsver = "11.9.0"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
-
-var docStart = `
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{.fontfamily}}"> 
-  <link rel="stylesheet" href="{{.cdn}}/reveal.min.css">
-  <link rel="stylesheet" href="{{.cdn}}/theme/{{.theme}}.css">
-
-  <link rel="stylesheet" href="{{.hljscdn}}/styles/{{.hljsstyle}}.min.css">
-<style>
-{{.stylesheet | css}}
-</style>
-</head>
-<body>
-	<div class="reveal">
-		<div class="slides">
-`
 
 /*
 
@@ -159,57 +140,6 @@ var docStart = `
 	},
 */
 
-var docEnd = `
-	</div></div>
-	<script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
-	<script src="{{.cdn}}/reveal.min.js"></script>
-	<script src="{{.cdn}}/plugin/highlight/highlight.min.js"></script>
-
-
-	<!--<script src="index.js"></script>-->
-	<script>
-		// More info about config & dependencies:
-		// - https://github.com/hakimel/reveal.js#configuration
-		// - https://github.com/hakimel/reveal.js#dependencies
-		Reveal.initialize({
-			center: false,
-			navigationMode: "grid",
-			dependencies: [
-				{ src: '{{.cdn}}/plugin/markdown/markdown.min.js' },
-				{ src: '{{.cdn}}/plugin/notes/notes.min.js', async: true },
-				{ src: '{{.cdn}}/plugin/math/math.min.js', async: true },
-				{ src: '{{.cdn}}/plugin/search/search.min.js', async: true },
-				{ src: '{{.cdn}}/plugin/zoom/zoom.min.js', async: true },
-				//{ src: '{{.cdn}}/plugin/highlight/highlight.min.js', async: true},
-				//{ src: '{{.cdn}}/plugin/highlight/highlight.min.js', callback: function () { hljs.initHighlightingOnLoad(); } },
-				//{ src: '//cdn.socket.io/socket.io-1.3.5.js', async: true },
-				//{ src: 'plugin/multiplex/master.js', async: true },
-				// and if you want speaker notes
-				//{ src: '{{.cdn}}/plugin/notes-server/client.js', async: true }
-
-			],
-			markdown: {
-				//            renderer: myrenderer,
-				smartypants: true
-			},
-			plugins: [RevealHighlight]
-		});
-		Reveal.configure({
-			// PDF Configurations
-			pdfMaxPagesPerSlide: 1
-
-		});
-		Reveal.getPlugins();
-	</script>
-	<script type="module">
-	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-	  mermaid.initialize({ startOnLoad: true });
-	</script>
-
-</body>
-</html>
-`
-
 type RevealExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
@@ -298,31 +228,13 @@ func (w *RevealWriter) WriteHeadline(h org.Headline) {
 	secProps = GetPropTag("REVEAL_AUTO_ANIMATE", "data-auto-animate", h, secProps)
 	w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
-	//w.WriteString(fmt.Sprintf(`<div id="outline-container-%s" class="outline-%d">`, h.ID(), h.Lvl+1) + "\n")
-	//w.WriteString(fmt.Sprintf(`<h%d id="%s">`, h.Lvl+1, h.ID()) + "\n")
-	//if w.Document.GetOption("todo") != "nil" && h.Status != "" {
-	//	w.WriteString(fmt.Sprintf(`<span class="todo">%s</span>`, h.Status) + "\n")
-	//}
-	//if w.Document.GetOption("pri") != "nil" && h.Priority != "" {
-	//	w.WriteString(fmt.Sprintf(`<span class="priority">[%s]</span>`, h.Priority) + "\n")
-	//}
 	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
 	org.WriteNodes(w, h.Title...)
 	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
 
-	//if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
-	//	tags := make([]string, len(h.Tags))
-	//	for i, tag := range h.Tags {
-	//		tags[i] = fmt.Sprintf(`<span>%s</span>`, tag)
-	//	}
-	//	w.WriteString("&#xa0;&#xa0;&#xa0;")
-	//	w.WriteString(fmt.Sprintf(`<span class="tags">%s</span>`, strings.Join(tags, "&#xa0;")))
-	//}
-	//w.WriteString(fmt.Sprintf("\n</h%d>\n", h.Lvl+1))
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
 	}
-	//w.WriteString("</div>\n")
 	w.WriteString("</section>\n")
 }
 
@@ -351,20 +263,12 @@ func (s *RevealExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(s)
 }
 
-func fileNameWithoutExt(fileName string) string {
-	return fileName[:len(fileName)-len(filepath.Ext(fileName))]
-}
-
-func agendaFilenameTag(fileName string) string {
-	return fileNameWithoutExt(filepath.Base(fileName))
-}
-
 func (self *RevealExporter) Export(db plugs.ODb, query string, to string, opts string) error {
-	fmt.Printf("REVEAL: Export called", query, to, opts)
+	fmt.Printf("REVEAL: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
-		log.Printf(msg)
+		log.Printf("%s\n", msg)
 		return fmt.Errorf(msg)
 	}
 	return nil
@@ -380,15 +284,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 
 func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
-	/*
-		_, err := db.QueryTodosExpr(query)
-		if err != nil {
-			msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
-			log.Printf(msg)
-			return fmt.Errorf(msg), ""
-		}
-	*/
+	fmt.Printf("REVEAL: Export string called [%s]:[%s]\n", query, opts)
 
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("REVEAL_THEME")
@@ -410,9 +306,8 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 		return nil, res
 	} else {
 		fmt.Printf("Failed to find file in database: [%s]", query)
-		return fmt.Errorf("Failed to find file in database: [%s]", query), ""
+		return fmt.Errorf("failed to find file in database: [%s]", query), ""
 	}
-	return nil, ""
 }
 
 func (self *RevealExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
