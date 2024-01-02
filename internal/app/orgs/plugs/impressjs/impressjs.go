@@ -17,6 +17,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"gopkg.in/op/go-logging.v1"
 )
 
 var rver = "2.0.0"
@@ -178,8 +179,11 @@ var docEnd = `
 // {{.stylesheet | css}}
 // </style>
 type ImpressExporter struct {
-	Props     map[string]interface{}
-	ThemePath string
+	Props        map[string]interface{}
+	ThemePath    string
+	TemplatePath string
+	out          *logging.Logger
+	pm           *plugs.PluginManager
 }
 
 type ImpressWriter struct {
@@ -419,16 +423,10 @@ func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts str
 		w := NewImpressWriter()
 		org.WriteNodes(w, f.Nodes...)
 		res := w.String()
-		//fmt.Printf("X: [%s]", res)
+		self.Props["slide_data"] = res
 
-		o := bytes.NewBufferString("")
-		//fmt.Printf("DOC START: %s\n", docStart)
 		fmt.Printf("DOC START: ========================================\n")
-		ExpandTemplateIntoBuf(o, docStart, self.Props)
-
-		end := bytes.NewBufferString("")
-		ExpandTemplateIntoBuf(end, docEnd, self.Props)
-		res = o.String() + res + end.String()
+		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
 		fmt.Printf("XXX: %s\n", res)
 		return nil, res
 	} else {
@@ -439,6 +437,8 @@ func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts str
 }
 
 func (self *ImpressExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+	self.out = manager.Out
+	self.pm = manager
 }
 
 func NewHtmlExp() *ImpressExporter {
@@ -451,14 +451,14 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	if _, ok := m["title"]; !ok {
 		m["title"] = "Schedule"
 	}
-	if _, ok := m["cdn"]; !ok {
-		m["cdn"] = cdn
+	if _, ok := m["impress_cdn"]; !ok {
+		m["impress_cdn"] = cdn
 	}
-	if _, ok := m["hljscdn"]; !ok {
-		m["hljscdn"] = hljscdn
+	if _, ok := m["hljs_cdn"]; !ok {
+		m["hljs_cdn"] = hljscdn
 	}
-	if _, ok := m["hljsstyle"]; !ok {
-		m["hljsstyle"] = "monokai"
+	if _, ok := m["hljs_style"]; !ok {
+		m["hljs_style"] = "monokai"
 	}
 	if _, ok := m["fontfamily"]; !ok {
 		m["fontfamily"] = "Inconsolata"
@@ -481,6 +481,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 // init function is called at boot
 func init() {
 	plugs.AddExporter("impressjs", func() plugs.Exporter {
-		return &ImpressExporter{Props: ValidateMap(map[string]interface{}{}), ThemePath: "./templates"}
+		return &ImpressExporter{Props: ValidateMap(map[string]interface{}{}), ThemePath: "./templates", TemplatePath: "impress_default.tpl"}
 	})
 }
