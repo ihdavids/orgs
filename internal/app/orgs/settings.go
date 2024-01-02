@@ -200,6 +200,14 @@ func (self *Config) ParseConfig() {
 		plugOpts := plugs.PluginOpts{}
 		pd.Plugin.Startup(pd.Frequency, manager, &plugOpts)
 	}
+	for _, pd := range self.Exporters {
+		plugOpts := plugs.PluginOpts{}
+		pd.Plugin.Startup(manager, &plugOpts)
+	}
+	for _, pd := range self.Updaters {
+		plugOpts := plugs.PluginOpts{}
+		pd.Plugin.Startup(1, manager, &plugOpts)
+	}
 	// Command line overrides config file.
 	self.ParseCommandLine()
 

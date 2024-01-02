@@ -15,6 +15,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"gopkg.in/op/go-logging.v1"
 )
 
 var rver = "5.0.4"
@@ -210,7 +211,10 @@ var docEnd = `
 `
 
 type RevealExporter struct {
-	Props map[string]interface{}
+	TemplatePath string
+	Props        map[string]interface{}
+	out          *logging.Logger
+	pm           *plugs.PluginManager
 }
 
 type RevealWriter struct {
@@ -398,16 +402,10 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 		w := NewRevealWriter()
 		org.WriteNodes(w, f.Nodes...)
 		res := w.String()
-		//fmt.Printf("X: [%s]", res)
+		self.Props["slide_data"] = res
 
-		o := bytes.NewBufferString("")
-		//fmt.Printf("DOC START: %s\n", docStart)
 		fmt.Printf("DOC START: ========================================\n")
-		ExpandTemplateIntoBuf(o, docStart, self.Props)
-
-		end := bytes.NewBufferString("")
-		ExpandTemplateIntoBuf(end, docEnd, self.Props)
-		res = o.String() + res + end.String()
+		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
 		fmt.Printf("XXX: %s\n", res)
 		return nil, res
 	} else {
@@ -418,6 +416,8 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 }
 
 func (self *RevealExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+	self.out = manager.Out
+	self.pm = manager
 }
 
 func NewHtmlExp() *RevealExporter {
@@ -431,13 +431,13 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 		m["title"] = "Schedule"
 	}
 	if _, ok := m["cdn"]; !ok {
-		m["cdn"] = cdn
+		m["reveal_cdn"] = cdn
 	}
 	if _, ok := m["hljscdn"]; !ok {
-		m["hljscdn"] = hljscdn
+		m["hljs_cdn"] = hljscdn
 	}
 	if _, ok := m["hljsstyle"]; !ok {
-		m["hljsstyle"] = "monokai"
+		m["hljs_style"] = "monokai"
 	}
 	if _, ok := m["fontfamily"]; !ok {
 		m["fontfamily"] = "Inconsolata"
@@ -460,6 +460,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 // init function is called at boot
 func init() {
 	plugs.AddExporter("revealjs", func() plugs.Exporter {
-		return &RevealExporter{Props: ValidateMap(map[string]interface{}{})}
+		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl"}
 	})
 }
