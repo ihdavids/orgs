@@ -143,20 +143,23 @@ var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 type RevealExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
+	UseTabulator bool // Write tables as tabulator tables for prettyness
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
 
 type RevealWriter struct {
 	*org.HTMLWriter
+	exp              *RevealExporter
+	PostWriteScripts string
 }
 
-func NewRevealWriter() *RevealWriter {
+func NewRevealWriter(exp *RevealExporter) *RevealWriter {
 	// This lovely bit of circular reference ensures that we get called when exporting for any methods
 	// we have overwritten
-	rw := RevealWriter{org.NewHTMLWriter()}
+	rw := RevealWriter{org.NewHTMLWriter(), nil, ""}
 	rw.ExtendingWriter = &rw
-
+	rw.exp = exp
 	// This version was a bad idea and needs to get removed!
 	//rw.HeadlineWriterOverride = &rw
 
@@ -238,6 +241,57 @@ func (w *RevealWriter) WriteHeadline(h org.Headline) {
 	w.WriteString("</section>\n")
 }
 
+func (w *RevealWriter) WriteTable(t org.Table) {
+	if w.exp == nil || !w.exp.UseTabulator {
+		w.HTMLWriter.WriteTable(t)
+	} else {
+		name := fmt.Sprintf("tabulator_table_%d", t.Pos.Row)
+		w.WriteString(fmt.Sprintf("<table id=\"%s\">\n", name))
+		inHead := len(t.SeparatorIndices) > 0 &&
+			t.SeparatorIndices[0] != len(t.Rows)-1 &&
+			(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
+		if inHead {
+			w.WriteString("<thead>\n")
+		} else {
+			w.WriteString("<tbody>\n")
+		}
+		for i, row := range t.Rows {
+			if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
+				if inHead {
+					w.WriteString("</thead>\n<tbody>\n")
+					inHead = false
+				} else {
+					w.WriteString("</tbody>\n<tbody>\n")
+				}
+			}
+			if row.IsSpecial {
+				continue
+			}
+			if inHead {
+				w.writeTableColumns(row.Columns, "th")
+			} else {
+				w.writeTableColumns(row.Columns, "td")
+			}
+		}
+		w.WriteString("</tbody>\n</table>\n")
+		w.PostWriteScripts += fmt.Sprintf("<script type=\"module\">import {Tabulator} from 'https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.2/js/tabulator_esm.min.js'; var table = new Tabulator(\"#%s\", {});</script>", name)
+	}
+}
+
+func (w *RevealWriter) writeTableColumns(columns []*org.Column, tag string) {
+	w.WriteString("<tr>\n")
+	for _, column := range columns {
+		if column.Align == "" {
+			w.WriteString(fmt.Sprintf("<%s>", tag))
+		} else {
+			w.WriteString(fmt.Sprintf(`<%s class="align-%s">`, tag, column.Align))
+		}
+		org.WriteNodes(w, column.Children...)
+		w.WriteString(fmt.Sprintf("</%s>\n", tag))
+	}
+	w.WriteString("</tr>\n")
+}
+
 var funcMap template.FuncMap = template.FuncMap{
 	"attr": func(s string) template.HTMLAttr {
 		return template.HTMLAttr(s)
@@ -295,10 +349,11 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 		if style != "" {
 			self.Props["hljsstyle"] = style
 		}
-		w := NewRevealWriter()
+		w := NewRevealWriter(self)
 		org.WriteNodes(w, f.Nodes...)
 		res := w.String()
 		self.Props["slide_data"] = res
+		self.Props["post_scripts"] = w.PostWriteScripts
 
 		fmt.Printf("DOC START: ========================================\n")
 		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
@@ -348,6 +403,10 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 			m["stylesheet"] = (string)(data)
 		}
 	}
+	// TODO: make this follow the configuration
+	if _, ok := m["tabulator"]; !ok {
+		m["tabulator"] = true
+	}
 
 	return m
 }
@@ -355,6 +414,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 // init function is called at boot
 func init() {
 	plugs.AddExporter("revealjs", func() plugs.Exporter {
-		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl"}
+		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl", UseTabulator: true}
 	})
 }

@@ -6,11 +6,15 @@
   <link rel="stylesheet" href="{{reveal_cdn}}/theme/{{theme}}.css">
 
   <link rel="stylesheet" href="{{hljs_cdn}}/styles/{{hljs_style}}.min.css">
+  {%if tabulator%}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.2/css/tabulator.min.css">
+  {%endif%}
 <style>
 {{stylesheet}}
 </style>
 </head>
 <body>
+
 	<div class="reveal">
 		<div class="slides">
         {%autoescape off%}
@@ -62,6 +66,10 @@
 	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
 	  mermaid.initialize({ startOnLoad: true });
 	</script>
+
+    {%autoescape off%}
+	{{post_scripts}}
+    {%endautoescape%}
 
 </body>
 </html>
