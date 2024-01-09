@@ -27,6 +27,9 @@ type PluginManager struct {
 	Out            *logging.Logger
 	Tempo          *templates.TemplateManager
 	BlockExec      map[string]BlockExecMethod
+	Port           int
+	TLSPort        int
+	OrgDirs        []string
 	cachedPassword map[string]string
 }
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"net/rpc/jsonrpc"
+	"path/filepath"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -36,6 +37,15 @@ func main() {
 	// move ws up, prevent '/*' from covering '/ws' in not testing mux, httprouter has this bug.
 	restApi(router)
 
+	for i, path := range orgs.Conf().OrgDirs {
+		if i == 0 {
+			if fpath, err := filepath.Abs(path); err == nil {
+				fmt.Printf("PREFIX: %s\n", fpath)
+				fs := http.FileServer(http.Dir(fpath))
+				router.PathPrefix("/images/").Handler(http.StripPrefix("/images", fs))
+			}
+		}
+	}
 	// END ROUTING TABLE PathPrefix("/") match '/*' request
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
@@ -44,6 +54,29 @@ func main() {
 	//http.Handle("/", fileServer)
 	//http.HandleFunc("/orgs", portal)
 	startPlugins()
+
+	// Allow http connections but only from localhost
+	go func() {
+		corsHandler := cors.Default().Handler(router)
+		if orgs.Conf().AccessControl != "*" {
+			corsPolicy := cors.New(cors.Options{
+				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", orgs.Conf().Port)},
+				AllowCredentials: true,
+				//	// Enable Debugging for testing, consider disabling in production
+				//	Debug: true,
+			})
+			corsHandler = corsPolicy.Handler(corsHandler)
+		}
+		//if orgs.Conf().AllowHttp {
+		fmt.Printf("HTTP PORT: %d\n", orgs.Conf().Port)
+		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
+		//fmt.Printf("ORG: %s\n", orgs.Conf().ServePath)
+		err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), corsHandler)
+		if err != nil {
+			log.Fatal("ListenAndServe: ", err)
+		}
+		//}
+	}()
 
 	corsHandler := cors.Default().Handler(router)
 	if orgs.Conf().AccessControl != "*" {
@@ -55,18 +88,6 @@ func main() {
 		})
 		corsHandler = corsPolicy.Handler(corsHandler)
 	}
-
-	// Allow http connections
-	if orgs.Conf().AllowHttp {
-		fmt.Printf("PORT: %d\n", orgs.Conf().Port)
-		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
-		fmt.Printf("ORG: %s\n", orgs.Conf().ServePath)
-		err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), corsHandler)
-		if err != nil {
-			log.Fatal("ListenAndServe: ", err)
-		}
-	}
-
 	// Allow https connections
 	if orgs.Conf().AllowHttps {
 		fmt.Printf("PORT: %d\n", orgs.Conf().TLSPort)

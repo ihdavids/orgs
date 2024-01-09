@@ -103,7 +103,15 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	fname := r.URL.Query().Get("filename")
 	query := r.URL.Query().Get("query")
 	local := r.URL.Query().Get("local")
+	filelinks := r.URL.Query().Get("filelinks")
+	httpslinks := r.URL.Query().Get("httpslinks")
 	opts := common.ExportToFile{Name: ptype, Filename: fname, Query: query, Opts: ""}
+	if filelinks == "t" {
+		opts.Opts += "filelinks;"
+	}
+	if httpslinks == "t" {
+		opts.Opts += "httpslinks;"
+	}
 	var res common.ResultMsg
 	if local == "t" {
 		res, _ = orgs.ExportToFile(db, &opts)

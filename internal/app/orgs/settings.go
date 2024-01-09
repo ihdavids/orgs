@@ -191,9 +191,12 @@ func (self *Config) ParseConfig() {
 			panic(err2)
 		}
 	}
+	manager.Port = self.Port
+	manager.TLSPort = self.TLSPort
 	manager.HomeDir = filepath.Dir(execPath)
 	manager.Out = GetLog()
 	manager.Tempo = &templates.TemplateManager{TemplatePath: config.TemplatePath}
+	manager.OrgDirs = self.OrgDirs
 	manager.Tempo.Initialize()
 	config.PlugManager = manager
 	for _, pd := range self.Plugins {

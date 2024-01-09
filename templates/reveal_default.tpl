@@ -4,11 +4,42 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{fontfamily}}"> 
   <link rel="stylesheet" href="{{reveal_cdn}}/reveal.min.css">
   <link rel="stylesheet" href="{{reveal_cdn}}/theme/{{theme}}.css">
-
   <link rel="stylesheet" href="{{hljs_cdn}}/styles/{{hljs_style}}.min.css">
-  {%if tabulator%}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.2/css/tabulator.min.css">
-  {%endif%}
+  <style>
+  table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+	border-collapse:separate;	
+	border-radius: 20px;
+	
+	}
+	thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+	border-radius:6px;
+	}
+	th, td {
+	    padding: 12px 15px;
+	}
+	tbody tr {
+ 	   border-bottom: 1px solid #dddddd;
+	}
+	tbody tr:nth-of-type(even) {
+	    background-color: #232323;
+	}
+	tbody tr:last-of-type {
+ 	   border-bottom: 2px solid #009879;
+	}
+	tbody tr.active-row {
+	    font-weight: bold;
+	    color: #009879;
+	}
+  </style>
 <style>
 {{stylesheet}}
 </style>

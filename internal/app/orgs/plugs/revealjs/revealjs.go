@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
@@ -143,7 +144,6 @@ var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 type RevealExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
-	UseTabulator bool // Write tables as tabulator tables for prettyness
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
@@ -152,12 +152,13 @@ type RevealWriter struct {
 	*org.HTMLWriter
 	exp              *RevealExporter
 	PostWriteScripts string
+	Opts             string
 }
 
 func NewRevealWriter(exp *RevealExporter) *RevealWriter {
 	// This lovely bit of circular reference ensures that we get called when exporting for any methods
 	// we have overwritten
-	rw := RevealWriter{org.NewHTMLWriter(), nil, ""}
+	rw := RevealWriter{org.NewHTMLWriter(), nil, "", ""}
 	rw.ExtendingWriter = &rw
 	rw.exp = exp
 	// This version was a bad idea and needs to get removed!
@@ -210,6 +211,65 @@ func GetPropTag(name, revealName string, h org.Headline, secProps string) string
 	}
 	return secProps
 }
+func (w *RevealWriter) WriteRegularLink(l org.RegularLink) {
+	if l.Protocol == "file" && l.Kind() == "image" {
+
+		// This bit is tricky: VSCode will not work with anything not setup as accessible in the webroot
+		// Since a vscode webview is a seperate entity self signed certificates also do not work.
+		// So we support localhost access over http to fix that. It's not ideal but works.
+
+		url := l.URL[len("file://"):]
+		//fname, _ := filepath.Abs(url)
+
+		//fname = "file://" + fname
+		//fname := "/Users/idavids/dev/gtd/" + url
+		fname := ""
+		if strings.Contains(w.Opts, "httpslinks;") {
+			fname = url
+			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.exp.pm.TLSPort, fname)
+		} else if strings.Contains(w.Opts, "filelinks;") {
+			found := false
+			for _, path := range w.exp.pm.OrgDirs {
+				fname = filepath.Join(path, url)
+				fname, _ = filepath.Abs(fname)
+				if _, err := os.Stat(fname); err != nil {
+					fname = "file://" + fname
+					found = true
+					break
+				}
+			}
+			if !found {
+				if len(w.exp.pm.OrgDirs) > 0 {
+					path := w.exp.pm.OrgDirs[0]
+					fname = filepath.Join(path, url)
+					fname, _ = filepath.Abs(fname)
+					fname = "file://" + fname
+				}
+			}
+		} else { //if strings.Contains(w.Opts, "httplinks;") {
+			fname = url
+			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.exp.pm.Port, fname)
+		}
+		if l.Description == nil {
+			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`, fname, fname, url))
+		} else {
+			description := strings.TrimPrefix(org.String(l.Description...), "file:")
+			w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, l.URL, fname, description))
+		}
+		/*
+			// This works but only with a certificate
+			fname := url
+			if l.Description == nil {
+				w.WriteString(fmt.Sprintf(`<img src="https://localhost/images/%s" alt="%s" title="%s" />`, fname, l.URL, l.URL))
+			} else {
+				description := strings.TrimPrefix(org.String(l.Description...), "file:")
+				w.WriteString(fmt.Sprintf(`<a href="https://localhost/images/%s"><img src="%s" alt="%s" /></a>`, l.URL, description, description))
+			}
+		*/
+	} else {
+		w.HTMLWriter.WriteRegularLink(l)
+	}
+}
 
 // OVERRIDE: This overrides the core method
 func (w *RevealWriter) WriteHeadline(h org.Headline) {
@@ -242,40 +302,40 @@ func (w *RevealWriter) WriteHeadline(h org.Headline) {
 }
 
 func (w *RevealWriter) WriteTable(t org.Table) {
-	if w.exp == nil || !w.exp.UseTabulator {
-		w.HTMLWriter.WriteTable(t)
-	} else {
-		name := fmt.Sprintf("tabulator_table_%d", t.Pos.Row)
-		w.WriteString(fmt.Sprintf("<table id=\"%s\">\n", name))
-		inHead := len(t.SeparatorIndices) > 0 &&
-			t.SeparatorIndices[0] != len(t.Rows)-1 &&
-			(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
-		if inHead {
-			w.WriteString("<thead>\n")
+	w.HTMLWriter.WriteTable(t)
+	/*
 		} else {
-			w.WriteString("<tbody>\n")
-		}
-		for i, row := range t.Rows {
-			if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
+			name := fmt.Sprintf("tabulator_table_%d", t.Pos.Row)
+			w.WriteString(fmt.Sprintf("<table id=\"%s\">\n", name))
+			inHead := len(t.SeparatorIndices) > 0 &&
+				t.SeparatorIndices[0] != len(t.Rows)-1 &&
+				(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
+			if inHead {
+				w.WriteString("<thead>\n")
+			} else {
+				w.WriteString("<tbody>\n")
+			}
+			for i, row := range t.Rows {
+				if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
+					if inHead {
+						w.WriteString("</thead>\n<tbody>\n")
+						inHead = false
+					} else {
+						w.WriteString("</tbody>\n<tbody>\n")
+					}
+				}
+				if row.IsSpecial {
+					continue
+				}
 				if inHead {
-					w.WriteString("</thead>\n<tbody>\n")
-					inHead = false
+					w.writeTableColumns(row.Columns, "th")
 				} else {
-					w.WriteString("</tbody>\n<tbody>\n")
+					w.writeTableColumns(row.Columns, "td")
 				}
 			}
-			if row.IsSpecial {
-				continue
-			}
-			if inHead {
-				w.writeTableColumns(row.Columns, "th")
-			} else {
-				w.writeTableColumns(row.Columns, "td")
-			}
+			w.WriteString("</tbody>\n</table>\n")
 		}
-		w.WriteString("</tbody>\n</table>\n")
-		w.PostWriteScripts += fmt.Sprintf("<script type=\"module\">import {Tabulator} from 'https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.5.2/js/tabulator_esm.min.js'; var table = new Tabulator(\"#%s\", {});</script>", name)
-	}
+	*/
 }
 
 func (w *RevealWriter) writeTableColumns(columns []*org.Column, tag string) {
@@ -350,6 +410,7 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 			self.Props["hljsstyle"] = style
 		}
 		w := NewRevealWriter(self)
+		w.Opts = opts
 		org.WriteNodes(w, f.Nodes...)
 		res := w.String()
 		self.Props["slide_data"] = res
@@ -399,21 +460,16 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 		m["trackheight"] = 30
 	}
 	if _, ok := m["stylesheet"]; !ok || force_reload_style {
-		if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_style.css")); err == nil {
+		if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("reveal_style.css")); err == nil {
 			m["stylesheet"] = (string)(data)
 		}
 	}
-	// TODO: make this follow the configuration
-	if _, ok := m["tabulator"]; !ok {
-		m["tabulator"] = true
-	}
-
 	return m
 }
 
 // init function is called at boot
 func init() {
 	plugs.AddExporter("revealjs", func() plugs.Exporter {
-		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl", UseTabulator: true}
+		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl"}
 	})
 }
