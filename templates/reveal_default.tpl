@@ -39,6 +39,10 @@
 	    font-weight: bold;
 	    color: #009879;
 	}
+	img {
+  		box-shadow: 5px 5px 15px 0px #aa8;
+		-webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));
+	}
   </style>
 <style>
 {{stylesheet}}
