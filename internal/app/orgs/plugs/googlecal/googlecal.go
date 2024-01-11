@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -21,16 +23,35 @@ import (
 // Create credentials
 
 // Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config, tokFile string) *http.Client {
+func getClient(config *oauth2.Config, tokFile string, gc *GoogleCalendar) *http.Client {
+
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tok, err := tokenFromFile(tokFile)
-	if err != nil {
-		tok = getTokenFromWeb(config)
-		saveToken(tokFile, tok)
+	if tokFile != "" {
+		tok, err := tokenFromFile(tokFile)
+		if err != nil {
+			tok = getTokenFromWeb(config)
+			saveToken(tokFile, tok)
+			// As a backup we save it to our keyring as well.
+			// We might not want this long term...
+			saveTokenToKeyring(tok, gc)
+		}
+		return config.Client(context.Background(), tok)
 	}
-	return config.Client(context.Background(), tok)
+	if tok, err := tokenFromKeyring(gc.GetToken()); err == nil {
+		return config.Client(context.Background(), tok)
+	} else {
+		tok = getTokenFromWeb(config)
+		saveTokenToKeyring(tok, gc)
+	}
+	return nil
+}
+
+func saveTokenToKeyring(tok *oauth2.Token, gc *GoogleCalendar) {
+	b := new(strings.Builder)
+	json.NewEncoder(b).Encode(tok)
+	gc.SetToken([]byte(b.String()))
 }
 
 // Request a token from the web, then returns the retrieved token.
@@ -63,6 +84,15 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	return tok, err
 }
 
+func tokenFromKeyring(keyRingTok string) (*oauth2.Token, error) {
+	if keyRingTok != "" {
+		tok := &oauth2.Token{}
+		err := json.NewDecoder(strings.NewReader(keyRingTok)).Decode(tok)
+		return tok, err
+	}
+	return nil, fmt.Errorf("no keyring token present")
+}
+
 // Saves a token to a file path.
 func saveToken(path string, token *oauth2.Token) {
 	fmt.Printf("Saving credential file to: %s\n", path)
@@ -80,19 +110,43 @@ type GoogleCalendar struct {
 	Token       string
 	Output      string
 	NumEvents   int64
+	manager     *plugs.PluginManager
 }
 
 func (self *GoogleCalendar) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *GoogleCalendar) GetToken() string {
+	return self.manager.GetPass("orgs-googlecal-token", "keyring-nonfatal")
+}
+
+func (self *GoogleCalendar) SetToken(data []byte) {
+	self.manager.SetPass("orgs-googlecal-token", string(data))
+}
+
+func (self *GoogleCalendar) GetCreds() string {
+	return self.manager.GetPass("orgs-googlecal-creds", "keyring-nonfatal")
+}
+
+func (self *GoogleCalendar) SetCreds(data []byte) {
+	self.manager.SetPass("orgs-googlecal-creds", string(data))
+}
+
 func (self *GoogleCalendar) Update(db plugs.ODb) {
 	fmt.Printf("Google Calendar Update...\n")
 
+	crds := self.GetCreds()
 	ctx := context.Background()
 	b, err := os.ReadFile(self.Credentials)
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		if crds == "" {
+			log.Fatalf("Unable to read client secret file: %v or find crednetials in keyring", err)
+		}
+		b = []byte(crds)
+	} else {
+		// Store it in your keyring
+		self.SetCreds(b)
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
@@ -100,7 +154,7 @@ func (self *GoogleCalendar) Update(db plugs.ODb) {
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
-	client := getClient(config, self.Token)
+	client := getClient(config, self.Token, self)
 
 	srv, err := calendar.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
@@ -109,6 +163,10 @@ func (self *GoogleCalendar) Update(db plugs.ODb) {
 
 	t := time.Now().Format(time.RFC3339)
 	cals, _ := srv.CalendarList.List().Do()
+	outputPath := filepath.Dir(self.Output)
+	if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+		os.MkdirAll(outputPath, 0700)
+	}
 	f, err := os.OpenFile(self.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Fatalf("Unable to create calendar file: %v", err)
@@ -158,6 +216,7 @@ func (self *GoogleCalendar) Update(db plugs.ODb) {
 }
 
 func (self *GoogleCalendar) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+	self.manager = manager
 }
 
 // init function is called at boot
