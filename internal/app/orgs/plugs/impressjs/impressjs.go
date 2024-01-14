@@ -38,12 +38,15 @@ type ImpressExporter struct {
 
 type ImpressWriter struct {
 	*org.HTMLWriter
+	exp  *ImpressExporter
+	Opts string
 }
 
-func NewImpressWriter() *ImpressWriter {
+func NewImpressWriter(exp *ImpressExporter) *ImpressWriter {
 	// This lovely circular reference ensures overrides are called when calling write node.
-	rw := ImpressWriter{org.NewHTMLWriter()}
+	rw := ImpressWriter{org.NewHTMLWriter(), nil, ""}
 	rw.ExtendingWriter = &rw
+	rw.exp = exp
 
 	// This was a bad idea and needs to be removed!
 	rw.HeadlineWriterOverride = &rw
@@ -62,6 +65,8 @@ func NewImpressWriter() *ImpressWriter {
 		}
 		if lang == "mermaid" {
 			return fmt.Sprintf(`<pre class="mermaid">%s</pre>`, html.EscapeString(source))
+		} else if lang == "d3-wordcloud" {
+			return fmt.Sprintf(`<script></script>`)
 		} else {
 			if inline {
 				return fmt.Sprintf("<div class=\"hljs\"><pre><code %s >%s</code></pre></div>", attribStr, html.EscapeString(source))
@@ -116,6 +121,52 @@ func GetPropTag(name, revealName string, h org.Headline, secProps string) string
 		secProps = fmt.Sprintf("%s %s", secProps, revealName)
 	}
 	return secProps
+}
+
+func (w *ImpressWriter) WriteRegularLink(l org.RegularLink) {
+	if l.Protocol == "file" && l.Kind() == "image" {
+
+		// This bit is tricky: VSCode will not work with anything not setup as accessible in the webroot
+		// Since a vscode webview is a seperate entity self signed certificates also do not work.
+		// So we support localhost access over http to fix that. It's not ideal but works.
+
+		url := l.URL[len("file://"):]
+		fname := ""
+		if strings.Contains(w.Opts, "httpslinks;") {
+			fname = url
+			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.exp.pm.TLSPort, fname)
+		} else if strings.Contains(w.Opts, "filelinks;") {
+			found := false
+			for _, path := range w.exp.pm.OrgDirs {
+				fname = filepath.Join(path, url)
+				fname, _ = filepath.Abs(fname)
+				if _, err := os.Stat(fname); err != nil {
+					fname = "file://" + fname
+					found = true
+					break
+				}
+			}
+			if !found {
+				if len(w.exp.pm.OrgDirs) > 0 {
+					path := w.exp.pm.OrgDirs[0]
+					fname = filepath.Join(path, url)
+					fname, _ = filepath.Abs(fname)
+					fname = "file://" + fname
+				}
+			}
+		} else { //if strings.Contains(w.Opts, "httplinks;") {
+			fname = url
+			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.exp.pm.Port, fname)
+		}
+		if l.Description == nil {
+			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`, fname, fname, url))
+		} else {
+			description := strings.TrimPrefix(org.String(l.Description...), "file:")
+			w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, l.URL, fname, description))
+		}
+	} else {
+		w.HTMLWriter.WriteRegularLink(l)
+	}
 }
 
 func (w *ImpressWriter) WriteHeadlineOverride(h org.Headline) {
@@ -244,7 +295,7 @@ func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts str
 		if style != "" {
 			self.Props["hljsstyle"] = style
 		}
-		w := NewImpressWriter()
+		w := NewImpressWriter(self)
 		org.WriteNodes(w, f.Nodes...)
 		res := w.String()
 		self.Props["slide_data"] = res
