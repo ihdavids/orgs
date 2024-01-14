@@ -47,6 +47,46 @@
 <style>
 {{stylesheet}}
 </style>
+{%if wordcloud%}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.7/d3.layout.cloud.min.js"></script>
+<script>
+function wordcloud(name, words) {
+	function draw(words) {
+  		d3.select(name)
+  	    .attr("width", layout.size()[0])
+  	    .attr("height", layout.size()[1])
+  	  .append("g")
+  	    .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+  	  .selectAll("text")
+  	    .data(words)
+  	  .enter().append("text")
+  	    .style("font-size", function(d) { return d.size + "px"; })
+		.style("fill", function(d){return "hsl(" + Math.random() * 360 + ",72%,70%)"; })
+  	    .style("font-family", "Impact")
+  	    .attr("text-anchor", "middle")
+  	    .attr("transform", function(d) {
+  	      return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+  	    })
+  	    .text(function(d) { return d.text; });
+	}
+
+	var layout = d3.layout.cloud()
+	    .size([800, 600])
+	    .words( words.map(function(d) {
+      		return {text: d, size: 20 + Math.random() * 70};
+    }))
+    .padding(5)
+    .rotate(function() { return ~~(Math.random() * 1.5) * 90; })
+    .font("Impact")
+    .fontSize(function(d) { return d.size; })
+    .on("end", draw);
+
+	layout.start();
+}
+</script>
+{%endif%}
+
 </head>
 <body>
 

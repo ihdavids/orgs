@@ -166,6 +166,7 @@ func NewRevealWriter(exp *RevealExporter) *RevealWriter {
 
 	// This we should probably just replace with an override as well! Way better
 	rw.NoWrapCodeBlock = true
+	cnt := 1
 	rw.HighlightCodeBlock = func(keywords []org.Keyword, source, lang string, inline bool, params map[string]string) string {
 		var attribs []string = []string{}
 		for _, key := range keywords {
@@ -180,6 +181,11 @@ func NewRevealWriter(exp *RevealExporter) *RevealWriter {
 		}
 		if lang == "mermaid" {
 			return fmt.Sprintf(`<pre class="mermaid">%s</pre>`, html.EscapeString(source))
+		} else if lang == "wordcloud" {
+			rw.exp.Props["wordcloud"] = true
+			rv := fmt.Sprintf(`<svg style="border: 1px dashed; border-radius: 10px; border-color: #333333" id="wordcloud_%d" onload="wordcloud('#wordcloud_%d', %s)"/>`, cnt, cnt, strings.TrimSpace(source))
+			cnt += 1
+			return rv
 		} else {
 			if inline {
 				return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
@@ -449,6 +455,9 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["hljsstyle"]; !ok {
 		m["hljs_style"] = "monokai"
+	}
+	if _, ok := m["wordcloud"]; !ok {
+		m["wordcloud"] = false
 	}
 	if _, ok := m["fontfamily"]; !ok {
 		m["fontfamily"] = "Inconsolata"
