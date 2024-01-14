@@ -62,11 +62,14 @@ func (o *PluginManager) GetPassFromStdIn(name string) string {
 	return o.cachedPassword[name]
 }
 
-func (o *PluginManager) GetPassFromKeyring(name string) string {
+func (o *PluginManager) GetPassFromKeyring(name string, nonfatal bool) string {
 	o.Out.Info("Querying keyring password source.")
 	var err error
 	o.cachedPassword[name], err = keyringGet(name)
 	if err != nil {
+		if nonfatal {
+			return ""
+		}
 		panic(err)
 	}
 	return o.cachedPassword[name]
@@ -86,7 +89,11 @@ func (o *PluginManager) GetPass(name string, passSource string) string {
 	if passSource != "" {
 		o.Out.Debugf("password-source: %s", passSource)
 		if passSource == "keyring" {
-			o.GetPassFromKeyring(name)
+			o.GetPassFromKeyring(name, false)
+		} else if passSource == "keyring-nonfatal" {
+			if o.GetPassFromKeyring(name, true) == "" {
+				return ""
+			}
 		} else if passSource == "stdin" {
 			o.GetPassFromStdIn(name)
 		} else {
