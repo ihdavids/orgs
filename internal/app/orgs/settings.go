@@ -114,6 +114,8 @@ type Config struct {
 	// Drawer to use in inserting clock values
 	// Defaults to LOGBOOK
 	ClockIntoDrawer string `yaml:"clockIntoDrawer"`
+	// Where can we find images served for templates
+	TemplateImagesPath string `yaml:"templateImagesPath"`
 }
 
 func (self *Config) Defaults() {
@@ -146,6 +148,7 @@ func (self *Config) Defaults() {
 	self.DateTreeMonthFormat = "January"
 	self.DateTreeDayFormat = "02 Monday"
 	self.ClockIntoDrawer = "LOGBOOK"
+	self.TemplateImagesPath = "./templates/html_styles/images"
 }
 
 func (self *Config) Validate() {

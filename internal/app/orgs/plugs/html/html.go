@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
@@ -272,7 +273,8 @@ var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
 func GetStylesheet(name string) string {
 	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
-		return (string)(data)
+		re := regexp.MustCompile(`url\(([^)]+)\)`)
+		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
 	}
 	return ""
 }

@@ -42,7 +42,12 @@ func main() {
 			if fpath, err := filepath.Abs(path); err == nil {
 				fmt.Printf("PREFIX: %s\n", fpath)
 				fs := http.FileServer(http.Dir(fpath))
+				tpath, _ := filepath.Abs(orgs.Conf().TemplateImagesPath)
+				fmt.Printf("TEMP PATH: %s\n", tpath)
+				internalfs := http.FileServer(http.Dir(tpath))
 				router.PathPrefix("/images/").Handler(http.StripPrefix("/images", fs))
+				router.PathPrefix("/orgimages/").Handler(http.StripPrefix("/orgimages", internalfs))
+				router.PathPrefix("orgimages/").Handler(http.StripPrefix("orgimages", internalfs))
 			}
 		}
 	}
