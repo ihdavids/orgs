@@ -230,7 +230,11 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("HTML_THEME")
 		if theme != "" {
-			self.Props["theme"] = theme
+			self.Props["stylesheet"] = GetStylesheet(theme)
+		}
+		theme = f.Get("HTML_STYLE")
+		if theme != "" {
+			self.Props["stylesheet"] = GetStylesheet(theme)
 		}
 		style := f.Get("HTML_HIGHLIGHT_STYLE")
 		if style != "" {
@@ -266,6 +270,13 @@ func NewHtmlExp() *OrgHtmlExporter {
 var hljsver = "11.9.0"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
+func GetStylesheet(name string) string {
+	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
+		return (string)(data)
+	}
+	return ""
+}
+
 func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	force_reload_style := false
 	if _, ok := m["title"]; !ok {
@@ -278,9 +289,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 		m["trackheight"] = 30
 	}
 	if _, ok := m["stylesheet"]; !ok || force_reload_style {
-		if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_style.css")); err == nil {
-			m["stylesheet"] = (string)(data)
-		}
+		m["stylesheet"] = GetStylesheet("default")
 	}
 	if _, ok := m["hljscdn"]; !ok {
 		m["hljs_cdn"] = hljscdn
