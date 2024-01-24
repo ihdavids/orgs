@@ -5,49 +5,11 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{fontfamily}}"> 
   <link rel="stylesheet" href="{{hljs_cdn}}/styles/{{hljs_style}}.min.css">
   <style>
-  table {
-    border-collapse: collapse;
-    margin: 25px 0;
-    font-size: 0.9em;
-    font-family: sans-serif;
-    min-width: 400px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-	border-collapse:separate;	
-	border-radius: 20px;
-	
-	}
-	thead tr {
-    background-color: #009879;
-    color: #ffffff;
-    text-align: left;
-	border-radius:6px;
-	}
-	th, td {
-	    padding: 12px 15px;
-	}
-	tbody tr {
- 	   border-bottom: 1px solid #dddddd;
-	}
-	tbody tr:nth-of-type(even) {
-	    background-color: #232323;
-	}
-	tbody tr:last-of-type {
- 	   border-bottom: 2px solid #009879;
-	}
-	tbody tr.active-row {
-	    font-weight: bold;
-	    color: #009879;
-	}
 	img {
   		box-shadow: 5px 5px 15px 0px #aa8;
 		-webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));
 	}
   </style>
-<style>
-{%autoescape off%}
-{{stylesheet}}
-{%endautoescape%}
-</style>
 {%if wordcloud%}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.7/d3.layout.cloud.min.js"></script>
@@ -88,10 +50,14 @@ function wordcloud(name, words) {
 </script>
 {%endif%}
 
+<style>
+{%autoescape off%}
+{{stylesheet}}
+{%endautoescape%}
+</style>
 </head>
-<body>
-
-	<script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
+<body{%if havebodyattr%} class="{{bodyattr}}"{%endif%}>
+    <script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
 
     {%autoescape off%}
     {{html_data}}
@@ -101,7 +67,6 @@ function wordcloud(name, words) {
 	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
 	  mermaid.initialize({ startOnLoad: true });
 	</script>
-
     {%autoescape off%}
 	{{post_scripts}}
     {%endautoescape%}

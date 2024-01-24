@@ -237,6 +237,13 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		if theme != "" {
 			self.Props["stylesheet"] = GetStylesheet(theme)
 		}
+		attr := f.Get("ATTR_BODY_HTML")
+		self.Props["havebodyattr"] = false
+		if attr != "" {
+			self.Props["bodyattr"] = attr
+			self.Props["havebodyattr"] = true
+		}
+
 		style := f.Get("HTML_HIGHLIGHT_STYLE")
 		if style != "" {
 			self.Props["hljsstyle"] = style
@@ -273,6 +280,7 @@ var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
 func GetStylesheet(name string) string {
 	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
+		// HACK: We probably do not alway want to do this. Need to think of a better way to handle this!
 		re := regexp.MustCompile(`url\(([^)]+)\)`)
 		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
 	}
