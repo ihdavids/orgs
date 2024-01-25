@@ -479,12 +479,12 @@ table.abilities th,td{
 }
 
 table.abilities th {
-    font-family: "ScalySans";
+    font-family: "Scaly Sans";
     font-size: 1rem;
 }
 
 table.abilities td {
-    font-family: "Scaly Sans";
+    font-family: "ScalySans";
     font-size: 0.8rem;
   }
 table.abilities tr:nth-child(odd) {
