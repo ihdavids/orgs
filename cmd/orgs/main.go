@@ -45,9 +45,13 @@ func main() {
 				tpath, _ := filepath.Abs(orgs.Conf().TemplateImagesPath)
 				fmt.Printf("TEMP PATH: %s\n", tpath)
 				internalfs := http.FileServer(http.Dir(tpath))
+				tfpath, _ := filepath.Abs(orgs.Conf().TemplateFontPath)
+				internalfontfs := http.FileServer(http.Dir(tfpath))
 				router.PathPrefix("/images/").Handler(http.StripPrefix("/images", fs))
 				router.PathPrefix("/orgimages/").Handler(http.StripPrefix("/orgimages", internalfs))
 				router.PathPrefix("orgimages/").Handler(http.StripPrefix("orgimages", internalfs))
+				router.PathPrefix("/orgfonts/").Handler(http.StripPrefix("/orgfonts", internalfontfs))
+				router.PathPrefix("orgfonts/").Handler(http.StripPrefix("orgfonts", internalfontfs))
 			}
 		}
 	}

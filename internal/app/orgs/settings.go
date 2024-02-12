@@ -116,6 +116,7 @@ type Config struct {
 	ClockIntoDrawer string `yaml:"clockIntoDrawer"`
 	// Where can we find images served for templates
 	TemplateImagesPath string `yaml:"templateImagesPath"`
+	TemplateFontPath   string `yaml:"templateFontPath"`
 }
 
 func (self *Config) Defaults() {
@@ -149,6 +150,7 @@ func (self *Config) Defaults() {
 	self.DateTreeDayFormat = "02 Monday"
 	self.ClockIntoDrawer = "LOGBOOK"
 	self.TemplateImagesPath = "./templates/html_styles/images"
+	self.TemplateFontPath = "./templates/fonts"
 }
 
 func (self *Config) Validate() {

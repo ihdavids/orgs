@@ -1,21 +1,31 @@
-
 // EXPORTER: Latex Export
 
 package gantt
 
 import (
 	"fmt"
+	"html"
 	"log"
 	"os"
-	"path/filepath"
+	"reflect"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
 )
+
+func isRawTextBlock(name string) bool { return name == "SRC" || name == "EXAMPLE" || name == "EXPORT" }
+
+func isImageOrVideoLink(n org.Node) bool {
+	if l, ok := n.(org.RegularLink); ok && l.Kind() == "video" || l.Kind() == "image" {
+		return true
+	}
+	return false
+}
 
 type OrgLatexExporter struct {
 	TemplatePath string
@@ -25,18 +35,18 @@ type OrgLatexExporter struct {
 }
 
 type OrgLatexWriter struct {
-	ExtendingWriter        org.Writer
+	ExtendingWriter org.Writer
 	strings.Builder
-	Document   *org.Document
-	log        *log.Logger
-	footnotes  *footnotes
+	Document            *org.Document
+	log                 *log.Logger
+	footnotes           *footnotes
+	PrettyRelativeLinks bool
 }
-
 
 func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
 	defaultConfig := org.New()
 	return &OrgLatexWriter{
-		Document:   &org.Document{Configuration: defaultConfig},
+		Document: &org.Document{Configuration: defaultConfig},
 		footnotes: &footnotes{
 			mapping: map[string]int{},
 		},
@@ -68,7 +78,6 @@ func GetPropTag(name, revealName string, h org.Headline, secProps string) string
 	}
 	return secProps
 }
-
 
 func (self *OrgLatexExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
@@ -179,7 +188,7 @@ func init() {
 	})
 }
 
-////////////////////////// WRITER //////////////////////////////////
+// //////////////////////// WRITER //////////////////////////////////
 func (n *OrgLatexWriter) NodeIdx(_ int) {
 	// We do not need the node idx at this point in time
 }
@@ -218,7 +227,6 @@ var listItemStatuses = map[string]string{
 
 var cleanHeadlineTitleForHTMLAnchorRegexp = regexp.MustCompile(`</?a[^>]*>`) // nested a tags are not valid HTML
 var tocHeadlineMaxLvlRegexp = regexp.MustCompile(`headlines\s+(\d+)`)
-
 
 func (w *OrgLatexWriter) WriteNodesAsString(nodes ...org.Node) string {
 	original := w.Builder
@@ -427,12 +435,10 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 }
 
 func (w *OrgLatexWriter) WriteText(t org.Text) {
-	if !w.htmlEscape {
-		w.WriteString(t.Content)
-	} else if w.Document.GetOption("e") == "nil" || t.IsRaw {
+	if w.Document.GetOption("e") == "nil" || t.IsRaw {
 		w.WriteString(EscapeString(t.Content))
 	} else {
-		w.WriteString(EscapeString(htmlEntityReplacer.Replace(t.Content)))
+		w.WriteString(EscapeString(t.Content))
 	}
 }
 
@@ -481,13 +487,13 @@ func (w *OrgLatexWriter) WriteTimestamp(t org.Timestamp) {
 	}
 	w.WriteString(`<span class="timestamp">`)
 	bs, be := "", ""
-	if t.Time.TimestampType == Active {
+	if t.Time.TimestampType == org.Active {
 		bs, be = "&lt;", "&gt;"
-	} else if t.Time.TimestampType == Inactive {
+	} else if t.Time.TimestampType == org.Inactive {
 		bs, be = "&lsqb;", "&rsqb;"
 	}
-	var od OrgDate = *t.Time
-	od.TimestampType = NoBracket
+	var od org.OrgDate = *t.Time
+	od.TimestampType = org.NoBracket
 	w.WriteString(fmt.Sprintf("%s%s%s</span>", bs, od.ToString(), be))
 	/*
 		if t.IsDate {
@@ -506,27 +512,27 @@ func (w *OrgLatexWriter) WriteSDC(s org.SDC) {
 	}
 	name := ""
 	switch s.DateType {
-	case Scheduled:
+	case org.Scheduled:
 		name = "SCHEDULED"
 		break
-	case Deadline:
+	case org.Deadline:
 		name = "DEADLINE"
 		break
-	case Closed:
+	case org.Closed:
 		name = "CLOSED"
 		break
 	}
 	w.WriteString(fmt.Sprintf(`<span class="tags">%s`, name))
 	w.WriteString(`</span>`)
 	bs, be := "", ""
-	if s.Date.TimestampType == Active {
+	if s.Date.TimestampType == org.Active {
 		bs, be = "&lt;", "&gt;"
-	} else if s.Date.TimestampType == Inactive {
+	} else if s.Date.TimestampType == org.Inactive {
 		bs, be = "&lsqb;", "&rsqb;"
 	}
 	w.WriteString(fmt.Sprintf(`<span class="timestamp">%s`, bs))
 	dt := s.Date
-	dt.TimestampType = NoBracket
+	dt.TimestampType = org.NoBracket
 	w.WriteString(fmt.Sprintf("%s", dt.ToString()))
 	w.WriteString(fmt.Sprintf(`%s</span>`, be))
 }
@@ -552,7 +558,7 @@ func (w *OrgLatexWriter) WriteClock(s org.Clock) {
 
 func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
 	url := html.EscapeString(l.URL)
-	
+
 	if l.Protocol == "file" {
 		url = url[len("file:"):]
 	}
@@ -568,7 +574,7 @@ func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
 	}
 	if prefix := w.Document.Links[l.Protocol]; prefix != "" {
 		if tag := strings.TrimPrefix(l.URL, l.Protocol+":"); strings.Contains(prefix, "%s") || strings.Contains(prefix, "%h") {
-			url = html.EscapeString(strings.ReplaceAll(strings.ReplaceAll(prefix, "%s", tag), "%h", u.QueryEscape(tag)))
+			url = html.EscapeString(strings.ReplaceAll(strings.ReplaceAll(prefix, "%s", tag), "%h", tag))
 		} else {
 			url = html.EscapeString(prefix) + tag
 		}
@@ -576,31 +582,30 @@ func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
 		url = html.EscapeString(strings.ReplaceAll(strings.ReplaceAll(prefix, "%s", ""), "%h", ""))
 	}
 	switch l.Kind() {
-		/*
-	case "image":
-		if l.Description == nil {
-			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" />`, url, url, url))
-		} else {
-			description := strings.TrimPrefix(String(l.Description...), "file:")
-			w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, url, description, description))
-		}
-	case "video":
-		if l.Description == nil {
-			w.WriteString(fmt.Sprintf(`<video src="%s" title="%s">%s</video>`, url, url, url))
-		} else {
-			description := strings.TrimPrefix(String(l.Description...), "file:")
-			w.WriteString(fmt.Sprintf(`<a href="%s"><video src="%s" title="%s"></video></a>`, url, description, description))
-		}
-		*/
+	/*
+		case "image":
+			if l.Description == nil {
+				w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" />`, url, url, url))
+			} else {
+				description := strings.TrimPrefix(String(l.Description...), "file:")
+				w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, url, description, description))
+			}
+		case "video":
+			if l.Description == nil {
+				w.WriteString(fmt.Sprintf(`<video src="%s" title="%s">%s</video>`, url, url, url))
+			} else {
+				description := strings.TrimPrefix(String(l.Description...), "file:")
+				w.WriteString(fmt.Sprintf(`<a href="%s"><video src="%s" title="%s"></video></a>`, url, description, description))
+			}
+	*/
 	default:
 		description := url
 		if l.Description != nil {
 			description = w.WriteNodesAsString(l.Description...)
 		}
-		w.WriteString(fmt.Sprintf(`\ref{%s}{%s}`,url,description))
+		w.WriteString(fmt.Sprintf(`\ref{%s}{%s}`, url, description))
 	}
 }
-
 
 func (w *OrgLatexWriter) WriteMacro(m org.Macro) {
 	if macro := w.Document.Macros[m.Name]; macro != "" {
@@ -611,7 +616,7 @@ func (w *OrgLatexWriter) WriteMacro(m org.Macro) {
 		if macroDocument.Error != nil {
 			w.log.Printf("bad macro: %s -> %s: %v", m.Name, macro, macroDocument.Error)
 		}
-		WriteNodes(w, macroDocument.Nodes...)
+		org.WriteNodes(w, macroDocument.Nodes...)
 	}
 }
 
@@ -621,7 +626,7 @@ func (w *OrgLatexWriter) WriteList(l org.List) {
 		panic(fmt.Sprintf("bad list kind %#v", l))
 	}
 	w.WriteString(tags[0] + "\n")
-	WriteNodes(w, l.Items...)
+	org.WriteNodes(w, l.Items...)
 	w.WriteString(tags[1] + "\n")
 }
 
@@ -646,7 +651,7 @@ func (w *OrgLatexWriter) WriteDescriptiveListItem(di org.DescriptiveListItem) {
 	}
 
 	if len(di.Term) != 0 {
-		WriteNodes(w, di.Term...)
+		org.WriteNodes(w, di.Term...)
 	} else {
 		w.WriteString("?")
 	}
@@ -667,7 +672,7 @@ func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
 		}
 	} else {
 		w.WriteString("\n")
-		WriteNodes(w, children...)
+		org.WriteNodes(w, children...)
 	}
 }
 
@@ -676,7 +681,7 @@ func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 		return
 	}
 	w.WriteString("<p>")
-	WriteNodes(w, p.Children...)
+	org.WriteNodes(w, p.Children...)
 	w.WriteString("</p>\n")
 }
 
@@ -684,7 +689,7 @@ func (w *OrgLatexWriter) WriteExample(e org.Example) {
 	w.WriteString(`<pre class="example">` + "\n")
 	if len(e.Children) != 0 {
 		for _, n := range e.Children {
-			WriteNodes(w, n)
+			org.WriteNodes(w, n)
 			w.WriteString("\n")
 		}
 	}
@@ -719,7 +724,7 @@ func (w *OrgLatexWriter) WriteNodeWithMeta(n org.NodeWithMeta) {
 }
 
 func (w *OrgLatexWriter) WriteNodeWithName(n org.NodeWithName) {
-	WriteNodes(w, n.Node)
+	org.WriteNodes(w, n.Node)
 }
 
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
@@ -761,48 +766,52 @@ func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column, tag string) {
 		} else {
 			w.WriteString(fmt.Sprintf(`<%s class="align-%s">`, tag, column.Align))
 		}
-		WriteNodes(w, column.Children...)
+		org.WriteNodes(w, column.Children...)
 		w.WriteString(fmt.Sprintf("</%s>\n", tag))
 	}
 	w.WriteString("</tr>\n")
 }
 
 func (w *OrgLatexWriter) withHTMLAttributes(input string, kvs ...string) string {
-	if len(kvs)%2 != 0 {
-		w.log.Printf("withHTMLAttributes: Len of kvs must be even: %#v", kvs)
-		return input
-	}
-	context := &h.Node{Type: h.ElementNode, Data: "body", DataAtom: atom.Body}
-	nodes, err := h.ParseFragment(strings.NewReader(strings.TrimSpace(input)), context)
-	if err != nil || len(nodes) != 1 {
-		w.log.Printf("withHTMLAttributes: Could not extend attributes of %s: %v (%s)", input, nodes, err)
-		return input
-	}
-	out, node := strings.Builder{}, nodes[0]
-	for i := 0; i < len(kvs)-1; i += 2 {
-		node.Attr = setHTMLAttribute(node.Attr, strings.TrimPrefix(kvs[i], ":"), kvs[i+1])
-	}
-	err = h.Render(&out, nodes[0])
-	if err != nil {
-		w.log.Printf("withHTMLAttributes: Could not extend attributes of %s: %v (%s)", input, node, err)
-		return input
-	}
-	return out.String()
+	/*
+		if len(kvs)%2 != 0 {
+			w.log.Printf("withHTMLAttributes: Len of kvs must be even: %#v", kvs)
+			return input
+		}
+		context := &h.Node{Type: h.ElementNode, Data: "body", DataAtom: atom.Body}
+		nodes, err := h.ParseFragment(strings.NewReader(strings.TrimSpace(input)), context)
+		if err != nil || len(nodes) != 1 {
+			w.log.Printf("withHTMLAttributes: Could not extend attributes of %s: %v (%s)", input, nodes, err)
+			return input
+		}
+		out, node := strings.Builder{}, nodes[0]
+		for i := 0; i < len(kvs)-1; i += 2 {
+			node.Attr = setHTMLAttribute(node.Attr, strings.TrimPrefix(kvs[i], ":"), kvs[i+1])
+		}
+		err = h.Render(&out, nodes[0])
+		if err != nil {
+			w.log.Printf("withHTMLAttributes: Could not extend attributes of %s: %v (%s)", input, node, err)
+			return input
+		}
+		return out.String()
+	*/
+	return ""
 }
 
 func (w *OrgLatexWriter) blockContent(name string, children []org.Node) string {
 	if isRawTextBlock(name) {
-		builder, htmlEscape := w.Builder, w.htmlEscape
-		w.Builder, w.htmlEscape = strings.Builder{}, false
-		WriteNodes(w, children...)
+		builder := w.Builder
+		w.Builder = strings.Builder{}
+		org.WriteNodes(w, children...)
 		out := w.String()
-		w.Builder, w.htmlEscape = builder, htmlEscape
+		w.Builder = builder
 		return strings.TrimRightFunc(out, unicode.IsSpace)
 	} else {
 		return w.WriteNodesAsString(children...)
 	}
 }
 
+/*
 func setHTMLAttribute(attributes []h.Attribute, k, v string) []h.Attribute {
 	for i, a := range attributes {
 		if strings.ToLower(a.Key) == strings.ToLower(k) {
@@ -817,6 +826,7 @@ func setHTMLAttribute(attributes []h.Attribute, k, v string) []h.Attribute {
 	}
 	return append(attributes, h.Attribute{Namespace: "", Key: k, Val: v})
 }
+*/
 
 func isParagraphNodeSlice(ns []org.Node) bool {
 	for _, n := range ns {
