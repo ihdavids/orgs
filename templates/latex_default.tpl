@@ -1,4 +1,4 @@
-\documentclass{{{docclass}}}
+\documentclass{ {{docclass}} }
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usepackage{hyperref}

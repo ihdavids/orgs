@@ -85,13 +85,21 @@ func (self *OrgLatexExporter) Unmarshal(unmarshal func(interface{}) error) error
 
 func (self *OrgLatexExporter) Export(db plugs.ODb, query string, to string, opts string) error {
 	fmt.Printf("LATEX: Export called", query, to, opts)
-	_, err := db.QueryTodosExpr(query)
+	err, str := self.ExportToString(db, query, opts)
 	if err != nil {
-		msg := fmt.Sprintf("ERROR: latex failed to query expression, %v [%s]\n", err, query)
-		log.Printf(msg)
-		return fmt.Errorf(msg)
+		return err
 	}
-	return nil
+	return os.WriteFile(to, []byte(str), 0644)
+
+	/*
+		_, err := db.QueryTodosExpr(query)
+		if err != nil {
+			msg := fmt.Sprintf("ERROR: latex failed to query expression, %v [%s]\n", err, query)
+			log.Printf(msg)
+			return fmt.Errorf(msg)
+		}
+	*/
+
 }
 
 func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
@@ -100,6 +108,7 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("LATEX_THEME")
+		self.Props["docclass"] = "page"
 		if theme != "" {
 			self.Props["docclass"] = theme
 		}
@@ -118,6 +127,7 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		//self.Props["post_scripts"] = w.PostWriteScripts
 
 		fmt.Printf("DOC START: ========================================\n")
+		fmt.Printf("TEMP: %s\n", self.TemplatePath)
 		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
 		fmt.Printf("XXX: %s\n", res)
 		return nil, res
@@ -202,15 +212,15 @@ type footnotes struct {
 	list    []*org.FootnoteDefinition
 }
 
-var emphasisTags = map[string][]string{
-	"/":   []string{"<em>", "</em>"},
-	"*":   []string{"<strong>", "</strong>"},
-	"+":   []string{"<del>", "</del>"},
-	"~":   []string{"<code>", "</code>"},
-	"=":   []string{`<code class="verbatim">`, "</code>"},
-	"_":   []string{`<span style="text-decoration: underline;">`, "</span>"},
-	"_{}": []string{"<sub>", "</sub>"},
-	"^{}": []string{"<sup>", "</sup>"},
+var emphasisTags = map[string]string{
+	"/":   `\textit{%s}`,
+	"*":   `\textbf{%s}`,
+	"+":   `\sout{%s}`,
+	"~":   `\texttt{%s}`,
+	"=":   `\texttt{%s}`,
+	"_":   `\underline{%s}`,
+	"_{}": `\textsubscript{%s}`,
+	"^{}": `\textsuperscript{%s}`,
 }
 
 var listTags = map[string][]string{
@@ -223,6 +233,14 @@ var listItemStatuses = map[string]string{
 	" ": "unchecked",
 	"-": "indeterminate",
 	"X": "checked",
+}
+var sectionTypes = []string{
+	`\chapter{%s}`,
+	`\section{%s}`,
+	`\subsection{%s}`,
+	`\subsubsection{%s}`,
+	`\paragraph{%s}`,
+	`\subparagraph{%s}`,
 }
 
 var cleanHeadlineTitleForHTMLAnchorRegexp = regexp.MustCompile(`</?a[^>]*>`) // nested a tags are not valid HTML
@@ -409,29 +427,28 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		return
 	}
 
-	w.WriteString(fmt.Sprintf(`<div id="outline-container-%s" class="outline-%d">`, h.ID(), h.Lvl+1) + "\n")
-	w.WriteString(fmt.Sprintf(`<h%d id="%s">`, h.Lvl+1, h.ID()) + "\n")
+	// Clamp to max level
+	lvl := h.Lvl
+	if lvl > len(sectionTypes)-1 {
+		lvl = len(sectionTypes) - 1
+	}
+	sectionFormat := sectionTypes[lvl]
+	head := ""
 	if w.Document.GetOption("todo") != "nil" && h.Status != "" {
-		w.WriteString(fmt.Sprintf(`<span class="todo">%s</span>`, h.Status) + "\n")
+		head += fmt.Sprintf("%s ", h.Status)
 	}
 	if w.Document.GetOption("pri") != "nil" && h.Priority != "" {
-		w.WriteString(fmt.Sprintf(`<span class="priority">[%s]</span>`, h.Priority) + "\n")
+		head += fmt.Sprintf(`[%s] `, h.Priority)
 	}
 
-	org.WriteNodes(w, h.Title...)
+	head += w.WriteNodesAsString(h.Title...)
 	if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
-		tags := make([]string, len(h.Tags))
-		for i, tag := range h.Tags {
-			tags[i] = fmt.Sprintf(`<span>%s</span>`, tag)
-		}
-		w.WriteString("&#xa0;&#xa0;&#xa0;")
-		w.WriteString(fmt.Sprintf(`<span class="tags">%s</span>`, strings.Join(tags, "&#xa0;")))
+		head += strings.Join(h.Tags, " ")
 	}
-	w.WriteString(fmt.Sprintf("\n</h%d>\n", h.Lvl+1))
+	w.WriteString(fmt.Sprintf(sectionFormat, head))
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
-		w.WriteString(fmt.Sprintf(`<div id="outline-text-%s" class="outline-text-%d">`, h.ID(), h.Lvl+1) + "\n" + content + "</div>\n")
+		w.WriteString(content)
 	}
-	w.WriteString("</div>\n")
 }
 
 func (w *OrgLatexWriter) WriteText(t org.Text) {
@@ -442,14 +459,14 @@ func (w *OrgLatexWriter) WriteText(t org.Text) {
 	}
 }
 
+// DONE
 func (w *OrgLatexWriter) WriteEmphasis(e org.Emphasis) {
 	tags, ok := emphasisTags[e.Kind]
 	if !ok {
 		panic(fmt.Sprintf("bad emphasis %#v", e))
 	}
-	w.WriteString(tags[0])
-	org.WriteNodes(w, e.Content...)
-	w.WriteString(tags[1])
+	out := w.WriteNodesAsString(e.Content...)
+	w.WriteString(fmt.Sprintf(tags, out))
 }
 
 func (w *OrgLatexWriter) WriteLatexFragment(l org.LatexFragment) {
