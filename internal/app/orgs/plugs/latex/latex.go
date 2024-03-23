@@ -108,7 +108,7 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("LATEX_THEME")
-		self.Props["docclass"] = "page"
+		self.Props["docclass"] = "book"
 		if theme != "" {
 			self.Props["docclass"] = theme
 		}
@@ -121,7 +121,8 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 
 		w := NewOrgLatexWriter(self)
 		// TODO: w.Opts = opts
-		org.WriteNodes(w, f.Nodes...)
+		f.Write(w)
+		//org.WriteNodes(w, f.Nodes...)
 		res := w.String()
 		self.Props["latex_data"] = res
 		//self.Props["post_scripts"] = w.PostWriteScripts
@@ -224,9 +225,9 @@ var emphasisTags = map[string]string{
 }
 
 var listTags = map[string][]string{
-	"unordered":   []string{"<ul>", "</ul>"},
-	"ordered":     []string{"<ol>", "</ol>"},
-	"descriptive": []string{"<dl>", "</dl>"},
+	"unordered":   []string{`\begin{itemize}`, `\end{itemize}`},
+	"ordered":     []string{`\begin{enumerate}`, `\end{enumerate}`},
+	"descriptive": []string{`\begin{description}`, `\end{description}`},
 }
 
 var listItemStatuses = map[string]string{
@@ -270,8 +271,23 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 		if titleDocument.Error == nil {
 			title = w.WriteNodesAsString(titleDocument.Nodes...)
 		}
-		w.WriteString(fmt.Sprintf(`<h1 class="title">%s</h1>`+"\n", title))
+		w.WriteString(fmt.Sprintf(`\title{%s}`+"\n", title))
 	}
+	if auth := d.Get("AUTHOR"); auth != "" && w.Document.GetOption("author") != "nil" {
+		titleDocument := d.Parse(strings.NewReader(auth), d.Path)
+		if titleDocument.Error == nil {
+			auth = w.WriteNodesAsString(titleDocument.Nodes...)
+		}
+		w.WriteString(fmt.Sprintf(`\author{%s}`+"\n", auth))
+	}
+	if dt := d.Get("DATE"); dt != "" && w.Document.GetOption("date") != "nil" {
+		titleDocument := d.Parse(strings.NewReader(dt), d.Path)
+		if titleDocument.Error == nil {
+			dt = w.WriteNodesAsString(titleDocument.Nodes...)
+		}
+		w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
+	}
+	w.WriteString(`\begin{document}`)
 	if w.Document.GetOption("toc") != "nil" {
 		maxLvl, _ := strconv.Atoi(w.Document.GetOption("toc"))
 		w.WriteOutline(d, maxLvl)
@@ -280,6 +296,7 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 
 func (w *OrgLatexWriter) After(d *org.Document) {
 	w.WriteFootnotes(d)
+	w.WriteString(`\end{document}`)
 }
 
 func (w *OrgLatexWriter) WriteComment(org.Comment)               {}
@@ -290,6 +307,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 
 	switch b.Name {
 	case "SRC":
+		// TODO: Source blocks still have to be converted... Going to need their own export flow
 		if params[":exports"] == "results" || params[":exports"] == "none" {
 			break
 		}
@@ -301,19 +319,19 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		content = ""
 		w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
 	case "EXAMPLE":
-		w.WriteString(`<pre class="example">` + "\n" + EscapeString(content) + "\n</pre>\n")
+		w.WriteString(`\begin{verbatim}` + "\n" + EscapeString(content) + `\n\end{verbatim}\n`)
 	case "EXPORT":
 		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "html" {
 			w.WriteString(content + "\n")
 		}
 	case "QUOTE":
-		w.WriteString("<blockquote>\n" + content + "</blockquote>\n")
+		w.WriteString(`\begin{displayquote}\n` + content + `\end{displayquote}\n`)
 	case "CENTER":
-		w.WriteString(`<div class="center-block" style="text-align: center; margin-left: auto; margin-right: auto;">` + "\n")
-		w.WriteString(content + "</div>\n")
+		w.WriteString(`\begin{center}\n\centering\n`)
+		w.WriteString(content + `\end{center}\n`)
 	default:
-		w.WriteString(fmt.Sprintf(`<div class="%s-block">`, strings.ToLower(b.Name)) + "\n")
-		w.WriteString(content + "</div>\n")
+		w.WriteString(fmt.Sprintf(`\begin{%s}\n`, strings.ToLower(b.Name)))
+		w.WriteString(fmt.Sprintf(`%s\n\end{%s}\n`, content, strings.ToLower(b.Name)))
 	}
 
 	if b.Result != nil && params[":exports"] != "code" && params[":exports"] != "none" {
@@ -390,13 +408,18 @@ func (w *OrgLatexWriter) WriteFootnotes(d *org.Document) {
 }
 
 func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
-	if len(d.Outline.Children) != 0 {
-		w.WriteString("<nav>\n<ul>\n")
-		for _, section := range d.Outline.Children {
-			w.writeSection(section, maxLvl)
+	/*
+		if len(d.Outline.Children) != 0 {
+			w.WriteString("<nav>\n<ul>\n")
+			for _, section := range d.Outline.Children {
+				w.writeSection(section, maxLvl)
+			}
+			w.WriteString("</ul>\n</nav>\n")
 		}
-		w.WriteString("</ul>\n</nav>\n")
-	}
+	*/
+	w.WriteString(`\tableofcontents` + "\n")
+	//w.WriteString(`\listoffigures` + "\n")
+	//w.WriteString(`\listoftables` + "\n")
 }
 
 func (w *OrgLatexWriter) writeSection(section *org.Section, maxLvl int) {
@@ -446,6 +469,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		head += strings.Join(h.Tags, " ")
 	}
 	w.WriteString(fmt.Sprintf(sectionFormat, head))
+	w.WriteString("\n")
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
 	}
@@ -475,8 +499,9 @@ func (w *OrgLatexWriter) WriteLatexFragment(l org.LatexFragment) {
 	w.WriteString(l.ClosingPair)
 }
 
+// TODO: Statistic? What is this? Can we format this better?
 func (w *OrgLatexWriter) WriteStatisticToken(s org.StatisticToken) {
-	w.WriteString(fmt.Sprintf(`<code class="statistic">[%s]</code>`, s.Content))
+	w.WriteString(fmt.Sprintf(`\begin{verbatim}[%s]\end{verbatim}`, s.Content))
 }
 
 func (w *OrgLatexWriter) WriteLineBreak(l org.LineBreak) {
@@ -486,7 +511,7 @@ func (w *OrgLatexWriter) WriteLineBreak(l org.LineBreak) {
 }
 
 func (w *OrgLatexWriter) WriteExplicitLineBreak(l org.ExplicitLineBreak) {
-	w.WriteString("<br>\n")
+	w.WriteString(`\newline\noindent\rule{\textwidth}{0.5pt}\n`)
 }
 
 func (w *OrgLatexWriter) WriteFootnoteLink(l org.FootnoteLink) {
@@ -648,34 +673,35 @@ func (w *OrgLatexWriter) WriteList(l org.List) {
 }
 
 func (w *OrgLatexWriter) WriteListItem(li org.ListItem) {
-	attributes := ""
-	if li.Value != "" {
-		attributes += fmt.Sprintf(` value="%s"`, li.Value)
-	}
-	if li.Status != "" {
-		attributes += fmt.Sprintf(` class="%s"`, listItemStatuses[li.Status])
-	}
-	w.WriteString(fmt.Sprintf("<li%s>", attributes))
+	//attributes := ""
+	//if li.Value != "" {
+	//	attributes += fmt.Sprintf(` value="%s"`, li.Value)
+	//}
+	//if li.Status != "" {
+	//	attributes += fmt.Sprintf(` class="%s"`, listItemStatuses[li.Status])
+	//}
+	//w.WriteString(fmt.Sprintf("<li%s>", attributes))
+	w.WriteString(`\item `)
 	w.writeListItemContent(li.Children)
-	w.WriteString("</li>\n")
+	w.WriteString("\n")
 }
 
 func (w *OrgLatexWriter) WriteDescriptiveListItem(di org.DescriptiveListItem) {
-	if di.Status != "" {
-		w.WriteString(fmt.Sprintf("<dt class=\"%s\">\n", listItemStatuses[di.Status]))
-	} else {
-		w.WriteString("<dt>\n")
-	}
+	//if di.Status != "" {
+	//	w.WriteString(fmt.Sprintf("<dt class=\"%s\">\n", listItemStatuses[di.Status]))
+	//} else {
+	//	w.WriteString("<dt>\n")
+	//}
 
+	w.WriteString(`\item{`)
 	if len(di.Term) != 0 {
 		org.WriteNodes(w, di.Term...)
 	} else {
 		w.WriteString("?")
 	}
-	w.WriteString("\n</dt>\n")
-	w.WriteString("<dd>")
+	w.WriteString(`} `)
 	w.writeListItemContent(di.Details)
-	w.WriteString("</dd>\n")
+	w.WriteString("\n")
 }
 
 func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
@@ -697,24 +723,26 @@ func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if len(p.Children) == 0 {
 		return
 	}
-	w.WriteString("<p>")
+	//w.WriteString("<p>")
 	org.WriteNodes(w, p.Children...)
-	w.WriteString("</p>\n")
+	//w.WriteString("</p>\n")
 }
 
 func (w *OrgLatexWriter) WriteExample(e org.Example) {
-	w.WriteString(`<pre class="example">` + "\n")
+	w.WriteString(`\begin{verbatim}`)
+	//w.WriteString(`<pre class="example">` + "\n")
 	if len(e.Children) != 0 {
 		for _, n := range e.Children {
 			org.WriteNodes(w, n)
 			w.WriteString("\n")
 		}
 	}
-	w.WriteString("</pre>\n")
+	w.WriteString(`\end{verbatim}`)
+	//w.WriteString("</pre>\n")
 }
 
 func (w *OrgLatexWriter) WriteHorizontalRule(h org.HorizontalRule) {
-	w.WriteString("<hr>\n")
+	w.WriteString(`\rulefill` + "\n")
 }
 
 func (w *OrgLatexWriter) WriteNodeWithMeta(n org.NodeWithMeta) {
