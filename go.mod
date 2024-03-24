@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/rpc v1.2.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/ides15/todoist v0.0.0-20220427224039-71f7428f4d5a
-	github.com/ihdavids/go-org v1.6.3-0.20231228052633-d92c3143fd7b
+	github.com/ihdavids/go-org v1.6.3-0.20240324000001-3f98561d9795
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
 	github.com/zyedidia/highlight v0.0.0-20200217010119-291680feaca1
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
