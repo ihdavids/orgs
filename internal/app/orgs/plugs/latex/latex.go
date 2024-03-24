@@ -34,6 +34,83 @@ type OrgLatexExporter struct {
 	pm           *plugs.PluginManager
 }
 
+type EnvData struct {
+	Env     string
+	Attribs [][]string
+	Caption string
+}
+
+func (s EnvData) HaveCaption() bool {
+	return s.Caption != ""
+}
+
+func (s EnvData) HaveEnv() bool {
+	return s.Env != ""
+}
+
+func (s EnvData) HaveAttribs() bool {
+	return len(s.Attribs) > 0
+}
+
+func (s EnvData) GetEnv(def string) string {
+	if s.Env == "" {
+		return def
+	}
+	return s.Env
+}
+
+type EnvironmentStack []EnvData
+
+func (s *EnvironmentStack) Push(v EnvData) {
+	*s = append(*s, v)
+}
+
+func (s *EnvironmentStack) Pop() EnvData {
+	res := (*s)[len(*s)-1]
+	*s = (*s)[:len(*s)-1]
+	return res
+}
+
+func (s *EnvironmentStack) IsEmpty() bool {
+	return len(*s) <= 0
+}
+
+func (s *EnvironmentStack) Peek() *EnvData {
+	if s.IsEmpty() {
+		return nil
+	}
+	res := &(*s)[len(*s)-1]
+	return res
+}
+
+func (s *EnvironmentStack) GetEnv(def string) string {
+	if env := s.Peek(); env != nil {
+		return env.GetEnv(def)
+	}
+	return def
+}
+
+func (s *EnvironmentStack) HaveCaption() bool {
+	if env := s.Peek(); env != nil && env.HaveCaption() {
+		return true
+	}
+	return false
+}
+
+func (s *EnvironmentStack) HaveEnv() bool {
+	if env := s.Peek(); env != nil && env.HaveEnv() {
+		return true
+	}
+	return false
+}
+
+func (s *EnvironmentStack) HaveAttribs() bool {
+	if env := s.Peek(); env != nil && env.HaveAttribs() {
+		return true
+	}
+	return false
+}
+
 type OrgLatexWriter struct {
 	ExtendingWriter org.Writer
 	strings.Builder
@@ -41,6 +118,7 @@ type OrgLatexWriter struct {
 	log                 *log.Logger
 	footnotes           *footnotes
 	PrettyRelativeLinks bool
+	envs                EnvironmentStack
 }
 
 func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
@@ -108,17 +186,13 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("LATEX_THEME")
+		if theme == "" {
+			theme = f.Get("LATEX_CLASS")
+		}
 		self.Props["docclass"] = "book"
 		if theme != "" {
 			self.Props["docclass"] = theme
 		}
-		attr := f.Get("ATTR_BODY_LATEX")
-		self.Props["havebodyattr"] = false
-		if attr != "" {
-			self.Props["bodyattr"] = attr
-			self.Props["havebodyattr"] = true
-		}
-
 		w := NewOrgLatexWriter(self)
 		// TODO: w.Opts = opts
 		f.Write(w)
@@ -302,6 +376,16 @@ func (w *OrgLatexWriter) After(d *org.Document) {
 func (w *OrgLatexWriter) WriteComment(org.Comment)               {}
 func (w *OrgLatexWriter) WritePropertyDrawer(org.PropertyDrawer) {}
 
+func (w *OrgLatexWriter) startEnv(name string) {
+	name = w.envs.GetEnv(name)
+	w.WriteString(fmt.Sprintf(`\begin{%s}`, name) + "\n")
+}
+
+func (w *OrgLatexWriter) endEnv(name string) {
+	name = w.envs.GetEnv(name)
+	w.WriteString(fmt.Sprintf(`\end{%s}`, name) + "\n")
+}
+
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
 
@@ -319,19 +403,24 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		content = ""
 		w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
 	case "EXAMPLE":
-		w.WriteString(`\begin{verbatim}` + "\n" + EscapeString(content) + `\n\end{verbatim}\n`)
+		w.startEnv("verbatim")
+		w.WriteString(EscapeString(content))
+		w.endEnv("verbatim")
 	case "EXPORT":
 		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "html" {
 			w.WriteString(content + "\n")
 		}
 	case "QUOTE":
-		w.WriteString(`\begin{displayquote}\n` + content + `\end{displayquote}\n`)
+		w.startEnv("displayquote")
+		w.WriteString(content)
+		w.endEnv("displayquote")
 	case "CENTER":
 		w.WriteString(`\begin{center}\n\centering\n`)
 		w.WriteString(content + `\end{center}\n`)
 	default:
-		w.WriteString(fmt.Sprintf(`\begin{%s}\n`, strings.ToLower(b.Name)))
-		w.WriteString(fmt.Sprintf(`%s\n\end{%s}\n`, content, strings.ToLower(b.Name)))
+		w.startEnv(strings.ToLower(b.Name))
+		w.WriteString(content)
+		w.endEnv(strings.ToLower(b.Name))
 	}
 
 	if b.Result != nil && params[":exports"] != "code" && params[":exports"] != "none" {
@@ -345,10 +434,11 @@ func (w *OrgLatexWriter) WriteInlineBlock(b org.InlineBlock) {
 	content := w.blockContent(strings.ToUpper(b.Name), b.Children)
 	switch b.Name {
 	case "src":
-		lang := strings.ToLower(b.Parameters[0])
+		// TODO: is there a better source block to be using here.
+		//lang := strings.ToLower(b.Parameters[0])
 		//TODO Convert content = w.HighlightCodeBlock(b.Keywords, content, lang, true, nil)
-		content = ""
-		w.WriteString(fmt.Sprintf("<div class=\"src src-inline src-%s\">\n%s\n</div>", lang, content))
+		//content = ""
+		w.WriteString(`\begin{verbatim} ` + content + `\end{verbatim}` + "\n")
 	case "export":
 		if strings.ToLower(b.Parameters[0]) == "html" {
 			w.WriteString(content)
@@ -383,9 +473,9 @@ func (w *OrgLatexWriter) WriteFootnotes(d *org.Document) {
 	if w.Document.GetOption("f") == "nil" || len(w.footnotes.list) == 0 {
 		return
 	}
-	w.WriteString(`<div class="footnotes">` + "\n")
-	w.WriteString(`<hr class="footnotes-separatator">` + "\n")
-	w.WriteString(`<div class="footnote-definitions">` + "\n")
+	//w.WriteString(`<div class="footnotes">` + "\n")
+	//w.WriteString(`<hr class="footnotes-separatator">` + "\n")
+	//w.WriteString(`<div class="footnote-definitions">` + "\n")
 	for i, definition := range w.footnotes.list {
 		id := i + 1
 		if definition == nil {
@@ -398,13 +488,15 @@ func (w *OrgLatexWriter) WriteFootnotes(d *org.Document) {
 			w.log.Printf("Missing footnote definition for [fn:%s] (#%d)", name, id)
 			continue
 		}
-		w.WriteString(`<div class="footnote-definition">` + "\n")
-		w.WriteString(fmt.Sprintf(`<sup id="footnote-%d"><a href="#footnote-reference-%d">%d</a></sup>`, id, id, id) + "\n")
-		w.WriteString(`<div class="footnote-body">` + "\n")
+		//w.WriteString(`<div class="footnote-definition">` + "\n")
+		//w.WriteString(fmt.Sprintf(`<sup id="footnote-%d"><a href="#footnote-reference-%d">%d</a></sup>`, id, id, id) + "\n")
+		//w.WriteString(`<div class="footnote-body">` + "\n")
+		w.WriteString(fmt.Sprintf(`\footnotetext[%d]{`, id))
 		org.WriteNodes(w, definition.Children...)
-		w.WriteString("</div>\n</div>\n")
+		w.WriteString("}")
+		//w.WriteString("</div>\n</div>\n")
 	}
-	w.WriteString("</div>\n</div>\n")
+	//w.WriteString("</div>\n</div>\n")
 }
 
 func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
@@ -488,7 +580,7 @@ func (w *OrgLatexWriter) WriteFootnoteLink(l org.FootnoteLink) {
 	}
 	i := w.footnotes.add(l)
 	id := i + 1
-	w.WriteString(fmt.Sprintf(`<sup class="footnote-reference"><a id="footnote-reference-%d" href="#footnote-%d">%d</a></sup>`, id, id, id))
+	w.WriteString(fmt.Sprintf(`\footnotemark[%d]`, id))
 }
 
 func (w *OrgLatexWriter) WriteTimestamp(t org.Timestamp) {
@@ -718,26 +810,26 @@ func (w *OrgLatexWriter) WriteHorizontalRule(h org.HorizontalRule) {
 }
 
 func (w *OrgLatexWriter) WriteNodeWithMeta(n org.NodeWithMeta) {
-	out := w.WriteNodesAsString(n.Node)
-	if p, ok := n.Node.(org.Paragraph); ok {
-		if len(p.Children) == 1 && isImageOrVideoLink(p.Children[0]) {
-			out = w.WriteNodesAsString(p.Children[0])
-		}
-	}
-	for _, attributes := range n.Meta.HTMLAttributes {
-		out = w.withHTMLAttributes(out, attributes...) + "\n"
-	}
+	caption := ""
 	if len(n.Meta.Caption) != 0 {
-		caption := ""
 		for i, ns := range n.Meta.Caption {
 			if i != 0 {
 				caption += " "
 			}
 			caption += w.WriteNodesAsString(ns...)
 		}
-		out = fmt.Sprintf("<figure>\n%s<figcaption>\n%s\n</figcaption>\n</figure>\n", out, caption)
+	}
+
+	d := EnvData{n.Meta.LatexEnv, n.Meta.LatexAttributes, caption}
+	w.envs.Push(d)
+	out := w.WriteNodesAsString(n.Node)
+	if p, ok := n.Node.(org.Paragraph); ok {
+		if len(p.Children) == 1 && isImageOrVideoLink(p.Children[0]) {
+			out = w.WriteNodesAsString(p.Children[0])
+		}
 	}
 	w.WriteString(out)
+	w.envs.Pop()
 }
 
 func (w *OrgLatexWriter) WriteNodeWithName(n org.NodeWithName) {
@@ -745,48 +837,59 @@ func (w *OrgLatexWriter) WriteNodeWithName(n org.NodeWithName) {
 }
 
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
-	w.WriteString("<table>\n")
+	w.startEnv("tabular")
+	cnt := len(t.ColumnInfos)
+	sep := "c"
+	for i := 1; i < cnt; i++ {
+		sep += "| c"
+	}
+	w.WriteString(fmt.Sprintf("{%s}\n", sep))
 	inHead := len(t.SeparatorIndices) > 0 &&
 		t.SeparatorIndices[0] != len(t.Rows)-1 &&
 		(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
-	if inHead {
-		w.WriteString("<thead>\n")
-	} else {
-		w.WriteString("<tbody>\n")
-	}
+	/*
+		if inHead {
+			w.WriteString("<thead>\n")
+		} else {
+			w.WriteString("<tbody>\n")
+		}
+	*/
 	for i, row := range t.Rows {
 		if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
 			if inHead {
-				w.WriteString("</thead>\n<tbody>\n")
 				inHead = false
 			} else {
-				w.WriteString("</tbody>\n<tbody>\n")
 			}
 		}
 		if row.IsSpecial {
+			w.WriteString(`\hline` + "\n")
 			continue
 		}
 		if inHead {
-			w.writeTableColumns(row.Columns, "th")
+			w.writeTableColumns(row.Columns)
 		} else {
-			w.writeTableColumns(row.Columns, "td")
+			w.writeTableColumns(row.Columns)
 		}
 	}
-	w.WriteString("</tbody>\n</table>\n")
+	w.endEnv("tabular")
 }
 
-func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column, tag string) {
-	w.WriteString("<tr>\n")
-	for _, column := range columns {
-		if column.Align == "" {
-			w.WriteString(fmt.Sprintf("<%s>", tag))
-		} else {
-			w.WriteString(fmt.Sprintf(`<%s class="align-%s">`, tag, column.Align))
+func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column) {
+
+	for i, column := range columns {
+		/*
+			if column.Align == "" {
+				w.WriteString(fmt.Sprintf("<%s>", tag))
+			} else {
+				w.WriteString(fmt.Sprintf(`<%s class="align-%s">`, tag, column.Align))
+			}
+		*/
+		if i > 0 {
+			w.WriteString(" & ")
 		}
 		org.WriteNodes(w, column.Children...)
-		w.WriteString(fmt.Sprintf("</%s>\n", tag))
 	}
-	w.WriteString("</tr>\n")
+	w.WriteString(` \\ ` + "\n")
 }
 
 func (w *OrgLatexWriter) withHTMLAttributes(input string, kvs ...string) string {
