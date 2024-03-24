@@ -408,41 +408,9 @@ func (w *OrgLatexWriter) WriteFootnotes(d *org.Document) {
 }
 
 func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
-	/*
-		if len(d.Outline.Children) != 0 {
-			w.WriteString("<nav>\n<ul>\n")
-			for _, section := range d.Outline.Children {
-				w.writeSection(section, maxLvl)
-			}
-			w.WriteString("</ul>\n</nav>\n")
-		}
-	*/
 	w.WriteString(`\tableofcontents` + "\n")
 	//w.WriteString(`\listoffigures` + "\n")
 	//w.WriteString(`\listoftables` + "\n")
-}
-
-func (w *OrgLatexWriter) writeSection(section *org.Section, maxLvl int) {
-	if (maxLvl != 0 && section.Headline.Lvl > maxLvl) || section.Headline.IsExcluded(w.Document) {
-		return
-	}
-	// NOTE: To satisfy hugo ExtractTOC() check we cannot use `<li>\n` here. Doesn't really matter, just a note.
-	w.WriteString("<li>")
-	h := section.Headline
-	title := cleanHeadlineTitleForHTMLAnchorRegexp.ReplaceAllString(w.WriteNodesAsString(h.Title...), "")
-	w.WriteString(fmt.Sprintf("<a href=\"#%s\">%s</a>\n", h.ID(), title))
-	hasChildren := false
-	for _, section := range section.Children {
-		hasChildren = hasChildren || maxLvl == 0 || section.Headline.Lvl <= maxLvl
-	}
-	if hasChildren {
-		w.WriteString("<ul>\n")
-		for _, section := range section.Children {
-			w.writeSection(section, maxLvl)
-		}
-		w.WriteString("</ul>\n")
-	}
-	w.WriteString("</li>\n")
 }
 
 func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
@@ -527,16 +495,19 @@ func (w *OrgLatexWriter) WriteTimestamp(t org.Timestamp) {
 	if w.Document.GetOption("<") == "nil" {
 		return
 	}
-	w.WriteString(`<span class="timestamp">`)
-	bs, be := "", ""
-	if t.Time.TimestampType == org.Active {
-		bs, be = "&lt;", "&gt;"
-	} else if t.Time.TimestampType == org.Inactive {
-		bs, be = "&lsqb;", "&rsqb;"
-	}
-	var od org.OrgDate = *t.Time
-	od.TimestampType = org.NoBracket
-	w.WriteString(fmt.Sprintf("%s%s%s</span>", bs, od.ToString(), be))
+	// TODO: Add datetimestamp capability
+	/*
+		w.WriteString(`<span class="timestamp">`)
+		bs, be := "", ""
+		if t.Time.TimestampType == org.Active {
+			bs, be = "&lt;", "&gt;"
+		} else if t.Time.TimestampType == org.Inactive {
+			bs, be = "&lsqb;", "&rsqb;"
+		}
+		var od org.OrgDate = *t.Time
+		od.TimestampType = org.NoBracket
+		w.WriteString(fmt.Sprintf("%s%s%s</span>", bs, od.ToString(), be))
+	*/
 	/*
 		if t.IsDate {
 			w.WriteString(t.Time.Format(datestampFormat))
@@ -552,50 +523,54 @@ func (w *OrgLatexWriter) WriteSDC(s org.SDC) {
 	if w.Document.GetOption("<") == "nil" {
 		return
 	}
-	name := ""
-	switch s.DateType {
-	case org.Scheduled:
-		name = "SCHEDULED"
-		break
-	case org.Deadline:
-		name = "DEADLINE"
-		break
-	case org.Closed:
-		name = "CLOSED"
-		break
-	}
-	w.WriteString(fmt.Sprintf(`<span class="tags">%s`, name))
-	w.WriteString(`</span>`)
-	bs, be := "", ""
-	if s.Date.TimestampType == org.Active {
-		bs, be = "&lt;", "&gt;"
-	} else if s.Date.TimestampType == org.Inactive {
-		bs, be = "&lsqb;", "&rsqb;"
-	}
-	w.WriteString(fmt.Sprintf(`<span class="timestamp">%s`, bs))
-	dt := s.Date
-	dt.TimestampType = org.NoBracket
-	w.WriteString(fmt.Sprintf("%s", dt.ToString()))
-	w.WriteString(fmt.Sprintf(`%s</span>`, be))
+	/*
+		name := ""
+		switch s.DateType {
+		case org.Scheduled:
+			name = "SCHEDULED"
+			break
+		case org.Deadline:
+			name = "DEADLINE"
+			break
+		case org.Closed:
+			name = "CLOSED"
+			break
+		}
+		w.WriteString(fmt.Sprintf(`<span class="tags">%s`, name))
+		w.WriteString(`</span>`)
+		bs, be := "", ""
+		if s.Date.TimestampType == org.Active {
+			bs, be = "&lt;", "&gt;"
+		} else if s.Date.TimestampType == org.Inactive {
+			bs, be = "&lsqb;", "&rsqb;"
+		}
+		w.WriteString(fmt.Sprintf(`<span class="timestamp">%s`, bs))
+		dt := s.Date
+		dt.TimestampType = org.NoBracket
+		w.WriteString(fmt.Sprintf("%s", dt.ToString()))
+		w.WriteString(fmt.Sprintf(`%s</span>`, be))
+	*/
 }
 
 func (w *OrgLatexWriter) WriteClock(s org.Clock) {
 	if w.Document.GetOption("<") == "nil" {
 		return
 	}
-	name := "CLOCK"
-	w.WriteString(fmt.Sprintf(`<span class="tags">%s`, name))
-	w.WriteString(`</span>`)
-	bs, be := "&lsqb;", "&rsqb;"
-	w.WriteString(fmt.Sprintf(`<span class="timestamp">%s`, bs))
-	dt := s.Date
-	end := ""
-	if !dt.End.IsZero() {
-		end = "--" + bs + dt.End.Format("2006-01-02 Mon 15:04") + be
-	}
-	tm := bs + dt.Start.Format("2006-01-02 Mon 15:04") + be + end
-	w.WriteString(tm)
-	w.WriteString(`</span>`)
+	/*
+		name := "CLOCK"
+		w.WriteString(fmt.Sprintf(`<span class="tags">%s`, name))
+		w.WriteString(`</span>`)
+		bs, be := "&lsqb;", "&rsqb;"
+		w.WriteString(fmt.Sprintf(`<span class="timestamp">%s`, bs))
+		dt := s.Date
+		end := ""
+		if !dt.End.IsZero() {
+			end = "--" + bs + dt.End.Format("2006-01-02 Mon 15:04") + be
+		}
+		tm := bs + dt.Start.Format("2006-01-02 Mon 15:04") + be + end
+		w.WriteString(tm)
+		w.WriteString(`</span>`)
+	*/
 }
 
 func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
@@ -723,14 +698,12 @@ func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if len(p.Children) == 0 {
 		return
 	}
-	//w.WriteString("<p>")
+	w.WriteString(`\par `)
 	org.WriteNodes(w, p.Children...)
-	//w.WriteString("</p>\n")
 }
 
 func (w *OrgLatexWriter) WriteExample(e org.Example) {
 	w.WriteString(`\begin{verbatim}`)
-	//w.WriteString(`<pre class="example">` + "\n")
 	if len(e.Children) != 0 {
 		for _, n := range e.Children {
 			org.WriteNodes(w, n)
@@ -738,7 +711,6 @@ func (w *OrgLatexWriter) WriteExample(e org.Example) {
 		}
 	}
 	w.WriteString(`\end{verbatim}`)
-	//w.WriteString("</pre>\n")
 }
 
 func (w *OrgLatexWriter) WriteHorizontalRule(h org.HorizontalRule) {
