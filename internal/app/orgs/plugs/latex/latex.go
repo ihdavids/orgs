@@ -59,6 +59,14 @@ func (s EnvData) GetEnv(def string) string {
 	return s.Env
 }
 
+func (s EnvData) GetCaption() string {
+	return s.Caption
+}
+
+func (s EnvData) GetAttribs() [][]string {
+	return s.Attribs
+}
+
 type EnvironmentStack []EnvData
 
 func (s *EnvironmentStack) Push(v EnvData) {
@@ -88,6 +96,20 @@ func (s *EnvironmentStack) GetEnv(def string) string {
 		return env.GetEnv(def)
 	}
 	return def
+}
+
+func (s *EnvironmentStack) GetCaption() string {
+	if env := s.Peek(); env != nil {
+		return env.GetCaption()
+	}
+	return ""
+}
+
+func (s *EnvironmentStack) GetAttribs() [][]string {
+	if env := s.Peek(); env != nil {
+		return env.GetAttribs()
+	}
+	return [][]string{}
 }
 
 func (s *EnvironmentStack) HaveCaption() bool {
@@ -310,12 +332,12 @@ var listItemStatuses = map[string]string{
 	"X": "checked",
 }
 var sectionTypes = []string{
-	`\chapter{%s}`,
-	`\section{%s}`,
-	`\subsection{%s}`,
-	`\subsubsection{%s}`,
-	`\paragraph{%s}`,
-	`\subparagraph{%s}`,
+	`\chapter%s{%s}`,
+	`\section%s{%s}`,
+	`\subsection%s{%s}`,
+	`\subsubsection%s{%s}`,
+	`\paragraph%s{%s}`,
+	`\subparagraph%s{%s}`,
 }
 
 var cleanHeadlineTitleForHTMLAnchorRegexp = regexp.MustCompile(`</?a[^>]*>`) // nested a tags are not valid HTML
@@ -528,7 +550,16 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
 		head += strings.Join(h.Tags, " ")
 	}
-	w.WriteString(fmt.Sprintf(sectionFormat, head))
+	numberPrefix := ""
+	fmt.Printf("EXPORT TEST: %s\n", w.Document.GetOption("num"))
+	if w.Document.GetOption("num") != "nil" {
+		if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
+			if lvl > num {
+				numberPrefix = "*"
+			}
+		}
+	}
+	w.WriteString(fmt.Sprintf(sectionFormat, numberPrefix, head))
 	w.WriteString("\n")
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
@@ -836,14 +867,40 @@ func (w *OrgLatexWriter) WriteNodeWithName(n org.NodeWithName) {
 	org.WriteNodes(w, n.Node)
 }
 
+func GetAlign(i int, t org.Table) string {
+	if i >= 0 && i < len(t.ColumnInfos) {
+		switch t.ColumnInfos[i].Align {
+		case "left":
+			return "l"
+		case "right":
+			return "r"
+		case "center":
+			return "c"
+		default:
+			return "c"
+		}
+	}
+	return "c"
+}
+
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
+	haveTable := false
+	if w.envs.HaveCaption() {
+		w.WriteString(`\begin{table}[!h]` + "\n")
+		haveTable = true
+		w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
+	}
+
+	w.WriteString(`\begin{center}` + "\n")
 	w.startEnv("tabular")
 	cnt := len(t.ColumnInfos)
-	sep := "c"
-	for i := 1; i < cnt; i++ {
-		sep += "| c"
+	sep := ""
+	for i := 0; i < cnt; i++ {
+		sep += " | " + GetAlign(i, t)
 	}
+	sep += " |"
 	w.WriteString(fmt.Sprintf("{%s}\n", sep))
+
 	inHead := len(t.SeparatorIndices) > 0 &&
 		t.SeparatorIndices[0] != len(t.Rows)-1 &&
 		(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
@@ -858,7 +915,6 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
 			if inHead {
 				inHead = false
-			} else {
 			}
 		}
 		if row.IsSpecial {
@@ -872,6 +928,10 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 	}
 	w.endEnv("tabular")
+	w.WriteString(`\end{center}` + "\n")
+	if haveTable {
+		w.WriteString(`\end{table}` + "\n")
+	}
 }
 
 func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column) {
