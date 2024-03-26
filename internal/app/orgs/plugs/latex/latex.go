@@ -141,6 +141,7 @@ type OrgLatexWriter struct {
 	footnotes           *footnotes
 	PrettyRelativeLinks bool
 	envs                EnvironmentStack
+	docclass            string
 }
 
 func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
@@ -215,7 +216,13 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		if theme != "" {
 			self.Props["docclass"] = theme
 		}
+
+		temp := f.Get("LATEX_TEMPLATE")
+		if temp != "" {
+			self.TemplatePath = temp
+		}
 		w := NewOrgLatexWriter(self)
+		w.docclass = self.Props["docclass"].(string)
 		// TODO: w.Opts = opts
 		f.Write(w)
 		//org.WriteNodes(w, f.Nodes...)
@@ -247,17 +254,7 @@ func NewLatexExp() *OrgLatexExporter {
 var hljsver = "11.9.0"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
-func GetStylesheet(name string) string {
-	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
-		// HACK: We probably do not alway want to do this. Need to think of a better way to handle this!
-		re := regexp.MustCompile(`url\(([^)]+)\)`)
-		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
-	}
-	return ""
-}
-
 func ValidateMap(m map[string]interface{}) map[string]interface{} {
-	force_reload_style := false
 	if _, ok := m["title"]; !ok {
 		m["title"] = "Schedule"
 	}
@@ -266,9 +263,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["trackheight"]; !ok {
 		m["trackheight"] = 30
-	}
-	if _, ok := m["stylesheet"]; !ok || force_reload_style {
-		m["stylesheet"] = GetStylesheet("default")
 	}
 	if _, ok := m["hljscdn"]; !ok {
 		m["hljs_cdn"] = hljscdn
@@ -522,7 +516,11 @@ func (w *OrgLatexWriter) WriteFootnotes(d *org.Document) {
 }
 
 func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
-	w.WriteString(`\tableofcontents` + "\n")
+	// Need to exclude on basis of toc:nil parameter as well
+	// Not compatible with DnDBook class for some reason.
+	if w.docclass != "dndbook" {
+		w.WriteString("\n" + `\tableofcontents` + "\n")
+	}
 	//w.WriteString(`\listoffigures` + "\n")
 	//w.WriteString(`\listoftables` + "\n")
 }
@@ -888,7 +886,7 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 	if w.envs.HaveCaption() {
 		w.WriteString(`\begin{table}[!h]` + "\n")
 		haveTable = true
-		w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
+		//w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
 	}
 
 	w.WriteString(`\begin{center}` + "\n")
@@ -928,6 +926,9 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 	}
 	w.endEnv("tabular")
+	if haveTable && w.envs.HaveCaption() {
+		w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
+	}
 	w.WriteString(`\end{center}` + "\n")
 	if haveTable {
 		w.WriteString(`\end{table}` + "\n")

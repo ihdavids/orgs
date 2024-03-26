@@ -20,6 +20,9 @@
 \usepackage[normalem]{ulem}
 % Checkbox Setup
 \usepackage{enumitem,amssymb}
+% DndBook required
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
 \newlist{todolist}{itemize}{2}
 \setlist[todolist]{label=$\square$}
 \usepackage{pifont}
