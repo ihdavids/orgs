@@ -216,6 +216,12 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		if theme != "" {
 			self.Props["docclass"] = theme
 		}
+		classOpts := ""
+		clsOpts := f.Get("LATEX_CLASS_OPTIONS")
+		if clsOpts != "" {
+			classOpts = fmt.Sprintf("[%s]", clsOpts)
+		}
+		self.Props["docclass_opts"] = classOpts
 
 		temp := f.Get("LATEX_TEMPLATE")
 		if temp != "" {
@@ -353,10 +359,17 @@ func (w *OrgLatexWriter) WriterWithExtensions() org.Writer {
 	return w
 }
 
+func (w *OrgLatexWriter) HaveTitle(d *org.Document) bool {
+	if title := d.Get("TITLE"); title != "" && w.Document.GetOption("title") != "nil" {
+		return true
+	}
+	return false
+}
+
 func (w *OrgLatexWriter) Before(d *org.Document) {
 	w.Document = d
 	w.log = d.Log
-	if title := d.Get("TITLE"); title != "" && w.Document.GetOption("title") != "nil" {
+	if title := d.Get("TITLE"); w.HaveTitle(d) {
 		titleDocument := d.Parse(strings.NewReader(title), d.Path)
 		if titleDocument.Error == nil {
 			title = w.WriteNodesAsString(titleDocument.Nodes...)
@@ -377,16 +390,20 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 		}
 		w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
 	}
-	w.WriteString(`\begin{document}`)
+	w.WriteString(`\begin{document}` + "\n")
+	if w.HaveTitle(d) {
+		w.WriteString(`\maketitle` + "\n")
+	}
 	if w.Document.GetOption("toc") != "nil" {
 		maxLvl, _ := strconv.Atoi(w.Document.GetOption("toc"))
 		w.WriteOutline(d, maxLvl)
 	}
+
 }
 
 func (w *OrgLatexWriter) After(d *org.Document) {
 	w.WriteFootnotes(d)
-	w.WriteString(`\end{document}`)
+	w.WriteString(`\end{document}` + "\n")
 }
 
 func (w *OrgLatexWriter) WriteComment(org.Comment)               {}
@@ -518,18 +535,95 @@ func (w *OrgLatexWriter) WriteFootnotes(d *org.Document) {
 func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	// Need to exclude on basis of toc:nil parameter as well
 	// Not compatible with DnDBook class for some reason.
-	if w.docclass != "dndbook" {
+	// Presence of a title allow TOC to work.
+	if w.docclass != "dndbook" || w.HaveTitle(d) {
 		w.WriteString("\n" + `\tableofcontents` + "\n")
 	}
 	//w.WriteString(`\listoffigures` + "\n")
 	//w.WriteString(`\listoftables` + "\n")
 }
 
+func HeadlineHasTag(name string, p org.Headline) bool {
+	for _, t := range p.Tags {
+		if ok, err := regexp.MatchString(name, t); err == nil && ok {
+			return true
+		}
+	}
+	return false
+}
+func (w *OrgLatexWriter) WriteDndBookAreas(name string, latexformat string, h org.Headline) bool {
+	if HeadlineHasTag(name, h) {
+		head := w.WriteNodesAsString(h.Title...)
+		w.WriteString(fmt.Sprintf(latexformat, head) + "\n")
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			w.WriteString(content)
+		}
+		return true
+	}
+	return false
+}
+
+func (w *OrgLatexWriter) WriteDndPropertyHeadline(p PropHead, h org.Headline) bool {
+	if HeadlineHasTag(p.Tag, h) {
+		head := w.WriteNodesAsString(h.Title...)
+		w.WriteString(fmt.Sprintf(p.Format, head) + "\n")
+		for _, prop := range p.Props {
+			if v, ok := h.Properties.Get(prop); ok {
+				fmt.Printf("HAVE PROP %s!!!\n", prop)
+				if p.PropSquare {
+					w.WriteString(fmt.Sprintf("  [%s]\n", v))
+				} else {
+					w.WriteString(fmt.Sprintf("  {%s}\n", v))
+				}
+			}
+		}
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			w.WriteString(content)
+		}
+		return true
+	}
+	return false
+}
+
+var simpleDndHeadlines = [][]string{
+	{"AREA", `\DndArea{%s}`},
+	{"SUBAREA", `\DndSubArea{%s}`},
+}
+
+type PropHead struct {
+	Tag        string
+	Format     string
+	Props      []string
+	PropSquare bool // Are properties in {} or []
+}
+
+var propertyDndBasedHeadlines = []PropHead{
+	{Tag: "ITEM", Format: `\DndItemHeader{%s}`, Props: []string{"RARITY"}},
+	{Tag: "SPELL", Format: "\\DndSpellHeader%%\n  {%s}", Props: []string{"LEVELSCHOOL", "CASTTIME", "RANGE", "COMPONENTS", "DURATION"}},
+	{Tag: "FEAT", Format: `\DndFeatHeader{%s}`, Props: []string{"INFO"}, PropSquare: true},
+}
+
+func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
+	for _, area := range simpleDndHeadlines {
+		if w.WriteDndBookAreas(area[0], area[1], h) {
+			return true
+		}
+	}
+	for _, propHead := range propertyDndBasedHeadlines {
+		if w.WriteDndPropertyHeadline(propHead, h) {
+			return true
+		}
+	}
+	return false
+}
+
 func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
-
+	if w.WriteDndBookSpecialHeadlines(h) {
+		return
+	}
 	// Clamp to max level
 	lvl := h.Lvl
 	if lvl > len(sectionTypes)-1 {

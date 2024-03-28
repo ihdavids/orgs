@@ -1,9 +1,9 @@
-\documentclass{% verbatim %}{{% endverbatim %}{{docclass}}{% verbatim %}}{% endverbatim %}
+\documentclass{{docclass_opts}}{% verbatim %}{{% endverbatim %}{{docclass}}{% verbatim %}}{% endverbatim %}
 %\usepackage[utf8]{inputenc}
 \usepackage{listings}
 \usepackage{hyperref}
 \usepackage{csquotes}
-\usepackage{makecell, caption}
+\usepackage{makecell}
 \usepackage[T1]{fontenc}
 \usepackage[greek,english]{babel}
 \usepackage{CJKutf8}
@@ -16,6 +16,9 @@
 \usepackage{capt-of}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage[singlelinecheck=false]{caption}
+\usepackage{shortvrb}
+\usepackage{stfloats}
 % Needed for strikethrough
 \usepackage[normalem]{ulem}
 % Checkbox Setup
