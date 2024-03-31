@@ -390,7 +390,7 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 		}
 		w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
 	}
-	w.WriteString(`\begin{document}` + "\n")
+	w.WriteString("\n" + `\begin{document}` + "\n")
 	if w.HaveTitle(d) {
 		w.WriteString(`\maketitle` + "\n")
 	}
@@ -403,7 +403,7 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 
 func (w *OrgLatexWriter) After(d *org.Document) {
 	w.WriteFootnotes(d)
-	w.WriteString(`\end{document}` + "\n")
+	w.WriteString("\n" + `\end{document}` + "\n")
 }
 
 func (w *OrgLatexWriter) WriteComment(org.Comment)               {}
@@ -411,12 +411,33 @@ func (w *OrgLatexWriter) WritePropertyDrawer(org.PropertyDrawer) {}
 
 func (w *OrgLatexWriter) startEnv(name string) {
 	name = w.envs.GetEnv(name)
-	w.WriteString(fmt.Sprintf(`\begin{%s}`, name) + "\n")
+	vals := strings.Split(name, "|")
+	if len(vals) > 1 {
+		name = strings.TrimSpace(vals[0])
+		w.WriteString("\n" + fmt.Sprintf(`\begin{%s}`, name))
+		for _, txt := range vals[1:] {
+			txt = strings.TrimSpace(txt)
+			if strings.Contains(txt, "[") {
+				w.WriteString(txt)
+			} else {
+				w.WriteString(fmt.Sprintf("{%s}", txt))
+			}
+		}
+		w.WriteString("\n")
+	} else {
+		w.WriteString("\n" + fmt.Sprintf(`\begin{%s}`, name) + "\n")
+	}
 }
 
 func (w *OrgLatexWriter) endEnv(name string) {
 	name = w.envs.GetEnv(name)
-	w.WriteString(fmt.Sprintf(`\end{%s}`, name) + "\n")
+	vals := strings.Split(name, "|")
+	if len(vals) > 1 {
+		name = strings.TrimSpace(vals[0])
+		w.WriteString("\n" + fmt.Sprintf(`\end{%s}`, name) + "\n")
+	} else {
+		w.WriteString("\n" + fmt.Sprintf(`\end{%s}`, name) + "\n")
+	}
 }
 
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
@@ -448,8 +469,8 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		w.WriteString(content)
 		w.endEnv("displayquote")
 	case "CENTER":
-		w.WriteString(`\begin{center}\n\centering\n`)
-		w.WriteString(content + `\end{center}\n`)
+		w.WriteString("\n" + `\begin{center}\n\centering\n`)
+		w.WriteString(content + "\n" + `\end{center}\n`)
 	default:
 		w.startEnv(strings.ToLower(b.Name))
 		w.WriteString(content)
@@ -471,7 +492,7 @@ func (w *OrgLatexWriter) WriteInlineBlock(b org.InlineBlock) {
 		//lang := strings.ToLower(b.Parameters[0])
 		//TODO Convert content = w.HighlightCodeBlock(b.Keywords, content, lang, true, nil)
 		//content = ""
-		w.WriteString(`\begin{verbatim} ` + content + `\end{verbatim}` + "\n")
+		w.WriteString(` \begin{verbatim} ` + content + ` \end{verbatim}` + "\n")
 	case "export":
 		if strings.ToLower(b.Parameters[0]) == "html" {
 			w.WriteString(content)
@@ -566,7 +587,7 @@ func (w *OrgLatexWriter) WriteDndBookAreas(name string, latexformat string, h or
 func (w *OrgLatexWriter) WriteDndPropertyHeadline(p PropHead, h org.Headline) bool {
 	if HeadlineHasTag(p.Tag, h) {
 		head := w.WriteNodesAsString(h.Title...)
-		w.WriteString(fmt.Sprintf(p.Format, head) + "\n")
+		w.WriteString("\n" + fmt.Sprintf(p.Format, head) + "\n")
 		for _, prop := range p.Props {
 			if v, ok := h.Properties.Get(prop); ok {
 				fmt.Printf("HAVE PROP %s!!!\n", prop)
@@ -586,8 +607,8 @@ func (w *OrgLatexWriter) WriteDndPropertyHeadline(p PropHead, h org.Headline) bo
 }
 
 var simpleDndHeadlines = [][]string{
-	{"AREA", `\DndArea{%s}`},
 	{"SUBAREA", `\DndSubArea{%s}`},
+	{"AREA", `\DndArea{%s}`},
 }
 
 type PropHead struct {
@@ -651,7 +672,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 			}
 		}
 	}
-	w.WriteString(fmt.Sprintf(sectionFormat, numberPrefix, head))
+	w.WriteString("\n" + fmt.Sprintf(sectionFormat, numberPrefix, head))
 	w.WriteString("\n")
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
@@ -977,32 +998,41 @@ func GetAlign(i int, t org.Table) string {
 
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
 	haveTable := false
-	if w.envs.HaveCaption() {
-		w.WriteString(`\begin{table}[!h]` + "\n")
-		haveTable = true
-		//w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
+	// Dndbook does its own formatting
+	if w.docclass != "dndbook" {
+		if w.envs.HaveCaption() {
+			w.WriteString(`\begin{table}[!h]` + "\n")
+			haveTable = true
+		}
+		w.WriteString(`\begin{center}` + "\n")
 	}
-
-	w.WriteString(`\begin{center}` + "\n")
-	w.startEnv("tabular")
+	tableEnv := "tabular"
+	if w.docclass == "dndbook" {
+		name := ""
+		if w.envs.HaveCaption() {
+			name = w.envs.GetCaption()
+		}
+		tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
+	}
+	w.startEnv(tableEnv)
 	cnt := len(t.ColumnInfos)
 	sep := ""
-	for i := 0; i < cnt; i++ {
-		sep += " | " + GetAlign(i, t)
+	// Dndbook does its own formatting
+	if w.docclass == "dndbook" {
+		for i := 0; i < cnt; i++ {
+			sep += "X"
+		}
+	} else {
+		for i := 0; i < cnt; i++ {
+			sep += " | " + GetAlign(i, t)
+		}
+		sep += " |"
 	}
-	sep += " |"
 	w.WriteString(fmt.Sprintf("{%s}\n", sep))
 
 	inHead := len(t.SeparatorIndices) > 0 &&
 		t.SeparatorIndices[0] != len(t.Rows)-1 &&
 		(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
-	/*
-		if inHead {
-			w.WriteString("<thead>\n")
-		} else {
-			w.WriteString("<tbody>\n")
-		}
-	*/
 	for i, row := range t.Rows {
 		if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
 			if inHead {
@@ -1019,13 +1049,16 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 			w.writeTableColumns(row.Columns)
 		}
 	}
-	w.endEnv("tabular")
-	if haveTable && w.envs.HaveCaption() {
+	w.endEnv(tableEnv)
+	if haveTable && w.envs.HaveCaption() && w.docclass != "dndbook" {
 		w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
 	}
-	w.WriteString(`\end{center}` + "\n")
-	if haveTable {
-		w.WriteString(`\end{table}` + "\n")
+	// dndbook does its own formatting
+	if w.docclass != "dndbook" {
+		w.WriteString(`\end{center}` + "\n")
+		if haveTable {
+			w.WriteString(`\end{table}` + "\n")
+		}
 	}
 }
 
