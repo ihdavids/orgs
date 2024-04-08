@@ -5,6 +5,7 @@ package gantt
 import (
 	"fmt"
 	"html"
+	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -16,6 +17,7 @@ import (
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
+	"gopkg.in/yaml.v3"
 )
 
 func isRawTextBlock(name string) bool { return name == "SRC" || name == "EXAMPLE" || name == "EXPORT" }
@@ -133,6 +135,15 @@ func (s *EnvironmentStack) HaveAttribs() bool {
 	return false
 }
 
+type TableTemplate struct {
+	Vertical bool
+	Template string
+}
+
+type DocClassConf struct {
+	Tables map[string]TableTemplate
+}
+
 type OrgLatexWriter struct {
 	ExtendingWriter org.Writer
 	strings.Builder
@@ -142,6 +153,8 @@ type OrgLatexWriter struct {
 	PrettyRelativeLinks bool
 	envs                EnvironmentStack
 	docclass            string
+	docconf             *DocClassConf
+	exporter            *OrgLatexExporter
 }
 
 func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
@@ -151,6 +164,7 @@ func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
 		footnotes: &footnotes{
 			mapping: map[string]int{},
 		},
+		exporter: exp,
 	}
 }
 
@@ -203,6 +217,25 @@ func (self *OrgLatexExporter) Export(db plugs.ODb, query string, to string, opts
 
 }
 
+func GetDocConf(path string) *DocClassConf {
+	fmt.Printf("[GetDocConf] %s\n", path)
+	var c *DocClassConf = &DocClassConf{}
+	if _, errStat := os.Stat(path); errStat == nil {
+		fmt.Printf("Trying to load config file...\n")
+		yamlFile, err := ioutil.ReadFile(path)
+		if err != nil {
+			log.Printf("ERROR: yamlFile.Get err   #%v ", err)
+			return nil
+		}
+		err = yaml.Unmarshal(yamlFile, c)
+		if err != nil {
+			log.Printf("ERROR: Unmarshal: %v", err)
+			return nil
+		}
+	}
+	return c
+}
+
 func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("LATEX: Export string called [%s]:[%s]\n", query, opts)
@@ -229,6 +262,7 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		}
 		w := NewOrgLatexWriter(self)
 		w.docclass = self.Props["docclass"].(string)
+		w.docconf = GetDocConf(self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml"))
 		// TODO: w.Opts = opts
 		f.Write(w)
 		//org.WriteNodes(w, f.Nodes...)
@@ -471,6 +505,8 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	case "CENTER":
 		w.WriteString("\n" + `\begin{center}\n\centering\n`)
 		w.WriteString(content + "\n" + `\end{center}\n`)
+	case "MONSTERTYPE":
+		w.WriteString("\n" + fmt.Sprintf(`\DndMonsterType{%s}`, content) + "\n")
 	default:
 		w.startEnv(strings.ToLower(b.Name))
 		w.WriteString(content)
@@ -606,6 +642,28 @@ func (w *OrgLatexWriter) WriteDndPropertyHeadline(p PropHead, h org.Headline) bo
 	return false
 }
 
+func (w *OrgLatexWriter) WriteDndRegionHeadline(p RegionHead, h org.Headline) bool {
+	if HeadlineHasTag(p.Tag, h) {
+		head := w.WriteNodesAsString(h.Title...)
+		w.WriteString("\n" + fmt.Sprintf(p.Format, head) + "\n")
+		for _, prop := range p.Props {
+			if v, ok := h.Properties.Get(prop); ok {
+				if p.PropSquare {
+					w.WriteString(fmt.Sprintf("  [%s]\n", v))
+				} else {
+					w.WriteString(fmt.Sprintf("  {%s}\n", v))
+				}
+			}
+		}
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			w.WriteString(content)
+		}
+		w.WriteString("\n" + fmt.Sprintf(p.EndFormat, head) + "\n")
+		return true
+	}
+	return false
+}
+
 var simpleDndHeadlines = [][]string{
 	{"SUBAREA", `\DndSubArea{%s}`},
 	{"AREA", `\DndArea{%s}`},
@@ -618,10 +676,22 @@ type PropHead struct {
 	PropSquare bool // Are properties in {} or []
 }
 
+type RegionHead struct {
+	Tag        string
+	Format     string
+	EndFormat  string
+	Props      []string
+	PropSquare bool // Are properties in {} or []
+}
+
 var propertyDndBasedHeadlines = []PropHead{
 	{Tag: "ITEM", Format: `\DndItemHeader{%s}`, Props: []string{"RARITY"}},
 	{Tag: "SPELL", Format: "\\DndSpellHeader%%\n  {%s}", Props: []string{"LEVELSCHOOL", "CASTTIME", "RANGE", "COMPONENTS", "DURATION"}},
 	{Tag: "FEAT", Format: `\DndFeatHeader{%s}`, Props: []string{"INFO"}, PropSquare: true},
+}
+
+var regionDndBasedHeadlines = []RegionHead{
+	{Tag: "MONSTER", Format: `\begin{DndMonster}[float*=b,width=\textwidth + 8pt]{%s}\begin{multicols}{2}`, EndFormat: `\end{multicols}\end{DndMonster}`, Props: []string{"RARITY"}},
 }
 
 func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
@@ -632,6 +702,11 @@ func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
 	}
 	for _, propHead := range propertyDndBasedHeadlines {
 		if w.WriteDndPropertyHeadline(propHead, h) {
+			return true
+		}
+	}
+	for _, regHead := range regionDndBasedHeadlines {
+		if w.WriteDndRegionHeadline(regHead, h) {
 			return true
 		}
 	}
@@ -934,7 +1009,9 @@ func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if len(p.Children) == 0 {
 		return
 	}
-	w.WriteString(`\par `)
+	if w.docclass != "dndbook" {
+		w.WriteString(`\par `)
+	}
 	org.WriteNodes(w, p.Children...)
 }
 
@@ -996,6 +1073,109 @@ func GetAlign(i int, t org.Table) string {
 	return "c"
 }
 
+func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err)
+		}
+	}()
+	fmt.Printf("  == [Special Table] ==\n")
+	if w.docconf != nil {
+		fmt.Printf("    == [CONF] ==\n")
+		if tbl, ok := w.docconf.Tables[name]; ok {
+			props := map[string]interface{}{}
+			if !tbl.Vertical {
+				for i, nameNode := range t.Rows[0].Columns {
+					name := w.WriteNodesAsString(nameNode.Children...)
+					name = strings.ToLower(name)
+					name = strings.ReplaceAll(name, " ", "")
+					fmt.Printf("  NAME: %s\n", name)
+					val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
+					props[name] = val
+				}
+			} else {
+				for _, nameRow := range t.Rows {
+					nameNode := nameRow.Columns[0]
+					name := w.WriteNodesAsString(nameNode.Children...)
+					name = strings.ToLower(name)
+					name = strings.TrimSpace(strings.ReplaceAll(name, " ", ""))
+					if name != "" {
+						fmt.Printf("  NAME: %s\n", name)
+						val := ""
+						for j, colNode := range nameRow.Columns {
+							if j > 0 {
+								tmp := strings.TrimSpace(w.WriteNodesAsString(colNode.Children...))
+								if tmp != "" {
+									val += tmp
+								}
+							}
+						}
+						if val != "" {
+							props[name] = val
+						}
+					}
+				}
+			}
+			fmt.Printf("BEFORE RENDER\n")
+			res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
+			fmt.Printf("AFTER RENDER\n")
+			if res != "" {
+				fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
+				w.WriteString(res)
+				return true
+			} else {
+				fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
+			}
+		} else {
+			fmt.Printf("%s is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
+		}
+	}
+	return false
+}
+
+func (w *OrgLatexWriter) HandleDndSpecialTables(t org.Table) bool {
+	e := w.envs.GetEnv("")
+	fmt.Printf("CHECKING FOR STATS: %s\n", e)
+	if w.SpecialTable(e, t) {
+		return true
+	}
+	/*
+		switch e {
+		case "Stats":
+			if len(t.ColumnInfos) == 3 && len(t.Rows) == 2 {
+
+				ac := w.WriteNodesAsString(t.Rows[1].Columns[0].Children...)
+				hit := w.WriteNodesAsString(t.Rows[1].Columns[1].Children...)
+				speed := w.WriteNodesAsString(t.Rows[1].Columns[2].Children...)
+				w.WriteString(fmt.Sprintf(`\DndMonsterBasics[%s  armor-class = {%s},%s  hit-points  = {%s},%s  speed       = {%s},%s]%s`, "\n", ac, "\n", hit, "\n", speed, "\n", "\n"))
+				return true
+			}
+			return false
+		case "AbilityScores":
+			if len(t.ColumnInfos) == 6 && len(t.Rows) == 2 {
+				str := w.WriteNodesAsString(t.Rows[1].Columns[0].Children...)
+				dex := w.WriteNodesAsString(t.Rows[1].Columns[1].Children...)
+				con := w.WriteNodesAsString(t.Rows[1].Columns[2].Children...)
+				int := w.WriteNodesAsString(t.Rows[1].Columns[3].Children...)
+				wis := w.WriteNodesAsString(t.Rows[1].Columns[4].Children...)
+				cha := w.WriteNodesAsString(t.Rows[1].Columns[5].Children...)
+				w.WriteString(fmt.Sprintf(`\DndMonsterAbilityScores[%s  str = {%s},%s  dex = {%s},%s  con = {%s},%s  con = {%s},%s  con = {%s},%s  con = {%s},%s]%s`,
+					"\n", str,
+					"\n", dex,
+					"\n", con,
+					"\n", int,
+					"\n", wis,
+					"\n", cha,
+					"\n", "\n"))
+				return true
+			}
+			return false
+		}
+	*/
+
+	return false
+}
+
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
 	haveTable := false
 	// Dndbook does its own formatting
@@ -1005,6 +1185,10 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 			haveTable = true
 		}
 		w.WriteString(`\begin{center}` + "\n")
+	} else {
+		if w.HandleDndSpecialTables(t) {
+			return
+		}
 	}
 	tableEnv := "tabular"
 	if w.docclass == "dndbook" {
