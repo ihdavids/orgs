@@ -1106,6 +1106,9 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 							if j > 0 {
 								tmp := strings.TrimSpace(w.WriteNodesAsString(colNode.Children...))
 								if tmp != "" {
+									if val != "" {
+										val += ", "
+									}
 									val += tmp
 								}
 							}
