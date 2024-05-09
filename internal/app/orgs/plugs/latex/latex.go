@@ -140,8 +140,16 @@ type TableTemplate struct {
 	Template string
 }
 
+// These get properties
+// and the heading as parameters
+// Properties are ALWAYS uppercase
+type HeadingTemplate struct {
+	Template string
+}
+
 type DocClassConf struct {
-	Tables map[string]TableTemplate
+	Tables   map[string]TableTemplate
+	Headings map[string]HeadingTemplate
 }
 
 type OrgLatexWriter struct {
@@ -600,9 +608,15 @@ func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	//w.WriteString(`\listoftables` + "\n")
 }
 
+var IsLetter = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
+
 func HeadlineHasTag(name string, p org.Headline) bool {
+	tagName := name
+	if IsLetter(tagName) {
+		tagName = fmt.Sprintf("\b%s\b", name)
+	}
 	for _, t := range p.Tags {
-		if ok, err := regexp.MatchString(name, t); err == nil && ok {
+		if ok, err := regexp.MatchString(tagName, t); err == nil && ok {
 			return true
 		}
 	}
@@ -694,23 +708,69 @@ var regionDndBasedHeadlines = []RegionHead{
 	{Tag: "MONSTER", Format: `\begin{DndMonster}[float*=b,width=\textwidth + 8pt]{%s}\begin{multicols}{2}`, EndFormat: `\end{multicols}\end{DndMonster}`, Props: []string{"RARITY"}},
 }
 
-func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
-	for _, area := range simpleDndHeadlines {
-		if w.WriteDndBookAreas(area[0], area[1], h) {
-			return true
+func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
+	defer func() {
+		if err := recover(); err != nil {
+			head := w.WriteNodesAsString(h.Title...)
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", head, "\n+++++++++++++++++++++++++++++++++++++++++++\n")
 		}
-	}
-	for _, propHead := range propertyDndBasedHeadlines {
-		if w.WriteDndPropertyHeadline(propHead, h) {
-			return true
-		}
-	}
-	for _, regHead := range regionDndBasedHeadlines {
-		if w.WriteDndRegionHeadline(regHead, h) {
-			return true
+	}()
+	if w.docconf != nil && len(w.docconf.Headings) > 0 {
+		for tag, temp := range w.docconf.Headings {
+			if HeadlineHasTag(tag, h) {
+				props := map[string]interface{}{}
+				if h.Properties != nil && len(h.Properties.Properties) > 0 {
+					for _, prop := range h.Properties.Properties {
+						if len(prop[0]) > 0 {
+							props[prop[0]] = prop[1]
+						}
+					}
+				}
+				head := ""
+				if len(h.Title) > 0 {
+					head = w.WriteNodesAsString(h.Title...)
+				}
+				content := ""
+				if len(h.Children) > 0 {
+					content = w.WriteNodesAsString(h.Children...)
+				}
+				props["heading"] = head
+				props["content"] = content
+				res := w.exporter.pm.Tempo.RenderTemplateString(temp.Template, props)
+				if res != "" {
+					fmt.Printf("HEADING EXPANSION: \n[%s]\n------------------------\n", res)
+					w.WriteString(res)
+					return true
+				} else {
+					fmt.Printf("ERROR: Heading template failed to expand! %s\n", tag)
+				}
+				break
+			}
 		}
 	}
 	return false
+}
+
+func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
+	return w.SpecialHeaders(h)
+	/*
+			for _, area := range simpleDndHeadlines {
+				if w.WriteDndBookAreas(area[0], area[1], h) {
+					return true
+				}
+			}
+			for _, propHead := range propertyDndBasedHeadlines {
+				if w.WriteDndPropertyHeadline(propHead, h) {
+					return true
+				}
+			}
+			for _, regHead := range regionDndBasedHeadlines {
+				if w.WriteDndRegionHeadline(regHead, h) {
+					return true
+				}
+			}
+		return false
+	*/
 }
 
 func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
@@ -1119,9 +1179,7 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 					}
 				}
 			}
-			fmt.Printf("BEFORE RENDER\n")
 			res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
-			fmt.Printf("AFTER RENDER\n")
 			if res != "" {
 				fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
 				w.WriteString(res)
@@ -1130,7 +1188,7 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 				fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
 			}
 		} else {
-			fmt.Printf("%s is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
+			fmt.Printf("[%s] is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
 		}
 	}
 	return false
@@ -1139,7 +1197,7 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 func (w *OrgLatexWriter) HandleDndSpecialTables(t org.Table) bool {
 	e := w.envs.GetEnv("")
 	fmt.Printf("CHECKING FOR STATS: %s\n", e)
-	if w.SpecialTable(e, t) {
+	if e != "" && w.SpecialTable(e, t) {
 		return true
 	}
 	/*

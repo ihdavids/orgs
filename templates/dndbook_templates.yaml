@@ -20,13 +20,52 @@ tables:
     vertical: true
     template: |+
         \DndMonsterDetails[
-          {% if savingthrows %}saving-throws = { {{savingthrows}} },{% endif %} // {Str +0, Dex +0, Con +0, Int +0, Wis +0, Cha +0}, { {{savingthrows}} },
-          {% if skills %}skills = { {{skills}} },{% endif %}  // {Acrobatics +0, Animal Handling +0, Arcana +0, Athletics +0, Deception +0, History +0, Insight +0, Intimidation +0, Investigation +0, Medicine +0, Nature +0, Perception +0, Performance +0, Persuasion +0, Religion +0, Sleight of Hand +0, Stealth +0, Survival +0},
-          {% if damagevulnerabilities %}damage-vulnerabilities = { {{damagevulnerabilities}} },{% endif %}  // {cold},
-          {% if damageresistances %}damage-resistances = { {{damageresistances}} },{% endif %}  // {bludgeoning, piercing, and slashing from nonmagical attacks},
-          {% if damageimmunities %}damage-immunities = { {{damageimmunities}} },{% endif %}  // {poison},
-          {% if conditionimmunities %}condition-immunities = { {{conditionimmunities}} },{% endif %}  //{poisoned},
-          {% if senses %}senses = { {{senses}} },{% endif %}  //{darkvision 60 ft., passive Perception 10},
-          {% if languages %}languages = { {{languages}} },{% endif %}           //{Common, Goblin, Undercommon},
+          {% if savingthrows %}saving-throws = { {{savingthrows}} },{% endif %}
+          {% if skills %}skills = { {{skills}} },{% endif %}
+          {% if damagevulnerabilities %}damage-vulnerabilities = { {{damagevulnerabilities}} },{% endif %}
+          {% if damageresistances %}damage-resistances = { {{damageresistances}} },{% endif %}
+          {% if damageimmunities %}damage-immunities = { {{damageimmunities}} },{% endif %}
+          {% if conditionimmunities %}condition-immunities = { {{conditionimmunities}} },{% endif %}
+          {% if senses %}senses = { {{senses}} },{% endif %}
+          {% if languages %}languages = { {{languages}} },{% endif %}
           {% if challenge %}challenge = {{challenge}},{% endif %}
           ]
+  MonsterSpells:
+    vertical: true
+    template: |+
+      \begin{DndMonsterSpells}
+      \end{DndMonsterSpells}
+headings:
+  ITEM:
+    template: |+
+      \DndItemHeader{ {{heading}} }
+        { {{RARITY}} }
+        {{content}}
+  SPELL:
+    template: |+
+      \DndSpellHeader%
+        { {{heading}} }
+        { {{LEVELSCHOOL}} }
+        { {{CASTTIME}} }
+        { {{RANGE}} }
+        { {{COMPONENTS}} }
+        { {{DURATION}} }
+        {{content}}
+  FEAT:
+    template: |+
+      \DndFeatHeader{ {{heading}} }[ {{INFO}} ]
+      {{content}}
+  MONSTER:
+    template: |+
+      \begin{DndMonster}[float*=b,width=\textwidth + 8pt]{ {{heading}} }\begin{multicols}{2}
+      {{content}}
+      \end{multicols}
+      \end{DndMonster}
+  INNATESPELLCASTING:
+    template: |+
+      \DndMonsterAction{Innate Spellcasting}
+        {{content}}
+  SPELLCASTING:
+    template: |+
+      \DndMonsterAction{Spellcasting}
+        {{content}}
