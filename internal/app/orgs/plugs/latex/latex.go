@@ -613,7 +613,7 @@ var IsLetter = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 func HeadlineHasTag(name string, p org.Headline) bool {
 	tagName := name
 	if IsLetter(tagName) {
-		tagName = fmt.Sprintf("\b%s\b", name)
+		tagName = fmt.Sprintf("\\b%s\\b", name)
 	}
 	for _, t := range p.Tags {
 		if ok, err := regexp.MatchString(tagName, t); err == nil && ok {
@@ -696,16 +696,6 @@ type RegionHead struct {
 	EndFormat  string
 	Props      []string
 	PropSquare bool // Are properties in {} or []
-}
-
-var propertyDndBasedHeadlines = []PropHead{
-	{Tag: "ITEM", Format: `\DndItemHeader{%s}`, Props: []string{"RARITY"}},
-	{Tag: "SPELL", Format: "\\DndSpellHeader%%\n  {%s}", Props: []string{"LEVELSCHOOL", "CASTTIME", "RANGE", "COMPONENTS", "DURATION"}},
-	{Tag: "FEAT", Format: `\DndFeatHeader{%s}`, Props: []string{"INFO"}, PropSquare: true},
-}
-
-var regionDndBasedHeadlines = []RegionHead{
-	{Tag: "MONSTER", Format: `\begin{DndMonster}[float*=b,width=\textwidth + 8pt]{%s}\begin{multicols}{2}`, EndFormat: `\end{multicols}\end{DndMonster}`, Props: []string{"RARITY"}},
 }
 
 func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
