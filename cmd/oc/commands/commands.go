@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,7 +15,8 @@ import (
 
 type Cmd interface {
 	Unmarshal(unmarshal func(interface{}) error) error
-	Exec(core *Core, args []string)
+	Exec(core *Core)
+	SetupParameters(*flag.FlagSet)
 }
 
 type PluginDef struct {
@@ -33,7 +35,7 @@ func (self *PluginDef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return res
 	}
 	if creator, ok := CmdRegistry[id.Name]; ok {
-		self.Plugin = creator.Creator()
+		self.Plugin = creator.Cmd
 		self.Name = id.Name
 		return self.Plugin.Unmarshal(unmarshal)
 	}
@@ -44,6 +46,8 @@ func (self *PluginDef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 type CmdCreator func() Cmd
 type CmdParams func()
 
+/*
+// This can be used in a yaml file to handle flag parsing.
 type CmdArgs struct {
 	Have   bool
 	Args   string
@@ -65,18 +69,21 @@ func (i *CmdArgs) Set(value string) error {
 	//fmt.Printf("SET: %s\n", value)
 	return nil
 }
+*/
 
 type CmdCreatorThunk struct {
-	Name    string
-	Creator CmdCreator
-	Args    *CmdArgs
+	Name string
+	Cmd  Cmd
+	//Args      *CmdArgs
+	Usage string
+	Flags *flag.FlagSet
 }
 
 var CmdRegistry = map[string]CmdCreatorThunk{}
 
 func AddCmd(name string, usage string, creator CmdCreator) {
 	//fmt.Printf("ADDING PLUGIN: %s\n", name)
-	CmdRegistry[name] = CmdCreatorThunk{Name: name, Creator: creator, Args: new(CmdArgs)}
+	CmdRegistry[name] = CmdCreatorThunk{Name: name, Cmd: creator() /*Args: new(CmdArgs),*/, Usage: usage}
 	//CmdRegistry[name].Args = flag.NewFlagSet(name, flag.ExitOnError )
 	//flag.BoolVar(&CmdRegistry[name].Args.Have, name, false, usage)
 }

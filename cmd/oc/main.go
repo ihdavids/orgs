@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	//"net/rpc"
@@ -45,9 +46,18 @@ func main() {
 			//fmt.Printf("KEY: %v -> %v\n", k, args[1:])
 			mod := Conf().FindCommand(k)
 			if mod == nil {
-				mod = v.Creator()
+				mod = v.Cmd
+				oldArgs := args
+				args = []string{}
+				if len(oldArgs) > 1 {
+					args = oldArgs[1:]
+				}
+				if v.Flags != nil && nil != v.Flags.Parse(args) {
+					fmt.Printf("HERE\n")
+					panic(fmt.Sprintf("failed to parse arguments for: %s\n", k))
+				}
 			}
-			mod.Exec(core, args[1:])
+			mod.Exec(core)
 		}
 	}
 

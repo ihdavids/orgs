@@ -20,15 +20,23 @@ func (self *Capture) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *Capture) Exec(core *commands.Core, args []string) {
-	fmt.Printf("Capture called\n")
-
-	fset := flag.NewFlagSet("capture", flag.ExitOnError)
+func (self *Capture) SetupParameters(fset *flag.FlagSet) {
+	//fset := flag.NewFlagSet("capture", flag.ExitOnError)
 	fset.StringVar(&self.Template, "temp", "", "template name")
 	fset.StringVar(&self.Head, "head", "", "heading")
 	fset.StringVar(&self.Cont, "cont", "", "content")
-	fset.Parse(args)
+	//fset.Parse(args)
+}
 
+func (self *Capture) Exec(core *commands.Core) {
+	fmt.Printf("Capture called\n")
+	/*
+		fset := flag.NewFlagSet("capture", flag.ExitOnError)
+		fset.StringVar(&self.Template, "temp", "", "template name")
+		fset.StringVar(&self.Head, "head", "", "heading")
+		fset.StringVar(&self.Cont, "cont", "", "content")
+		fset.Parse(args)
+	*/
 	var query common.Capture
 	query.Template = self.Template
 	query.NewNode.Headline = self.Head
@@ -51,7 +59,10 @@ func (self *CaptureTemplate) Unmarshal(unmarshal func(interface{}) error) error 
 	return unmarshal(self)
 }
 
-func (self *CaptureTemplate) Exec(core *commands.Core, args []string) {
+func (self *CaptureTemplate) SetupParameters(*flag.FlagSet) {
+}
+
+func (self *CaptureTemplate) Exec(core *commands.Core) {
 	fmt.Printf("Capture templates\n")
 
 	var qry map[string]string = map[string]string{}
@@ -71,10 +82,12 @@ func (self *CaptureTemplate) Exec(core *commands.Core, args []string) {
 
 // init function is called at boot
 func init() {
-	commands.AddCmd("cap", "quick capture idea", func() commands.Cmd {
-		return &Capture{}
-	})
-	commands.AddCmd("listcap", "list capture templates", func() commands.Cmd {
-		return &CaptureTemplate{}
-	})
+	commands.AddCmd("cap", "quick capture idea",
+		func() commands.Cmd {
+			return &Capture{}
+		})
+	commands.AddCmd("listcap", "list capture templates",
+		func() commands.Cmd {
+			return &CaptureTemplate{}
+		})
 }

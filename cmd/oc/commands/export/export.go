@@ -1,6 +1,7 @@
 package export
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
@@ -14,7 +15,10 @@ func (self *Export) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *Export) Exec(core *commands.Core, args []string) {
+func (self *Export) SetupParameters(*flag.FlagSet) {
+}
+
+func (self *Export) Exec(core *commands.Core) {
 	fmt.Printf("Export called\n")
 
 	var qry map[string]string = map[string]string{}
@@ -34,7 +38,8 @@ func (self *Export) Exec(core *commands.Core, args []string) {
 
 // init function is called at boot
 func init() {
-	commands.AddCmd("export", "export a given module", func() commands.Cmd {
-		return &Export{}
-	})
+	commands.AddCmd("export", "export a given module",
+		func() commands.Cmd {
+			return &Export{}
+		})
 }
