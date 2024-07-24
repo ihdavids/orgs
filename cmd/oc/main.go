@@ -35,6 +35,7 @@ func main() {
 	defer f.Close()
 	Conf()
 	core := commands.NewCore(Conf().Url)
+	core.EditorTemplate = Conf().EditorTemplate
 	core.Start()
 
 	args := flag.Args()

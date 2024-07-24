@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os/exec"
 	"runtime"
 	"strings"
 	"time"
@@ -101,9 +102,10 @@ var (
 )
 
 type Core struct {
-	Messages chan string
-	Send     chan []byte
-	Rest     common.Rest
+	Messages       chan string
+	Send           chan []byte
+	Rest           common.Rest
+	EditorTemplate []string
 }
 
 func NewCore(rurl string) *Core {
@@ -206,6 +208,17 @@ func SendReceiveGet[RESP any](core *Core, name string, ps map[string]string, res
 
 func SendReceivePost[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
 	*resp, _ = common.RestPost[RESP](&core.Rest, name, args)
+}
+
+func (core *Core) LaunchEditor(filename string, line int) {
+	eargs := make([]string, len(core.EditorTemplate))
+	copy(eargs, core.EditorTemplate)
+	for i, v := range eargs {
+		eargs[i] = strings.Replace(strings.Replace(v, "{filename}", filename, -1), "{linenum}", fmt.Sprintf("%d", line), -1)
+	}
+	cmnd := exec.Command(eargs[0], eargs[1:]...)
+	//cmnd.Run() // and wait
+	cmnd.Start()
 }
 
 // writePump pumps messages from the hub to the websocket connection.

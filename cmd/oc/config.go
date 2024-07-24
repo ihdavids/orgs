@@ -16,6 +16,7 @@ import (
 type Config struct {
 	Url             string               `yaml:"url"`
 	ConfigedPlugins []commands.PluginDef `yaml:"plugins"`
+	EditorTemplate  []string
 }
 
 func Usage() {
@@ -48,6 +49,7 @@ func (self *Config) FindCommand(name string) commands.Cmd {
 
 func (self *Config) Defaults() {
 	self.Url = "http://localhost:8010"
+	self.EditorTemplate = []string{"code", "-g", "{filename}:{linenum}"}
 }
 
 func (self *Config) Validate() {
