@@ -1123,6 +1123,42 @@ func GetAlign(i int, t org.Table) string {
 	return "c"
 }
 
+/*
+func dndFormatSpell(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	if in != nil {
+		inVar, ok := in.Interface().(map[string]interface{})
+		if ok && inVar != nil {
+			front := ""
+			end := ""
+			output := ""
+			for k, v := range inVar {
+				key := strings.TrimSpace(k)
+				val, vok := v.(string)
+				if vok && key != "" && key != "cantrip" {
+					val = strings.TrimSpace(val)
+					if val != "" {
+						front += "[" + key + "]"
+						if end != "" {
+							end += ", "
+						}
+						end += val
+					}
+				}
+			}
+			output = front + "{" + end + "}"
+			output = strings.TrimSpace(output)
+			return pongo2.AsValue(output), nil
+		}
+	}
+	return in, nil
+}
+*/
+
+type KeyVal struct {
+	Key string
+	Val []string
+}
+
 func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 	defer func() {
 		if err := recover(); err != nil {
@@ -1135,15 +1171,69 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 		if tbl, ok := w.docconf.Tables[name]; ok {
 			props := map[string]interface{}{}
 			if !tbl.Vertical {
+				// Single row tables can access by name
+				// without a table reference
+				// Name is 0 row
+				// | A  | B  | C  | D  |
+				// | v1 | v2 | v3 | v4 |
 				for i, nameNode := range t.Rows[0].Columns {
-					name := w.WriteNodesAsString(nameNode.Children...)
-					name = strings.ToLower(name)
-					name = strings.ReplaceAll(name, " ", "")
-					fmt.Printf("  NAME: %s\n", name)
+					cellName := w.WriteNodesAsString(nameNode.Children...)
+					cellName = strings.ToLower(cellName)
+					cellName = strings.ReplaceAll(cellName, "[", "")
+					cellName = strings.ReplaceAll(cellName, "]", "")
+					cellName = strings.ReplaceAll(cellName, "{", "")
+					cellName = strings.ReplaceAll(cellName, "}", "")
+					cellName = strings.ReplaceAll(cellName, " ", "")
+					fmt.Printf("  NAME: %s\n", cellName)
 					val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
-					props[name] = val
+					props[cellName] = val
 				}
+				tbl := []map[string]interface{}{}
+				for r, row := range t.Rows {
+					if r == 0 {
+						continue
+					}
+					rr := map[string]interface{}{}
+					for c, nameNode := range t.Rows[0].Columns {
+						cellName := w.WriteNodesAsString(nameNode.Children...)
+						cellName = strings.ToLower(cellName)
+						cellName = strings.ReplaceAll(cellName, " ", "")
+						val := w.WriteNodesAsString(row.Columns[c].Children...)
+						rr[cellName] = val
+					}
+					tbl = append(tbl, rr)
+				}
+				props["tbl"] = tbl
+				ctbl := []KeyVal{}
+				for c, nameNode := range t.Rows[0].Columns {
+					cellName := w.WriteNodesAsString(nameNode.Children...)
+					cellName = strings.ToLower(cellName)
+					cellName = strings.ReplaceAll(cellName, " ", "")
+					rr := []string{}
+					for r, row := range t.Rows {
+						if r == 0 {
+							continue
+						}
+						val := w.WriteNodesAsString(row.Columns[c].Children...)
+						val = strings.TrimSpace(val)
+						if val != "" {
+							rr = append(rr, val)
+						}
+					}
+					if cellName == "cantrip" {
+						cellName = ""
+					}
+					pair := KeyVal{Key: cellName, Val: rr}
+					ctbl = append(ctbl, pair)
+				}
+				props["ctbl"] = ctbl
 			} else {
+				// Vertical table does not get the multiple row option
+				// It's a key value pairing
+				//
+				// | key1 | value1 |
+				// | key2 | value2 |
+				//
 				for _, nameRow := range t.Rows {
 					nameNode := nameRow.Columns[0]
 					name := w.WriteNodesAsString(nameNode.Children...)

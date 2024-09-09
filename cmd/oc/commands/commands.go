@@ -80,18 +80,18 @@ type CmdCreatorThunk struct {
 	Flags *flag.FlagSet
 }
 
-var CmdRegistry = map[string]CmdCreatorThunk{}
+var CmdRegistry = map[string]*CmdCreatorThunk{}
 
 func AddCmd(name string, usage string, creator CmdCreator) {
 	//fmt.Printf("ADDING PLUGIN: %s\n", name)
-	CmdRegistry[name] = CmdCreatorThunk{Name: name, Cmd: creator() /*Args: new(CmdArgs),*/, Usage: usage}
+	CmdRegistry[name] = &CmdCreatorThunk{Name: name, Cmd: creator() /*Args: new(CmdArgs),*/, Usage: usage}
 	//CmdRegistry[name].Args = flag.NewFlagSet(name, flag.ExitOnError )
 	//flag.BoolVar(&CmdRegistry[name].Args.Have, name, false, usage)
 }
 
 func Find(name string) *CmdCreatorThunk {
 	if v, ok := CmdRegistry[name]; ok {
-		return &v
+		return v
 	}
 	return nil
 }

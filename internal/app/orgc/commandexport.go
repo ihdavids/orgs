@@ -1,6 +1,7 @@
 package orgc
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/ihdavids/orgs/internal/common"
@@ -43,13 +44,27 @@ func (self *CommandExport) Enter(core *Core, params []string) {
 		var reply common.ResultMsg = common.ResultMsg{}
 		SendReceiveRpc(core, "Db.ExportToFile", &query, &reply)
 	*/
+	output := "out.html"
+	format := "html"
+	query := "IsTask()"
+
+	if len(params) > 0 {
+		format = params[0]
+	}
+	if len(params) > 1 {
+		output = params[1]
+	}
+	if len(params) > 2 {
+		query = params[2]
+	}
+
 	var qry map[string]string = map[string]string{}
-	qry["filename"] = "./out.html"
-	qry["query"] = "IsTask()"
+	qry["filename"] = output
+	qry["query"] = query
 	qry["opts"] = ""
 	qry["local"] = "t"
 	var reply common.ResultMsg = common.ResultMsg{}
-	SendReceiveGet(core, "file/mermaid", qry, &reply)
+	SendReceiveGet(core, fmt.Sprintf("file/%s", format), qry, &reply)
 
 	if reply.Ok {
 		core.taskPane.SetTitle("Export success")

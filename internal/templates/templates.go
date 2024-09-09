@@ -279,6 +279,25 @@ func orgEnv() map[string]string {
 	return out
 }
 
+func commaList(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	if in != nil {
+		inVar, ok := in.Interface().([]string)
+		if ok && inVar != nil {
+			output := ""
+			for _, v := range inVar {
+				v := strings.TrimSpace(v)
+				if output != "" {
+					output += ", "
+				}
+				output += v
+			}
+			output = strings.TrimSpace(output)
+			return pongo2.AsValue(output), nil
+		}
+	}
+	return in, nil
+}
+
 func (self *TemplateManager) Initialize() {
 	pongo2.RegisterFilter("age", fuzzyAge)
 	pongo2.RegisterFilter("fit", fit)
@@ -286,6 +305,7 @@ func (self *TemplateManager) Initialize() {
 	pongo2.RegisterFilter("orgIndent", templateIndent)
 	pongo2.RegisterFilter("orgCleanup", cleanupString)
 	pongo2.RegisterFilter("orgWordWrap", wordWrap)
+	pongo2.RegisterFilter("commaList", commaList)
 }
 
 func (self *TemplateManager) resolveTemplate(name string, context map[string]interface{}) string {

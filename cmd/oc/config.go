@@ -28,7 +28,7 @@ func Usage() {
 }
 
 func (self *Config) AddCommands() {
-	fmt.Printf("Add Commands\n")
+	//fmt.Printf("Add Commands\n")
 	for name, val := range commands.CmdRegistry {
 		//fmt.Printf("NAME: %s\n", name)
 		op := flag.NewFlagSet(name, flag.ExitOnError)

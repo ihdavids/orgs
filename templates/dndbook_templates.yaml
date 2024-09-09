@@ -30,10 +30,76 @@ tables:
           {% if languages %}languages = { {{languages}} },{% endif %}
           {% if challenge %}challenge = {{challenge}},{% endif %}
           ]
-  MonsterSpells:
+  MonsterAttack:
     vertical: true
     template: |+
+      \DndMonsterAttack[
+          {% if name %}name = { {{name}} },
+          {% endif %}{% if distance %}distance = { {{distance}} },
+          {% endif %}{% if type %}type = { {{type}} },
+          {% endif %}{% if mod %}mod = { {{mod}} },
+          {% endif %}{% if reach %}reach = { {{reach}} },
+          {% endif %}{% if range %}range = { {{range}} },
+          {% endif %}{% if targets %}targets = { {{targets}} },
+          {% endif %}{% if dmg %}dmg = { {{dmg}} },
+          {% endif %}{% if dmgtype %}dmg-type = { {{dmgtype}} },
+          {% endif %}{% if plusdmg %}plus-dmg = { {{plusdmg}} },
+          {% endif %}{% if plusdmgtype %}plus-dmg-type = { {{plusdmgtype}} },
+          {% endif %}{% if ordmg %}or-dmg = { {{ordmg}} },
+          {% endif %}{% if ordmgwhen %}or-dmg-when = { {{ordmgwhen}} },
+          {% endif %}{% if extra %}extra = { {{extra}} },
+          {% endif %}]
+  MonsterMelee:
+    vertical: true
+    template: |+
+      \DndMonsterMelee[
+          {% if name %}name = { {{name}} },
+          {% endif %}{% if distance %}distance = { {{distance}} },
+          {% endif %}{% if type %}type = { {{type}} },
+          {% endif %}{% if mod %}mod = { {{mod}} },
+          {% endif %}{% if reach %}reach = { {{reach}} },
+          {% endif %}{% if range %}range = { {{range}} },
+          {% endif %}{% if targets %}targets = { {{targets}} },
+          {% endif %}{% if dmg %}dmg = { {{dmg}} },
+          {% endif %}{% if dmgtype %}dmg-type = { {{dmgtype}} },
+          {% endif %}{% if plusdmg %}plus-dmg = { {{plusdmg}} },
+          {% endif %}{% if plusdmgtype %}plus-dmg-type = { {{plusdmgtype}} },
+          {% endif %}{% if ordmg %}or-dmg = { {{ordmg}} },
+          {% endif %}{% if ordmgwhen %}or-dmg-when = { {{ordmgwhen}} },
+          {% endif %}{% if extra %}extra = { {{extra}} },
+          {% endif %}]
+  MonsterRanged:
+    vertical: true
+    template: |+
+      \DndMonsterRanged[
+          {% if name %}name = { {{name}} },
+          {% endif %}{% if distance %}distance = { {{distance}} },
+          {% endif %}{% if type %}type = { {{type}} },
+          {% endif %}{% if mod %}mod = { {{mod}} },
+          {% endif %}{% if reach %}reach = { {{reach}} },
+          {% endif %}{% if range %}range = { {{range}} },
+          {% endif %}{% if targets %}targets = { {{targets}} },
+          {% endif %}{% if dmg %}dmg = { {{dmg}} },
+          {% endif %}{% if dmgtype %}dmg-type = { {{dmgtype}} },
+          {% endif %}{% if plusdmg %}plus-dmg = { {{plusdmg}} },
+          {% endif %}{% if plusdmgtype %}plus-dmg-type = { {{plusdmgtype}} },
+          {% endif %}{% if ordmg %}or-dmg = { {{ordmg}} },
+          {% endif %}{% if ordmgwhen %}or-dmg-when = { {{ordmgwhen}} },
+          {% endif %}{% if extra %}extra = { {{extra}} },
+          {% endif %}]
+  InnateMonsterSpells:
+    vertical: false
+    template: |+
       \begin{DndMonsterSpells}
+      {% for spell in ctbl %}  \DndInnateSpellLevel{{spell.Key}}{ {{spell.Val|commaList}} }
+      {% endfor %}
+      \end{DndMonsterSpells}
+  MonsterSpells:
+    vertical: false
+    template: |+
+      \begin{DndMonsterSpells}
+      {% for spell in ctbl %}  \DndMonsterSpellLevel{{spell.Key}}{ {{spell.Val|commaList}} } 
+      {% endfor %}
       \end{DndMonsterSpells}
 headings:
   ITEM:
@@ -68,4 +134,12 @@ headings:
   SPELLCASTING:
     template: |+
       \DndMonsterAction{Spellcasting}
+        {{content}}
+  MONSTERSECTION:
+    template: |+
+      \DndMonsterSection{ {{heading}} }
+        {{content}}
+  MONSTERACTION:
+    template: |+
+      \DndMonsterAction{ {{heading}} }
         {{content}}

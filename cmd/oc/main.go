@@ -54,7 +54,6 @@ func main() {
 					args = oldArgs[1:]
 				}
 				if v.Flags != nil && nil != v.Flags.Parse(args) {
-					fmt.Printf("HERE\n")
 					panic(fmt.Sprintf("failed to parse arguments for: %s\n", k))
 				}
 			}

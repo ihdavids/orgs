@@ -13,15 +13,17 @@ import (
 )
 
 type ProjectsQuery struct {
-	table *tview.Table
-	core  *commands.Core
+	table  *tview.Table
+	core   *commands.Core
+	filter string
 }
 
 func (self *ProjectsQuery) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *ProjectsQuery) SetupParameters(*flag.FlagSet) {
+func (self *ProjectsQuery) SetupParameters(f *flag.FlagSet) {
+	f.StringVar(&self.filter, "f", "", "Additional filtering for project lists")
 }
 
 func (self *ProjectsQuery) HandleShortcuts(in *tcell.EventKey) *tcell.EventKey {
@@ -78,6 +80,9 @@ func (self *ProjectsQuery) Exec(core *commands.Core) {
 	var qry map[string]string = map[string]string{}
 	//qry["filename"] = "./out.html"
 	qry["query"] = "IsProject()"
+	if self.filter != "" {
+		qry["query"] += " && " + self.filter
+	}
 	var reply common.Todos = common.Todos{}
 
 	//func SendReceiveGet[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
