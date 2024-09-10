@@ -491,13 +491,17 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		if params[":exports"] == "results" || params[":exports"] == "none" {
 			break
 		}
-		lang := "text"
-		if len(b.Parameters) >= 1 {
-			lang = strings.ToLower(b.Parameters[0])
-		}
+		//lang := "text"
+		//if len(b.Parameters) >= 1 {
+		//	lang = strings.ToLower(b.Parameters[0])
+		//}
 		// TODO content = w.HighlightCodeBlock(b.Keywords, content, lang, false, params)
 		content = ""
-		w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
+		w.startEnv("verbatim")
+		// TODO: Handle content
+		w.WriteString(EscapeString(content))
+		w.endEnv("verbatim")
+		//w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
 	case "EXAMPLE":
 		w.startEnv("verbatim")
 		w.WriteString(EscapeString(content))
@@ -805,11 +809,8 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 }
 
 func (w *OrgLatexWriter) WriteText(t org.Text) {
-	if w.Document.GetOption("e") == "nil" || t.IsRaw {
-		w.WriteString(EscapeString(t.Content))
-	} else {
-		w.WriteString(EscapeString(t.Content))
-	}
+	fmt.Printf("%s\n", t.Content)
+	w.WriteString(t.Content)
 }
 
 // DONE

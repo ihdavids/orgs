@@ -101,6 +101,12 @@ tables:
       {% for spell in ctbl %}  \DndMonsterSpellLevel{{spell.Key}}{ {{spell.Val|commaList}} } 
       {% endfor %}
       \end{DndMonsterSpells}
+  LegendaryActions:
+    template: |+
+      \begin{DndMonsterLegendaryActions}
+      {% for act in tbl %}  \DndMonsterLegendaryAction{ {{act.name}} }{ {{act.description}} }
+      {% endfor %}
+      \end{DndMonsterLegendaryActions}
 headings:
   ITEM:
     template: |+
@@ -142,4 +148,12 @@ headings:
   MONSTERACTION:
     template: |+
       \DndMonsterAction{ {{heading}} }
+        {{content}}
+  PART:
+    template: |+
+      \part{ {{heading}} }
+        {{content}}
+  CHAPTER:
+    template: |+
+      \chapter{ {{heading}} }
         {{content}}
