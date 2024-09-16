@@ -1,0 +1,55 @@
+#+TITLE: Overview
+
+* Introduction
+  Org is a document interchange format. Yay, the world needs another!
+
+  That said, org-mode is a lifestyle built around using org files
+  to help organize your life in a variety of ways. Org Mode has strong
+  roots in many common methodologies like GTD, while at the same time
+  using org mode files for almost everything in your life.
+
+  OrgS is a server that manages a collection of org files.
+  It offers:
+
+  - A flexible extensible module based architecture.
+  - An exporter framework that can convert an org file to a variety of outputs
+  	- gantt     - Export an org file as a gantt chart
+ 	- mermaid   - Export a diagram in an org file using mermaid js
+  	- mindmap   - Generate a mind map from an org file
+ 	- html      - Convert an org file to an html file
+  	- revealjs  - Convert an org file to a revealjs presentation
+  	- impressjs - Convert an org file to an impressjs presentation
+  	- latex     - Export an org file to a latex file (pdf)
+  - An importer framework for syncing periodically with 3rd party services
+  	- git
+  	- google calendar
+  	- ics files
+  	- jira
+  	- todoist
+  - Quick capture methods - capture input in a variety of ways
+  - Refiling and archiving capabilities
+  - Generators
+  	- daypage - Create and jump to a daily log file
+  - Fast table evaluation
+  - A flexible query language
+  - Clocking in and out
+  - A flexible notification system.
+
+  A command line interface for interacting with your org files
+  from the command line
+
+** Uses
+   	OrgS is intended to be like the Language Server Protocol of org files.
+   	It is intended to support:
+
+   	- org protocol synchronization
+   	- web portal access to your org files
+   	- rich robust editor integrations for your org files.
+   	- a notification mechanism that works across platforms
+   	- command line access to your org files.
+
+
+** Plans
+   - Mu4E style imap email synchronization and exposure of your emails as part of your
+     org repository.
+
