@@ -841,7 +841,8 @@ func (w *OrgLatexWriter) WriteLineBreak(l org.LineBreak) {
 }
 
 func (w *OrgLatexWriter) WriteExplicitLineBreak(l org.ExplicitLineBreak) {
-	w.WriteString(`\newline\noindent\rule{\textwidth}{0.5pt}\n`)
+	//w.WriteString(`\newline\noindent\rule{\textwidth}{0.5pt}\n`)
+	w.WriteString(`\break`)
 }
 
 func (w *OrgLatexWriter) WriteFootnoteLink(l org.FootnoteLink) {
@@ -936,7 +937,7 @@ func (w *OrgLatexWriter) WriteClock(s org.Clock) {
 }
 
 func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
-	url := html.EscapeString(l.URL)
+	url := l.URL
 
 	if l.Protocol == "file" {
 		url = url[len("file:"):]
@@ -961,23 +962,32 @@ func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
 		url = html.EscapeString(strings.ReplaceAll(strings.ReplaceAll(prefix, "%s", ""), "%h", ""))
 	}
 	switch l.Kind() {
-	/*
 		case "image":
 			if l.Description == nil {
-				w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" />`, url, url, url))
+				w.WriteString(fmt.Sprintf(`\begin{figure}
+  \centering
+    \includegraphics[width=.5\textwidth]{%s}
+\end{figure}
+`, url))
 			} else {
-				description := strings.TrimPrefix(String(l.Description...), "file:")
-				w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, url, description, description))
+				description := strings.TrimPrefix(org.String(l.Description...), "file:")
+				w.WriteString(fmt.Sprintf(`\begin{figure}[h!]
+  \centering
+    \includegraphics[width=.5\textwidth]{%s}
+    \caption{%s}
+\end{figure}
+`, url,description))
 			}
 		case "video":
+			/*
 			if l.Description == nil {
 				w.WriteString(fmt.Sprintf(`<video src="%s" title="%s">%s</video>`, url, url, url))
 			} else {
 				description := strings.TrimPrefix(String(l.Description...), "file:")
 				w.WriteString(fmt.Sprintf(`<a href="%s"><video src="%s" title="%s"></video></a>`, url, description, description))
 			}
-	*/
-	default:
+			*/
+		default:
 		description := url
 		if l.Description != nil {
 			description = w.WriteNodesAsString(l.Description...)
@@ -1078,7 +1088,8 @@ func (w *OrgLatexWriter) WriteExample(e org.Example) {
 }
 
 func (w *OrgLatexWriter) WriteHorizontalRule(h org.HorizontalRule) {
-	w.WriteString(`\rulefill` + "\n")
+	//w.WriteString(`\rulefill` + "\n")
+	w.WriteString(`\newline\noindent\rule{\textwidth}{0.5pt}` + "\n")
 }
 
 func (w *OrgLatexWriter) WriteNodeWithMeta(n org.NodeWithMeta) {
