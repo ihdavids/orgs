@@ -23,6 +23,7 @@ import (
 
 func restApi(router *mux.Router) {
 	router.Use(loggingMiddleware)
+	router.HandleFunc("/orgfile", RequestOrgFile)
 	router.HandleFunc("/files", RequestFiles)
 	router.HandleFunc("/file", CreateFile).Methods("POST")
 	router.HandleFunc("/file/{type}", RequestFile) // html etc
@@ -93,7 +94,26 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//key := vars["id"]
 	res := orgs.GetDb().GetFiles()
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+
+// Request the contents of a file as a raw file
+// returns a ResultMsg with ok and error or ok and message
+// https://.../orgfile?filename="blah"
+func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
+	//vars := mux.Vars(r)
+	filename := r.URL.Query().Get("filename")
+	if f, err := ioutil.ReadFile(filename); err == nil {
+		msg := common.ResultMsg{Ok: true, Msg: string(f)}
+		json.NewEncoder(w).Encode(msg)
+	} else {
+		res := fmt.Sprintf("[RequestOrgFile] error opening file: %v", err)
+		log.Printf(res)
+		msg := common.ResultMsg{Ok: false, Msg: res}
+		json.NewEncoder(w).Encode(msg)
+	}
 }
 
 // Request the contents of a file in a given encoding.
@@ -128,6 +148,7 @@ func RequestRefileTargets(w http.ResponseWriter, r *http.Request) {
 	//query := r.URL.Query().Get("query")
 	//local := r.URL.Query().Get("local")
 	targets := orgs.GetRefileTargetsList([]string{})
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(targets)
 }
 

@@ -3,9 +3,12 @@ package files
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
+
+	"github.com/koki-develop/go-fzf"
 )
 
 type FilesQuery struct {
@@ -31,8 +34,18 @@ func (self *FilesQuery) Exec(core *commands.Core) {
 	//commands.SendReceiveRpc(core, "Db.ExportToFile", &query, &reply)
 	if reply != nil {
 		fmt.Printf("OK")
-		for _, file := range reply {
-			fmt.Printf("%s\n", file)
+		f, err := fzf.New()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		idxs, err := f.Find(reply, func(i int) string { return reply[i] })
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, i := range idxs {
+			fmt.Println(reply[i])
 		}
 	} else {
 		fmt.Printf("Err")

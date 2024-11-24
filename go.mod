@@ -14,6 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/ides15/todoist v0.0.0-20220427224039-71f7428f4d5a
 	github.com/ihdavids/go-org v1.6.3-0.20240324000001-3f98561d9795
+	github.com/koki-develop/go-fzf v0.15.0
 	github.com/rivo/tview v0.0.0-20220307222120-9994674d60a8
 	github.com/zyedidia/highlight v0.0.0-20200217010119-291680feaca1
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
@@ -30,8 +31,14 @@ require (
 	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/alessio/shellescape v1.4.1 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/bzick/tokenizer v1.4.0 // indirect
+	github.com/charmbracelet/bubbles v0.16.1 // indirect
+	github.com/charmbracelet/bubbletea v0.24.2 // indirect
+	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
+	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/coryb/figtree v1.0.1-0.20190907170512-58176d03ef0d // indirect
 	github.com/coryb/kingpeon v0.0.0-20180107011214-9a669f143f2e // indirect
 	github.com/coryb/oreo v0.0.0-20180804211640-3e1b88fc08f1 // indirect
@@ -56,9 +63,13 @@ require (
 	github.com/labstack/gommon v0.4.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
+	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/niklasfasching/go-org v1.7.0 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -72,6 +83,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/sync v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0 // indirect
@@ -89,15 +101,15 @@ require (
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/teambition/rrule-go v1.8.0 // indirect
 	github.com/zalando/go-keyring v0.2.3
 	golang.org/x/net v0.0.0-20221012135044-0b7e1fb9d458 // indirect
 	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/term v0.6.0 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 	gopkg.in/yaml.v3 v3.0.1
