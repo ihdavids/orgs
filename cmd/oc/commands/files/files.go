@@ -33,8 +33,14 @@ func (self *FilesQuery) Exec(core *commands.Core) {
 	commands.SendReceiveGet(core, "files", qry, &reply)
 	//commands.SendReceiveRpc(core, "Db.ExportToFile", &query, &reply)
 	if reply != nil {
-		fmt.Printf("OK")
-		f, err := fzf.New()
+		//fmt.Printf("OK")
+		f, err := fzf.New(
+			fzf.WithNoLimit(true),
+			fzf.WithCountViewEnabled(true),
+			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
+				return fmt.Sprintf("items: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
+			}),
+		)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -45,7 +51,8 @@ func (self *FilesQuery) Exec(core *commands.Core) {
 		}
 
 		for _, i := range idxs {
-			fmt.Println(reply[i])
+			core.LaunchEditor(reply[i], 0)
+			//fmt.Println(reply[i])
 		}
 	} else {
 		fmt.Printf("Err")
