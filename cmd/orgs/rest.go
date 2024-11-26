@@ -105,6 +105,7 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	filename := r.URL.Query().Get("filename")
+	w.Header().Set("Content-Type", "application/json")
 	if f, err := ioutil.ReadFile(filename); err == nil {
 		msg := common.ResultMsg{Ok: true, Msg: string(f)}
 		json.NewEncoder(w).Encode(msg)
@@ -138,6 +139,7 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res, _ = orgs.ExportToString(db, &opts)
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -304,6 +306,7 @@ func RequestTodosExpr(w http.ResponseWriter, r *http.Request) {
 	var args common.StringQuery
 	args.Query = query
 	reply, err := orgs.QueryStringTodos(&args)
+	w.Header().Set("Content-Type", "application/json")
 	if err == nil {
 		json.NewEncoder(w).Encode(reply)
 	} else {
@@ -316,6 +319,7 @@ func RequestHash(w http.ResponseWriter, r *http.Request) {
 	strPos := r.URL.Query().Get("pos")
 	fname := r.URL.Query().Get("filename")
 	pos, serr := strconv.Atoi(strPos)
+	w.Header().Set("Content-Type", "application/json")
 	if serr != nil {
 		json.NewEncoder(w).Encode("Failed to convert position value")
 		return
@@ -331,6 +335,7 @@ func RequestHash(w http.ResponseWriter, r *http.Request) {
 // Request node by active dynamic hash
 func RequestByHash(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	w.Header().Set("Content-Type", "application/json")
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var hash common.TodoHash = common.TodoHash(h)
 		var err error = nil
