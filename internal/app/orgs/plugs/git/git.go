@@ -81,9 +81,11 @@ func (self *Git) gitCommit(msg string) bool {
 
 func (self *Git) gitPull() bool {
 	cmd := exec.Command(fmt.Sprintf("git pull --no-edit"))
-	if err := cmd.Run(); err == nil {
+	var err error = nil
+	if err = cmd.Run(); err == nil {
 		return true
 	}
+	fmt.Printf("Error: %v\n", err)
 	return false
 }
 
@@ -108,10 +110,13 @@ func (self *Git) Update(db plugs.ODb) {
 			self.gitAddAll()
 			self.gitCommit("auto checkin from orgs")
 		}
+		fmt.Printf("Git pull...\n")
 		self.gitPull()
 		if modified || localChanges {
 			self.gitPush()
 		}
+	} else {
+		fmt.Printf("Git not okay...\n")
 	}
 }
 
