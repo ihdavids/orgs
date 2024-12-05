@@ -5,10 +5,79 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/koki-develop/go-fzf"
+	"github.com/rivo/tview"
 )
+
+type TaskPane struct {
+	*tview.Flex
+	list *tview.List
+	//tasks      []model.Task
+	//activeTask *model.Task
+
+	newTask *tview.InputField
+	//projectRepo repository.ProjectRepository
+	//taskRepo    repository.TaskRepository
+	text *tview.TextView
+}
+
+func makeLightTextInput(placeholder string) *tview.InputField {
+	return tview.NewInputField().
+		SetPlaceholder(placeholder).
+		SetPlaceholderTextColor(tcell.ColorDarkSlateBlue).
+		SetFieldTextColor(tcell.ColorBlack).
+		SetFieldBackgroundColor(tcell.ColorLightBlue)
+}
+func MakeTaskPane() *TaskPane {
+	pane := &TaskPane{
+		Flex: tview.NewFlex().SetDirection(tview.FlexRow),
+		//list: tview.NewList().ShowSecondaryText(false),
+		newTask: makeLightTextInput("+[New Task]"),
+		//projectRepo: projectRepo,
+		//taskRepo:    taskRepo,
+		text: tview.NewTextView().SetTextColor(tcell.ColorYellow).SetTextAlign(tview.AlignCenter),
+	}
+
+	//pane.list.SetSelectedBackgroundColor(tcell.ColorBlack)
+	//pane.list.SetSelectedTextColor(tcell.ColorYellow)
+	//pane.list.SetDoneFunc(func() {
+	//	pane.core.app.SetFocus(pane.core.projectPane)
+	//})
+
+	pane.newTask.SetDoneFunc(func(key tcell.Key) {
+		switch key {
+		case tcell.KeyEnter:
+			name := pane.newTask.GetText()
+			if len(name) < 3 {
+				//pane.core.statusBar.showForSeconds("[red::]Task title should be at least 3 character", 5)
+				return
+			}
+
+			//task, err := taskRepo.Create(*projectPane.GetActiveProject(), name, "", "", 0)
+			//if err != nil {
+			//	statusBar.showForSeconds("[red::]Could not create Task:"+err.Error(), 5)
+			//	return
+			//}
+
+			//pane.tasks = append(pane.tasks, task)
+			//pane.addTaskToList(len(pane.tasks) - 1)
+			//pane.newTask.SetText("")
+			//statusBar.showForSeconds("[yellow::]Task created. Add another task or press Esc.", 5)
+		case tcell.KeyEsc:
+			//pane.core.app.SetFocus(pane)
+		}
+	})
+
+	pane.
+		//AddItem(pane.list, 0, 1, true).
+		AddItem(pane.newTask, 0, 1, true)
+	return pane
+}
 
 type Capture struct {
 	Template string
@@ -38,12 +107,54 @@ func (self *Capture) Exec(core *commands.Core) {
 		fset.StringVar(&self.Cont, "cont", "", "content")
 		fset.Parse(args)
 	*/
+	var qry map[string]string = map[string]string{}
+	var rep []common.CaptureTemplate = []common.CaptureTemplate{}
+	commands.SendReceiveGet(core, "capture/templates", qry, &rep)
+	var reply common.ResultMsg = common.ResultMsg{}
+	if self.Template == "" {
+		f, err := fzf.New(
+			fzf.WithNoLimit(true),
+			fzf.WithCountViewEnabled(true),
+			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
+				return fmt.Sprintf("templates: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
+			}),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var idx []int = []int{}
+		idx, err = f.Find(rep, func(i int) string { return rep[i].Name })
+		if err != nil {
+			log.Fatal(err)
+		}
+		self.Template = rep[idx[0]].Name
+	}
+	if self.Template == "" {
+		log.Fatal("Cannot capture without a template")
+	}
+
+	if self.Head == "" {
+		p := MakeTaskPane()
+
+		app := tview.NewApplication()
+		if err := app.SetRoot(p, true).EnableMouse(true).Run(); err != nil {
+			panic(err)
+		}
+		fmt.Printf("DONE")
+		//if _, err := p.Run(); err != nil {
+		//	log.Fatal(err)
+		//}
+	}
+
+	if self.Head == "" {
+		log.Fatal("Heading is required for some templates")
+	}
+
 	var query common.Capture
 	query.Template = self.Template
 	query.NewNode.Headline = self.Head
 	query.NewNode.Content = self.Cont
 	fmt.Printf("CAP: %s\n\t%s\n\t%s\n", query.Template, query.NewNode.Headline, query.NewNode.Content)
-	var reply common.ResultMsg = common.ResultMsg{}
 	commands.SendReceivePost(core, "capture", &query, &reply)
 	//commands.SendReceiveRpc(core, "Db.Capture", &query, &reply)
 	if reply.Ok {
