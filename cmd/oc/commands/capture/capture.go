@@ -20,24 +20,31 @@ type TaskPane struct {
 	//tasks      []model.Task
 	//activeTask *model.Task
 
-	newTask *tview.InputField
+	newTask *tview.TextArea
 	//projectRepo repository.ProjectRepository
 	//taskRepo    repository.TaskRepository
 	text *tview.TextView
+	app  *tview.Application
 }
 
-func makeLightTextInput(placeholder string) *tview.InputField {
-	return tview.NewInputField().
-		SetPlaceholder(placeholder).
-		SetPlaceholderTextColor(tcell.ColorDarkSlateBlue).
-		SetFieldTextColor(tcell.ColorBlack).
-		SetFieldBackgroundColor(tcell.ColorLightBlue)
+func makeLightTextInput(placeholder string) *tview.TextArea {
+	return tview.NewTextArea().
+		SetPlaceholder(placeholder)
+	//SetPlaceholderTextColor(tcell.ColorDarkSlateGrey).
+	//SetFieldTextColor(tcell.ColorWhite).
+	//SetFieldBackgroundColor(tcell.ColorBlack)
 }
-func MakeTaskPane() *TaskPane {
+func MakeTaskPane(typeName string, app *tview.Application) *TaskPane {
+
+	placeholder := ""
+	switch typeName {
+	default:
+		placeholder = "+[Capture Text]"
+	}
 	pane := &TaskPane{
 		Flex: tview.NewFlex().SetDirection(tview.FlexRow),
 		//list: tview.NewList().ShowSecondaryText(false),
-		newTask: makeLightTextInput("+[New Task]"),
+		newTask: makeLightTextInput(placeholder),
 		//projectRepo: projectRepo,
 		//taskRepo:    taskRepo,
 		text: tview.NewTextView().SetTextColor(tcell.ColorYellow).SetTextAlign(tview.AlignCenter),
@@ -49,29 +56,39 @@ func MakeTaskPane() *TaskPane {
 	//	pane.core.app.SetFocus(pane.core.projectPane)
 	//})
 
-	pane.newTask.SetDoneFunc(func(key tcell.Key) {
-		switch key {
-		case tcell.KeyEnter:
-			name := pane.newTask.GetText()
-			if len(name) < 3 {
-				//pane.core.statusBar.showForSeconds("[red::]Task title should be at least 3 character", 5)
-				return
-			}
-
-			//task, err := taskRepo.Create(*projectPane.GetActiveProject(), name, "", "", 0)
-			//if err != nil {
-			//	statusBar.showForSeconds("[red::]Could not create Task:"+err.Error(), 5)
-			//	return
-			//}
-
-			//pane.tasks = append(pane.tasks, task)
-			//pane.addTaskToList(len(pane.tasks) - 1)
-			//pane.newTask.SetText("")
-			//statusBar.showForSeconds("[yellow::]Task created. Add another task or press Esc.", 5)
-		case tcell.KeyEsc:
-			//pane.core.app.SetFocus(pane)
+	pane.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEsc {
+			pane.app.Stop()
+			return nil
 		}
+		return event
 	})
+
+	/*
+		pane.newTask.SetDoneFunc(func(key tcell.Key) {
+			switch key {
+			case tcell.KeyEnter:
+				name := pane.newTask.GetText()
+				if len(name) < 3 {
+					//pane.core.statusBar.showForSeconds("[red::]Task title should be at least 3 character", 5)
+					return
+				}
+
+				//task, err := taskRepo.Create(*projectPane.GetActiveProject(), name, "", "", 0)
+				//if err != nil {
+				//	statusBar.showForSeconds("[red::]Could not create Task:"+err.Error(), 5)
+				//	return
+				//}
+
+				//pane.tasks = append(pane.tasks, task)
+				//pane.addTaskToList(len(pane.tasks) - 1)
+				//pane.newTask.SetText("")
+				//statusBar.showForSeconds("[yellow::]Task created. Add another task or press Esc.", 5)
+			case tcell.KeyEsc:
+				//pane.core.app.SetFocus(pane)
+			}
+		})
+	*/
 
 	pane.
 		//AddItem(pane.list, 0, 1, true).
@@ -111,6 +128,7 @@ func (self *Capture) Exec(core *commands.Core) {
 	var rep []common.CaptureTemplate = []common.CaptureTemplate{}
 	commands.SendReceiveGet(core, "capture/templates", qry, &rep)
 	var reply common.ResultMsg = common.ResultMsg{}
+	var capIndex int = 0
 	if self.Template == "" {
 		f, err := fzf.New(
 			fzf.WithNoLimit(true),
@@ -129,14 +147,20 @@ func (self *Capture) Exec(core *commands.Core) {
 		}
 		self.Template = rep[idx[0]].Name
 	}
+	for i, r := range rep {
+		temp := r.Name
+		if self.Template == temp {
+			capIndex = i
+		}
+	}
 	if self.Template == "" {
 		log.Fatal("Cannot capture without a template")
 	}
 
 	if self.Head == "" {
-		p := MakeTaskPane()
-
 		app := tview.NewApplication()
+		p := MakeTaskPane(rep[capIndex].Type, app)
+
 		if err := app.SetRoot(p, true).EnableMouse(true).Run(); err != nil {
 			panic(err)
 		}

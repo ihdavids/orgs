@@ -145,9 +145,10 @@ type PreciseTarget struct {
 }
 
 type CaptureTemplate struct {
-	Name      string `yaml:"name"`   // "User Specified"
-	Type      string `yaml:"type"`   // "entry"
-	CapTarget Target `yaml:"target"` // "file+headline"
+	Name      string `yaml:"name"`     // "User Specified"
+	Type      string `yaml:"type"`     // "entry"
+	CapTarget Target `yaml:"target"`   // "file+headline"
+	Template  string `yaml:"template"` // This is NOT used by orgs, this a suggestion for the calling program.
 }
 
 // TARGET TYPES
