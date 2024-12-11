@@ -7,4 +7,5 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/export"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/files"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/projects"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/refile"
 )
