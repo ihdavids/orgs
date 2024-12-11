@@ -688,6 +688,16 @@ func ProcessNode(exp *Expr, v *org.Section, f *common.OrgFile, todos common.Todo
 	return todos, nil
 }
 
+func GetAllTodosFromFile(v *org.Section, f *common.OrgFile, todos common.Todos) (common.Todos, error) {
+	GetDb().RegisterSection(v.Hash, v, f)
+	var t *common.Todo = SectionToTodo(v, f)
+	todos = append(todos, *t)
+	for _, c := range v.Children {
+		todos, _ = GetAllTodosFromFile(c, f, todos)
+	}
+	return todos, nil
+}
+
 func EvalForNodes(exp *Expr, v *org.Section, f *common.OrgFile, nodes []*org.Section) ([]*org.Section, error) {
 	GetDb().RegisterSection(v.Hash, v, f)
 	res := EvalString(exp, v, f)
@@ -724,6 +734,18 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 		f := GetDb().GetFile(file)
 		for _, v := range f.Doc.Outline.Children {
 			todos, _ = ProcessNode(exp, v, f, todos)
+		}
+	}
+	return &todos, nil
+}
+
+func GetAllTodosInFile(filename string) (*common.Todos, error) {
+	files := GetDb().GetFiles()
+	var todos common.Todos
+	for _, file := range files {
+		f := GetDb().GetFile(file)
+		for _, v := range f.Doc.Outline.Children {
+			todos, _ = GetAllTodosFromFile(v, f, todos)
 		}
 	}
 	return &todos, nil

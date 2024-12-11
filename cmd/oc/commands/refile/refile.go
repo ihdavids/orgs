@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
@@ -47,6 +48,7 @@ func (self *Refile) Exec(core *commands.Core) {
 		fmt.Printf("No files found to refile")
 		return
 	}
+	var fromFile string
 	if self.From == nil {
 		f, err := fzf.New(
 			fzf.WithNoLimit(true),
@@ -63,9 +65,40 @@ func (self *Refile) Exec(core *commands.Core) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fromFile := files[idx[0]]
+		fromFile = files[idx[0]]
 		fmt.Printf("FROM FILE: %s\n", fromFile)
 	}
+	qry["filename"] = fromFile
+	var todos common.Todos
+	commands.SendReceiveGet(core, "filecontents/headings", qry, &todos)
+
+	if len(todos) > 0 {
+		f, err := fzf.New(
+			fzf.WithNoLimit(true),
+			fzf.WithCountViewEnabled(true),
+			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
+				return fmt.Sprintf("headings: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
+			}),
+		)
+		if err != nil {
+			log.Fatal(err)
+		}
+		var idx []int = []int{}
+		idx, err = f.Find(todos, func(i int) string {
+			pre := ""
+			if todos[i].Level > 1 {
+				pre = strings.Repeat("  ", todos[i].Level-1)
+			}
+			return pre + "." + " " + todos[i].Headline
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		fromFile = todos[idx[0]].Hash
+		fmt.Printf("NODE HASH: %s\n", fromFile)
+
+	}
+
 }
 
 // init function is called at boot

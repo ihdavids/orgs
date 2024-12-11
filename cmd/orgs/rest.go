@@ -26,7 +26,8 @@ func restApi(router *mux.Router) {
 	router.HandleFunc("/orgfile", RequestOrgFile)
 	router.HandleFunc("/files", RequestFiles)
 	router.HandleFunc("/file", CreateFile).Methods("POST")
-	router.HandleFunc("/file/{type}", RequestFile) // html etc
+	router.HandleFunc("/file/{type}", RequestFile)               // html etc
+	router.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
 	router.HandleFunc("/search", RequestTodosExpr)
 	router.HandleFunc("/lookuphash", RequestHash)
 	router.HandleFunc("/todohtml/{hash}", RequestFullTodoHtml)
@@ -98,7 +99,6 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-
 // Request the contents of a file as a raw file
 // returns a ResultMsg with ok and error or ok and message
 // https://.../orgfile?filename="blah"
@@ -115,6 +115,15 @@ func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
 		msg := common.ResultMsg{Ok: false, Msg: res}
 		json.NewEncoder(w).Encode(msg)
 	}
+}
+
+// Returns all the todos in a file
+func RequestHeadings(w http.ResponseWriter, r *http.Request) {
+	//vars := mux.Vars(r)
+	fname := r.URL.Query().Get("filename")
+	res, _ := orgs.GetAllTodosInFile(fname)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
 }
 
 // Request the contents of a file in a given encoding.
