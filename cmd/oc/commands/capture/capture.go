@@ -27,14 +27,23 @@ type TaskPane struct {
 	app  *tview.Application
 }
 
-func makeLightTextInput(placeholder string) *tview.TextArea {
-	return tview.NewTextArea().
-		SetPlaceholder(placeholder)
-	//SetPlaceholderTextColor(tcell.ColorDarkSlateGrey).
-	//SetFieldTextColor(tcell.ColorWhite).
-	//SetFieldBackgroundColor(tcell.ColorBlack)
+func NeedsHeading(typeName string) bool {
+	switch typeName {
+	case "entry":
+		return true
+	case "item":
+		return false
+	case "checkitem":
+		return false
+	case "table-line":
+		return false
+	case "plain":
+		return false
+	}
+	return false
 }
-func MakeTaskPane(typeName string, app *tview.Application) *TaskPane {
+
+func MakeTaskPane(title string, typeName string, app *tview.Application) *TaskPane {
 
 	placeholder := ""
 	switch typeName {
@@ -44,11 +53,16 @@ func MakeTaskPane(typeName string, app *tview.Application) *TaskPane {
 	pane := &TaskPane{
 		Flex: tview.NewFlex().SetDirection(tview.FlexRow),
 		//list: tview.NewList().ShowSecondaryText(false),
-		newTask: makeLightTextInput(placeholder),
+		newTask: tview.NewTextArea().SetPlaceholder(placeholder),
 		//projectRepo: projectRepo,
 		//taskRepo:    taskRepo,
 		text: tview.NewTextView().SetTextColor(tcell.ColorYellow).SetTextAlign(tview.AlignCenter),
+		app:  app,
 	}
+	pane.newTask.SetTitle(title)
+	pane.newTask.SetTitleColor(tcell.ColorDarkCyan)
+	pane.newTask.SetTitleAlign(tview.AlignLeft)
+	pane.newTask.SetBorder(true)
 
 	//pane.list.SetSelectedBackgroundColor(tcell.ColorBlack)
 	//pane.list.SetSelectedTextColor(tcell.ColorYellow)
@@ -157,22 +171,34 @@ func (self *Capture) Exec(core *commands.Core) {
 		log.Fatal("Cannot capture without a template")
 	}
 
-	if self.Head == "" {
+	needsHeading := NeedsHeading(rep[capIndex].Type)
+	if self.Head == "" && needsHeading {
 		app := tview.NewApplication()
-		p := MakeTaskPane(rep[capIndex].Type, app)
+		p := MakeTaskPane("Enter Heading", rep[capIndex].Type, app)
 
 		if err := app.SetRoot(p, true).EnableMouse(true).Run(); err != nil {
 			panic(err)
 		}
-		fmt.Printf("DONE")
-		//if _, err := p.Run(); err != nil {
-		//	log.Fatal(err)
-		//}
+		self.Head = p.newTask.GetText()
 	}
 
-	if self.Head == "" {
+	if self.Head == "" && needsHeading {
 		log.Fatal("Heading is required for some templates")
 	}
+
+	if self.Cont == "" {
+		app := tview.NewApplication()
+		p := MakeTaskPane("Enter Content", rep[capIndex].Type, app)
+
+		if err := app.SetRoot(p, true).EnableMouse(true).Run(); err != nil {
+			panic(err)
+		}
+		self.Cont = p.newTask.GetText()
+	}
+	//if _, err := p.Run(); err != nil {
+	//	log.Fatal(err)
+	//}
+	//os.Exit(-1)
 
 	var query common.Capture
 	query.Template = self.Template
