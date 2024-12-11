@@ -16,15 +16,9 @@ import (
 
 type TaskPane struct {
 	*tview.Flex
-	list *tview.List
-	//tasks      []model.Task
-	//activeTask *model.Task
-
+	list    *tview.List
 	newTask *tview.TextArea
-	//projectRepo repository.ProjectRepository
-	//taskRepo    repository.TaskRepository
-	text *tview.TextView
-	app  *tview.Application
+	app     *tview.Application
 }
 
 func NeedsHeading(typeName string) bool {
@@ -51,24 +45,14 @@ func MakeTaskPane(title string, typeName string, app *tview.Application) *TaskPa
 		placeholder = "+[Capture Text]"
 	}
 	pane := &TaskPane{
-		Flex: tview.NewFlex().SetDirection(tview.FlexRow),
-		//list: tview.NewList().ShowSecondaryText(false),
+		Flex:    tview.NewFlex().SetDirection(tview.FlexRow),
 		newTask: tview.NewTextArea().SetPlaceholder(placeholder),
-		//projectRepo: projectRepo,
-		//taskRepo:    taskRepo,
-		text: tview.NewTextView().SetTextColor(tcell.ColorYellow).SetTextAlign(tview.AlignCenter),
-		app:  app,
+		app:     app,
 	}
 	pane.newTask.SetTitle(title)
 	pane.newTask.SetTitleColor(tcell.ColorDarkCyan)
 	pane.newTask.SetTitleAlign(tview.AlignLeft)
 	pane.newTask.SetBorder(true)
-
-	//pane.list.SetSelectedBackgroundColor(tcell.ColorBlack)
-	//pane.list.SetSelectedTextColor(tcell.ColorYellow)
-	//pane.list.SetDoneFunc(func() {
-	//	pane.core.app.SetFocus(pane.core.projectPane)
-	//})
 
 	pane.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEsc {
@@ -78,34 +62,7 @@ func MakeTaskPane(title string, typeName string, app *tview.Application) *TaskPa
 		return event
 	})
 
-	/*
-		pane.newTask.SetDoneFunc(func(key tcell.Key) {
-			switch key {
-			case tcell.KeyEnter:
-				name := pane.newTask.GetText()
-				if len(name) < 3 {
-					//pane.core.statusBar.showForSeconds("[red::]Task title should be at least 3 character", 5)
-					return
-				}
-
-				//task, err := taskRepo.Create(*projectPane.GetActiveProject(), name, "", "", 0)
-				//if err != nil {
-				//	statusBar.showForSeconds("[red::]Could not create Task:"+err.Error(), 5)
-				//	return
-				//}
-
-				//pane.tasks = append(pane.tasks, task)
-				//pane.addTaskToList(len(pane.tasks) - 1)
-				//pane.newTask.SetText("")
-				//statusBar.showForSeconds("[yellow::]Task created. Add another task or press Esc.", 5)
-			case tcell.KeyEsc:
-				//pane.core.app.SetFocus(pane)
-			}
-		})
-	*/
-
 	pane.
-		//AddItem(pane.list, 0, 1, true).
 		AddItem(pane.newTask, 0, 1, true)
 	return pane
 }
