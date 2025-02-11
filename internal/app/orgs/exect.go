@@ -53,6 +53,26 @@ func ExecTable(db plugs.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.T
 	return res, nil
 }
 
+func RequestTableRandomGet(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
+	ofile, sec, table := db.GetFromPreciseTarget(t, org.TableNode)
+	res := common.ResultMsg{Ok: false, Msg: "Unknown table get error"}
+	if table != nil {
+		var tbl *org.Table
+		var tok bool
+		if tbl, tok = table.(*org.Table); tok {
+			if tbl.Formulas == nil {
+				res.Msg = fmt.Sprintf("Cannot execute table does not have a formula [%s]:[%s]", ofile.Filename, common.GetSectionTitle(sec))
+				return res, nil
+			}
+		} else {
+			res.Msg = fmt.Sprintf("did not find table, cannot execute")
+			return res, nil
+		}
+		return ExecTable(db, ofile, sec, tbl)
+	}
+	return res, nil
+}
+
 func ExecTableAt(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	ofile, sec, table := db.GetFromPreciseTarget(t, org.TableNode)
 	res := common.ResultMsg{Ok: false, Msg: "Unknown table exec error"}

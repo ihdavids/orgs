@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/gorilla/mux"
 	//"time"
+	"math/rand"
 )
 
 func restApi(router *mux.Router) {
@@ -63,6 +65,9 @@ func restApi(router *mux.Router) {
 	router.HandleFunc("/exectable", PostExect).Methods("POST")
 	router.HandleFunc("/execalltables", PostExecAllT).Methods("POST")
 	router.HandleFunc("/tableformulainfo", PostFormulaInfo).Methods("POST")
+	router.HandleFunc("/tablerandomget", RequestTableRandomGet)
+	router.HandleFunc("/tablenames", RequestTableNames)
+
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
@@ -658,6 +663,64 @@ func PostExecb(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("BlockExec failed to read body", err)
 		json.NewEncoder(w).Encode(err)
 	}
+}
+
+func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("RequestTableRandomGet")
+	/*
+		vars := mux.Vars(r)
+	*/
+	name := r.URL.Query().Get("name")
+	name = strings.TrimSpace(name)
+	var rep common.ResultMsg
+	if name != "" {
+		tables := orgs.GetDb().GetNamedTables(name)
+		if len(tables) > 0 {
+			table := tables[0]
+			max := len(table.Table.Rows)
+			rowIdx := rand.Intn(max)
+			row := table.Table.Rows[rowIdx]
+			w := org.NewOrgWriter()
+
+			res := "| "
+			for _, col := range row.Columns {
+				res += w.WriteNodesAsString(col.Children...)
+				res += " |"
+			}
+			rep = common.ResultMsg{Ok: true, Msg: res}
+			fmt.Printf("RESULT: %v\n", rep)
+		} else {
+			rep = common.ResultMsg{Ok: false, Msg: fmt.Sprintf("Failed to find tables with name %s", name)}
+		}
+	} else {
+		fmt.Println("ERR: Name must be specified for table query!")
+		rep = common.ResultMsg{Ok: false, Msg: "Failed to find table did you specify a name?"}
+	}
+	json.NewEncoder(w).Encode(rep)
+	//json.NewEncoder(w).Encode(data)
+}
+
+func RequestTableNames(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("RequestTableNames")
+	/*
+		vars := mux.Vars(r)
+	*/
+	type ResultTableNames struct {
+		Ok          bool
+		NamedTables []string
+	}
+	var rep ResultTableNames
+	tables := orgs.GetDb().GetTableNames()
+	if len(tables) > 0 {
+		keys := make([]string, 0, len(tables))
+		for k := range tables {
+			keys = append(keys, k)
+		}
+		rep = ResultTableNames{Ok: true, NamedTables: keys}
+	} else {
+		rep = ResultTableNames{Ok: false, NamedTables: nil}
+	}
+	json.NewEncoder(w).Encode(rep)
 }
 
 func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {

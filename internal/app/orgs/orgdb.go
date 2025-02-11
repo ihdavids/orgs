@@ -315,6 +315,21 @@ func (self *OrgDb) GetNamedTable(name string, filename string) *TableFile {
 	return nil
 }
 
+// Returns the list of named tables
+func (self *OrgDb) GetNamedTables(name string) []*TableFile {
+	if list, ok := self.NamedTables[name]; ok {
+		if len(list) <= 0 {
+			return nil
+		}
+		return list
+	}
+	return nil
+}
+
+func (self *OrgDb) GetTableNames() map[string][]*TableFile {
+	return self.NamedTables
+}
+
 func (self *OrgDb) GetAllTags() []string {
 	return self.Tags
 }
