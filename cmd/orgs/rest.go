@@ -682,10 +682,14 @@ func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 			row := table.Table.Rows[rowIdx]
 			w := org.NewOrgWriter()
 
-			res := "| "
+			res := "|"
 			for _, col := range row.Columns {
+				res += " "
 				res += w.WriteNodesAsString(col.Children...)
 				res += " |"
+			}
+			if len(res) == 1 {
+				res += "|"
 			}
 			rep = common.ResultMsg{Ok: true, Msg: res}
 			fmt.Printf("RESULT: %v\n", rep)
