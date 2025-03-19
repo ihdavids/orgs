@@ -166,6 +166,12 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
 	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
+
+	// This is not good enough, we add a span with the status if requested, but this is
+	// Kind of lame
+	if w.exp.Props["showstatus"] == true {
+		w.WriteString(fmt.Sprintf("<span class=\"status\"> %s </span> ", h.Status))
+	}
 	org.WriteNodes(w, h.Title...)
 	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
 
@@ -242,6 +248,10 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		if attr != "" {
 			self.Props["bodyattr"] = attr
 			self.Props["havebodyattr"] = true
+		}
+		self.Props["showstatus"] = false
+		if f.Get("HTML_STATUS") != "" {
+			self.Props["showstatus"] = true
 		}
 
 		style := f.Get("HTML_HIGHLIGHT_STYLE")
