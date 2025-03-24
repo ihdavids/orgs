@@ -111,6 +111,7 @@ type ExportToFile struct {
 	Query    string
 	Filename string
 	Opts     string
+	Props    map[string]string
 }
 
 type NewNode struct {

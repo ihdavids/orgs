@@ -13,4 +13,5 @@ import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/revealjs"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todoist"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/latex"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/confluence"
 )

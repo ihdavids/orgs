@@ -206,9 +206,9 @@ func (self *OrgLatexExporter) Unmarshal(unmarshal func(interface{}) error) error
 	return unmarshal(self)
 }
 
-func (self *OrgLatexExporter) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *OrgLatexExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("LATEX: Export called", query, to, opts)
-	err, str := self.ExportToString(db, query, opts)
+	err, str := self.ExportToString(db, query, opts, props)
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func GetDocConf(path string) *DocClassConf {
 	return c
 }
 
-func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
+func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("LATEX: Export string called [%s]:[%s]\n", query, opts)
 

@@ -293,8 +293,8 @@ func (self *ExportDef) UnmarshalYAML(unmarshal func(interface{}) error) error {
 //
 // Their purpose is to export one or more org files as desired.
 type Exporter interface {
-	Export(db ODb, query string, to string, opts string) error
-	ExportToString(db ODb, query string, opts string) (error, string)
+	Export(db ODb, query string, to string, opts string, props map[string]string) error
+	ExportToString(db ODb, query string, opts string, props map[string]string) (error, string)
 	Startup(manager *PluginManager, opts *PluginOpts)
 	Unmarshal(unmarshal func(interface{}) error) error
 }

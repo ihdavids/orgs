@@ -383,7 +383,7 @@ func (s *RevealExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(s)
 }
 
-func (self *RevealExporter) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *RevealExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("REVEAL: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -402,7 +402,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	}
 }
 
-func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
+func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("REVEAL: Export string called [%s]:[%s]\n", query, opts)
 

@@ -14,7 +14,7 @@ func ExportToFile(db plugs.ODb, args *common.ExportToFile) (common.ResultMsg, er
 	msg := "Unknown Error"
 	for _, exp := range Conf().Exporters {
 		if exp.Name == args.Name {
-			err := exp.Plugin.Export(db, args.Query, args.Filename, args.Opts)
+			err := exp.Plugin.Export(db, args.Query, args.Filename, args.Opts, args.Props)
 			if err == nil {
 				didWrite = true
 				msg = "Success"
@@ -39,7 +39,7 @@ func ExportToString(db plugs.ODb, args *common.ExportToFile) (common.ResultMsg, 
 	msg := "Unknown Error"
 	for _, exp := range Conf().Exporters {
 		if exp.Name == args.Name {
-			err, txt := exp.Plugin.ExportToString(db, args.Query, args.Opts)
+			err, txt := exp.Plugin.ExportToString(db, args.Query, args.Opts, args.Props)
 			if err == nil {
 				didWrite = true
 				msg = txt
