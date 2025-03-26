@@ -1,6 +1,15 @@
 // EXPORTER: CONFLUENCE Export
 
-package gantt
+/* SDOC
+
+* Confluence Plugin
+  The confluence exporter has the ability to take an entire file
+  and export it as a confluence page in the space of your choosing.
+
+
+EDOC */
+
+package confluence
 
 import (
 	"fmt"
@@ -18,6 +27,8 @@ import (
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
+
+	"github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
 )
 
 type OrgConfluenceExporter struct {
@@ -29,6 +40,7 @@ type OrgConfluenceExporter struct {
 	Url          string	
 	out          *logging.Logger
 	pm           *plugs.PluginManager
+	opts         *plugs.PluginOpts
 }
 
 type OrgConfluenceWriter struct {
@@ -216,7 +228,7 @@ func (self *OrgConfluenceExporter) Unmarshal(unmarshal func(interface{}) error) 
 	return unmarshal(self)
 }
 
-func (self *OrgConfluenceExporter) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *OrgConfluenceExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("CONFLUENCE: Export called", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -236,71 +248,50 @@ func (self *OrgConfluenceExporter) Export(db plugs.ODb, query string, to string,
 		}
 	}
 */
-func (self *OrgConfluenceExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
-	self.Props = ValidateMap(self.Props)
-	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
+func (self *OrgConfluenceExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 
-	if f := db.FindByFile(query); f != nil {
-		theme := f.Get("HTML_THEME")
-		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme)
-		}
-		theme = f.Get("HTML_STYLE")
-		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme)
-		}
-		attr := f.Get("ATTR_BODY_HTML")
-		self.Props["havebodyattr"] = false
-		if attr != "" {
-			self.Props["bodyattr"] = attr
-			self.Props["havebodyattr"] = true
-		}
-		self.Props["showstatus"] = false
-		if f.Get("HTML_STATUS") != "" {
-			self.Props["showstatus"] = true
-		}
-
-		style := f.Get("HTML_HIGHLIGHT_STYLE")
-		if style != "" {
-			self.Props["hljsstyle"] = style
-		}
-		w := NewOrgConfluenceWriter(self)
-		w.Opts = opts
-		org.WriteNodes(w, f.Nodes...)
-		res := w.String()
-		self.Props["html_data"] = res
-		self.Props["post_scripts"] = w.PostWriteScripts
-
-		fmt.Printf("DOC START: ========================================\n")
-		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
-		fmt.Printf("XXX: %s\n", res)
-		self.CreateConfluencePage(res)
-		return nil, res
-	} else {
-		fmt.Printf("Failed to find file in database: [%s]", query)
-		return fmt.Errorf("Failed to find file in database: [%s]", query), ""
+	exp := htmlexp.OrgHtmlExporter{Props: htmlexp.ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
+	// Limit our exports to only things tagged with confluence
+	exp.Props["skipnoconfluence"] = "t"
+	exp.Startup(self.pm, self.opts)
+	err, str := exp.ExportToString(db, query, opts, props)
+	if err == nil {
+		self.CreateConfluencePage(str, props)
 	}
+	return nil, ""
 }
 
-func (self *OrgConfluenceExporter) CreateConfluencePage(res string) *http.Response {
+func (self *OrgConfluenceExporter) CreateConfluencePage(res string, props map[string]string) *http.Response {
 	// we will run an HTTP server locally to test the POST request
 	url := self.Url + "/rest/api/content" 
 
+	title := "My New Page"
+	if t,ok := props["title"]; ok && t != "" {
+		title = t
+	}
 	page_data := map[string]interface{} {
     	"type":  "page",
-    	"title": "My New Page",
+    	"title": title,
     	"space": map[string]string { "key": self.Space },
     	"body":  map[string]interface{}{ "storage": map[string]string {
-            	 "value": "<p>This is the content of my new page.</p>",
+            	 "value": res,
             	 "representation": "storage" } } }
+  if pid,ok := props["parent"]; ok && pid != "" {
+  	page_data["parentId"] = pid
+  }
 	body,err := json.Marshal(page_data)
+	fmt.Printf("body: %s\n", body)
 	if err != nil {
 		fmt.Printf("ERROR could not marshal json data: ", err)
 		return nil
 	}
 	// create post body
-
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+  client := &http.Client{}
+  req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Header.Add("Content-Type", "application/json")  
+  req.SetBasicAuth(self.User, self.Token)
+  resp, err := client.Do(req)
+	//resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -311,6 +302,7 @@ func (self *OrgConfluenceExporter) CreateConfluencePage(res string) *http.Respon
 }
 
 func (self *OrgConfluenceExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+	self.opts = opts
 	self.out = manager.Out
 	self.pm = manager
 }

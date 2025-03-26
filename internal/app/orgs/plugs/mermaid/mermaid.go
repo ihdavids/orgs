@@ -344,7 +344,7 @@ func (self *Mermaid) ExportRes(o *bytes.Buffer, db plugs.ODb, sectionMap map[str
 	plugs.ExpandTemplateIntoBuf(o, "\t{{.name}}\t:{{.prefix}}{{.hash}},{{.start}},{{.duration}}\n", m)
 }
 
-func (self *Mermaid) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *Mermaid) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
 	fmt.Printf("GANTT: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -395,7 +395,7 @@ func (self *Mermaid) Export(db plugs.ODb, query string, to string, opts string) 
 	return res
 }
 
-func (self *Mermaid) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
+func (self *Mermaid) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Println("GANTT: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)

@@ -236,7 +236,7 @@ func (s *ImpressExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(s)
 }
 
-func (self *ImpressExporter) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *ImpressExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("IMPRESS: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -264,7 +264,7 @@ func (e *ImpressExporter) ExpandThemePath(tname string) string {
 	return name
 }
 
-func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
+func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("IMPRESS: Export string called [%s]:[%s]\n", query, opts)
 	/*

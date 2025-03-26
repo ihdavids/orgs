@@ -1,6 +1,6 @@
 // EXPORTER: HTML Export
 
-package gantt
+package htmlexp
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ import (
 type OrgHtmlExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
+	StatusColors map[string]string
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
@@ -156,27 +157,81 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 	}
 }
 
+
+func HeadlineAloneHasTag(name string, h *org.Headline) bool {
+	if h != nil {
+		for _, t := range h.Tags {
+			t = strings.ToLower(strings.TrimSpace(t))
+			if t != "" && (t == name) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // OVERRIDE: This overrides the core method
 func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
+	// CONFLUENCE CRAP!
+	amConf := false
+	haveConf := false
+	if _,ok := w.exp.Props["skipnoconfluence"]; ok {
+		amConf = true
+		haveConf = HeadlineAloneHasTag("confluence", &h)
+		if ip,o2 := w.exp.Props["inconf"]; !haveConf && (!o2 || ip == "f") 	{
+			return
+		} else {
+			if haveConf {
+				w.exp.Props["inconf"] = "t"
+			}
+		}
+	}
 	//secProps := ""
 	//secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
-	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
+	// CONFLUENCE CRAP!
+	confIndent := h.Lvl*5
+	if amConf {
+		w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", confIndent))
+		w.WriteString(fmt.Sprintf("<h%d>", h.Lvl))
+	} else {
+		w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
+	}
 
 	// This is not good enough, we add a span with the status if requested, but this is
 	// Kind of lame
 	if w.exp.Props["showstatus"] == true {
-		w.WriteString(fmt.Sprintf("<span class=\"status\"> %s </span> ", h.Status))
+		statColor := ""
+		if col,ok := w.exp.StatusColors[h.Status]; ok {
+			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
+		}
+		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
 	org.WriteNodes(w, h.Title...)
-	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
+
+	// CONFLUENCE CRAP
+	if amConf {
+		w.WriteString(fmt.Sprintf("</h%d>", h.Lvl))
+		w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", 3))
+	} else {
+		w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
+	}
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
+	}
+	if haveConf {
+		w.exp.Props["inconf"] = "f"
+	}
+
+	// CONFLUENCE CRAP
+	if amConf {
+		w.WriteString(fmt.Sprintf("</div>"))
+		w.WriteString(fmt.Sprintf("</div>"))
 	}
 	//w.WriteString("</section>\n")
 }
@@ -210,7 +265,7 @@ func (self *OrgHtmlExporter) Unmarshal(unmarshal func(interface{}) error) error 
 	return unmarshal(self)
 }
 
-func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("HTML: Export called", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -230,11 +285,15 @@ func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts 
 		}
 	}
 */
-func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
+func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
 
 	if f := db.FindByFile(query); f != nil {
+		title := f.Get("TITLE")
+		if title != "" {
+			props["title"] = title
+		}
 		theme := f.Get("HTML_THEME")
 		if theme != "" {
 			self.Props["stylesheet"] = GetStylesheet(theme)
@@ -276,6 +335,15 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 }
 
 func (self *OrgHtmlExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+	if len(self.StatusColors) == 0 {
+		self.StatusColors = map[string]string {
+			"TODO": "red",
+			"INPROGRESS": "#CC9900",
+			"IN-PROGRESS": "#CC9900",
+			"DOING": "#CC9900",
+			"DONE": "#006600",
+		}
+	}
 	self.out = manager.Out
 	self.pm = manager
 }

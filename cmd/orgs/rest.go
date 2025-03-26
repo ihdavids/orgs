@@ -140,7 +140,9 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	local := r.URL.Query().Get("local")
 	filelinks := r.URL.Query().Get("filelinks")
 	httpslinks := r.URL.Query().Get("httpslinks")
-	opts := common.ExportToFile{Name: ptype, Filename: fname, Query: query, Opts: ""}
+	props := map[string]string{}
+	props["parent"] = r.URL.Query().Get("parent")
+	opts := common.ExportToFile{Name: ptype, Filename: fname, Query: query, Opts: "", Props: props}
 	if filelinks == "t" {
 		opts.Opts += "filelinks;"
 	}

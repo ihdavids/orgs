@@ -385,7 +385,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	t.Execute(o, m)
 }
 
-func (self *Gantt) Export(db plugs.ODb, query string, to string, opts string) error {
+func (self *Gantt) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
 	fmt.Printf("GANTT: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -432,7 +432,7 @@ func (self *Gantt) Export(db plugs.ODb, query string, to string, opts string) er
 	return res
 }
 
-func (self *Gantt) ExportToString(db plugs.ODb, query string, opts string) (error, string) {
+func (self *Gantt) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Println("GANTT: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
