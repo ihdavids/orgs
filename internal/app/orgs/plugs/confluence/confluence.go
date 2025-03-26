@@ -1,5 +1,14 @@
 // EXPORTER: CONFLUENCE Export
 
+/* SDOC
+
+* Confluence Plugin
+  The confluence exporter has the ability to take an entire file
+  and export it as a confluence page in the space of your choosing.
+
+
+EDOC */
+
 package confluence
 
 import (
@@ -353,3 +362,4 @@ func init() {
 		return &OrgConfluenceExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
 	})
 }
+* Confluence Plugin  The confluence exporter has the ability to take an entire file  and export it as a confluence page in the space of your choosing.
