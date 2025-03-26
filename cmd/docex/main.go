@@ -23,14 +23,14 @@ func ProcessFile(filename string, output string) {
 		for scanner.Scan() {
 			line := scanner.Text()
 			if inDoc {
-				if strings.Contains(line, "EDOC */") {
+				if strings.HasPrefix(line, "EDOC */") {
 					inDoc = false
 				} else {
 					out += line + "\n"
 				}
 
 			} else {
-				if strings.Contains(line, "/* SDOC") {
+				if strings.HasPrefix(line, "/* SDOC") {
 					inDoc = true
 				}
 			}
@@ -77,4 +77,3 @@ func main() {
 		ProcessFile(file, output)
 	}
 }
-
