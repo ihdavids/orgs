@@ -6,6 +6,16 @@
   The confluence exporter has the ability to take an entire file
   and export it as a confluence page in the space of your choosing.
 
+** Configuration
+
+	#+BEGIN_SRC yaml
+		exporters:
+			- name: "confluence"
+				url: "<confluenceurl>"
+				user: "<your username>"
+				token: "<generated token from confluence>"
+				space: "<name of space where you would like docs generated>"
+	#+END_SRC
 
 EDOC */
 
