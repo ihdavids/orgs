@@ -21,13 +21,14 @@ type OrgHtmlExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
 	StatusColors map[string]string
+	ExtendedHeadline   func(*OrgHtmlWriter,org.Headline)
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
 
 type OrgHtmlWriter struct {
 	*org.HTMLWriter
-	exp              *OrgHtmlExporter
+	Exp              *OrgHtmlExporter
 	PostWriteScripts string
 	Opts             string
 }
@@ -48,11 +49,16 @@ var docEnd = `
 </html>
 `
 
+func MakeWriter() OrgHtmlWriter {
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", ""}
+}
+
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
 	// This lovely bit of circular reference ensures that we get called when exporting for any methods we have overwritten
-	rw := OrgHtmlWriter{org.NewHTMLWriter(), nil, "", ""}
+	rw := MakeWriter()
+	//rw := OrgHtmlWriter{org.NewHTMLWriter(), nil, "", ""}
 	rw.ExtendingWriter = &rw
-	rw.exp = exp
+	rw.Exp = exp
 
 	// This we should probably just replace with an override as well! Way better
 	rw.NoWrapCodeBlock = true
@@ -72,7 +78,7 @@ func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
 		if lang == "mermaid" {
 			return fmt.Sprintf(`<pre class="mermaid">%s</pre>`, html.EscapeString(source))
 		} else if lang == "wordcloud" {
-			rw.exp.Props["wordcloud"] = true
+			rw.Exp.Props["wordcloud"] = true
 			rv := fmt.Sprintf(`<svg style="border: 1px dashed; border-radius: 10px; border-color: #333333" id="wordcloud_%d" onload="wordcloud('#wordcloud_%d', %s)"/>`, cnt, cnt, strings.TrimSpace(source))
 			cnt += 1
 			return rv
@@ -122,10 +128,10 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 		fname := ""
 		if strings.Contains(w.Opts, "httpslinks;") {
 			fname = url
-			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.exp.pm.TLSPort, fname)
+			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.Exp.pm.TLSPort, fname)
 		} else if strings.Contains(w.Opts, "filelinks;") {
 			found := false
-			for _, path := range w.exp.pm.OrgDirs {
+			for _, path := range w.Exp.pm.OrgDirs {
 				fname = filepath.Join(path, url)
 				fname, _ = filepath.Abs(fname)
 				if _, err := os.Stat(fname); err != nil {
@@ -135,8 +141,8 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 				}
 			}
 			if !found {
-				if len(w.exp.pm.OrgDirs) > 0 {
-					path := w.exp.pm.OrgDirs[0]
+				if len(w.Exp.pm.OrgDirs) > 0 {
+					path := w.Exp.pm.OrgDirs[0]
 					fname = filepath.Join(path, url)
 					fname, _ = filepath.Abs(fname)
 					fname = "file://" + fname
@@ -144,7 +150,7 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 			}
 		} else { //if strings.Contains(w.Opts, "httplinks;") {
 			fname = url
-			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.exp.pm.Port, fname)
+			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.Exp.pm.Port, fname)
 		}
 		if l.Description == nil {
 			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`, fname, fname, url))
@@ -175,64 +181,33 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
-	// CONFLUENCE CRAP!
-	amConf := false
-	haveConf := false
-	if _,ok := w.exp.Props["skipnoconfluence"]; ok {
-		amConf = true
-		haveConf = HeadlineAloneHasTag("confluence", &h)
-		if ip,o2 := w.exp.Props["inconf"]; !haveConf && (!o2 || ip == "f") 	{
-			return
-		} else {
-			if haveConf {
-				w.exp.Props["inconf"] = "t"
-			}
-		}
+	if w.Exp.ExtendedHeadline != nil {
+		w.Exp.ExtendedHeadline(w, h)
+		return
 	}
 	//secProps := ""
 	//secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
-	// CONFLUENCE CRAP!
-	confIndent := h.Lvl*5
-	if amConf {
-		w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", confIndent))
-		w.WriteString(fmt.Sprintf("<h%d>", h.Lvl))
-	} else {
-		w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
-	}
+	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
 
 	// This is not good enough, we add a span with the status if requested, but this is
 	// Kind of lame
-	if w.exp.Props["showstatus"] == true {
+	if w.Exp.Props["showstatus"] == true {
 		statColor := ""
-		if col,ok := w.exp.StatusColors[h.Status]; ok {
+		if col,ok := w.Exp.StatusColors[h.Status]; ok {
 			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
 		}
 		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
 	org.WriteNodes(w, h.Title...)
 
-	// CONFLUENCE CRAP
-	if amConf {
-		w.WriteString(fmt.Sprintf("</h%d>", h.Lvl))
-		w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", 3))
-	} else {
-		w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
-	}
+	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
 	}
-	if haveConf {
-		w.exp.Props["inconf"] = "f"
-	}
 
-	// CONFLUENCE CRAP
-	if amConf {
-		w.WriteString(fmt.Sprintf("</div>"))
-		w.WriteString(fmt.Sprintf("</div>"))
-	}
 	//w.WriteString("</section>\n")
 }
 
