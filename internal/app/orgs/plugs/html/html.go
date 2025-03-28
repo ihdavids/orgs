@@ -192,8 +192,7 @@ func (w *OrgHtmlWriter) FindParent(h org.Headline) int {
 		return idx
 	}
 	if (len(w.Nodes) > 0) {
-		idx = len(w.Nodes) - 1
-		for (idx >= 0) {
+		for idx=len(w.Nodes)-1; idx >= 0; idx-- {
 			parent := w.Nodes[idx]
 			if (parent.lvl == (h.Lvl - 1)) {
 				return idx
@@ -315,7 +314,15 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
 
+    defer func() { //catch or finally
+        if err := recover(); err != nil { //catch
+            fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+            os.Exit(1)
+        }
+    }()
+
 	if f := db.FindByFile(query); f != nil {
+		fmt.Printf("File found\n")
 		title := f.Get("TITLE")
 		if title != "" {
 			props["title"] = title
@@ -324,9 +331,10 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		if theme != "" {
 			self.Props["stylesheet"] = GetStylesheet(theme)
 		}
-		theme = f.Get("HTML_STYLE")
-		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme)
+		// This overrides the theme if present
+		style := f.Get("HTML_STYLE")
+		if style != "" {
+			self.Props["stylesheet"] = GetStylesheet(style)
 		}
 		attr := f.Get("ATTR_BODY_HTML")
 		self.Props["havebodyattr"] = false
@@ -339,13 +347,15 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 			self.Props["showstatus"] = true
 		}
 
-		style := f.Get("HTML_HIGHLIGHT_STYLE")
-		if style != "" {
-			self.Props["hljsstyle"] = style
+		hlstyle := f.Get("HTML_HIGHLIGHT_STYLE")
+		if hlstyle != "" {
+			self.Props["hljsstyle"] = hlstyle
 		}
 		w := NewOrgHtmlWriter(self)
 		w.Opts = opts
+		fmt.Printf("Writing nodes...\n")
 		org.WriteNodes(w, f.Nodes...)
+		fmt.Printf("Done writing nodes...\n")
 		res := w.String()
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
@@ -353,7 +363,9 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		self.Props["nodes_json"] = string(nodestr)
 
 		fmt.Printf("DOC START: ========================================\n")
-		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
+		templatePath := GetTemplate(self.TemplatePath, theme)
+		fmt.Printf("TEMPLATE: %s\n", templatePath)
+		res = self.pm.Tempo.RenderTemplate(templatePath, self.Props)
 		fmt.Printf("XXX: %s\n", res)
 		return nil, res
 	} else {
@@ -391,6 +403,15 @@ func GetStylesheet(name string) string {
 		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
 	}
 	return ""
+}
+
+func GetTemplate(defaultTemplate string, theme string) string {
+	themeTemplate := "html_" + theme + ".tpl"
+	themeTemplatePath := plugs.PlugExpandTemplatePath(themeTemplate)
+	if _, err := os.Stat(themeTemplatePath); err == nil {
+		return themeTemplate
+	}
+	return defaultTemplate
 }
 
 func ValidateMap(m map[string]interface{}) map[string]interface{} {
