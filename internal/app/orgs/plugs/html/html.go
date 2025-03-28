@@ -238,7 +238,7 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	if len(w.Nodes) > 0 {
 		parentIdx := w.FindParent(h)
 		if parentIdx >= 0 {
-			parent := w.Nodes[parentIdx]
+			parent := &w.Nodes[parentIdx]
 			addChild = true
 			parent.Children = append(parent.Children, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
 		}
