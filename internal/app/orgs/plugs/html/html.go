@@ -11,10 +11,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"encoding/json"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
+	"github.com/google/uuid"
 )
 
 type OrgHtmlExporter struct {
@@ -26,11 +28,19 @@ type OrgHtmlExporter struct {
 	pm           *plugs.PluginManager
 }
 
+type OrgHeadingNode struct {
+	Id       string
+	Name     string
+	Children []OrgHeadingNode
+	lvl      int
+}
+
 type OrgHtmlWriter struct {
 	*org.HTMLWriter
 	Exp              *OrgHtmlExporter
 	PostWriteScripts string
 	Opts             string
+	Nodes            []OrgHeadingNode
 }
 
 var docStart = `
@@ -50,7 +60,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", ""}
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}}
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -176,6 +186,23 @@ func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	return false
 }
 
+func (w *OrgHtmlWriter) FindParent(h org.Headline) int {
+	idx := -1
+	if (h.Lvl == 0) {
+		return idx
+	}
+	if (len(w.Nodes) > 0) {
+		idx = len(w.Nodes) - 1
+		for (idx >= 0) {
+			parent := w.Nodes[idx]
+			if (parent.lvl == (h.Lvl - 1)) {
+				return idx
+			}
+		}
+	}
+	return idx
+}
+
 // OVERRIDE: This overrides the core method
 func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
@@ -189,6 +216,9 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	//secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
+	id := uuid.New().String()
+	w.WriteString(fmt.Sprintf("<div id=\"%s\" class=\"heading-wrapper\">", id))
+	w.WriteString(fmt.Sprintf("<div id=\"%s-title\" class=\"heading-title-wrapper title-level-%d\">", id, h.Lvl+1))
 	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
 
 	// This is not good enough, we add a span with the status if requested, but this is
@@ -200,13 +230,34 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 		}
 		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
-	org.WriteNodes(w, h.Title...)
+
+	// Write out our title but we need this for our node heirarchy
+	title := w.WriteNodesAsString(h.Title...)
+	w.WriteString(title)
+
+	addChild := false
+	if len(w.Nodes) > 0 {
+		parentIdx := w.FindParent(h)
+		if parentIdx >= 0 {
+			parent := w.Nodes[parentIdx]
+			addChild = true
+			parent.Children = append(parent.Children, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+		}
+	}
+
+	if !addChild {
+		w.Nodes = append(w.Nodes, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+	}
 
 	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
+	w.WriteString("</div>")
+	w.WriteString(fmt.Sprintf("<div id=\"%s-content\" class=\"heading-content-wrapper content-level-%d\">", id, h.Lvl+1))
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
 	}
+	w.WriteString("</div>")
+	w.WriteString("</div>")
 
 	//w.WriteString("</section>\n")
 }
@@ -298,6 +349,8 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		res := w.String()
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
+		nodestr,_:=json.Marshal(w.Nodes)
+		self.Props["nodes_json"] = string(nodestr)
 
 		fmt.Printf("DOC START: ========================================\n")
 		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
