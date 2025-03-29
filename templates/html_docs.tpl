@@ -58,9 +58,17 @@ nodes =
     function injectHeadingCollapse(nodes) {
         nodes.forEach((n, i) => {
             console.log("NODE: ", n.Name);
-            $("#"+n.Id + "-title").click(function (){
-                $("#"+n.Id + "-content").slideToggle(50, function() {
-
+            $title = $("#"+n.Id + "-title");
+            $title.click(function (){
+                $cnt = $("#"+n.Id + "-content");
+                $cnt.slideToggle(30, function() {
+                    if ($cnt.is(":visible")) {
+                        console.log("visible");
+                        $("#"+n.Id + "-heading-end").removeClass("folded");
+                    } else {
+                        console.log("hidden");
+                        $("#"+n.Id + "-heading-end").addClass("folded");
+                    }
                 });
             });
             if (n.Children && n.Children.length > 0) {

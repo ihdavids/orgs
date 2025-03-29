@@ -218,7 +218,7 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	id := uuid.New().String()
 	w.WriteString(fmt.Sprintf("<div id=\"%s\" class=\"heading-wrapper\">", id))
 	w.WriteString(fmt.Sprintf("<div id=\"%s-title\" class=\"heading-title-wrapper title-level-%d\">", id, h.Lvl+1))
-	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
+	w.WriteString(fmt.Sprintf("<h%d id=\"%s-heading\"><span id=\"%s-heading-start\"></span>", h.Lvl+1, id, id))
 
 	// This is not good enough, we add a span with the status if requested, but this is
 	// Kind of lame
@@ -248,7 +248,7 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 		w.Nodes = append(w.Nodes, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
 	}
 
-	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
+	w.WriteString(fmt.Sprintf("<span id=\"%s-heading-end\"></span></h%d>", id, h.Lvl+1))
 	w.WriteString("</div>")
 	w.WriteString(fmt.Sprintf("<div id=\"%s-content\" class=\"heading-content-wrapper content-level-%d\">", id, h.Lvl+1))
 
