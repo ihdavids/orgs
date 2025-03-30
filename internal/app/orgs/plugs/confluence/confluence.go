@@ -6,6 +6,16 @@
   The confluence exporter has the ability to take an entire file
   and export it as a confluence page in the space of your choosing.
 
+** Configuration
+
+	#+BEGIN_SRC yaml
+		exporters:
+			- name: "confluence"
+				url: "<confluenceurl>"
+				user: "<your username>"
+				token: "<generated token from confluence>"
+				space: "<name of space where you would like docs generated>"
+	#+END_SRC
 
 EDOC */
 
@@ -13,11 +23,11 @@ package confluence
 
 import (
 	"fmt"
-	"html"
-	"html/template"
+	//"html"
+	//"html/template"
 	"log"
 	"os"
-	"path/filepath"
+	//"path/filepath"
 	"regexp"
 	"strings"
 	"net/http"
@@ -43,185 +53,67 @@ type OrgConfluenceExporter struct {
 	opts         *plugs.PluginOpts
 }
 
-type OrgConfluenceWriter struct {
-	*org.HTMLWriter
-	exp              *OrgConfluenceExporter
-	PostWriteScripts string
-	Opts             string
-}
 
-var docStart = `
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{.fontfamily}}">  
-<style>
-{{.stylesheet | css}}
-</style>
-</head>
-<body>
-`
-var docEnd = `
-</body>
-</html>
-`
 
-func NewOrgConfluenceWriter(exp *OrgConfluenceExporter) *OrgConfluenceWriter {
-	// This lovely bit of circular reference ensures that we get called when exporting for any methods we have overwritten
-	rw := OrgConfluenceWriter{org.NewHTMLWriter(), nil, "", ""}
-	rw.ExtendingWriter = &rw
-	rw.exp = exp
-
-	// This we should probably just replace with an override as well! Way better
-	rw.NoWrapCodeBlock = true
-	cnt := 1
-	rw.HighlightCodeBlock = func(keywords []org.Keyword, source, lang string, inline bool, params map[string]string) string {
-		var attribs []string = []string{}
-		for _, key := range keywords {
-			// This does something strange! I don't understand why it centers the text and puts a red box around it
-			if key.Key == "HTML_LINES" {
-				attribs = append(attribs, fmt.Sprintf("%s=\"%s\"", "data-line-numbers", key.Value))
+func HeadlineAloneHasTag(name string, h *org.Headline) bool {
+	if h != nil {
+		for _, t := range h.Tags {
+			t = strings.ToLower(strings.TrimSpace(t))
+			if t != "" && (t == name) {
+				return true
 			}
 		}
-		attribStr := ""
-		if len(attribs) > 0 {
-			attribStr = strings.Join(attribs, " ")
-		}
-		if lang == "mermaid" {
-			return fmt.Sprintf(`<pre class="mermaid">%s</pre>`, html.EscapeString(source))
-		} else if lang == "wordcloud" {
-			rw.exp.Props["wordcloud"] = true
-			rv := fmt.Sprintf(`<svg style="border: 1px dashed; border-radius: 10px; border-color: #333333" id="wordcloud_%d" onload="wordcloud('#wordcloud_%d', %s)"/>`, cnt, cnt, strings.TrimSpace(source))
-			cnt += 1
-			return rv
-		} else {
-			if inline {
-				return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
-			}
-			return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
-		}
 	}
-	return &rw
-}
-
-func GetProp(name, revealName string, h org.Headline, secProps string) string {
-	tran := h.Doc.Get(name)
-	if tmp, ok := h.Properties.Get(name); ok {
-		tran = tmp
-	}
-	if tran != "" {
-		secProps = fmt.Sprintf("%s %s=\"%s\"", secProps, revealName, tran)
-	}
-	return secProps
-}
-
-func GetPropTag(name, revealName string, h org.Headline, secProps string) string {
-	tran := h.Doc.Get(name)
-	if tmp, ok := h.Properties.Get(name); ok {
-		tran = tmp
-	}
-	if tran != "" && tran != "false" && tran != "off" && tran != "f" {
-		secProps = fmt.Sprintf("%s %s", secProps, revealName)
-	}
-	return secProps
-}
-func (w *OrgConfluenceWriter) WriteRegularLink(l org.RegularLink) {
-	if l.Protocol == "file" && l.Kind() == "image" {
-
-		// This bit is tricky: VSCode will not work with anything not setup as accessible in the webroot
-		// Since a vscode webview is a seperate entity self signed certificates also do not work.
-		// So we support localhost access over http to fix that. It's not ideal but works.
-
-		url := l.URL[len("file://"):]
-		//fname, _ := filepath.Abs(url)
-
-		//fname = "file://" + fname
-		//fname := "/Users/idavids/dev/gtd/" + url
-		fname := ""
-		if strings.Contains(w.Opts, "httpslinks;") {
-			fname = url
-			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.exp.pm.TLSPort, fname)
-		} else if strings.Contains(w.Opts, "filelinks;") {
-			found := false
-			for _, path := range w.exp.pm.OrgDirs {
-				fname = filepath.Join(path, url)
-				fname, _ = filepath.Abs(fname)
-				if _, err := os.Stat(fname); err != nil {
-					fname = "file://" + fname
-					found = true
-					break
-				}
-			}
-			if !found {
-				if len(w.exp.pm.OrgDirs) > 0 {
-					path := w.exp.pm.OrgDirs[0]
-					fname = filepath.Join(path, url)
-					fname, _ = filepath.Abs(fname)
-					fname = "file://" + fname
-				}
-			}
-		} else { //if strings.Contains(w.Opts, "httplinks;") {
-			fname = url
-			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.exp.pm.Port, fname)
-		}
-		if l.Description == nil {
-			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`, fname, fname, url))
-		} else {
-			description := strings.TrimPrefix(org.String(l.Description...), "file:")
-			w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, l.URL, fname, description))
-		}
-	} else {
-		w.HTMLWriter.WriteRegularLink(l)
-	}
+	return false
 }
 
 // OVERRIDE: This overrides the core method
-func (w *OrgConfluenceWriter) WriteHeadline(h org.Headline) {
-	if h.IsExcluded(w.Document) {
-		return
+func WriteHeadline(w* htmlexp.OrgHtmlWriter, h org.Headline) {
+	// CONFLUENCE CRAP!
+	haveConf := false
+	if _,ok := w.Exp.Props["skipnoconfluence"]; ok {
+		haveConf = HeadlineAloneHasTag("confluence", &h)
+		if ip,o2 := w.Exp.Props["inconf"]; !haveConf && (!o2 || ip == "f") 	{
+			return
+		} else {
+			if haveConf {
+				w.Exp.Props["inconf"] = "t"
+			}
+		}
 	}
 	//secProps := ""
 	//secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
-	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
+	// CONFLUENCE CRAP!
+	confIndent := h.Lvl*5
+	w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", confIndent))
+	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl))
 
-	// HERE IANif h.Status
-	if w.exp.Props["showstatus"] == true {
-		w.WriteString(fmt.Sprintf("<span class=\"status\"> %s </span> ", h.Status))
+	// This is not good enough, we add a span with the status if requested, but this is
+	// Kind of lame
+	if w.Exp.Props["showstatus"] == true {
+		statColor := ""
+		if col,ok := w.Exp.StatusColors[h.Status]; ok {
+			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
+		}
+		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
 	org.WriteNodes(w, h.Title...)
-	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
+
+	w.WriteString(fmt.Sprintf("</h%d>", h.Lvl))
+	w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", 3))
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
 	}
+	if haveConf {
+		w.Exp.Props["inconf"] = "f"
+	}
+
+	w.WriteString(fmt.Sprintf("</div>"))
+	w.WriteString(fmt.Sprintf("</div>"))
 	//w.WriteString("</section>\n")
-}
-
-func (w *OrgConfluenceWriter) WriteTable(t org.Table) {
-	w.HTMLWriter.WriteTable(t)
-}
-
-var funcMap template.FuncMap = template.FuncMap{
-	"attr": func(s string) template.HTMLAttr {
-		return template.HTMLAttr(s)
-	},
-	"safe": func(s string) template.HTML {
-		return template.HTML(s)
-	},
-	"css": func(s string) template.CSS {
-		return template.CSS(s)
-	},
-	"jsstr": func(s string) template.JSStr {
-		return template.JSStr(s)
-	},
-	"js": func(s string) template.JS {
-		return template.JS(s)
-	},
-	"url": func(s string) template.URL {
-		return template.URL(s)
-	},
 }
 
 func (self *OrgConfluenceExporter) Unmarshal(unmarshal func(interface{}) error) error {
@@ -251,6 +143,7 @@ func (self *OrgConfluenceExporter) Export(db plugs.ODb, query string, to string,
 func (self *OrgConfluenceExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 
 	exp := htmlexp.OrgHtmlExporter{Props: htmlexp.ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
+	exp.ExtendedHeadline = WriteHeadline
 	// Limit our exports to only things tagged with confluence
 	exp.Props["skipnoconfluence"] = "t"
 	exp.Startup(self.pm, self.opts)

@@ -11,25 +11,36 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"encoding/json"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
+	"github.com/google/uuid"
 )
 
 type OrgHtmlExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
 	StatusColors map[string]string
+	ExtendedHeadline   func(*OrgHtmlWriter,org.Headline)
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
 
+type OrgHeadingNode struct {
+	Id       string
+	Name     string
+	Children []OrgHeadingNode
+	lvl      int
+}
+
 type OrgHtmlWriter struct {
 	*org.HTMLWriter
-	exp              *OrgHtmlExporter
+	Exp              *OrgHtmlExporter
 	PostWriteScripts string
 	Opts             string
+	Nodes            []OrgHeadingNode
 }
 
 var docStart = `
@@ -48,11 +59,16 @@ var docEnd = `
 </html>
 `
 
+func MakeWriter() OrgHtmlWriter {
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}}
+}
+
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
 	// This lovely bit of circular reference ensures that we get called when exporting for any methods we have overwritten
-	rw := OrgHtmlWriter{org.NewHTMLWriter(), nil, "", ""}
+	rw := MakeWriter()
+	//rw := OrgHtmlWriter{org.NewHTMLWriter(), nil, "", ""}
 	rw.ExtendingWriter = &rw
-	rw.exp = exp
+	rw.Exp = exp
 
 	// This we should probably just replace with an override as well! Way better
 	rw.NoWrapCodeBlock = true
@@ -72,7 +88,7 @@ func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
 		if lang == "mermaid" {
 			return fmt.Sprintf(`<pre class="mermaid">%s</pre>`, html.EscapeString(source))
 		} else if lang == "wordcloud" {
-			rw.exp.Props["wordcloud"] = true
+			rw.Exp.Props["wordcloud"] = true
 			rv := fmt.Sprintf(`<svg style="border: 1px dashed; border-radius: 10px; border-color: #333333" id="wordcloud_%d" onload="wordcloud('#wordcloud_%d', %s)"/>`, cnt, cnt, strings.TrimSpace(source))
 			cnt += 1
 			return rv
@@ -122,10 +138,10 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 		fname := ""
 		if strings.Contains(w.Opts, "httpslinks;") {
 			fname = url
-			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.exp.pm.TLSPort, fname)
+			fname = fmt.Sprintf("https://localhost:%d/images/%s", w.Exp.pm.TLSPort, fname)
 		} else if strings.Contains(w.Opts, "filelinks;") {
 			found := false
-			for _, path := range w.exp.pm.OrgDirs {
+			for _, path := range w.Exp.pm.OrgDirs {
 				fname = filepath.Join(path, url)
 				fname, _ = filepath.Abs(fname)
 				if _, err := os.Stat(fname); err != nil {
@@ -135,8 +151,8 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 				}
 			}
 			if !found {
-				if len(w.exp.pm.OrgDirs) > 0 {
-					path := w.exp.pm.OrgDirs[0]
+				if len(w.Exp.pm.OrgDirs) > 0 {
+					path := w.Exp.pm.OrgDirs[0]
 					fname = filepath.Join(path, url)
 					fname, _ = filepath.Abs(fname)
 					fname = "file://" + fname
@@ -144,7 +160,7 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 			}
 		} else { //if strings.Contains(w.Opts, "httplinks;") {
 			fname = url
-			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.exp.pm.Port, fname)
+			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.Exp.pm.Port, fname)
 		}
 		if l.Description == nil {
 			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`, fname, fname, url))
@@ -170,69 +186,78 @@ func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	return false
 }
 
+func (w *OrgHtmlWriter) FindParent(h org.Headline) int {
+	idx := -1
+	if (h.Lvl == 0) {
+		return idx
+	}
+	if (len(w.Nodes) > 0) {
+		for idx=len(w.Nodes)-1; idx >= 0; idx-- {
+			parent := w.Nodes[idx]
+			if (parent.lvl == (h.Lvl - 1)) {
+				return idx
+			}
+		}
+	}
+	return idx
+}
+
 // OVERRIDE: This overrides the core method
 func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
-	// CONFLUENCE CRAP!
-	amConf := false
-	haveConf := false
-	if _,ok := w.exp.Props["skipnoconfluence"]; ok {
-		amConf = true
-		haveConf = HeadlineAloneHasTag("confluence", &h)
-		if ip,o2 := w.exp.Props["inconf"]; !haveConf && (!o2 || ip == "f") 	{
-			return
-		} else {
-			if haveConf {
-				w.exp.Props["inconf"] = "t"
-			}
-		}
+	if w.Exp.ExtendedHeadline != nil {
+		w.Exp.ExtendedHeadline(w, h)
+		return
 	}
 	//secProps := ""
 	//secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
-	// CONFLUENCE CRAP!
-	confIndent := h.Lvl*5
-	if amConf {
-		w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", confIndent))
-		w.WriteString(fmt.Sprintf("<h%d>", h.Lvl))
-	} else {
-		w.WriteString(fmt.Sprintf("<h%d>", h.Lvl+1))
-	}
+	id := uuid.New().String()
+	w.WriteString(fmt.Sprintf("<div id=\"%s\" class=\"heading-wrapper\">", id))
+	w.WriteString(fmt.Sprintf("<div id=\"%s-title\" class=\"heading-title-wrapper title-level-%d\">", id, h.Lvl+1))
+	w.WriteString(fmt.Sprintf("<h%d id=\"%s-heading\"><span id=\"%s-heading-start\"></span>", h.Lvl+1, id, id))
 
 	// This is not good enough, we add a span with the status if requested, but this is
 	// Kind of lame
-	if w.exp.Props["showstatus"] == true {
+	if w.Exp.Props["showstatus"] == true {
 		statColor := ""
-		if col,ok := w.exp.StatusColors[h.Status]; ok {
+		if col,ok := w.Exp.StatusColors[h.Status]; ok {
 			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
 		}
 		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
-	org.WriteNodes(w, h.Title...)
 
-	// CONFLUENCE CRAP
-	if amConf {
-		w.WriteString(fmt.Sprintf("</h%d>", h.Lvl))
-		w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", 3))
-	} else {
-		w.WriteString(fmt.Sprintf("</h%d>", h.Lvl+1))
+	// Write out our title but we need this for our node heirarchy
+	title := w.WriteNodesAsString(h.Title...)
+	w.WriteString(title)
+
+	addChild := false
+	if len(w.Nodes) > 0 {
+		parentIdx := w.FindParent(h)
+		if parentIdx >= 0 {
+			parent := &w.Nodes[parentIdx]
+			addChild = true
+			parent.Children = append(parent.Children, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+		}
 	}
+
+	if !addChild {
+		w.Nodes = append(w.Nodes, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+	}
+
+	w.WriteString(fmt.Sprintf("<span id=\"%s-heading-end\"></span></h%d>", id, h.Lvl+1))
+	w.WriteString("</div>")
+	w.WriteString(fmt.Sprintf("<div id=\"%s-content\" class=\"heading-content-wrapper content-level-%d\">", id, h.Lvl+1))
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
 	}
-	if haveConf {
-		w.exp.Props["inconf"] = "f"
-	}
+	w.WriteString("</div>")
+	w.WriteString("</div>")
 
-	// CONFLUENCE CRAP
-	if amConf {
-		w.WriteString(fmt.Sprintf("</div>"))
-		w.WriteString(fmt.Sprintf("</div>"))
-	}
 	//w.WriteString("</section>\n")
 }
 
@@ -289,7 +314,15 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
 
+    defer func() { //catch or finally
+        if err := recover(); err != nil { //catch
+            fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+            os.Exit(1)
+        }
+    }()
+
 	if f := db.FindByFile(query); f != nil {
+		fmt.Printf("File found\n")
 		title := f.Get("TITLE")
 		if title != "" {
 			props["title"] = title
@@ -298,9 +331,10 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		if theme != "" {
 			self.Props["stylesheet"] = GetStylesheet(theme)
 		}
-		theme = f.Get("HTML_STYLE")
-		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme)
+		// This overrides the theme if present
+		style := f.Get("HTML_STYLE")
+		if style != "" {
+			self.Props["stylesheet"] = GetStylesheet(style)
 		}
 		attr := f.Get("ATTR_BODY_HTML")
 		self.Props["havebodyattr"] = false
@@ -313,19 +347,25 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 			self.Props["showstatus"] = true
 		}
 
-		style := f.Get("HTML_HIGHLIGHT_STYLE")
-		if style != "" {
-			self.Props["hljsstyle"] = style
+		hlstyle := f.Get("HTML_HIGHLIGHT_STYLE")
+		if hlstyle != "" {
+			self.Props["hljsstyle"] = hlstyle
 		}
 		w := NewOrgHtmlWriter(self)
 		w.Opts = opts
+		fmt.Printf("Writing nodes...\n")
 		org.WriteNodes(w, f.Nodes...)
+		fmt.Printf("Done writing nodes...\n")
 		res := w.String()
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
+		nodestr,_:=json.Marshal(w.Nodes)
+		self.Props["nodes_json"] = string(nodestr)
 
 		fmt.Printf("DOC START: ========================================\n")
-		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
+		templatePath := GetTemplate(self.TemplatePath, theme)
+		fmt.Printf("TEMPLATE: %s\n", templatePath)
+		res = self.pm.Tempo.RenderTemplate(templatePath, self.Props)
 		fmt.Printf("XXX: %s\n", res)
 		return nil, res
 	} else {
@@ -363,6 +403,15 @@ func GetStylesheet(name string) string {
 		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
 	}
 	return ""
+}
+
+func GetTemplate(defaultTemplate string, theme string) string {
+	themeTemplate := "html_" + theme + ".tpl"
+	themeTemplatePath := plugs.PlugExpandTemplatePath(themeTemplate)
+	if _, err := os.Stat(themeTemplatePath); err == nil {
+		return themeTemplate
+	}
+	return defaultTemplate
 }
 
 func ValidateMap(m map[string]interface{}) map[string]interface{} {

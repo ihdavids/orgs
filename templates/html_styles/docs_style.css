@@ -68,7 +68,7 @@
   blockquote {
 	padding-left: 1em;
 	font-style: italic;
-	border-left: solid 1px #fa6432; }
+	border-left: solid 1px #00d8d8; }
   
   table {
 	font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
@@ -176,16 +176,30 @@
 
 .status {
 	color:#fff;
+}
 
 /* Remove default bullets */
-ul, #treeviewul {
+ul, .treeviewul {
   list-style-type: none;
 }
 
 /* Remove margins and padding from the parent ul */
-#treeviewul {
+.treeviewul {
   margin: 0;
   padding: 0;
+}
+
+.node-link {
+  cursor: pointer;
+  user-select: none; /* Prevent text selection */
+}
+
+/* Create the caret/arrow with a unicode, and style it */
+.node-link::before {
+  content: "\0f36";
+  color: while;
+  display: inline-block;
+  margin-right: 6px;
 }
 
 /* Style the caret/arrow */
@@ -196,8 +210,9 @@ ul, #treeviewul {
 
 /* Create the caret/arrow with a unicode, and style it */
 .caret::before {
-  content: "\25B6";
-  color: black;
+  /*content: "\25B6";*/
+  content: "\21ac";
+  color: cyan;
   display: inline-block;
   margin-right: 6px;
 }
@@ -214,15 +229,15 @@ ul, #treeviewul {
 }
 
 /* Create the caret/arrow with a unicode, and style it */
-.folded::after {
-  content: "\25B6";
-  color: black;
+.folded::before {
+  content: "\21A9";
+  color: gray;
   display: inline-block;
-  margin-left: 6px;
+  margin-left: 12px;
 }
 
 /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
-.folded-down::after {
+.folded-down::before {
   transform: rotate(90deg);
 }
 
@@ -234,6 +249,4 @@ ul, #treeviewul {
 /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
 .active {
   display: block;
-}
-
 }
