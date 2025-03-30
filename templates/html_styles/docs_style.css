@@ -189,6 +189,19 @@ ul, .treeviewul {
   padding: 0;
 }
 
+.node-link {
+  cursor: pointer;
+  user-select: none; /* Prevent text selection */
+}
+
+/* Create the caret/arrow with a unicode, and style it */
+.node-link::before {
+  content: "\0f36";
+  color: while;
+  display: inline-block;
+  margin-right: 6px;
+}
+
 /* Style the caret/arrow */
 .caret {
   cursor: pointer;
@@ -197,8 +210,9 @@ ul, .treeviewul {
 
 /* Create the caret/arrow with a unicode, and style it */
 .caret::before {
-  content: "\25B6";
-  color: while;
+  /*content: "\25B6";*/
+  content: "\21ac";
+  color: cyan;
   display: inline-block;
   margin-right: 6px;
 }

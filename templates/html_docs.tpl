@@ -55,31 +55,57 @@ nodes =
     {%autoescape off%}
     {{nodes_json}}
     {%endautoescape%}
-    function injectHeadingCollapse(nodes) {
+    function injectHeadingCollapse(nodes, lvl) {
         nodes.forEach((n, i) => {
-            console.log("NODE: ", n.Name);
             $title = $("#"+n.Id + "-title");
             $title.click(function (){
                 $cnt = $("#"+n.Id + "-content");
                 $cnt.slideToggle(30, function() {
                     if ($cnt.is(":visible")) {
-                        console.log("visible");
                         $("#"+n.Id + "-heading-end").removeClass("folded");
                     } else {
-                        console.log("hidden");
                         $("#"+n.Id + "-heading-end").addClass("folded");
                     }
                 });
             });
             if (n.Children && n.Children.length > 0) {
-                console.log("HAVE CHILDREN: ", n.Name);
-                injectHeadingCollapse(n.Children);
+                injectHeadingCollapse(n.Children, lvl + 1);
             }
         });
     }
 
+    function buildTreeView(nodes, lvl, parent) {
+        nodes.forEach((n, i) => {
+            console.log("NODE: ", n.Name);
+            if (n.Children && n.Children.length > 0) {
+                $elem = $("<li><span class=\"caret caret-down\">" + n.Name + "</span></li>");
+                $ul = $("<ul class=\"nested active\"></ul>");
+                $elem.append($ul);
+                parent.append($elem);
+                buildTreeView(n.Children, lvl + 1, $ul);
+            } else {
+                $elem = $("<li><span class=\"node-link\">" + n.Name + "</span></li>")
+                parent.append($elem)
+            }
+        });
+    }
+
+    function activateTreeView() {
+        var toggler = document.getElementsByClassName("caret");
+        var i;
+
+        for (i = 0; i < toggler.length; i++) {
+            toggler[i].addEventListener("click", function() {
+            this.parentElement.querySelector(".nested").classList.toggle("active");
+            this.classList.toggle("caret-down");
+            });
+        } 
+    }
+
     function onLoadHandler(){
-        injectHeadingCollapse(nodes);
+        injectHeadingCollapse(nodes, 1);
+        buildTreeView(nodes, 1, $("#navbar"));
+        activateTreeView();
     }
 </script>
 
@@ -93,17 +119,26 @@ nodes =
     <script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
     <div class="header-wrapper">
     	<div id="header" class="header">
+        <h1> DOCS </h1>
     	</div>
     </div>
     <div id="master-wrapper" class="master-wrapper clear">
-    	<div id="sidebar" class="sidebar" style="left: 0px">
+
+    
+    
+     
+    	<div id="sidebar" class="sidebar" style="padding-right: 20px; margin-left: 20px; cursor: pointer; overflow-y: auto; left: 0px; float: left; width: 340px; height: 1189px;">
+            <h2>{{title}}</h2>
+            <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;">
+            </ul>
     	</div>
+        <div>
+        {%autoescape off%}
+        {{html_data}}
+        {%endautoescape%}
+        </div>
     </div>
 
-
-    {%autoescape off%}
-    {{html_data}}
-    {%endautoescape%}
 
 	<script type="module">
 	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
