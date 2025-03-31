@@ -379,6 +379,19 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			}
 			return ok, nil
 		},
+		"InTagGroup": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			s := args[0].(string)
+			ok := false
+			if tags, ok := Conf().TagGroups[s]; ok {
+				for _, tag := range tags {
+					if ok = ok || HasTag(tag, p, exp.Doc); ok {
+						break
+					}
+				}
+			}
+			return ok, nil
+		},
 		"NoTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)

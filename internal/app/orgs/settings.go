@@ -117,6 +117,9 @@ type Config struct {
 	// Where can we find images served for templates
 	TemplateImagesPath string `yaml:"templateImagesPath"`
 	TemplateFontPath   string `yaml:"templateFontPath"`
+	// Tag groups are a shorthand for matching groups of tags
+	// when showing views.
+	TagGroups map[string][]string `yaml:"tagGroups"`
 }
 
 func (self *Config) Defaults() {
