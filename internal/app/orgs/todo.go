@@ -383,7 +383,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			s := args[0].(string)
 			ok := false
-			if tags, ok := Conf().TagGroups[s]; ok {
+			if tags, tgok := Conf().TagGroups[s]; tgok {
 				for _, tag := range tags {
 					if ok = ok || HasTag(tag, p, exp.Doc); ok {
 						break
