@@ -304,7 +304,7 @@ func IsProjectByTag(p *org.Section) bool {
 }
 
 func IsArchived(p *org.Section, d *org.Document) bool {
-	return HasTag("archive", p, d)
+	return HasTag("archive", p, d) || HasTag("archived", p, d)
 }
 
 func IsProject(p *org.Section, f *common.OrgFile) bool {
