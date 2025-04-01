@@ -74,18 +74,46 @@ nodes =
         });
     }
 
-    function showRecursive(n) {
-        console.log("SHOWING: ", n.Name);
-        $("#"+n.Id).show();
-        if (n.Children && n.Children.length > 0) {
-            n.Children.forEach((c,i) => {
-                showRecursive(c);
-            })
+    function findParent(n, nodes) {
+        for (var i = 0; i < nodes.length; ++i) {
+            var x = nodes[i];
+            if (x.Id == n.Parent) {
+                return x;
+            }
+            if (x.Children && x.Children.length > 0) {
+                var v = findParent(n, x.Children);
+                if (v != null) {
+                    return v;
+                }
+            }
+        }
+        return null;
+    }
+
+    function showParent(n) {
+        if (n.Parent !== "") {
+            var p = findParent(n, nodes);
+            if (p != null) {
+                $("#"+p.Id).show();
+                showParent(p);
+            }
         }
     }
 
+    function showRecursive(n) {
+        //console.log("SHOWING: ", n.Name);
+        $("#"+n.Id).show();
+        showParent(n);
+
+        //if (n.Children && n.Children.length > 0) {
+        //    n.Children.forEach((c,i) => {
+        //        showRecursive(c);
+        //    })
+        //}
+    }
+
     function hideRecursive(n) {
-        console.log("HIDING: ", n.Name);
+        //console.log("HIDING: ", n.Name);
         $("#"+n.Id).hide();
         if (n.Children && n.Children.length > 0) {
             n.Children.forEach((c,i) => {
@@ -93,6 +121,8 @@ nodes =
             })
         }
     }
+
+
 
     var curTree = null;
 
@@ -104,21 +134,23 @@ nodes =
                 $elem.append($ul);
                 parent.append($elem);
                 buildTreeView(n.Children, lvl + 1, $ul);
-                $elem.click(function () {
+                $elem.click(function (event) {
                     let me = n;
-                    console.log("CLICKED: ", n.Name);
-                    hideRecursive(curTree);
+                    //console.log("CLICKED: ", n.Name);
+                    nodes.forEach((xx,i) => {hideRecursive(xx); });
                     showRecursive(me);
                     curTree = me;
+                    event.stopPropagation();
                 });
                 $("#"+n.Id).hide();
             } else {
                 $elem = $("<li><span class=\"node-link\">" + n.Name + "</span></li>")
-                $elem.click(function () {
+                $elem.click(function (event) {
                     let me = n;
-                    hideRecursive(curTree);
+                    nodes.forEach((xx,i) => {hideRecursive(xx); });
                     showRecursive(me);
                     curTree = me;
+                    event.stopPropagation();
                 });
                 parent.append($elem);
                 $("#"+n.Id).hide();
@@ -166,12 +198,12 @@ nodes =
     
     
      
-    	<div id="sidebar" class="sidebar" style="padding-right: 20px; margin-left: 20px; cursor: pointer; overflow-y: auto; left: 0px; float: left; width: 340px; height: 1189px;">
+    	<div id="sidebar" class="sidebar" style="padding-right: 0px; margin-right: 0px; margin-left: 1px; cursor: pointer; overflow-y: auto; left: 0px; float: left; width: 25%; min-width: 150px; height: 1189px;">
             <h2>{{title}}</h2>
             <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;">
             </ul>
     	</div>
-        <div>
+        <div class="display-box">
         {%autoescape off%}
         {{html_data}}
         {%endautoescape%}

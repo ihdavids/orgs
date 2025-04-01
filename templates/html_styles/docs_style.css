@@ -6,7 +6,7 @@
   html {
 	font: 100%/1.5 sans-serif;
 	word-wrap: break-word;
-	padding: 1.5em; }
+	padding: 0; }
   
   @media (min-width: 768px) {
 	html { font-size: 125%; } }
@@ -181,6 +181,16 @@
 /* Remove default bullets */
 ul, .treeviewul {
   list-style-type: none;
+	white-space: nowrap;
+}
+
+ul > li {
+    padding-left:1px;
+	padding-right:1px;
+}
+li > ul {
+    padding-left:1px;
+	padding-right:1px;
 }
 
 /* Remove margins and padding from the parent ul */
@@ -192,6 +202,7 @@ ul, .treeviewul {
 .node-link {
   cursor: pointer;
   user-select: none; /* Prevent text selection */
+  font-size: 2vw;
 }
 
 /* Create the caret/arrow with a unicode, and style it */
@@ -206,6 +217,7 @@ ul, .treeviewul {
 .caret {
   cursor: pointer;
   user-select: none; /* Prevent text selection */
+  font-size: 2vw;
 }
 
 /* Create the caret/arrow with a unicode, and style it */
@@ -246,9 +258,20 @@ ul, .treeviewul {
 /* Hide the nested list */
 .nested {
   display: none;
+  margin: 5px;
 }
 
 /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
 .active {
   display: block;
+  margin: 5px;
+}
+
+.master-wrapper {
+	display: flex;
+	flex-direction: row;
+}
+
+.display-box {
+	margin-left: 20px;
 }
