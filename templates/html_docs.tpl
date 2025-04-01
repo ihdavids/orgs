@@ -188,16 +188,16 @@ nodes =
 </head>
 <body{%if havebodyattr%} class="{{bodyattr}}"{%endif%} onload="onLoadHandler()">
     <script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
-    <div class="header-wrapper">
+    <div class="doc-wrapper">
+     <div class="header-wrapper">
     	<div id="header" class="header">
-        <h1> DOCS </h1>
+            <div class="header-container">
+                <div class="header-left"><h1 class="header">DOCS</h1></div>
+                <div class="header-right" style="justify-content: flex-end; align-self: stretch; flex-grow: 4;"><h2 class="header">Hi</h2></div>
+            </div>
     	</div>
-    </div>
-    <div id="master-wrapper" class="master-wrapper clear">
-
-    
-    
-     
+      </div>
+      <div id="master-wrapper" class="master-wrapper clear">
     	<div id="sidebar" class="sidebar" style="padding-right: 0px; margin-right: 0px; margin-left: 1px; cursor: pointer; overflow-y: auto; left: 0px; float: left; width: 25%; min-width: 150px; height: 1189px;">
             <h2>{{title}}</h2>
             <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;">
@@ -208,8 +208,8 @@ nodes =
         {{html_data}}
         {%endautoescape%}
         </div>
+      </div>
     </div>
-
 
 	<script type="module">
 	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
