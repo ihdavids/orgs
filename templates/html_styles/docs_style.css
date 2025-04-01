@@ -211,8 +211,10 @@ ul, .treeviewul {
 /* Create the caret/arrow with a unicode, and style it */
 .caret::before {
   /*content: "\25B6";*/
-  content: "\21ac";
+  /*content: "\21ac";*/
+  content: "\203A";
   color: cyan;
+  font-weight: 900;
   display: inline-block;
   margin-right: 6px;
 }

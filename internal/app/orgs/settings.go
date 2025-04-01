@@ -232,7 +232,7 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
-		config.DefaultTodoStates = "TODO INPROGRESS BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
+		config.DefaultTodoStates = "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
 		config.ParseConfig()
 	}
 	return config

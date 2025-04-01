@@ -3,6 +3,7 @@
 package htmlexp
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
@@ -11,28 +12,28 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
-	"github.com/google/uuid"
 )
 
 type OrgHtmlExporter struct {
-	TemplatePath string
-	Props        map[string]interface{}
-	StatusColors map[string]string
-	ExtendedHeadline   func(*OrgHtmlWriter,org.Headline)
-	out          *logging.Logger
-	pm           *plugs.PluginManager
+	TemplatePath     string
+	Props            map[string]interface{}
+	StatusColors     map[string]string
+	ExtendedHeadline func(*OrgHtmlWriter, org.Headline)
+	out              *logging.Logger
+	pm               *plugs.PluginManager
 }
 
 type OrgHeadingNode struct {
 	Id       string
+	Parent   string
 	Name     string
 	Children []OrgHeadingNode
-	lvl      int
+	Lvl      int
 }
 
 type OrgHtmlWriter struct {
@@ -173,7 +174,6 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 	}
 }
 
-
 func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	if h != nil {
 		for _, t := range h.Tags {
@@ -186,20 +186,18 @@ func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	return false
 }
 
-func (w *OrgHtmlWriter) FindParent(h org.Headline) int {
-	idx := -1
-	if (h.Lvl == 0) {
-		return idx
+func (w *OrgHtmlWriter) FindParent(h org.Headline) *OrgHeadingNode {
+	if h.Lvl == 0 {
+		return nil
 	}
-	if (len(w.Nodes) > 0) {
-		for idx=len(w.Nodes)-1; idx >= 0; idx-- {
-			parent := w.Nodes[idx]
-			if (parent.lvl == (h.Lvl - 1)) {
-				return idx
-			}
+	if len(w.Nodes) > 0 {
+		top := &w.Nodes[len(w.Nodes)-1]
+		for top.Lvl != (h.Lvl-1) && len(top.Children) > 0 {
+			top = &top.Children[len(top.Children)-1]
 		}
+		return top
 	}
-	return idx
+	return nil
 }
 
 // OVERRIDE: This overrides the core method
@@ -224,8 +222,8 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	// Kind of lame
 	if w.Exp.Props["showstatus"] == true {
 		statColor := ""
-		if col,ok := w.Exp.StatusColors[h.Status]; ok {
-			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
+		if col, ok := w.Exp.StatusColors[h.Status]; ok {
+			statColor = fmt.Sprintf("style=\"color:%s;\"", col)
 		}
 		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
@@ -236,16 +234,15 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 
 	addChild := false
 	if len(w.Nodes) > 0 {
-		parentIdx := w.FindParent(h)
-		if parentIdx >= 0 {
-			parent := &w.Nodes[parentIdx]
+		parent := w.FindParent(h)
+		if parent != nil {
 			addChild = true
-			parent.Children = append(parent.Children, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+			parent.Children = append(parent.Children, OrgHeadingNode{Id: id, Parent: parent.Id, Name: title, Children: []OrgHeadingNode{}, Lvl: h.Lvl})
 		}
 	}
 
 	if !addChild {
-		w.Nodes = append(w.Nodes, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+		w.Nodes = append(w.Nodes, OrgHeadingNode{Id: id, Parent: "", Name: title, Children: []OrgHeadingNode{}, Lvl: h.Lvl})
 	}
 
 	w.WriteString(fmt.Sprintf("<span id=\"%s-heading-end\"></span></h%d>", id, h.Lvl+1))
@@ -314,12 +311,12 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
 
-    defer func() { //catch or finally
-        if err := recover(); err != nil { //catch
-            fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
-            os.Exit(1)
-        }
-    }()
+	defer func() { //catch or finally
+		if err := recover(); err != nil { //catch
+			fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+			os.Exit(1)
+		}
+	}()
 
 	if f := db.FindByFile(query); f != nil {
 		fmt.Printf("File found\n")
@@ -359,7 +356,7 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		res := w.String()
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
-		nodestr,_:=json.Marshal(w.Nodes)
+		nodestr, _ := json.Marshal(w.Nodes)
 		self.Props["nodes_json"] = string(nodestr)
 
 		fmt.Printf("DOC START: ========================================\n")
@@ -376,12 +373,12 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 
 func (self *OrgHtmlExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
 	if len(self.StatusColors) == 0 {
-		self.StatusColors = map[string]string {
-			"TODO": "red",
-			"INPROGRESS": "#CC9900",
+		self.StatusColors = map[string]string{
+			"TODO":        "red",
+			"INPROGRESS":  "#CC9900",
 			"IN-PROGRESS": "#CC9900",
-			"DOING": "#CC9900",
-			"DONE": "#006600",
+			"DOING":       "#CC9900",
+			"DONE":        "#006600",
 		}
 	}
 	self.out = manager.Out

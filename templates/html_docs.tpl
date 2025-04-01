@@ -74,18 +74,54 @@ nodes =
         });
     }
 
+    function showRecursive(n) {
+        console.log("SHOWING: ", n.Name);
+        $("#"+n.Id).show();
+        if (n.Children && n.Children.length > 0) {
+            n.Children.forEach((c,i) => {
+                showRecursive(c);
+            })
+        }
+    }
+
+    function hideRecursive(n) {
+        console.log("HIDING: ", n.Name);
+        $("#"+n.Id).hide();
+        if (n.Children && n.Children.length > 0) {
+            n.Children.forEach((c,i) => {
+                hideRecursive(c);
+            })
+        }
+    }
+
+    var curTree = null;
+
     function buildTreeView(nodes, lvl, parent) {
         nodes.forEach((n, i) => {
-            console.log("NODE: ", n.Name);
             if (n.Children && n.Children.length > 0) {
-                $elem = $("<li><span class=\"caret caret-down\">" + n.Name + "</span></li>");
-                $ul = $("<ul class=\"nested active\"></ul>");
+                var $elem = $("<li><span class=\"caret caret-down\">" + n.Name + "</span></li>");
+                var $ul = $("<ul class=\"nested active\"></ul>");
                 $elem.append($ul);
                 parent.append($elem);
                 buildTreeView(n.Children, lvl + 1, $ul);
+                $elem.click(function () {
+                    let me = n;
+                    console.log("CLICKED: ", n.Name);
+                    hideRecursive(curTree);
+                    showRecursive(me);
+                    curTree = me;
+                });
+                $("#"+n.Id).hide();
             } else {
                 $elem = $("<li><span class=\"node-link\">" + n.Name + "</span></li>")
-                parent.append($elem)
+                $elem.click(function () {
+                    let me = n;
+                    hideRecursive(curTree);
+                    showRecursive(me);
+                    curTree = me;
+                });
+                parent.append($elem);
+                $("#"+n.Id).hide();
             }
         });
     }
@@ -100,6 +136,9 @@ nodes =
             this.classList.toggle("caret-down");
             });
         } 
+
+        curTree = nodes[0];
+        showRecursive(curTree);
     }
 
     function onLoadHandler(){
