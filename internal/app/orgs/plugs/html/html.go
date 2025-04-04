@@ -3,6 +3,7 @@
 package htmlexp
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
@@ -11,28 +12,28 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
-	"github.com/google/uuid"
 )
 
 type OrgHtmlExporter struct {
-	TemplatePath string
-	Props        map[string]interface{}
-	StatusColors map[string]string
-	ExtendedHeadline   func(*OrgHtmlWriter,org.Headline)
-	out          *logging.Logger
-	pm           *plugs.PluginManager
+	TemplatePath     string
+	Props            map[string]interface{}
+	StatusColors     map[string]string
+	ExtendedHeadline func(*OrgHtmlWriter, org.Headline)
+	out              *logging.Logger
+	pm               *plugs.PluginManager
 }
 
 type OrgHeadingNode struct {
 	Id       string
+	Parent   string
 	Name     string
 	Children []OrgHeadingNode
-	lvl      int
+	Lvl      int
 }
 
 type OrgHtmlWriter struct {
@@ -41,6 +42,7 @@ type OrgHtmlWriter struct {
 	PostWriteScripts string
 	Opts             string
 	Nodes            []OrgHeadingNode
+	isClosed         map[string]bool
 }
 
 var docStart = `
@@ -60,7 +62,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}}
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{} }
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -173,7 +175,6 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 	}
 }
 
-
 func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	if h != nil {
 		for _, t := range h.Tags {
@@ -186,20 +187,32 @@ func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	return false
 }
 
-func (w *OrgHtmlWriter) FindParent(h org.Headline) int {
-	idx := -1
-	if (h.Lvl == 0) {
-		return idx
+func (w *OrgHtmlWriter) FindParent(h org.Headline) *OrgHeadingNode {
+	if h.Lvl <= 1 {
+		return nil
 	}
-	if (len(w.Nodes) > 0) {
-		for idx=len(w.Nodes)-1; idx >= 0; idx-- {
-			parent := w.Nodes[idx]
-			if (parent.lvl == (h.Lvl - 1)) {
-				return idx
-			}
+	if len(w.Nodes) > 0 {
+		top := &w.Nodes[len(w.Nodes)-1]
+		for top.Lvl != (h.Lvl-1) && len(top.Children) > 0 {
+			top = &top.Children[len(top.Children)-1]
+		}
+		if top.Lvl < h.Lvl {
+			return top
 		}
 	}
-	return idx
+	return nil
+}
+
+func (w *OrgHtmlWriter) ShouldCloseById(id string) bool {
+	if _,ok := w.isClosed[id]; ok {
+		return false
+	}
+	w.isClosed[id] = true
+	return true
+}
+
+func (w *OrgHtmlWriter) ShouldClose(n *OrgHeadingNode) bool {
+	return w.ShouldCloseById(n.Id)
 }
 
 // OVERRIDE: This overrides the core method
@@ -216,6 +229,10 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
 	id := uuid.New().String()
+	parent := w.FindParent(h)
+	if (parent != nil && w.ShouldClose(parent)) {
+		w.WriteString("</div>")
+	}
 	w.WriteString(fmt.Sprintf("<div id=\"%s\" class=\"heading-wrapper\">", id))
 	w.WriteString(fmt.Sprintf("<div id=\"%s-title\" class=\"heading-title-wrapper title-level-%d\">", id, h.Lvl+1))
 	w.WriteString(fmt.Sprintf("<h%d id=\"%s-heading\"><span id=\"%s-heading-start\"></span>", h.Lvl+1, id, id))
@@ -224,8 +241,8 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	// Kind of lame
 	if w.Exp.Props["showstatus"] == true {
 		statColor := ""
-		if col,ok := w.Exp.StatusColors[h.Status]; ok {
-			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
+		if col, ok := w.Exp.StatusColors[h.Status]; ok {
+			statColor = fmt.Sprintf("style=\"color:%s;\"", col)
 		}
 		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
@@ -236,24 +253,27 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 
 	addChild := false
 	if len(w.Nodes) > 0 {
-		parentIdx := w.FindParent(h)
-		if parentIdx >= 0 {
-			parent := &w.Nodes[parentIdx]
+		if parent != nil {
 			addChild = true
-			parent.Children = append(parent.Children, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+			parent.Children = append(parent.Children, OrgHeadingNode{Id: id, Parent: parent.Id, Name: title, Children: []OrgHeadingNode{}, Lvl: h.Lvl})
 		}
 	}
 
 	if !addChild {
-		w.Nodes = append(w.Nodes, OrgHeadingNode{ Id: id, Name: title, Children: []OrgHeadingNode{}, lvl: h.Lvl })
+		w.Nodes = append(w.Nodes, OrgHeadingNode{Id: id, Parent: "", Name: title, Children: []OrgHeadingNode{}, Lvl: h.Lvl})
 	}
 
 	w.WriteString(fmt.Sprintf("<span id=\"%s-heading-end\"></span></h%d>", id, h.Lvl+1))
 	w.WriteString("</div>")
 	w.WriteString(fmt.Sprintf("<div id=\"%s-content\" class=\"heading-content-wrapper content-level-%d\">", id, h.Lvl+1))
+	w.WriteString(fmt.Sprintf("<div id=\"%s-text\" class=\"heading-content-text\">", id))
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
+	}
+
+	if (w.ShouldCloseById(id)) {
+		w.WriteString("</div>")
 	}
 	w.WriteString("</div>")
 	w.WriteString("</div>")
@@ -311,15 +331,16 @@ func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts 
 	}
 */
 func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+	fmt.Printf("PPPP: %v\n", self.Props)
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
 
-    defer func() { //catch or finally
-        if err := recover(); err != nil { //catch
-            fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
-            os.Exit(1)
-        }
-    }()
+	defer func() { //catch or finally
+		if err := recover(); err != nil { //catch
+			fmt.Fprintf(os.Stderr, "Exception: %v\n", err)
+			os.Exit(1)
+		}
+	}()
 
 	if f := db.FindByFile(query); f != nil {
 		fmt.Printf("File found\n")
@@ -328,13 +349,17 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 			props["title"] = title
 		}
 		theme := f.Get("HTML_THEME")
+		fontfamily := f.Get("HTML_FONTFAMILY")
+		if fontfamily == "" {
+			fontfamily = self.Props["fontfamily"].(string)
+		}
 		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme)
+			self.Props["stylesheet"] = GetStylesheet(theme, fontfamily)
 		}
 		// This overrides the theme if present
 		style := f.Get("HTML_STYLE")
 		if style != "" {
-			self.Props["stylesheet"] = GetStylesheet(style)
+			self.Props["stylesheet"] = GetStylesheet(style, fontfamily)
 		}
 		attr := f.Get("ATTR_BODY_HTML")
 		self.Props["havebodyattr"] = false
@@ -359,7 +384,7 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 		res := w.String()
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
-		nodestr,_:=json.Marshal(w.Nodes)
+		nodestr, _ := json.Marshal(w.Nodes)
 		self.Props["nodes_json"] = string(nodestr)
 
 		fmt.Printf("DOC START: ========================================\n")
@@ -376,12 +401,12 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 
 func (self *OrgHtmlExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
 	if len(self.StatusColors) == 0 {
-		self.StatusColors = map[string]string {
-			"TODO": "red",
-			"INPROGRESS": "#CC9900",
+		self.StatusColors = map[string]string{
+			"TODO":        "red",
+			"INPROGRESS":  "#CC9900",
 			"IN-PROGRESS": "#CC9900",
-			"DOING": "#CC9900",
-			"DONE": "#006600",
+			"DOING":       "#CC9900",
+			"DONE":        "#006600",
 		}
 	}
 	self.out = manager.Out
@@ -396,11 +421,13 @@ func NewHtmlExp() *OrgHtmlExporter {
 var hljsver = "11.9.0"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
-func GetStylesheet(name string) string {
+func GetStylesheet(name string, fontfamily string) string {
 	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
 		// HACK: We probably do not alway want to do this. Need to think of a better way to handle this!
 		re := regexp.MustCompile(`url\(([^)]+)\)`)
-		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
+		ff := regexp.MustCompile(`[{][{]fontfamily[}][}]`)
+
+		return ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily)
 	}
 	return ""
 }
@@ -426,7 +453,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 		m["trackheight"] = 30
 	}
 	if _, ok := m["stylesheet"]; !ok || force_reload_style {
-		m["stylesheet"] = GetStylesheet("default")
+		m["stylesheet"] = GetStylesheet("default", m["fontfamily"].(string))
 	}
 	if _, ok := m["hljscdn"]; !ok {
 		m["hljs_cdn"] = hljscdn
@@ -436,9 +463,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["wordcloud"]; !ok {
 		m["wordcloud"] = false
-	}
-	if _, ok := m["fontfamily"]; !ok {
-		m["fontfamily"] = "Inconsolata"
 	}
 	if _, ok := m["theme"]; !ok {
 		m["theme"] = "default"

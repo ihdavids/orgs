@@ -117,6 +117,9 @@ type Config struct {
 	// Where can we find images served for templates
 	TemplateImagesPath string `yaml:"templateImagesPath"`
 	TemplateFontPath   string `yaml:"templateFontPath"`
+	// Tag groups are a shorthand for matching groups of tags
+	// when showing views.
+	TagGroups map[string][]string `yaml:"tagGroups"`
 }
 
 func (self *Config) Defaults() {
@@ -229,7 +232,7 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
-		config.DefaultTodoStates = "TODO INPROGRESS BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
+		config.DefaultTodoStates = "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
 		config.ParseConfig()
 	}
 	return config

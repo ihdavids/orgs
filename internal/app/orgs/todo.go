@@ -304,7 +304,7 @@ func IsProjectByTag(p *org.Section) bool {
 }
 
 func IsArchived(p *org.Section, d *org.Document) bool {
-	return HasTag("archive", p, d)
+	return HasTag("archive", p, d) || HasTag("archived", p, d)
 }
 
 func IsProject(p *org.Section, f *common.OrgFile) bool {
@@ -375,6 +375,19 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 				tag := tagi.(string)
 				if ok = ok && HasTag(tag, p, exp.Doc); !ok {
 					break
+				}
+			}
+			return ok, nil
+		},
+		"InTagGroup": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			s := args[0].(string)
+			ok := false
+			if tags, tgok := Conf().TagGroups[s]; tgok {
+				for _, tag := range tags {
+					if ok = ok || HasTag(tag, p, exp.Doc); ok {
+						break
+					}
 				}
 			}
 			return ok, nil
