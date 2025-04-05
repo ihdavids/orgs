@@ -92,6 +92,22 @@ nodes =
         return null;
     }
 
+    function findNodeById(id, treeNodes) {
+        for (var i = 0; i < treeNodes.length; ++i) {
+            var x = treeNodes[i];
+            if (x.Id === id) {
+                return x;
+            }
+            if (x.Children && x.Children.length > 0) {
+                var v = findNodeById(id, x.Children);
+                if (v !== null) {
+                    return v;
+                }
+            }
+        }
+        return null;
+    }
+
     function showParent(n) {
         if (n.Parent !== "") {
             console.log("Looking for parent of: ", n.Name);
@@ -119,6 +135,7 @@ nodes =
 
     function hideEverything(n) {
         //console.log("HIDING: ", n.Name);
+        $("mark").contents().unwrap();
         $("#searchoutput").hide();
         $("#searchoutput").html("");
         $("#"+n.Id).hide();
@@ -140,7 +157,7 @@ nodes =
         treeNodes.forEach((n, i) => {
             if (n.Children && n.Children.length > 0) {
                 var $elem = $("<li><span class=\"caret caret-down\">" + n.Name + "</span></li>");
-                var $ul = $("<ul class=\"nested active\"></ul>");
+                var $ul = $("<ul class=\"nested active treeviewul\"></ul>");
                 $elem.append($ul);
                 parent.append($elem);
                 buildTreeView(n.Children, lvl + 1, $ul);
@@ -189,21 +206,25 @@ nodes =
         var allHeadings = $(".heading-content-text");
         allHeadings.each(function () {
             const content = $(this).html();
-            const id = $(this).parent.id();
-            console.log(content);
+
             var m = content.match(re);
             if (m) {
-                elem += content + " " + id;
+
+                const newText = content.replace(re, '<mark class="highlight">$&</mark>');
+                $(this).html(newText);
+
+
+                var id = $(this).parent().attr('id');
+                id = id.replace('-content', '');
+                console.log(id);
+                var n = findNodeById(id, nodes);
+                if (n) {
+                    showRecursive(n);
+                }
             }
         });
-        for (i = 0; i < allHeadings.length; i++) {
-        } 
-        var elem = $(elem);
-        
-
-
-        $("#searchoutput").append(elem);
-        $("#searchoutput").show();
+        //$("#searchoutput").append(elem);
+        //$("#searchoutput").show();
         return false;
     }
 </script>
@@ -235,7 +256,7 @@ nodes =
       <div id="master-wrapper" class="master-wrapper clear">
     	<div id="sidebar" class="sidebar" style="padding-right: 0px; margin-right: 0px; margin-left: 1px; cursor: pointer; overflow-y: auto; left: 0px; float: left; width: 25%; min-width: 150px; height: 1189px;">
             <h2>{{title}}</h2>
-            <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;">
+            <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;" class="treeviewul">
             </ul>
     	</div>
         <div class="display-box">

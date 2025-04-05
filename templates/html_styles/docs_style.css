@@ -183,16 +183,24 @@
 }
 
 /* Remove default bullets */
-ul, .treeviewul {
+ul.treeviewul {
   list-style-type: none;
 	white-space: nowrap;
 }
 
-ul > li {
+ul > li.caret  {
     padding-left:1px;
 	padding-right:1px;
 }
-li > ul {
+li.caret > ul  {
+    padding-left:1px;
+	padding-right:1px;
+}
+ul.treeviewul > li,  {
+    padding-left:1px;
+	padding-right:1px;
+}
+li > ul.treeviewul {
     padding-left:1px;
 	padding-right:1px;
 }
