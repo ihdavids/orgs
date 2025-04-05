@@ -189,10 +189,11 @@ nodes =
         var allHeadings = $(".heading-content-text");
         allHeadings.each(function () {
             const content = $(this).html();
+            const id = $(this).parent.id();
             console.log(content);
             var m = content.match(re);
             if (m) {
-                elem += content;
+                elem += content + " " + id;
             }
         });
         for (i = 0; i < allHeadings.length; i++) {
