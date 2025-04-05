@@ -16,6 +16,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+
+
 type Config struct {
 	// Core systems
 	PlugManager *plugs.PluginManager
@@ -119,6 +121,50 @@ type Config struct {
 	TemplateFontPath   string `yaml:"templateFontPath"`
 	// Tag groups are a shorthand for matching groups of tags
 	// when showing views.
+
+	/* SDOC
+* Tag Groups
+
+  Tag Groups are a cheater way of helping to make your queries less verbose.
+  They are defined on the orgs server and provide a grouping of tags that you
+  can query against.
+
+  Here is a quick example. The following entry in your orgs.yaml
+  allows you to treat PERSONAL as any of FAMILY ME or PERSONAL tags
+  and WORK as any of WORK BACKLOG or PROJECTX tags in an InTagGroup('GROUPNAME')
+  query.
+
+  #+BEGIN_SRC yaml
+	tagGroups:
+	  PERSONAL:
+	    - FAMILY
+	    - ME
+	    - PERSONAL
+	  WORK:
+	    - WORK
+	    - BACKLOG
+	    - PROJECTX
+  #+END_SRC
+
+  Here is a query that might be using that in your vscode org.todoConfigs:
+  I am defining a Todo view that will have filename, status, headline and a few property columns of various sizes
+  and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
+
+  #+BEGIN_SRC json
+  	"Waiting": {
+  		"query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
+  		"display": {
+  			"filename": 15,
+  			"status": 10,
+  			"headline" 25,
+  			"properties": {
+  				"EFFORT": 5,
+  				"ASSIGNED": 15
+  			}
+  		}
+  	}
+  #+END_SRC
+	EDOC */
 	TagGroups map[string][]string `yaml:"tagGroups"`
 }
 
