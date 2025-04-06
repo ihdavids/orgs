@@ -1,6 +1,6 @@
 // EXPORTER: CONFLUENCE Export
 
-/* SDOC
+/* SDOC: Exporters
 
 * Confluence Plugin
   The confluence exporter has the ability to take an entire file

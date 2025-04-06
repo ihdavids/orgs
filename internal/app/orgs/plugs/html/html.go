@@ -19,6 +19,25 @@ import (
 	"gopkg.in/op/go-logging.v1"
 )
 
+/* SDOC: Exporters
+
+* Html Plugin
+  The html exporter has the ability to take an entire file
+  and export it as an html document using one of several templates of your choosing
+
+** Configuration
+
+	#+BEGIN_SRC yaml
+		exporters:
+			- name: "confluence"
+				url: "<confluenceurl>"
+				user: "<your username>"
+				token: "<generated token from confluence>"
+				space: "<name of space where you would like docs generated>"
+	#+END_SRC
+
+EDOC */
+
 type OrgHtmlExporter struct {
 	TemplatePath     string
 	Props            map[string]interface{}

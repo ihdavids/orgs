@@ -1,7 +1,7 @@
 //lint:file-ignore ST1006 allow the use of self
 package orgs
 
-/* SDOC
+/* SDOC: Editing
 
 * Capture Plugin
   The capture tool can take a quick snippet of text
