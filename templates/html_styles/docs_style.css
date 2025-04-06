@@ -100,7 +100,23 @@
 	font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
 	font-size: 0.85rem;
 	border: 1px dashed rgba(250, 100, 50, 0.5); }
-  
+ 
+	pre {
+	/*display:block;*/
+	/*overflow: auto;*/
+	font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
+	/*font-size: 0.85rem;*/
+	line-height: 1;
+	/*border: 1px dashed rgba(250, 100, 50, 0.5); }*/
+	padding: 5px;
+	tab-size: 2;
+
+	}
+	code {
+		display: block;
+		border-radius: 10px;
+	}
+
   figure {
 	margin: 1em 0;
   }
