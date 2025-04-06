@@ -166,6 +166,8 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	// Ensure we do not accidentally process the existing output file
+	os.Remove(output)
 	for _, file := range files {
 		ProcessFile(file)
 	}
