@@ -5,6 +5,35 @@ package orgs
 * Overview
   
   TODO: Fill in information on querying operations
+
+  - IsProject - returns true for nodes that are defined as a project (see project definition)
+  - IsActive  - returns true if the status of a node is an active status (IE not DONE)
+  - HasAStatus - returns true if a node has a valid status
+  - IsPartOfProject - returns true if a task is a subnode of a project node
+		"HasTags": func(args ...interface{}) (interface{}, error) {
+		"InTagGroup": func(args ...interface{}) (interface{}, error) {
+		"NoTags": func(args ...interface{}) (interface{}, error) {
+		"IsStatus": func(args ...interface{}) (interface{}, error) {
+		"IsTodo": func(args ...interface{}) (interface{}, error) {
+		// Syntatical sugar for the following:
+		// !IsArchived() && IsTodo() && !IsProject()
+		"IsTask": func(args ...interface{}) (interface{}, error) {
+		// Check if a headline is in the archived state or not
+		"IsArchived": func(args ...interface{}) (interface{}, error) {
+		// Check if the priority matches a specific value.
+		"IsPriority": func(args ...interface{}) (interface{}, error) {
+		// Returns true if the headline has the specific property
+		"HasProperty": func(args ...interface{}) (interface{}, error) {
+		// MatchProperty(NAME, REGEX)
+		// returns true if the property value matches the implied regex
+		"MatchProperty": func(args ...interface{}) (interface{}, error) {
+		// Run an RE against each headline and check for a match
+		"MatchHeadline": func(args ...interface{}) (interface{}, error) {
+		// Check if a todo is targetting a specific date
+		"OnDate": func(args ...interface{}) (interface{}, error) {
+		"Today": func(args ...interface{}) (interface{}, error) {
+		"Yesterday": func(args ...interface{}) (interface{}, error) {
+		"ThisWeek": func(args ...interface{}) (interface{}, error) {
 EDOC */
 
 import (
