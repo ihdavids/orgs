@@ -4,16 +4,27 @@ package googlecal
 
 * Google Calendar Auto Sync
 
-	TODO More documentation on this module
+	This integrates with your google calendar
+	Syncing the calendar locally as org mode files.
+
+	This is currently a one way sync and cannot sync
+	back to your calendar!
+
+	To create your credentials, you need to go here:
+	https://console.cloud.google.com/
 
 	#+BEGIN_SRC yaml
-  - name: "googlecal"
-	credentials: "<your creds>"
-	token:       "<your token>"
-	output:      "filename you want to output to"
-	numevents    30
-    freq: 300
+    - name: "googlecal"
+      credentials: "<your creds, usually a json filename>"
+      token:       "<your token, usually a json filename>"
+      output:      "path/filename you want to output to"
+      numevents    30
+      freq: 300
 	#+END_SRC
+
+	Here we are polling every 300 seconds (5 minutes)
+	and we are asking the google API for a copy of our calendar
+	to store in path/filename.
 
 EDOC */
 
