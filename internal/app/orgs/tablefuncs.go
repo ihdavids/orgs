@@ -14,6 +14,111 @@ import (
 
 /* SDOC: Tables
 * Table Functions
+
+  Orgs cannot support the more rigorous org mode like table syntax. It does it's best
+  but a true implementation of org mode table syntax would require that orgs run a lisp
+  interpreter inside your editor, and that's just not possible. That said, orgs
+  does facilitate a very robust table evaluation that I hope might prove useful
+  to people other than just me.
+
+  Here is an example of a table with some expressions.
+  org mode stores all table expression at the end of a table
+  in a TBLFM: comment.
+
+  #+BEGIN_SRC org
+  #+NAME: Monsters
+  | Monster Name | Start Health | Total Damage | %Alive | AC | Initiative |
+  |--------------+--------------+--------------+--------+----+------------|
+  | M1           |           44 |            0 |  100.0 |    |            |
+  #+TBLFM:$4=(($2-$3)/$2)*100.0;%.1f::$3=remote('FightHistory',$4) if remote('FightHistory',$2)==$1 else 0 
+  #+END_SRC
+
+  Looking at the first operation (up to the ::)
+  
+  #+BEGIN_SRC org
+  	$4=(($2-$3)/$2)*100.0;%.1f
+  #+END_SRC
+
+  This states that every entry in the 4th column (IE the %Alive column)
+  is set to the (Start Health - Total Damage) / Start Health * 100.0
+  So each monsters % alive is the percentage of health left.
+
+  Then there is that funny %.1f which tells the system to only keep one decimal place
+  becase more would be tedious to look at.
+
+  Next $3 pulls the value from the 4th column of the FightHistory table if the 2nd column has my Monster Name in it, otherwise 0
+  This means I can update the fight history table and have this table auto update from it. (The last row in the fight history that has our monster in it
+  will end up in the Total Damage block.
+
+** Table Function Reference
+
+   Standard Org Columnar Methods
+
+   - vmean
+   - vmedian
+   - vsum
+   - vmin
+   - vmax
+
+   Math methods
+
+   - floor
+   - ceil
+   - round
+   - trunc
+   - abs
+   - degrees
+   - radians
+   - int
+   - float
+   - bool
+   - sqrt
+   - cos
+   - acos
+   - cosh
+   - acosh
+   - tan
+   - atan
+   - atanh
+   - tanh
+   - sin
+   - asin
+   - asinh
+   - sinh
+   - log
+   - log10
+   - log2
+   - exp
+   - exp2
+   - rem
+   - pow
+   - mod
+   - pow10
+   - neg
+   - rdup
+   - sort
+   - rsort
+   - rev
+   - vlen
+   - vcount
+   - rand
+   - passed
+   - highlight
+
+   Date methods
+
+   - now
+   - date
+   - minute
+   - hour
+   - day
+   - year
+   - month
+   - monthname
+   - weekday
+   - weekdayname
+   - yearday
+   - duration
   
   TODO: Fill in information on table functions
 EDOC */

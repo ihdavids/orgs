@@ -3,37 +3,67 @@ package orgs
 
 /* SDOC: Querying
 * Overview
-  
-  TODO: Fill in information on querying operations
 
-  - IsProject - returns true for nodes that are defined as a project (see project definition)
-  - IsActive  - returns true if the status of a node is an active status (IE not DONE)
-  - HasAStatus - returns true if a node has a valid status
-  - IsPartOfProject - returns true if a task is a subnode of a project node
-		"HasTags": func(args ...interface{}) (interface{}, error) {
-		"InTagGroup": func(args ...interface{}) (interface{}, error) {
-		"NoTags": func(args ...interface{}) (interface{}, error) {
-		"IsStatus": func(args ...interface{}) (interface{}, error) {
-		"IsTodo": func(args ...interface{}) (interface{}, error) {
-		// Syntatical sugar for the following:
-		// !IsArchived() && IsTodo() && !IsProject()
-		"IsTask": func(args ...interface{}) (interface{}, error) {
-		// Check if a headline is in the archived state or not
-		"IsArchived": func(args ...interface{}) (interface{}, error) {
-		// Check if the priority matches a specific value.
-		"IsPriority": func(args ...interface{}) (interface{}, error) {
-		// Returns true if the headline has the specific property
-		"HasProperty": func(args ...interface{}) (interface{}, error) {
-		// MatchProperty(NAME, REGEX)
-		// returns true if the property value matches the implied regex
-		"MatchProperty": func(args ...interface{}) (interface{}, error) {
-		// Run an RE against each headline and check for a match
-		"MatchHeadline": func(args ...interface{}) (interface{}, error) {
-		// Check if a todo is targetting a specific date
-		"OnDate": func(args ...interface{}) (interface{}, error) {
-		"Today": func(args ...interface{}) (interface{}, error) {
-		"Yesterday": func(args ...interface{}) (interface{}, error) {
-		"ThisWeek": func(args ...interface{}) (interface{}, error) {
+  Many operations in orgs require you to select the nodes that the operation applies to.
+  - Agendas
+  - Filtered Tabular Lists
+  - Various Exporters
+  - Etc
+
+  Lots of these things require a filtered list of nodes to operate. Orgs does this through
+  a node filter. This is an expression that is applied to nodes in the DB and returns only those
+  nodes that pass the query.
+
+  The most common expression starts with:
+
+   #+BEGIN_SRC cpp
+   !IsArchive() && IsTodo()
+   #+END_SRC
+
+   This will select all active nodes that have an active TODO status on them throughout all of your org mode files.
+   Note the negation on IsArchive() these expressions support most common operators
+
+   Agenda views will often add a date query:
+
+   #+BEGIN_SRC cpp
+   !IsArchive() && IsTodo() && OnDate('<specific date>')
+   #+END_SRC
+
+   People who follow GTD will often want lists that follow the common patterns:
+
+   #+BEGIN_SRC cpp
+   !IsArchive() && IsProject()
+   !IsArchive() && IsTodo() && IsStatus('NEXT')
+   !IsArchive() && IsTodo() && ( IsStatus('WAITING') || IsStatus('BLOCKED') )
+   #+END_SRC
+
+   This represents some of your common lists that you need to review regularly:
+   - Projects List
+   - Next Actions List
+   - Waiting On List
+
+
+** Orgs Expression Methods Reference  
+
+  - *IsProject* - returns true for nodes that are defined as a project (see project definition)
+  - *HasAStatus* - returns true if a node has a valid status
+  - *IsPartOfProject* - returns true if a task is a subnode of a project node
+  - *HasTags* - returns true if a node has any tags
+  - *NoTags* - returns true if a node does not have any tags on it
+  - *InTagGroup* - cheat, returns true if any tags in a tag group are applied to a node
+  - *IsStatus* - returns true if a node has a given status
+  - *IsTodo* - returns true if a node has an active status (the same as IsActive currently)
+  - *IsActive* - returns true if the status of a node is an active status (IE not DONE)
+  - *IsTask* - Syntatical sugar for the following: "!IsArchived() && IsTodo() && !IsProject()"
+  - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
+  - *IsPriority* - Check if the priority matches a specific value.
+  - *HasProperty* - Returns true if the headline has the specific property
+  - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
+  - *MatchHeadline* - Run an RE against each headline and check for a match
+  - *OnDate* - Check if a todo is targetting a specific date
+  - *Today* - returns true if a node is scheduled for today
+  - *Yesterday* - returns true if a node is scheduled for yesterday
+  - *ThisWeek* - returns true if a node is scheduled for sometime this week
 EDOC */
 
 import (
