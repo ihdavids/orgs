@@ -189,7 +189,10 @@ func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
 }
 
 func EscapeString(out string) string {
-	return out
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(out, 
+					"_",  "\\_"), 
+					"&",  "\\&"), 
+					"$",  "\\$")
 }
 
 func GetProp(name, revealName string, h org.Headline, secProps string) string {
@@ -508,12 +511,21 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		//	lang = strings.ToLower(b.Parameters[0])
 		//}
 		// TODO content = w.HighlightCodeBlock(b.Keywords, content, lang, false, params)
-		content = ""
-		w.startEnv("verbatim")
+		//content = ""
+		//w.startEnv("verbatim")
 		// TODO: Handle content
-		w.WriteString(EscapeString(content))
-		w.endEnv("verbatim")
+		//w.WriteString(EscapeString(content))
+		//w.endEnv("verbatim")
 		//w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
+		lang := "text"
+		if len(b.Parameters) >= 1 {
+			lang = strings.ToLower(b.Parameters[0])
+		}
+		w.startEnv("minted")
+		w.WriteString(fmt.Sprintf("{%s}\n",lang))
+		w.WriteString(content)
+		w.endEnv("minted")
+
 	case "EXAMPLE":
 		w.startEnv("verbatim")
 		w.WriteString(EscapeString(content))
@@ -1070,7 +1082,7 @@ func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
 			if i != 0 && out != "" {
 				w.WriteString("\n")
 			}
-			w.WriteString(out)
+			w.WriteString(EscapeString(out))
 		}
 	} else {
 		w.WriteString("\n")
@@ -1085,7 +1097,8 @@ func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if w.docclass != "dndbook" {
 		w.WriteString(`\par `)
 	}
-	org.WriteNodes(w, p.Children...)
+	out := w.WriteNodesAsString(p.Children...)
+	w.WriteString(EscapeString(out))
 }
 
 func (w *OrgLatexWriter) WriteExample(e org.Example) {
