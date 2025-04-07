@@ -2,8 +2,37 @@ package orgs
 
 /* SDOC: Editing
 * Day Page
-  
-  TODO: Fill in information on daypage manipulation
+
+	The day page module is designed to quickly create a worklog
+	file for you every day. It is driven off a template file:
+
+	daypage.tpl
+
+	This template file will expand into a new worklog file when asked.
+	I tend to operate with a single day page per week as I find
+	a daypage per day is to verbose and a daypage per month is to messy.
+
+
+ 
+	#+BEGIN_SRC yaml
+    dayPagePath: "C:/path/worklog/"
+	#+END_SRC
+
+	My personal day page template looks about like so at the moment.
+
+	#+BEGIN_SRC org	
+    #+TITLE:  {{day_page_title}} 
+    #+AUTHOR: Me Myself
+
+    * Inbox
+
+    * Mon
+    * Tue
+    * Wed
+    * Thu
+    * Fri
+	#+END_SRC
+
 EDOC */
 
 import (
