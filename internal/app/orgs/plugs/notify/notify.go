@@ -3,13 +3,24 @@ package notify
 
 * Notify
 
-	TODO More documentation on this module
+	The notify plugin will display a message box on Windows or Mac
+	as a scheduled appointment approached. This is a polling orgs
+	module meaning it will run periodically and your polling interval
+	determines the smallest granularity at which you can notify.
+
+	Here we are polling every 60 seconds but only notifying when
+	the appointment is less than 5 minutes away.
+
+	The popup will have a unicorn org mode icon and the popup
+	will play an annoying beep sound to catch your attention.
+
 
 	#+BEGIN_SRC yaml
   - name: "notify"
+    freq: 60
     beep: true
     notifybeforemins: 5
-    icon: "icon location"
+    icon: "c:/path/orgs/unicorn.png"
 	#+END_SRC
 
 EDOC */
