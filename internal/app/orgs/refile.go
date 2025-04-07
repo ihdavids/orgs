@@ -1,6 +1,12 @@
 //lint:file-ignore ST1006 allow the use of self
 package orgs
 
+/* SDOC: Editing
+* Refile
+  
+  TODO: Fill in information on orgs server refiling
+EDOC */
+
 import (
 	"bufio"
 	"fmt"

@@ -12,6 +12,12 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+/* SDOC: Tables
+* Table Functions
+  
+  TODO: Fill in information on table functions
+EDOC */
+
 // Additional functions
 // head - Get first cell
 // tail - Get all but first cell

@@ -1,5 +1,11 @@
 package orgs
 
+/* SDOC: Editing
+* Exporters
+  
+  TODO: Fill in information on working with exporters
+EDOC */
+
 import (
 	"fmt"
 	"log"

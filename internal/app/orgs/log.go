@@ -1,5 +1,11 @@
 package orgs
 
+/* SDOC: Settings
+* Logging
+  
+  TODO: Fill in information on orgs server logging
+EDOC */
+
 import (
 	"os"
 	"strconv"

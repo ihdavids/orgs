@@ -1,12 +1,23 @@
 //lint:file-ignore ST1006 allow the use of self
 // EXPORTER: Gantt Chart
-// This is a mermaid JS based gantt chart exporter.
-// This returns an html page with a mermaid js rendering of the
-// requested query.
-//
-// Unlike the google gantt chart this has swim lane
-// based sections and does not support resource based
-// bar coloring.
+/* SDOC: Exporters
+
+* Mermaid Gantt
+  This is a mermaid JS based gantt chart exporter.
+  This returns an html page with a mermaid js rendering of the
+  requested query.
+
+  Unlike the google gantt chart this has swim lane
+  based sections and does not support resource based
+  bar coloring.
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "mermaid"
+	#+END_SRC
+
+EDOC */
 
 package mermaid
 

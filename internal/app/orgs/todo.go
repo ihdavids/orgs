@@ -1,6 +1,12 @@
 //lint:file-ignore ST1006 allow the use of self
 package orgs
 
+/* SDOC: Querying
+* Overview
+  
+  TODO: Fill in information on querying operations
+EDOC */
+
 import (
 	"fmt"
 	"io/ioutil"

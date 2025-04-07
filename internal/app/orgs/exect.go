@@ -1,5 +1,11 @@
 package orgs
 
+/* SDOC: Editing
+* Table Execution
+  
+  TODO: Fill in information on table execution
+EDOC */
+
 import (
 	"fmt"
 	"regexp"

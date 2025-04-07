@@ -1,5 +1,20 @@
 package ics
 
+/* SDOC: Pollers
+
+* ICS Calendar Importer
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "ics"
+	timezone: "America/Los_Angeles"
+	filename: "path to ics file to import"
+	output: "where to output org data"
+	#+END_SRC
+
+EDOC */
+
 import (
 	"fmt"
 	"log"

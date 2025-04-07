@@ -100,29 +100,62 @@ type Config struct {
 
 	// If true tasks are marked done when moved to archive.
 	ArchiveMarkDone bool `yaml:"archiveMarkDone"`
+	/* SDOC: Settings
+* Date Tree Formatting
+	These options control the format of your datatree
 
-	// How do you like your datetree?
-	// * 2006
-	// ** January
-	// *** 01 Monday
-	//
-	// * 2006
-	// ** 2006-01 October
-	// *** 2006-01-02 Friday
-	// *** 2006-01-02 Saturday
+	#+BEGIN_SRC org
+	 * 2006
+	 ** January
+	 *** 01 Monday
+	#+END_SRC
+
+	#+BEGIN_SRC org
+	 * 2006
+	 ** 2006-01 October
+	 *** 2006-01-02 Friday
+	 *** 2006-01-02 Saturday
+	#+END_SRC
+
+	#+BEGIN_SRC yaml
+	dateTreeYearFormat:  "2006"
+	dateTreeMonthFormat: "January"
+	dateTreeDayFormat:   "01 Monday"
+	#+END_SRC
+
+	EDOC */
 	DateTreeYearFormat  string `yaml:"dateTreeYearFormat"`
 	DateTreeMonthFormat string `yaml:"dateTreeMonthFormat"`
 	DateTreeDayFormat   string `yaml:"dateTreeDayFormat"`
-	// Drawer to use in inserting clock values
-	// Defaults to LOGBOOK
+	/* SDOC: Settings
+* Clock Into Drawer
+	When using the clocking features org can choose to dump clock data at the top of a heading
+	OR produce the clock data into a drawer of your choosing. This option lets you
+	choose the name of the drawer.
+	#+BEGIN_SRC yaml
+	 clockIntoDrawer: "LOGBOOK"
+	#+END_SRC
+
+	This defaults to LOGBOOK
+
+	EDOC */
 	ClockIntoDrawer string `yaml:"clockIntoDrawer"`
-	// Where can we find images served for templates
+	/* SDOC: Settings
+* Image Path
+	Images and fonts are secondary html requests when loading an html
+	document in vscode. In addition, orgs may want to provide
+	quick links et al.
+
+	#+BEGIN_SRC yaml
+	 templateImagesPath: "<path>"
+	 templateFontPath: "<path>"
+	#+END_SRC
+
+	This defaults to: ./templates/html_styles/images
+	EDOC */
 	TemplateImagesPath string `yaml:"templateImagesPath"`
 	TemplateFontPath   string `yaml:"templateFontPath"`
-	// Tag groups are a shorthand for matching groups of tags
-	// when showing views.
-
-	/* SDOC
+	/* SDOC: Settings
 * Tag Groups
 
   Tag Groups are a cheater way of helping to make your queries less verbose.
@@ -156,7 +189,7 @@ type Config struct {
   		"display": {
   			"filename": 15,
   			"status": 10,
-  			"headline" 25,
+  			"headline": 25,
   			"properties": {
   				"EFFORT": 5,
   				"ASSIGNED": 15

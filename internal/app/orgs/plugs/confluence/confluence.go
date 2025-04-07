@@ -2,11 +2,9 @@
 
 /* SDOC: Exporters
 
-* Confluence Plugin
+* Confluence
   The confluence exporter has the ability to take an entire file
   and export it as a confluence page in the space of your choosing.
-
-** Configuration
 
 	#+BEGIN_SRC yaml
 		exporters:

@@ -1,5 +1,11 @@
 package orgs
 
+/* SDOC: Editing
+* Day Page
+  
+  TODO: Fill in information on daypage manipulation
+EDOC */
+
 import (
 	"fmt"
 	"io/fs"

@@ -1,5 +1,11 @@
 package orgs
 
+/* SDOC: Editing
+* Bable Block Execution
+  
+  TODO: Fill in information on babel and literate programming
+EDOC */
+
 import (
 	"fmt"
 

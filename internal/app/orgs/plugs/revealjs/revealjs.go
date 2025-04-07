@@ -1,5 +1,17 @@
 //lint:file-ignore ST1006 allow the use of self
-// EXPORTER: HTML Export
+// EXPORTER: Reveal JS
+/* SDOC: Exporters
+
+* Reveal JS
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "revealjs"
+  	templatepath: "path to reveal template"
+	#+END_SRC
+
+EDOC */
 
 package revealjs
 

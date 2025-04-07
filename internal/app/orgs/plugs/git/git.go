@@ -8,6 +8,21 @@ package git
 //     freq: 300
 //     gitpath: "C:/Program Files/Git/bin/git.exe"
 
+/* SDOC: Pollers
+
+* Git
+  Syncs the first directory found in your OrgDirs with git automatically
+  Can currently only sync one dir.
+
+	#+BEGIN_SRC yaml
+  - name: "git"
+    freq: 300
+    gitpath: "C:/Program Files/Git/bin/git.exe"
+	#+END_SRC
+
+EDOC */
+
+
 import (
 	"bytes"
 	"fmt"

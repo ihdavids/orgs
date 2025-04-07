@@ -1,8 +1,19 @@
 // EXPORTER: MindMap
-// This returns an html document containing a mind map in mermaid js format
-// This can be used in a web framework or in VsCode as a means of visualizing
-// a set of org nodes.
-// https://mermaid.js.org/syntax/mindmap.html
+/* SDOC: Exporters
+
+* MindMap
+  This returns an html document containing a mind map in mermaid js format
+  This can be used in a web framework or in VsCode as a means of visualizing
+  a set of org nodes.
+  https://mermaid.js.org/syntax/mindmap.html
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "mindmap"
+	#+END_SRC
+
+EDOC */
 
 package mermaid
 

@@ -3,14 +3,13 @@ package orgs
 
 /* SDOC: Editing
 
-* Capture Plugin
+* Capture
   The capture tool can take a quick snippet of text
   and turn it into a targetted org entry in a file
   of your choosing. With Refile capability Capture
   can be a major asset when helping you organize your
   thoughts. 
 
-** Configuration
   Configuration for the system is done through
   the captureTemplates entry in your orgs.yaml file:
 

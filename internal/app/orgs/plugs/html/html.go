@@ -21,20 +21,48 @@ import (
 
 /* SDOC: Exporters
 
-* Html Plugin
+* Html
   The html exporter has the ability to take an entire file
   and export it as an html document using one of several templates of your choosing
 
-** Configuration
+  To enable the plugin you should add the following to your orgs.yaml file.
+
 
 	#+BEGIN_SRC yaml
-		exporters:
-			- name: "confluence"
-				url: "<confluenceurl>"
-				user: "<your username>"
-				token: "<generated token from confluence>"
-				space: "<name of space where you would like docs generated>"
+  - name: "html"
+    props:
+      fontfamily: "Underdog"
 	#+END_SRC
+
+  Several properties are available to you in the regular operation of the exporter.
+  these include: 
+
+  - fontfamily - This can be used to control the default font. At the moment the default
+    template uses google fonts as a source of fonts for your exported html document.
+  - title - The default title to use on your document if none is provided by the org document
+  - stylesheet - The default stylesheet name to use for styling your output html
+  - hljscdn - The default cdn link to use for highlight js (the default styling mechanism for source code blocks)
+  - hljsstyle - The default font style to use for highlight js blocks
+  - wordcloud - If true includes a wordcloud block in your template
+  - theme - The default theme template to use (html_default.tpl) (also default style in abscense of stylesheet default_style.css)
+
+	Once enabled html export requests will first generate an html representation of your document, which in turn will expand
+	the theme template (tpl file) with that html and apply the stylesheet into that template where requested.
+	The result is your rendered html as requested.
+
+** Default Style
+	The default style is pretty vanilla. It is a simple rendering of your html with very few bells and whistles.
+
+** Docs Style
+	When you set the HTML_THEME to docs the docs theme is selected. 
+	This html template has a treeview for jumping around in your node tree
+	and a search bar that can facilitate searching through all the generated text.
+
+	#+BEGIN_SRC org
+	   #+HTML_THEME: docs
+	#+END_SRC
+
+
 
 EDOC */
 
@@ -114,6 +142,7 @@ func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
 			cnt += 1
 			return rv
 		} else {
+			//attribStr = "class=\"lanugage-" + lang + "\""
 			if inline {
 				return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
 			}

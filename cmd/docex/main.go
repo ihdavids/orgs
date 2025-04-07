@@ -11,6 +11,22 @@ import (
 	"sort"
 )
 
+type arrayFlags []string
+
+// String is an implementation of the flag.Value interface
+func (i *arrayFlags) String() string {
+    return fmt.Sprintf("%v", *i)
+}
+
+// Set is an implementation of the flag.Value interface
+func (i *arrayFlags) Set(value string) error {
+    *i = append(*i, value)
+    return nil
+}
+
+var introFiles arrayFlags
+
+
 func IsGoFile(filename string) bool {
 	return filepath.Ext(filename) == ".go"
 }
@@ -112,6 +128,21 @@ func WriteDocs(output string) {
 		// TODO: Make this configurable
 		f.WriteString("#+TITLE: Orgs\n")
 		f.WriteString("#+HTML_THEME: docs\n")
+
+
+		for _,file := range introFiles {
+			if r, err := os.Open(file); err == nil {
+				defer r.Close()
+				scanner := bufio.NewScanner(r)
+				for scanner.Scan() {
+					line := scanner.Text()
+					f.WriteString(line)
+					f.WriteString("\n")
+				}
+			}
+		}
+
+
 		keys := []string{}
 		for k,_ := range groups {
 			keys = append(keys, k)
@@ -145,6 +176,8 @@ func main() {
 
 	flag.StringVar(&output, "out", "./out.org", "Output file to contain documentation")
 	flag.StringVar(&rootDir, "src", "./", "Where to find source files.")
+    flag.Var(&introFiles, "start", "Intro files to add first")
+
 	flag.Parse()
 
 	if output == "" || rootDir == "" {
@@ -166,6 +199,8 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+
 	// Ensure we do not accidentally process the existing output file
 	os.Remove(output)
 	for _, file := range files {

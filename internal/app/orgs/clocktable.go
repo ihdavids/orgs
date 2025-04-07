@@ -1,5 +1,11 @@
 package orgs
 
+/* SDOC: Editing
+* Clock Table
+  
+  TODO: Fill in information on how to use the orgs clocktable output
+EDOC */
+
 import (
 	"fmt"
 	"strconv"

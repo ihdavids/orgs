@@ -1,5 +1,17 @@
 package todoist
 
+/* SDOC: Pollers
+
+* Todoist
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "todoist"
+  	token: "todoist api token"
+	#+END_SRC
+
+EDOC */
 import (
 	"context"
 	"fmt"

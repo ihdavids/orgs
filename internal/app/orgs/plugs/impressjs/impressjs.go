@@ -1,7 +1,18 @@
 //lint:file-ignore ST1006 allow the use of self
 // EXPORTER: IMPRESS JS Export
 
-package revealjs
+/* SDOC: Exporters
+
+* ImpressJs
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "impressjs"
+	#+END_SRC
+
+EDOC */
+package impressjs
 
 import (
 	"bytes"

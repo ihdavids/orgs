@@ -1,5 +1,36 @@
 package jira
 
+// -----------------------------------------------------------
+/* SDOC: Pollers
+
+* Jira
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "jira"
+  	endpoint: "your endpoint https://go-jira.atlassian.net"
+  	user: "The user operating on jira"
+  	queries: "List of JiraSearch objects"
+	#+END_SRC
+
+EDOC */
+// -----------------------------------------------------------
+/* SDOC: Updaters
+
+* Jira
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "jira"
+  	endpoint: "your endpoint https://go-jira.atlassian.net"
+  	user: "The user operating on jira"
+  	queries: "List of JiraSearch objects"
+	#+END_SRC
+
+EDOC */
+
 import (
 	"encoding/base64"
 	"fmt"

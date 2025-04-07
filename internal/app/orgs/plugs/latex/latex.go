@@ -1,6 +1,18 @@
 // EXPORTER: Latex Export
 
-package gantt
+/* SDOC: Exporters
+
+* Latex
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "latex"
+  	templatepath: "latex template path"
+	#+END_SRC
+
+EDOC */
+package latex
 
 import (
 	"fmt"

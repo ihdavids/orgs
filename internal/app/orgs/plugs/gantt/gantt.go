@@ -1,7 +1,28 @@
 //lint:file-ignore ST1006 allow the use of self
 // EXPORTER: Gantt Chart
-// This is a google gantt chart based exporter. It returns an
-// html page structured to display a google gantt chart with the respective nodes.
+/* SDOC: Exporters
+
+* Gantt
+  This is a google gantt chart based exporter. It returns an
+  html page structured to display a google gantt chart with the respective nodes.
+
+  To enable the plugin you should add the following to your orgs.yaml file.
+
+
+	#+BEGIN_SRC yaml
+  - name: "gantt"
+	#+END_SRC
+
+	Key Properties
+	- ORDERED
+	- AFTER
+
+	Other Key Properties
+	- ASSIGNED
+	- RID
+	- RESOURCEID
+
+EDOC */
 
 package gantt
 

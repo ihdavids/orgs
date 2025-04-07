@@ -1,4 +1,18 @@
 package notify
+/* SDOC: Pollers
+
+* Notify
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "notify"
+    beep: true
+    notifybeforemins: 5
+    icon: "icon location"
+	#+END_SRC
+
+EDOC */
 
 import (
 	"fmt"

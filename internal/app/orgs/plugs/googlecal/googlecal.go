@@ -1,5 +1,22 @@
 package googlecal
 
+/* SDOC: Pollers
+
+* Google Calendar Auto Sync
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "googlecal"
+	credentials: "<your creds>"
+	token:       "<your token>"
+	output:      "filename you want to output to"
+	numevents    30
+    freq: 300
+	#+END_SRC
+
+EDOC */
+
 import (
 	"context"
 	"encoding/json"
