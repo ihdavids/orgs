@@ -15,6 +15,13 @@
 				space: "<name of space where you would like docs generated>"
 	#+END_SRC
 
+	By default your personal space's name is tilde followed by your username
+	best to put it in quotes to avoid parsing issues:
+	#+BEGIN_SRC yaml
+     space: "~myusername"
+	#+END_SRC
+
+
 EDOC */
 
 package confluence
