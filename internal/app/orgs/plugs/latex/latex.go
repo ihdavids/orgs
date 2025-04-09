@@ -11,6 +11,13 @@
   	templatepath: "latex template path"
 	#+END_SRC
 
+	Converting to a pdf can be done with a variety of latex tools.
+	MacTex for instance:
+
+	#+BEGIN_SRC bash
+    pdflatex --shell-escape ./docs.tex -output-format=pdf -o=docs.pdf	
+	#+END_SRC
+
 EDOC */
 package latex
 
