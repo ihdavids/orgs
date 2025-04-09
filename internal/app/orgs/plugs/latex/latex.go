@@ -1554,16 +1554,15 @@ type TableRow struct {
     template: |+
       {% if havecaption %}\begin{table}[!h]{% endif %}
       \begin{center}
-      {{ envs | startenv: tabular }}
-      {{ separators }} 
-      {{% for row in rows %}}
-        {{% if row.isspecial %}}
+      {{ envs | startenv: "tabular" }}{{ separators }} 
+      {% for row in rows %}
+        {{% if row.Isspecial %}}
           \hline
-        {{% else %}}
-          {{ row.cols | sepList & }} \\
-        {{% endif %}}
-      {{% endfor %}}
-      {{ envs | endenv: tabular }}
+        {% else %}
+          {{ row.Cols | sepList: "&"" }} \\
+        {% endif %}
+      {% endfor %}
+      {{ envs | endenv: "tabular" }}
       {% if havecaption %}\caption{ {{caption}} }{% endif %}
       \end{center}
       {% if havecaption %}\end{table}{% endif %}
@@ -1577,24 +1576,14 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 			panic("PANIC WRITING TABLE")
 		}
 	}()
-	//haveTable := false
 	// Dndbook does its own formatting
-	if w.docclass != "dndbook" {
-		/*
-		if w.envs.HaveCaption() {
-			w.WriteString(`\begin{table}[!h]` + "\n")
-			haveTable = true
-		}
-		w.WriteString(`\begin{center}` + "\n")
-		*/
-	} else {
+	if w.docclass == "dndbook" {
 		// TODO Handle this one!
 		if w.HandleDndSpecialTables(t) {
 			return
 		}
 	}
-	//tableEnv := "tabular"
-	// TODO: Handle this one!
+	// TODO: Handle this one in a template!
 	if w.docclass == "dndbook" {
 		name := ""
 		if w.envs.HaveCaption() {
@@ -1602,8 +1591,8 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 		//tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
 		fmt.Sprintf("DndTable | [header=%s]", name)
+		//w.startEnv(tableEnv)
 	}
-	//w.startEnv(tableEnv)
 	cnt := len(t.ColumnInfos)
 	sep := ""
 	// Dndbook does its own formatting
