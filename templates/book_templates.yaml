@@ -22,4 +22,4 @@ headings:
 paragraph:
   default:
     template: |+
-      \par {{content}}
+      \par {{content | safe}}

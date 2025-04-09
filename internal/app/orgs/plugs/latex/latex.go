@@ -6,9 +6,16 @@
 
 	TODO More documentation on this module
 
+	The latex exporter can be used to generate a .tex file
+	from a set of org nodes. This can be for a variety of typesetting reasons
+	or simply as a stepping stone on the way to a pdf using any number of latex
+	tools for converting to pdf.
+
+	To set it up in your config file you do the following:
+
 	#+BEGIN_SRC yaml
-  - name: "latex"
-  	templatepath: "latex template path"
+      - name: "latex"
+  	    templatepath: "latex template path"
 	#+END_SRC
 
 	Converting to a pdf can be done with a variety of latex tools.
@@ -17,6 +24,13 @@
 	#+BEGIN_SRC bash
     pdflatex --shell-escape ./docs.tex -output-format=pdf -o=docs.pdf	
 	#+END_SRC
+
+	The Latex module uses a cascading templates as a means of
+	facilitating expansing. There is a default template (book_templates.yaml)
+	that is the fallback for all templates used in generating latex. You can
+	tweak that but beware, pongo2 templates can be a bit temperamental and 
+	will expand in odd ways if you add a second set of {} on a for loop or 
+	miss out on quotes in a parameter.
 
 EDOC */
 package latex
@@ -1272,6 +1286,25 @@ func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
 	}
 }
 
+/* SDOC: Exporters
+
+** Latex Paragraph
+
+	Paragraphs, much like most org nodes
+	can be customized. By default the use the
+	standard latex par tag. Note the safe
+	filter. Paragraphs are run through latex escaping
+	by default so you will want to avoid the pongo template
+	escaping to avoid ampersand and other html style escaping
+	that are default for this framwork.
+
+	#+BEGIN_SRC yaml
+    paragraph:
+      default:
+        template: |+
+          \par {{content | safe}}
+    #+END_SRC
+EDOC */
 func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if len(p.Children) == 0 {
 		return
