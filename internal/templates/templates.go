@@ -298,6 +298,44 @@ func commaList(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut
 	return in, nil
 }
 
+func sepList(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	if in != nil {
+		fmt.Printf("HAVE IN \n")
+		inVar, ok := in.Interface().([]string)
+		sep := param.String()
+		if ok && inVar != nil {
+			fmt.Printf("PROCESS IN \n")
+			output := ""
+			for _, v := range inVar {
+				v := strings.TrimSpace(v)
+				if output != "" {
+					output += " "+sep+" "
+				}
+				output += v
+			}
+			output = strings.TrimSpace(output)
+			fmt.Printf("OUTPUT: %s\n", output)
+			return pongo2.AsValue(output), nil
+		}
+	}
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	fmt.Printf("IN WAS NIL \n")
+	return in, nil
+}
+
 func (self *TemplateManager) Initialize() {
 	pongo2.RegisterFilter("age", fuzzyAge)
 	pongo2.RegisterFilter("fit", fit)
@@ -306,6 +344,7 @@ func (self *TemplateManager) Initialize() {
 	pongo2.RegisterFilter("orgCleanup", cleanupString)
 	pongo2.RegisterFilter("orgWordWrap", wordWrap)
 	pongo2.RegisterFilter("commaList", commaList)
+	pongo2.RegisterFilter("sepList", sepList)
 }
 
 func (self *TemplateManager) resolveTemplate(name string, context map[string]interface{}) string {
@@ -351,7 +390,7 @@ func (self *TemplateManager) standardContext(context *pongo2.Context) {
 	(*context)["env"] = orgEnv
 }
 
-func (self *TemplateManager) resolveTemplateString(template string, context map[string]interface{}) string {
+func (self *TemplateManager) resolveTemplateString(template string, context map[string]any) string {
 	tpl, _ := pongo2.FromString(template)
 	ctx := pongo2.Context{}
 	self.standardContext(&ctx)
@@ -383,6 +422,6 @@ func (self *TemplateManager) RenderTemplate(name string, context map[string]inte
 	return self.resolveTemplate(name, context)
 }
 
-func (self *TemplateManager) RenderTemplateString(template string, context map[string]interface{}) string {
+func (self *TemplateManager) RenderTemplateString(template string, context map[string]any) string {
 	return self.resolveTemplateString(template, context)
 }

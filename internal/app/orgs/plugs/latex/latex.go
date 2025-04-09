@@ -30,6 +30,7 @@ import (
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v3"
+	"github.com/flosch/pongo2/v5"
 )
 
 func isRawTextBlock(name string) bool { return name == "SRC" || name == "EXAMPLE" || name == "EXPORT" }
@@ -43,7 +44,7 @@ func isImageOrVideoLink(n org.Node) bool {
 
 type OrgLatexExporter struct {
 	TemplatePath string
-	Props        map[string]interface{}
+	Props        map[string]any
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
@@ -174,7 +175,12 @@ type OrgLatexWriter struct {
 	envs                EnvironmentStack
 	docclass            string
 	docconf             *DocClassConf
+	defaultDocConf      *DocClassConf
 	exporter            *OrgLatexExporter
+}
+
+func (w *OrgLatexWriter) TemplateProps() *map[string]interface{} {
+	return &w.exporter.Props
 }
 
 func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
@@ -258,6 +264,42 @@ func GetDocConf(path string) *DocClassConf {
 	}
 	return c
 }
+func StartEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	var res *pongo2.Error = nil
+	if in != nil && param != nil {
+		e := in.Interface().(*EnvironmentStack)
+		s := param.String()
+		if e == nil {
+			res = &pongo2.Error{Sender: "startenv", OrigError: fmt.Errorf("startenv: Environment stack is missing, abort!")}
+		}
+		if s != "" {
+			s = strings.TrimSpace(strings.ReplaceAll(s, "\u00a0", "\n"))
+			s = strings.TrimSpace((*e).startEnvAsString(s))
+			return pongo2.AsValue(s), res
+		} else {
+			res = &pongo2.Error{Sender: "startenv", OrigError: fmt.Errorf("Environment stack requires an environment name")}
+		}
+	}
+	return pongo2.AsValue(""), res
+}
+func EndEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	var res *pongo2.Error = nil
+	if in != nil && param != nil {
+		e := in.Interface().(*EnvironmentStack)
+		s := param.String()
+		if e == nil {
+			res = &pongo2.Error{Sender: "endenv", OrigError: fmt.Errorf("Environment stack is missing, abort!")}
+		}
+		if s != "" {
+			s = strings.TrimSpace(strings.ReplaceAll(s, "\u00a0", "\n"))
+			s = strings.TrimSpace((*e).endEnvAsString(s))
+			return pongo2.AsValue(s), res
+		} else {
+			res = &pongo2.Error{Sender: "endenv", OrigError: fmt.Errorf("Environment stack requires an environment name")}
+		}
+	}
+	return pongo2.AsValue(""), res
+}
 
 func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
@@ -271,6 +313,7 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		self.Props["docclass"] = "book"
 		if theme != "" {
 			self.Props["docclass"] = theme
+			self.Props["theme"] = theme
 		}
 		classOpts := ""
 		clsOpts := f.Get("LATEX_CLASS_OPTIONS")
@@ -286,6 +329,13 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		w := NewOrgLatexWriter(self)
 		w.docclass = self.Props["docclass"].(string)
 		w.docconf = GetDocConf(self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml"))
+		// This is our fallback, if we do not find it in our specific template, we fall back on this
+		// to make the normal export work
+		w.defaultDocConf = GetDocConf(self.pm.Tempo.ExpandTemplatePath("book_templates.yaml"))
+
+		self.Props["envs"] = &w.envs
+		pongo2.RegisterFilter("startenv", StartEnv)
+		pongo2.RegisterFilter("endenv", EndEnv)
 		// TODO: w.Opts = opts
 		f.Write(w)
 		//org.WriteNodes(w, f.Nodes...)
@@ -307,6 +357,7 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 func (self *OrgLatexExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
 	self.out = manager.Out
 	self.pm = manager
+
 }
 
 func NewLatexExp() *OrgLatexExporter {
@@ -466,6 +517,7 @@ func (w *OrgLatexWriter) After(d *org.Document) {
 func (w *OrgLatexWriter) WriteComment(org.Comment)               {}
 func (w *OrgLatexWriter) WritePropertyDrawer(org.PropertyDrawer) {}
 
+// TODO DEPRECATE
 func (w *OrgLatexWriter) startEnv(name string) {
 	name = w.envs.GetEnv(name)
 	vals := strings.Split(name, "|")
@@ -486,6 +538,29 @@ func (w *OrgLatexWriter) startEnv(name string) {
 	}
 }
 
+func (e *EnvironmentStack) startEnvAsString(name string) string {
+	out := ""
+	name = e.GetEnv(name)
+	vals := strings.Split(name, "|")
+	if len(vals) > 1 {
+		name = strings.TrimSpace(vals[0])
+		out += "\n" + fmt.Sprintf(`\begin{%s}`, name)
+		for _, txt := range vals[1:] {
+			txt = strings.TrimSpace(txt)
+			if strings.Contains(txt, "[") {
+				out += txt
+			} else {
+				out += fmt.Sprintf("{%s}", txt)
+			}
+		}
+		out += "\n"
+	} else {
+		out += "\n" + fmt.Sprintf(`\begin{%s}`, name) + "\n"
+	}
+	return out
+}
+
+// TODO DEPRECATE
 func (w *OrgLatexWriter) endEnv(name string) {
 	name = w.envs.GetEnv(name)
 	vals := strings.Split(name, "|")
@@ -495,6 +570,19 @@ func (w *OrgLatexWriter) endEnv(name string) {
 	} else {
 		w.WriteString("\n" + fmt.Sprintf(`\end{%s}`, name) + "\n")
 	}
+}
+
+func (e *EnvironmentStack) endEnvAsString(name string) string {
+	out := ""
+	name = e.GetEnv(name)
+	vals := strings.Split(name, "|")
+	if len(vals) > 1 {
+		name = strings.TrimSpace(vals[0])
+		out += "\n" + fmt.Sprintf(`\end{%s}`, name) + "\n"
+	} else {
+		out += "\n" + fmt.Sprintf(`\end{%s}`, name) + "\n"
+	}
+	return out
 }
 
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
@@ -1196,6 +1284,122 @@ type KeyVal struct {
 	Val []string
 }
 
+func (w *OrgLatexWriter) DefaultTable(name string, t org.Table) bool {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err)
+		}
+	}()
+	fmt.Printf("  == [Default Table] ==\n")
+	if w.docconf != nil {
+		fmt.Printf("    == [CONF] ==\n")
+		if tbl, ok := w.docconf.Tables[name]; ok {
+			props := map[string]interface{}{}
+			if !tbl.Vertical {
+				// Single row tables can access by name
+				// without a table reference
+				// Name is 0 row
+				// | A  | B  | C  | D  |
+				// | v1 | v2 | v3 | v4 |
+				for i, nameNode := range t.Rows[0].Columns {
+					cellName := w.WriteNodesAsString(nameNode.Children...)
+					cellName = strings.ToLower(cellName)
+					cellName = strings.ReplaceAll(cellName, "[", "")
+					cellName = strings.ReplaceAll(cellName, "]", "")
+					cellName = strings.ReplaceAll(cellName, "{", "")
+					cellName = strings.ReplaceAll(cellName, "}", "")
+					cellName = strings.ReplaceAll(cellName, " ", "")
+					fmt.Printf("  NAME: %s\n", cellName)
+					val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
+					props[cellName] = val
+				}
+				tbl := []map[string]interface{}{}
+				for r, row := range t.Rows {
+					if r == 0 {
+						continue
+					}
+					rr := map[string]interface{}{}
+					for c, nameNode := range t.Rows[0].Columns {
+						cellName := w.WriteNodesAsString(nameNode.Children...)
+						cellName = strings.ToLower(cellName)
+						cellName = strings.ReplaceAll(cellName, " ", "")
+						val := w.WriteNodesAsString(row.Columns[c].Children...)
+						rr[cellName] = val
+					}
+					tbl = append(tbl, rr)
+				}
+				props["tbl"] = tbl
+				ctbl := []KeyVal{}
+				for c, nameNode := range t.Rows[0].Columns {
+					cellName := w.WriteNodesAsString(nameNode.Children...)
+					cellName = strings.ToLower(cellName)
+					cellName = strings.ReplaceAll(cellName, " ", "")
+					rr := []string{}
+					for r, row := range t.Rows {
+						if r == 0 {
+							continue
+						}
+						val := w.WriteNodesAsString(row.Columns[c].Children...)
+						val = strings.TrimSpace(val)
+						if val != "" {
+							rr = append(rr, val)
+						}
+					}
+					if cellName == "cantrip" {
+						cellName = ""
+					}
+					pair := KeyVal{Key: cellName, Val: rr}
+					ctbl = append(ctbl, pair)
+				}
+				props["ctbl"] = ctbl
+			} else {
+				// Vertical table does not get the multiple row option
+				// It's a key value pairing
+				//
+				// | key1 | value1 |
+				// | key2 | value2 |
+				//
+				for _, nameRow := range t.Rows {
+					nameNode := nameRow.Columns[0]
+					name := w.WriteNodesAsString(nameNode.Children...)
+					name = strings.ToLower(name)
+					name = strings.TrimSpace(strings.ReplaceAll(name, " ", ""))
+					if name != "" {
+						fmt.Printf("  NAME: %s\n", name)
+						val := ""
+						for j, colNode := range nameRow.Columns {
+							if j > 0 {
+								tmp := strings.TrimSpace(w.WriteNodesAsString(colNode.Children...))
+								if tmp != "" {
+									if val != "" {
+										val += ", "
+									}
+									val += tmp
+								}
+							}
+						}
+						if val != "" {
+							props[name] = val
+						}
+					}
+				}
+			}
+			res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
+			if res != "" {
+				fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
+				w.WriteString(res)
+				return true
+			} else {
+				fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
+			}
+		} else {
+			fmt.Printf("[%s] is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
+		}
+	}
+	return false
+
+}
+
 func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 	defer func() {
 		if err := recover(); err != nil {
@@ -1317,66 +1521,89 @@ func (w *OrgLatexWriter) HandleDndSpecialTables(t org.Table) bool {
 	if e != "" && w.SpecialTable(e, t) {
 		return true
 	}
-	/*
-		switch e {
-		case "Stats":
-			if len(t.ColumnInfos) == 3 && len(t.Rows) == 2 {
-
-				ac := w.WriteNodesAsString(t.Rows[1].Columns[0].Children...)
-				hit := w.WriteNodesAsString(t.Rows[1].Columns[1].Children...)
-				speed := w.WriteNodesAsString(t.Rows[1].Columns[2].Children...)
-				w.WriteString(fmt.Sprintf(`\DndMonsterBasics[%s  armor-class = {%s},%s  hit-points  = {%s},%s  speed       = {%s},%s]%s`, "\n", ac, "\n", hit, "\n", speed, "\n", "\n"))
-				return true
-			}
-			return false
-		case "AbilityScores":
-			if len(t.ColumnInfos) == 6 && len(t.Rows) == 2 {
-				str := w.WriteNodesAsString(t.Rows[1].Columns[0].Children...)
-				dex := w.WriteNodesAsString(t.Rows[1].Columns[1].Children...)
-				con := w.WriteNodesAsString(t.Rows[1].Columns[2].Children...)
-				int := w.WriteNodesAsString(t.Rows[1].Columns[3].Children...)
-				wis := w.WriteNodesAsString(t.Rows[1].Columns[4].Children...)
-				cha := w.WriteNodesAsString(t.Rows[1].Columns[5].Children...)
-				w.WriteString(fmt.Sprintf(`\DndMonsterAbilityScores[%s  str = {%s},%s  dex = {%s},%s  con = {%s},%s  con = {%s},%s  con = {%s},%s  con = {%s},%s]%s`,
-					"\n", str,
-					"\n", dex,
-					"\n", con,
-					"\n", int,
-					"\n", wis,
-					"\n", cha,
-					"\n", "\n"))
-				return true
-			}
-			return false
-		}
-	*/
-
 	return false
 }
 
+type TableRow struct {
+	Isspecial bool
+	Cols []string
+}
+
+
+/* SDOC: Exporters
+
+** Latex Tables
+
+	There are several methods of working with tables.
+	In on mode the table is exported verbatim
+
+	In another the table is exported using heading lookups
+	as properties for the table. This supports the macro
+	approach found in the DND Latex module AND the standard
+	latex table model.
+
+	This is the default template found in book_templates.yaml
+	Since book is the default export mode used by the latex exporter
+
+	This table is built as a tabular object with & separators
+	(See pongo2 for more details on the template format)
+
+	#+BEGIN_SRC yaml
+  default:
+    vertical: false
+    template: |+
+      {% if havecaption %}\begin{table}[!h]{% endif %}
+      \begin{center}
+      {{ envs | startenv: tabular }}
+      {{ separators }} 
+      {{% for row in rows %}}
+        {{% if row.isspecial %}}
+          \hline
+        {{% else %}}
+          {{ row.cols | sepList & }} \\
+        {{% endif %}}
+      {{% endfor %}}
+      {{ envs | endenv: tabular }}
+      {% if havecaption %}\caption{ {{caption}} }{% endif %}
+      \end{center}
+      {% if havecaption %}\end{table}{% endif %}
+	#+END_SRC
+
+EDOC */
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
-	haveTable := false
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred in table:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+			panic("PANIC WRITING TABLE")
+		}
+	}()
+	//haveTable := false
 	// Dndbook does its own formatting
 	if w.docclass != "dndbook" {
+		/*
 		if w.envs.HaveCaption() {
 			w.WriteString(`\begin{table}[!h]` + "\n")
 			haveTable = true
 		}
 		w.WriteString(`\begin{center}` + "\n")
+		*/
 	} else {
+		// TODO Handle this one!
 		if w.HandleDndSpecialTables(t) {
 			return
 		}
 	}
-	tableEnv := "tabular"
+	//tableEnv := "tabular"
+	// TODO: Handle this one!
 	if w.docclass == "dndbook" {
 		name := ""
 		if w.envs.HaveCaption() {
 			name = w.envs.GetCaption()
 		}
-		tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
+		//tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
+		fmt.Sprintf("DndTable | [header=%s]", name)
 	}
-	w.startEnv(tableEnv)
+	//w.startEnv(tableEnv)
 	cnt := len(t.ColumnInfos)
 	sep := ""
 	// Dndbook does its own formatting
@@ -1390,11 +1617,32 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 		sep += " |"
 	}
-	w.WriteString(fmt.Sprintf("{%s}\n", sep))
+	tp := w.TemplateProps()
+	(*tp)["separators"] = strings.TrimSpace(sep)
+	// REMOVED IN FAVOR OF {{ separators }} w.WriteString(fmt.Sprintf("{%s}\n", sep))
+	// TODO DND Flow will need this somehow?
 
-	inHead := len(t.SeparatorIndices) > 0 &&
-		t.SeparatorIndices[0] != len(t.Rows)-1 &&
-		(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
+	//inHead := len(t.SeparatorIndices) > 0 &&
+	//	t.SeparatorIndices[0] != len(t.Rows)-1 &&
+	//	(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
+
+	(*tp)["curtable"] = t
+
+	rows := []*TableRow{}
+	for _, row := range t.Rows {
+		cols := []string{}
+		for _, col := range row.Columns {
+			txt := w.WriteNodesAsString( col.Children... )
+			cols = append(cols, txt)
+		}
+		row := TableRow{
+			Isspecial: row.IsSpecial,
+			Cols: cols }
+		rows = append(rows, &row)
+	}
+	(*tp)["rows"] = rows
+
+    /*
 	for i, row := range t.Rows {
 		if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
 			if inHead {
@@ -1411,7 +1659,32 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 			w.writeTableColumns(row.Columns)
 		}
 	}
+
 	w.endEnv(tableEnv)
+
+    */
+	// TODO: Make this work if special tables did not expand
+
+	if tbl, ok := w.defaultDocConf.Tables["default"]; ok {
+		if w.envs.HaveCaption() {
+			(*tp)["havecaption"] = true
+			(*tp)["caption"] = w.envs.GetCaption()
+		} else {
+			(*tp)["havecaption"] = false
+		}
+		fmt.Printf("RENDERING TEMPLATE: %s\n", "default")
+		fmt.Printf("\n%v\n",tbl.Template)
+		res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, *tp)
+		fmt.Printf("RENDERED\n%v\n",res)
+		w.WriteString(res)
+
+	} else {
+		fmt.Printf("FAILED TO RENDER TEMPLATE: %s\n", "default")
+		// TODO: Show an error here! We failed
+	}
+
+	// TODO: Facilitate this write string!
+	/*
 	if haveTable && w.envs.HaveCaption() && w.docclass != "dndbook" {
 		w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
 	}
@@ -1422,8 +1695,11 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 			w.WriteString(`\end{table}` + "\n")
 		}
 	}
+	*/
 }
 
+
+// DEPRECATED REMOVE
 func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column) {
 
 	for i, column := range columns {

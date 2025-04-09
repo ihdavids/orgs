@@ -1,0 +1,21 @@
+tables:
+  default:
+    vertical: false
+    template: |+
+      {% if havecaption %}\begin{table}[!h]{% endif %}
+      \begin{center}
+      {{ envs | startenv: "tabular" }}{ {{ separators }} } 
+      {% for row in rows %}{% if row.Isspecial %}\hline{% else %}{{ row.Cols | sepList: "&" | safe}} \\{% endif %}
+      {% endfor %}
+      {{ envs | endenv: "tabular" }}
+      \end{center}
+      {% if havecaption %}\end{table}{% endif %}
+headings:
+  PART:
+    template: |+
+      \part{ {{heading}} }
+        {{content}}
+  CHAPTER:
+    template: |+
+      \chapter{ {{heading}} }
+        {{content}}
