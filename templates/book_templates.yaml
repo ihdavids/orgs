@@ -19,3 +19,7 @@ headings:
     template: |+
       \chapter{ {{heading}} }
         {{content}}
+paragraph:
+  default:
+    template: |+
+      \par {{content}}

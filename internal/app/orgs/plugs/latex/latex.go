@@ -156,14 +156,112 @@ type TableTemplate struct {
 // These get properties
 // and the heading as parameters
 // Properties are ALWAYS uppercase
-type HeadingTemplate struct {
+type StringTemplate struct {
 	Template string
 }
 
 type DocClassConf struct {
-	Tables   map[string]TableTemplate
-	Headings map[string]HeadingTemplate
+	Tables    map[string]TableTemplate
+	Headings  map[string]StringTemplate
+	Paragraph map[string]StringTemplate
 }
+
+type SubTemplates struct {
+	defaultDocConf *DocClassConf
+	docconf        *DocClassConf
+}
+
+// TODO: Get rid of this!
+func (s *SubTemplates) HaveHeadingOverrides() bool {
+	return s.docconf != nil && len(s.docconf.Headings) > 0
+}
+
+func (s *SubTemplates) HeadingOverrides() map[string]StringTemplate {
+	return s.docconf.Headings
+}
+
+func (s *SubTemplates) TableTemplate(name string, usedefault...bool) (TableTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Tables != nil {
+		if tbl, ok := s.docconf.Tables[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Tables["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Tables[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Tables["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return TableTemplate{false, ""}, false
+}
+
+func (s *SubTemplates) HeadingTemplate(name string, usedefault...bool) (StringTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Headings != nil{
+		if tbl, ok := s.docconf.Headings[name]; ok {
+			return tbl,ok
+		}
+		if tbl, ok := s.docconf.Headings["default"]; useDefault && ok {
+			return tbl,ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Headings[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Headings["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return StringTemplate{""}, false
+}
+
+func (s *SubTemplates) ParagraphTemplate(name string, usedefault...bool) (StringTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Paragraph != nil {
+		if tbl, ok := s.docconf.Paragraph[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Paragraph["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Paragraph[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Paragraph["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return StringTemplate{""}, false
+}
+
+func MakeTemplateRegistry(defaultPath, classPath string) *SubTemplates {
+	var t *SubTemplates = &SubTemplates{}
+	t.docconf = GetDocConf(classPath)
+	// This is our fallback, if we do not find it in our specific template, we fall back on this
+	// to make the normal export work
+	t.defaultDocConf = GetDocConf(defaultPath)
+
+
+	//t.docconf = GetDocConf(self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml"))
+		// This is our fallback, if we do not find it in our specific template, we fall back on this
+		// to make the normal export work
+	//t.defaultDocConf = GetDocConf(self.pm.Tempo.ExpandTemplatePath("book_templates.yaml"))
+	return t
+}
+
+
 
 type OrgLatexWriter struct {
 	ExtendingWriter org.Writer
@@ -174,8 +272,7 @@ type OrgLatexWriter struct {
 	PrettyRelativeLinks bool
 	envs                EnvironmentStack
 	docclass            string
-	docconf             *DocClassConf
-	defaultDocConf      *DocClassConf
+	templateRegistry    *SubTemplates
 	exporter            *OrgLatexExporter
 }
 
@@ -328,10 +425,9 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		}
 		w := NewOrgLatexWriter(self)
 		w.docclass = self.Props["docclass"].(string)
-		w.docconf = GetDocConf(self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml"))
-		// This is our fallback, if we do not find it in our specific template, we fall back on this
-		// to make the normal export work
-		w.defaultDocConf = GetDocConf(self.pm.Tempo.ExpandTemplatePath("book_templates.yaml"))
+		classPath := self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml")
+		defaultPath := self.pm.Tempo.ExpandTemplatePath("book_templates.yaml")
+		w.templateRegistry = MakeTemplateRegistry(classPath, defaultPath)
 
 		self.Props["envs"] = &w.envs
 		pongo2.RegisterFilter("startenv", StartEnv)
@@ -450,6 +546,13 @@ var sectionTypes = []string{
 
 var cleanHeadlineTitleForHTMLAnchorRegexp = regexp.MustCompile(`</?a[^>]*>`) // nested a tags are not valid HTML
 var tocHeadlineMaxLvlRegexp = regexp.MustCompile(`headlines\s+(\d+)`)
+
+func (w *OrgLatexWriter) RenderContentTemplate(temp string, content string) {
+	tp := w.TemplateProps()
+	(*tp)["content"] = strings.TrimSpace(content)
+	res := w.exporter.pm.Tempo.RenderTemplateString(temp, *tp)
+	w.WriteString(res)
+}
 
 func (w *OrgLatexWriter) WriteNodesAsString(nodes ...org.Node) string {
 	original := w.Builder
@@ -794,6 +897,7 @@ func (w *OrgLatexWriter) WriteDndRegionHeadline(p RegionHead, h org.Headline) bo
 	return false
 }
 
+// TODO: Can this be removed?
 var simpleDndHeadlines = [][]string{
 	{"SUBAREA", `\DndSubArea{%s}`},
 	{"AREA", `\DndArea{%s}`},
@@ -821,8 +925,9 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", head, "\n+++++++++++++++++++++++++++++++++++++++++++\n")
 		}
 	}()
-	if w.docconf != nil && len(w.docconf.Headings) > 0 {
-		for tag, temp := range w.docconf.Headings {
+	if w.templateRegistry.HaveHeadingOverrides() {
+		// TODO Rethink how this works so we can work with fallbacks!
+		for tag, temp := range w.templateRegistry.HeadingOverrides() {
 			if HeadlineHasTag(tag, h) {
 				props := map[string]interface{}{}
 				if h.Properties != nil && len(h.Properties.Properties) > 0 {
@@ -859,24 +964,6 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 
 func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
 	return w.SpecialHeaders(h)
-	/*
-			for _, area := range simpleDndHeadlines {
-				if w.WriteDndBookAreas(area[0], area[1], h) {
-					return true
-				}
-			}
-			for _, propHead := range propertyDndBasedHeadlines {
-				if w.WriteDndPropertyHeadline(propHead, h) {
-					return true
-				}
-			}
-			for _, regHead := range regionDndBasedHeadlines {
-				if w.WriteDndRegionHeadline(regHead, h) {
-					return true
-				}
-			}
-		return false
-	*/
 }
 
 func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
@@ -1182,11 +1269,16 @@ func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if len(p.Children) == 0 {
 		return
 	}
-	if w.docclass != "dndbook" {
-		w.WriteString(`\par `)
+	out := EscapeString(w.WriteNodesAsString(p.Children...))
+	if tmp, ok := w.templateRegistry.ParagraphTemplate("default"); ok {
+		w.RenderContentTemplate(tmp.Template, out)
+	} else {
+		// TODO: Remove this!
+		if w.docclass != "dndbook" {
+			w.WriteString(`\par `)
+		}
+		w.WriteString(out)
 	}
-	out := w.WriteNodesAsString(p.Children...)
-	w.WriteString(EscapeString(out))
 }
 
 func (w *OrgLatexWriter) WriteExample(e org.Example) {
@@ -1284,121 +1376,6 @@ type KeyVal struct {
 	Val []string
 }
 
-func (w *OrgLatexWriter) DefaultTable(name string, t org.Table) bool {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err)
-		}
-	}()
-	fmt.Printf("  == [Default Table] ==\n")
-	if w.docconf != nil {
-		fmt.Printf("    == [CONF] ==\n")
-		if tbl, ok := w.docconf.Tables[name]; ok {
-			props := map[string]interface{}{}
-			if !tbl.Vertical {
-				// Single row tables can access by name
-				// without a table reference
-				// Name is 0 row
-				// | A  | B  | C  | D  |
-				// | v1 | v2 | v3 | v4 |
-				for i, nameNode := range t.Rows[0].Columns {
-					cellName := w.WriteNodesAsString(nameNode.Children...)
-					cellName = strings.ToLower(cellName)
-					cellName = strings.ReplaceAll(cellName, "[", "")
-					cellName = strings.ReplaceAll(cellName, "]", "")
-					cellName = strings.ReplaceAll(cellName, "{", "")
-					cellName = strings.ReplaceAll(cellName, "}", "")
-					cellName = strings.ReplaceAll(cellName, " ", "")
-					fmt.Printf("  NAME: %s\n", cellName)
-					val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
-					props[cellName] = val
-				}
-				tbl := []map[string]interface{}{}
-				for r, row := range t.Rows {
-					if r == 0 {
-						continue
-					}
-					rr := map[string]interface{}{}
-					for c, nameNode := range t.Rows[0].Columns {
-						cellName := w.WriteNodesAsString(nameNode.Children...)
-						cellName = strings.ToLower(cellName)
-						cellName = strings.ReplaceAll(cellName, " ", "")
-						val := w.WriteNodesAsString(row.Columns[c].Children...)
-						rr[cellName] = val
-					}
-					tbl = append(tbl, rr)
-				}
-				props["tbl"] = tbl
-				ctbl := []KeyVal{}
-				for c, nameNode := range t.Rows[0].Columns {
-					cellName := w.WriteNodesAsString(nameNode.Children...)
-					cellName = strings.ToLower(cellName)
-					cellName = strings.ReplaceAll(cellName, " ", "")
-					rr := []string{}
-					for r, row := range t.Rows {
-						if r == 0 {
-							continue
-						}
-						val := w.WriteNodesAsString(row.Columns[c].Children...)
-						val = strings.TrimSpace(val)
-						if val != "" {
-							rr = append(rr, val)
-						}
-					}
-					if cellName == "cantrip" {
-						cellName = ""
-					}
-					pair := KeyVal{Key: cellName, Val: rr}
-					ctbl = append(ctbl, pair)
-				}
-				props["ctbl"] = ctbl
-			} else {
-				// Vertical table does not get the multiple row option
-				// It's a key value pairing
-				//
-				// | key1 | value1 |
-				// | key2 | value2 |
-				//
-				for _, nameRow := range t.Rows {
-					nameNode := nameRow.Columns[0]
-					name := w.WriteNodesAsString(nameNode.Children...)
-					name = strings.ToLower(name)
-					name = strings.TrimSpace(strings.ReplaceAll(name, " ", ""))
-					if name != "" {
-						fmt.Printf("  NAME: %s\n", name)
-						val := ""
-						for j, colNode := range nameRow.Columns {
-							if j > 0 {
-								tmp := strings.TrimSpace(w.WriteNodesAsString(colNode.Children...))
-								if tmp != "" {
-									if val != "" {
-										val += ", "
-									}
-									val += tmp
-								}
-							}
-						}
-						if val != "" {
-							props[name] = val
-						}
-					}
-				}
-			}
-			res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
-			if res != "" {
-				fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
-				w.WriteString(res)
-				return true
-			} else {
-				fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
-			}
-		} else {
-			fmt.Printf("[%s] is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
-		}
-	}
-	return false
-
-}
 
 func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 	defer func() {
@@ -1407,9 +1384,8 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 		}
 	}()
 	fmt.Printf("  == [Special Table] ==\n")
-	if w.docconf != nil {
 		fmt.Printf("    == [CONF] ==\n")
-		if tbl, ok := w.docconf.Tables[name]; ok {
+		if tbl, ok := w.templateRegistry.TableTemplate(name); ok {
 			props := map[string]interface{}{}
 			if !tbl.Vertical {
 				// Single row tables can access by name
@@ -1509,9 +1485,8 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 				fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
 			}
 		} else {
-			fmt.Printf("[%s] is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
+			fmt.Printf("[%s] is NOT in conf table entries\n", name)
 		}
-	}
 	return false
 }
 
@@ -1654,7 +1629,7 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
     */
 	// TODO: Make this work if special tables did not expand
 
-	if tbl, ok := w.defaultDocConf.Tables["default"]; ok {
+	if tbl, ok := w.templateRegistry.TableTemplate("default"); ok {
 		if w.envs.HaveCaption() {
 			(*tp)["havecaption"] = true
 			(*tp)["caption"] = w.envs.GetCaption()
@@ -1686,7 +1661,6 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 	}
 	*/
 }
-
 
 // DEPRECATED REMOVE
 func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column) {
