@@ -42,8 +42,17 @@ type Config struct {
 * Use Project Tag
 	How should we define a project. If this is set a project
 	is defined as a heading with a :PROJECT: tag on it.
+
 	#+BEGIN_SRC yaml
   useProjectTag: true
+	#+END_SRC
+
+	If this is false then a project is defined to be a headline
+	that has a child headline that has a status on it.
+
+	#+BEGIN_SRC org
+  * Project
+  ** TODO This task makes it a project
 	#+END_SRC
 	EDOC */
 	UseTagForProjects    bool                     `yaml:"useProjectTag"`
@@ -69,7 +78,7 @@ type Config struct {
 	DayPageMaxSearchBack int                      `yaml:"dayPageMaxSearch"`
 	Plugins              []plugs.PluginDef        `yaml:"plugins"`
 	/* SDOC: Settings
-* Enabled Exporters
+* Enabled Exporters, Plugins, Updaters
 	The list of enabled exporter modules
 	#+BEGIN_SRC yaml
 	exporters:
@@ -83,6 +92,10 @@ type Config struct {
     - name: "impressjs"
     - name: "latex"
 	#+END_SRC
+
+	The same is true for updaters and plugins.
+	You must explicitly enable the modules you wish
+	to be active in your orgs installation for them to be available.
 	EDOC */
 	Exporters            []plugs.ExportDef        `yaml:"exporters"`
 	Updaters             []plugs.UpdaterDef       `yaml:"updaters"`
