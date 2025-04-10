@@ -8,10 +8,10 @@ package jira
 	TODO More documentation on this module
 
 	#+BEGIN_SRC yaml
-  - name: "jira"
-  	endpoint: "your endpoint https://go-jira.atlassian.net"
-  	user: "The user operating on jira"
-  	queries: "List of JiraSearch objects"
+    - name: "jira"
+      endpoint: "your endpoint https://go-jira.atlassian.net"
+      user: "The user operating on jira"
+      queries: "List of JiraSearch objects"
 	#+END_SRC
 
 EDOC */
@@ -23,10 +23,10 @@ EDOC */
 	TODO More documentation on this module
 
 	#+BEGIN_SRC yaml
-  - name: "jira"
-  	endpoint: "your endpoint https://go-jira.atlassian.net"
-  	user: "The user operating on jira"
-  	queries: "List of JiraSearch objects"
+    - name: "jira"
+      endpoint: "your endpoint https://go-jira.atlassian.net"
+      user: "The user operating on jira"
+      queries: "List of JiraSearch objects"
 	#+END_SRC
 
 EDOC */

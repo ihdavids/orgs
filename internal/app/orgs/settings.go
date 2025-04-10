@@ -184,18 +184,18 @@ type Config struct {
   and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
 
   #+BEGIN_SRC json
-  	"Waiting": {
-  		"query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
-  		"display": {
-  			"filename": 15,
-  			"status": 10,
-  			"headline": 25,
-  			"properties": {
-  				"EFFORT": 5,
-  				"ASSIGNED": 15
-  			}
-  		}
-  	}
+    "Waiting": {
+      "query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
+      "display": {
+        "filename": 15,
+        "status": 10,
+        "headline": 25,
+        "properties": {
+          "EFFORT": 5,
+          "ASSIGNED": 15
+        }
+      }
+    }
   #+END_SRC
 	EDOC */
 	TagGroups map[string][]string `yaml:"tagGroups"`

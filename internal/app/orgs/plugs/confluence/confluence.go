@@ -7,18 +7,18 @@
   and export it as a confluence page in the space of your choosing.
 
 	#+BEGIN_SRC yaml
-		exporters:
-			- name: "confluence"
-				url: "<confluenceurl>"
-				user: "<your username>"
-				token: "<generated token from confluence>"
-				space: "<name of space where you would like docs generated>"
+    exporters:
+      - name: "confluence"
+        url: "<confluenceurl>"
+        user: "<your username>"
+        token: "<generated token from confluence>"
+        space: "<name of space where you would like docs generated>"
 	#+END_SRC
 
 	By default your personal space's name is tilde followed by your username
 	best to put it in quotes to avoid parsing issues:
 	#+BEGIN_SRC yaml
-     space: "~myusername"
+    space: "~myusername"
 	#+END_SRC
 
 

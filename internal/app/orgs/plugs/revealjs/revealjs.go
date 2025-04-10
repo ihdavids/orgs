@@ -7,8 +7,8 @@
 	TODO More documentation on this module
 
 	#+BEGIN_SRC yaml
-  - name: "revealjs"
-  	templatepath: "path to reveal template"
+    - name: "revealjs"
+      templatepath: "path to reveal template"
 	#+END_SRC
 
 EDOC */

@@ -7,8 +7,8 @@ package todoist
 	TODO More documentation on this module
 
 	#+BEGIN_SRC yaml
-  - name: "todoist"
-  	token: "todoist api token"
+    - name: "todoist"
+      token: "todoist api token"
 	#+END_SRC
 
 EDOC */

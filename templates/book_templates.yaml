@@ -26,7 +26,7 @@ paragraph:
 blocks:
   SRC:
     template: |+
-      {{ envs | startenv: "minted" }}{ {{ lang }} }
+      {{ envs | startenv: "minted" }}{% verbatim %}{{% endverbatim %}{{lang}}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
       {{ envs | endenv: "minted" }}
   EXAMPLE:

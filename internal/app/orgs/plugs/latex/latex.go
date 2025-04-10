@@ -14,8 +14,8 @@
 	To set it up in your config file you do the following:
 
 	#+BEGIN_SRC yaml
-      - name: "latex"
-  	    templatepath: "latex template path"
+	- name: "latex"
+      templatepath: "latex template path"
 	#+END_SRC
 
 	Converting to a pdf can be done with a variety of latex tools.
