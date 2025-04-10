@@ -30,8 +30,12 @@ var introFiles arrayFlags
 func IsGoFile(filename string) bool {
 	return filepath.Ext(filename) == ".go"
 }
-
-var groups map[string]map[string]string = map[string]map[string]string{}
+type DocNode struct {
+	Name string
+	Docs string
+	Children map[string]*DocNode
+}
+var groups map[string]*DocNode = map[string]*DocNode{}
 
 
 func ReMatch(regEx, txt string) (map[string]string) {
@@ -82,17 +86,29 @@ func ProcessFile(filename string) {
 					if docName == "" {
 						docName = "General"
 					}
-					//fmt.Printf("DOCNAME: %v\n", docName)
+					docNames := strings.Split(docName, "::")
+					// fmt.Printf("DOCNAME: %v\n", docNames)
 					if out != "" {
-						if cur, ok := groups[docName]; ok {
-	
-							if _, ok2 := cur[heading]; ok2 {
-								groups[docName][heading] += out
+						gr := groups
+						for _,cur := range docNames {
+							cur = strings.TrimSpace(cur)
+							var d *DocNode = nil
+							ok := false
+							if d, ok = gr[cur]; ok {
+								gr = d.Children
 							} else {
-								groups[docName][heading] = out
+								d = &DocNode{Name: cur, Docs: "", Children: map[string]*DocNode{}}
+								gr[cur] = d
+								gr = d.Children
 							}
+						}
+
+						if dn, ok2 := gr[heading]; ok2 {
+							dn.Docs = out
 						} else {
-							groups[docName] = map[string]string{heading: out}
+							//fmt.Printf("CREATE: %s\n", heading)
+							dn := &DocNode{Name: heading, Docs: out, Children: map[string]*DocNode{}}
+							gr[heading] = dn
 						}
 					}
 					out = ""
@@ -102,7 +118,7 @@ func ProcessFile(filename string) {
 					// Reindent for grouping
 					if m := ReMatch(`^\s*(?P<stars>[*]+)\s+(?P<heading>.+)`, line); m != nil {
 						line = m["stars"] + "* " + m["heading"]
-						if (len(m["stars"]) == 1) {
+						if (heading == "" && len(m["stars"]) > 0) {
 							heading = m["heading"]
 						}
 					}
@@ -110,7 +126,7 @@ func ProcessFile(filename string) {
 				}
 
 			} else {
-				if m := ReMatch(`^\s*/[*]\s+SDOC(([:]\s+(?P<group>[a-zA-Z0-9 ]+)\s*)|(?P<nogroup>\s*))`, line); m != nil {
+				if m := ReMatch(`^\s*/[*]\s+SDOC(([:]\s+(?P<group>[:a-zA-Z0-9 ]+)\s*)|(?P<nogroup>\s*))`, line); m != nil {
 					inDoc = true
 					ok := false
 					if docName,ok = m["group"]; !ok {
@@ -120,6 +136,30 @@ func ProcessFile(filename string) {
 			}
 		}
 	}
+}
+
+func WriteRecursive(lvl int, gr map[string]*DocNode, f *os.File) {
+		keys := []string{}
+		for k,_ := range gr {
+			keys = append(keys, k)
+		}
+		//fmt.Printf("%v\n", keys)
+		sort.Slice(keys, func(i, j int) bool { return strings.ToLower(keys[i]) < strings.ToLower(keys[j]) }) 
+		for _,k := range keys {
+			cur := gr[k]
+			if cur.Docs == "" {
+				f.WriteString(strings.Repeat("*", lvl) + " ")
+				f.WriteString(k)
+				f.WriteString("\n")
+			} else {
+				f.WriteString(cur.Docs)
+				f.WriteString("\n")
+			}
+			if len(cur.Children) > 0 {
+				//fmt.Printf("Par: %s => %v\n", cur.Name, cur.Children)
+				WriteRecursive(lvl + 1, cur.Children, f)
+			}
+		}
 }
 
 func WriteDocs(output string) {
@@ -142,30 +182,8 @@ func WriteDocs(output string) {
 			}
 		}
 
-
-		keys := []string{}
-		for k,_ := range groups {
-			keys = append(keys, k)
-		}
-		fmt.Printf("%v\n", keys)
-		sort.Slice(keys, func(i, j int) bool { return strings.ToLower(keys[i]) < strings.ToLower(keys[j]) }) 
-		for _,k := range keys {
-			subkeys := []string{}
-			subitems := groups[k]
-			for s,_ := range subitems {
-				subkeys = append(subkeys, s)
-			}
-			f.WriteString("* ")
-			f.WriteString(k)
-			f.WriteString("\n")
-			sort.Slice(subkeys, func(i, j int) bool { return strings.ToLower(subkeys[i]) < strings.ToLower(subkeys[j]) }) 
-			for _, s := range subkeys {
-				v := subitems[s]
-				fmt.Printf("GROUP: %v::%v\n",k,s)
-				f.WriteString(v)
-				f.WriteString("\n")
-			}
-		}
+		gr := groups
+		WriteRecursive(1, gr, f)
 	}
 }
 

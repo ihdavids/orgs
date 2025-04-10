@@ -730,7 +730,7 @@ func (e *EnvironmentStack) endEnvAsString(name string) string {
 	return out
 }
 
-/* SDOC: Exporters
+/* SDOC: Exporters::Latex
 
 ** Latex Blocks
 
@@ -1351,7 +1351,7 @@ func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
 	}
 }
 
-/* SDOC: Exporters
+/* SDOC: Exporters::Latex
 
 ** Latex Paragraph
 
@@ -1610,7 +1610,7 @@ type TableRow struct {
 }
 
 
-/* SDOC: Exporters
+/* SDOC: Exporters::Latex
 
 ** Latex Tables
 
