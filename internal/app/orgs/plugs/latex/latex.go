@@ -730,6 +730,42 @@ func (e *EnvironmentStack) endEnvAsString(name string) string {
 	return out
 }
 
+/* SDOC: Exporters
+
+** Latex Blocks
+
+	Org Mode supports various block types these all appear
+	in an org file with BEGIN and END comments:
+
+	#+BEGIN_SRC org
+		#+BEGIN_QUOTE
+		Info goes here
+		#+END_QUOTE
+	#+END_SRC
+
+	The latex exporter supports the gamut of these block types
+	in its yaml templates as so:
+
+	#+BEGIN_SRC yaml
+    blocks:
+      SRC:
+        template: |+
+          {{ envs | startenv: "minted" }}{ {{ lang }} }
+          {{content | safe}}
+          {{ envs | endenv: "minted" }}
+      EXAMPLE:
+        template: |+
+          {{ envs | startenv: "verbatim" }}
+          {{content | safe}}
+          {{ envs | endenv: "verbatim" }}
+      QUOTE:
+        template: |+
+          {{ envs | startenv: "displayquote" }}
+          {{content | safe}}
+          {{ envs | endenv: "displayquote" }}
+    #+END_SRC
+
+EDOC */
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
 	tp := w.TemplateProps()
