@@ -41,6 +41,22 @@ type Config struct {
 	DayPageModeWeekDay   string                   `yaml:"dayPageModeWeekDay"`
 	DayPageMaxSearchBack int                      `yaml:"dayPageMaxSearch"`
 	Plugins              []plugs.PluginDef        `yaml:"plugins"`
+	/* SDOC: Settings
+* Enabled Exporters
+	The list of enabled exporter modules
+	#+BEGIN_SRC yaml
+	exporters:
+    - name: "gantt"
+    - name: "mermaid"
+    - name: "mindmap"
+    - name: "html"
+      props:
+        fontfamily: "Underdog"
+    - name: "revealjs"
+    - name: "impressjs"
+    - name: "latex"
+	#+END_SRC
+	EDOC */
 	Exporters            []plugs.ExportDef        `yaml:"exporters"`
 	Updaters             []plugs.UpdaterDef       `yaml:"updaters"`
 	CaptureTemplates     []common.CaptureTemplate `yaml:"captureTemplates"`
@@ -48,7 +64,13 @@ type Config struct {
 	// These specify a valid set of org files that can be searched for valid
 	// refile targets
 	RefileTargets []string `yaml:"refileTargets"`
-	// Default author parameter to use when generating new templates
+	/* SDOC: Settings
+* Default Author
+	Default author parameter to use when generating new templates
+	#+BEGIN_SRC yaml
+	 author: "John Smith"
+	#+END_SRC
+	EDOC */
 	Author string `yaml:"author"`
 	// What template file to render when generating a new org file
 	// This is a file found in the templatePath option
