@@ -346,6 +346,8 @@ func IsPartOfProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
 	return false
 }
 
+// Project is defined as a headline that has a headline child with
+// a status entry
 func IsProjectByChildren(p *org.Section, f *common.OrgFile) bool {
 	if p != nil && p.Headline != nil {
 		var childHasTodo bool = false
