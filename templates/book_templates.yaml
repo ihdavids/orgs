@@ -23,3 +23,21 @@ paragraph:
   default:
     template: |+
       \par {{content | safe}}
+blocks:
+  SRC:
+    template: |+
+      {{ envs | startenv: "minted" }}{ {{ lang }} }
+      {{content | safe}}
+      {{ envs | endenv: "minted" }}
+  EXAMPLE:
+    template: |+
+      {{ envs | startenv: "verbatim" }}
+      {{content | safe}}
+      {{ envs | endenv: "verbatim" }}
+  QUOTE:
+    template: |+
+      {{ envs | startenv: "displayquote" }}
+      {{content | safe}}
+      {{ envs | endenv: "displayquote" }}
+
+

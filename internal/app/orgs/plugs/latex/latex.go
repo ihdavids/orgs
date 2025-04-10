@@ -185,6 +185,7 @@ type DocClassConf struct {
 	Tables    map[string]TableTemplate
 	Headings  map[string]StringTemplate
 	Paragraph map[string]StringTemplate
+	Blocks    map[string]StringTemplate
 }
 
 type SubTemplates struct {
@@ -199,6 +200,28 @@ func (s *SubTemplates) HaveHeadingOverrides() bool {
 
 func (s *SubTemplates) HeadingOverrides() map[string]StringTemplate {
 	return s.docconf.Headings
+}
+
+func (s *SubTemplates) BlockTemplate(name string, usedefault...bool) (StringTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Blocks != nil {
+		if tbl, ok := s.docconf.Blocks[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Blocks["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Blocks[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Blocks["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return StringTemplate{""}, false
 }
 
 func (s *SubTemplates) TableTemplate(name string, usedefault...bool) (TableTemplate, bool) {
@@ -382,6 +405,9 @@ func GetDocConf(path string) *DocClassConf {
 	}
 	return c
 }
+
+// ----------- [ Expression Filters ] -----------------------
+
 func StartEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
 	var res *pongo2.Error = nil
 	if in != nil && param != nil {
@@ -400,6 +426,7 @@ func StartEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut 
 	}
 	return pongo2.AsValue(""), res
 }
+
 func EndEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
 	var res *pongo2.Error = nil
 	if in != nil && param != nil {
@@ -418,6 +445,8 @@ func EndEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *p
 	}
 	return pongo2.AsValue(""), res
 }
+
+// ----------- [ Exporter System ] -----------------------
 
 func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
@@ -482,9 +511,6 @@ func NewLatexExp() *OrgLatexExporter {
 	return g
 }
 
-var hljsver = "11.9.0"
-var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
-
 func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	if _, ok := m["title"]; !ok {
 		m["title"] = "Schedule"
@@ -494,12 +520,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["trackheight"]; !ok {
 		m["trackheight"] = 30
-	}
-	if _, ok := m["hljscdn"]; !ok {
-		m["hljs_cdn"] = hljscdn
-	}
-	if _, ok := m["hljsstyle"]; !ok {
-		m["hljs_style"] = "monokai"
 	}
 	if _, ok := m["wordcloud"]; !ok {
 		m["wordcloud"] = false
@@ -520,6 +540,7 @@ func init() {
 	})
 }
 
+// ----------- [ Writer ] -----------------------------
 // //////////////////////// WRITER //////////////////////////////////
 func (n *OrgLatexWriter) NodeIdx(_ int) {
 	// We do not need the node idx at this point in time
@@ -711,45 +732,53 @@ func (e *EnvironmentStack) endEnvAsString(name string) string {
 
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
-
+	tp := w.TemplateProps()
 	switch b.Name {
 	case "SRC":
-		// TODO: Source blocks still have to be converted... Going to need their own export flow
 		if params[":exports"] == "results" || params[":exports"] == "none" {
 			break
 		}
-		//lang := "text"
-		//if len(b.Parameters) >= 1 {
-		//	lang = strings.ToLower(b.Parameters[0])
-		//}
-		// TODO content = w.HighlightCodeBlock(b.Keywords, content, lang, false, params)
-		//content = ""
-		//w.startEnv("verbatim")
-		// TODO: Handle content
-		//w.WriteString(EscapeString(content))
-		//w.endEnv("verbatim")
-		//w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
 		lang := "text"
 		if len(b.Parameters) >= 1 {
 			lang = strings.ToLower(b.Parameters[0])
 		}
-		w.startEnv("minted")
-		w.WriteString(fmt.Sprintf("{%s}\n",lang))
-		w.WriteString(content)
-		w.endEnv("minted")
+		if tmp, ok := w.templateRegistry.BlockTemplate("SRC"); ok {
+			(*tp)["lang"]    = lang
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			// TODO: Deprecated
+			w.startEnv("minted")
+			w.WriteString(fmt.Sprintf("{%s}\n",lang))
+			w.WriteString(content)
+			w.endEnv("minted")
+		}
 
 	case "EXAMPLE":
-		w.startEnv("verbatim")
-		w.WriteString(EscapeString(content))
-		w.endEnv("verbatim")
+		if tmp, ok := w.templateRegistry.BlockTemplate("EXAMPLE"); ok {
+			(*tp)["content"] = EscapeString(content)
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.startEnv("verbatim")
+			w.WriteString(EscapeString(content))
+			w.endEnv("verbatim")
+		}
 	case "EXPORT":
 		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "html" {
 			w.WriteString(content + "\n")
 		}
 	case "QUOTE":
-		w.startEnv("displayquote")
-		w.WriteString(content)
-		w.endEnv("displayquote")
+		if tmp, ok := w.templateRegistry.BlockTemplate("QUOTE"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.startEnv("displayquote")
+			w.WriteString(content)
+			w.endEnv("displayquote")
+		}
 	case "CENTER":
 		w.WriteString("\n" + `\begin{center}\n\centering\n`)
 		w.WriteString(content + "\n" + `\end{center}\n`)
