@@ -52,6 +52,17 @@ type Config struct {
 	DefaultTodoStates    string                   `yaml:"defaultTodoStates"`
 	TemplatePath         string                   `yaml:"templatePath"`
 	DayPageTemplate      string                   `yaml:"dayPageTemplate"`
+	/* SDOC: Settings
+* Day Page
+	The day page system has a number of settings that can be used to control
+	its behaviour.
+
+	The first and most important is where your daypages should be generated
+	This should be a folder inside your orgDirs.
+	#+BEGIN_SRC yaml
+  dayPagePath: "/Users/me/dev/gtd/worklog"
+	#+END_SRC
+	EDOC */
 	DayPagePath          string                   `yaml:"dayPagePath"`
 	DayPageMode          string                   `yaml:"dayPageMode"`
 	DayPageModeWeekDay   string                   `yaml:"dayPageModeWeekDay"`
