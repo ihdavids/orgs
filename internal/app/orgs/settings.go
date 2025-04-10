@@ -28,8 +28,24 @@ type Config struct {
 	TLSPort              int                      `yaml:"tlsport"`
 	ServerCrt            string                   `yaml:"servercrt"`
 	ServerKey            string                   `yaml:"serverkey"`
+	/* SDOC: Settings
+* Org Dirs
+	A list of directories containing your org files
+	#+BEGIN_SRC yaml
+  orgDirs: 
+    - "/Users/me/dev/gtd"
+	#+END_SRC
+	EDOC */
 	OrgDirs              []string                 `yaml:"orgDirs"`
 	CanFailWatch         bool                     `yaml:"canWatchFail"`
+	/* SDOC: Settings
+* Use Project Tag
+	How should we define a project. If this is set a project
+	is defined as a heading with a :PROJECT: tag on it.
+	#+BEGIN_SRC yaml
+  useProjectTag: true
+	#+END_SRC
+	EDOC */
 	UseTagForProjects    bool                     `yaml:"useProjectTag"`
 	AllowHttp            bool                     `yaml:"allowHttp"`
 	AllowHttps           bool                     `yaml:"allowHttps"`
