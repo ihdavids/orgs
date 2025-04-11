@@ -11,6 +11,30 @@ tables:
       \end{center}
       {% if havecaption %}\end{table}{% endif %}
 headings:
+  1:
+    template: |+
+      \chapter{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content}}
+  2:
+    template: |+
+      \section{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content}}
+  3:
+    template: |+
+      \subsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content}}
+  4:
+    template: |+
+      \subsubsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content}}
+  5:
+    template: |+
+      \paragraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content}}
+  6:
+    template: |+
+      \subparagraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content}}
   PART:
     template: |+
       \part{ {{heading}} }
@@ -24,6 +48,17 @@ paragraph:
     template: |+
       \par {{content | safe}}
 blocks:
+  default:
+    template: |+
+      {{ envs | startenv: "{{name}}" }}
+      {{content | safe}}
+      {{ envs | endenv: "{{name}}" }}
+  inline_src:
+    template: |+
+       \begin{verbatim}{{content|safe}}\end{verbatim}
+  toc:
+    template: |+
+       {% if {{havetitle}} %}\tableofcontents{% endif %}
   SRC:
     template: |+
       {{ envs | startenv: "minted" }}{% verbatim %}{{% endverbatim %}{{lang}}{% verbatim %}}{% endverbatim %}
@@ -39,5 +74,14 @@ blocks:
       {{ envs | startenv: "displayquote" }}
       {{content | safe}}
       {{ envs | endenv: "displayquote" }}
+  CENTER:
+    template: |+
+      {{ envs | startenv: "center" }}
+      \centering
+      {{content | safe}}
+      {{ envs | endenv: "center" }}
+  MONSTERTYPE:
+    template: |+
+      \DndMonsterType{% verbatim %}{{% endverbatim %}{{content | safe}}{% verbatim %}}{% endverbatim %}
 
 

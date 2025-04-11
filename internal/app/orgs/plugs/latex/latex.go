@@ -802,7 +802,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 			w.endEnv("verbatim")
 		}
 	case "EXPORT":
-		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "html" {
+		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "latex" {
 			w.WriteString(content + "\n")
 		}
 	case "QUOTE":
@@ -816,16 +816,36 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 			w.endEnv("displayquote")
 		}
 	case "CENTER":
-		w.WriteString("\n" + `\begin{center}\n\centering\n`)
-		w.WriteString(content + "\n" + `\end{center}\n`)
+		if tmp, ok := w.templateRegistry.BlockTemplate("CENTER"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.WriteString("\n" + `\begin{center}\n\centering\n`)
+			w.WriteString(content + "\n" + `\end{center}\n`)
+		}
 	case "MONSTERTYPE":
-		w.WriteString("\n" + fmt.Sprintf(`\DndMonsterType{%s}`, content) + "\n")
+		if tmp, ok := w.templateRegistry.BlockTemplate("MONSTERTYPE"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.WriteString("\n" + fmt.Sprintf(`\DndMonsterType{%s}`, content) + "\n")
+		}
 	default:
-		w.startEnv(strings.ToLower(b.Name))
-		w.WriteString(content)
-		w.endEnv(strings.ToLower(b.Name))
+		if tmp, ok := w.templateRegistry.BlockTemplate("default"); ok {
+			(*tp)["content"] = content
+			(*tp)["envname"] = strings.ToLower(b.Name)
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.startEnv(strings.ToLower(b.Name))
+			w.WriteString(content)
+			w.endEnv(strings.ToLower(b.Name))
+		}
 	}
 
+	// TODO: Do we need to handle this?
 	if b.Result != nil && params[":exports"] != "code" && params[":exports"] != "none" {
 		org.WriteNodes(w, b.Result)
 	}
@@ -834,16 +854,19 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 func (w *OrgLatexWriter) WriteResult(r org.Result) { org.WriteNodes(w, r.Node) }
 
 func (w *OrgLatexWriter) WriteInlineBlock(b org.InlineBlock) {
+	tp := w.TemplateProps()
 	content := w.blockContent(strings.ToUpper(b.Name), b.Children)
 	switch b.Name {
 	case "src":
-		// TODO: is there a better source block to be using here.
-		//lang := strings.ToLower(b.Parameters[0])
-		//TODO Convert content = w.HighlightCodeBlock(b.Keywords, content, lang, true, nil)
-		//content = ""
-		w.WriteString(` \begin{verbatim} ` + content + ` \end{verbatim}` + "\n")
+		if tmp, ok := w.templateRegistry.BlockTemplate("inline_src"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.WriteString(` \begin{verbatim} ` + content + ` \end{verbatim}` + "\n")
+		}
 	case "export":
-		if strings.ToLower(b.Parameters[0]) == "html" {
+		if strings.ToLower(b.Parameters[0]) == "latex" {
 			w.WriteString(content)
 		}
 	}
@@ -854,7 +877,7 @@ func (w *OrgLatexWriter) WriteDrawer(d org.Drawer) {
 }
 
 func (w *OrgLatexWriter) WriteKeyword(k org.Keyword) {
-	if k.Key == "HTML" {
+	if k.Key == "LATEX" {
 		w.WriteString(k.Value + "\n")
 	} else if k.Key == "TOC" {
 		if m := tocHeadlineMaxLvlRegexp.FindStringSubmatch(k.Value); m != nil {
@@ -906,8 +929,15 @@ func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	// Need to exclude on basis of toc:nil parameter as well
 	// Not compatible with DnDBook class for some reason.
 	// Presence of a title allow TOC to work.
-	if w.docclass != "dndbook" || w.HaveTitle(d) {
-		w.WriteString("\n" + `\tableofcontents` + "\n")
+	tp := w.TemplateProps()
+	if tmp, ok := w.templateRegistry.BlockTemplate("toc"); ok {
+		(*tp)["havetitle"] = w.HaveTitle(d)
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		if w.docclass != "dndbook" || w.HaveTitle(d) {
+			w.WriteString("\n" + `\tableofcontents` + "\n")
+		}
 	}
 	//w.WriteString(`\listoffigures` + "\n")
 	//w.WriteString(`\listoftables` + "\n")
@@ -1064,32 +1094,72 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if lvl > len(sectionTypes)-1 {
 		lvl = len(sectionTypes) - 1
 	}
-	sectionFormat := sectionTypes[lvl]
-	head := ""
-	if w.Document.GetOption("todo") != "nil" && h.Status != "" {
-		head += fmt.Sprintf("%s ", h.Status)
-	}
-	if w.Document.GetOption("pri") != "nil" && h.Priority != "" {
-		head += fmt.Sprintf(`[%s] `, h.Priority)
-	}
-
-	head += w.WriteNodesAsString(h.Title...)
-	if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
-		head += strings.Join(h.Tags, " ")
-	}
-	numberPrefix := ""
-	fmt.Printf("EXPORT TEST: %s\n", w.Document.GetOption("num"))
-	if w.Document.GetOption("num") != "nil" {
-		if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
-			if lvl > num {
-				numberPrefix = "*"
+	if tmp, ok := w.templateRegistry.BlockTemplate(fmt.Sprintf("%d",lvl)); ok {
+		tp := w.TemplateProps()
+		showtodo := w.Document.GetOption("todo") != "nil" && h.Status != ""
+		(*tp)["showtodo"] = showtodo
+		(*tp)["status"] = ""
+		if showtodo {
+			(*tp)["status"] = h.Status
+		}
+		showpriority := w.Document.GetOption("pri") != "nil" && h.Priority != "" {
+		(*tp)["showpriority"] = showpriority
+		(*tp)["priority"] = ""
+		if showtodo {
+			(*tp)["priority"] = h.Priority
+		}
+		head := w.WriteNodesAsString(h.Title...)
+		(*tp)["heading"] = head
+		showtags := w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
+		(*tp)["showtags"] = showtags
+		(*tp)["tags"] = []
+		if showtodo {
+			(*tp)["tags"] = h.Tags
+		}
+		numberPrefix := ""
+		if w.Document.GetOption("num") != "nil" {
+			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
+				if lvl > num {
+					numberPrefix = "*"
+				}
 			}
 		}
-	}
-	w.WriteString("\n" + fmt.Sprintf(sectionFormat, numberPrefix, head))
-	w.WriteString("\n")
-	if content := w.WriteNodesAsString(h.Children...); content != "" {
-		w.WriteString(content)
+		(*tp)["numprefix"] = numberPrefix
+		(*tp)["content"] = ""
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			(*tp)["content"] = content
+		}
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		sectionFormat := sectionTypes[lvl]
+		head := ""
+
+		if w.Document.GetOption("todo") != "nil" && h.Status != "" {
+			head += fmt.Sprintf("%s ", h.Status)
+		}
+		if w.Document.GetOption("pri") != "nil" && h.Priority != "" {
+			head += fmt.Sprintf(`[%s] `, h.Priority)
+		}
+
+		head += w.WriteNodesAsString(h.Title...)
+		if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
+			head += strings.Join(h.Tags, " ")
+		}
+		numberPrefix := ""
+		fmt.Printf("EXPORT TEST: %s\n", w.Document.GetOption("num"))
+		if w.Document.GetOption("num") != "nil" {
+			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
+				if lvl > num {
+					numberPrefix = "*"
+				}
+			}
+		}
+		w.WriteString("\n" + fmt.Sprintf(sectionFormat, numberPrefix, head))
+		w.WriteString("\n")
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			w.WriteString(content)
+		}
 	}
 }
 
