@@ -11,29 +11,29 @@ tables:
       \end{center}
       {% if havecaption %}\end{table}{% endif %}
 headings:
-  1:
+  "1":
     template: |+
-      \chapter{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      \chapter{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content}}
-  2:
+  "2":
     template: |+
-      \section{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      \section{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content}}
-  3:
+  "3":
     template: |+
-      \subsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      \subsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content}}
-  4:
+  "4":
     template: |+
-      \subsubsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      \subsubsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content}}
-  5:
+  "5":
     template: |+
-      \paragraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      \paragraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content}}
-  6:
+  "6":
     template: |+
-      \subparagraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if {{showtodo}} %}{{status}} {% endif %}{% if {{showpriority}} %}[{{priority}}] {% endif %}{{heading}}{% if {{showtags}} %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      \subparagraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content}}
   PART:
     template: |+
@@ -58,7 +58,7 @@ blocks:
        \begin{verbatim}{{content|safe}}\end{verbatim}
   toc:
     template: |+
-       {% if {{havetitle}} %}\tableofcontents{% endif %}
+       {% if havetitle %}\tableofcontents{% endif %}
   SRC:
     template: |+
       {{ envs | startenv: "minted" }}{% verbatim %}{{% endverbatim %}{{lang}}{% verbatim %}}{% endverbatim %}

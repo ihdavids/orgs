@@ -291,6 +291,11 @@ func (s *SubTemplates) ParagraphTemplate(name string, usedefault...bool) (String
 }
 
 func MakeTemplateRegistry(defaultPath, classPath string) *SubTemplates {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+		}
+	}()
 	var t *SubTemplates = &SubTemplates{}
 	t.docconf = GetDocConf(classPath)
 	// This is our fallback, if we do not find it in our specific template, we fall back on this
@@ -931,7 +936,7 @@ func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	// Presence of a title allow TOC to work.
 	tp := w.TemplateProps()
 	if tmp, ok := w.templateRegistry.BlockTemplate("toc"); ok {
-		(*tp)["havetitle"] = w.HaveTitle(d)
+		(*tp)["havetitle"] = w.docclass != "dndbook" || w.HaveTitle(d)
 		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
@@ -1094,7 +1099,9 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if lvl > len(sectionTypes)-1 {
 		lvl = len(sectionTypes) - 1
 	}
-	if tmp, ok := w.templateRegistry.BlockTemplate(fmt.Sprintf("%d",lvl)); ok {
+	fmt.Printf("HEADING OF: %d\n",lvl)
+	if tmp, ok := w.templateRegistry.HeadingTemplate(fmt.Sprintf("%d",lvl), false); ok {
+		fmt.Printf("GOT HEADING TEMPLATE: %d\n",lvl)
 		tp := w.TemplateProps()
 		showtodo := w.Document.GetOption("todo") != "nil" && h.Status != ""
 		(*tp)["showtodo"] = showtodo
@@ -1102,7 +1109,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		if showtodo {
 			(*tp)["status"] = h.Status
 		}
-		showpriority := w.Document.GetOption("pri") != "nil" && h.Priority != "" {
+		showpriority := w.Document.GetOption("pri") != "nil" && h.Priority != ""
 		(*tp)["showpriority"] = showpriority
 		(*tp)["priority"] = ""
 		if showtodo {
@@ -1110,9 +1117,9 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		}
 		head := w.WriteNodesAsString(h.Title...)
 		(*tp)["heading"] = head
-		showtags := w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
+		showtags := w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0
 		(*tp)["showtags"] = showtags
-		(*tp)["tags"] = []
+		(*tp)["tags"] = []string{}
 		if showtodo {
 			(*tp)["tags"] = h.Tags
 		}
@@ -1129,6 +1136,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		if content := w.WriteNodesAsString(h.Children...); content != "" {
 			(*tp)["content"] = content
 		}
+		fmt.Printf("RENDERING HEADING: %d\n",lvl)
 		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
