@@ -1123,6 +1123,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		if showtodo {
 			(*tp)["tags"] = h.Tags
 		}
+		fmt.Printf("BEFORE NUM\n")
 		numberPrefix := ""
 		if w.Document.GetOption("num") != "nil" {
 			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
@@ -1131,6 +1132,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 				}
 			}
 		}
+		fmt.Printf("PAST NUM\n")
 		(*tp)["numprefix"] = numberPrefix
 		(*tp)["content"] = ""
 		if content := w.WriteNodesAsString(h.Children...); content != "" {
@@ -1138,6 +1140,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		}
 		fmt.Printf("RENDERING HEADING: %d\n",lvl)
 		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		fmt.Printf("RENDERED HEADING: %d\n",lvl)
 		w.WriteString(res)
 	} else {
 		sectionFormat := sectionTypes[lvl]
