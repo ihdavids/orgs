@@ -1099,9 +1099,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if lvl > len(sectionTypes)-1 {
 		lvl = len(sectionTypes) - 1
 	}
-	fmt.Printf("HEADING OF: %d\n",lvl)
 	if tmp, ok := w.templateRegistry.HeadingTemplate(fmt.Sprintf("%d",lvl), false); ok {
-		fmt.Printf("GOT HEADING TEMPLATE: %d\n",lvl)
 		tp := w.TemplateProps()
 		showtodo := w.Document.GetOption("todo") != "nil" && h.Status != ""
 		(*tp)["showtodo"] = showtodo
@@ -1123,7 +1121,6 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		if showtodo {
 			(*tp)["tags"] = h.Tags
 		}
-		fmt.Printf("BEFORE NUM\n")
 		numberPrefix := ""
 		if w.Document.GetOption("num") != "nil" {
 			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
@@ -1132,15 +1129,12 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 				}
 			}
 		}
-		fmt.Printf("PAST NUM\n")
 		(*tp)["numprefix"] = numberPrefix
 		(*tp)["content"] = ""
 		if content := w.WriteNodesAsString(h.Children...); content != "" {
 			(*tp)["content"] = content
 		}
-		fmt.Printf("RENDERING HEADING: %d\n",lvl)
 		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
-		fmt.Printf("RENDERED HEADING: %d\n",lvl)
 		w.WriteString(res)
 	} else {
 		sectionFormat := sectionTypes[lvl]
