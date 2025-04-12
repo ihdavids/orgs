@@ -458,6 +458,9 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 	fmt.Printf("LATEX: Export string called [%s]:[%s]\n", query, opts)
 
 	if f := db.FindByFile(query); f != nil {
+		for k,v := range f.BufferSettings {
+			self.Props[k] = v
+		}
 		theme := f.Get("LATEX_THEME")
 		if theme == "" {
 			theme = f.Get("LATEX_CLASS")
@@ -829,7 +832,16 @@ func (e *EnvironmentStack) endEnvAsString(name string) string {
 EDOC */
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
-	tp := w.TemplateProps()
+	props := w.TemplateProps()
+	// Copy over local properties for this block so they can be
+	// used in this template
+	tp := &map[string]any{}
+	for k,v := range *props {
+		(*tp)[k]	= v
+	}
+	for k,v := range params {
+		(*tp)[k]	= v
+	}
 	switch b.Name {
 	case "SRC":
 		if params[":exports"] == "results" || params[":exports"] == "none" {
@@ -1155,6 +1167,9 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		lvl = len(sectionTypes) - 1
 	}
 	tlvl := h.Lvl
+	// This is tricky, lets you shift heading values.
+	// So if you want to start at 1 then you just set this
+	// to 1. Lets you use book but skip chapters.
 	shift := w.Document.Get("LATEX_HEADING_SHIFT")
 	if shift != "" {
 		if s, err := strconv.Atoi(shift); err == nil && s <= (len(sectionTypes)-2) {
