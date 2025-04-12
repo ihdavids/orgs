@@ -462,6 +462,9 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		if theme == "" {
 			theme = f.Get("LATEX_CLASS")
 		}
+		// Shorthand for braces when spaces are a problem
+		self.Props["o"] = "{"
+		self.Props["c"] = "}" 
 		self.Props["docclass"] = "book"
 		if theme != "" {
 			self.Props["docclass"] = theme
@@ -627,27 +630,80 @@ func (w *OrgLatexWriter) HaveTitle(d *org.Document) bool {
 func (w *OrgLatexWriter) Before(d *org.Document) {
 	w.Document = d
 	w.log = d.Log
-	if title := d.Get("TITLE"); w.HaveTitle(d) {
+	tp := w.TemplateProps()
+	haveTitle := w.docclass != "dndbook" || w.HaveTitle(d)
+	(*tp)["havetitle"] = haveTitle
+	title := d.Get("TITLE")
+	if haveTitle {
 		titleDocument := d.Parse(strings.NewReader(title), d.Path)
 		if titleDocument.Error == nil {
 			title = w.WriteNodesAsString(titleDocument.Nodes...)
 		}
-		w.WriteString(fmt.Sprintf(`\title{%s}`+"\n", title))
 	}
-	if auth := d.Get("AUTHOR"); auth != "" && w.Document.GetOption("author") != "nil" {
-		titleDocument := d.Parse(strings.NewReader(auth), d.Path)
-		if titleDocument.Error == nil {
-			auth = w.WriteNodesAsString(titleDocument.Nodes...)
+	(*tp)["title"] = title
+	if tmp, ok := w.templateRegistry.HeadingTemplate("TITLE"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		// DEPRECATED
+		if title = d.Get("TITLE"); w.HaveTitle(d) {
+			titleDocument := d.Parse(strings.NewReader(title), d.Path)
+			if titleDocument.Error == nil {
+				title = w.WriteNodesAsString(titleDocument.Nodes...)
+			}
+			w.WriteString(fmt.Sprintf(`\title{%s}`+"\n", title))
 		}
-		w.WriteString(fmt.Sprintf(`\author{%s}`+"\n", auth))
 	}
-	if dt := d.Get("DATE"); dt != "" && w.Document.GetOption("date") != "nil" {
-		titleDocument := d.Parse(strings.NewReader(dt), d.Path)
-		if titleDocument.Error == nil {
-			dt = w.WriteNodesAsString(titleDocument.Nodes...)
+
+	auth := d.Get("AUTHOR")
+	haveAuth := auth != "" && w.Document.GetOption("author") != "nil"
+	(*tp)["haveauthor"] = haveAuth
+	if haveAuth {
+		doc := d.Parse(strings.NewReader(auth), d.Path)
+		if doc.Error == nil {
+			auth = w.WriteNodesAsString(doc.Nodes...)
 		}
-		w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
 	}
+	(*tp)["title"] = auth
+	if tmp, ok := w.templateRegistry.HeadingTemplate("AUTHOR"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		// DEPRECATED
+		if auth := d.Get("AUTHOR"); auth != "" && w.Document.GetOption("author") != "nil" {
+			titleDocument := d.Parse(strings.NewReader(auth), d.Path)
+			if titleDocument.Error == nil {
+				auth = w.WriteNodesAsString(titleDocument.Nodes...)
+			}
+			w.WriteString(fmt.Sprintf(`\author{%s}`+"\n", auth))
+		}
+	}
+
+
+	dt := d.Get("DATE")
+	haveDate := dt != "" && w.Document.GetOption("date") != "nil"
+	(*tp)["havedate"] = haveDate
+	if haveDate {
+		doc := d.Parse(strings.NewReader(dt), d.Path)
+		if doc.Error == nil {
+			dt = w.WriteNodesAsString(doc.Nodes...)
+		}
+	}
+	(*tp)["date"] = dt
+	if tmp, ok := w.templateRegistry.HeadingTemplate("DATE"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		// DEPRECATED
+		if dt := d.Get("DATE"); dt != "" && w.Document.GetOption("date") != "nil" {
+			titleDocument := d.Parse(strings.NewReader(dt), d.Path)
+			if titleDocument.Error == nil {
+				dt = w.WriteNodesAsString(titleDocument.Nodes...)
+			}
+			w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
+		}
+	}
+
 	w.WriteString("\n" + `\begin{document}` + "\n")
 	if w.HaveTitle(d) {
 		w.WriteString(`\maketitle` + "\n")
@@ -936,7 +992,6 @@ func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	// Presence of a title allow TOC to work.
 	tp := w.TemplateProps()
 	if tmp, ok := w.templateRegistry.BlockTemplate("toc"); ok {
-		(*tp)["havetitle"] = w.docclass != "dndbook" || w.HaveTitle(d)
 		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
@@ -1099,7 +1154,20 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if lvl > len(sectionTypes)-1 {
 		lvl = len(sectionTypes) - 1
 	}
-	if tmp, ok := w.templateRegistry.HeadingTemplate(fmt.Sprintf("%d",lvl), false); ok {
+	tlvl := h.Lvl
+	shift := w.Document.Get("LATEX_HEADING_SHIFT")
+	if shift != "" {
+		if s, err := strconv.Atoi(shift); err == nil && s <= (len(sectionTypes)-2) {
+			tlvl += s
+		}
+	}	
+	if tlvl < 1 {
+		tlvl = 1
+	}
+	if tlvl > len(sectionTypes) {
+		tlvl = len(sectionTypes)
+	}
+	if tmp, ok := w.templateRegistry.HeadingTemplate(fmt.Sprintf("%d",tlvl), false); ok {
 		tp := w.TemplateProps()
 		showtodo := w.Document.GetOption("todo") != "nil" && h.Status != ""
 		(*tp)["showtodo"] = showtodo

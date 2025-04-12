@@ -11,38 +11,47 @@ tables:
       \end{center}
       {% if havecaption %}\end{table}{% endif %}
 headings:
-  "0":
+  "1":
     template: |+
       \chapter{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
-  "1":
+  "2":
     template: |+
       \section{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
-  "2":
+  "3":
     template: |+
       \subsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
-  "3":
+  "4":
     template: |+
       \subsubsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
-  "4":
+  "5":
     template: |+
       \paragraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
-  "5":
+  "6":
     template: |+
       \subparagraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
       {{content | safe}}
   PART:
     template: |+
-      \part{ {{heading}} }
+      \part{{o}}{{heading}}{{c}}
         {{content | safe}}
   CHAPTER:
     template: |+
-      \chapter{ {{heading}} }
+      \chapter{{o}}{{heading}}{{c}}
         {{content | safe}}
+  TITLE:
+    template: |+
+      {% if havetitle %}\title{{o}}{{title}}{{c}}{% endif %}
+  AUTHOR:
+    template: |+
+      {% if haveauthor %}\author{{o}}{{author}}{{c}}{% endif %}
+  DATE:
+    template: |+
+      {% if havedate %}\date{{o}}{{date}}{{c}}{% endif %}
 paragraph:
   default:
     template: |+
