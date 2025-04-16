@@ -22,6 +22,8 @@ type Config struct {
 	// Core systems
 	PlugManager *plugs.PluginManager
 	Out         *logging.Logger
+	Config               string
+	HomeDir              string
 	// Configuration options
 	ServePath            string                   `yaml:"servepath"`
 	Port                 int                      `yaml:"port"`
@@ -295,6 +297,12 @@ func (self *Config) Defaults() {
 	self.ClockIntoDrawer = "LOGBOOK"
 	self.TemplateImagesPath = "./templates/html_styles/images"
 	self.TemplateFontPath = "./templates/fonts"
+
+
+	execPath, _ := os.Executable()
+	execPath = filepath.Dir(execPath)
+	self.HomeDir = execPath
+	self.Config = filepath.Join(execPath, "orgs.yaml")
 }
 
 func (self *Config) Validate() {
@@ -303,30 +311,32 @@ func (self *Config) Validate() {
 	}
 }
 
-func (self *Config) ParseCommandLine() {
+func (self *Config) SetupCommandLine() {
+	flag.StringVar(&self.Config, "config", self.Config, "config file")
 	// NOTE: for this to work the default should always be the current
 	//       value of the structure. Avoid using a default here
 	//       instead specify it in Defaults up above.
 	flag.StringVar(&self.ServePath, "servepath", self.ServePath, "serve path")
 	flag.IntVar(&self.Port, "port", 8010, "serve port")
 	flag.IntVar(&self.TLSPort, "tlsport", 443, "tls serve port")
-	flag.Parse()
+
 }
 
 func (self *Config) ParseConfig() {
 	// Setup overall defaults for all options
 	self.Defaults()
 	manager := new(plugs.PluginManager)
+	manager.HomeDir = self.HomeDir
 
-	execPath, _ := os.Executable()
-	execPath = filepath.Dir(execPath)
-	manager.HomeDir = execPath
-	execPath = filepath.Join(execPath, "orgs.yaml")
-	filename := execPath
+	self.SetupCommandLine()
+	// Parse to pull config file from command line first
+	flag.Parse()
+	filename := self.Config
 	if _, err := os.Stat(filename); err != nil {
-		filename, _ = filepath.Abs("orgc.yaml")
+		// I should really remove this crap!
+		filename, _ := filepath.Abs("orgc.yaml")
 		if _, err = os.Stat(filename); err != nil {
-			fmt.Printf("Looks like you do not have an orgs.yaml configuration file. Please add one!")
+			fmt.Printf("Looks like you do not have a [%s] configuration file. Please add one!", self.Config)
 			os.Exit(-1)
 		}
 	}
@@ -342,7 +352,7 @@ func (self *Config) ParseConfig() {
 	}
 	manager.Port = self.Port
 	manager.TLSPort = self.TLSPort
-	manager.HomeDir = filepath.Dir(execPath)
+	manager.HomeDir = filepath.Dir(self.HomeDir)
 	manager.Out = GetLog()
 	manager.Tempo = &templates.TemplateManager{TemplatePath: config.TemplatePath}
 	manager.OrgDirs = self.OrgDirs
@@ -361,7 +371,9 @@ func (self *Config) ParseConfig() {
 		pd.Plugin.Startup(1, manager, &plugOpts)
 	}
 	// Command line overrides config file.
-	self.ParseCommandLine()
+	// down here. This dual parse facilitates the command line
+	// override of the yaml file.
+	flag.Parse()
 
 	// Validate that all required parameters are present for
 	// us to start up.

@@ -924,7 +924,9 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	}
 }
 
-func (w *OrgLatexWriter) WriteResult(r org.Result) { org.WriteNodes(w, r.Node) }
+func (w *OrgLatexWriter) WriteResult(r org.Result) { 
+	org.WriteNodes(w, r.Node) 
+}
 
 func (w *OrgLatexWriter) WriteInlineBlock(b org.InlineBlock) {
 	tp := w.TemplateProps()
@@ -1183,7 +1185,25 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		tlvl = len(sectionTypes)
 	}
 	if tmp, ok := w.templateRegistry.HeadingTemplate(fmt.Sprintf("%d",tlvl), false); ok {
-		tp := w.TemplateProps()
+		props := w.TemplateProps()
+		// Copy over local properties for this headline so they can be
+		// used in this template
+		tp := &map[string]any{}
+		for k,v := range *props {
+			(*tp)[k]	= v
+		}
+		if h.Properties != nil {
+			for _,d := range (*h.Properties).Properties {
+				if d != nil && len(d) >= 1 {
+					k := d[0]
+					v := []string{}
+					if len(d) > 1 {
+						v = d[1:]
+					}	
+					(*tp)[k]	= v
+				}
+			}
+		}
 		showtodo := w.Document.GetOption("todo") != "nil" && h.Status != ""
 		(*tp)["showtodo"] = showtodo
 		(*tp)["status"] = ""
