@@ -21,6 +21,12 @@ import (
 	"gopkg.in/op/go-logging.v1"
 )
 
+type PluginLookup interface {
+	GetExporter(name string) Exporter
+	GetPoller(name string)   Poller
+	GetUpdater(name string)  Updater
+}
+
 type BlockExecMethod func(*common.OrgFile, *org.Section, *org.Block) *common.ResultMsg
 type PluginManager struct {
 	HomeDir        string
@@ -31,6 +37,7 @@ type PluginManager struct {
 	TLSPort        int
 	OrgDirs        []string
 	cachedPassword map[string]string
+	Plugs          PluginLookup
 }
 
 func keyringGet(user string) (string, error) {

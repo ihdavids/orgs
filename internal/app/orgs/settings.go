@@ -17,7 +17,6 @@ import (
 )
 
 
-
 type Config struct {
 	// Core systems
 	PlugManager *plugs.PluginManager
@@ -327,6 +326,7 @@ func (self *Config) ParseConfig() {
 	self.Defaults()
 	manager := new(plugs.PluginManager)
 	manager.HomeDir = self.HomeDir
+	manager.Plugs = plugs.PluginLookup(self)
 
 	self.SetupCommandLine()
 	// Parse to pull config file from command line first
@@ -378,6 +378,34 @@ func (self *Config) ParseConfig() {
 	// Validate that all required parameters are present for
 	// us to start up.
 	self.Validate()
+}
+
+
+func (self *Config) GetExporter(name string) plugs.Exporter {
+	for _, e := range self.Exporters {
+		if name == e.Name {
+			return e.Plugin
+		}
+	}
+	return nil
+}
+	
+func (self *Config) GetPoller(name string)   plugs.Poller {
+	for _, e := range self.Plugins {
+		if name == e.Name {
+			return e.Plugin
+		}
+	}
+	return nil
+}
+
+func (self *Config) GetUpdater(name string)  plugs.Updater {
+	for _, e := range self.Updaters {
+		if name == e.Name {
+			return e.Plugin
+		}
+	}
+	return nil
 }
 
 var config *Config
