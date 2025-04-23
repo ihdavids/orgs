@@ -59,6 +59,9 @@ func (self *OrgPdfExporter) Unmarshal(unmarshal func(interface{}) error) error {
 
 func (self *OrgPdfExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("PDF: Export called", query, to, opts)
+	exp := self.pm.Plugs.GetExporter("latex")	
+	_,res := exp.ExportToString(db, query, opts, props)
+	fmt.Printf("RES: %s\n", res)
 	/*
 	for _, exp := range Conf().Exporters {
 		if exp.Name == "latex" {
