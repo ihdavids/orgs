@@ -2,6 +2,8 @@ package latex
 
 import (
 	"fmt"
+	"path/filepath"
+
 	//"html"
 	//"io/ioutil"
 	"log"
@@ -70,22 +72,31 @@ func (self *OrgPdfExporter) Export(db plugs.ODb, query string, to string, opts s
 	}
 	if err, res := exp.ExportToString(db, query, opts, props); err == nil {
 		if tmp, e2 := os.CreateTemp("", "latexcache-*.tex"); e2 == nil {
+			fmt.Printf("SOURCE FILE: %s\n", tmp.Name())
 			defer os.Remove(tmp.Name())
 			{
 				defer tmp.Close()
 				tmp.Write([]byte(res))
 			}
-			tmp.Name()
+			//tmp.Name()
+			// Get our output filename from our source filename
+			fullname := tmp.Name()
+			file := filepath.Base(fullname)
+			outputraw := strings.TrimSuffix(file, filepath.Ext(file))
+			outputtemp := fmt.Sprintf("./%s.pdf", outputraw)
+
 			pdflatex := self.PdfLatex
 			if pdflatex == "" {
 				pdflatex = "/Library/TeX/texbin/pdflatex"
 			}
-			args := []string{"--shell-escape", tmp.Name(), "-output-format=pdf", fmt.Sprintf("-o=%s", to)}
+			//args := []string{"--shell-escape", tmp.Name(), "-output-format=pdf", fmt.Sprintf("-o=%s", to)}
+			args := []string{"--shell-escape", tmp.Name(), "-output-format=pdf"}
 			cmd := exec.Command(pdflatex, args...)
 			//cmd := exec.Command(pdflatex, fmt.Sprintf("--shell-escape %s -output-format=pdf -o=%s", tmp.Name(), to))
 
 			if out, e3 := cmd.Output(); e3 == nil {
 				self.pm.Out.Info("%s\n", string(out))
+				os.Rename(outputtemp, to)
 				self.pm.Out.Info("CONVERSION FINISHED\n")
 			} else {
 				fmt.Printf("ERROR PDF Export: %v\n%v\n%v\n", cmd.Args, e3, string(out))
