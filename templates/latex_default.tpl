@@ -9,7 +9,7 @@
 \usepackage{CJKutf8}
 \usepackage{graphicx}
 % Required by minted for code coloring
-\usepackage{pygmentize}
+%\usepackage{pygmentize}
 \usepackage{minted}
 \usepackage{grffile}
 \usepackage{longtable}

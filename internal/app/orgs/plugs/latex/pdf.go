@@ -2,6 +2,8 @@ package latex
 
 import (
 	"fmt"
+	"path/filepath"
+
 	//"html"
 	//"io/ioutil"
 	"log"
@@ -15,13 +17,17 @@ import (
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"gopkg.in/op/go-logging.v1"
+
 	//"gopkg.in/yaml.v3"
 	//"github.com/flosch/pongo2/v5"
+	"os"
+	"os/exec"
 )
 
 type OrgPdfExporter struct {
 	TemplatePath string
 	Props        map[string]any
+	PdfLatex     string
 	out          *logging.Logger
 	pm           *plugs.PluginManager
 }
@@ -41,14 +47,14 @@ type OrgPdfWriter struct {
 
 func NewOrgPdfWriter(exp *OrgPdfExporter) *OrgPdfWriter {
 	/*
-	defaultConfig := org.New()
-	return &OrgLatexWriter{
-		Document: &org.Document{Configuration: defaultConfig},
-		footnotes: &footnotes{
-			mapping: map[string]int{},
-		},
-		exporter: exp,
-	}
+		defaultConfig := org.New()
+		return &OrgLatexWriter{
+			Document: &org.Document{Configuration: defaultConfig},
+			footnotes: &footnotes{
+				mapping: map[string]int{},
+			},
+			exporter: exp,
+		}
 	*/
 	return nil
 }
@@ -58,14 +64,58 @@ func (self *OrgPdfExporter) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *OrgPdfExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("PDF: Export called", query, to, opts)
-	/*
-	for _, exp := range Conf().Exporters {
-		if exp.Name == "latex" {
-			err := exp.Plugin.Export(db, query, to, opts, props)
-			break
+	fmt.Printf("PDF: Export called: [%s] [%s]\n%v", query, to, opts)
+	exp := self.pm.Plugs.GetExporter("latex")
+	if exp == nil {
+		self.pm.Out.Error("Failed to find latex exporter for pdf conversion!")
+		return fmt.Errorf("Failed to find latex exporter, has it been initialized?")
+	}
+	if err, res := exp.ExportToString(db, query, opts, props); err == nil {
+		if tmp, e2 := os.CreateTemp("", "latexcache-*.tex"); e2 == nil {
+			fmt.Printf("SOURCE FILE: %s\n", tmp.Name())
+			defer os.Remove(tmp.Name())
+			{
+				defer tmp.Close()
+				tmp.Write([]byte(res))
+			}
+			//tmp.Name()
+			// Get our output filename from our source filename
+			fullname := tmp.Name()
+			file := filepath.Base(fullname)
+			outputraw := strings.TrimSuffix(file, filepath.Ext(file))
+			outputtemp := fmt.Sprintf("./%s.pdf", outputraw)
+
+			pdflatex := self.PdfLatex
+			if pdflatex == "" {
+				pdflatex = "/Library/TeX/texbin/pdflatex"
+			}
+			//args := []string{"--shell-escape", tmp.Name(), "-output-format=pdf", fmt.Sprintf("-o=%s", to)}
+			args := []string{"--shell-escape", tmp.Name(), "-output-format=pdf"}
+			cmd := exec.Command(pdflatex, args...)
+			//cmd := exec.Command(pdflatex, fmt.Sprintf("--shell-escape %s -output-format=pdf -o=%s", tmp.Name(), to))
+
+			if out, e3 := cmd.Output(); e3 == nil {
+				self.pm.Out.Info("%s\n", string(out))
+				os.Rename(outputtemp, to)
+				self.pm.Out.Info("CONVERSION FINISHED\n")
+			} else {
+				fmt.Printf("ERROR PDF Export: %v\n%v\n%v\n", cmd.Args, e3, string(out))
+			}
+		} else {
+			fmt.Printf("Temp file not created... %v\n", e2)
 		}
-	}*/
+
+		//fmt.Printf("RES: %s\n", res)
+	} else {
+		self.pm.Out.Error("Latex Conversion Error: %v", err)
+	}
+	/*
+		for _, exp := range Conf().Exporters {
+			if exp.Name == "latex" {
+				err := exp.Plugin.Export(db, query, to, opts, props)
+				break
+			}
+		}*/
 	//err, str := self.ExportToString(db, query, opts, props)
 	//if err != nil {
 	//	return err
@@ -82,6 +132,7 @@ func (self *OrgPdfExporter) Export(db plugs.ODb, query string, to string, opts s
 	*/
 	return nil
 }
+
 // ----------- [ Exporter System ] -----------------------
 
 func (self *OrgPdfExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
@@ -91,7 +142,7 @@ func (self *OrgPdfExporter) ExportToString(db plugs.ODb, query string, opts stri
 
 func (self *OrgPdfExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
 	self.out = manager.Out
-	self.pm  = manager
+	self.pm = manager
 }
 
 // init function is called at boot
