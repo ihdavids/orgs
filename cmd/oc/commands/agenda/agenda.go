@@ -361,7 +361,7 @@ func (self *CommandAgenda) SetupParameters(*flag.FlagSet) {
 }
 
 func (self *CommandAgenda) Exec(core *commands.Core) {
-	fmt.Printf("CommandAgenda called\n")
+	//fmt.Printf("CommandAgenda called\n")
 	//box := tview.NewBox().SetBorder(true).SetTitle("Agenda")
 	self.out = tview.NewTextView()
 	self.statusBar = tview.NewTable()

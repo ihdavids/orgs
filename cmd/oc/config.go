@@ -78,7 +78,7 @@ func (self *Config) ParseConfig() {
 	if _, err := os.Stat(filename); err != nil {
 		filename, _ = filepath.Abs("oc.yaml")
 		if _, err = os.Stat(filename); err != nil {
-			fmt.Printf("No oc.yaml config file found...\n")
+			//fmt.Printf("No oc.yaml config file found...\n")
 			haveConfig = false
 		}
 	}

@@ -450,11 +450,16 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 func (self *OrgHtmlExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
 	if len(self.StatusColors) == 0 {
 		self.StatusColors = map[string]string{
-			"TODO":        "red",
+			"TODO":        "#3498db",
 			"INPROGRESS":  "#CC9900",
 			"IN-PROGRESS": "#CC9900",
 			"DOING":       "#CC9900",
 			"DONE":        "#006600",
+			"PAUSED":      "#dc7633",
+			"BLOCKED":     "#c0392b",
+			"WAITING":     "#76448a",
+			"CANCELED":    "#909497",
+			"CANCELLED":   "#909497",
 		}
 	}
 	self.out = manager.Out

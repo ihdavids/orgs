@@ -78,7 +78,7 @@ func (self *Capture) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *Capture) SetupParameters(fset *flag.FlagSet) {
-	fmt.Printf("CAP CALLED\n")
+	//fmt.Printf("CAP CALLED\n")
 	//fset := flag.NewFlagSet("capture", flag.ExitOnError)
 	fset.StringVar(&(self.Template), "temp", "", "template name")
 	fset.StringVar(&(self.Head), "head", "", "heading")
