@@ -2,12 +2,16 @@
 package orgs
 
 import (
+	"crypto/sha1"
+	b64 "encoding/base64"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
@@ -16,102 +20,117 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const kBAD_SALT = "THIS IS A DEFAULT SALT DO NOT USE THIS! SET YOUR OWN"
 
 type Config struct {
 	// Core systems
 	PlugManager *plugs.PluginManager
 	Out         *logging.Logger
-	Config               string
-	HomeDir              string
+	Config      string
+	HomeDir     string
+	/* SDOC: Settings
+	* Orgs Keys
+		There are 2 keys that will be generated
+		if not provided by the system.
+		#+BEGIN_SRC yaml
+	  orgJWS: "this key is used to sign the JWT"
+	  orgJWE: "This key is used to encrypt the JWT"
+	  orgSalt: "Appended to the per user salt to help with rainbow tables"
+		#+END_SRC
+		EDOC */
+	OrgJWS  string `yaml:"orgJWS"`
+	OrgJWE  string `yaml:"orgJWE"`
+	OrgSalt string `yaml:"orgSalt"`
+
 	// Configuration options
-	ServePath            string                   `yaml:"servepath"`
-	Port                 int                      `yaml:"port"`
-	TLSPort              int                      `yaml:"tlsport"`
-	ServerCrt            string                   `yaml:"servercrt"`
-	ServerKey            string                   `yaml:"serverkey"`
+	ServePath string `yaml:"servepath"`
+	Port      int    `yaml:"port"`
+	TLSPort   int    `yaml:"tlsport"`
+	ServerCrt string `yaml:"servercrt"`
+	ServerKey string `yaml:"serverkey"`
 	/* SDOC: Settings
-* Org Dirs
-	A list of directories containing your org files
-	#+BEGIN_SRC yaml
-  orgDirs: 
-    - "/Users/me/dev/gtd"
-	#+END_SRC
-	EDOC */
-	OrgDirs              []string                 `yaml:"orgDirs"`
-	CanFailWatch         bool                     `yaml:"canWatchFail"`
+	* Org Dirs
+		A list of directories containing your org files
+		#+BEGIN_SRC yaml
+	  orgDirs:
+	    - "/Users/me/dev/gtd"
+		#+END_SRC
+		EDOC */
+	OrgDirs      []string `yaml:"orgDirs"`
+	CanFailWatch bool     `yaml:"canWatchFail"`
 	/* SDOC: Settings
-* Use Project Tag
-	How should we define a project. If this is set a project
-	is defined as a heading with a :PROJECT: tag on it.
+	* Use Project Tag
+		How should we define a project. If this is set a project
+		is defined as a heading with a :PROJECT: tag on it.
 
-	#+BEGIN_SRC yaml
-  useProjectTag: true
-	#+END_SRC
+		#+BEGIN_SRC yaml
+	  useProjectTag: true
+		#+END_SRC
 
-	If this is false then a project is defined to be a headline
-	that has a child headline that has a status on it.
+		If this is false then a project is defined to be a headline
+		that has a child headline that has a status on it.
 
-	#+BEGIN_SRC org
-  * Project
-  ** TODO This task makes it a project
-	#+END_SRC
-	EDOC */
-	UseTagForProjects    bool                     `yaml:"useProjectTag"`
-	AllowHttp            bool                     `yaml:"allowHttp"`
-	AllowHttps           bool                     `yaml:"allowHttps"`
-	DefaultTodoStates    string                   `yaml:"defaultTodoStates"`
-	TemplatePath         string                   `yaml:"templatePath"`
-	DayPageTemplate      string                   `yaml:"dayPageTemplate"`
+		#+BEGIN_SRC org
+	  * Project
+	  ** TODO This task makes it a project
+		#+END_SRC
+		EDOC */
+	UseTagForProjects bool   `yaml:"useProjectTag"`
+	AllowHttp         bool   `yaml:"allowHttp"`
+	AllowHttps        bool   `yaml:"allowHttps"`
+	DefaultTodoStates string `yaml:"defaultTodoStates"`
+	TemplatePath      string `yaml:"templatePath"`
+	DayPageTemplate   string `yaml:"dayPageTemplate"`
 	/* SDOC: Settings
-* Day Page
-	The day page system has a number of settings that can be used to control
-	its behaviour.
+	* Day Page
+		The day page system has a number of settings that can be used to control
+		its behaviour.
 
-	The first and most important is where your daypages should be generated
-	This should be a folder inside your orgDirs.
-	#+BEGIN_SRC yaml
-  dayPagePath: "/Users/me/dev/gtd/worklog"
-	#+END_SRC
-	EDOC */
-	DayPagePath          string                   `yaml:"dayPagePath"`
-	DayPageMode          string                   `yaml:"dayPageMode"`
-	DayPageModeWeekDay   string                   `yaml:"dayPageModeWeekDay"`
-	DayPageMaxSearchBack int                      `yaml:"dayPageMaxSearch"`
-	Plugins              []plugs.PluginDef        `yaml:"plugins"`
+		The first and most important is where your daypages should be generated
+		This should be a folder inside your orgDirs.
+		#+BEGIN_SRC yaml
+	  dayPagePath: "/Users/me/dev/gtd/worklog"
+		#+END_SRC
+		EDOC */
+	DayPagePath          string            `yaml:"dayPagePath"`
+	DayPageMode          string            `yaml:"dayPageMode"`
+	DayPageModeWeekDay   string            `yaml:"dayPageModeWeekDay"`
+	DayPageMaxSearchBack int               `yaml:"dayPageMaxSearch"`
+	Plugins              []plugs.PluginDef `yaml:"plugins"`
 	/* SDOC: Settings
-* Enabled Exporters, Plugins, Updaters
-	The list of enabled exporter modules
-	#+BEGIN_SRC yaml
-	exporters:
-    - name: "gantt"
-    - name: "mermaid"
-    - name: "mindmap"
-    - name: "html"
-      props:
-        fontfamily: "Underdog"
-    - name: "revealjs"
-    - name: "impressjs"
-    - name: "latex"
-	#+END_SRC
+	* Enabled Exporters, Plugins, Updaters
+		The list of enabled exporter modules
+		#+BEGIN_SRC yaml
+		exporters:
+	    - name: "gantt"
+	    - name: "mermaid"
+	    - name: "mindmap"
+	    - name: "html"
+	      props:
+	        fontfamily: "Underdog"
+	    - name: "revealjs"
+	    - name: "impressjs"
+	    - name: "latex"
+		#+END_SRC
 
-	The same is true for updaters and plugins.
-	You must explicitly enable the modules you wish
-	to be active in your orgs installation for them to be available.
-	EDOC */
-	Exporters            []plugs.ExportDef        `yaml:"exporters"`
-	Updaters             []plugs.UpdaterDef       `yaml:"updaters"`
-	CaptureTemplates     []common.CaptureTemplate `yaml:"captureTemplates"`
-	AccessControl        string                   `yaml:"accessControl"`
+		The same is true for updaters and plugins.
+		You must explicitly enable the modules you wish
+		to be active in your orgs installation for them to be available.
+		EDOC */
+	Exporters        []plugs.ExportDef        `yaml:"exporters"`
+	Updaters         []plugs.UpdaterDef       `yaml:"updaters"`
+	CaptureTemplates []common.CaptureTemplate `yaml:"captureTemplates"`
+	AccessControl    string                   `yaml:"accessControl"`
 	// These specify a valid set of org files that can be searched for valid
 	// refile targets
 	RefileTargets []string `yaml:"refileTargets"`
 	/* SDOC: Settings
-* Default Author
-	Default author parameter to use when generating new templates
-	#+BEGIN_SRC yaml
-	 author: "John Smith"
-	#+END_SRC
-	EDOC */
+	* Default Author
+		Default author parameter to use when generating new templates
+		#+BEGIN_SRC yaml
+		 author: "John Smith"
+		#+END_SRC
+		EDOC */
 	Author string `yaml:"author"`
 	// What template file to render when generating a new org file
 	// This is a file found in the templatePath option
@@ -164,108 +183,132 @@ type Config struct {
 	// If true tasks are marked done when moved to archive.
 	ArchiveMarkDone bool `yaml:"archiveMarkDone"`
 	/* SDOC: Settings
-* Date Tree Formatting
-	These options control the format of your datatree
+	* Date Tree Formatting
+		These options control the format of your datatree
 
-	#+BEGIN_SRC org
-	 * 2006
-	 ** January
-	 *** 01 Monday
-	#+END_SRC
+		#+BEGIN_SRC org
+		 * 2006
+		 ** January
+		 *** 01 Monday
+		#+END_SRC
 
-	#+BEGIN_SRC org
-	 * 2006
-	 ** 2006-01 October
-	 *** 2006-01-02 Friday
-	 *** 2006-01-02 Saturday
-	#+END_SRC
+		#+BEGIN_SRC org
+		 * 2006
+		 ** 2006-01 October
+		 *** 2006-01-02 Friday
+		 *** 2006-01-02 Saturday
+		#+END_SRC
 
-	#+BEGIN_SRC yaml
-	dateTreeYearFormat:  "2006"
-	dateTreeMonthFormat: "January"
-	dateTreeDayFormat:   "01 Monday"
-	#+END_SRC
+		#+BEGIN_SRC yaml
+		dateTreeYearFormat:  "2006"
+		dateTreeMonthFormat: "January"
+		dateTreeDayFormat:   "01 Monday"
+		#+END_SRC
 
-	EDOC */
+		EDOC */
 	DateTreeYearFormat  string `yaml:"dateTreeYearFormat"`
 	DateTreeMonthFormat string `yaml:"dateTreeMonthFormat"`
 	DateTreeDayFormat   string `yaml:"dateTreeDayFormat"`
 	/* SDOC: Settings
-* Clock Into Drawer
-	When using the clocking features org can choose to dump clock data at the top of a heading
-	OR produce the clock data into a drawer of your choosing. This option lets you
-	choose the name of the drawer.
-	#+BEGIN_SRC yaml
-	 clockIntoDrawer: "LOGBOOK"
-	#+END_SRC
+	* Clock Into Drawer
+		When using the clocking features org can choose to dump clock data at the top of a heading
+		OR produce the clock data into a drawer of your choosing. This option lets you
+		choose the name of the drawer.
+		#+BEGIN_SRC yaml
+		 clockIntoDrawer: "LOGBOOK"
+		#+END_SRC
 
-	This defaults to LOGBOOK
+		This defaults to LOGBOOK
 
-	EDOC */
+		EDOC */
 	ClockIntoDrawer string `yaml:"clockIntoDrawer"`
 	/* SDOC: Settings
-* Image Path
-	Images and fonts are secondary html requests when loading an html
-	document in vscode. In addition, orgs may want to provide
-	quick links et al.
+	* Image Path
+		Images and fonts are secondary html requests when loading an html
+		document in vscode. In addition, orgs may want to provide
+		quick links et al.
 
-	#+BEGIN_SRC yaml
-	 templateImagesPath: "<path>"
-	 templateFontPath: "<path>"
-	#+END_SRC
+		#+BEGIN_SRC yaml
+		 templateImagesPath: "<path>"
+		 templateFontPath: "<path>"
+		#+END_SRC
 
-	This defaults to: ./templates/html_styles/images
-	EDOC */
+		This defaults to: ./templates/html_styles/images
+		EDOC */
 	TemplateImagesPath string `yaml:"templateImagesPath"`
 	TemplateFontPath   string `yaml:"templateFontPath"`
 	/* SDOC: Settings
-* Tag Groups
+	* Tag Groups
 
-  Tag Groups are a cheater way of helping to make your queries less verbose.
-  They are defined on the orgs server and provide a grouping of tags that you
-  can query against.
+	  Tag Groups are a cheater way of helping to make your queries less verbose.
+	  They are defined on the orgs server and provide a grouping of tags that you
+	  can query against.
 
-  Here is a quick example. The following entry in your orgs.yaml
-  allows you to treat PERSONAL as any of FAMILY ME or PERSONAL tags
-  and WORK as any of WORK BACKLOG or PROJECTX tags in an InTagGroup('GROUPNAME')
-  query.
+	  Here is a quick example. The following entry in your orgs.yaml
+	  allows you to treat PERSONAL as any of FAMILY ME or PERSONAL tags
+	  and WORK as any of WORK BACKLOG or PROJECTX tags in an InTagGroup('GROUPNAME')
+	  query.
 
-  #+BEGIN_SRC yaml
-	tagGroups:
-	  PERSONAL:
-	    - FAMILY
-	    - ME
-	    - PERSONAL
-	  WORK:
-	    - WORK
-	    - BACKLOG
-	    - PROJECTX
-  #+END_SRC
+	  #+BEGIN_SRC yaml
+		tagGroups:
+		  PERSONAL:
+		    - FAMILY
+		    - ME
+		    - PERSONAL
+		  WORK:
+		    - WORK
+		    - BACKLOG
+		    - PROJECTX
+	  #+END_SRC
 
-  Here is a query that might be using that in your vscode org.todoConfigs:
-  I am defining a Todo view that will have filename, status, headline and a few property columns of various sizes
-  and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
+	  Here is a query that might be using that in your vscode org.todoConfigs:
+	  I am defining a Todo view that will have filename, status, headline and a few property columns of various sizes
+	  and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
 
-  #+BEGIN_SRC json
-    "Waiting": {
-      "query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
-      "display": {
-        "filename": 15,
-        "status": 10,
-        "headline": 25,
-        "properties": {
-          "EFFORT": 5,
-          "ASSIGNED": 15
-        }
-      }
-    }
-  #+END_SRC
-	EDOC */
+	  #+BEGIN_SRC json
+	    "Waiting": {
+	      "query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
+	      "display": {
+	        "filename": 15,
+	        "status": 10,
+	        "headline": 25,
+	        "properties": {
+	          "EFFORT": 5,
+	          "ASSIGNED": 15
+	        }
+	      }
+	    }
+	  #+END_SRC
+		EDOC */
 	TagGroups map[string][]string `yaml:"tagGroups"`
 }
 
-func (self *Config) Defaults() {
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()"
 
+func generateRandomString(length int) string {
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano())) // Seed the random number generator
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+func (self *Config) RandomKeyVal() string {
+	tHash := sha1.New()
+	tHash.Write([]byte(generateRandomString(20)))
+	return b64.StdEncoding.EncodeToString(tHash.Sum(nil))
+}
+
+func (self *Config) Defaults() {
+	// Really you should not use these and should provide your own!
+	// But at least these are cryptographically sound as a time based
+	// randomly generated string that we sha1 hash and base 64 encode
+	// to produce something that should work as our keyset
+	self.OrgJWS = self.RandomKeyVal()
+	self.OrgJWE = self.RandomKeyVal()
+	// That said, you SHOULD NOT USE THIS!
+	self.OrgSalt = kBAD_SALT
 	self.Out = logging.MustGetLogger("orgs")
 	self.ServePath = "/org"
 	self.Port = 8010
@@ -297,7 +340,6 @@ func (self *Config) Defaults() {
 	self.TemplateImagesPath = "./templates/html_styles/images"
 	self.TemplateFontPath = "./templates/fonts"
 
-
 	execPath, _ := os.Executable()
 	execPath = filepath.Dir(execPath)
 	self.HomeDir = execPath
@@ -305,8 +347,13 @@ func (self *Config) Defaults() {
 }
 
 func (self *Config) Validate() {
-	if self.OrgDirs == nil || len(self.OrgDirs) < 1 {
+	// You HAVE to have a orgdir
+	if len(self.OrgDirs) < 1 {
 		log.Fatalln("Config file must specify orgDirs parameter!", self.OrgDirs)
+	}
+	// You have to have a salt of some kind defined
+	if self.OrgSalt == kBAD_SALT {
+		log.Default().Printf("BAD SALT!\n>> You NEED to set orgSalt in your config file!\n")
 	}
 }
 
@@ -380,7 +427,6 @@ func (self *Config) ParseConfig() {
 	self.Validate()
 }
 
-
 func (self *Config) GetExporter(name string) plugs.Exporter {
 	for _, e := range self.Exporters {
 		if name == e.Name {
@@ -389,8 +435,8 @@ func (self *Config) GetExporter(name string) plugs.Exporter {
 	}
 	return nil
 }
-	
-func (self *Config) GetPoller(name string)   plugs.Poller {
+
+func (self *Config) GetPoller(name string) plugs.Poller {
 	for _, e := range self.Plugins {
 		if name == e.Name {
 			return e.Plugin
@@ -399,7 +445,7 @@ func (self *Config) GetPoller(name string)   plugs.Poller {
 	return nil
 }
 
-func (self *Config) GetUpdater(name string)  plugs.Updater {
+func (self *Config) GetUpdater(name string) plugs.Updater {
 	for _, e := range self.Updaters {
 		if name == e.Name {
 			return e.Plugin

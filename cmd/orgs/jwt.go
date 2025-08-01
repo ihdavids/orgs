@@ -5,19 +5,16 @@ import (
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
+	"github.com/ihdavids/orgs/internal/app/orgs"
+
 	//"github.com/golang-jwt/jwt/v5"
 	"github.com/go-jose/go-jose/v4/jwt"
 )
 
-// TODO: Include this in config used for JWS Signing
-var jwtKey = []byte("my_secret_key") // This should be global in your config and or generated
-// TODO: Include in the config used for JWE encryption of the key
-var encryptionKey = []byte("a_very_secret_key_for_encryption_32_bytes") // This should be global
-var salt = []byte("1234567890ljasdfkuhasdlfjhioweqrioulka8397y#@@#k")   // This should be per user
-
 type Claims struct {
 	jwt.Claims
 	Username string `json:"username"`
+	CanWrite bool   `json:"write"`
 }
 
 const kORGS_ISSUER = "ORGS"
@@ -34,7 +31,7 @@ func generateToken(username string) (string, error) {
 		},
 	}
 
-	if signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwtKey}, nil); err != nil {
+	if signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: orgs.Conf().OrgJWS}, nil); err != nil {
 		return "", err
 	} else {
 		if rawJwt, err := jwt.Signed(signer).Claims(claims).Serialize(); err != nil {
@@ -51,7 +48,7 @@ func generateToken(username string) (string, error) {
 func encryptJWT(jwtToken string, salt []byte) (string, error) {
 	rcpt := jose.Recipient{
 		Algorithm:  jose.PBES2_HS256_A128KW,
-		Key:        encryptionKey,
+		Key:        orgs.Conf().OrgJWE,
 		PBES2Count: 4096,
 		PBES2Salt:  []byte(salt),
 	}
@@ -76,7 +73,7 @@ func decryptJWT(jweToken string) ([]byte, error) {
 	if jwe, err := jose.ParseEncrypted(jweToken, []jose.KeyAlgorithm{jose.PBES2_HS256_A128KW}, []jose.ContentEncryption{jose.A128CBC_HS256}); err != nil {
 		return nil, err
 	} else {
-		if decryptedKey, err := jwe.Decrypt(encryptionKey); err != nil {
+		if decryptedKey, err := jwe.Decrypt(orgs.Conf().OrgJWE); err != nil {
 			return nil, err
 		} else {
 			return decryptedKey, nil
@@ -84,11 +81,14 @@ func decryptJWT(jweToken string) ([]byte, error) {
 	}
 }
 
+// After user validation we create a JWT/JWS AND a JWE from that JWS
+// that we can then store in a variety of ways and validate that
+// the user has authenticated after the fact
 func GenerateEncryptedToken(username string) (string, error) {
 	if token, err := generateToken(username); err != nil {
 		return "err", err
 	} else {
-		if etoken, err := encryptJWT(token, salt); err != nil {
+		if etoken, err := encryptJWT(token, []byte(orgs.Conf().OrgSalt)); err != nil {
 			return "err", err
 		} else {
 			return etoken, nil
@@ -96,6 +96,8 @@ func GenerateEncryptedToken(username string) (string, error) {
 	}
 }
 
+// Used in pre-login, we pull a cookie or auth header and validate that the users token
+// is valid using our keys et al.
 func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken, error) {
 	// First decrypt the encrypted token
 	if tokenBytes, err := decryptJWT(encToken); err != nil {
@@ -104,7 +106,7 @@ func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken,
 		if rawJwt, err := jwt.ParseSigned(string(tokenBytes), []jose.SignatureAlgorithm{jose.HS256}); err != nil {
 			return nil, err
 		} else {
-			if err := rawJwt.Claims(jwtKey, claims); err != nil {
+			if err := rawJwt.Claims(orgs.Conf().OrgJWS, claims); err != nil {
 				return nil, err
 			} else {
 				if err := validateToken(rawJwt, claims); err != nil {
