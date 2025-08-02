@@ -8,7 +8,7 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
-// OLD NUKE THIS!
+// DEPRECATED: OLD NUKE THIS!
 
 type Comm struct{}
 

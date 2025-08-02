@@ -42,6 +42,17 @@ type Config struct {
 	OrgJWE  string `yaml:"orgJWE"`
 	OrgSalt string `yaml:"orgSalt"`
 
+	/* SDOC: Settings
+	* Orgs Keystore
+		Orgs has various ways of storing credentials. You need something to protect your
+		data. By default the yaml keystore is just a file with usernames and creds.
+		Other keystores are possible.
+		#+BEGIN_SRC yaml
+	  keystore: "path to yaml file"
+		#+END_SRC
+		EDOC */
+	Keystore string `yaml:"keystore"`
+
 	// Configuration options
 	ServePath string `yaml:"servepath"`
 	Port      int    `yaml:"port"`
@@ -307,6 +318,7 @@ func (self *Config) Defaults() {
 	// to produce something that should work as our keyset
 	self.OrgJWS = self.RandomKeyVal()
 	self.OrgJWE = self.RandomKeyVal()
+	self.Keystore = ""
 	// That said, you SHOULD NOT USE THIS!
 	self.OrgSalt = kBAD_SALT
 	self.Out = logging.MustGetLogger("orgs")
