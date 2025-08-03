@@ -318,6 +318,7 @@ func (self *Config) Defaults() {
 	// to produce something that should work as our keyset
 	self.OrgJWS = self.RandomKeyVal()
 	self.OrgJWE = self.RandomKeyVal()
+	// The default keystore is useless, we need to force the user to make one of their own
 	self.Keystore = ""
 	// That said, you SHOULD NOT USE THIS!
 	self.OrgSalt = kBAD_SALT

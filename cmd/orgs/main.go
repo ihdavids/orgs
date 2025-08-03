@@ -42,6 +42,7 @@ https://dev.to/neelp03/securing-your-go-api-with-jwt-authentication-4amj
 
 func main() {
 	// Force config parsing right up front
+	orgs.DefaultKeystore()
 	orgs.Conf()
 	orgs.GetDb().Watch()
 	defer func() {

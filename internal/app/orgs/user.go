@@ -2,7 +2,11 @@ package orgs
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Used for login.
@@ -42,10 +46,27 @@ func (s *YamlKeystore) Validate(user, pass string) bool {
 		valid := p.Password == pass
 		if valid {
 			s.Logins[user] = time.Now()
+			s.Save()
 			return true
 		}
 	}
 	return false
+}
+
+func (s *YamlKeystore) Save() error {
+	if out, err := yaml.Marshal(s); err == nil {
+		if Conf().Keystore != "" {
+			if filepath.Ext(Conf().Keystore) == ".yaml" {
+				return os.WriteFile(Conf().Keystore, out, os.ModePerm)
+			} else {
+				return fmt.Errorf("keystore path is not a yaml file: %s")
+			}
+		} else {
+			return fmt.Errorf("keystore path not set, cannot save")
+		}
+	} else {
+		return err
+	}
 }
 
 func DefaultKeystore() {
