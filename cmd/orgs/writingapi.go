@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"fmt"
 	"github.com/ihdavids/orgs/internal/app/orgs"
@@ -38,3 +39,4 @@ func (s *Db) Capture(args *common.Capture, reply *common.ResultMsg) error {
 	}
 	return err
 }
+*/

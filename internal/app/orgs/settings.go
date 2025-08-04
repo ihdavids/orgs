@@ -18,6 +18,9 @@ import (
 	"github.com/ihdavids/orgs/internal/templates"
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v2"
+
+	"github.com/ihdavids/orgs/cmd/oc/commands"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/all"
 )
 
 const kBAD_SALT = "THIS IS A DEFAULT SALT DO NOT USE THIS! SET YOUR OWN"
@@ -292,6 +295,13 @@ type Config struct {
 	  #+END_SRC
 		EDOC */
 	TagGroups map[string][]string `yaml:"tagGroups"`
+
+	// NON SERVE CONFIGURATION OPTIONS:
+	Url            string `yaml:"url`
+	EditorTemplate []string
+	// When a command is called we configure it and add it
+	// to the list to avoid having to redo that
+	ConfigedCommands []commands.PluginDef
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()"
@@ -353,6 +363,10 @@ func (self *Config) Defaults() {
 	self.TemplateImagesPath = "./templates/html_styles/images"
 	self.TemplateFontPath = "./templates/fonts"
 
+	// Non Serve options:
+	self.Url = "http://localhost:8010"
+	self.EditorTemplate = []string{"code", "-g", "{filename}:{linenum}"}
+
 	execPath, _ := os.Executable()
 	execPath = filepath.Dir(execPath)
 	self.HomeDir = execPath
@@ -370,6 +384,34 @@ func (self *Config) Validate() {
 	}
 }
 
+func Usage() {
+	flag.PrintDefaults()
+	fmt.Printf("  Commands:\n")
+	for name, val := range commands.CmdRegistry {
+		fmt.Printf("   %-15s\t%s\n", name, val.Usage)
+	}
+}
+
+func (self *Config) AddCommands() {
+	//fmt.Printf("Add Commands\n")
+	for name, val := range commands.CmdRegistry {
+		//fmt.Printf("NAME: %s\n", name)
+		op := flag.NewFlagSet(name, flag.ExitOnError)
+		val.Flags = op
+		val.Cmd.SetupParameters(op)
+	}
+	flag.Usage = Usage
+}
+
+func (self *Config) FindCommand(name string) commands.Cmd {
+	for _, p := range self.ConfigedCommands {
+		if p.Name == name {
+			return p.Plugin
+		}
+	}
+	return nil
+}
+
 func (self *Config) SetupCommandLine() {
 	flag.StringVar(&self.Config, "config", self.Config, "config file")
 	// NOTE: for this to work the default should always be the current
@@ -378,6 +420,9 @@ func (self *Config) SetupCommandLine() {
 	flag.StringVar(&self.ServePath, "servepath", self.ServePath, "serve path")
 	flag.IntVar(&self.Port, "port", 8010, "serve port")
 	flag.IntVar(&self.TLSPort, "tlsport", 443, "tls serve port")
+
+	flag.StringVar(&self.Url, "url", self.Url, "server url for non serve mode")
+	self.AddCommands()
 
 }
 

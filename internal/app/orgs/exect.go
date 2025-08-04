@@ -2,7 +2,7 @@ package orgs
 
 /* SDOC: Editing
 * Table Execution
-  
+
   TODO: Fill in information on table execution
 EDOC */
 
@@ -59,7 +59,8 @@ func ExecTable(db plugs.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.T
 	return res, nil
 }
 
-func RequestTableRandomGet(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
+// REMOVE: UNUSED CURRENTLY????
+func RequestTableRandomGetFromDb(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	ofile, sec, table := db.GetFromPreciseTarget(t, org.TableNode)
 	res := common.ResultMsg{Ok: false, Msg: "Unknown table get error"}
 	if table != nil {

@@ -1,16 +1,14 @@
-package main
+package orgs
 
 import (
 	"crypto/sha1"
 	"encoding/json"
 	"net/http"
 	"time"
-
-	"github.com/ihdavids/orgs/internal/app/orgs"
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
-	var creds orgs.Credentials
+	var creds Credentials
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -20,7 +18,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	hsh := sha1.New()
 	hsh.Write([]byte(creds.Password))
 
-	if ok := orgs.GetKeystore().Validate(creds.Username, creds.Password); ok {
+	if ok := GetKeystore().Validate(creds.Username, creds.Password); ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

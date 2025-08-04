@@ -2,27 +2,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"net/http"
-	"net/rpc"
-	"net/rpc/jsonrpc"
-	"path/filepath"
-	"time"
+	"os"
 
-	//"github.com/golang-jwt/jwt/v5"
-
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
-
-	"github.com/gorilla/websocket"
 	"github.com/ihdavids/orgs/internal/app/orgs"
-	"github.com/ihdavids/orgs/internal/common"
+
+	"github.com/ihdavids/orgs/cmd/oc/commands"
 )
+
+//"github.com/golang-jwt/jwt/v5"
 
 // Used by the deprecated Websocket API I need to nuke
 // "encoding/json"
-var db *Db = &Db{}
+//var db *Db = &Db{}
 
 /*
 func routingExample() {
@@ -40,98 +34,145 @@ curl --cookie "token=<your_token>" http://localhost:8000/books
 https://dev.to/neelp03/securing-your-go-api-with-jwt-authentication-4amj
 */
 
+func logToFile() *os.File {
+	f, err := os.OpenFile("orgs.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	//defer f.Close()
+	//wrt := io.MultiWriter(os.Stdout, f)
+	//log.SetOutput(wrt)
+	log.SetOutput(f)
+	log.Println("--- [OrgS] ----------------------------------")
+	return f
+}
+
 func main() {
-	// Force config parsing right up front
-	orgs.DefaultKeystore()
+	f := logToFile()
+	defer f.Close()
 	orgs.Conf()
-	orgs.GetDb().Watch()
-	defer func() {
-		orgs.GetDb().Close()
-	}()
-	fmt.Println("STARTING SERVER")
-	//http.HandleFunc(orgs.Conf().ServePath, serveWs)
-	//fileServer := http.FileServer(http.Dir("./web"))
+	core := commands.NewCore(orgs.Conf().Url)
+	core.StartServer = orgs.StartServer
+	core.EditorTemplate = orgs.Conf().EditorTemplate
+	core.Start()
 
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc(orgs.Conf().ServePath, serveWs)
-	// move ws up, prevent '/*' from covering '/ws' in not testing mux, httprouter has this bug.
-	restApi(router)
+	args := flag.Args()
 
-	for i, path := range orgs.Conf().OrgDirs {
-		if i == 0 {
-			if fpath, err := filepath.Abs(path); err == nil {
-				fmt.Printf("PREFIX: %s\n", fpath)
-				fs := http.FileServer(http.Dir(fpath))
-				tpath, _ := filepath.Abs(orgs.Conf().TemplateImagesPath)
-				fmt.Printf("TEMP PATH: %s\n", tpath)
-				internalfs := http.FileServer(http.Dir(tpath))
-				tfpath, _ := filepath.Abs(orgs.Conf().TemplateFontPath)
-				internalfontfs := http.FileServer(http.Dir(tfpath))
-				router.PathPrefix("/images/").Handler(http.StripPrefix("/images", fs))
-				router.PathPrefix("/orgimages/").Handler(http.StripPrefix("/orgimages", internalfs))
-				router.PathPrefix("orgimages/").Handler(http.StripPrefix("orgimages", internalfs))
-				router.PathPrefix("/orgfonts/").Handler(http.StripPrefix("/orgfonts", internalfontfs))
-				router.PathPrefix("orgfonts/").Handler(http.StripPrefix("orgfonts", internalfontfs))
+	// Execute command line options
+	for k, _ := range commands.CmdRegistry {
+		if len(args) > 0 && k == args[0] {
+			v := commands.CmdRegistry[k]
+			//fmt.Printf("KEY: %v -> %v\n", k, args[1:])
+			mod := orgs.Conf().FindCommand(k)
+			if mod == nil {
+				mod = v.Cmd
+				oldArgs := args
+				args = []string{}
+				if len(oldArgs) > 1 {
+					args = oldArgs[1:]
+				}
+				if v.Flags != nil && nil != v.Flags.Parse(args) {
+					panic(fmt.Sprintf("failed to parse arguments for: %s\n", k))
+				}
 			}
+			mod.Exec(core)
 		}
 	}
-	// END ROUTING TABLE PathPrefix("/") match '/*' request
-	// This needs to be replaced by an org embedded mechanism so it's built in to orgs
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
 
-	// http.Handle(orgs.Conf().WebServePath, http.StripPrefix(orgs.Conf().WebServePath, fileServer))
-	// This is annoying, I can't seem to handle binding to anything other than /
-	//http.Handle("/", fileServer)
-	//http.HandleFunc("/orgs", portal)
-	startPlugins()
+	/*
+		// Force config parsing right up front
+		orgs.DefaultKeystore()
+		orgs.Conf()
+		orgs.GetDb().Watch()
+		defer func() {
+			orgs.GetDb().Close()
+		}()
+		fmt.Println("STARTING SERVER")
+		//http.HandleFunc(orgs.Conf().ServePath, serveWs)
+		//fileServer := http.FileServer(http.Dir("./web"))
 
-	// Allow http connections but only from localhost
-	go func() {
+		router := mux.NewRouter().StrictSlash(true)
+		router.HandleFunc(orgs.Conf().ServePath, serveWs)
+		// move ws up, prevent '/*' from covering '/ws' in not testing mux, httprouter has this bug.
+		restApi(router)
+
+		for i, path := range orgs.Conf().OrgDirs {
+			if i == 0 {
+				if fpath, err := filepath.Abs(path); err == nil {
+					fmt.Printf("PREFIX: %s\n", fpath)
+					fs := http.FileServer(http.Dir(fpath))
+					tpath, _ := filepath.Abs(orgs.Conf().TemplateImagesPath)
+					fmt.Printf("TEMP PATH: %s\n", tpath)
+					internalfs := http.FileServer(http.Dir(tpath))
+					tfpath, _ := filepath.Abs(orgs.Conf().TemplateFontPath)
+					internalfontfs := http.FileServer(http.Dir(tfpath))
+					router.PathPrefix("/images/").Handler(http.StripPrefix("/images", fs))
+					router.PathPrefix("/orgimages/").Handler(http.StripPrefix("/orgimages", internalfs))
+					router.PathPrefix("orgimages/").Handler(http.StripPrefix("orgimages", internalfs))
+					router.PathPrefix("/orgfonts/").Handler(http.StripPrefix("/orgfonts", internalfontfs))
+					router.PathPrefix("orgfonts/").Handler(http.StripPrefix("orgfonts", internalfontfs))
+				}
+			}
+		}
+		// END ROUTING TABLE PathPrefix("/") match '/*' request
+		// This needs to be replaced by an org embedded mechanism so it's built in to orgs
+		router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
+
+		// http.Handle(orgs.Conf().WebServePath, http.StripPrefix(orgs.Conf().WebServePath, fileServer))
+		// This is annoying, I can't seem to handle binding to anything other than /
+		//http.Handle("/", fileServer)
+		//http.HandleFunc("/orgs", portal)
+		startPlugins()
+
+		// Allow http connections but only from localhost
+		go func() {
+			corsHandler := cors.Default().Handler(router)
+			if orgs.Conf().AccessControl != "*" {
+				corsPolicy := cors.New(cors.Options{
+					AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", orgs.Conf().Port)},
+					AllowCredentials: true,
+					//	// Enable Debugging for testing, consider disabling in production
+					//	Debug: true,
+				})
+				corsHandler = corsPolicy.Handler(corsHandler)
+			}
+			//if orgs.Conf().AllowHttp {
+			fmt.Printf("HTTP PORT: %d\n", orgs.Conf().Port)
+			//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
+			//fmt.Printf("ORG: %s\n", orgs.Conf().ServePath)
+			err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), corsHandler)
+			if err != nil {
+				log.Fatal("ListenAndServe: ", err)
+			}
+			//}
+		}()
+
 		corsHandler := cors.Default().Handler(router)
 		if orgs.Conf().AccessControl != "*" {
 			corsPolicy := cors.New(cors.Options{
-				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", orgs.Conf().Port)},
+				AllowedOrigins:   []string{orgs.Conf().AccessControl},
 				AllowCredentials: true,
 				//	// Enable Debugging for testing, consider disabling in production
 				//	Debug: true,
 			})
 			corsHandler = corsPolicy.Handler(corsHandler)
 		}
-		//if orgs.Conf().AllowHttp {
-		fmt.Printf("HTTP PORT: %d\n", orgs.Conf().Port)
-		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
-		//fmt.Printf("ORG: %s\n", orgs.Conf().ServePath)
-		err := http.ListenAndServe(fmt.Sprint(":", orgs.Conf().Port), corsHandler)
-		if err != nil {
-			log.Fatal("ListenAndServe: ", err)
+		// Allow https connections
+		if orgs.Conf().AllowHttps {
+			fmt.Printf("PORT: %d\n", orgs.Conf().TLSPort)
+			//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
+			servercrt := orgs.Conf().ServerCrt
+			serverkey := orgs.Conf().ServerKey
+			err := http.ListenAndServeTLS(fmt.Sprint(":", orgs.Conf().TLSPort), servercrt, serverkey, corsHandler)
+			if err != nil {
+				log.Fatal("ListenAndServeTLS: ", err)
+			}
 		}
-		//}
-	}()
-
-	corsHandler := cors.Default().Handler(router)
-	if orgs.Conf().AccessControl != "*" {
-		corsPolicy := cors.New(cors.Options{
-			AllowedOrigins:   []string{orgs.Conf().AccessControl},
-			AllowCredentials: true,
-			//	// Enable Debugging for testing, consider disabling in production
-			//	Debug: true,
-		})
-		corsHandler = corsPolicy.Handler(corsHandler)
-	}
-	// Allow https connections
-	if orgs.Conf().AllowHttps {
-		fmt.Printf("PORT: %d\n", orgs.Conf().TLSPort)
-		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
-		servercrt := orgs.Conf().ServerCrt
-		serverkey := orgs.Conf().ServerKey
-		err := http.ListenAndServeTLS(fmt.Sprint(":", orgs.Conf().TLSPort), servercrt, serverkey, corsHandler)
-		if err != nil {
-			log.Fatal("ListenAndServeTLS: ", err)
-		}
-	}
-	stopPlugins()
+		stopPlugins()
+	*/
 }
 
+/*
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  common.MaxMessageSize,
 	WriteBufferSize: common.MaxMessageSize,
@@ -212,3 +253,4 @@ func handle(ws *websocket.Conn) {
 	s.ServeCodec(jsonrpc.NewServerCodec(rwc))
 	//s.ServeConn(rwc)
 }
+*/

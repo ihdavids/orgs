@@ -101,11 +101,14 @@ var (
 	space   = []byte{' '}
 )
 
+type StartServerThunk func()
+
 type Core struct {
 	Messages       chan string
 	Send           chan []byte
 	Rest           common.Rest
 	EditorTemplate []string
+	StartServer    StartServerThunk
 }
 
 func NewCore(rurl string) *Core {
