@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/mux"
+	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rs/cors"
 )
 
@@ -14,8 +15,8 @@ import (
 // "encoding/json"
 var db *Db = &Db{}
 
-func StartServer() {
-	fmt.Printf("EXEC SERVE\n")
+func StartServer(sets *common.ServerSettings) {
+	log.Printf("STARTING SERVER")
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
@@ -23,7 +24,6 @@ func StartServer() {
 	defer func() {
 		GetDb().Close()
 	}()
-	fmt.Println("STARTING SERVER")
 	//http.HandleFunc(orgs.Conf().ServePath, serveWs)
 	//fileServer := http.FileServer(http.Dir("./web"))
 
@@ -32,7 +32,7 @@ func StartServer() {
 	// move ws up, prevent '/*' from covering '/ws' in not testing mux, httprouter has this bug.
 	RestApi(router)
 
-	for i, path := range Conf().OrgDirs {
+	for i, path := range sets.OrgDirs {
 		if i == 0 {
 			if fpath, err := filepath.Abs(path); err == nil {
 				fmt.Printf("PREFIX: %s\n", fpath)
@@ -58,14 +58,14 @@ func StartServer() {
 	// This is annoying, I can't seem to handle binding to anything other than /
 	//http.Handle("/", fileServer)
 	//http.HandleFunc("/orgs", portal)
-	startPlugins()
+	startPlugins(sets)
 
 	// Allow http connections but only from localhost
 	go func() {
 		corsHandler := cors.Default().Handler(router)
-		if Conf().AccessControl != "*" {
+		if sets.AccessControl != "*" {
 			corsPolicy := cors.New(cors.Options{
-				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", Conf().Port)},
+				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", sets.Port)},
 				AllowCredentials: true,
 				//	// Enable Debugging for testing, consider disabling in production
 				//	Debug: true,
@@ -73,10 +73,10 @@ func StartServer() {
 			corsHandler = corsPolicy.Handler(corsHandler)
 		}
 		//if orgs.Conf().AllowHttp {
-		fmt.Printf("HTTP PORT: %d\n", Conf().Port)
+		fmt.Printf("HTTP PORT: %d\n", sets.Port)
 		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
 		//fmt.Printf("ORG: %s\n", orgs.Conf().ServePath)
-		err := http.ListenAndServe(fmt.Sprint(":", Conf().Port), corsHandler)
+		err := http.ListenAndServe(fmt.Sprint(":", sets.Port), corsHandler)
 		if err != nil {
 			log.Fatal("ListenAndServe: ", err)
 		}
@@ -84,9 +84,9 @@ func StartServer() {
 	}()
 
 	corsHandler := cors.Default().Handler(router)
-	if Conf().AccessControl != "*" {
+	if sets.AccessControl != "*" {
 		corsPolicy := cors.New(cors.Options{
-			AllowedOrigins:   []string{Conf().AccessControl},
+			AllowedOrigins:   []string{sets.AccessControl},
 			AllowCredentials: true,
 			//	// Enable Debugging for testing, consider disabling in production
 			//	Debug: true,
@@ -94,27 +94,27 @@ func StartServer() {
 		corsHandler = corsPolicy.Handler(corsHandler)
 	}
 	// Allow https connections
-	if Conf().AllowHttps {
-		fmt.Printf("PORT: %d\n", Conf().TLSPort)
+	if sets.AllowHttps {
+		fmt.Printf("PORT: %d\n", sets.TLSPort)
 		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
-		servercrt := Conf().ServerCrt
-		serverkey := Conf().ServerKey
-		err := http.ListenAndServeTLS(fmt.Sprint(":", Conf().TLSPort), servercrt, serverkey, corsHandler)
+		servercrt := sets.ServerCrt
+		serverkey := sets.ServerKey
+		err := http.ListenAndServeTLS(fmt.Sprint(":", sets.TLSPort), servercrt, serverkey, corsHandler)
 		if err != nil {
 			log.Fatal("ListenAndServeTLS: ", err)
 		}
 	}
-	stopPlugins()
+	stopPlugins(sets)
 }
 
-func startPlugins() {
-	for _, plug := range Conf().Plugins {
+func startPlugins(sets *common.ServerSettings) {
+	for _, plug := range sets.Plugins {
 		plug.Start(db)
 	}
 }
 
-func stopPlugins() {
-	for _, plug := range Conf().Plugins {
+func stopPlugins(sets *common.ServerSettings) {
+	for _, plug := range sets.Plugins {
 		plug.Stop()
 	}
 }

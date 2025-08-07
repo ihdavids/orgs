@@ -417,7 +417,7 @@ func RequestDayPageAt(w http.ResponseWriter, r *http.Request) {
 
 // Request the daypage increment from orgs.
 func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
-	if Conf().DayPageMode == "week" {
+	if Conf().Server.DayPageMode == "week" {
 		fmt.Println("DAYPAGE INC: 7")
 		json.NewEncoder(w).Encode(7)
 	} else {

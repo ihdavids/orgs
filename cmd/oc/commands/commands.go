@@ -101,7 +101,7 @@ var (
 	space   = []byte{' '}
 )
 
-type StartServerThunk func()
+type StartServerThunk func(sets *common.ServerSettings)
 
 type Core struct {
 	Messages       chan string
@@ -109,13 +109,15 @@ type Core struct {
 	Rest           common.Rest
 	EditorTemplate []string
 	StartServer    StartServerThunk
+	ServerSettings *common.ServerSettings
 }
 
-func NewCore(rurl string) *Core {
+func NewCore(rurl string, sets *common.ServerSettings) *Core {
 	core := new(Core)
 	core.Rest = common.Rest{Url: rurl, Header: http.Header{}}
 	// TODO: Make this configurable
 	core.Rest.Insecure()
+	core.ServerSettings = sets
 	return core
 }
 

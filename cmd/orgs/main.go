@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -40,9 +41,9 @@ func logToFile() *os.File {
 		log.Fatalf("error opening file: %v", err)
 	}
 	//defer f.Close()
-	//wrt := io.MultiWriter(os.Stdout, f)
-	//log.SetOutput(wrt)
-	log.SetOutput(f)
+	wrt := io.MultiWriter(os.Stdout, f)
+	log.SetOutput(wrt)
+	//log.SetOutput(f)
 	log.Println("--- [OrgS] ----------------------------------")
 	return f
 }
@@ -51,7 +52,7 @@ func main() {
 	f := logToFile()
 	defer f.Close()
 	orgs.Conf()
-	core := commands.NewCore(orgs.Conf().Url)
+	core := commands.NewCore(orgs.Conf().Url, orgs.Conf().Server)
 	core.StartServer = orgs.StartServer
 	core.EditorTemplate = orgs.Conf().EditorTemplate
 	core.Start()

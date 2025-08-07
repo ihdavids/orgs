@@ -7,6 +7,9 @@ import (
 )
 
 type Serve struct {
+	ServePath string
+	Port      int
+	TLSPort   int
 }
 
 func (self *Serve) Unmarshal(unmarshal func(interface{}) error) error {
@@ -14,10 +17,27 @@ func (self *Serve) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *Serve) SetupParameters(fset *flag.FlagSet) {
+
+	// NOTE: for this to work the default should always be the current
+	//       value of the structure. Avoid using a default here
+	//       instead specify it in Defaults up above.
+	fset.StringVar(&self.ServePath, "servepath", self.ServePath, "serve path")
+	fset.IntVar(&self.Port, "port", 8010, "serve port")
+	fset.IntVar(&self.TLSPort, "tlsport", 443, "tls serve port")
 }
 
 func (self *Serve) Exec(core *commands.Core) {
-	core.StartServer()
+	if self.ServePath != "" {
+		core.ServerSettings.ServePath = self.ServePath
+	}
+	if self.Port != 0 {
+		core.ServerSettings.Port = self.Port
+	}
+	if self.TLSPort != 0 {
+		core.ServerSettings.TLSPort = self.TLSPort
+	}
+	core.ServerSettings.Validate()
+	core.StartServer(core.ServerSettings)
 }
 
 /*

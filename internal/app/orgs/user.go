@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/yaml.v2"
 )
 
@@ -55,9 +56,9 @@ func (s *YamlKeystore) Validate(user, pass string) bool {
 
 func (s *YamlKeystore) Save() error {
 	if out, err := yaml.Marshal(s); err == nil {
-		if Conf().Keystore != "" {
-			if filepath.Ext(Conf().Keystore) == ".yaml" {
-				return os.WriteFile(Conf().Keystore, out, os.ModePerm)
+		if Conf().Server.Keystore != "" {
+			if filepath.Ext(Conf().Server.Keystore) == ".yaml" {
+				return os.WriteFile(Conf().Server.Keystore, out, os.ModePerm)
 			} else {
 				return fmt.Errorf("keystore path is not a yaml file: %s")
 			}
@@ -72,7 +73,7 @@ func (s *YamlKeystore) Save() error {
 func DefaultKeystore() {
 	// Give us A keystore when we start up at least.
 	currentKeystore = &YamlKeystore{Creds: map[string]Cred{
-		"admin": Cred{Password: "default", Salt: kBAD_SALT},
+		"admin": Cred{Password: "default", Salt: common.KBAD_SALT},
 	}, Logins: map[string]time.Time{}}
 }
 

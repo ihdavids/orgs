@@ -30,7 +30,7 @@ func generateToken(username string) (string, error) {
 		},
 	}
 
-	if signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: Conf().OrgJWS}, nil); err != nil {
+	if signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: Conf().Server.OrgJWS}, nil); err != nil {
 		return "", err
 	} else {
 		if rawJwt, err := jwt.Signed(signer).Claims(claims).Serialize(); err != nil {
@@ -47,7 +47,7 @@ func generateToken(username string) (string, error) {
 func encryptJWT(jwtToken string, salt []byte) (string, error) {
 	rcpt := jose.Recipient{
 		Algorithm:  jose.PBES2_HS256_A128KW,
-		Key:        Conf().OrgJWE,
+		Key:        Conf().Server.OrgJWE,
 		PBES2Count: 4096,
 		PBES2Salt:  []byte(salt),
 	}
@@ -72,7 +72,7 @@ func decryptJWT(jweToken string) ([]byte, error) {
 	if jwe, err := jose.ParseEncrypted(jweToken, []jose.KeyAlgorithm{jose.PBES2_HS256_A128KW}, []jose.ContentEncryption{jose.A128CBC_HS256}); err != nil {
 		return nil, err
 	} else {
-		if decryptedKey, err := jwe.Decrypt(Conf().OrgJWE); err != nil {
+		if decryptedKey, err := jwe.Decrypt(Conf().Server.OrgJWE); err != nil {
 			return nil, err
 		} else {
 			return decryptedKey, nil
@@ -87,7 +87,7 @@ func GenerateEncryptedToken(username string) (string, error) {
 	if token, err := generateToken(username); err != nil {
 		return "err", err
 	} else {
-		if etoken, err := encryptJWT(token, []byte(Conf().OrgSalt)); err != nil {
+		if etoken, err := encryptJWT(token, []byte(Conf().Server.OrgSalt)); err != nil {
 			return "err", err
 		} else {
 			return etoken, nil
@@ -105,7 +105,7 @@ func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken,
 		if rawJwt, err := jwt.ParseSigned(string(tokenBytes), []jose.SignatureAlgorithm{jose.HS256}); err != nil {
 			return nil, err
 		} else {
-			if err := rawJwt.Claims(Conf().OrgJWS, claims); err != nil {
+			if err := rawJwt.Claims(Conf().Server.OrgJWS, claims); err != nil {
 				return nil, err
 			} else {
 				if err := validateToken(rawJwt, claims); err != nil {

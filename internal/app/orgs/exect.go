@@ -15,11 +15,10 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/govaluate"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
-func ExecTable(db plugs.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.Table) (common.ResultMsg, error) {
+func ExecTable(db common.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.Table) (common.ResultMsg, error) {
 	res := common.ResultMsg{Ok: false, Msg: "Unknown table exec error"}
 	strt := tbl.GetPos()
 	end := tbl.GetEnd()
@@ -60,7 +59,7 @@ func ExecTable(db plugs.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.T
 }
 
 // REMOVE: UNUSED CURRENTLY????
-func RequestTableRandomGetFromDb(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
+func RequestTableRandomGetFromDb(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	ofile, sec, table := db.GetFromPreciseTarget(t, org.TableNode)
 	res := common.ResultMsg{Ok: false, Msg: "Unknown table get error"}
 	if table != nil {
@@ -80,7 +79,7 @@ func RequestTableRandomGetFromDb(db plugs.ODb, t *common.PreciseTarget) (common.
 	return res, nil
 }
 
-func ExecTableAt(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
+func ExecTableAt(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	ofile, sec, table := db.GetFromPreciseTarget(t, org.TableNode)
 	res := common.ResultMsg{Ok: false, Msg: "Unknown table exec error"}
 	if table != nil {
@@ -100,7 +99,7 @@ func ExecTableAt(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error
 	return res, nil
 }
 
-func ExecTablesInSubheadings(db plugs.ODb, ofile *common.OrgFile, sec *org.Section) ([]common.ResultMsg, []error) {
+func ExecTablesInSubheadings(db common.ODb, ofile *common.OrgFile, sec *org.Section) ([]common.ResultMsg, []error) {
 	res := []common.ResultMsg{}
 	err := []error{}
 	for _, c := range sec.Children {
@@ -124,7 +123,7 @@ func ExecTablesInSubheadings(db plugs.ODb, ofile *common.OrgFile, sec *org.Secti
 	return res, err
 }
 
-func ExecAllTables(db plugs.ODb, filename string) ([]common.ResultMsg, []error) {
+func ExecAllTables(db common.ODb, filename string) ([]common.ResultMsg, []error) {
 	res := []common.ResultMsg{}
 	err := []error{}
 	ofile := db.GetFile(filename)
@@ -657,7 +656,7 @@ func GetFormulaDetails(tbl *org.Table) *common.TableFormulaDetails {
 	return ret
 }
 
-func FormulaDetailsAt(db plugs.ODb, t *common.PreciseTarget) (common.ResultTableDetailsMsg, error) {
+func FormulaDetailsAt(db common.ODb, t *common.PreciseTarget) (common.ResultTableDetailsMsg, error) {
 	ofile, sec, table := db.GetFromPreciseTarget(t, org.TableNode)
 	res := common.ResultTableDetailsMsg{Ok: false, Msg: "Unknown table exec error"}
 	if table != nil {
@@ -683,7 +682,7 @@ func FormulaDetailsAt(db plugs.ODb, t *common.PreciseTarget) (common.ResultTable
 	return res, nil
 }
 
-func ExecuteFormula(db plugs.ODb, sec *org.Section, ofile *common.OrgFile, tbl *org.Table) error {
+func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl *org.Table) error {
 	if tbl.Formulas == nil {
 		fmt.Printf("Table does not have any formulas, skipping")
 		return nil

@@ -107,7 +107,7 @@ func formatDateForGantt(tm time.Time) string {
 	return out
 }
 
-func CheckPushDownChild(have map[string]*common.Todo, db plugs.ODb, n *common.Todo) *common.Todo {
+func CheckPushDownChild(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.Todo {
 	if n != nil {
 		if _, ok := have[n.Hash]; !ok {
 			if _, ok2 := n.Props["ORDERED"]; ok2 {
@@ -124,7 +124,7 @@ func CheckPushDownChild(have map[string]*common.Todo, db plugs.ODb, n *common.To
 	return n
 }
 
-func After(have map[string]*common.Todo, db plugs.ODb, n *common.Todo) *common.Todo {
+func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.Todo {
 	var dep *common.Todo = nil
 	if p, ok := n.Props["AFTER"]; ok && p != "" {
 		//fmt.Printf("AFTER: %s\n", n.Props["AFTER"])
@@ -180,7 +180,7 @@ func HeadlineAloneHasTag(name string, tags []string) bool {
 	return false
 }
 
-func GetResource(db plugs.ODb, resource string, td *common.Todo) string {
+func GetResource(db common.ODb, resource string, td *common.Todo) string {
 	if res, ok := td.Props["ASSIGNED"]; ok {
 		resource = res
 	}
@@ -199,7 +199,7 @@ func GetResource(db plugs.ODb, resource string, td *common.Todo) string {
 	return resource
 }
 
-func GetSection(db plugs.ODb, td *common.Todo) string {
+func GetSection(db common.ODb, td *common.Todo) string {
 	section := ""
 	if res, ok := td.Props["SECTION"]; ok {
 		section = res
@@ -238,7 +238,7 @@ func getMermaidName(namesMap map[string]string, td *common.Todo, idx *int) strin
 	return name
 }
 
-func getSectionName(sectionMap map[string]string, section *string, db plugs.ODb, td *common.Todo) string {
+func getSectionName(sectionMap map[string]string, section *string, db common.ODb, td *common.Todo) string {
 	sec := GetSection(db, td)
 	actualSection := ""
 	if sec != "" && *section != sec {
@@ -266,7 +266,7 @@ func getSectionName(sectionMap map[string]string, section *string, db plugs.ODb,
 	return actualSection
 }
 
-func (self *Mermaid) ExportRes(o *bytes.Buffer, db plugs.ODb, sectionMap map[string]string, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo, section *string) {
+func (self *Mermaid) ExportRes(o *bytes.Buffer, db common.ODb, sectionMap map[string]string, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo, section *string) {
 	resource := "unknown"
 	percentDone := "0"
 	duration := "1"
@@ -355,7 +355,7 @@ func (self *Mermaid) ExportRes(o *bytes.Buffer, db plugs.ODb, sectionMap map[str
 	plugs.ExpandTemplateIntoBuf(o, "\t{{.name}}\t:{{.prefix}}{{.hash}},{{.start}},{{.duration}}\n", m)
 }
 
-func (self *Mermaid) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *Mermaid) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
 	fmt.Printf("GANTT: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -406,7 +406,7 @@ func (self *Mermaid) Export(db plugs.ODb, query string, to string, opts string, 
 	return res
 }
 
-func (self *Mermaid) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *Mermaid) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Println("GANTT: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -440,7 +440,7 @@ func (self *Mermaid) ExportToString(db plugs.ODb, query string, opts string, pro
 	return res, txt
 }
 
-func (self *Mermaid) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *Mermaid) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 }
 
 func NewMermaid() *Mermaid {
@@ -470,10 +470,10 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("mermaid", func() plugs.Exporter {
+	common.AddExporter("mermaid", func() common.Exporter {
 		return &Mermaid{Props: ValidateMap(map[string]interface{}{})}
 	})
-	plugs.AddExporter("mindmap", func() plugs.Exporter {
+	common.AddExporter("mindmap", func() common.Exporter {
 		return &MermaidMindMap{Props: ValidateMap(map[string]interface{}{})}
 	})
 }

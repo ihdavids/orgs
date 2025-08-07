@@ -8,13 +8,12 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
 var headlineRegexp = regexp.MustCompile(`^([*]+)\s+(.*)`)
 
-func FindArchiveTarget(db plugs.ODb, tgt *common.Target) *common.Target {
+func FindArchiveTarget(db common.ODb, tgt *common.Target) *common.Target {
 	fromFile, fromSecs := db.GetFromTarget(tgt, false)
 	if fromFile != nil && fromSecs != nil {
 		// Default global setting
@@ -157,7 +156,7 @@ func fixupArchiveHeading(ofile *common.OrgFile, sec *org.Section) *org.Section {
 	return c
 }
 
-func Archive(db plugs.ODb, tgt *common.Target) (common.ResultMsg, error) {
+func Archive(db common.ODb, tgt *common.Target) (common.ResultMsg, error) {
 	var res common.ResultMsg = common.ResultMsg{}
 	// Find the archive target
 	// Refile to the archive target

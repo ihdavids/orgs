@@ -27,6 +27,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 )
 
@@ -157,7 +158,7 @@ type RevealExporter struct {
 	TemplatePath string
 	Props        map[string]interface{}
 	out          *logging.Logger
-	pm           *plugs.PluginManager
+	pm           *common.PluginManager
 }
 
 type RevealWriter struct {
@@ -395,7 +396,7 @@ func (s *RevealExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(s)
 }
 
-func (self *RevealExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *RevealExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("REVEAL: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -414,7 +415,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	}
 }
 
-func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *RevealExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("REVEAL: Export string called [%s]:[%s]\n", query, opts)
 
@@ -444,7 +445,7 @@ func (self *RevealExporter) ExportToString(db plugs.ODb, query string, opts stri
 	}
 }
 
-func (self *RevealExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *RevealExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	self.out = manager.Out
 	self.pm = manager
 }
@@ -490,7 +491,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("revealjs", func() plugs.Exporter {
+	common.AddExporter("revealjs", func() common.Exporter {
 		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl"}
 	})
 }

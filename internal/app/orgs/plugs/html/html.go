@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 )
 
@@ -35,7 +36,7 @@ import (
 	#+END_SRC
 
   Several properties are available to you in the regular operation of the exporter.
-  these include: 
+  these include:
 
   - fontfamily - This can be used to control the default font. At the moment the default
     template uses google fonts as a source of fonts for your exported html document.
@@ -54,7 +55,7 @@ import (
 	The default style is pretty vanilla. It is a simple rendering of your html with very few bells and whistles.
 
 ** Docs Style
-	When you set the HTML_THEME to docs the docs theme is selected. 
+	When you set the HTML_THEME to docs the docs theme is selected.
 	This html template has a treeview for jumping around in your node tree
 	and a search bar that can facilitate searching through all the generated text.
 
@@ -72,7 +73,7 @@ type OrgHtmlExporter struct {
 	StatusColors     map[string]string
 	ExtendedHeadline func(*OrgHtmlWriter, org.Headline)
 	out              *logging.Logger
-	pm               *plugs.PluginManager
+	pm               *common.PluginManager
 }
 
 type OrgHeadingNode struct {
@@ -109,7 +110,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{} }
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}}
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -252,7 +253,7 @@ func (w *OrgHtmlWriter) FindParent(h org.Headline) *OrgHeadingNode {
 }
 
 func (w *OrgHtmlWriter) ShouldCloseById(id string) bool {
-	if _,ok := w.isClosed[id]; ok {
+	if _, ok := w.isClosed[id]; ok {
 		return false
 	}
 	w.isClosed[id] = true
@@ -278,7 +279,7 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 
 	id := uuid.New().String()
 	parent := w.FindParent(h)
-	if (parent != nil && w.ShouldClose(parent)) {
+	if parent != nil && w.ShouldClose(parent) {
 		w.WriteString("</div>")
 	}
 	w.WriteString(fmt.Sprintf("<div id=\"%s\" class=\"heading-wrapper\">", id))
@@ -320,7 +321,7 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 		w.WriteString(content)
 	}
 
-	if (w.ShouldCloseById(id)) {
+	if w.ShouldCloseById(id) {
 		w.WriteString("</div>")
 	}
 	w.WriteString("</div>")
@@ -358,7 +359,7 @@ func (self *OrgHtmlExporter) Unmarshal(unmarshal func(interface{}) error) error 
 	return unmarshal(self)
 }
 
-func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *OrgHtmlExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("HTML: Export called", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -378,7 +379,7 @@ func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts 
 		}
 	}
 */
-func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	fmt.Printf("PPPP: %v\n", self.Props)
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
@@ -447,7 +448,7 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 	}
 }
 
-func (self *OrgHtmlExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *OrgHtmlExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	if len(self.StatusColors) == 0 {
 		self.StatusColors = map[string]string{
 			"TODO":        "#3498db",
@@ -525,7 +526,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("html", func() plugs.Exporter {
+	common.AddExporter("html", func() common.Exporter {
 		return &OrgHtmlExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
 	})
 }

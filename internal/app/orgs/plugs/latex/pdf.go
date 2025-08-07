@@ -15,7 +15,7 @@ import (
 	//"unicode"
 
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 
 	//"gopkg.in/yaml.v3"
@@ -29,7 +29,7 @@ type OrgPdfExporter struct {
 	Props        map[string]any
 	PdfLatex     string
 	out          *logging.Logger
-	pm           *plugs.PluginManager
+	pm           *common.PluginManager
 }
 
 type OrgPdfWriter struct {
@@ -63,7 +63,7 @@ func (self *OrgPdfExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *OrgPdfExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *OrgPdfExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("PDF: Export called: [%s] [%s]\n%v", query, to, opts)
 	exp := self.pm.Plugs.GetExporter("latex")
 	if exp == nil {
@@ -135,19 +135,19 @@ func (self *OrgPdfExporter) Export(db plugs.ODb, query string, to string, opts s
 
 // ----------- [ Exporter System ] -----------------------
 
-func (self *OrgPdfExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *OrgPdfExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	fmt.Printf("PDF: Export string called [%s]:[%s]\n", query, opts)
 	return nil, ""
 }
 
-func (self *OrgPdfExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *OrgPdfExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	self.out = manager.Out
 	self.pm = manager
 }
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("pdf", func() plugs.Exporter {
+	common.AddExporter("pdf", func() common.Exporter {
 		return &OrgPdfExporter{Props: map[string]interface{}{}, TemplatePath: "latex_default.tpl"}
 	})
 }
