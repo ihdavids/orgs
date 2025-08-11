@@ -31,6 +31,7 @@ require (
 	github.com/muesli/reflow v0.3.0
 	github.com/rivo/tview v0.0.0-20241103174730-c76f7879f592
 	github.com/rs/cors v1.9.0
+	github.com/tmc/keyring v0.0.0-20230418032330-0c8bdba76fa8
 	github.com/zyedidia/highlight v0.0.0-20200217010119-291680feaca1
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/api v0.99.0
@@ -84,7 +85,6 @@ require (
 	github.com/theckman/go-flock v0.4.0 // indirect
 	github.com/tidwall/gjson v0.0.0-20180711011033-ba784d767ac7 // indirect
 	github.com/tidwall/match v1.0.0 // indirect
-	github.com/tmc/keyring v0.0.0-20171121202319-839169085ae1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
