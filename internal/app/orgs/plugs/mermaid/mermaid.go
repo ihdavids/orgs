@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
@@ -52,7 +53,6 @@ var docStart = `
 	tickInterval 2week
 	excludes    weekends  
   	title {{.title}}
-	todayMarker off
 `
 var startMarkers = `
 `
@@ -266,15 +266,20 @@ func getSectionName(sectionMap map[string]string, section *string, db plugs.ODb,
 	return actualSection
 }
 
+func haveDate(td *common.Todo) bool {
+	return td.Date != nil && td.Date.TimestampType == org.Active
+}
+
 func (self *Mermaid) ExportRes(o *bytes.Buffer, db plugs.ODb, sectionMap map[string]string, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo, section *string) {
 	resource := "unknown"
 	percentDone := "0"
-	duration := "1"
+	duration := "1d"
 
 	now := time.Now()
 	start := formatDateForGantt(now)
 	end := formatDateForGantt(now)
-	if td.Date != nil {
+	if haveDate(td) {
+		fmt.Printf("TIMESTAMP TYPE: %d\n", td.Date.TimestampType)
 		start = formatDateForGantt(td.Date.Start)
 		if td.Date.Start != td.Date.End {
 			end = formatDateForGantt(td.Date.End)
@@ -316,11 +321,11 @@ func (self *Mermaid) ExportRes(o *bytes.Buffer, db plugs.ODb, sectionMap map[str
 			//duration = duration.days()
 		}
 	} else {
-		duration = "1"
+		duration = "1d"
 		end = "null"
 	}
 	name := EscapeQuotes(strings.TrimSpace(td.Headline))
-	if after != "null" {
+	if after != "null" && !haveDate(td) {
 		start = fmt.Sprintf("after %s", after)
 		end = "null"
 	}
