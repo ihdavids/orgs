@@ -73,7 +73,7 @@ type JiraSync struct {
 	// Possible values are "api-token", "bearer-token" or "session".
 	// The default is "api-token" when the service endpoint ends with "atlassian.net", otherwise it "session".  Session authentication
 	// will promt for user password and use the /auth/1/session-login endpoint.
-	AuthenticationMethod string `yaml:"authentication-method`
+	AuthenticationMethod string `yaml:"authentication-method"`
 	// This is required should be your full login name
 	Login string
 
@@ -110,7 +110,7 @@ func (self *JiraSync) AuthMethodIsToken() bool {
 }
 
 func (self *JiraSync) GetPass(manager *common.PluginManager) string {
-	return manager.GetPass("orgs-jira", "keyring")
+	return manager.GetPass("orgs-jira", "keyring-nonfatal")
 }
 
 func (self *JiraSync) GetLogin() string {

@@ -14,6 +14,7 @@ import (
 )
 
 func keyringGet(user string) (string, error) {
+	fmt.Printf("KEYRING GET CALLED: %s\n", user)
 	password, err := keyring.Get("orgs", user)
 	if err != nil {
 		return password, err

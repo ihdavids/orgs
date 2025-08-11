@@ -176,7 +176,7 @@ type Config struct {
 	TagGroups map[string][]string `yaml:"tagGroups"`
 
 	// NON SERVE CONFIGURATION OPTIONS:
-	Url            string `yaml:"url`
+	Url            string `yaml:"url"`
 	EditorTemplate []string
 	// When a command is called we configure it and add it
 	// to the list to avoid having to redo that
