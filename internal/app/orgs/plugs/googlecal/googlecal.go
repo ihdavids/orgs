@@ -44,7 +44,7 @@ import (
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 // GO HERE: https://console.cloud.google.com/
@@ -138,7 +138,7 @@ type GoogleCalendar struct {
 	Token       string
 	Output      string
 	NumEvents   int64
-	manager     *plugs.PluginManager
+	manager     *common.PluginManager
 }
 
 func (self *GoogleCalendar) Unmarshal(unmarshal func(interface{}) error) error {
@@ -161,7 +161,7 @@ func (self *GoogleCalendar) SetCreds(data []byte) {
 	self.manager.SetPass("orgs-googlecal-creds", string(data))
 }
 
-func (self *GoogleCalendar) Update(db plugs.ODb) {
+func (self *GoogleCalendar) Update(db common.ODb) {
 	fmt.Printf("Google Calendar Update...\n")
 
 	crds := self.GetCreds()
@@ -243,13 +243,13 @@ func (self *GoogleCalendar) Update(db plugs.ODb) {
 
 }
 
-func (self *GoogleCalendar) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *GoogleCalendar) Startup(freq int, manager *common.PluginManager, opts *common.PluginOpts) {
 	self.manager = manager
 }
 
 // init function is called at boot
 func init() {
-	plugs.AddPoller("googlecal", func() plugs.Poller {
+	common.AddPoller("googlecal", func() common.Poller {
 		return &GoogleCalendar{Credentials: "credentials.json", Token: "token.json", Output: "cal.org", NumEvents: 30}
 	})
 }

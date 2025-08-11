@@ -43,7 +43,7 @@ package orgs
    - Waiting On List
 
 
-** Orgs Expression Methods Reference  
+** Orgs Expression Methods Reference
 
   - *IsProject* - returns true for nodes that are defined as a project (see project definition)
   - *HasAStatus* - returns true if a node has a valid status
@@ -375,7 +375,7 @@ func IsArchived(p *org.Section, d *org.Document) bool {
 }
 
 func IsProject(p *org.Section, f *common.OrgFile) bool {
-	if Conf().UseTagForProjects {
+	if Conf().Server.UseTagForProjects {
 		return IsProjectByTag(p)
 	} else {
 		return IsProjectByChildren(p, f)
@@ -1082,10 +1082,10 @@ func ValidStatusFromFile(f *common.OrgFile) ([]string, []string) {
 		if ftagstr != "" {
 			active, done = ParseTodoStates(ftagstr)
 		} else {
-			active, done = ParseTodoStates(Conf().DefaultTodoStates)
+			active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
 		}
 	} else {
-		active, done = ParseTodoStates(Conf().DefaultTodoStates)
+		active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
 	}
 	return active, done
 }
@@ -1099,7 +1099,7 @@ func ValidStatus(query *common.TodoHash) (common.TodoStatesResult, error) {
 			active, done = ValidStatusFromFile(f)
 		}
 	} else {
-		active, done = ParseTodoStates(Conf().DefaultTodoStates)
+		active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
 	}
 	states := common.TodoStatesResult{Active: active, Done: done}
 	return states, nil

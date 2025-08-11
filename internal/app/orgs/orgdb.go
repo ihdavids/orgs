@@ -209,7 +209,7 @@ func GetConfig() *org.Configuration {
 		AutoLink:            true,
 		MaxEmphasisNewLines: 1,
 		DefaultSettings: map[string]string{
-			"TODO":         Conf().DefaultTodoStates,
+			"TODO":         Conf().Server.DefaultTodoStates,
 			"EXCLUDE_TAGS": "noexport",
 			"OPTIONS":      "toc:t <:t e:t f:t pri:t todo:t tags:t title:t ealb:nil",
 		},
@@ -414,12 +414,12 @@ func (self *OrgDb) Watch() {
 
 	}()
 
-	var dirs []string = Conf().OrgDirs
+	var dirs []string = Conf().Server.OrgDirs
 	for _, dir := range dirs {
 		fmt.Printf("WATCHING: %s\n", dir)
 		err = self.watcher.AddRecursive(dir)
 		if err != nil {
-			if Conf().CanFailWatch {
+			if Conf().Server.CanFailWatch {
 				log.Println("Watcher add failed:", err)
 			} else {
 				log.Fatal("Watcher add failed:", err)
@@ -429,7 +429,7 @@ func (self *OrgDb) Watch() {
 }
 
 func (self *OrgDb) RebuildDb() {
-	var dirs []string = Conf().OrgDirs
+	var dirs []string = Conf().Server.OrgDirs
 	for _, dir := range dirs {
 		files := self.ListFilesInDir(dir)
 		for _, file := range files {
@@ -529,7 +529,7 @@ func (self *OrgDb) GetFilepath(file string) string {
 		return file
 	}
 	// This may not be a good choice, but it's probably the best we can do
-	root := Conf().OrgDirs[0]
+	root := Conf().Server.OrgDirs[0]
 	file = filepath.Join(root, file)
 	return file
 }

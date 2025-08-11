@@ -5,114 +5,26 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/internal/templates"
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v2"
-)
 
+	"github.com/ihdavids/orgs/cmd/oc/commands"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/all"
+)
 
 type Config struct {
 	// Core systems
-	PlugManager *plugs.PluginManager
+	PlugManager *common.PluginManager
 	Out         *logging.Logger
-	Config               string
-	HomeDir              string
-	// Configuration options
-	ServePath            string                   `yaml:"servepath"`
-	Port                 int                      `yaml:"port"`
-	TLSPort              int                      `yaml:"tlsport"`
-	ServerCrt            string                   `yaml:"servercrt"`
-	ServerKey            string                   `yaml:"serverkey"`
-	/* SDOC: Settings
-* Org Dirs
-	A list of directories containing your org files
-	#+BEGIN_SRC yaml
-  orgDirs: 
-    - "/Users/me/dev/gtd"
-	#+END_SRC
-	EDOC */
-	OrgDirs              []string                 `yaml:"orgDirs"`
-	CanFailWatch         bool                     `yaml:"canWatchFail"`
-	/* SDOC: Settings
-* Use Project Tag
-	How should we define a project. If this is set a project
-	is defined as a heading with a :PROJECT: tag on it.
-
-	#+BEGIN_SRC yaml
-  useProjectTag: true
-	#+END_SRC
-
-	If this is false then a project is defined to be a headline
-	that has a child headline that has a status on it.
-
-	#+BEGIN_SRC org
-  * Project
-  ** TODO This task makes it a project
-	#+END_SRC
-	EDOC */
-	UseTagForProjects    bool                     `yaml:"useProjectTag"`
-	AllowHttp            bool                     `yaml:"allowHttp"`
-	AllowHttps           bool                     `yaml:"allowHttps"`
-	DefaultTodoStates    string                   `yaml:"defaultTodoStates"`
-	TemplatePath         string                   `yaml:"templatePath"`
-	DayPageTemplate      string                   `yaml:"dayPageTemplate"`
-	/* SDOC: Settings
-* Day Page
-	The day page system has a number of settings that can be used to control
-	its behaviour.
-
-	The first and most important is where your daypages should be generated
-	This should be a folder inside your orgDirs.
-	#+BEGIN_SRC yaml
-  dayPagePath: "/Users/me/dev/gtd/worklog"
-	#+END_SRC
-	EDOC */
-	DayPagePath          string                   `yaml:"dayPagePath"`
-	DayPageMode          string                   `yaml:"dayPageMode"`
-	DayPageModeWeekDay   string                   `yaml:"dayPageModeWeekDay"`
-	DayPageMaxSearchBack int                      `yaml:"dayPageMaxSearch"`
-	Plugins              []plugs.PluginDef        `yaml:"plugins"`
-	/* SDOC: Settings
-* Enabled Exporters, Plugins, Updaters
-	The list of enabled exporter modules
-	#+BEGIN_SRC yaml
-	exporters:
-    - name: "gantt"
-    - name: "mermaid"
-    - name: "mindmap"
-    - name: "html"
-      props:
-        fontfamily: "Underdog"
-    - name: "revealjs"
-    - name: "impressjs"
-    - name: "latex"
-	#+END_SRC
-
-	The same is true for updaters and plugins.
-	You must explicitly enable the modules you wish
-	to be active in your orgs installation for them to be available.
-	EDOC */
-	Exporters            []plugs.ExportDef        `yaml:"exporters"`
-	Updaters             []plugs.UpdaterDef       `yaml:"updaters"`
-	CaptureTemplates     []common.CaptureTemplate `yaml:"captureTemplates"`
-	AccessControl        string                   `yaml:"accessControl"`
-	// These specify a valid set of org files that can be searched for valid
-	// refile targets
-	RefileTargets []string `yaml:"refileTargets"`
-	/* SDOC: Settings
-* Default Author
-	Default author parameter to use when generating new templates
-	#+BEGIN_SRC yaml
-	 author: "John Smith"
-	#+END_SRC
-	EDOC */
-	Author string `yaml:"author"`
+	Config      string
+	HomeDir     string
+	Server      *common.ServerSettings `yaml:"server"`
+	Author      string                 `yaml:"author"`
 	// What template file to render when generating a new org file
 	// This is a file found in the templatePath option
 	NewFileTemplate string `yaml:"newFileTemplate"`
@@ -164,128 +76,119 @@ type Config struct {
 	// If true tasks are marked done when moved to archive.
 	ArchiveMarkDone bool `yaml:"archiveMarkDone"`
 	/* SDOC: Settings
-* Date Tree Formatting
-	These options control the format of your datatree
+	* Date Tree Formatting
+		These options control the format of your datatree
 
-	#+BEGIN_SRC org
-	 * 2006
-	 ** January
-	 *** 01 Monday
-	#+END_SRC
+		#+BEGIN_SRC org
+		 * 2006
+		 ** January
+		 *** 01 Monday
+		#+END_SRC
 
-	#+BEGIN_SRC org
-	 * 2006
-	 ** 2006-01 October
-	 *** 2006-01-02 Friday
-	 *** 2006-01-02 Saturday
-	#+END_SRC
+		#+BEGIN_SRC org
+		 * 2006
+		 ** 2006-01 October
+		 *** 2006-01-02 Friday
+		 *** 2006-01-02 Saturday
+		#+END_SRC
 
-	#+BEGIN_SRC yaml
-	dateTreeYearFormat:  "2006"
-	dateTreeMonthFormat: "January"
-	dateTreeDayFormat:   "01 Monday"
-	#+END_SRC
+		#+BEGIN_SRC yaml
+		dateTreeYearFormat:  "2006"
+		dateTreeMonthFormat: "January"
+		dateTreeDayFormat:   "01 Monday"
+		#+END_SRC
 
-	EDOC */
+		EDOC */
 	DateTreeYearFormat  string `yaml:"dateTreeYearFormat"`
 	DateTreeMonthFormat string `yaml:"dateTreeMonthFormat"`
 	DateTreeDayFormat   string `yaml:"dateTreeDayFormat"`
 	/* SDOC: Settings
-* Clock Into Drawer
-	When using the clocking features org can choose to dump clock data at the top of a heading
-	OR produce the clock data into a drawer of your choosing. This option lets you
-	choose the name of the drawer.
-	#+BEGIN_SRC yaml
-	 clockIntoDrawer: "LOGBOOK"
-	#+END_SRC
+	* Clock Into Drawer
+		When using the clocking features org can choose to dump clock data at the top of a heading
+		OR produce the clock data into a drawer of your choosing. This option lets you
+		choose the name of the drawer.
+		#+BEGIN_SRC yaml
+		 clockIntoDrawer: "LOGBOOK"
+		#+END_SRC
 
-	This defaults to LOGBOOK
+		This defaults to LOGBOOK
 
-	EDOC */
+		EDOC */
 	ClockIntoDrawer string `yaml:"clockIntoDrawer"`
 	/* SDOC: Settings
-* Image Path
-	Images and fonts are secondary html requests when loading an html
-	document in vscode. In addition, orgs may want to provide
-	quick links et al.
+	* Image Path
+		Images and fonts are secondary html requests when loading an html
+		document in vscode. In addition, orgs may want to provide
+		quick links et al.
 
-	#+BEGIN_SRC yaml
-	 templateImagesPath: "<path>"
-	 templateFontPath: "<path>"
-	#+END_SRC
+		#+BEGIN_SRC yaml
+		 templateImagesPath: "<path>"
+		 templateFontPath: "<path>"
+		#+END_SRC
 
-	This defaults to: ./templates/html_styles/images
-	EDOC */
+		This defaults to: ./templates/html_styles/images
+		EDOC */
 	TemplateImagesPath string `yaml:"templateImagesPath"`
 	TemplateFontPath   string `yaml:"templateFontPath"`
 	/* SDOC: Settings
-* Tag Groups
+	* Tag Groups
 
-  Tag Groups are a cheater way of helping to make your queries less verbose.
-  They are defined on the orgs server and provide a grouping of tags that you
-  can query against.
+	  Tag Groups are a cheater way of helping to make your queries less verbose.
+	  They are defined on the orgs server and provide a grouping of tags that you
+	  can query against.
 
-  Here is a quick example. The following entry in your orgs.yaml
-  allows you to treat PERSONAL as any of FAMILY ME or PERSONAL tags
-  and WORK as any of WORK BACKLOG or PROJECTX tags in an InTagGroup('GROUPNAME')
-  query.
+	  Here is a quick example. The following entry in your orgs.yaml
+	  allows you to treat PERSONAL as any of FAMILY ME or PERSONAL tags
+	  and WORK as any of WORK BACKLOG or PROJECTX tags in an InTagGroup('GROUPNAME')
+	  query.
 
-  #+BEGIN_SRC yaml
-	tagGroups:
-	  PERSONAL:
-	    - FAMILY
-	    - ME
-	    - PERSONAL
-	  WORK:
-	    - WORK
-	    - BACKLOG
-	    - PROJECTX
-  #+END_SRC
+	  #+BEGIN_SRC yaml
+		tagGroups:
+		  PERSONAL:
+		    - FAMILY
+		    - ME
+		    - PERSONAL
+		  WORK:
+		    - WORK
+		    - BACKLOG
+		    - PROJECTX
+	  #+END_SRC
 
-  Here is a query that might be using that in your vscode org.todoConfigs:
-  I am defining a Todo view that will have filename, status, headline and a few property columns of various sizes
-  and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
+	  Here is a query that might be using that in your vscode org.todoConfigs:
+	  I am defining a Todo view that will have filename, status, headline and a few property columns of various sizes
+	  and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
 
-  #+BEGIN_SRC json
-    "Waiting": {
-      "query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
-      "display": {
-        "filename": 15,
-        "status": 10,
-        "headline": 25,
-        "properties": {
-          "EFFORT": 5,
-          "ASSIGNED": 15
-        }
-      }
-    }
-  #+END_SRC
-	EDOC */
+	  #+BEGIN_SRC json
+	    "Waiting": {
+	      "query": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL') && (IsStatus('WAITING') || IsStatus('BLOCKED')",
+	      "display": {
+	        "filename": 15,
+	        "status": 10,
+	        "headline": 25,
+	        "properties": {
+	          "EFFORT": 5,
+	          "ASSIGNED": 15
+	        }
+	      }
+	    }
+	  #+END_SRC
+		EDOC */
 	TagGroups map[string][]string `yaml:"tagGroups"`
+
+	// NON SERVE CONFIGURATION OPTIONS:
+	Url            string `yaml:"url`
+	EditorTemplate []string
+	// When a command is called we configure it and add it
+	// to the list to avoid having to redo that
+	ConfigedCommands []commands.PluginDef
 }
 
 func (self *Config) Defaults() {
-
+	self.Server.Init()
+	// That said, you SHOULD NOT USE THIS!
 	self.Out = logging.MustGetLogger("orgs")
-	self.ServePath = "/org"
-	self.Port = 8010
-	self.TLSPort = 443
-	self.ServerCrt = "server.crt"
-	self.ServerKey = "server.key"
-	self.AllowHttp = false
-	self.AllowHttps = true
 	self.Author = ""
-	self.TemplatePath = "./templates"
 	self.NewFileTemplate = "newfile.tpl"
-	self.DayPageTemplate = "daypage.tpl"
-	self.DayPagePath = "./daypages"
-	self.DayPageMode = "week"
-	self.DayPageModeWeekDay = "Monday"
-	self.DayPageMaxSearchBack = 30 // How many weeks back should we look to pull last weeks tasks from.
-	self.UseTagForProjects = true
-	self.CaptureTemplates = []common.CaptureTemplate{}
-	self.AccessControl = "null"
-	self.RefileTargets = []string{".*\\.org"}
 	self.ArchiveDefaultTarget = "%s_archive::"
 	self.ArchiveSaveContextInfo = []string{"time", "file", "ltags", "itags", "todo", "category", "olpath"}
 	self.ArchiveSkipEmptyProperties = true
@@ -297,6 +200,9 @@ func (self *Config) Defaults() {
 	self.TemplateImagesPath = "./templates/html_styles/images"
 	self.TemplateFontPath = "./templates/fonts"
 
+	// Non Serve options:
+	self.Url = "http://localhost:8010"
+	self.EditorTemplate = []string{"code", "-g", "{filename}:{linenum}"}
 
 	execPath, _ := os.Executable()
 	execPath = filepath.Dir(execPath)
@@ -305,28 +211,50 @@ func (self *Config) Defaults() {
 }
 
 func (self *Config) Validate() {
-	if self.OrgDirs == nil || len(self.OrgDirs) < 1 {
-		log.Fatalln("Config file must specify orgDirs parameter!", self.OrgDirs)
+}
+
+func Usage() {
+	flag.PrintDefaults()
+	fmt.Printf("  Commands:\n")
+	for name, val := range commands.CmdRegistry {
+		fmt.Printf("   %-15s\t%s\n", name, val.Usage)
 	}
+}
+
+func (self *Config) AddCommands() {
+	//fmt.Printf("Add Commands\n")
+	for name, val := range commands.CmdRegistry {
+		//fmt.Printf("NAME: %s\n", name)
+		op := flag.NewFlagSet(name, flag.ExitOnError)
+		val.Flags = op
+		val.Cmd.SetupParameters(op)
+	}
+	flag.Usage = Usage
+}
+
+func (self *Config) FindCommand(name string) commands.Cmd {
+	for _, p := range self.ConfigedCommands {
+		if p.Name == name {
+			return p.Plugin
+		}
+	}
+	return nil
 }
 
 func (self *Config) SetupCommandLine() {
 	flag.StringVar(&self.Config, "config", self.Config, "config file")
-	// NOTE: for this to work the default should always be the current
-	//       value of the structure. Avoid using a default here
-	//       instead specify it in Defaults up above.
-	flag.StringVar(&self.ServePath, "servepath", self.ServePath, "serve path")
-	flag.IntVar(&self.Port, "port", 8010, "serve port")
-	flag.IntVar(&self.TLSPort, "tlsport", 443, "tls serve port")
+
+	flag.StringVar(&self.Url, "url", self.Url, "server url for non serve mode")
+	self.AddCommands()
 
 }
 
 func (self *Config) ParseConfig() {
 	// Setup overall defaults for all options
 	self.Defaults()
-	manager := new(plugs.PluginManager)
+	manager := new(common.PluginManager)
 	manager.HomeDir = self.HomeDir
-	manager.Plugs = plugs.PluginLookup(self)
+	manager.Plugs = common.PluginLookup(self)
 
 	self.SetupCommandLine()
 	// Parse to pull config file from command line first
@@ -350,25 +278,31 @@ func (self *Config) ParseConfig() {
 			panic(err2)
 		}
 	}
-	manager.Port = self.Port
-	manager.TLSPort = self.TLSPort
 	manager.HomeDir = filepath.Dir(self.HomeDir)
 	manager.Out = GetLog()
-	manager.Tempo = &templates.TemplateManager{TemplatePath: config.TemplatePath}
-	manager.OrgDirs = self.OrgDirs
-	manager.Tempo.Initialize()
+	if self.Server != nil {
+		manager.Tempo = &templates.TemplateManager{TemplatePath: config.Server.TemplatePath}
+		manager.Tempo.Initialize()
+	}
+	if self.Server != nil {
+		manager.Port = self.Server.Port
+		manager.TLSPort = self.Server.TLSPort
+		manager.OrgDirs = self.Server.OrgDirs
+	}
 	config.PlugManager = manager
-	for _, pd := range self.Plugins {
-		plugOpts := plugs.PluginOpts{}
-		pd.Plugin.Startup(pd.Frequency, manager, &plugOpts)
-	}
-	for _, pd := range self.Exporters {
-		plugOpts := plugs.PluginOpts{}
-		pd.Plugin.Startup(manager, &plugOpts)
-	}
-	for _, pd := range self.Updaters {
-		plugOpts := plugs.PluginOpts{}
-		pd.Plugin.Startup(1, manager, &plugOpts)
+	if self.Server != nil {
+		for _, pd := range self.Server.Plugins {
+			plugOpts := common.PluginOpts{}
+			pd.Plugin.Startup(pd.Frequency, manager, &plugOpts)
+		}
+		for _, pd := range self.Server.Exporters {
+			plugOpts := common.PluginOpts{}
+			pd.Plugin.Startup(manager, &plugOpts)
+		}
+		for _, pd := range self.Server.Updaters {
+			plugOpts := common.PluginOpts{}
+			pd.Plugin.Startup(1, manager, &plugOpts)
+		}
 	}
 	// Command line overrides config file.
 	// down here. This dual parse facilitates the command line
@@ -380,29 +314,34 @@ func (self *Config) ParseConfig() {
 	self.Validate()
 }
 
-
-func (self *Config) GetExporter(name string) plugs.Exporter {
-	for _, e := range self.Exporters {
-		if name == e.Name {
-			return e.Plugin
-		}
-	}
-	return nil
-}
-	
-func (self *Config) GetPoller(name string)   plugs.Poller {
-	for _, e := range self.Plugins {
-		if name == e.Name {
-			return e.Plugin
+func (self *Config) GetExporter(name string) common.Exporter {
+	if self.Server != nil {
+		for _, e := range self.Server.Exporters {
+			if name == e.Name {
+				return e.Plugin
+			}
 		}
 	}
 	return nil
 }
 
-func (self *Config) GetUpdater(name string)  plugs.Updater {
-	for _, e := range self.Updaters {
-		if name == e.Name {
-			return e.Plugin
+func (self *Config) GetPoller(name string) common.Poller {
+	if self.Server != nil {
+		for _, e := range self.Server.Plugins {
+			if name == e.Name {
+				return e.Plugin
+			}
+		}
+	}
+	return nil
+}
+
+func (self *Config) GetUpdater(name string) common.Updater {
+	if self.Server != nil {
+		for _, e := range self.Server.Updaters {
+			if name == e.Name {
+				return e.Plugin
+			}
 		}
 	}
 	return nil
@@ -413,7 +352,8 @@ var config *Config
 func Conf() *Config {
 	if config == nil {
 		config = new(Config)
-		config.DefaultTodoStates = "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
+		config.Server = &common.ServerSettings{}
+		config.Server.DefaultTodoStates = "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
 		config.ParseConfig()
 	}
 	return config

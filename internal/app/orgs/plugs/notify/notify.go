@@ -1,4 +1,5 @@
 package notify
+
 /* SDOC: Pollers
 
 * Notify
@@ -30,7 +31,6 @@ import (
 	"time"
 
 	"github.com/gen2brain/beeep"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -71,7 +71,7 @@ func max(a int, b int) int {
 	}
 }
 
-func (self *Notify) Update(db plugs.ODb) {
+func (self *Notify) Update(db common.ODb) {
 	//fmt.Printf("Notify Update...%v\n", time.Now())
 
 	curDate := time.Now()
@@ -100,13 +100,13 @@ func (self *Notify) Update(db plugs.ODb) {
 	}
 }
 
-func (self *Notify) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *Notify) Startup(freq int, manager *common.PluginManager, opts *common.PluginOpts) {
 	self.freq = freq
 }
 
 // init function is called at boot
 func init() {
-	plugs.AddPoller("notify", func() plugs.Poller {
+	common.AddPoller("notify", func() common.Poller {
 		return &Notify{Beep: true, NotifyBeforeMins: 10, Icon: "warning.png"}
 	})
 }

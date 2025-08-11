@@ -32,18 +32,20 @@ import (
 	//"html/template"
 	"log"
 	"os"
+
 	//"path/filepath"
+	"bytes"
+	"encoding/json"
+	"net/http"
 	"regexp"
 	"strings"
-	"net/http"
-	"encoding/json"
-	"bytes"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
+	htmlexp "github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
 )
 
 type OrgConfluenceExporter struct {
@@ -52,13 +54,11 @@ type OrgConfluenceExporter struct {
 	User         string
 	Token        string
 	Space        string
-	Url          string	
+	Url          string
 	out          *logging.Logger
-	pm           *plugs.PluginManager
-	opts         *plugs.PluginOpts
+	pm           *common.PluginManager
+	opts         *common.PluginOpts
 }
-
-
 
 func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 	if h != nil {
@@ -73,12 +73,12 @@ func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 }
 
 // OVERRIDE: This overrides the core method
-func WriteHeadline(w* htmlexp.OrgHtmlWriter, h org.Headline) {
+func WriteHeadline(w *htmlexp.OrgHtmlWriter, h org.Headline) {
 	// CONFLUENCE CRAP!
 	haveConf := false
-	if _,ok := w.Exp.Props["skipnoconfluence"]; ok {
+	if _, ok := w.Exp.Props["skipnoconfluence"]; ok {
 		haveConf = HeadlineAloneHasTag("confluence", &h)
-		if ip,o2 := w.Exp.Props["inconf"]; !haveConf && (!o2 || ip == "f") 	{
+		if ip, o2 := w.Exp.Props["inconf"]; !haveConf && (!o2 || ip == "f") {
 			return
 		} else {
 			if haveConf {
@@ -91,7 +91,7 @@ func WriteHeadline(w* htmlexp.OrgHtmlWriter, h org.Headline) {
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
 	// CONFLUENCE CRAP!
-	confIndent := h.Lvl*5
+	confIndent := h.Lvl * 5
 	w.WriteString(fmt.Sprintf("<div style=\"padding-left:%dpx;\">", confIndent))
 	w.WriteString(fmt.Sprintf("<h%d>", h.Lvl))
 
@@ -99,8 +99,8 @@ func WriteHeadline(w* htmlexp.OrgHtmlWriter, h org.Headline) {
 	// Kind of lame
 	if w.Exp.Props["showstatus"] == true {
 		statColor := ""
-		if col,ok := w.Exp.StatusColors[h.Status]; ok {
-			statColor = fmt.Sprintf("style=\"color:%s;\"",col)
+		if col, ok := w.Exp.StatusColors[h.Status]; ok {
+			statColor = fmt.Sprintf("style=\"color:%s;\"", col)
 		}
 		w.WriteString(fmt.Sprintf("<span class=\"status\" %s> %s </span> ", statColor, h.Status))
 	}
@@ -125,7 +125,7 @@ func (self *OrgConfluenceExporter) Unmarshal(unmarshal func(interface{}) error) 
 	return unmarshal(self)
 }
 
-func (self *OrgConfluenceExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *OrgConfluenceExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("CONFLUENCE: Export called", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -145,7 +145,7 @@ func (self *OrgConfluenceExporter) Export(db plugs.ODb, query string, to string,
 		}
 	}
 */
-func (self *OrgConfluenceExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *OrgConfluenceExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 
 	exp := htmlexp.OrgHtmlExporter{Props: htmlexp.ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
 	exp.ExtendedHeadline = WriteHeadline
@@ -161,34 +161,34 @@ func (self *OrgConfluenceExporter) ExportToString(db plugs.ODb, query string, op
 
 func (self *OrgConfluenceExporter) CreateConfluencePage(res string, props map[string]string) *http.Response {
 	// we will run an HTTP server locally to test the POST request
-	url := self.Url + "/rest/api/content" 
+	url := self.Url + "/rest/api/content"
 
 	title := "My New Page"
-	if t,ok := props["title"]; ok && t != "" {
+	if t, ok := props["title"]; ok && t != "" {
 		title = t
 	}
-	page_data := map[string]interface{} {
-    	"type":  "page",
-    	"title": title,
-    	"space": map[string]string { "key": self.Space },
-    	"body":  map[string]interface{}{ "storage": map[string]string {
-            	 "value": res,
-            	 "representation": "storage" } } }
-  if pid,ok := props["parent"]; ok && pid != "" {
-  	page_data["parentId"] = pid
-  }
-	body,err := json.Marshal(page_data)
+	page_data := map[string]interface{}{
+		"type":  "page",
+		"title": title,
+		"space": map[string]string{"key": self.Space},
+		"body": map[string]interface{}{"storage": map[string]string{
+			"value":          res,
+			"representation": "storage"}}}
+	if pid, ok := props["parent"]; ok && pid != "" {
+		page_data["parentId"] = pid
+	}
+	body, err := json.Marshal(page_data)
 	fmt.Printf("body: %s\n", body)
 	if err != nil {
 		fmt.Printf("ERROR could not marshal json data: ", err)
 		return nil
 	}
 	// create post body
-  client := &http.Client{}
-  req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
-	req.Header.Add("Content-Type", "application/json")  
-  req.SetBasicAuth(self.User, self.Token)
-  resp, err := client.Do(req)
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(self.User, self.Token)
+	resp, err := client.Do(req)
 	//resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		log.Fatal(err)
@@ -199,7 +199,7 @@ func (self *OrgConfluenceExporter) CreateConfluencePage(res string, props map[st
 	return resp
 }
 
-func (self *OrgConfluenceExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *OrgConfluenceExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	self.opts = opts
 	self.out = manager.Out
 	self.pm = manager
@@ -256,7 +256,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("confluence", func() plugs.Exporter {
+	common.AddExporter("confluence", func() common.Exporter {
 		return &OrgConfluenceExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
 	})
 }

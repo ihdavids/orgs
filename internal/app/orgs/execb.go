@@ -2,7 +2,7 @@ package orgs
 
 /* SDOC: Editing
 * Bable Block Execution
-  
+
   TODO: Fill in information on babel and literate programming
 EDOC */
 
@@ -10,11 +10,10 @@ import (
 	"fmt"
 
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
-func ExecBlock(db plugs.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
+func ExecBlock(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	res := common.ResultMsg{Ok: false, Msg: "Unknown block exec error"}
 	ofile, sec, block := db.GetFromPreciseTarget(t, org.BlockNode)
 	if block != nil {
