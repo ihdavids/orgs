@@ -60,6 +60,7 @@ package orgs
   - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
   - *IsPriority* - Check if the priority matches a specific value.
   - *HasProperty* - Returns true if the headline has the specific property
+  - *HasTable* - Checks if the node contains a table.
   - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
   - *MatchHeadline* - Run an RE against each headline and check for a match
   - *OnDate* - Check if a todo is targetting a specific date
@@ -354,7 +355,7 @@ func IsPartOfProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
 // forward.
 func IsBlockedProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
 	// We have a headline
-	if p != nil && p.Headline != nil && p.Parent != nil {
+	if p != nil && p.Headline != nil {
 		// This is a project
 		if IsProject(p, f) {
 			// Do any of the children have a NEXT status
@@ -364,6 +365,14 @@ func IsBlockedProject(p *org.Section, projectRe string, f *common.OrgFile) bool 
 			}
 			return childHasNext
 		}
+	}
+	return false
+}
+
+func HasTable(p *org.Section, f *common.OrgFile) bool {
+	// The body of this node has a table object in it.
+	if p != nil && p.Headline != nil {
+		return p.Headline.Tables != nil && len(p.Headline.Tables) > 0
 	}
 	return false
 }
@@ -475,6 +484,10 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsBlockedProject(p, args[0].(string), exp.File), nil
+		},
+		"HasTable": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return HasTable(p, exp.File), nil
 		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
