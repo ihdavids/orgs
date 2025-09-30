@@ -74,6 +74,7 @@ type ServerSettings struct {
 	AllowHttp         bool   `yaml:"allowHttp"`
 	AllowHttps        bool   `yaml:"allowHttps"`
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
+	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`
 	DayPageTemplate   string `yaml:"dayPageTemplate"`
 	/* SDOC: Settings

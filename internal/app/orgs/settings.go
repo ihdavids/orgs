@@ -353,7 +353,8 @@ func Conf() *Config {
 	if config == nil {
 		config = new(Config)
 		config.Server = &common.ServerSettings{}
-		config.Server.DefaultTodoStates = "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED WAITING PHONE MEETING | DONE CANCELLED"
+		config.Server.DefaultTodoStates = "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED PAUSED WAITING PHONE MEETING BACKLOG | DONE CANCELLED"
+		config.Server.DefaultNextStates = "NEXT"
 		config.ParseConfig()
 	}
 	return config

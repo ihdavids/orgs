@@ -210,6 +210,7 @@ func GetConfig() *org.Configuration {
 		MaxEmphasisNewLines: 1,
 		DefaultSettings: map[string]string{
 			"TODO":         Conf().Server.DefaultTodoStates,
+			"NEXT":         Conf().Server.DefaultNextStates,
 			"EXCLUDE_TAGS": "noexport",
 			"OPTIONS":      "toc:t <:t e:t f:t pri:t todo:t tags:t title:t ealb:nil",
 		},

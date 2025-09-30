@@ -55,6 +55,7 @@ package orgs
   - *IsTodo* - returns true if a node has an active status (the same as IsActive currently)
   - *IsActive* - returns true if the status of a node is an active status (IE not DONE)
   - *IsTask* - Syntatical sugar for the following: "!IsArchived() && IsTodo() && !IsProject()"
+  - *IsNextTask* - Check if a headline has a NEXT action status. This is GTD support and uses the defaultNextStatus value and #+NEXT comment
   - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
   - *IsPriority* - Check if the priority matches a specific value.
   - *HasProperty* - Returns true if the headline has the specific property
@@ -374,6 +375,17 @@ func IsArchived(p *org.Section, d *org.Document) bool {
 	return HasTag("archive", p, d) || HasTag("archived", p, d)
 }
 
+// Return true if this task has a status that is considered a NEXT actions
+// status
+func IsNextTask(p *org.Section, f *common.OrgFile) bool {
+	if p != nil && p.Headline != nil {
+		status := p.Headline.Status
+		next, _ := NextStatusFromFile(f)
+		return contains(next, status)
+	}
+	return false
+}
+
 func IsProject(p *org.Section, f *common.OrgFile) bool {
 	if Conf().Server.UseTagForProjects {
 		return IsProjectByTag(p)
@@ -423,6 +435,10 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsActive(p, exp.File), nil
+		},
+		"IsNextTask": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return IsNextTask(p, exp.File), nil
 		},
 		"HasAStatus": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -1086,6 +1102,23 @@ func ValidStatusFromFile(f *common.OrgFile) ([]string, []string) {
 		}
 	} else {
 		active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
+	}
+	return active, done
+}
+
+func NextStatusFromFile(f *common.OrgFile) ([]string, []string) {
+	var active []string
+	var done []string
+	if f != nil {
+		// #+NEXT: NEXT | NEXTBACKLOG
+		ftagstr := f.Doc.Get("NEXT")
+		if ftagstr != "" {
+			active, done = ParseTodoStates(ftagstr)
+		} else {
+			active, done = ParseTodoStates(Conf().Server.DefaultNextStates)
+		}
+	} else {
+		active, done = ParseTodoStates(Conf().Server.DefaultNextStates)
 	}
 	return active, done
 }
