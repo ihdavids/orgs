@@ -56,6 +56,7 @@ package orgs
   - *IsActive* - returns true if the status of a node is an active status (IE not DONE)
   - *IsTask* - Syntatical sugar for the following: "!IsArchived() && IsTodo() && !IsProject()"
   - *IsNextTask* - Check if a headline has a NEXT action status. This is GTD support and uses the defaultNextStatus value and #+NEXT comment
+  - *IsBlockedProject* - Check if this is a project heading and it DOES NOT have a child marked NEXT.
   - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
   - *IsPriority* - Check if the priority matches a specific value.
   - *HasProperty* - Returns true if the headline has the specific property
@@ -347,6 +348,26 @@ func IsPartOfProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
 	return false
 }
 
+// This is a GTD support method. This returns true if this is a project (as defined by the system)
+// AND
+// this project does not have a NEXT status task. This is part of ensuring projects are moving
+// forward.
+func IsBlockedProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
+	// We have a headline
+	if p != nil && p.Headline != nil && p.Parent != nil {
+		// This is a project
+		if IsProject(p, f) {
+			// Do any of the children have a NEXT status
+			var childHasNext bool = false
+			for _, c := range p.Children {
+				childHasNext = childHasNext || IsNextTask(c, f)
+			}
+			return childHasNext
+		}
+	}
+	return false
+}
+
 // Project is defined as a headline that has a headline child with
 // a status entry
 func IsProjectByChildren(p *org.Section, f *common.OrgFile) bool {
@@ -449,6 +470,11 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsPartOfProject(p, args[0].(string), exp.File), nil
+		},
+		"IsBlockedProject": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			return IsBlockedProject(p, args[0].(string), exp.File), nil
 		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
