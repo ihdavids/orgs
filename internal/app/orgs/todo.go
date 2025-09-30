@@ -61,6 +61,8 @@ package orgs
   - *IsPriority* - Check if the priority matches a specific value.
   - *HasProperty* - Returns true if the headline has the specific property
   - *HasTable* - Checks if the node contains a table.
+  - *HasDrawer* - Checks if the node contains a drawer.
+  - *HasBlock* - Checks if the node contains a block object.
   - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
   - *MatchHeadline* - Run an RE against each headline and check for a match
   - *OnDate* - Check if a todo is targetting a specific date
@@ -377,6 +379,22 @@ func HasTable(p *org.Section, f *common.OrgFile) bool {
 	return false
 }
 
+func HasBlock(p *org.Section, f *common.OrgFile) bool {
+	// The body of this node has a block object in it.
+	if p != nil && p.Headline != nil {
+		return p.Headline.Blocks != nil && len(p.Headline.Blocks) > 0
+	}
+	return false
+}
+
+func HasDrawer(p *org.Section, f *common.OrgFile) bool {
+	// The body of this node has a Drawer object in it.
+	if p != nil && p.Headline != nil {
+		return p.Headline.Drawers != nil && len(p.Headline.Drawers) > 0
+	}
+	return false
+}
+
 // Project is defined as a headline that has a headline child with
 // a status entry
 func IsProjectByChildren(p *org.Section, f *common.OrgFile) bool {
@@ -484,6 +502,14 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsBlockedProject(p, args[0].(string), exp.File), nil
+		},
+		"HasBlock": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return HasBlock(p, exp.File), nil
+		},
+		"HasDrawer": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return HasDrawer(p, exp.File), nil
 		},
 		"HasTable": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
