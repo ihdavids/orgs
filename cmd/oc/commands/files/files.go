@@ -147,6 +147,8 @@ func (self *FilesQuery) Exec(core *commands.Core) {
 		options, _ := fzf.ParseOptions(
 			true, // whether to load defaults ($FZF_DEFAULT_OPTS_FILE and $FZF_DEFAULT_OPTS)
 			// I need to make fzf editor something that is configured!
+
+			//rg --with-filename --vimgrep --context 0 --sort path FilesQuery | fzf --border --reverse --delimiter ':' --with-nth '3..' --preview "bat --style=numbers --color=always --highlight-line {2} {1} -n -H {2}" --preview-window 'border-bottom,+{2}+3/3'
 			[]string{"--multi", "--reverse", "--border", "--height=40%", "--preview", "bat --style=numbers --color=always --line-range :500 {}"},
 		)
 		/*
