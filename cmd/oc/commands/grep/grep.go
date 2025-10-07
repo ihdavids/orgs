@@ -8,6 +8,8 @@ package grep
 import (
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
@@ -33,7 +35,6 @@ func (self *GrepQuery) Exec(core *commands.Core) {
 	//qry["filename"] = "./out.html"
 	//qry["query"] = "IsTask() && HasProperty(\"EFFORT\")"
 	qry["query"] = self.Query
-	fmt.Printf("XXX: %s\n", qry["query"])
 	var reply common.FileList = common.FileList{}
 
 	//func SendReceiveGet[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
@@ -87,12 +88,14 @@ func (self *GrepQuery) Exec(core *commands.Core) {
 		options.Output = outputChan
 
 		// Run fzf
-		code, _ := fzf.Run(options)
+		fzf.Run(options)
 
-		fmt.Printf("OUTPUT: %v\n", code)
+		//fmt.Printf("OUTPUT: %v:%v\n", code, reply[code])
+		fmt.Printf("%v\n", output)
 		for _, o := range output {
-			core.LaunchEditor(o, 0)
-			//fmt.Println(reply[i])
+			os := strings.Split(o, ":")
+			line, _ := strconv.Atoi(os[1])
+			core.LaunchEditor(os[0], line)
 		}
 	} else {
 		fmt.Printf("Err")
