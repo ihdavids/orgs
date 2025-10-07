@@ -72,6 +72,7 @@ package orgs
 EDOC */
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -898,6 +899,39 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 		}
 	}
 	return &todos, nil
+}
+
+func Grep(query string) ([]string, error) {
+	res := []string{}
+	if re, err := regexp.Compile(query); err != nil {
+		fmt.Printf("ERROR: failed to compile query: %v", err)
+		return res, err
+	} else {
+		files := GetDb().GetFiles()
+		for _, file := range files {
+			fh, err := os.Open(file)
+			if err != nil {
+				return res, fmt.Errorf("error opening file %s: %v", file, err)
+			}
+			defer fh.Close()
+			scanner := bufio.NewScanner(fh)
+			buf := make([]byte, 0, 64*1024)
+			scanner.Buffer(buf, 1024*1024)
+			lineNumber := 0
+			for scanner.Scan() {
+				lineNumber++
+				line := scanner.Text()
+				if re.MatchString(line) {
+					res = append(res, fmt.Sprintf("%s:%d:%d:%s", file, lineNumber, 0, line))
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				return res, fmt.Errorf("error reading file %s: %v", file, err)
+			}
+		}
+	}
+	return res, nil
 }
 
 func GetAllTodosInFile(filename string) (*common.Todos, error) {

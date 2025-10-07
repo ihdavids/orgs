@@ -29,6 +29,7 @@ func RestApi(router *mux.Router) {
 	router.HandleFunc("/file", CreateFile).Methods("POST")
 	router.HandleFunc("/file/{type}", RequestFile)               // html etc
 	router.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
+	router.HandleFunc("/grep", RequestGrep)
 	router.HandleFunc("/search", RequestTodosExpr)
 	router.HandleFunc("/lookuphash", RequestHash)
 	router.HandleFunc("/todohtml/{hash}", RequestFullTodoHtml)
@@ -101,6 +102,18 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	res := GetDb().GetFiles()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// Run a grep through all our files
+func RequestGrep(w http.ResponseWriter, r *http.Request) {
+	qry := r.URL.Query().Get("query")
+	w.Header().Set("Content-Type", "application/json")
+	if res, err := Grep(qry); err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+		json.NewEncoder(w).Encode([]string{})
+	} else {
+		json.NewEncoder(w).Encode(res)
+	}
 }
 
 // Request the contents of a file as a raw file
