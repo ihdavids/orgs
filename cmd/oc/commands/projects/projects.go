@@ -102,17 +102,6 @@ func (self *ProjectsQuery) Exec(core *commands.Core) {
 	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
-	/*
-		//commands.SendReceiveRpc(core, "Db.ExportToFile", &query, &reply)
-		if reply != nil {
-			fmt.Printf("OK")
-			for _, file := range reply {
-				fmt.Printf("%s\n", file)
-			}
-		} else {
-			fmt.Printf("Err")
-		}
-	*/
 }
 
 // init function is called at boot
