@@ -19,6 +19,9 @@ func (self *DayPage) Unmarshal(unmarshal func(interface{}) error) error {
 func (self *DayPage) SetupParameters(*flag.FlagSet) {
 }
 
+func (self *DayPage) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *DayPage) Exec(core *commands.Core) {
 	fmt.Printf("DayPage called\n")
 	var reply common.FileList

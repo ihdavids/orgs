@@ -15,6 +15,7 @@ import (
 )
 
 type Cmd interface {
+	StartPlugin(manager *common.PluginManager)
 	Unmarshal(unmarshal func(interface{}) error) error
 	Exec(core *Core)
 	SetupParameters(*flag.FlagSet)

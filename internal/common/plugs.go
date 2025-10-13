@@ -43,6 +43,8 @@ type PluginManager struct {
 	OrgDirs        []string
 	cachedPassword map[string]string
 	Plugs          PluginLookup
+	Filters        map[string]string
+	TagGroups      map[string][]string
 }
 
 // Updating plugins are called with a target

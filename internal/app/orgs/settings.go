@@ -18,6 +18,10 @@ import (
 )
 
 type Config struct {
+	// Remaining arguments after the parse
+	// NOT intended for serialization but accessible
+	// by plugins and other modules
+	Args []string
 	// Core systems
 	PlugManager *common.PluginManager
 	Out         *logging.Logger
@@ -179,8 +183,8 @@ type Config struct {
 	    }
 	  #+END_SRC
 		EDOC */
-	TagGroups map[string][]string `yaml:"tagGroups"`
-	NoInternalTagGroups bool `yaml:"noInternalTagGroups"`
+	TagGroups           map[string][]string `yaml:"tagGroups"`
+	NoInternalTagGroups bool                `yaml:"noInternalTagGroups"`
 	/* SDOC: Settings
 	* Filters
 
@@ -196,7 +200,7 @@ type Config struct {
 	  Which will cause the internal filters to not be defined.
 
 	  #+BEGIN_SRC yaml
-	      "filters": 
+	      "filters":
 	      	"alltasks": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL')",
 	  #+END_SRC
 
@@ -208,8 +212,8 @@ type Config struct {
 	  #+END_SRC
 
 		EDOC */
-	Filters map[string]string `yaml:"filters"`
-	NoInternalFilters bool `yaml:"noInternalFilters"`
+	Filters           map[string]string `yaml:"filters"`
+	NoInternalFilters bool              `yaml:"noInternalFilters"`
 
 	// NON SERVE CONFIGURATION OPTIONS:
 	Url            string `yaml:"url"`
@@ -266,6 +270,12 @@ func (self *Config) AddCommands() {
 		val.Cmd.SetupParameters(op)
 	}
 	flag.Usage = Usage
+}
+
+func (self *Config) StartupCommandModules(man *common.PluginManager) {
+	for _, val := range commands.CmdRegistry {
+		val.Cmd.StartPlugin(man)
+	}
 }
 
 func (self *Config) FindCommand(name string) commands.Cmd {
@@ -340,11 +350,6 @@ func (self *Config) ParseConfig() {
 			pd.Plugin.Startup(1, manager, &plugOpts)
 		}
 	}
-	// Command line overrides config file.
-	// down here. This dual parse facilitates the command line
-	// override of the yaml file.
-	flag.Parse()
-
 	// Internal filters are built in querries we would like
 	// always present in the server even if you don't specify
 	// anything in your configuration file.
@@ -355,6 +360,15 @@ func (self *Config) ParseConfig() {
 	if !self.NoInternalTagGroups {
 		self.AddInternalTagGroups()
 	}
+	manager.Filters = self.Filters
+	manager.TagGroups = self.TagGroups
+	self.StartupCommandModules(manager)
+	// Command line overrides config file.
+	// down here. This dual parse facilitates the command line
+	// override of the yaml file.
+	flag.Parse()
+	args := flag.Args()
+	self.Args = args
 
 	// Validate that all required parameters are present for
 	// us to start up.
@@ -394,78 +408,89 @@ func (self *Config) GetUpdater(name string) common.Updater {
 	return nil
 }
 
+/*
+		SDOC: Settings
 
-	/* SDOC: Settings
-	* Filters - Internal
-		To get you started the system
-		defines a set of internal filters
-		that I have found personally useful.
+	  - Filters - Internal
+	    To get you started the system
+	    defines a set of internal filters
+	    that I have found personally useful.
 
-		You are free to overwrite and extend these
-		to your needs:
+	    You are free to overwrite and extend these
+	    to your needs:
 
-	  #+BEGIN_SRC yaml
-	  AllTasks: "!IsProject() && IsTodo() && !IsArchived()"
-	  HomeTasks: "{{ AllTasks }} && InTagGroup('HOME')"
-	  WorkTasks: "{{ AllTasks }} && !InTagGroup('HOME')"
-	  WorkProjects: "IsProject() && !IsArchived() && !InTagGroup('HOME')"
-	  #+END_SRC
+	    #+BEGIN_SRC yaml
+	    AllTasks: "!IsProject() && IsTodo() && !IsArchived()"
+	    HomeTasks: "{{ AllTasks }} && InTagGroup('HOME')"
+	    WorkTasks: "{{ AllTasks }} && !InTagGroup('HOME')"
+	    WorkProjects: "IsProject() && !IsArchived() && !InTagGroup('HOME')"
+	    #+END_SRC
 
-	  NOTE: Because I tend to spend more time in org mode at work
-	  I define work tasks as being not those marked as home tasks
-	  in this way anything that is missing a label gets found
-	  while I am at work and patched up properly when I am doing
-	  my daily work triage.
+	    NOTE: Because I tend to spend more time in org mode at work
+	    I define work tasks as being not those marked as home tasks
+	    in this way anything that is missing a label gets found
+	    while I am at work and patched up properly when I am doing
+	    my daily work triage.
 
-		EDOC */
+	    EDOC
+*/
 func (self *Config) AddInternalFilters() {
 	if self.Filters == nil {
 		self.Filters = map[string]string{}
 	}
-	if _,ok := self.Filters["AllTasks"]; !ok {
+	if _, ok := self.Filters["AllTasks"]; !ok {
 		self.Filters["AllTasks"] = "!IsProject() && IsTodo() && !IsArchived()"
 	}
 
-	if _,ok := self.Filters["HomeTasks"]; !ok {
+	if _, ok := self.Filters["HomeTasks"]; !ok {
 		self.Filters["HomeTasks"] = "{{ AllTasks }} && InTagGroup('HOME')"
 	}
 
 	// I tend to define work tasks as everything not tagged AND things tagged as work
 	// So work items to not get lost in the shuffle.
-	if _,ok := self.Filters["WorkTasks"]; !ok {
+	if _, ok := self.Filters["WorkTasks"]; !ok {
 		self.Filters["WorkTasks"] = "{{ AllTasks }} && !InTagGroup('HOME')"
 	}
 
-	if _,ok := self.Filters["WorkProjects"]; !ok {
+	if _, ok := self.Filters["WorkProjects"]; !ok {
 		self.Filters["WorkProjects"] = "IsProject() && !IsArchived() && !InTagGroup('HOME')"
 	}
 }
 
-	/* SDOC: Settings
-	* Tag Groups - Internal
-		To get you started the system
-		defines a set of internal tag groups
-		that I have found personally useful.
+/*
+		SDOC: Settings
 
-		You are free to overwrite and extend these
-		to your needs:
+	  - Tag Groups - Internal
+	    To get you started the system
+	    defines a set of internal tag groups
+	    that I have found personally useful.
 
-	  #+BEGIN_SRC yaml
-		tagGroups:
-		  PERSONAL:
-		    - FAMILY
-		    - ME
-		    - PERSONAL
-		  WORK:
-		    - WORK
-		    - BACKLOG
-		    - CONFLUENCE
-	  #+END_SRC
+	    You are free to overwrite and extend these
+	    to your needs:
 
-	 	I have gone back and forth between using HOME 
-	 	and PERSONAL as my tag group name so
-	 	by default they are aliased.
-		EDOC */
+	    #+BEGIN_SRC yaml
+	    tagGroups:
+	    PERSONAL:
+
+	  - FAMILY
+
+	  - ME
+
+	  - PERSONAL
+	    WORK:
+
+	  - WORK
+
+	  - BACKLOG
+
+	  - CONFLUENCE
+	    #+END_SRC
+
+	    I have gone back and forth between using HOME
+	    and PERSONAL as my tag group name so
+	    by default they are aliased.
+	    EDOC
+*/
 func (self *Config) AddInternalTagGroups() {
 	if self.TagGroups == nil {
 		self.TagGroups = map[string][]string{}
@@ -473,20 +498,19 @@ func (self *Config) AddInternalTagGroups() {
 	personal := []string{
 		"FAMILY", "ME", "PERSONAL",
 	}
-	if _,ok := self.TagGroups["PERSONAL"]; !ok {
+	if _, ok := self.TagGroups["PERSONAL"]; !ok {
 		self.TagGroups["PERSONAL"] = personal
 	}
-	if _,ok := self.TagGroups["HOME"]; !ok {
+	if _, ok := self.TagGroups["HOME"]; !ok {
 		self.TagGroups["HOME"] = personal
 	}
-	work := []string {
+	work := []string{
 		"WORK", "BACKLOG", "CONFLUENCE",
 	}
-	if _,ok := self.TagGroups["WORK"]; !ok {
+	if _, ok := self.TagGroups["WORK"]; !ok {
 		self.TagGroups["WORK"] = work
 	}
 }
-
 
 var config *Config
 
@@ -504,4 +528,3 @@ func Conf() *Config {
 func Log() *logging.Logger {
 	return Conf().Out
 }
-

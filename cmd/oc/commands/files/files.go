@@ -101,6 +101,9 @@ func (self *FilesQuery) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *FilesQuery) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *FilesQuery) SetupParameters(*flag.FlagSet) {
 }
 

@@ -17,6 +17,9 @@ func (self *TagGroups) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *TagGroups) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *TagGroups) SetupParameters(fset *flag.FlagSet) {
 }
 

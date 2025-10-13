@@ -22,6 +22,9 @@ func (self *ProjectsQuery) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *ProjectsQuery) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *ProjectsQuery) SetupParameters(f *flag.FlagSet) {
 	f.StringVar(&self.filter, "f", "", "Additional filtering for project lists")
 }
