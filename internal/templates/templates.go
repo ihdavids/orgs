@@ -300,39 +300,21 @@ func commaList(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut
 
 func sepList(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
 	if in != nil {
-		fmt.Printf("HAVE IN \n")
 		inVar, ok := in.Interface().([]string)
 		sep := param.String()
 		if ok && inVar != nil {
-			fmt.Printf("PROCESS IN \n")
 			output := ""
 			for _, v := range inVar {
 				v := strings.TrimSpace(v)
 				if output != "" {
-					output += " "+sep+" "
+					output += " " + sep + " "
 				}
 				output += v
 			}
 			output = strings.TrimSpace(output)
-			fmt.Printf("OUTPUT: %s\n", output)
 			return pongo2.AsValue(output), nil
 		}
 	}
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
-	fmt.Printf("IN WAS NIL \n")
 	return in, nil
 }
 
@@ -355,35 +337,34 @@ func (self *TemplateManager) resolveTemplate(name string, context map[string]int
 	ctx := pongo2.Context{}
 	self.standardContext(&ctx)
 	for k, v := range context {
-		ctx[k] = v
+		ctx[k] = pongo2.AsSafeValue(v)
 	}
 	res, _ := tpl.Execute(ctx)
 	return res
 }
 
-
 func (self *TemplateManager) AugmentContext(context *pongo2.Context, aug map[string]any, expandTemplates bool) *pongo2.Context {
 	// Expand out our query filters into our context
 	if len(aug) > 0 {
-		for k,v := range aug {
-			(*context)[k] = v
+		for k, v := range aug {
+			(*context)[k] = pongo2.AsSafeValue(v)
 		}
 		if expandTemplates {
-			for k,v := range aug {
+			for k, v := range aug {
 				// We allow a strict 3 levels deep expansion and that's it!
 				if s, ok := v.(string); ok {
 					for i := 0; i < 3; i++ {
 						r := self.ExecuteTemplateString(s, context)
 						if r != s {
 							s = r
-							(*context)[k] = r
+							(*context)[k] = pongo2.AsSafeValue(r)
 						} else {
 							break
 						}
 					}
 				}
 			}
-		}	
+		}
 	}
 	return context
 }
@@ -391,23 +372,23 @@ func (self *TemplateManager) AugmentContext(context *pongo2.Context, aug map[str
 func (self *TemplateManager) AugmentContextFromStringMap(context *pongo2.Context, aug map[string]string, expandTemplates bool) *pongo2.Context {
 	// Expand out our query filters into our context
 	if len(aug) > 0 {
-		for k,v := range aug {
-			(*context)[k] = v
+		for k, v := range aug {
+			(*context)[k] = pongo2.AsSafeValue(v)
 		}
 		if expandTemplates {
-			for k,v := range aug {
+			for k, v := range aug {
 				// We allow a strict 3 levels deep expansion and that's it!
 				for i := 0; i < 3; i++ {
 					r := self.ExecuteTemplateString(v, context)
 					if r != v {
 						v = r
-						(*context)[k] = v
+						(*context)[k] = pongo2.AsSafeValue(v)
 					} else {
 						break
 					}
 				}
 			}
-		}	
+		}
 	}
 	return context
 }

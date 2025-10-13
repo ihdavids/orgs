@@ -115,7 +115,7 @@ func (self *Filter) Exec(core *commands.Core) {
 	fmt.Printf("Filter called\n")
 
 	var qry map[string]string = map[string]string{}
-	qry["query"] = "IsProject()"
+	qry["query"] = "{{" + self.CoreQuery + "}} "
 	if self.DynamicQuery != "" {
 		qry["query"] += " && " + self.DynamicQuery
 	}

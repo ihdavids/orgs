@@ -898,6 +898,7 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
 	query.Query = Conf().PlugManager.Tempo.ExecuteTemplateString(query.Query, ctx)
 
+	fmt.Printf("    > QUERY AFTER EXPANSION: %s\n", query.Query)
 	exp, err := ParseString(query)
 	if err != nil {
 		return &todos, err
