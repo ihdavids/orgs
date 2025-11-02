@@ -10,6 +10,19 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+/*
+		SDOC: Settings
+      * Filters Orcs Cmd Module
+
+   		This is the basis for a whole slew of visualizations
+        These can be configured in your config file
+        but orgs provides some built in (internal)
+        ones that you can override if you don't like them.
+
+   		The querries are found in the settings.go file
+	    EDOC
+*/
+
 type FiltersList struct {
 }
 

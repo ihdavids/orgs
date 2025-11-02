@@ -117,15 +117,29 @@ func (self *TodoTable) Preview(todo *Todo) {
 	}
 }
 
+func (self *TodoTable) HidePreview() {
+	self.layout.RemoveItem(self.preview)
+	self.preview = nil
+}
+
+func (self *TodoTable) ShowPreview() {
+	r, _ := self.table.GetSelection()
+	if r >= 1 {
+		self.Preview(&(*self.todos)[r-1])
+	}
+}
+
 func (self *TodoTable) HandleShortcuts(in *tcell.EventKey) *tcell.EventKey {
 	// Space should open a preview
 	if in.Rune() == ' ' {
-		r, _ := self.table.GetSelection()
-		self.Preview(&(*self.todos)[r-1])
-	}
-	if in.Key() == tcell.KeyEscape && self.preview != nil {
-		self.layout.RemoveItem(self.preview)
-		self.preview = nil
+		self.ShowPreview()
+	} else if self.preview != nil {
+		if in.Key() == tcell.KeyEscape {
+			self.HidePreview()
+		} else if in.Key() == tcell.KeyDown || in.Key() == tcell.KeyUp {
+			self.HidePreview()
+			self.ShowPreview()
+		}
 	}
 	return in
 }
