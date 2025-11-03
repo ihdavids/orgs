@@ -55,6 +55,29 @@ func RunTodoTable(todos *Todos) *TodoTable {
 	return &t
 }
 
+func (self *TodoTable) FormatFilename(filename string) string {
+	fn := filepath.Base(filename)
+	return strings.TrimSuffix(fn, filepath.Ext(fn))
+}
+
+func (self *TodoTable) FilenameTableCell(t Todo) *tview.TableCell {
+	fn := self.FormatFilename(t.Filename)
+	cell := tview.NewTableCell(fn)
+	cell.SetTextColor(tcell.ColorDarkGray)
+	return cell
+}
+
+func (self *TodoTable) StatusTableCell(t Todo) *tview.TableCell {
+	cell := tview.NewTableCell(t.Status)
+	cell.SetTextColor(getColor(t.Status))
+	return cell
+}
+
+func (self *TodoTable) HeadlineTableCell(t Todo) *tview.TableCell {
+	cell := tview.NewTableCell(t.Headline)
+	return cell
+}
+
 func (self *TodoTable) ShowTodos(todos *Todos) {
 	if todos == nil {
 		return
@@ -67,20 +90,15 @@ func (self *TodoTable) ShowTodos(todos *Todos) {
 	self.table.SetCell(0, 2, cell)
 	for r, t := range *todos {
 		c := 0
-		fn := filepath.Base(t.Filename)
-		fn = strings.TrimSuffix(fn, filepath.Ext(fn))
-		cell = tview.NewTableCell(fn)
-		cell.SetTextColor(tcell.ColorDarkGray)
+		cell = self.FilenameTableCell(t)
 		self.table.SetCell(r+1, c, cell)
 		c += 1
 
-		cell = tview.NewTableCell(t.Status)
-
-		cell.SetTextColor(getColor(t.Status))
+		cell = self.StatusTableCell(t)
 		self.table.SetCell(r+1, c, cell)
 		c += 1
 
-		cell = tview.NewTableCell(t.Headline)
+		cell = self.HeadlineTableCell(t)
 		self.table.SetCell(r+1, c, cell)
 		c += 1
 	}
