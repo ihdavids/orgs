@@ -901,7 +901,7 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	return &todos, nil
 }
 
-func Grep(query string) ([]string, error) {
+func Grep(query string, delimeter string) ([]string, error) {
 	res := []string{}
 	if re, err := regexp.Compile(query); err != nil {
 		fmt.Printf("ERROR: failed to compile query: %v", err)
@@ -922,7 +922,7 @@ func Grep(query string) ([]string, error) {
 				lineNumber++
 				line := scanner.Text()
 				if re.MatchString(line) {
-					res = append(res, fmt.Sprintf("%s:%d:%d:%s", file, lineNumber, 0, line))
+					res = append(res, fmt.Sprintf("%s%s%d%s%d%s%s", file, delimeter, lineNumber, delimeter, 0, delimeter, line))
 				}
 			}
 
