@@ -18,6 +18,10 @@ import (
 )
 
 type Config struct {
+	// Remaining arguments after the parse
+	// NOT intended for serialization but accessible
+	// by plugins and other modules
+	Args []string
 	// Core systems
 	PlugManager *common.PluginManager
 	Out         *logging.Logger
@@ -154,6 +158,12 @@ type Config struct {
 		    - PROJECTX
 	  #+END_SRC
 
+	  By default ORGS turns on tag groups that I find most useful
+	  If you would like to avoid those being defined turn on the following flag
+	  #+BEGIN_SRC yaml
+	     noInternalTagGroups: true
+	  #+END_SRC
+
 	  Here is a query that might be using that in your vscode org.todoConfigs:
 	  I am defining a Todo view that will have filename, status, headline and a few property columns of various sizes
 	  and it is looking for active todo's that are either WAITING or BLOCKED that are not tagged with any tags in my PERSONAL tag group.
@@ -173,7 +183,37 @@ type Config struct {
 	    }
 	  #+END_SRC
 		EDOC */
-	TagGroups map[string][]string `yaml:"tagGroups"`
+	TagGroups           map[string][]string `yaml:"tagGroups"`
+	NoInternalTagGroups bool                `yaml:"noInternalTagGroups"`
+	/* SDOC: Settings
+	* Filters
+
+		Filters provide a built in set of expressions that can be used to
+		filter your org mode headings. By default adding to filters in your
+		config file will add new or override internal ones. If you find the
+		internal list to be annoying you can simply turn on
+
+	  #+BEGIN_SRC yaml
+	     noInternalfilters: true
+	  #+END_SRC
+
+	  Which will cause the internal filters to not be defined.
+
+	  #+BEGIN_SRC yaml
+	      "filters":
+	      	"alltasks": "!IsProject() && IsTodo() && !IsArchived() && !InTagGroup('PERSONAL')",
+	  #+END_SRC
+
+	  Filters can be used as a macro in a query using handlebars style
+	  notation in the query passed to the server.
+
+	  #+BEGIN_SRC yaml
+	      	"query": "{{ alltasks }}",
+	  #+END_SRC
+
+		EDOC */
+	Filters           map[string]string `yaml:"filters"`
+	NoInternalFilters bool              `yaml:"noInternalFilters"`
 
 	// NON SERVE CONFIGURATION OPTIONS:
 	Url            string `yaml:"url"`
@@ -230,6 +270,12 @@ func (self *Config) AddCommands() {
 		val.Cmd.SetupParameters(op)
 	}
 	flag.Usage = Usage
+}
+
+func (self *Config) StartupCommandModules(man *common.PluginManager) {
+	for _, val := range commands.CmdRegistry {
+		val.Cmd.StartPlugin(man)
+	}
 }
 
 func (self *Config) FindCommand(name string) commands.Cmd {
@@ -304,10 +350,25 @@ func (self *Config) ParseConfig() {
 			pd.Plugin.Startup(1, manager, &plugOpts)
 		}
 	}
+	// Internal filters are built in querries we would like
+	// always present in the server even if you don't specify
+	// anything in your configuration file.
+	if !self.NoInternalFilters {
+		self.AddInternalFilters()
+	}
+
+	if !self.NoInternalTagGroups {
+		self.AddInternalTagGroups()
+	}
+	manager.Filters = self.Filters
+	manager.TagGroups = self.TagGroups
+	self.StartupCommandModules(manager)
 	// Command line overrides config file.
 	// down here. This dual parse facilitates the command line
 	// override of the yaml file.
 	flag.Parse()
+	args := flag.Args()
+	self.Args = args
 
 	// Validate that all required parameters are present for
 	// us to start up.
@@ -345,6 +406,110 @@ func (self *Config) GetUpdater(name string) common.Updater {
 		}
 	}
 	return nil
+}
+
+/*
+		SDOC: Settings
+
+	  - Filters - Internal
+	    To get you started the system
+	    defines a set of internal filters
+	    that I have found personally useful.
+
+	    You are free to overwrite and extend these
+	    to your needs:
+
+	    #+BEGIN_SRC yaml
+	    AllTasks: "!IsProject() && IsTodo() && !IsArchived()"
+	    HomeTasks: "{{ AllTasks }} && InTagGroup('HOME')"
+	    WorkTasks: "{{ AllTasks }} && !InTagGroup('HOME')"
+	    WorkProjects: "IsProject() && !IsArchived() && !InTagGroup('HOME')"
+	    #+END_SRC
+
+	    NOTE: Because I tend to spend more time in org mode at work
+	    I define work tasks as being not those marked as home tasks
+	    in this way anything that is missing a label gets found
+	    while I am at work and patched up properly when I am doing
+	    my daily work triage.
+
+	    EDOC
+*/
+func (self *Config) AddInternalFilters() {
+	if self.Filters == nil {
+		self.Filters = map[string]string{}
+	}
+	if _, ok := self.Filters["AllTasks"]; !ok {
+		self.Filters["AllTasks"] = "!IsProject() && IsTodo() && !IsArchived()"
+	}
+
+	if _, ok := self.Filters["HomeTasks"]; !ok {
+		self.Filters["HomeTasks"] = "{{ AllTasks }} && InTagGroup('HOME')"
+	}
+
+	// I tend to define work tasks as everything not tagged AND things tagged as work
+	// So work items to not get lost in the shuffle.
+	if _, ok := self.Filters["WorkTasks"]; !ok {
+		self.Filters["WorkTasks"] = "{{ AllTasks }} && !InTagGroup('HOME')"
+	}
+
+	if _, ok := self.Filters["WorkProjects"]; !ok {
+		self.Filters["WorkProjects"] = "IsProject() && !IsArchived() && !InTagGroup('HOME')"
+	}
+}
+
+/*
+		SDOC: Settings
+
+	  - Tag Groups - Internal
+	    To get you started the system
+	    defines a set of internal tag groups
+	    that I have found personally useful.
+
+	    You are free to overwrite and extend these
+	    to your needs:
+
+	    #+BEGIN_SRC yaml
+	    tagGroups:
+	    PERSONAL:
+
+	  - FAMILY
+
+	  - ME
+
+	  - PERSONAL
+	    WORK:
+
+	  - WORK
+
+	  - BACKLOG
+
+	  - CONFLUENCE
+	    #+END_SRC
+
+	    I have gone back and forth between using HOME
+	    and PERSONAL as my tag group name so
+	    by default they are aliased.
+	    EDOC
+*/
+func (self *Config) AddInternalTagGroups() {
+	if self.TagGroups == nil {
+		self.TagGroups = map[string][]string{}
+	}
+	personal := []string{
+		"FAMILY", "ME", "PERSONAL",
+	}
+	if _, ok := self.TagGroups["PERSONAL"]; !ok {
+		self.TagGroups["PERSONAL"] = personal
+	}
+	if _, ok := self.TagGroups["HOME"]; !ok {
+		self.TagGroups["HOME"] = personal
+	}
+	work := []string{
+		"WORK", "BACKLOG", "CONFLUENCE",
+	}
+	if _, ok := self.TagGroups["WORK"]; !ok {
+		self.TagGroups["WORK"] = work
+	}
 }
 
 var config *Config

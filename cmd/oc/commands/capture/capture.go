@@ -77,6 +77,9 @@ func (self *Capture) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *Capture) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *Capture) SetupParameters(fset *flag.FlagSet) {
 	//fmt.Printf("CAP CALLED\n")
 	//fset := flag.NewFlagSet("capture", flag.ExitOnError)
@@ -176,6 +179,9 @@ type CaptureTemplate struct {
 
 func (self *CaptureTemplate) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
+}
+
+func (self *CaptureTemplate) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *CaptureTemplate) SetupParameters(*flag.FlagSet) {

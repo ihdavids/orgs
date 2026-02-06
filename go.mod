@@ -26,6 +26,7 @@ require (
 	github.com/ihdavids/go-org v1.6.3-0.20240324000001-3f98561d9795
 	github.com/ihdavids/govaluate v0.0.0-20231220060452-759d66a62509
 	github.com/ihdavids/tablewriter v0.0.0-20231130030027-2e70cfc41f0c
+	github.com/junegunn/fzf v0.65.2
 	github.com/koki-develop/go-fzf v0.15.0
 	github.com/labstack/gommon v0.4.1
 	github.com/muesli/reflow v0.3.0
@@ -40,6 +41,7 @@ require (
 )
 
 require (
+	9fans.net/go v0.0.7 // indirect
 	cloud.google.com/go/compute v1.10.0 // indirect
 	github.com/ChannelMeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61 // indirect
 	github.com/Masterminds/goutils v1.1.0 // indirect
@@ -70,7 +72,6 @@ require (
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jinzhu/copier v0.0.0-20180308034124-7e38e58719c3 // indirect
-	github.com/junegunn/fzf v0.65.2 // indirect
 	github.com/junegunn/go-shellwords v0.0.0-20250127100254-2aa3b3277741 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -84,6 +85,7 @@ require (
 	github.com/niklasfasching/go-org v1.7.0 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rogpeppe/godef v1.1.3-0.20250918165420-5634abc2f36e // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	github.com/theckman/go-flock v0.4.0 // indirect
 	github.com/tidwall/gjson v0.0.0-20180711011033-ba784d767ac7 // indirect
@@ -91,8 +93,10 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	golang.org/x/crypto v0.39.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
+	golang.org/x/mod v0.27.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/tools v0.36.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0 // indirect
@@ -114,10 +118,10 @@ require (
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/teambition/rrule-go v1.8.0 // indirect
 	github.com/zalando/go-keyring v0.2.3
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/term v0.34.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 	gopkg.in/yaml.v3 v3.0.1

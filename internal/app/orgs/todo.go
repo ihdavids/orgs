@@ -874,6 +874,11 @@ func EvalForNodes(exp *Expr, v *org.Section, f *common.OrgFile, nodes []*org.Sec
 
 func QueryStringNodesOnFile(query string, file *common.OrgFile) ([]*org.Section, error) {
 	var nodes []*org.Section
+
+	// Render {{ FILTER }} in our template
+	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
+	query = Conf().PlugManager.Tempo.ExecuteTemplateString(query, ctx)
+
 	exp, err := ParseString(&common.StringQuery{Query: query})
 	if err != nil {
 		return nodes, err
@@ -888,6 +893,12 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	var todos common.Todos
 	files := GetDb().GetFiles()
 	fmt.Printf("    > QUERY: %s\n", query.Query)
+
+	// Render {{ FILTER }} in our template
+	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
+	query.Query = Conf().PlugManager.Tempo.ExecuteTemplateString(query.Query, ctx)
+
+	fmt.Printf("    > QUERY AFTER EXPANSION: %s\n", query.Query)
 	exp, err := ParseString(query)
 	if err != nil {
 		return &todos, err

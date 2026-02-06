@@ -24,6 +24,9 @@ func (self *GrepQuery) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *GrepQuery) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *GrepQuery) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&(self.Query), "query", "", "Query")
 }

@@ -20,7 +20,10 @@ func (self *Export) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-//3484778973
+func (self *Export) StartPlugin(manager *common.PluginManager) {
+}
+
+// 3484778973
 func (self *Export) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&(self.Filename), "out", "./out.html", "output filename")
 	fset.StringVar(&(self.Query), "query", "IsTask() && HasProperty(\"EFFORT\")", "query")

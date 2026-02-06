@@ -29,6 +29,8 @@ func RestApi(router *mux.Router) {
 	router.HandleFunc("/file", CreateFile).Methods("POST")
 	router.HandleFunc("/file/{type}", RequestFile)               // html etc
 	router.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
+	router.HandleFunc("/filters", RequestFilters)                // Get all stored filters from the server
+	router.HandleFunc("/taggroups", RequestTagGroups)
 	router.HandleFunc("/grep", RequestGrep)
 	router.HandleFunc("/search", RequestTodosExpr)
 	router.HandleFunc("/lookuphash", RequestHash)
@@ -145,6 +147,18 @@ func RequestHeadings(w http.ResponseWriter, r *http.Request) {
 	res, _ := GetAllTodosInFile(fname)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// Returns all our stored tag groups
+func RequestTagGroups(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Conf().TagGroups)
+}
+
+// Returns all our stored filters
+func RequestFilters(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Conf().Filters)
 }
 
 // Request the contents of a file in a given encoding.

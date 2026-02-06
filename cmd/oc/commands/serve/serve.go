@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 type Serve struct {
@@ -14,6 +15,9 @@ type Serve struct {
 
 func (self *Serve) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
+}
+
+func (self *Serve) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *Serve) SetupParameters(fset *flag.FlagSet) {
