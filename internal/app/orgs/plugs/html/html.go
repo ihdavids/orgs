@@ -42,6 +42,7 @@ type OrgHtmlWriter struct {
 	PostWriteScripts string
 	Opts             string
 	Nodes            []OrgHeadingNode
+	isClosed         map[string]bool
 }
 
 var docStart = `
@@ -61,7 +62,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}}
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{} }
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -187,7 +188,7 @@ func HeadlineAloneHasTag(name string, h *org.Headline) bool {
 }
 
 func (w *OrgHtmlWriter) FindParent(h org.Headline) *OrgHeadingNode {
-	if h.Lvl == 0 {
+	if h.Lvl <= 1 {
 		return nil
 	}
 	if len(w.Nodes) > 0 {
@@ -195,9 +196,23 @@ func (w *OrgHtmlWriter) FindParent(h org.Headline) *OrgHeadingNode {
 		for top.Lvl != (h.Lvl-1) && len(top.Children) > 0 {
 			top = &top.Children[len(top.Children)-1]
 		}
-		return top
+		if top.Lvl < h.Lvl {
+			return top
+		}
 	}
 	return nil
+}
+
+func (w *OrgHtmlWriter) ShouldCloseById(id string) bool {
+	if _,ok := w.isClosed[id]; ok {
+		return false
+	}
+	w.isClosed[id] = true
+	return true
+}
+
+func (w *OrgHtmlWriter) ShouldClose(n *OrgHeadingNode) bool {
+	return w.ShouldCloseById(n.Id)
 }
 
 // OVERRIDE: This overrides the core method
@@ -214,6 +229,10 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
 	id := uuid.New().String()
+	parent := w.FindParent(h)
+	if (parent != nil && w.ShouldClose(parent)) {
+		w.WriteString("</div>")
+	}
 	w.WriteString(fmt.Sprintf("<div id=\"%s\" class=\"heading-wrapper\">", id))
 	w.WriteString(fmt.Sprintf("<div id=\"%s-title\" class=\"heading-title-wrapper title-level-%d\">", id, h.Lvl+1))
 	w.WriteString(fmt.Sprintf("<h%d id=\"%s-heading\"><span id=\"%s-heading-start\"></span>", h.Lvl+1, id, id))
@@ -234,7 +253,6 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 
 	addChild := false
 	if len(w.Nodes) > 0 {
-		parent := w.FindParent(h)
 		if parent != nil {
 			addChild = true
 			parent.Children = append(parent.Children, OrgHeadingNode{Id: id, Parent: parent.Id, Name: title, Children: []OrgHeadingNode{}, Lvl: h.Lvl})
@@ -248,9 +266,14 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	w.WriteString(fmt.Sprintf("<span id=\"%s-heading-end\"></span></h%d>", id, h.Lvl+1))
 	w.WriteString("</div>")
 	w.WriteString(fmt.Sprintf("<div id=\"%s-content\" class=\"heading-content-wrapper content-level-%d\">", id, h.Lvl+1))
+	w.WriteString(fmt.Sprintf("<div id=\"%s-text\" class=\"heading-content-text\">", id))
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
+	}
+
+	if (w.ShouldCloseById(id)) {
+		w.WriteString("</div>")
 	}
 	w.WriteString("</div>")
 	w.WriteString("</div>")
@@ -308,6 +331,7 @@ func (self *OrgHtmlExporter) Export(db plugs.ODb, query string, to string, opts 
 	}
 */
 func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+	fmt.Printf("PPPP: %v\n", self.Props)
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
 
@@ -325,13 +349,17 @@ func (self *OrgHtmlExporter) ExportToString(db plugs.ODb, query string, opts str
 			props["title"] = title
 		}
 		theme := f.Get("HTML_THEME")
+		fontfamily := f.Get("HTML_FONTFAMILY")
+		if fontfamily == "" {
+			fontfamily = self.Props["fontfamily"].(string)
+		}
 		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme)
+			self.Props["stylesheet"] = GetStylesheet(theme, fontfamily)
 		}
 		// This overrides the theme if present
 		style := f.Get("HTML_STYLE")
 		if style != "" {
-			self.Props["stylesheet"] = GetStylesheet(style)
+			self.Props["stylesheet"] = GetStylesheet(style, fontfamily)
 		}
 		attr := f.Get("ATTR_BODY_HTML")
 		self.Props["havebodyattr"] = false
@@ -393,11 +421,13 @@ func NewHtmlExp() *OrgHtmlExporter {
 var hljsver = "11.9.0"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
-func GetStylesheet(name string) string {
+func GetStylesheet(name string, fontfamily string) string {
 	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
 		// HACK: We probably do not alway want to do this. Need to think of a better way to handle this!
 		re := regexp.MustCompile(`url\(([^)]+)\)`)
-		return re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})")
+		ff := regexp.MustCompile(`[{][{]fontfamily[}][}]`)
+
+		return ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily)
 	}
 	return ""
 }
@@ -423,7 +453,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 		m["trackheight"] = 30
 	}
 	if _, ok := m["stylesheet"]; !ok || force_reload_style {
-		m["stylesheet"] = GetStylesheet("default")
+		m["stylesheet"] = GetStylesheet("default", m["fontfamily"].(string))
 	}
 	if _, ok := m["hljscdn"]; !ok {
 		m["hljs_cdn"] = hljscdn
@@ -433,9 +463,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["wordcloud"]; !ok {
 		m["wordcloud"] = false
-	}
-	if _, ok := m["fontfamily"]; !ok {
-		m["fontfamily"] = "Inconsolata"
 	}
 	if _, ok := m["theme"]; !ok {
 		m["theme"] = "default"

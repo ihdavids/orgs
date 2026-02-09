@@ -13,22 +13,24 @@
   
   h1, h2, h3, h4 {
 	margin: 2.5rem 0 1.5rem 0;
-	line-height: 1.25; }
+	line-height: 1.25; 
+  user-select: none; /* Prevent text selection */
+	font-family: '{{fontfamily}}';
+  }
 
   h1 {
 	font-size: 22pt;
   }
   h2 {
 	font-size: 20pt;
-	font-family: 'Courier New';
 	color:#888;
   }
   h3 {
-	font-size: 16pt;
+	font-size: 17pt;
 	color:#777;
   }
   h4 {
-	font-size: 14pt;
+	font-size: 15pt;
   }
   
   .title {
@@ -135,9 +137,11 @@
   }
   
   .timestamp {
-	background-color: #eee;
-	padding: 0.05em 0.2em;
-	border: 1px solid #ccc; }
+		padding: 0px;
+		margin: 0px;
+		border: 1px dotted #222;
+		color: #444;
+	}
 
 
   table {
@@ -202,7 +206,7 @@ li > ul {
 .node-link {
   cursor: pointer;
   user-select: none; /* Prevent text selection */
-  font-size: 2vw;
+  font-size: 1.5vw;
 }
 
 /* Create the caret/arrow with a unicode, and style it */
@@ -217,14 +221,16 @@ li > ul {
 .caret {
   cursor: pointer;
   user-select: none; /* Prevent text selection */
-  font-size: 2vw;
+  font-size: 1.5vw;
 }
 
 /* Create the caret/arrow with a unicode, and style it */
 .caret::before {
   /*content: "\25B6";*/
   /*content: "\21ac";*/
-  content: "\203A";
+  /*content: "\203A";*/
+  content: "\2295";
+  font-size: 2.5vw;
   color: cyan;
   font-weight: 900;
   display: inline-block;
@@ -233,7 +239,8 @@ li > ul {
 
 /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
 .caret-down::before {
-  transform: rotate(90deg);
+  content: "\2212";
+  /*transform: rotate(90deg);*/
 }
 
 /* Style the caret/arrow */
