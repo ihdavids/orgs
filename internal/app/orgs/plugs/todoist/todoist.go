@@ -1,10 +1,22 @@
 package todoist
 
+/* SDOC: Pollers
+
+* Todoist
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+    - name: "todoist"
+      token: "todoist api token"
+	#+END_SRC
+
+EDOC */
 import (
 	"context"
 	"fmt"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 
 	"github.com/ides15/todoist"
 )
@@ -19,7 +31,7 @@ func (self *Todoist) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *Todoist) Update(db plugs.ODb) {
+func (self *Todoist) Update(db common.ODb) {
 	fmt.Printf("Todoist Update...\n")
 	if self.client != nil {
 		projects, _, err := self.client.Projects.List(context.Background(), "")
@@ -68,7 +80,7 @@ func (self *Todoist) Update(db plugs.ODb) {
 	}
 }
 
-func (self *Todoist) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *Todoist) Startup(freq int, manager *common.PluginManager, opts *common.PluginOpts) {
 	var err error
 	self.client, err = todoist.NewClient(self.Token)
 	if err != nil {
@@ -78,7 +90,7 @@ func (self *Todoist) Startup(freq int, manager *plugs.PluginManager, opts *plugs
 
 // init function is called at boot
 func init() {
-	plugs.AddPoller("todoist", func() plugs.Poller {
+	common.AddPoller("todoist", func() common.Poller {
 		return &Todoist{}
 	})
 }

@@ -8,6 +8,9 @@
 \usepackage[greek,english]{babel}
 \usepackage{CJKutf8}
 \usepackage{graphicx}
+% Required by minted for code coloring
+%\usepackage{pygmentize}
+\usepackage{minted}
 \usepackage{grffile}
 \usepackage{longtable}
 \usepackage{wrapfig}

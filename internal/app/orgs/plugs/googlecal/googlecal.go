@@ -1,5 +1,33 @@
 package googlecal
 
+/* SDOC: Pollers
+
+* Google Calendar Auto Sync
+
+	This integrates with your google calendar
+	Syncing the calendar locally as org mode files.
+
+	This is currently a one way sync and cannot sync
+	back to your calendar!
+
+	To create your credentials, you need to go here:
+	https://console.cloud.google.com/
+
+	#+BEGIN_SRC yaml
+    - name: "googlecal"
+      credentials: "<your creds, usually a json filename>"
+      token:       "<your token, usually a json filename>"
+      output:      "path/filename you want to output to"
+      numevents    30
+      freq: 300
+	#+END_SRC
+
+	Here we are polling every 300 seconds (5 minutes)
+	and we are asking the google API for a copy of our calendar
+	to store in path/filename.
+
+EDOC */
+
 import (
 	"context"
 	"encoding/json"
@@ -16,7 +44,7 @@ import (
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 // GO HERE: https://console.cloud.google.com/
@@ -110,7 +138,7 @@ type GoogleCalendar struct {
 	Token       string
 	Output      string
 	NumEvents   int64
-	manager     *plugs.PluginManager
+	manager     *common.PluginManager
 }
 
 func (self *GoogleCalendar) Unmarshal(unmarshal func(interface{}) error) error {
@@ -133,7 +161,7 @@ func (self *GoogleCalendar) SetCreds(data []byte) {
 	self.manager.SetPass("orgs-googlecal-creds", string(data))
 }
 
-func (self *GoogleCalendar) Update(db plugs.ODb) {
+func (self *GoogleCalendar) Update(db common.ODb) {
 	fmt.Printf("Google Calendar Update...\n")
 
 	crds := self.GetCreds()
@@ -215,13 +243,13 @@ func (self *GoogleCalendar) Update(db plugs.ODb) {
 
 }
 
-func (self *GoogleCalendar) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *GoogleCalendar) Startup(freq int, manager *common.PluginManager, opts *common.PluginOpts) {
 	self.manager = manager
 }
 
 // init function is called at boot
 func init() {
-	plugs.AddPoller("googlecal", func() plugs.Poller {
+	common.AddPoller("googlecal", func() common.Poller {
 		return &GoogleCalendar{Credentials: "credentials.json", Token: "token.json", Output: "cal.org", NumEvents: 30}
 	})
 }

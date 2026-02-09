@@ -1,9 +1,8 @@
 //lint:file-ignore ST1006 allow the use of self
-package main
+package orgs
 
 import (
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -64,7 +63,7 @@ func (s *Db) FindLastChild(hash string) *common.Todo {
 }
 
 func (self *Db) FindByFile(filename string) *org.Document {
-	f := orgs.GetDb().FindByFile(filename)
+	f := GetDb().FindByFile(filename)
 	if f != nil {
 		return f.Doc
 	}
@@ -72,13 +71,13 @@ func (self *Db) FindByFile(filename string) *org.Document {
 }
 
 func (self *Db) GetFile(filename string) *common.OrgFile {
-	return orgs.GetDb().FindByFile(filename)
+	return GetDb().FindByFile(filename)
 }
 
 func (self *Db) GetFromTarget(target *common.Target, allowCreate bool) (*common.OrgFile, *org.Section) {
-	return orgs.GetDb().GetFromTarget(target, allowCreate)
+	return GetDb().GetFromTarget(target, allowCreate)
 }
 
 func (self *Db) GetFromPreciseTarget(target *common.PreciseTarget, typeId org.NodeType) (*common.OrgFile, *org.Section, org.Node) {
-	return orgs.GetDb().GetFromPreciseTarget(target, typeId)
+	return GetDb().GetFromPreciseTarget(target, typeId)
 }

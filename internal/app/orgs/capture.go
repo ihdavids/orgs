@@ -1,71 +1,69 @@
 //lint:file-ignore ST1006 allow the use of self
 package orgs
 
-/* SDOC
+/* SDOC: Editing
 
-* Capture Plugin
+* Capture
   The capture tool can take a quick snippet of text
   and turn it into a targetted org entry in a file
   of your choosing. With Refile capability Capture
   can be a major asset when helping you organize your
-  thoughts. 
+  thoughts.
 
-** Configuration
   Configuration for the system is done through
   the captureTemplates entry in your orgs.yaml file:
 
-  #+BEGIN_SRC yaml     
+  #+BEGIN_SRC yaml
     captureTemplates:
       - name: "BasicEntry"
         type: "entry"
-        target: 
+        target:
           type: "file+headline"
           filename: "test.org"
           id: "Captures"
       - name: "BasicItem"
         type: "item"
-        target: 
+        target:
           type: "file+headline"
           filename: "test.org"
           id: "Captures"
       - name: "BasicCheckItem"
         type: "checkitem"
-        target: 
+        target:
           type: "file+headline"
           filename: "test.org"
           id: "Captures"
       - name: "BasicPlain"
         type: "plain"
-        target: 
+        target:
           type: "file+headline"
           filename: "test.org"
           id: "Captures"
       - name: "BasicTable"
         type: "table-line"
-        target: 
+        target:
           type: "file+headline"
           filename: "test.org"
           id: "Captures"
       - name: "Datetree"
         type: "entry"
-        target: 
+        target:
           type: "file+datetree"
           filename: "test.org"
           id: "Captures"
-          template: ":PROPERTIES: 
+          template: ":PROPERTIES:
                         :DATE: {{date}}
                      :END:
                      {{CONTENT}}
                     "
       - name: "OlpDatetree"
         type: "entry"
-        target: 
+        target:
           type: "file+olp+datetree"
           filename: "test.org"
           id: "Captures::Level1::Level2"
     #+END_SRC
 EDOC */
-
 
 import (
 	"bufio"
@@ -74,14 +72,13 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
 type FindInsertPosition func(sec *org.Section, typeName string) *org.Pos
 
 func FindCaptureTemplate(name string) *common.CaptureTemplate {
-	for _, cap := range Conf().CaptureTemplates {
+	for _, cap := range Conf().Server.CaptureTemplates {
 		if cap.Name == name {
 			return &cap
 		}
@@ -387,7 +384,7 @@ func InsertItemUsingTemplate(args *common.Capture, filename string, sec *org.Sec
 	}
 }
 
-func Capture(db plugs.ODb, args *common.Capture) (common.ResultMsg, error) {
+func Capture(db common.ODb, args *common.Capture) (common.ResultMsg, error) {
 	var res common.ResultMsg = common.ResultMsg{}
 	temp := FindCaptureTemplate(args.Template)
 	res.Ok = false
@@ -425,7 +422,7 @@ func Capture(db plugs.ODb, args *common.Capture) (common.ResultMsg, error) {
 
 func QueryCaptureTemplates() ([]common.CaptureTemplate, error) {
 
-	var res []common.CaptureTemplate = Conf().CaptureTemplates
+	var res []common.CaptureTemplate = Conf().Server.CaptureTemplates
 	if res != nil {
 		return res, nil
 	} else {

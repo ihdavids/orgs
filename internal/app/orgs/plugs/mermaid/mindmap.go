@@ -1,8 +1,19 @@
 // EXPORTER: MindMap
-// This returns an html document containing a mind map in mermaid js format
-// This can be used in a web framework or in VsCode as a means of visualizing
-// a set of org nodes.
-// https://mermaid.js.org/syntax/mindmap.html
+/* SDOC: Exporters
+
+* MindMap
+  This returns an html document containing a mind map in mermaid js format
+  This can be used in a web framework or in VsCode as a means of visualizing
+  a set of org nodes.
+  https://mermaid.js.org/syntax/mindmap.html
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+  - name: "mindmap"
+	#+END_SRC
+
+EDOC */
 
 package mermaid
 
@@ -109,7 +120,7 @@ func getMindMapStyle(td *common.Todo) (string, string) {
 	return formatstart, formatend
 }
 
-func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db plugs.ODb, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo) {
+func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db common.ODb, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo) {
 	name := EscapeQuotes(strings.TrimSpace(td.Headline))
 	hash := getMindMapName(namesMap, td, idx)
 	indentStart := "      "
@@ -126,7 +137,7 @@ func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db plugs.ODb, name
 	plugs.ExpandTemplateIntoBuf(o, "{{.prefix}}{{.indent}}{{.hash}}{{.formatstart}}\"`{{.name}}`\"{{.formatend}}\n", m)
 }
 
-func (self *MermaidMindMap) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
 	fmt.Printf("MindMap: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -197,7 +208,7 @@ func lookForRootNode(tds common.Todos) (common.Todo, int) {
 	return minTd, cntAtMin
 }
 
-func (self *MermaidMindMap) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Println("MindMap: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -237,5 +248,5 @@ func (self *MermaidMindMap) ExportToString(db plugs.ODb, query string, opts stri
 	return res, txt
 }
 
-func (self *MermaidMindMap) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *MermaidMindMap) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 }

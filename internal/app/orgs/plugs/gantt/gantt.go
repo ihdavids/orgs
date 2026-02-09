@@ -1,7 +1,28 @@
 //lint:file-ignore ST1006 allow the use of self
 // EXPORTER: Gantt Chart
-// This is a google gantt chart based exporter. It returns an
-// html page structured to display a google gantt chart with the respective nodes.
+/* SDOC: Exporters
+
+* Gantt
+  This is a google gantt chart based exporter. It returns an
+  html page structured to display a google gantt chart with the respective nodes.
+
+  To enable the plugin you should add the following to your orgs.yaml file.
+
+
+	#+BEGIN_SRC yaml
+  - name: "gantt"
+	#+END_SRC
+
+	Key Properties
+	- ORDERED
+	- AFTER
+
+	Other Key Properties
+	- ASSIGNED
+	- RID
+	- RESOURCEID
+
+EDOC */
 
 package gantt
 
@@ -17,7 +38,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -206,7 +226,7 @@ func formatDateForGantt(tm time.Time) string {
 	return out
 }
 
-func CheckPushDownChild(have map[string]*common.Todo, db plugs.ODb, n *common.Todo) *common.Todo {
+func CheckPushDownChild(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.Todo {
 	if n != nil {
 		if _, ok := have[n.Hash]; !ok {
 			if _, ok2 := n.Props["ORDERED"]; ok2 {
@@ -223,7 +243,7 @@ func CheckPushDownChild(have map[string]*common.Todo, db plugs.ODb, n *common.To
 	return n
 }
 
-func After(have map[string]*common.Todo, db plugs.ODb, n *common.Todo) *common.Todo {
+func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.Todo {
 	var dep *common.Todo = nil
 	if p, ok := n.Props["AFTER"]; ok && p != "" {
 		// Search by ID
@@ -278,7 +298,7 @@ func HeadlineAloneHasTag(name string, tags []string) bool {
 	return false
 }
 
-func GetResource(db plugs.ODb, resource string, td *common.Todo) string {
+func GetResource(db common.ODb, resource string, td *common.Todo) string {
 	if res, ok := td.Props["ASSIGNED"]; ok {
 		resource = res
 	}
@@ -305,7 +325,7 @@ func ReplaceQuotes(str string) string {
 	return strings.ReplaceAll(str, "\"", "")
 }
 
-func (self *Gantt) ExportRes(o *bytes.Buffer, db plugs.ODb, have map[string]*common.Todo, idx int, td *common.Todo) {
+func (self *Gantt) ExportRes(o *bytes.Buffer, db common.ODb, have map[string]*common.Todo, idx int, td *common.Todo) {
 	resource := "unknown"
 	percentDone := "0"
 	duration := "1"
@@ -385,7 +405,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	t.Execute(o, m)
 }
 
-func (self *Gantt) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *Gantt) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
 	fmt.Printf("GANTT: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -432,7 +452,7 @@ func (self *Gantt) Export(db plugs.ODb, query string, to string, opts string, pr
 	return res
 }
 
-func (self *Gantt) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *Gantt) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Println("GANTT: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
@@ -462,7 +482,7 @@ func (self *Gantt) ExportToString(db plugs.ODb, query string, opts string, props
 	return res, txt
 }
 
-func (self *Gantt) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *Gantt) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 }
 
 func NewGantt() *Gantt {
@@ -486,7 +506,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("gantt", func() plugs.Exporter {
+	common.AddExporter("gantt", func() common.Exporter {
 		return &Gantt{Props: ValidateMap(map[string]interface{}{})}
 	})
 }

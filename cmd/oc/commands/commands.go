@@ -15,6 +15,7 @@ import (
 )
 
 type Cmd interface {
+	StartPlugin(manager *common.PluginManager)
 	Unmarshal(unmarshal func(interface{}) error) error
 	Exec(core *Core)
 	SetupParameters(*flag.FlagSet)
@@ -101,18 +102,23 @@ var (
 	space   = []byte{' '}
 )
 
+type StartServerThunk func(sets *common.ServerSettings)
+
 type Core struct {
 	Messages       chan string
 	Send           chan []byte
 	Rest           common.Rest
 	EditorTemplate []string
+	StartServer    StartServerThunk
+	ServerSettings *common.ServerSettings
 }
 
-func NewCore(rurl string) *Core {
+func NewCore(rurl string, sets *common.ServerSettings) *Core {
 	core := new(Core)
 	core.Rest = common.Rest{Url: rurl, Header: http.Header{}}
 	// TODO: Make this configurable
 	core.Rest.Insecure()
+	core.ServerSettings = sets
 	return core
 }
 

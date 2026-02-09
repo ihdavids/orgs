@@ -8,6 +8,20 @@ package git
 //     freq: 300
 //     gitpath: "C:/Program Files/Git/bin/git.exe"
 
+/* SDOC: Pollers
+
+* Git
+  Syncs the first directory found in your OrgDirs with git automatically
+  Can currently only sync one dir.
+
+	#+BEGIN_SRC yaml
+  - name: "git"
+    freq: 300
+    gitpath: "C:/Program Files/Git/bin/git.exe"
+	#+END_SRC
+
+EDOC */
+
 import (
 	"bytes"
 	"fmt"
@@ -16,7 +30,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 type Git struct {
@@ -122,7 +136,7 @@ func (self *Git) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *Git) Update(db plugs.ODb) {
+func (self *Git) Update(db common.ODb) {
 	if self.ok {
 		fmt.Printf("Git Update...\n")
 		modified := self.haveChanges()
@@ -143,7 +157,7 @@ func (self *Git) Update(db plugs.ODb) {
 	}
 }
 
-func (self *Git) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *Git) Startup(freq int, manager *common.PluginManager, opts *common.PluginOpts) {
 	gitPath, err := exec.LookPath(self.GitPath)
 	if err != nil {
 		log.Printf("Failed to find git during git startup! ABORT")
@@ -165,7 +179,7 @@ func (self *Git) Startup(freq int, manager *plugs.PluginManager, opts *plugs.Plu
 
 // init function is called at boot
 func init() {
-	plugs.AddPoller("git", func() plugs.Poller {
+	common.AddPoller("git", func() common.Poller {
 		return &Git{GitPath: "git"}
 	})
 }

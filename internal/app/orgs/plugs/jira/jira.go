@@ -1,5 +1,36 @@
 package jira
 
+// -----------------------------------------------------------
+/* SDOC: Pollers
+
+* Jira
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+    - name: "jira"
+      endpoint: "your endpoint https://go-jira.atlassian.net"
+      user: "The user operating on jira"
+      queries: "List of JiraSearch objects"
+	#+END_SRC
+
+EDOC */
+// -----------------------------------------------------------
+/* SDOC: Updaters
+
+* Jira
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+    - name: "jira"
+      endpoint: "your endpoint https://go-jira.atlassian.net"
+      user: "The user operating on jira"
+      queries: "List of JiraSearch objects"
+	#+END_SRC
+
+EDOC */
+
 import (
 	"encoding/base64"
 	"fmt"
@@ -14,7 +45,6 @@ import (
 	"github.com/go-jira/jira"
 	"github.com/go-jira/jira/jiradata"
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -43,7 +73,7 @@ type JiraSync struct {
 	// Possible values are "api-token", "bearer-token" or "session".
 	// The default is "api-token" when the service endpoint ends with "atlassian.net", otherwise it "session".  Session authentication
 	// will promt for user password and use the /auth/1/session-login endpoint.
-	AuthenticationMethod string `yaml:"authentication-method`
+	AuthenticationMethod string `yaml:"authentication-method"`
 	// This is required should be your full login name
 	Login string
 
@@ -55,7 +85,7 @@ type JiraSync struct {
 	//NumEvents   int64
 	hclient *oreo.Client
 	out     *logging.Logger
-	pm      *plugs.PluginManager
+	pm      *common.PluginManager
 }
 
 // curl -D- -u username:password -X POST --data '{"fields":{"project":{"key": "PROJECTKEY"},"summary": "REST ye merry gentlemen.","description": "Creating of an issue using project keys and issue type names using the REST API","issuetype": {"name": "Bug"}}}' -H "Content-Type: application/json" https://mycompanyname.atlassian.net/rest/api/2/issue/
@@ -79,15 +109,15 @@ func (self *JiraSync) AuthMethodIsToken() bool {
 	return self.AuthMethod() == "api-token" || self.AuthMethod() == "bearer-token"
 }
 
-func (self *JiraSync) GetPass(manager *plugs.PluginManager) string {
-	return manager.GetPass("orgs-jira", "keyring")
+func (self *JiraSync) GetPass(manager *common.PluginManager) string {
+	return manager.GetPass("orgs-jira", "keyring-nonfatal")
 }
 
 func (self *JiraSync) GetLogin() string {
 	return self.Login
 }
 
-func (self *JiraSync) register(o *oreo.Client, manager *plugs.PluginManager) *oreo.Client {
+func (self *JiraSync) register(o *oreo.Client, manager *common.PluginManager) *oreo.Client {
 	self.GetPass(manager)
 	o = o.WithPreCallback(func(req *http.Request) (*http.Request, error) {
 		if self.AuthMethod() == "api-token" {
@@ -242,7 +272,7 @@ func fixGDPRUserFields(ua jira.HttpClient, endpoint string, meta jiradata.FieldM
 	return nil
 }
 
-func (self *JiraSync) CreateJira(db plugs.ODb, target *common.Target) (common.ResultMsg, error) {
+func (self *JiraSync) CreateJira(db common.ODb, target *common.Target) (common.ResultMsg, error) {
 	res := common.ResultMsg{}
 	res.Ok = false
 	res.Msg = "Unknown error, did not create JIRA"
@@ -424,7 +454,7 @@ func (self *JiraSync) CreateJira(db plugs.ODb, target *common.Target) (common.Re
 	return res, nil
 }
 
-func (self *JiraSync) DoQuery(db plugs.ODb) {
+func (self *JiraSync) DoQuery(db common.ODb) {
 	// Simple list of issues
 	// listTemp := "{% for i in data.Issues %}{{ i.Key | add: \":\" | ljust:12 }}{{ i.Fields.summary }}\n{% endfor %}"
 
@@ -500,7 +530,7 @@ func (self *JiraSync) DoQuery(db plugs.ODb) {
 	*/
 }
 
-func (self *JiraSync) Update(db plugs.ODb) {
+func (self *JiraSync) Update(db common.ODb) {
 	fmt.Printf("Jira Sync Update...\n")
 	self.DoQuery(db)
 	/*
@@ -628,7 +658,7 @@ func toOrgEffort(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errO
 	return pongo2.AsValue(""), nil
 }
 
-func (self *JiraSync) Startup(freq int, manager *plugs.PluginManager, popt *plugs.PluginOpts) {
+func (self *JiraSync) Startup(freq int, manager *common.PluginManager, popt *common.PluginOpts) {
 	if !self.HaveStarted {
 		self.HaveStarted = true
 		pongo2.RegisterFilter("orgStatus", toOrgStatus)
@@ -644,7 +674,7 @@ func (self *JiraSync) Startup(freq int, manager *plugs.PluginManager, popt *plug
 	}
 }
 
-func (self *JiraSync) UpdateTarget(db plugs.ODb, target *common.Target, manager *plugs.PluginManager) (common.ResultMsg, error) {
+func (self *JiraSync) UpdateTarget(db common.ODb, target *common.Target, manager *common.PluginManager) (common.ResultMsg, error) {
 	return self.CreateJira(db, target)
 }
 
@@ -655,10 +685,10 @@ func init() {
 	if jiraSync == nil {
 		jiraSync = &JiraSync{User: os.Getenv("JIRA_USER"), AuthenticationMethod: "api-token"}
 	}
-	plugs.AddPoller("jira", func() plugs.Poller {
+	common.AddPoller("jira", func() common.Poller {
 		return jiraSync
 	})
-	plugs.AddUpdater("jira", func() plugs.Updater {
+	common.AddUpdater("jira", func() common.Updater {
 		return jiraSync
 	})
 }

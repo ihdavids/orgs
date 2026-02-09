@@ -1,0 +1,96 @@
+tables:
+  default:
+    vertical: false
+    template: |+
+      {% if havecaption %}\begin{table}[!h]{% endif %}
+      \begin{center}
+      {{ envs | startenv: "tabular" }}{ {{ separators }} } 
+      {% for row in rows %}{% if row.Isspecial %}\hline{% else %}{{ row.Cols | sepList: "&" | safe}} \\{% endif %}
+      {% endfor %}
+      {{ envs | endenv: "tabular" }}
+      \end{center}
+      {% if havecaption %}\end{table}{% endif %}
+headings:
+  "1":
+    template: |+
+      \chapter{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+  "2":
+    template: |+
+      \section{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+  "3":
+    template: |+
+      \subsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+  "4":
+    template: |+
+      \subsubsection{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+  "5":
+    template: |+
+      \paragraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+  "6":
+    template: |+
+      \subparagraph{{numprefix}}{% verbatim %}{{% endverbatim %}{% if showtodo %}{{status}} {% endif %}{% if showpriority %}[{{priority}}] {% endif %}{{heading}}{% if showtags %} {{tags | sepList: " "}}{% endif %}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+  PART:
+    template: |+
+      \part{{o}}{{heading}}{{c}}
+        {{content | safe}}
+  CHAPTER:
+    template: |+
+      \chapter{{o}}{{heading}}{{c}}
+        {{content | safe}}
+  TITLE:
+    template: |+
+      {% if havetitle %}\title{{o}}{{title}}{{c}}{% endif %}
+  AUTHOR:
+    template: |+
+      {% if haveauthor %}\author{{o}}{{author}}{{c}}{% endif %}
+  DATE:
+    template: |+
+      {% if havedate %}\date{{o}}{{date}}{{c}}{% endif %}
+paragraph:
+  default:
+    template: |+
+      \par {{content | safe}}
+blocks:
+  default:
+    template: |+
+      {{ envs | startenv: "{{name}}" }}
+      {{content | safe}}
+      {{ envs | endenv: "{{name}}" }}
+  inline_src:
+    template: |+
+       \begin{verbatim}{{content|safe}}\end{verbatim}
+  toc:
+    template: |+
+       {% if havetitle %}\tableofcontents{% endif %}
+  SRC:
+    template: |+
+      {{ envs | startenv: "minted" }}{% verbatim %}{{% endverbatim %}{{lang}}{% verbatim %}}{% endverbatim %}
+      {{content | safe}}
+      {{ envs | endenv: "minted" }}
+  EXAMPLE:
+    template: |+
+      {{ envs | startenv: "verbatim" }}
+      {{content | safe}}
+      {{ envs | endenv: "verbatim" }}
+  QUOTE:
+    template: |+
+      {{ envs | startenv: "displayquote" }}
+      {{content | safe}}
+      {{ envs | endenv: "displayquote" }}
+  CENTER:
+    template: |+
+      {{ envs | startenv: "center" }}
+      \centering
+      {{content | safe}}
+      {{ envs | endenv: "center" }}
+  MONSTERTYPE:
+    template: |+
+      \DndMonsterType{% verbatim %}{{% endverbatim %}{{content | safe}}{% verbatim %}}{% endverbatim %}
+
+

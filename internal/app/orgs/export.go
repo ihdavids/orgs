@@ -1,18 +1,23 @@
 package orgs
 
+/* SDOC: Editing
+* Exporters
+
+  TODO: Fill in information on working with exporters
+EDOC */
+
 import (
 	"fmt"
 	"log"
 
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
-func ExportToFile(db plugs.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
+func ExportToFile(db common.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
 	fmt.Printf("EXPORT CALLED!\n")
 	var didWrite = false
 	msg := "Unknown Error"
-	for _, exp := range Conf().Exporters {
+	for _, exp := range Conf().Server.Exporters {
 		if exp.Name == args.Name {
 			err := exp.Plugin.Export(db, args.Query, args.Filename, args.Opts, args.Props)
 			if err == nil {
@@ -33,11 +38,11 @@ func ExportToFile(db plugs.ODb, args *common.ExportToFile) (common.ResultMsg, er
 	return common.ResultMsg{Ok: didWrite, Msg: msg}, nil
 }
 
-func ExportToString(db plugs.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
+func ExportToString(db common.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
 	fmt.Printf("EXPORT String CALLED!\n")
 	var didWrite = false
 	msg := "Unknown Error"
-	for _, exp := range Conf().Exporters {
+	for _, exp := range Conf().Server.Exporters {
 		if exp.Name == args.Name {
 			err, txt := exp.Plugin.ExportToString(db, args.Query, args.Opts, args.Props)
 			if err == nil {
@@ -58,11 +63,11 @@ func ExportToString(db plugs.ODb, args *common.ExportToFile) (common.ResultMsg, 
 	return common.ResultMsg{Ok: didWrite, Msg: msg}, nil
 }
 
-func PluginUpdateTarget(db plugs.ODb, args *common.Target, name string) (common.ResultMsg, error) {
+func PluginUpdateTarget(db common.ODb, args *common.Target, name string) (common.ResultMsg, error) {
 	fmt.Printf("UPDATE CALLED!\n")
 	var didWrite = false
 	msg := "Unknown Error"
-	for _, exp := range Conf().Updaters {
+	for _, exp := range Conf().Server.Updaters {
 		if exp.Name == name {
 			res, err := exp.Plugin.UpdateTarget(db, args, Conf().PlugManager)
 			if err == nil {

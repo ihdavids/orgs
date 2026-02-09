@@ -10,8 +10,12 @@
 		-webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));
 	}
   </style>
+
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
 
 {%if wordcloud%}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -92,6 +96,22 @@ nodes =
         return null;
     }
 
+    function findNodeById(id, treeNodes) {
+        for (var i = 0; i < treeNodes.length; ++i) {
+            var x = treeNodes[i];
+            if (x.Id === id) {
+                return x;
+            }
+            if (x.Children && x.Children.length > 0) {
+                var v = findNodeById(id, x.Children);
+                if (v !== null) {
+                    return v;
+                }
+            }
+        }
+        return null;
+    }
+
     function showParent(n) {
         if (n.Parent !== "") {
             console.log("Looking for parent of: ", n.Name);
@@ -119,6 +139,7 @@ nodes =
 
     function hideEverything(n) {
         //console.log("HIDING: ", n.Name);
+        $("mark").contents().unwrap();
         $("#searchoutput").hide();
         $("#searchoutput").html("");
         $("#"+n.Id).hide();
@@ -140,7 +161,7 @@ nodes =
         treeNodes.forEach((n, i) => {
             if (n.Children && n.Children.length > 0) {
                 var $elem = $("<li><span class=\"caret caret-down\">" + n.Name + "</span></li>");
-                var $ul = $("<ul class=\"nested active\"></ul>");
+                var $ul = $("<ul class=\"nested active treeviewul\"></ul>");
                 $elem.append($ul);
                 parent.append($elem);
                 buildTreeView(n.Children, lvl + 1, $ul);
@@ -189,23 +210,29 @@ nodes =
         var allHeadings = $(".heading-content-text");
         allHeadings.each(function () {
             const content = $(this).html();
-            console.log(content);
+
             var m = content.match(re);
             if (m) {
-                elem += content;
+
+                const newText = content.replace(re, '<mark class="highlight">$&</mark>');
+                $(this).html(newText);
+
+
+                var id = $(this).parent().attr('id');
+                id = id.replace('-content', '');
+                console.log(id);
+                var n = findNodeById(id, nodes);
+                if (n) {
+                    showRecursive(n);
+                }
             }
         });
-        for (i = 0; i < allHeadings.length; i++) {
-        } 
-        var elem = $(elem);
-        
-
-
-        $("#searchoutput").append(elem);
-        $("#searchoutput").show();
+        //$("#searchoutput").append(elem);
+        //$("#searchoutput").show();
         return false;
     }
 </script>
+<script>hljs.highlightAll();</script>
 
 <style>
 {%autoescape off%}
@@ -234,7 +261,7 @@ nodes =
       <div id="master-wrapper" class="master-wrapper clear">
     	<div id="sidebar" class="sidebar" style="padding-right: 0px; margin-right: 0px; margin-left: 1px; cursor: pointer; overflow-y: auto; left: 0px; float: left; width: 25%; min-width: 150px; height: 1189px;">
             <h2>{{title}}</h2>
-            <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;">
+            <ul id="navbar" style="font: 16px / 135% 'Roboto', sans-serif;" class="treeviewul">
             </ul>
     	</div>
         <div class="display-box">

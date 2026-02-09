@@ -32,8 +32,11 @@ func (self *Refile) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
+func (self *Refile) StartPlugin(manager *common.PluginManager) {
+}
+
 func (self *Refile) SetupParameters(fset *flag.FlagSet) {
-	fmt.Printf("REFILE CALLED\n")
+	//fmt.Printf("REFILE CALLED\n")
 	// Need custom parser for this....
 	//fset.StringVar(&(self.From), "from", "", "source id")
 	//fset.StringVar(&(self.To), "head", "", "destination id")

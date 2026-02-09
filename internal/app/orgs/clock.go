@@ -1,5 +1,12 @@
 package orgs
 
+/* SDOC: Editing
+* Clocking
+  
+  TODO: Fill in information on how to use the orgs clocking features
+EDOC */
+
+
 import (
 	"encoding/json"
 	"fmt"

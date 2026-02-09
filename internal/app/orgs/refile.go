@@ -1,6 +1,12 @@
 //lint:file-ignore ST1006 allow the use of self
 package orgs
 
+/* SDOC: Editing
+* Refile
+
+  TODO: Fill in information on orgs server refiling
+EDOC */
+
 import (
 	"bufio"
 	"fmt"
@@ -8,7 +14,6 @@ import (
 	"regexp"
 
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -137,7 +142,7 @@ func DeleteTree(filename string, sec *org.Section, res *common.ResultMsg) {
 
 type ModifySourceFunc func(ofile *common.OrgFile, sec *org.Section) *org.Section
 
-func Refile(db plugs.ODb, args *common.Refile, mod ModifySourceFunc, allowCreate bool) (common.ResultMsg, error) {
+func Refile(db common.ODb, args *common.Refile, mod ModifySourceFunc, allowCreate bool) (common.ResultMsg, error) {
 	var res common.ResultMsg = common.ResultMsg{}
 	res.Ok = false
 	res.Msg = "Refile: unknown failure, did not refile"
@@ -165,7 +170,7 @@ func Refile(db plugs.ODb, args *common.Refile, mod ModifySourceFunc, allowCreate
 	return res, nil
 }
 
-func Delete(db plugs.ODb, tgt *common.Target) (common.ResultMsg, error) {
+func Delete(db common.ODb, tgt *common.Target) (common.ResultMsg, error) {
 	var res common.ResultMsg = common.ResultMsg{}
 	res.Ok = false
 	res.Msg = "Delete: unknown failure, did not delete"
@@ -206,7 +211,7 @@ func getTargetHeadings(ofile *common.OrgFile, path string, sec *org.Section, res
 
 func GetRefileTargetsList(requestedTargets []string) []string {
 	if len(requestedTargets) == 0 {
-		requestedTargets = Conf().RefileTargets
+		requestedTargets = Conf().Server.RefileTargets
 	}
 	if len(requestedTargets) == 0 {
 		return []string{}

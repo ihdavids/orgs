@@ -1,5 +1,40 @@
 package orgs
 
+/* SDOC: Editing
+* Day Page
+
+	The day page module is designed to quickly create a worklog
+	file for you every day. It is driven off a template file:
+
+	daypage.tpl
+
+	This template file will expand into a new worklog file when asked.
+	I tend to operate with a single day page per week as I find
+	a daypage per day is to verbose and a daypage per month is to messy.
+
+
+
+	#+BEGIN_SRC yaml
+    dayPagePath: "C:/path/worklog/"
+	#+END_SRC
+
+	My personal day page template looks about like so at the moment.
+
+	#+BEGIN_SRC org
+    #+TITLE:  {{day_page_title}}
+    #+AUTHOR: Me Myself
+
+    * Inbox
+
+    * Mon
+    * Tue
+    * Wed
+    * Thu
+    * Fri
+	#+END_SRC
+
+EDOC */
+
 import (
 	"fmt"
 	"io/fs"
@@ -16,8 +51,8 @@ import (
 
 func getDayPageAt(dt time.Time) time.Time {
 	change := []string{"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
-	if Conf().DayPageMode == "week" {
-		firstDay := strings.ToLower(Conf().DayPageModeWeekDay)
+	if Conf().Server.DayPageMode == "week" {
+		firstDay := strings.ToLower(Conf().Server.DayPageModeWeekDay)
 		startAt := 0
 		for i, v := range change {
 			if strings.HasPrefix(v, firstDay) {
@@ -36,16 +71,16 @@ func getDayPageFilename(from time.Time) (string, string) {
 	dt := getDayPageAt(from)
 	title := dt.Format("Mon_2006_01_02")
 	filename := title + ".org"
-	filename = path.Join(Conf().DayPagePath, filename)
+	filename = path.Join(Conf().Server.DayPagePath, filename)
 	return filename, title
 }
 
 func getPreviousDayPage(dt time.Time) (string, string) {
 	offset := -1
-	if Conf().DayPageMode == "week" {
+	if Conf().Server.DayPageMode == "week" {
 		offset = -7
 	}
-	for i := 0; i < Conf().DayPageMaxSearchBack; i++ {
+	for i := 0; i < Conf().Server.DayPageMaxSearchBack; i++ {
 
 		dt = dt.AddDate(0, 0, offset)
 		filename, title := getDayPageFilename(dt)
@@ -72,7 +107,7 @@ func ParentIn(nodes []*org.Section, me *org.Section) bool {
 
 func CreateDayPage() (common.FileList, error) {
 
-	template := Conf().DayPageTemplate
+	template := Conf().Server.DayPageTemplate
 	dt := time.Now()
 	filename, title := getDayPageFilename(dt)
 	if _, err := os.Stat(filename); err != nil {

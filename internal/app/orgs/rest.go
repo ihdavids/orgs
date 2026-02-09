@@ -1,5 +1,5 @@
 //lint:file-ignore ST1006 allow the use of self
-package main
+package orgs
 
 import (
 	b64 "encoding/base64"
@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs"
 	"github.com/ihdavids/orgs/internal/common"
 
 	//"log"
@@ -23,13 +22,16 @@ import (
 	"math/rand"
 )
 
-func restApi(router *mux.Router) {
+func RestApi(router *mux.Router) {
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/orgfile", RequestOrgFile)
 	router.HandleFunc("/files", RequestFiles)
 	router.HandleFunc("/file", CreateFile).Methods("POST")
 	router.HandleFunc("/file/{type}", RequestFile)               // html etc
 	router.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
+	router.HandleFunc("/filters", RequestFilters)                // Get all stored filters from the server
+	router.HandleFunc("/taggroups", RequestTagGroups)
+	router.HandleFunc("/grep", RequestGrep)
 	router.HandleFunc("/search", RequestTodosExpr)
 	router.HandleFunc("/lookuphash", RequestHash)
 	router.HandleFunc("/todohtml/{hash}", RequestFullTodoHtml)
@@ -99,9 +101,25 @@ func GetHash(vars map[string]string, name string) (string, error) {
 func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//key := vars["id"]
-	res := orgs.GetDb().GetFiles()
+	res := GetDb().GetFiles()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// Run a grep through all our files
+func RequestGrep(w http.ResponseWriter, r *http.Request) {
+	qry := r.URL.Query().Get("query")
+	del := r.URL.Query().Get("delimeter")
+	if del == "" {
+		del = ":"
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if res, err := Grep(qry, del); err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+		json.NewEncoder(w).Encode([]string{})
+	} else {
+		json.NewEncoder(w).Encode(res)
+	}
 }
 
 // Request the contents of a file as a raw file
@@ -126,9 +144,21 @@ func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
 func RequestHeadings(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	fname := r.URL.Query().Get("filename")
-	res, _ := orgs.GetAllTodosInFile(fname)
+	res, _ := GetAllTodosInFile(fname)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// Returns all our stored tag groups
+func RequestTagGroups(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Conf().TagGroups)
+}
+
+// Returns all our stored filters
+func RequestFilters(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Conf().Filters)
 }
 
 // Request the contents of a file in a given encoding.
@@ -151,9 +181,9 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	}
 	var res common.ResultMsg
 	if local == "t" {
-		res, _ = orgs.ExportToFile(db, &opts)
+		res, _ = ExportToFile(db, &opts)
 	} else {
-		res, _ = orgs.ExportToString(db, &opts)
+		res, _ = ExportToString(db, &opts)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
@@ -165,7 +195,7 @@ func RequestRefileTargets(w http.ResponseWriter, r *http.Request) {
 	//fname := r.URL.Query().Get("filename")
 	//query := r.URL.Query().Get("query")
 	//local := r.URL.Query().Get("local")
-	targets := orgs.GetRefileTargetsList([]string{})
+	targets := GetRefileTargetsList([]string{})
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(targets)
 }
@@ -174,7 +204,7 @@ func RequestFullFileHtml(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var hash common.TodoHash = common.TodoHash(h)
-		reply, err := orgs.QueryFullFileHtml(&hash)
+		reply, err := QueryFullFileHtml(&hash)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -189,7 +219,7 @@ func RequestFullTodoHtml(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var hash common.TodoHash = common.TodoHash(h)
-		reply, err := orgs.QueryFullTodoHtml(&hash)
+		reply, err := QueryFullTodoHtml(&hash)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -204,7 +234,7 @@ func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var hash common.TodoHash = common.TodoHash(string(h))
-		reply, err := orgs.QueryFullTodo(&hash)
+		reply, err := QueryFullTodo(&hash)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -223,7 +253,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 	// TODO: Handle this and allow creation of files.
 	fmt.Println(string(body))
 	/*
-		res, err := orgs.CreateDayPage()
+		res, err := CreateDayPage()
 		if res == nil || err != nil {
 			if err == nil {
 				err = fmt.Errorf("")
@@ -244,7 +274,7 @@ func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
 		var reply common.Result
-		reply, err = orgs.ChangeStatus(&args)
+		reply, err = ChangeStatus(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -264,7 +294,7 @@ func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("Deserialized")
 		var reply common.Result
-		reply, err = orgs.ChangeProperty(&args)
+		reply, err = ChangeProperty(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -284,7 +314,7 @@ func PostToggleTags(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("Deserialized")
 		var reply common.Result
-		reply, err = orgs.ToggleTag(&args)
+		reply, err = ToggleTag(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -304,7 +334,7 @@ func PostReformat(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("Deserialized")
 		var reply common.Result
-		reply, err = orgs.Reformat(&args)
+		reply, err = Reformat(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -321,7 +351,7 @@ func RequestTodosExpr(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	var args common.StringQuery
 	args.Query = query
-	reply, err := orgs.QueryStringTodos(&args)
+	reply, err := QueryStringTodos(&args)
 	w.Header().Set("Content-Type", "application/json")
 	if err == nil {
 		json.NewEncoder(w).Encode(reply)
@@ -340,7 +370,7 @@ func RequestHash(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode("Failed to convert position value")
 		return
 	}
-	reply, err := orgs.FindNodeInFile(pos, fname)
+	reply, err := FindNodeInFile(pos, fname)
 	if err == nil {
 		json.NewEncoder(w).Encode(reply)
 	} else {
@@ -355,7 +385,7 @@ func RequestByHash(w http.ResponseWriter, r *http.Request) {
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var hash common.TodoHash = common.TodoHash(h)
 		var err error = nil
-		res := orgs.FindByHash(&hash)
+		res := FindByHash(&hash)
 		if res == nil || err != nil {
 			if err == nil {
 				err = fmt.Errorf("")
@@ -374,7 +404,7 @@ func RequestByAnyId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var hash common.TodoHash = common.TodoHash(vars["id"])
 	var err error = nil
-	res := orgs.FindByAnyId(&hash)
+	res := FindByAnyId(&hash)
 
 	if res == nil || err != nil {
 		if err == nil {
@@ -388,7 +418,7 @@ func RequestByAnyId(w http.ResponseWriter, r *http.Request) {
 
 func PostCreateDayPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	res, err := orgs.CreateDayPage()
+	res, err := CreateDayPage()
 	if res == nil || err != nil {
 		if err == nil {
 			err = fmt.Errorf("")
@@ -405,7 +435,7 @@ func PostCreateDayPage(w http.ResponseWriter, r *http.Request) {
 func RequestDayPageAt(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var args common.Date = common.Date(vars["date"])
-	res, err := orgs.GetDayPageAt(&args)
+	res, err := GetDayPageAt(&args)
 	if res == nil || err != nil {
 		if err == nil {
 			err = fmt.Errorf("")
@@ -418,7 +448,7 @@ func RequestDayPageAt(w http.ResponseWriter, r *http.Request) {
 
 // Request the daypage increment from orgs.
 func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
-	if orgs.Conf().DayPageMode == "week" {
+	if Conf().Server.DayPageMode == "week" {
 		fmt.Println("DAYPAGE INC: 7")
 		json.NewEncoder(w).Encode(7)
 	} else {
@@ -429,7 +459,7 @@ func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 
 // Request a list of capture templates defined on the server
 func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
-	res, err := orgs.QueryCaptureTemplates()
+	res, err := QueryCaptureTemplates()
 	if err != nil {
 		fmt.Printf("QueryCaptureTemplates: %s", err.Error())
 	}
@@ -451,7 +481,7 @@ func PostCapture(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = orgs.Capture(db, &args)
+		reply, err = Capture(db, &args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -467,9 +497,9 @@ func PostCapture(w http.ResponseWriter, r *http.Request) {
 func RequestMarker(w http.ResponseWriter, r *http.Request) {
 	// This a parameter rather than path
 	args := r.URL.Query().Get("name")
-	res, err := orgs.GetMarkerTag(args)
+	res, err := GetMarkerTag(args)
 	if err != nil {
-		orgs.Log().Errorf("GetMarkerErr: %s", err.Error())
+		Log().Errorf("GetMarkerErr: %s", err.Error())
 	}
 	if res == nil || err != nil {
 		if err == nil {
@@ -490,7 +520,7 @@ func PostMarker(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.Result
-		reply, err = orgs.SetMarkerTag(&args)
+		reply, err = SetMarkerTag(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -511,7 +541,7 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = orgs.Delete(db, &args)
+		reply, err = Delete(db, &args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -532,7 +562,7 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = orgs.PluginUpdateTarget(db, &args.Target, args.Name)
+		reply, err = PluginUpdateTarget(db, &args.Target, args.Name)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -553,7 +583,7 @@ func PostRefile(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = orgs.Refile(db, &args, nil, false)
+		reply, err = Refile(db, &args, nil, false)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -574,7 +604,7 @@ func PostArchive(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = orgs.Archive(db, &args)
+		reply, err = Archive(db, &args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -594,11 +624,11 @@ func RequestClock(w http.ResponseWriter, r *http.Request) {
 		Target common.Target
 	}
 	data := ClockData{}
-	active := orgs.Clock().IsClockActive()
+	active := Clock().IsClockActive()
 	data.Active = active
 	if active {
-		data.Time = *orgs.Clock().GetTime()
-		data.Target = *orgs.Clock().GetTarget()
+		data.Time = *Clock().GetTime()
+		data.Target = *Clock().GetTarget()
 	}
 	json.NewEncoder(w).Encode(data)
 }
@@ -611,7 +641,7 @@ func PostClockIn(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = orgs.Clock().ClockIn(&args)
+		reply, err = Clock().ClockIn(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -629,7 +659,7 @@ func PostClockOut(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err == nil {
 		var reply common.ResultMsg
-		reply, err = orgs.Clock().ClockOut()
+		reply, err = Clock().ClockOut()
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -650,7 +680,7 @@ func PostExecb(w http.ResponseWriter, r *http.Request) {
 		var err = json.Unmarshal(body, &args)
 		if err == nil {
 			var reply common.ResultMsg
-			reply, err = orgs.ExecBlock(db, &args)
+			reply, err = ExecBlock(db, &args)
 			if err == nil {
 				json.NewEncoder(w).Encode(reply)
 			} else {
@@ -676,7 +706,7 @@ func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 	name = strings.TrimSpace(name)
 	var rep common.ResultMsg
 	if name != "" {
-		tables := orgs.GetDb().GetNamedTables(name)
+		tables := GetDb().GetNamedTables(name)
 		if len(tables) > 0 {
 			table := tables[0]
 			max := len(table.Table.Rows)
@@ -716,7 +746,7 @@ func RequestTableNames(w http.ResponseWriter, r *http.Request) {
 		NamedTables []string
 	}
 	var rep ResultTableNames
-	tables := orgs.GetDb().GetTableNames()
+	tables := GetDb().GetTableNames()
 	if len(tables) > 0 {
 		keys := make([]string, 0, len(tables))
 		for k := range tables {
@@ -737,7 +767,7 @@ func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
 		var err = json.Unmarshal(body, &args)
 		if err == nil {
 			var reply common.ResultTableDetailsMsg
-			reply, err = orgs.FormulaDetailsAt(db, &args)
+			reply, err = FormulaDetailsAt(db, &args)
 			if err == nil {
 				fmt.Printf("RETURNING OK\n")
 				json.NewEncoder(w).Encode(reply)
@@ -765,7 +795,7 @@ func PostExect(w http.ResponseWriter, r *http.Request) {
 		var err = json.Unmarshal(body, &args)
 		if err == nil {
 			var reply common.ResultMsg
-			reply, err = orgs.ExecTableAt(db, &args)
+			reply, err = ExecTableAt(db, &args)
 			if err == nil {
 				json.NewEncoder(w).Encode(reply)
 			} else {
@@ -791,7 +821,7 @@ func PostExecAllT(w http.ResponseWriter, r *http.Request) {
 		var args string
 		var err = json.Unmarshal(body, &args)
 		if err == nil {
-			reply, errs := orgs.ExecAllTables(db, args)
+			reply, errs := ExecAllTables(db, args)
 			if len(errs) <= 0 {
 				json.NewEncoder(w).Encode(reply)
 			} else {
@@ -820,7 +850,7 @@ func RequestValidStatus(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var args common.TodoHash = common.TodoHash(h)
-		res, err := orgs.ValidStatus(&args)
+		res, err := ValidStatus(&args)
 		if err != nil {
 			if err == nil {
 				err = fmt.Errorf("")
@@ -838,7 +868,7 @@ func RequestNextSibling(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var args common.TodoHash = common.TodoHash(h)
-		res := orgs.NextSibling(&args)
+		res := NextSibling(&args)
 		if res == nil {
 			json.NewEncoder(w).Encode(fmt.Sprintf("could not get next sibling for hash %s", args))
 		} else {
@@ -853,7 +883,7 @@ func RequestPrevSibling(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var args common.TodoHash = common.TodoHash(h)
-		res := orgs.PrevSibling(&args)
+		res := PrevSibling(&args)
 		if res == nil {
 			json.NewEncoder(w).Encode(fmt.Sprintf("could not get prev sibling for hash %s", args))
 		} else {
@@ -868,7 +898,7 @@ func RequestLastChild(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var args common.TodoHash = common.TodoHash(h)
-		res := orgs.LastChild(&args)
+		res := LastChild(&args)
 		if res == nil {
 			json.NewEncoder(w).Encode(fmt.Sprintf("could not get last child for hash %s", args))
 		} else {
@@ -880,7 +910,7 @@ func RequestLastChild(w http.ResponseWriter, r *http.Request) {
 }
 
 func RequestTags(w http.ResponseWriter, r *http.Request) {
-	res := orgs.GetDb().GetAllTags()
+	res := GetDb().GetAllTags()
 	if res == nil {
 		json.NewEncoder(w).Encode("could not get tags list")
 	} else {

@@ -1,7 +1,20 @@
 //lint:file-ignore ST1006 allow the use of self
 // EXPORTER: IMPRESS JS Export
 
-package revealjs
+/*
+	SDOC: Exporters
+
+* ImpressJs
+
+		TODO More documentation on this module
+
+		#+BEGIN_SRC yaml
+	  - name: "impressjs"
+		#+END_SRC
+
+EDOC
+*/
+package impressjs
 
 import (
 	"bytes"
@@ -17,6 +30,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 )
 
@@ -33,7 +47,7 @@ type ImpressExporter struct {
 	ThemePath    string
 	TemplatePath string
 	out          *logging.Logger
-	pm           *plugs.PluginManager
+	pm           *common.PluginManager
 }
 
 type ImpressWriter struct {
@@ -236,7 +250,7 @@ func (s *ImpressExporter) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(s)
 }
 
-func (self *ImpressExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *ImpressExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("IMPRESS: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
@@ -264,7 +278,7 @@ func (e *ImpressExporter) ExpandThemePath(tname string) string {
 	return name
 }
 
-func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+func (self *ImpressExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("IMPRESS: Export string called [%s]:[%s]\n", query, opts)
 	/*
@@ -310,7 +324,7 @@ func (self *ImpressExporter) ExportToString(db plugs.ODb, query string, opts str
 	}
 }
 
-func (self *ImpressExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *ImpressExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	self.out = manager.Out
 	self.pm = manager
 }
@@ -354,7 +368,7 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("impressjs", func() plugs.Exporter {
+	common.AddExporter("impressjs", func() common.Exporter {
 		return &ImpressExporter{Props: ValidateMap(map[string]interface{}{}), ThemePath: "./templates", TemplatePath: "impress_default.tpl"}
 	})
 }

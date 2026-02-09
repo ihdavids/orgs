@@ -1,5 +1,20 @@
 package ics
 
+/* SDOC: Pollers
+
+* ICS Calendar Importer
+
+	TODO More documentation on this module
+
+	#+BEGIN_SRC yaml
+    - name: "ics"
+      timezone: "America/Los_Angeles"
+      filename: "path to ics file to import"
+      output: "where to output org data"
+	#+END_SRC
+
+EDOC */
+
 import (
 	"fmt"
 	"log"
@@ -14,7 +29,7 @@ import (
 	"io/ioutil"
 
 	"github.com/apognu/gocal"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 type LastChanged struct {
@@ -97,7 +112,7 @@ func FormatIt(input string) string {
 	return output
 }
 
-func (self *Ics) Update(db plugs.ODb) {
+func (self *Ics) Update(db common.ODb) {
 	fmt.Printf("Ics Update...%v\n", time.Now())
 	loc, err := time.LoadLocation(self.Timezone)
 	if err != nil {
@@ -172,7 +187,7 @@ func (self *Ics) Update(db plugs.ODb) {
 	}
 }
 
-func (self *Ics) Startup(freq int, manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *Ics) Startup(freq int, manager *common.PluginManager, opts *common.PluginOpts) {
 
 	self.jname = filepath.Base(self.Filename)
 	ext := path.Ext(self.jname)
@@ -188,7 +203,7 @@ func (self *Ics) Startup(freq int, manager *plugs.PluginManager, opts *plugs.Plu
 
 // init function is called at boot
 func init() {
-	plugs.AddPoller("ics", func() plugs.Poller {
+	common.AddPoller("ics", func() common.Poller {
 		return &Ics{Timezone: "America/Los_Angeles"}
 	})
 }

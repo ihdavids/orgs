@@ -1,6 +1,41 @@
 // EXPORTER: Latex Export
 
-package gantt
+/*
+	SDOC: Exporters
+
+* Latex
+
+		TODO More documentation on this module
+
+		The latex exporter can be used to generate a .tex file
+		from a set of org nodes. This can be for a variety of typesetting reasons
+		or simply as a stepping stone on the way to a pdf using any number of latex
+		tools for converting to pdf.
+
+		To set it up in your config file you do the following:
+
+		#+BEGIN_SRC yaml
+		- name: "latex"
+	      templatepath: "latex template path"
+		#+END_SRC
+
+		Converting to a pdf can be done with a variety of latex tools.
+		MacTex for instance:
+
+		#+BEGIN_SRC bash
+	    pdflatex --shell-escape ./docs.tex -output-format=pdf -o=docs.pdf
+		#+END_SRC
+
+		The Latex module uses a cascading templates as a means of
+		facilitating expansing. There is a default template (book_templates.yaml)
+		that is the fallback for all templates used in generating latex. You can
+		tweak that but beware, pongo2 templates can be a bit temperamental and
+		will expand in odd ways if you add a second set of {} on a for loop or
+		miss out on quotes in a parameter.
+
+EDOC
+*/
+package latex
 
 import (
 	"fmt"
@@ -14,8 +49,9 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/flosch/pongo2/v5"
 	"github.com/ihdavids/go-org/org"
-	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v3"
 )
@@ -31,9 +67,9 @@ func isImageOrVideoLink(n org.Node) bool {
 
 type OrgLatexExporter struct {
 	TemplatePath string
-	Props        map[string]interface{}
+	Props        map[string]any
 	out          *logging.Logger
-	pm           *plugs.PluginManager
+	pm           *common.PluginManager
 }
 
 type EnvData struct {
@@ -143,13 +179,136 @@ type TableTemplate struct {
 // These get properties
 // and the heading as parameters
 // Properties are ALWAYS uppercase
-type HeadingTemplate struct {
+type StringTemplate struct {
 	Template string
 }
 
 type DocClassConf struct {
-	Tables   map[string]TableTemplate
-	Headings map[string]HeadingTemplate
+	Tables    map[string]TableTemplate
+	Headings  map[string]StringTemplate
+	Paragraph map[string]StringTemplate
+	Blocks    map[string]StringTemplate
+}
+
+type SubTemplates struct {
+	defaultDocConf *DocClassConf
+	docconf        *DocClassConf
+}
+
+// TODO: Get rid of this!
+func (s *SubTemplates) HaveHeadingOverrides() bool {
+	return s.docconf != nil && len(s.docconf.Headings) > 0
+}
+
+func (s *SubTemplates) HeadingOverrides() map[string]StringTemplate {
+	return s.docconf.Headings
+}
+
+func (s *SubTemplates) BlockTemplate(name string, usedefault ...bool) (StringTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Blocks != nil {
+		if tbl, ok := s.docconf.Blocks[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Blocks["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Blocks[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Blocks["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return StringTemplate{""}, false
+}
+
+func (s *SubTemplates) TableTemplate(name string, usedefault ...bool) (TableTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Tables != nil {
+		if tbl, ok := s.docconf.Tables[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Tables["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Tables[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Tables["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return TableTemplate{false, ""}, false
+}
+
+func (s *SubTemplates) HeadingTemplate(name string, usedefault ...bool) (StringTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Headings != nil {
+		if tbl, ok := s.docconf.Headings[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Headings["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Headings[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Headings["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return StringTemplate{""}, false
+}
+
+func (s *SubTemplates) ParagraphTemplate(name string, usedefault ...bool) (StringTemplate, bool) {
+	useDefault := true
+	if len(usedefault) > 0 {
+		useDefault = usedefault[0]
+	}
+	if s.docconf != nil && s.docconf.Paragraph != nil {
+		if tbl, ok := s.docconf.Paragraph[name]; ok {
+			return tbl, ok
+		}
+		if tbl, ok := s.docconf.Paragraph["default"]; useDefault && ok {
+			return tbl, ok
+		}
+	}
+	if tbl, ok := s.defaultDocConf.Paragraph[name]; ok {
+		return tbl, ok
+	}
+	if tbl, ok := s.defaultDocConf.Paragraph["default"]; useDefault && ok {
+		return tbl, ok
+	}
+	return StringTemplate{""}, false
+}
+
+func MakeTemplateRegistry(defaultPath, classPath string) *SubTemplates {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+		}
+	}()
+	var t *SubTemplates = &SubTemplates{}
+	t.docconf = GetDocConf(classPath)
+	// This is our fallback, if we do not find it in our specific template, we fall back on this
+	// to make the normal export work
+	t.defaultDocConf = GetDocConf(defaultPath)
+
+	//t.docconf = GetDocConf(self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml"))
+	// This is our fallback, if we do not find it in our specific template, we fall back on this
+	// to make the normal export work
+	//t.defaultDocConf = GetDocConf(self.pm.Tempo.ExpandTemplatePath("book_templates.yaml"))
+	return t
 }
 
 type OrgLatexWriter struct {
@@ -161,8 +320,12 @@ type OrgLatexWriter struct {
 	PrettyRelativeLinks bool
 	envs                EnvironmentStack
 	docclass            string
-	docconf             *DocClassConf
+	templateRegistry    *SubTemplates
 	exporter            *OrgLatexExporter
+}
+
+func (w *OrgLatexWriter) TemplateProps() *map[string]interface{} {
+	return &w.exporter.Props
 }
 
 func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
@@ -177,7 +340,10 @@ func NewOrgLatexWriter(exp *OrgLatexExporter) *OrgLatexWriter {
 }
 
 func EscapeString(out string) string {
-	return out
+	return strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(out,
+		"_", "\\_"),
+		"&", "\\&"),
+		"$", "\\$")
 }
 
 func GetProp(name, revealName string, h org.Headline, secProps string) string {
@@ -206,7 +372,7 @@ func (self *OrgLatexExporter) Unmarshal(unmarshal func(interface{}) error) error
 	return unmarshal(self)
 }
 
-func (self *OrgLatexExporter) Export(db plugs.ODb, query string, to string, opts string, props map[string]string) error {
+func (self *OrgLatexExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	fmt.Printf("LATEX: Export called", query, to, opts)
 	err, str := self.ExportToString(db, query, opts, props)
 	if err != nil {
@@ -244,18 +410,67 @@ func GetDocConf(path string) *DocClassConf {
 	return c
 }
 
-func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts string, props map[string]string) (error, string) {
+// ----------- [ Expression Filters ] -----------------------
+
+func StartEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	var res *pongo2.Error = nil
+	if in != nil && param != nil {
+		e := in.Interface().(*EnvironmentStack)
+		s := param.String()
+		if e == nil {
+			res = &pongo2.Error{Sender: "startenv", OrigError: fmt.Errorf("startenv: Environment stack is missing, abort!")}
+		}
+		if s != "" {
+			s = strings.TrimSpace(strings.ReplaceAll(s, "\u00a0", "\n"))
+			s = strings.TrimSpace((*e).startEnvAsString(s))
+			return pongo2.AsValue(s), res
+		} else {
+			res = &pongo2.Error{Sender: "startenv", OrigError: fmt.Errorf("Environment stack requires an environment name")}
+		}
+	}
+	return pongo2.AsValue(""), res
+}
+
+func EndEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *pongo2.Error) {
+	var res *pongo2.Error = nil
+	if in != nil && param != nil {
+		e := in.Interface().(*EnvironmentStack)
+		s := param.String()
+		if e == nil {
+			res = &pongo2.Error{Sender: "endenv", OrigError: fmt.Errorf("Environment stack is missing, abort!")}
+		}
+		if s != "" {
+			s = strings.TrimSpace(strings.ReplaceAll(s, "\u00a0", "\n"))
+			s = strings.TrimSpace((*e).endEnvAsString(s))
+			return pongo2.AsValue(s), res
+		} else {
+			res = &pongo2.Error{Sender: "endenv", OrigError: fmt.Errorf("Environment stack requires an environment name")}
+		}
+	}
+	return pongo2.AsValue(""), res
+}
+
+// ----------- [ Exporter System ] -----------------------
+
+func (self *OrgLatexExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
 	fmt.Printf("LATEX: Export string called [%s]:[%s]\n", query, opts)
 
 	if f := db.FindByFile(query); f != nil {
+		for k, v := range f.BufferSettings {
+			self.Props[k] = v
+		}
 		theme := f.Get("LATEX_THEME")
 		if theme == "" {
 			theme = f.Get("LATEX_CLASS")
 		}
+		// Shorthand for braces when spaces are a problem
+		self.Props["o"] = "{"
+		self.Props["c"] = "}"
 		self.Props["docclass"] = "book"
 		if theme != "" {
 			self.Props["docclass"] = theme
+			self.Props["theme"] = theme
 		}
 		classOpts := ""
 		clsOpts := f.Get("LATEX_CLASS_OPTIONS")
@@ -270,7 +485,13 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 		}
 		w := NewOrgLatexWriter(self)
 		w.docclass = self.Props["docclass"].(string)
-		w.docconf = GetDocConf(self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml"))
+		classPath := self.pm.Tempo.ExpandTemplatePath(w.docclass + "_templates.yaml")
+		defaultPath := self.pm.Tempo.ExpandTemplatePath("book_templates.yaml")
+		w.templateRegistry = MakeTemplateRegistry(classPath, defaultPath)
+
+		self.Props["envs"] = &w.envs
+		pongo2.RegisterFilter("startenv", StartEnv)
+		pongo2.RegisterFilter("endenv", EndEnv)
 		// TODO: w.Opts = opts
 		f.Write(w)
 		//org.WriteNodes(w, f.Nodes...)
@@ -289,18 +510,16 @@ func (self *OrgLatexExporter) ExportToString(db plugs.ODb, query string, opts st
 	}
 }
 
-func (self *OrgLatexExporter) Startup(manager *plugs.PluginManager, opts *plugs.PluginOpts) {
+func (self *OrgLatexExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	self.out = manager.Out
 	self.pm = manager
+
 }
 
 func NewLatexExp() *OrgLatexExporter {
 	var g *OrgLatexExporter = new(OrgLatexExporter)
 	return g
 }
-
-var hljsver = "11.9.0"
-var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
 func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	if _, ok := m["title"]; !ok {
@@ -311,12 +530,6 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	}
 	if _, ok := m["trackheight"]; !ok {
 		m["trackheight"] = 30
-	}
-	if _, ok := m["hljscdn"]; !ok {
-		m["hljs_cdn"] = hljscdn
-	}
-	if _, ok := m["hljsstyle"]; !ok {
-		m["hljs_style"] = "monokai"
 	}
 	if _, ok := m["wordcloud"]; !ok {
 		m["wordcloud"] = false
@@ -332,11 +545,12 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 
 // init function is called at boot
 func init() {
-	plugs.AddExporter("latex", func() plugs.Exporter {
+	common.AddExporter("latex", func() common.Exporter {
 		return &OrgLatexExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "latex_default.tpl"}
 	})
 }
 
+// ----------- [ Writer ] -----------------------------
 // //////////////////////// WRITER //////////////////////////////////
 func (n *OrgLatexWriter) NodeIdx(_ int) {
 	// We do not need the node idx at this point in time
@@ -385,6 +599,13 @@ var sectionTypes = []string{
 var cleanHeadlineTitleForHTMLAnchorRegexp = regexp.MustCompile(`</?a[^>]*>`) // nested a tags are not valid HTML
 var tocHeadlineMaxLvlRegexp = regexp.MustCompile(`headlines\s+(\d+)`)
 
+func (w *OrgLatexWriter) RenderContentTemplate(temp string, content string) {
+	tp := w.TemplateProps()
+	(*tp)["content"] = strings.TrimSpace(content)
+	res := w.exporter.pm.Tempo.RenderTemplateString(temp, *tp)
+	w.WriteString(res)
+}
+
 func (w *OrgLatexWriter) WriteNodesAsString(nodes ...org.Node) string {
 	original := w.Builder
 	w.Builder = strings.Builder{}
@@ -411,27 +632,79 @@ func (w *OrgLatexWriter) HaveTitle(d *org.Document) bool {
 func (w *OrgLatexWriter) Before(d *org.Document) {
 	w.Document = d
 	w.log = d.Log
-	if title := d.Get("TITLE"); w.HaveTitle(d) {
+	tp := w.TemplateProps()
+	haveTitle := w.docclass != "dndbook" || w.HaveTitle(d)
+	(*tp)["havetitle"] = haveTitle
+	title := d.Get("TITLE")
+	if haveTitle {
 		titleDocument := d.Parse(strings.NewReader(title), d.Path)
 		if titleDocument.Error == nil {
 			title = w.WriteNodesAsString(titleDocument.Nodes...)
 		}
-		w.WriteString(fmt.Sprintf(`\title{%s}`+"\n", title))
 	}
-	if auth := d.Get("AUTHOR"); auth != "" && w.Document.GetOption("author") != "nil" {
-		titleDocument := d.Parse(strings.NewReader(auth), d.Path)
-		if titleDocument.Error == nil {
-			auth = w.WriteNodesAsString(titleDocument.Nodes...)
+	(*tp)["title"] = title
+	if tmp, ok := w.templateRegistry.HeadingTemplate("TITLE"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		// DEPRECATED
+		if title = d.Get("TITLE"); w.HaveTitle(d) {
+			titleDocument := d.Parse(strings.NewReader(title), d.Path)
+			if titleDocument.Error == nil {
+				title = w.WriteNodesAsString(titleDocument.Nodes...)
+			}
+			w.WriteString(fmt.Sprintf(`\title{%s}`+"\n", title))
 		}
-		w.WriteString(fmt.Sprintf(`\author{%s}`+"\n", auth))
 	}
-	if dt := d.Get("DATE"); dt != "" && w.Document.GetOption("date") != "nil" {
-		titleDocument := d.Parse(strings.NewReader(dt), d.Path)
-		if titleDocument.Error == nil {
-			dt = w.WriteNodesAsString(titleDocument.Nodes...)
+
+	auth := d.Get("AUTHOR")
+	haveAuth := auth != "" && w.Document.GetOption("author") != "nil"
+	(*tp)["haveauthor"] = haveAuth
+	if haveAuth {
+		doc := d.Parse(strings.NewReader(auth), d.Path)
+		if doc.Error == nil {
+			auth = w.WriteNodesAsString(doc.Nodes...)
 		}
-		w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
 	}
+	(*tp)["title"] = auth
+	if tmp, ok := w.templateRegistry.HeadingTemplate("AUTHOR"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		// DEPRECATED
+		if auth := d.Get("AUTHOR"); auth != "" && w.Document.GetOption("author") != "nil" {
+			titleDocument := d.Parse(strings.NewReader(auth), d.Path)
+			if titleDocument.Error == nil {
+				auth = w.WriteNodesAsString(titleDocument.Nodes...)
+			}
+			w.WriteString(fmt.Sprintf(`\author{%s}`+"\n", auth))
+		}
+	}
+
+	dt := d.Get("DATE")
+	haveDate := dt != "" && w.Document.GetOption("date") != "nil"
+	(*tp)["havedate"] = haveDate
+	if haveDate {
+		doc := d.Parse(strings.NewReader(dt), d.Path)
+		if doc.Error == nil {
+			dt = w.WriteNodesAsString(doc.Nodes...)
+		}
+	}
+	(*tp)["date"] = dt
+	if tmp, ok := w.templateRegistry.HeadingTemplate("DATE"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		// DEPRECATED
+		if dt := d.Get("DATE"); dt != "" && w.Document.GetOption("date") != "nil" {
+			titleDocument := d.Parse(strings.NewReader(dt), d.Path)
+			if titleDocument.Error == nil {
+				dt = w.WriteNodesAsString(titleDocument.Nodes...)
+			}
+			w.WriteString(fmt.Sprintf(`\date{%s}`+"\n", dt))
+		}
+	}
+
 	w.WriteString("\n" + `\begin{document}` + "\n")
 	if w.HaveTitle(d) {
 		w.WriteString(`\maketitle` + "\n")
@@ -451,6 +724,7 @@ func (w *OrgLatexWriter) After(d *org.Document) {
 func (w *OrgLatexWriter) WriteComment(org.Comment)               {}
 func (w *OrgLatexWriter) WritePropertyDrawer(org.PropertyDrawer) {}
 
+// TODO DEPRECATE
 func (w *OrgLatexWriter) startEnv(name string) {
 	name = w.envs.GetEnv(name)
 	vals := strings.Split(name, "|")
@@ -471,6 +745,29 @@ func (w *OrgLatexWriter) startEnv(name string) {
 	}
 }
 
+func (e *EnvironmentStack) startEnvAsString(name string) string {
+	out := ""
+	name = e.GetEnv(name)
+	vals := strings.Split(name, "|")
+	if len(vals) > 1 {
+		name = strings.TrimSpace(vals[0])
+		out += "\n" + fmt.Sprintf(`\begin{%s}`, name)
+		for _, txt := range vals[1:] {
+			txt = strings.TrimSpace(txt)
+			if strings.Contains(txt, "[") {
+				out += txt
+			} else {
+				out += fmt.Sprintf("{%s}", txt)
+			}
+		}
+		out += "\n"
+	} else {
+		out += "\n" + fmt.Sprintf(`\begin{%s}`, name) + "\n"
+	}
+	return out
+}
+
+// TODO DEPRECATE
 func (w *OrgLatexWriter) endEnv(name string) {
 	name = w.envs.GetEnv(name)
 	vals := strings.Split(name, "|")
@@ -482,67 +779,169 @@ func (w *OrgLatexWriter) endEnv(name string) {
 	}
 }
 
+func (e *EnvironmentStack) endEnvAsString(name string) string {
+	out := ""
+	name = e.GetEnv(name)
+	vals := strings.Split(name, "|")
+	if len(vals) > 1 {
+		name = strings.TrimSpace(vals[0])
+		out += "\n" + fmt.Sprintf(`\end{%s}`, name) + "\n"
+	} else {
+		out += "\n" + fmt.Sprintf(`\end{%s}`, name) + "\n"
+	}
+	return out
+}
+
+/*
+	SDOC: Exporters::Latex
+
+** Latex Blocks
+
+		Org Mode supports various block types these all appear
+		in an org file with BEGIN and END comments:
+
+		#+BEGIN_SRC org
+			#+BEGIN_QUOTE
+			Info goes here
+			#+END_QUOTE
+		#+END_SRC
+
+		The latex exporter supports the gamut of these block types
+		in its yaml templates as so:
+
+		#+BEGIN_SRC yaml
+	    blocks:
+	      SRC:
+	        template: |+
+	          {{ envs | startenv: "minted" }}{ {{ lang }} }
+	          {{content | safe}}
+	          {{ envs | endenv: "minted" }}
+	      EXAMPLE:
+	        template: |+
+	          {{ envs | startenv: "verbatim" }}
+	          {{content | safe}}
+	          {{ envs | endenv: "verbatim" }}
+	      QUOTE:
+	        template: |+
+	          {{ envs | startenv: "displayquote" }}
+	          {{content | safe}}
+	          {{ envs | endenv: "displayquote" }}
+	    #+END_SRC
+
+EDOC
+*/
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
-
+	props := w.TemplateProps()
+	// Copy over local properties for this block so they can be
+	// used in this template
+	tp := &map[string]any{}
+	for k, v := range *props {
+		(*tp)[k] = v
+	}
+	for k, v := range params {
+		(*tp)[k] = v
+	}
 	switch b.Name {
 	case "SRC":
-		// TODO: Source blocks still have to be converted... Going to need their own export flow
 		if params[":exports"] == "results" || params[":exports"] == "none" {
 			break
 		}
-		//lang := "text"
-		//if len(b.Parameters) >= 1 {
-		//	lang = strings.ToLower(b.Parameters[0])
-		//}
-		// TODO content = w.HighlightCodeBlock(b.Keywords, content, lang, false, params)
-		content = ""
-		w.startEnv("verbatim")
-		// TODO: Handle content
-		w.WriteString(EscapeString(content))
-		w.endEnv("verbatim")
-		//w.WriteString(fmt.Sprintf("<div class=\"src src-%s\">\n%s\n</div>\n", lang, content))
+		lang := "text"
+		if len(b.Parameters) >= 1 {
+			lang = strings.ToLower(b.Parameters[0])
+		}
+		if tmp, ok := w.templateRegistry.BlockTemplate("SRC"); ok {
+			(*tp)["lang"] = lang
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			// TODO: Deprecated
+			w.startEnv("minted")
+			w.WriteString(fmt.Sprintf("{%s}\n", lang))
+			w.WriteString(content)
+			w.endEnv("minted")
+		}
+
 	case "EXAMPLE":
-		w.startEnv("verbatim")
-		w.WriteString(EscapeString(content))
-		w.endEnv("verbatim")
+		if tmp, ok := w.templateRegistry.BlockTemplate("EXAMPLE"); ok {
+			(*tp)["content"] = EscapeString(content)
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.startEnv("verbatim")
+			w.WriteString(EscapeString(content))
+			w.endEnv("verbatim")
+		}
 	case "EXPORT":
-		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "html" {
+		if len(b.Parameters) >= 1 && strings.ToLower(b.Parameters[0]) == "latex" {
 			w.WriteString(content + "\n")
 		}
 	case "QUOTE":
-		w.startEnv("displayquote")
-		w.WriteString(content)
-		w.endEnv("displayquote")
+		if tmp, ok := w.templateRegistry.BlockTemplate("QUOTE"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.startEnv("displayquote")
+			w.WriteString(content)
+			w.endEnv("displayquote")
+		}
 	case "CENTER":
-		w.WriteString("\n" + `\begin{center}\n\centering\n`)
-		w.WriteString(content + "\n" + `\end{center}\n`)
+		if tmp, ok := w.templateRegistry.BlockTemplate("CENTER"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.WriteString("\n" + `\begin{center}\n\centering\n`)
+			w.WriteString(content + "\n" + `\end{center}\n`)
+		}
 	case "MONSTERTYPE":
-		w.WriteString("\n" + fmt.Sprintf(`\DndMonsterType{%s}`, content) + "\n")
+		if tmp, ok := w.templateRegistry.BlockTemplate("MONSTERTYPE"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.WriteString("\n" + fmt.Sprintf(`\DndMonsterType{%s}`, content) + "\n")
+		}
 	default:
-		w.startEnv(strings.ToLower(b.Name))
-		w.WriteString(content)
-		w.endEnv(strings.ToLower(b.Name))
+		if tmp, ok := w.templateRegistry.BlockTemplate("default"); ok {
+			(*tp)["content"] = content
+			(*tp)["envname"] = strings.ToLower(b.Name)
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.startEnv(strings.ToLower(b.Name))
+			w.WriteString(content)
+			w.endEnv(strings.ToLower(b.Name))
+		}
 	}
 
+	// TODO: Do we need to handle this?
 	if b.Result != nil && params[":exports"] != "code" && params[":exports"] != "none" {
 		org.WriteNodes(w, b.Result)
 	}
 }
 
-func (w *OrgLatexWriter) WriteResult(r org.Result) { org.WriteNodes(w, r.Node) }
+func (w *OrgLatexWriter) WriteResult(r org.Result) {
+	org.WriteNodes(w, r.Node)
+}
 
 func (w *OrgLatexWriter) WriteInlineBlock(b org.InlineBlock) {
+	tp := w.TemplateProps()
 	content := w.blockContent(strings.ToUpper(b.Name), b.Children)
 	switch b.Name {
 	case "src":
-		// TODO: is there a better source block to be using here.
-		//lang := strings.ToLower(b.Parameters[0])
-		//TODO Convert content = w.HighlightCodeBlock(b.Keywords, content, lang, true, nil)
-		//content = ""
-		w.WriteString(` \begin{verbatim} ` + content + ` \end{verbatim}` + "\n")
+		if tmp, ok := w.templateRegistry.BlockTemplate("inline_src"); ok {
+			(*tp)["content"] = content
+			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			w.WriteString(res)
+		} else {
+			w.WriteString(` \begin{verbatim} ` + content + ` \end{verbatim}` + "\n")
+		}
 	case "export":
-		if strings.ToLower(b.Parameters[0]) == "html" {
+		if strings.ToLower(b.Parameters[0]) == "latex" {
 			w.WriteString(content)
 		}
 	}
@@ -553,7 +952,7 @@ func (w *OrgLatexWriter) WriteDrawer(d org.Drawer) {
 }
 
 func (w *OrgLatexWriter) WriteKeyword(k org.Keyword) {
-	if k.Key == "HTML" {
+	if k.Key == "LATEX" {
 		w.WriteString(k.Value + "\n")
 	} else if k.Key == "TOC" {
 		if m := tocHeadlineMaxLvlRegexp.FindStringSubmatch(k.Value); m != nil {
@@ -605,8 +1004,14 @@ func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	// Need to exclude on basis of toc:nil parameter as well
 	// Not compatible with DnDBook class for some reason.
 	// Presence of a title allow TOC to work.
-	if w.docclass != "dndbook" || w.HaveTitle(d) {
-		w.WriteString("\n" + `\tableofcontents` + "\n")
+	tp := w.TemplateProps()
+	if tmp, ok := w.templateRegistry.BlockTemplate("toc"); ok {
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		if w.docclass != "dndbook" || w.HaveTitle(d) {
+			w.WriteString("\n" + `\tableofcontents` + "\n")
+		}
 	}
 	//w.WriteString(`\listoffigures` + "\n")
 	//w.WriteString(`\listoftables` + "\n")
@@ -682,6 +1087,7 @@ func (w *OrgLatexWriter) WriteDndRegionHeadline(p RegionHead, h org.Headline) bo
 	return false
 }
 
+// TODO: Can this be removed?
 var simpleDndHeadlines = [][]string{
 	{"SUBAREA", `\DndSubArea{%s}`},
 	{"AREA", `\DndArea{%s}`},
@@ -709,8 +1115,9 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", head, "\n+++++++++++++++++++++++++++++++++++++++++++\n")
 		}
 	}()
-	if w.docconf != nil && len(w.docconf.Headings) > 0 {
-		for tag, temp := range w.docconf.Headings {
+	if w.templateRegistry.HaveHeadingOverrides() {
+		// TODO Rethink how this works so we can work with fallbacks!
+		for tag, temp := range w.templateRegistry.HeadingOverrides() {
 			if HeadlineHasTag(tag, h) {
 				props := map[string]interface{}{}
 				if h.Properties != nil && len(h.Properties.Properties) > 0 {
@@ -747,24 +1154,6 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 
 func (w *OrgLatexWriter) WriteDndBookSpecialHeadlines(h org.Headline) bool {
 	return w.SpecialHeaders(h)
-	/*
-			for _, area := range simpleDndHeadlines {
-				if w.WriteDndBookAreas(area[0], area[1], h) {
-					return true
-				}
-			}
-			for _, propHead := range propertyDndBasedHeadlines {
-				if w.WriteDndPropertyHeadline(propHead, h) {
-					return true
-				}
-			}
-			for _, regHead := range regionDndBasedHeadlines {
-				if w.WriteDndRegionHeadline(regHead, h) {
-					return true
-				}
-			}
-		return false
-	*/
 }
 
 func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
@@ -779,32 +1168,106 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 	if lvl > len(sectionTypes)-1 {
 		lvl = len(sectionTypes) - 1
 	}
-	sectionFormat := sectionTypes[lvl]
-	head := ""
-	if w.Document.GetOption("todo") != "nil" && h.Status != "" {
-		head += fmt.Sprintf("%s ", h.Status)
-	}
-	if w.Document.GetOption("pri") != "nil" && h.Priority != "" {
-		head += fmt.Sprintf(`[%s] `, h.Priority)
-	}
-
-	head += w.WriteNodesAsString(h.Title...)
-	if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
-		head += strings.Join(h.Tags, " ")
-	}
-	numberPrefix := ""
-	fmt.Printf("EXPORT TEST: %s\n", w.Document.GetOption("num"))
-	if w.Document.GetOption("num") != "nil" {
-		if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
-			if lvl > num {
-				numberPrefix = "*"
-			}
+	tlvl := h.Lvl
+	// This is tricky, lets you shift heading values.
+	// So if you want to start at 1 then you just set this
+	// to 1. Lets you use book but skip chapters.
+	shift := w.Document.Get("LATEX_HEADING_SHIFT")
+	if shift != "" {
+		if s, err := strconv.Atoi(shift); err == nil && s <= (len(sectionTypes)-2) {
+			tlvl += s
 		}
 	}
-	w.WriteString("\n" + fmt.Sprintf(sectionFormat, numberPrefix, head))
-	w.WriteString("\n")
-	if content := w.WriteNodesAsString(h.Children...); content != "" {
-		w.WriteString(content)
+	if tlvl < 1 {
+		tlvl = 1
+	}
+	if tlvl > len(sectionTypes) {
+		tlvl = len(sectionTypes)
+	}
+	if tmp, ok := w.templateRegistry.HeadingTemplate(fmt.Sprintf("%d", tlvl), false); ok {
+		props := w.TemplateProps()
+		// Copy over local properties for this headline so they can be
+		// used in this template
+		tp := &map[string]any{}
+		for k, v := range *props {
+			(*tp)[k] = v
+		}
+		if h.Properties != nil {
+			for _, d := range (*h.Properties).Properties {
+				if d != nil && len(d) >= 1 {
+					k := d[0]
+					v := []string{}
+					if len(d) > 1 {
+						v = d[1:]
+					}
+					(*tp)[k] = v
+				}
+			}
+		}
+		showtodo := w.Document.GetOption("todo") != "nil" && h.Status != ""
+		(*tp)["showtodo"] = showtodo
+		(*tp)["status"] = ""
+		if showtodo {
+			(*tp)["status"] = h.Status
+		}
+		showpriority := w.Document.GetOption("pri") != "nil" && h.Priority != ""
+		(*tp)["showpriority"] = showpriority
+		(*tp)["priority"] = ""
+		if showtodo {
+			(*tp)["priority"] = h.Priority
+		}
+		head := w.WriteNodesAsString(h.Title...)
+		(*tp)["heading"] = head
+		showtags := w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0
+		(*tp)["showtags"] = showtags
+		(*tp)["tags"] = []string{}
+		if showtodo {
+			(*tp)["tags"] = h.Tags
+		}
+		numberPrefix := ""
+		if w.Document.GetOption("num") != "nil" {
+			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
+				if lvl > num {
+					numberPrefix = "*"
+				}
+			}
+		}
+		(*tp)["numprefix"] = numberPrefix
+		(*tp)["content"] = ""
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			(*tp)["content"] = content
+		}
+		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		w.WriteString(res)
+	} else {
+		sectionFormat := sectionTypes[lvl]
+		head := ""
+
+		if w.Document.GetOption("todo") != "nil" && h.Status != "" {
+			head += fmt.Sprintf("%s ", h.Status)
+		}
+		if w.Document.GetOption("pri") != "nil" && h.Priority != "" {
+			head += fmt.Sprintf(`[%s] `, h.Priority)
+		}
+
+		head += w.WriteNodesAsString(h.Title...)
+		if w.Document.GetOption("tags") != "nil" && len(h.Tags) != 0 {
+			head += strings.Join(h.Tags, " ")
+		}
+		numberPrefix := ""
+		fmt.Printf("EXPORT TEST: %s\n", w.Document.GetOption("num"))
+		if w.Document.GetOption("num") != "nil" {
+			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
+				if lvl > num {
+					numberPrefix = "*"
+				}
+			}
+		}
+		w.WriteString("\n" + fmt.Sprintf(sectionFormat, numberPrefix, head))
+		w.WriteString("\n")
+		if content := w.WriteNodesAsString(h.Children...); content != "" {
+			w.WriteString(content)
+		}
 	}
 }
 
@@ -962,32 +1425,32 @@ func (w *OrgLatexWriter) WriteRegularLink(l org.RegularLink) {
 		url = html.EscapeString(strings.ReplaceAll(strings.ReplaceAll(prefix, "%s", ""), "%h", ""))
 	}
 	switch l.Kind() {
-		case "image":
-			if l.Description == nil {
-				w.WriteString(fmt.Sprintf(`\begin{figure}
+	case "image":
+		if l.Description == nil {
+			w.WriteString(fmt.Sprintf(`\begin{figure}
   \centering
     \includegraphics[width=.5\textwidth]{%s}
 \end{figure}
 `, url))
-			} else {
-				description := strings.TrimPrefix(org.String(l.Description...), "file:")
-				w.WriteString(fmt.Sprintf(`\begin{figure}[h!]
+		} else {
+			description := strings.TrimPrefix(org.String(l.Description...), "file:")
+			w.WriteString(fmt.Sprintf(`\begin{figure}[h!]
   \centering
     \includegraphics[width=.5\textwidth]{%s}
     \caption{%s}
 \end{figure}
-`, url,description))
-			}
-		case "video":
-			/*
+`, url, description))
+		}
+	case "video":
+		/*
 			if l.Description == nil {
 				w.WriteString(fmt.Sprintf(`<video src="%s" title="%s">%s</video>`, url, url, url))
 			} else {
 				description := strings.TrimPrefix(String(l.Description...), "file:")
 				w.WriteString(fmt.Sprintf(`<a href="%s"><video src="%s" title="%s"></video></a>`, url, description, description))
 			}
-			*/
-		default:
+		*/
+	default:
 		description := url
 		if l.Description != nil {
 			description = w.WriteNodesAsString(l.Description...)
@@ -1058,7 +1521,7 @@ func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
 			if i != 0 && out != "" {
 				w.WriteString("\n")
 			}
-			w.WriteString(out)
+			w.WriteString(EscapeString(out))
 		}
 	} else {
 		w.WriteString("\n")
@@ -1066,14 +1529,42 @@ func (w *OrgLatexWriter) writeListItemContent(children []org.Node) {
 	}
 }
 
+/*
+	SDOC: Exporters::Latex
+
+** Latex Paragraph
+
+		Paragraphs, much like most org nodes
+		can be customized. By default the use the
+		standard latex par tag. Note the safe
+		filter. Paragraphs are run through latex escaping
+		by default so you will want to avoid the pongo template
+		escaping to avoid ampersand and other html style escaping
+		that are default for this framwork.
+
+		#+BEGIN_SRC yaml
+	    paragraph:
+	      default:
+	        template: |+
+	          \par {{content | safe}}
+	    #+END_SRC
+
+EDOC
+*/
 func (w *OrgLatexWriter) WriteParagraph(p org.Paragraph) {
 	if len(p.Children) == 0 {
 		return
 	}
-	if w.docclass != "dndbook" {
-		w.WriteString(`\par `)
+	out := EscapeString(w.WriteNodesAsString(p.Children...))
+	if tmp, ok := w.templateRegistry.ParagraphTemplate("default"); ok {
+		w.RenderContentTemplate(tmp.Template, out)
+	} else {
+		// TODO: Remove this!
+		if w.docclass != "dndbook" {
+			w.WriteString(`\par `)
+		}
+		w.WriteString(out)
 	}
-	org.WriteNodes(w, p.Children...)
 }
 
 func (w *OrgLatexWriter) WriteExample(e org.Example) {
@@ -1178,110 +1669,108 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 		}
 	}()
 	fmt.Printf("  == [Special Table] ==\n")
-	if w.docconf != nil {
-		fmt.Printf("    == [CONF] ==\n")
-		if tbl, ok := w.docconf.Tables[name]; ok {
-			props := map[string]interface{}{}
-			if !tbl.Vertical {
-				// Single row tables can access by name
-				// without a table reference
-				// Name is 0 row
-				// | A  | B  | C  | D  |
-				// | v1 | v2 | v3 | v4 |
-				for i, nameNode := range t.Rows[0].Columns {
-					cellName := w.WriteNodesAsString(nameNode.Children...)
-					cellName = strings.ToLower(cellName)
-					cellName = strings.ReplaceAll(cellName, "[", "")
-					cellName = strings.ReplaceAll(cellName, "]", "")
-					cellName = strings.ReplaceAll(cellName, "{", "")
-					cellName = strings.ReplaceAll(cellName, "}", "")
-					cellName = strings.ReplaceAll(cellName, " ", "")
-					fmt.Printf("  NAME: %s\n", cellName)
-					val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
-					props[cellName] = val
+	fmt.Printf("    == [CONF] ==\n")
+	if tbl, ok := w.templateRegistry.TableTemplate(name); ok {
+		props := map[string]interface{}{}
+		if !tbl.Vertical {
+			// Single row tables can access by name
+			// without a table reference
+			// Name is 0 row
+			// | A  | B  | C  | D  |
+			// | v1 | v2 | v3 | v4 |
+			for i, nameNode := range t.Rows[0].Columns {
+				cellName := w.WriteNodesAsString(nameNode.Children...)
+				cellName = strings.ToLower(cellName)
+				cellName = strings.ReplaceAll(cellName, "[", "")
+				cellName = strings.ReplaceAll(cellName, "]", "")
+				cellName = strings.ReplaceAll(cellName, "{", "")
+				cellName = strings.ReplaceAll(cellName, "}", "")
+				cellName = strings.ReplaceAll(cellName, " ", "")
+				fmt.Printf("  NAME: %s\n", cellName)
+				val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
+				props[cellName] = val
+			}
+			tbl := []map[string]interface{}{}
+			for r, row := range t.Rows {
+				if r == 0 {
+					continue
 				}
-				tbl := []map[string]interface{}{}
-				for r, row := range t.Rows {
-					if r == 0 {
-						continue
-					}
-					rr := map[string]interface{}{}
-					for c, nameNode := range t.Rows[0].Columns {
-						cellName := w.WriteNodesAsString(nameNode.Children...)
-						cellName = strings.ToLower(cellName)
-						cellName = strings.ReplaceAll(cellName, " ", "")
-						val := w.WriteNodesAsString(row.Columns[c].Children...)
-						rr[cellName] = val
-					}
-					tbl = append(tbl, rr)
-				}
-				props["tbl"] = tbl
-				ctbl := []KeyVal{}
+				rr := map[string]interface{}{}
 				for c, nameNode := range t.Rows[0].Columns {
 					cellName := w.WriteNodesAsString(nameNode.Children...)
 					cellName = strings.ToLower(cellName)
 					cellName = strings.ReplaceAll(cellName, " ", "")
-					rr := []string{}
-					for r, row := range t.Rows {
-						if r == 0 {
-							continue
-						}
-						val := w.WriteNodesAsString(row.Columns[c].Children...)
-						val = strings.TrimSpace(val)
-						if val != "" {
-							rr = append(rr, val)
-						}
-					}
-					if cellName == "cantrip" {
-						cellName = ""
-					}
-					pair := KeyVal{Key: cellName, Val: rr}
-					ctbl = append(ctbl, pair)
+					val := w.WriteNodesAsString(row.Columns[c].Children...)
+					rr[cellName] = val
 				}
-				props["ctbl"] = ctbl
-			} else {
-				// Vertical table does not get the multiple row option
-				// It's a key value pairing
-				//
-				// | key1 | value1 |
-				// | key2 | value2 |
-				//
-				for _, nameRow := range t.Rows {
-					nameNode := nameRow.Columns[0]
-					name := w.WriteNodesAsString(nameNode.Children...)
-					name = strings.ToLower(name)
-					name = strings.TrimSpace(strings.ReplaceAll(name, " ", ""))
-					if name != "" {
-						fmt.Printf("  NAME: %s\n", name)
-						val := ""
-						for j, colNode := range nameRow.Columns {
-							if j > 0 {
-								tmp := strings.TrimSpace(w.WriteNodesAsString(colNode.Children...))
-								if tmp != "" {
-									if val != "" {
-										val += ", "
-									}
-									val += tmp
+				tbl = append(tbl, rr)
+			}
+			props["tbl"] = tbl
+			ctbl := []KeyVal{}
+			for c, nameNode := range t.Rows[0].Columns {
+				cellName := w.WriteNodesAsString(nameNode.Children...)
+				cellName = strings.ToLower(cellName)
+				cellName = strings.ReplaceAll(cellName, " ", "")
+				rr := []string{}
+				for r, row := range t.Rows {
+					if r == 0 {
+						continue
+					}
+					val := w.WriteNodesAsString(row.Columns[c].Children...)
+					val = strings.TrimSpace(val)
+					if val != "" {
+						rr = append(rr, val)
+					}
+				}
+				if cellName == "cantrip" {
+					cellName = ""
+				}
+				pair := KeyVal{Key: cellName, Val: rr}
+				ctbl = append(ctbl, pair)
+			}
+			props["ctbl"] = ctbl
+		} else {
+			// Vertical table does not get the multiple row option
+			// It's a key value pairing
+			//
+			// | key1 | value1 |
+			// | key2 | value2 |
+			//
+			for _, nameRow := range t.Rows {
+				nameNode := nameRow.Columns[0]
+				name := w.WriteNodesAsString(nameNode.Children...)
+				name = strings.ToLower(name)
+				name = strings.TrimSpace(strings.ReplaceAll(name, " ", ""))
+				if name != "" {
+					fmt.Printf("  NAME: %s\n", name)
+					val := ""
+					for j, colNode := range nameRow.Columns {
+						if j > 0 {
+							tmp := strings.TrimSpace(w.WriteNodesAsString(colNode.Children...))
+							if tmp != "" {
+								if val != "" {
+									val += ", "
 								}
+								val += tmp
 							}
 						}
-						if val != "" {
-							props[name] = val
-						}
+					}
+					if val != "" {
+						props[name] = val
 					}
 				}
 			}
-			res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
-			if res != "" {
-				fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
-				w.WriteString(res)
-				return true
-			} else {
-				fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
-			}
-		} else {
-			fmt.Printf("[%s] is NOT in conf table of %d entries\n", name, len(w.docconf.Tables))
 		}
+		res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
+		if res != "" {
+			fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
+			w.WriteString(res)
+			return true
+		} else {
+			fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
+		}
+	} else {
+		fmt.Printf("[%s] is NOT in conf table entries\n", name)
 	}
 	return false
 }
@@ -1292,66 +1781,79 @@ func (w *OrgLatexWriter) HandleDndSpecialTables(t org.Table) bool {
 	if e != "" && w.SpecialTable(e, t) {
 		return true
 	}
-	/*
-		switch e {
-		case "Stats":
-			if len(t.ColumnInfos) == 3 && len(t.Rows) == 2 {
-
-				ac := w.WriteNodesAsString(t.Rows[1].Columns[0].Children...)
-				hit := w.WriteNodesAsString(t.Rows[1].Columns[1].Children...)
-				speed := w.WriteNodesAsString(t.Rows[1].Columns[2].Children...)
-				w.WriteString(fmt.Sprintf(`\DndMonsterBasics[%s  armor-class = {%s},%s  hit-points  = {%s},%s  speed       = {%s},%s]%s`, "\n", ac, "\n", hit, "\n", speed, "\n", "\n"))
-				return true
-			}
-			return false
-		case "AbilityScores":
-			if len(t.ColumnInfos) == 6 && len(t.Rows) == 2 {
-				str := w.WriteNodesAsString(t.Rows[1].Columns[0].Children...)
-				dex := w.WriteNodesAsString(t.Rows[1].Columns[1].Children...)
-				con := w.WriteNodesAsString(t.Rows[1].Columns[2].Children...)
-				int := w.WriteNodesAsString(t.Rows[1].Columns[3].Children...)
-				wis := w.WriteNodesAsString(t.Rows[1].Columns[4].Children...)
-				cha := w.WriteNodesAsString(t.Rows[1].Columns[5].Children...)
-				w.WriteString(fmt.Sprintf(`\DndMonsterAbilityScores[%s  str = {%s},%s  dex = {%s},%s  con = {%s},%s  con = {%s},%s  con = {%s},%s  con = {%s},%s]%s`,
-					"\n", str,
-					"\n", dex,
-					"\n", con,
-					"\n", int,
-					"\n", wis,
-					"\n", cha,
-					"\n", "\n"))
-				return true
-			}
-			return false
-		}
-	*/
-
 	return false
 }
 
+type TableRow struct {
+	Isspecial bool
+	Cols      []string
+}
+
+/*
+	SDOC: Exporters::Latex
+
+** Latex Tables
+
+		There are several methods of working with tables.
+		In on mode the table is exported verbatim
+
+		In another the table is exported using heading lookups
+		as properties for the table. This supports the macro
+		approach found in the DND Latex module AND the standard
+		latex table model.
+
+		This is the default template found in book_templates.yaml
+		Since book is the default export mode used by the latex exporter
+
+		This table is built as a tabular object with & separators
+		(See pongo2 for more details on the template format)
+
+		#+BEGIN_SRC yaml
+	  default:
+	    vertical: false
+	    template: |+
+	      {% if havecaption %}\begin{table}[!h]{% endif %}
+	      \begin{center}
+	      {{ envs | startenv: "tabular" }}{{ separators }}
+	      {% for row in rows %}
+	        {{% if row.Isspecial %}}
+	          \hline
+	        {% else %}
+	          {{ row.Cols | sepList: "&"" }} \\
+	        {% endif %}
+	      {% endfor %}
+	      {{ envs | endenv: "tabular" }}
+	      {% if havecaption %}\caption{ {{caption}} }{% endif %}
+	      \end{center}
+	      {% if havecaption %}\end{table}{% endif %}
+		#+END_SRC
+
+EDOC
+*/
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
-	haveTable := false
-	// Dndbook does its own formatting
-	if w.docclass != "dndbook" {
-		if w.envs.HaveCaption() {
-			w.WriteString(`\begin{table}[!h]` + "\n")
-			haveTable = true
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred in table:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+			panic("PANIC WRITING TABLE")
 		}
-		w.WriteString(`\begin{center}` + "\n")
-	} else {
+	}()
+	// Dndbook does its own formatting
+	if w.docclass == "dndbook" {
+		// TODO Handle this one!
 		if w.HandleDndSpecialTables(t) {
 			return
 		}
 	}
-	tableEnv := "tabular"
+	// TODO: Handle this one in a template!
 	if w.docclass == "dndbook" {
 		name := ""
 		if w.envs.HaveCaption() {
 			name = w.envs.GetCaption()
 		}
-		tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
+		//tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
+		fmt.Sprintf("DndTable | [header=%s]", name)
+		//w.startEnv(tableEnv)
 	}
-	w.startEnv(tableEnv)
 	cnt := len(t.ColumnInfos)
 	sep := ""
 	// Dndbook does its own formatting
@@ -1365,40 +1867,88 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 		sep += " |"
 	}
-	w.WriteString(fmt.Sprintf("{%s}\n", sep))
+	tp := w.TemplateProps()
+	(*tp)["separators"] = strings.TrimSpace(sep)
+	// REMOVED IN FAVOR OF {{ separators }} w.WriteString(fmt.Sprintf("{%s}\n", sep))
+	// TODO DND Flow will need this somehow?
 
-	inHead := len(t.SeparatorIndices) > 0 &&
-		t.SeparatorIndices[0] != len(t.Rows)-1 &&
-		(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
-	for i, row := range t.Rows {
-		if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
+	//inHead := len(t.SeparatorIndices) > 0 &&
+	//	t.SeparatorIndices[0] != len(t.Rows)-1 &&
+	//	(t.SeparatorIndices[0] != 0 || len(t.SeparatorIndices) > 1 && t.SeparatorIndices[len(t.SeparatorIndices)-1] != len(t.Rows)-1)
+
+	(*tp)["curtable"] = t
+
+	rows := []*TableRow{}
+	for _, row := range t.Rows {
+		cols := []string{}
+		for _, col := range row.Columns {
+			txt := w.WriteNodesAsString(col.Children...)
+			cols = append(cols, txt)
+		}
+		row := TableRow{
+			Isspecial: row.IsSpecial,
+			Cols:      cols}
+		rows = append(rows, &row)
+	}
+	(*tp)["rows"] = rows
+
+	/*
+		for i, row := range t.Rows {
+			if len(row.Columns) == 0 && i != 0 && i != len(t.Rows)-1 {
+				if inHead {
+					inHead = false
+				}
+			}
+			if row.IsSpecial {
+				w.WriteString(`\hline` + "\n")
+				continue
+			}
 			if inHead {
-				inHead = false
+				w.writeTableColumns(row.Columns)
+			} else {
+				w.writeTableColumns(row.Columns)
 			}
 		}
-		if row.IsSpecial {
-			w.WriteString(`\hline` + "\n")
-			continue
-		}
-		if inHead {
-			w.writeTableColumns(row.Columns)
+
+		w.endEnv(tableEnv)
+
+	*/
+	// TODO: Make this work if special tables did not expand
+
+	if tbl, ok := w.templateRegistry.TableTemplate("default"); ok {
+		if w.envs.HaveCaption() {
+			(*tp)["havecaption"] = true
+			(*tp)["caption"] = w.envs.GetCaption()
 		} else {
-			w.writeTableColumns(row.Columns)
+			(*tp)["havecaption"] = false
 		}
+		fmt.Printf("RENDERING TEMPLATE: %s\n", "default")
+		fmt.Printf("\n%v\n", tbl.Template)
+		res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, *tp)
+		fmt.Printf("RENDERED\n%v\n", res)
+		w.WriteString(res)
+
+	} else {
+		fmt.Printf("FAILED TO RENDER TEMPLATE: %s\n", "default")
+		// TODO: Show an error here! We failed
 	}
-	w.endEnv(tableEnv)
-	if haveTable && w.envs.HaveCaption() && w.docclass != "dndbook" {
-		w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
-	}
-	// dndbook does its own formatting
-	if w.docclass != "dndbook" {
-		w.WriteString(`\end{center}` + "\n")
-		if haveTable {
-			w.WriteString(`\end{table}` + "\n")
+
+	// TODO: Facilitate this write string!
+	/*
+		if haveTable && w.envs.HaveCaption() && w.docclass != "dndbook" {
+			w.WriteString(fmt.Sprintf(`\caption{%s}`, w.envs.GetCaption()) + "\n")
 		}
-	}
+		// dndbook does its own formatting
+		if w.docclass != "dndbook" {
+			w.WriteString(`\end{center}` + "\n")
+			if haveTable {
+				w.WriteString(`\end{table}` + "\n")
+			}
+		}
+	*/
 }
 
+// DEPRECATED REMOVE
 func (w *OrgLatexWriter) writeTableColumns(columns []*org.Column) {
 
 	for i, column := range columns {

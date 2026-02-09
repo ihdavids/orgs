@@ -1,6 +1,12 @@
 // This pulls constants out of the current org file header
 package orgs
 
+/* SDOC: Editing
+* Constants
+  
+  TODO: Fill in information on constants
+EDOC */
+
 import (
 	"strings"
 

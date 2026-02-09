@@ -1,7 +1,78 @@
 //lint:file-ignore ST1006 allow the use of self
 package orgs
 
+/* SDOC: Querying
+* Overview
+
+  Many operations in orgs require you to select the nodes that the operation applies to.
+  - Agendas
+  - Filtered Tabular Lists
+  - Various Exporters
+  - Etc
+
+  Lots of these things require a filtered list of nodes to operate. Orgs does this through
+  a node filter. This is an expression that is applied to nodes in the DB and returns only those
+  nodes that pass the query.
+
+  The most common expression starts with:
+
+   #+BEGIN_SRC cpp
+   !IsArchive() && IsTodo()
+   #+END_SRC
+
+   This will select all active nodes that have an active TODO status on them throughout all of your org mode files.
+   Note the negation on IsArchive() these expressions support most common operators
+
+   Agenda views will often add a date query:
+
+   #+BEGIN_SRC cpp
+   !IsArchive() && IsTodo() && OnDate('<specific date>')
+   #+END_SRC
+
+   People who follow GTD will often want lists that follow the common patterns:
+
+   #+BEGIN_SRC cpp
+   !IsArchive() && IsProject()
+   !IsArchive() && IsTodo() && IsStatus('NEXT')
+   !IsArchive() && IsTodo() && ( IsStatus('WAITING') || IsStatus('BLOCKED') )
+   #+END_SRC
+
+   This represents some of your common lists that you need to review regularly:
+   - Projects List
+   - Next Actions List
+   - Waiting On List
+
+
+** Orgs Expression Methods Reference
+
+  - *IsProject* - returns true for nodes that are defined as a project (see project definition)
+  - *HasAStatus* - returns true if a node has a valid status
+  - *IsPartOfProject* - returns true if a task is a subnode of a project node
+  - *HasTags* - returns true if a node has any tags
+  - *NoTags* - returns true if a node does not have any tags on it
+  - *InTagGroup* - cheat, returns true if any tags in a tag group are applied to a node
+  - *IsStatus* - returns true if a node has a given status
+  - *IsTodo* - returns true if a node has an active status (the same as IsActive currently)
+  - *IsActive* - returns true if the status of a node is an active status (IE not DONE)
+  - *IsTask* - Syntatical sugar for the following: "!IsArchived() && IsTodo() && !IsProject()"
+  - *IsNextTask* - Check if a headline has a NEXT action status. This is GTD support and uses the defaultNextStatus value and #+NEXT comment
+  - *IsBlockedProject* - Check if this is a project heading and it DOES NOT have a child marked NEXT.
+  - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
+  - *IsPriority* - Check if the priority matches a specific value.
+  - *HasProperty* - Returns true if the headline has the specific property
+  - *HasTable* - Checks if the node contains a table.
+  - *HasDrawer* - Checks if the node contains a drawer.
+  - *HasBlock* - Checks if the node contains a block object.
+  - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
+  - *MatchHeadline* - Run an RE against each headline and check for a match
+  - *OnDate* - Check if a todo is targetting a specific date
+  - *Today* - returns true if a node is scheduled for today
+  - *Yesterday* - returns true if a node is scheduled for yesterday
+  - *ThisWeek* - returns true if a node is scheduled for sometime this week
+EDOC */
+
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -281,6 +352,52 @@ func IsPartOfProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
 	return false
 }
 
+// This is a GTD support method. This returns true if this is a project (as defined by the system)
+// AND
+// this project does not have a NEXT status task. This is part of ensuring projects are moving
+// forward.
+func IsBlockedProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
+	// We have a headline
+	if p != nil && p.Headline != nil {
+		// This is a project
+		if IsProject(p, f) {
+			// Do any of the children have a NEXT status
+			var childHasNext bool = false
+			for _, c := range p.Children {
+				childHasNext = childHasNext || IsNextTask(c, f)
+			}
+			return childHasNext
+		}
+	}
+	return false
+}
+
+func HasTable(p *org.Section, f *common.OrgFile) bool {
+	// The body of this node has a table object in it.
+	if p != nil && p.Headline != nil {
+		return p.Headline.Tables != nil && len(p.Headline.Tables) > 0
+	}
+	return false
+}
+
+func HasBlock(p *org.Section, f *common.OrgFile) bool {
+	// The body of this node has a block object in it.
+	if p != nil && p.Headline != nil {
+		return p.Headline.Blocks != nil && len(p.Headline.Blocks) > 0
+	}
+	return false
+}
+
+func HasDrawer(p *org.Section, f *common.OrgFile) bool {
+	// The body of this node has a Drawer object in it.
+	if p != nil && p.Headline != nil {
+		return p.Headline.Drawers != nil && len(p.Headline.Drawers) > 0
+	}
+	return false
+}
+
+// Project is defined as a headline that has a headline child with
+// a status entry
 func IsProjectByChildren(p *org.Section, f *common.OrgFile) bool {
 	if p != nil && p.Headline != nil {
 		var childHasTodo bool = false
@@ -307,8 +424,19 @@ func IsArchived(p *org.Section, d *org.Document) bool {
 	return HasTag("archive", p, d) || HasTag("archived", p, d)
 }
 
+// Return true if this task has a status that is considered a NEXT actions
+// status
+func IsNextTask(p *org.Section, f *common.OrgFile) bool {
+	if p != nil && p.Headline != nil {
+		status := p.Headline.Status
+		next, _ := NextStatusFromFile(f)
+		return contains(next, status)
+	}
+	return false
+}
+
 func IsProject(p *org.Section, f *common.OrgFile) bool {
-	if Conf().UseTagForProjects {
+	if Conf().Server.UseTagForProjects {
 		return IsProjectByTag(p)
 	} else {
 		return IsProjectByChildren(p, f)
@@ -357,6 +485,10 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			//p := args[0].(*org.Section)
 			return IsActive(p, exp.File), nil
 		},
+		"IsNextTask": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return IsNextTask(p, exp.File), nil
+		},
 		"HasAStatus": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
@@ -366,6 +498,23 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			return IsPartOfProject(p, args[0].(string), exp.File), nil
+		},
+		"IsBlockedProject": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			//p := args[0].(*org.Section)
+			return IsBlockedProject(p, args[0].(string), exp.File), nil
+		},
+		"HasBlock": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return HasBlock(p, exp.File), nil
+		},
+		"HasDrawer": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return HasDrawer(p, exp.File), nil
+		},
+		"HasTable": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			return HasTable(p, exp.File), nil
 		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -725,6 +874,11 @@ func EvalForNodes(exp *Expr, v *org.Section, f *common.OrgFile, nodes []*org.Sec
 
 func QueryStringNodesOnFile(query string, file *common.OrgFile) ([]*org.Section, error) {
 	var nodes []*org.Section
+
+	// Render {{ FILTER }} in our template
+	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
+	query = Conf().PlugManager.Tempo.ExecuteTemplateString(query, ctx)
+
 	exp, err := ParseString(&common.StringQuery{Query: query})
 	if err != nil {
 		return nodes, err
@@ -739,6 +893,12 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	var todos common.Todos
 	files := GetDb().GetFiles()
 	fmt.Printf("    > QUERY: %s\n", query.Query)
+
+	// Render {{ FILTER }} in our template
+	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
+	query.Query = Conf().PlugManager.Tempo.ExecuteTemplateString(query.Query, ctx)
+
+	fmt.Printf("    > QUERY AFTER EXPANSION: %s\n", query.Query)
 	exp, err := ParseString(query)
 	if err != nil {
 		return &todos, err
@@ -750,6 +910,39 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 		}
 	}
 	return &todos, nil
+}
+
+func Grep(query string, delimeter string) ([]string, error) {
+	res := []string{}
+	if re, err := regexp.Compile(query); err != nil {
+		fmt.Printf("ERROR: failed to compile query: %v", err)
+		return res, err
+	} else {
+		files := GetDb().GetFiles()
+		for _, file := range files {
+			fh, err := os.Open(file)
+			if err != nil {
+				return res, fmt.Errorf("error opening file %s: %v", file, err)
+			}
+			defer fh.Close()
+			scanner := bufio.NewScanner(fh)
+			buf := make([]byte, 0, 64*1024)
+			scanner.Buffer(buf, 1024*1024)
+			lineNumber := 0
+			for scanner.Scan() {
+				lineNumber++
+				line := scanner.Text()
+				if re.MatchString(line) {
+					res = append(res, fmt.Sprintf("%s%s%d%s%d%s%s", file, delimeter, lineNumber, delimeter, 0, delimeter, line))
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				return res, fmt.Errorf("error reading file %s: %v", file, err)
+			}
+		}
+	}
+	return res, nil
 }
 
 func GetAllTodosInFile(filename string) (*common.Todos, error) {
@@ -1015,10 +1208,27 @@ func ValidStatusFromFile(f *common.OrgFile) ([]string, []string) {
 		if ftagstr != "" {
 			active, done = ParseTodoStates(ftagstr)
 		} else {
-			active, done = ParseTodoStates(Conf().DefaultTodoStates)
+			active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
 		}
 	} else {
-		active, done = ParseTodoStates(Conf().DefaultTodoStates)
+		active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
+	}
+	return active, done
+}
+
+func NextStatusFromFile(f *common.OrgFile) ([]string, []string) {
+	var active []string
+	var done []string
+	if f != nil {
+		// #+NEXT: NEXT | NEXTBACKLOG
+		ftagstr := f.Doc.Get("NEXT")
+		if ftagstr != "" {
+			active, done = ParseTodoStates(ftagstr)
+		} else {
+			active, done = ParseTodoStates(Conf().Server.DefaultNextStates)
+		}
+	} else {
+		active, done = ParseTodoStates(Conf().Server.DefaultNextStates)
 	}
 	return active, done
 }
@@ -1032,7 +1242,7 @@ func ValidStatus(query *common.TodoHash) (common.TodoStatesResult, error) {
 			active, done = ValidStatusFromFile(f)
 		}
 	} else {
-		active, done = ParseTodoStates(Conf().DefaultTodoStates)
+		active, done = ParseTodoStates(Conf().Server.DefaultTodoStates)
 	}
 	states := common.TodoStatesResult{Active: active, Done: done}
 	return states, nil
