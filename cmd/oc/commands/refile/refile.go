@@ -118,17 +118,23 @@ func (self *Refile) Exec(core *commands.Core) {
 		fmt.Printf("No files found to refile")
 		return
 	}
-	var toFile string
+	//var toFile string
 	var from common.Target = common.Target{Filename: "", Type: "hash", Id: ""}
 	var to common.Target = common.Target{Filename: "", Type: "hash", Id: ""}
 	GetTarget(core, &from, files)
 	GetTarget(core, &to, files)
 	if !TargetsMatch(&to, &from) {
-		//ref := common.Refile{FromId: from, ToId: to}
+		ref := common.Refile{FromId: from, ToId: to}
 		//return await this.doPost(url, {FromId: {Filename: src.filename, Id: src.id, Type: src.type }, ToId: {Filename: dest.filename, Id: dest.id, Type: dest.type }});
-		fmt.Printf("Refiling!")
-		qry["filename"] = toFile
-		//commands.SendReceivePost(core, "refile", &ref, &todos)
+		fmt.Printf("Refiling!\n")
+		//qry["filename"] = toFile
+		var res common.ResultMsg = common.ResultMsg{}
+		commands.SendReceivePost(core, "refile", &ref, &res)
+		if res.Ok {
+			fmt.Printf("Refile complete\n")
+		} else {
+			fmt.Printf("Refile failed: %v\n", res.Msg)
+		}
 	} else {
 		fmt.Printf("Target and dest cannot be the same! ABORT")
 	}
