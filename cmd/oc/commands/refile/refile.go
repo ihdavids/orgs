@@ -42,18 +42,11 @@ func (self *Refile) SetupParameters(fset *flag.FlagSet) {
 	//fset.StringVar(&(self.To), "head", "", "destination id")
 }
 
-func (self *Refile) Exec(core *commands.Core) {
-	fmt.Printf("Refile called\n")
+func GetTarget(core *commands.Core, t *common.Target, files []string) error {
 	var qry map[string]string = map[string]string{}
-	var files []string
-	commands.SendReceiveGet(core, "files", qry, &files)
-	if len(files) <= 0 {
-		fmt.Printf("No files found to refile")
-		return
-	}
-	var fromFile string
-	if self.From == nil {
+	if t != nil {
 		f, err := fzf.New(
+			fzf.WithPrompt("Source File: "),
 			fzf.WithNoLimit(true),
 			fzf.WithCountViewEnabled(true),
 			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
@@ -68,38 +61,76 @@ func (self *Refile) Exec(core *commands.Core) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fromFile = files[idx[0]]
-		fmt.Printf("FROM FILE: %s\n", fromFile)
-	}
-	qry["filename"] = fromFile
-	var todos common.Todos
-	commands.SendReceiveGet(core, "filecontents/headings", qry, &todos)
-
-	if len(todos) > 0 {
-		f, err := fzf.New(
-			fzf.WithNoLimit(true),
-			fzf.WithCountViewEnabled(true),
-			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
-				return fmt.Sprintf("headings: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
-			}),
-		)
-		if err != nil {
-			log.Fatal(err)
+		t.Filename = files[idx[0]]
+		fmt.Printf("FROM FILE: %s\n", t.Filename)
+		// GOT FILE NOW GET HEADING
+		var todos common.Todos
+		if t.Filename != "" {
+			qry["filename"] = t.Filename
+			commands.SendReceiveGet(core, "filecontents/headings", qry, &todos)
 		}
-		var idx []int = []int{}
-		idx, err = f.Find(todos, func(i int) string {
-			pre := ""
-			if todos[i].Level > 1 {
-				pre = strings.Repeat("  ", todos[i].Level-1)
+
+		if len(todos) > 0 {
+			f, err := fzf.New(
+				fzf.WithPrompt("Source Heading: "),
+				fzf.WithNoLimit(true),
+				fzf.WithCountViewEnabled(true),
+				fzf.WithCountView(func(meta fzf.CountViewMeta) string {
+					return fmt.Sprintf("headings: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
+				}),
+			)
+			if err != nil {
+				log.Fatal(err)
 			}
-			return pre + "." + " " + todos[i].Headline
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-		fromFile = todos[idx[0]].Hash
-		fmt.Printf("NODE HASH: %s\n", fromFile)
+			var idx []int = []int{}
+			idx, err = f.Find(todos, func(i int) string {
+				pre := ""
+				if todos[i].Level > 1 {
+					pre = strings.Repeat("  ", todos[i].Level-1)
+				}
+				return pre + "." + " " + todos[i].Headline
+			})
+			if err != nil {
+				log.Fatal(err)
+			}
+			t.Id = todos[idx[0]].Hash
+			fmt.Printf("NODE HASH: %s\n", t.Id)
 
+		}
+
+	}
+	return nil
+}
+
+func TargetsMatch(to, from *common.Target) bool {
+	if to.Type == from.Type && to.Id == from.Id {
+		return true
+	}
+	return false
+}
+
+func (self *Refile) Exec(core *commands.Core) {
+	fmt.Printf("Refile called\n")
+	var files []string
+	var qry map[string]string = map[string]string{}
+	commands.SendReceiveGet(core, "files", qry, &files)
+	if len(files) <= 0 {
+		fmt.Printf("No files found to refile")
+		return
+	}
+	var toFile string
+	var from common.Target = common.Target{Filename: "", Type: "hash", Id: ""}
+	var to common.Target = common.Target{Filename: "", Type: "hash", Id: ""}
+	GetTarget(core, &from, files)
+	GetTarget(core, &to, files)
+	if !TargetsMatch(&to, &from) {
+		//ref := common.Refile{FromId: from, ToId: to}
+		//return await this.doPost(url, {FromId: {Filename: src.filename, Id: src.id, Type: src.type }, ToId: {Filename: dest.filename, Id: dest.id, Type: dest.type }});
+		fmt.Printf("Refiling!")
+		qry["filename"] = toFile
+		//commands.SendReceivePost(core, "refile", &ref, &todos)
+	} else {
+		fmt.Printf("Target and dest cannot be the same! ABORT")
 	}
 
 }

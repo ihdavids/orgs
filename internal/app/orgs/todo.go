@@ -945,8 +945,11 @@ func Grep(query string, delimeter string) ([]string, error) {
 	return res, nil
 }
 
+// Will return all the headings found in a particular file.
+// If FILENAME is empty will return the la
 func GetAllTodosInFile(filename string) (*common.Todos, error) {
 	if filename == "" {
+		// TODO This is broken, determine what is actually using this?
 		files := GetDb().GetFiles()
 		var todos common.Todos
 		for _, file := range files {
