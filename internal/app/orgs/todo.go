@@ -946,15 +946,26 @@ func Grep(query string, delimeter string) ([]string, error) {
 }
 
 func GetAllTodosInFile(filename string) (*common.Todos, error) {
-	files := GetDb().GetFiles()
-	var todos common.Todos
-	for _, file := range files {
-		f := GetDb().GetFile(file)
-		for _, v := range f.Doc.Outline.Children {
-			todos, _ = GetAllTodosFromFile(v, f, todos)
+	if filename == "" {
+		files := GetDb().GetFiles()
+		var todos common.Todos
+		for _, file := range files {
+			f := GetDb().GetFile(file)
+			for _, v := range f.Doc.Outline.Children {
+				todos, _ = GetAllTodosFromFile(v, f, todos)
+			}
+		}
+		return &todos, nil
+	} else {
+		if f := GetDb().GetFile(filename); f != nil {
+			var todos common.Todos
+			for _, v := range f.Doc.Outline.Children {
+				todos, _ = GetAllTodosFromFile(v, f, todos)
+			}
+			return &todos, nil
 		}
 	}
-	return &todos, nil
+	return nil, fmt.Errorf("could not locate file: %s", filename)
 }
 
 func FindNodeFromPos(sec *org.Section, pos int, file *common.OrgFile) *org.Section {

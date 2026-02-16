@@ -49,13 +49,13 @@ func MakeTaskPane(title string, typeName string, app *tview.Application) *TaskPa
 		newTask: tview.NewTextArea().SetPlaceholder(placeholder),
 		app:     app,
 	}
-	pane.newTask.SetTitle(title)
+	pane.newTask.SetTitle(title + " [Esc/Ctrl-G]")
 	pane.newTask.SetTitleColor(tcell.ColorDarkCyan)
 	pane.newTask.SetTitleAlign(tview.AlignLeft)
 	pane.newTask.SetBorder(true)
 
 	pane.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEsc {
+		if event.Key() == tcell.KeyEsc || event.Key() == tcell.KeyCtrlG || event.Key() == tcell.KeyCtrlQ {
 			pane.app.Stop()
 			return nil
 		}
