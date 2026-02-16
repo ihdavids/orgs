@@ -5,6 +5,8 @@ package filters
 import (
 	"flag"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
@@ -42,7 +44,13 @@ func (self *FiltersList) Exec(core *commands.Core) {
 	var qry map[string]string = map[string]string{}
 	var reply map[string]string = map[string]string{}
 	commands.SendReceiveGet(core, "filters", qry, &reply)
-	common.FzfMapOfString(reply)
+	output := common.FzfMapOfString(reply)
+	fmt.Printf("%v\n", output)
+	for _, o := range output {
+		os := strings.Split(o, ":")
+		line, _ := strconv.Atoi(os[1])
+		core.LaunchEditor(os[0], line)
+	}
 }
 
 // ------------------------------------

@@ -158,6 +158,8 @@ func (self *TodoTable) HandleShortcuts(in *tcell.EventKey) *tcell.EventKey {
 			self.HidePreview()
 			self.ShowPreview()
 		}
+	} else if in.Key() == tcell.KeyEnter {
+
 	}
 	return in
 }
