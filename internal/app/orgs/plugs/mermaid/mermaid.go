@@ -270,7 +270,6 @@ func haveDate(td *common.Todo) bool {
 	return td.Date != nil && td.Date.TimestampType == org.Active
 }
 
-
 func (self *Mermaid) ExportRes(o *bytes.Buffer, db common.ODb, sectionMap map[string]string, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo, section *string) {
 	resource := "unknown"
 	percentDone := "0"
@@ -344,6 +343,9 @@ func (self *Mermaid) ExportRes(o *bytes.Buffer, db common.ODb, sectionMap map[st
 	}
 	if plugs.HasP(td, "MILESTONE") || td.Status == "MILESTONE" {
 		prefix += "milestone,"
+	}
+	if plugs.HasP(td, "MARK") || td.Status == "MARK" {
+		prefix += "vert,"
 	}
 
 	if !td.IsActive {

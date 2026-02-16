@@ -451,7 +451,7 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 func (self *OrgHtmlExporter) Startup(manager *common.PluginManager, opts *common.PluginOpts) {
 	if len(self.StatusColors) == 0 {
 		self.StatusColors = map[string]string{
-			"TODO":        "#3498db",
+			"TODO":        "red",
 			"INPROGRESS":  "#CC9900",
 			"IN-PROGRESS": "#CC9900",
 			"DOING":       "#CC9900",

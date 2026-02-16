@@ -109,8 +109,12 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 // Run a grep through all our files
 func RequestGrep(w http.ResponseWriter, r *http.Request) {
 	qry := r.URL.Query().Get("query")
+	del := r.URL.Query().Get("delimeter")
+	if del == "" {
+		del = ":"
+	}
 	w.Header().Set("Content-Type", "application/json")
-	if res, err := Grep(qry); err != nil {
+	if res, err := Grep(qry, del); err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 		json.NewEncoder(w).Encode([]string{})
 	} else {

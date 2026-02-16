@@ -204,6 +204,14 @@ ul.treeviewul {
 	white-space: nowrap;
 }
 
+ul > li {
+    padding-left:1px;
+	padding-right:1px;
+}
+li > ul {
+    padding-left:1px;
+	padding-right:1px;
+}
 ul > li.caret  {
     padding-left:1px;
 	padding-right:1px;
