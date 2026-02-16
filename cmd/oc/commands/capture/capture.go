@@ -103,6 +103,10 @@ func (self *Capture) Exec(core *commands.Core) {
 	commands.SendReceiveGet(core, "capture/templates", qry, &rep)
 	var reply common.ResultMsg = common.ResultMsg{}
 	var capIndex int = 0
+	if len(rep) <= 0 {
+		fmt.Printf(">>> No capture templates defined, cannot capture...\n")
+		return
+	}
 	if self.Template == "" {
 		f, err := fzf.New(
 			fzf.WithNoLimit(true),
