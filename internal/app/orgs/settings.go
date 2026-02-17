@@ -215,6 +215,26 @@ type Config struct {
 	Filters           map[string]string `yaml:"filters"`
 	NoInternalFilters bool              `yaml:"noInternalFilters"`
 
+	/* SDOC: Settings
+	* Aliases
+
+	    This is a command line tool helper. These are stored prefixes for long
+	    command lines that are repetitive.
+		Aliases provide a means of shortening command lines to common patterns
+	    Ex: If you alway refile from a particular inbox file you can add something
+	    as follows to your orgs.yaml and tri will expand to the source from your
+	    inbox file:
+
+	  #+BEGIN_SRC yaml
+	    aliases:
+	      triage: ["ref" "-from" "inbox.org"]
+	  #+END_SRC
+
+	  Any additional parameters will end up after the alias
+
+		EDOC */
+	Aliases map[string][]string `yaml:"aliases"`
+
 	// NON SERVE CONFIGURATION OPTIONS:
 	Url            string `yaml:"url"`
 	EditorTemplate []string

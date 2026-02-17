@@ -48,6 +48,17 @@ func logToFile() *os.File {
 	return f
 }
 
+// Aliases allow for command line helpers for the orgs command line tool.
+func expandAliases(args []string) []string {
+	if len(args) > 0 {
+		k := args[0]
+		if v, ok := orgs.Conf().Aliases[k]; ok && len(v) > 0 {
+			args = append(v, args[1:]...)
+		}
+	}
+	return args
+}
+
 func main() {
 	f := logToFile()
 	defer f.Close()
@@ -59,6 +70,7 @@ func main() {
 
 	args := flag.Args()
 
+	args = expandAliases(args)
 	// Execute command line options
 	for k, _ := range commands.CmdRegistry {
 		if len(args) > 0 && k == args[0] {
