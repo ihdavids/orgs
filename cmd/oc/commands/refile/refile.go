@@ -13,8 +13,8 @@ import (
 )
 
 type Refile struct {
-	From *common.Target
-	To   *common.Target
+	From common.Target
+	To   common.Target
 }
 
 /*
@@ -38,31 +38,42 @@ func (self *Refile) StartPlugin(manager *common.PluginManager) {
 func (self *Refile) SetupParameters(fset *flag.FlagSet) {
 	//fmt.Printf("REFILE CALLED\n")
 	// Need custom parser for this....
-	//fset.StringVar(&(self.From), "from", "", "source id")
+	fset.StringVar(&(self.From.Filename), "from", "", "source file")
 	//fset.StringVar(&(self.To), "head", "", "destination id")
 }
 
 func GetTarget(core *commands.Core, t *common.Target, files []string) error {
 	var qry map[string]string = map[string]string{}
 	if t != nil {
-		f, err := fzf.New(
-			fzf.WithPrompt("Source File: "),
-			fzf.WithNoLimit(true),
-			fzf.WithCountViewEnabled(true),
-			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
-				return fmt.Sprintf("files: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
-			}),
-		)
-		if err != nil {
-			log.Fatal(err)
+		if t.Filename == "" {
+			f, err := fzf.New(
+				fzf.WithPrompt("Source File: "),
+				fzf.WithNoLimit(true),
+				fzf.WithCountViewEnabled(true),
+				fzf.WithCountView(func(meta fzf.CountViewMeta) string {
+					return fmt.Sprintf("files: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
+				}),
+			)
+			if err != nil {
+				log.Fatal(err)
+			}
+			var idx []int = []int{}
+			idx, err = f.Find(files, func(i int) string { return files[i] })
+			if err != nil {
+				log.Fatal(err)
+			}
+			t.Filename = files[idx[0]]
+		} else {
+			// We have an input filename but it may not be a full path
+			// resolve it against the DB just to make sure.
+			var res common.ResultMsg = common.ResultMsg{}
+			qry["filename"] = t.Filename
+			commands.SendReceiveGet(core, "findfile", qry, &res)
+			if res.Ok {
+				t.Filename = res.Msg
+			}
 		}
-		var idx []int = []int{}
-		idx, err = f.Find(files, func(i int) string { return files[i] })
-		if err != nil {
-			log.Fatal(err)
-		}
-		t.Filename = files[idx[0]]
-		fmt.Printf("FROM FILE: %s\n", t.Filename)
+		//fmt.Printf("FILE: %s\n", t.Filename)
 		// GOT FILE NOW GET HEADING
 		var todos common.Todos
 		if t.Filename != "" {
@@ -94,8 +105,10 @@ func GetTarget(core *commands.Core, t *common.Target, files []string) error {
 				log.Fatal(err)
 			}
 			t.Id = todos[idx[0]].Hash
-			fmt.Printf("NODE HASH: %s\n", t.Id)
+			//fmt.Printf("NODE HASH: %s\n", t.Id)
 
+		} else {
+			return fmt.Errorf("Failed to find any nodes in file: %s", t.Filename)
 		}
 
 	}
@@ -119,14 +132,12 @@ func (self *Refile) Exec(core *commands.Core) {
 		return
 	}
 	//var toFile string
-	var from common.Target = common.Target{Filename: "", Type: "hash", Id: ""}
-	var to common.Target = common.Target{Filename: "", Type: "hash", Id: ""}
-	GetTarget(core, &from, files)
-	GetTarget(core, &to, files)
-	if !TargetsMatch(&to, &from) {
-		ref := common.Refile{FromId: from, ToId: to}
+	GetTarget(core, &self.From, files)
+	GetTarget(core, &self.To, files)
+	if !TargetsMatch(&self.To, &self.From) {
+		ref := common.Refile{FromId: self.From, ToId: self.To}
 		//return await this.doPost(url, {FromId: {Filename: src.filename, Id: src.id, Type: src.type }, ToId: {Filename: dest.filename, Id: dest.id, Type: dest.type }});
-		fmt.Printf("Refiling!\n")
+		//fmt.Printf("Refiling!\n")
 		//qry["filename"] = toFile
 		var res common.ResultMsg = common.ResultMsg{}
 		commands.SendReceivePost(core, "refile", &ref, &res)
