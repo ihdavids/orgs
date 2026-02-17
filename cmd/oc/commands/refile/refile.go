@@ -105,6 +105,7 @@ func GetTarget(core *commands.Core, t *common.Target, files []string) error {
 				log.Fatal(err)
 			}
 			t.Id = todos[idx[0]].Hash
+			t.Type = "hash"
 			//fmt.Printf("NODE HASH: %s\n", t.Id)
 
 		} else {
