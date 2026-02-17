@@ -454,6 +454,20 @@ func (self *OrgDb) GetFile(filename string) *common.OrgFile {
 	self.dblock.RLock()
 	file = self.ByFile[filename]
 	self.dblock.RUnlock()
+	// Try to append the search path
+	// to the file provided to find it!
+	if file == nil {
+		var dirs []string = Conf().Server.OrgDirs
+		for _, dir := range dirs {
+			fname := filepath.Join(dir, filename)
+			self.dblock.RLock()
+			file = self.ByFile[fname]
+			self.dblock.RUnlock()
+			if file != nil {
+				break
+			}
+		}
+	}
 	return file
 }
 

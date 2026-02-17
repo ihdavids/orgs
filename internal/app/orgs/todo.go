@@ -945,6 +945,15 @@ func Grep(query string, delimeter string) ([]string, error) {
 	return res, nil
 }
 
+// Search for a file by filename in the db
+func FindFileInDb(filename string) (string, error) {
+	f := GetDb().FindByFile(filename)
+	if f != nil {
+		return f.Doc.Path, nil
+	}
+	return "", fmt.Errorf("Could not find file: %s", filename)
+}
+
 // Will return all the headings found in a particular file.
 // If FILENAME is empty will return the la
 func GetAllTodosInFile(filename string) (*common.Todos, error) {
@@ -960,7 +969,7 @@ func GetAllTodosInFile(filename string) (*common.Todos, error) {
 		}
 		return &todos, nil
 	} else {
-		if f := GetDb().GetFile(filename); f != nil {
+		if f := GetDb().FindByFile(filename); f != nil {
 			var todos common.Todos
 			for _, v := range f.Doc.Outline.Children {
 				todos, _ = GetAllTodosFromFile(v, f, todos)

@@ -25,6 +25,7 @@ import (
 func RestApi(router *mux.Router) {
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/orgfile", RequestOrgFile)
+	router.HandleFunc("/findfile", RequestFindFileInDb)
 	router.HandleFunc("/files", RequestFiles)
 	router.HandleFunc("/file", CreateFile).Methods("POST")
 	router.HandleFunc("/file/{type}", RequestFile)               // html etc
@@ -104,6 +105,19 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	res := GetDb().GetFiles()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+func RequestFindFileInDb(w http.ResponseWriter, r *http.Request) {
+	fname := r.URL.Query().Get("filename")
+	if res, err := FindFileInDb(fname); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		msg := common.ResultMsg{Ok: false, Msg: err.Error()}
+		json.NewEncoder(w).Encode(msg)
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		msg := common.ResultMsg{Ok: true, Msg: res}
+		json.NewEncoder(w).Encode(msg)
+	}
 }
 
 // Run a grep through all our files

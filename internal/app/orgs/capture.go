@@ -217,7 +217,7 @@ func GetTableRow(sec *org.Section, tname string) (*org.Pos, *org.Table) {
 }
 
 func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Section, res *common.ResultMsg, tname string, findInsertPos FindInsertPosition) {
-	fmt.Printf("[InsertEntryUsingTemplate]\n")
+	fmt.Printf("[InsertEntryUsingTemplate]: %s\n", filename)
 	if r, err := os.Open(filename); err == nil {
 		defer r.Close()
 		// Split the file into lines of text
