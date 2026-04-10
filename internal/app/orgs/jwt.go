@@ -119,7 +119,7 @@ func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken,
 }
 
 func validateToken(tkn *jwt.JSONWebToken, claims *Claims) error {
-	if claims.Claims.Issuer == kORGS_ISSUER {
+	if claims.Claims.Issuer != kORGS_ISSUER {
 		return fmt.Errorf("issuer does not match! Cannot validate claims")
 	}
 	// TODO: Need more here for validating this user

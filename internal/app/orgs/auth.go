@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	hsh := sha1.New()
 	hsh.Write([]byte(creds.Password))
 
-	if ok := GetKeystore().Validate(creds.Username, creds.Password); ok {
+	if ok := GetKeystore().Validate(creds.Username, creds.Password); !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -39,40 +40,35 @@ func login(w http.ResponseWriter, r *http.Request) {
 		Name:  "orgstoken",
 		Value: token,
 		// TODO: Make this configurable
-		Expires: time.Now().Add(5 * time.Minute),
+		Expires:  time.Now().Add(5 * time.Minute),
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 func authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("orgstoken")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			w.WriteHeader(http.StatusBadRequest)
+		var tokenStr string
+
+		// Prefer Authorization: Bearer <token> header (for API clients)
+		if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+			tokenStr = strings.TrimPrefix(auth, "Bearer ")
+		} else if c, err := r.Cookie("orgstoken"); err == nil {
+			// Fall back to cookie (for browser clients)
+			tokenStr = c.Value
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
 		claims := &Claims{}
-		if _, err := ValidateEncryptedToken(c.Value, claims); err != nil {
+		if _, err := ValidateEncryptedToken(tokenStr, claims); err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
-		} else {
-			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			next.ServeHTTP(w, r)
 		}
-		/*
-			tokenStr := c.Value
-
-			tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-				return jwtKey, nil
-			})
-		*/
-
+		next.ServeHTTP(w, r)
 	})
 }
