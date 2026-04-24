@@ -34,7 +34,9 @@ type CommandAgenda struct {
 	AgendaStatusColors  map[string]string
 	AgendaBlockColors   []string
 	out                 *tview.TextView
+	weekView            *tview.Table
 	statusBar           *tview.Table
+	allTodos            common.Todos
 	core                *commands.Core
 }
 
@@ -298,21 +300,107 @@ func (self *CommandAgenda) GetSelectedHash() string {
 	return ""
 }
 
-// fetchActiveDays queries for all active todos and returns a set of date keys ("2006-01-02")
-// that have at least one agenda item.
-func (self *CommandAgenda) fetchActiveDays(core *commands.Core) map[string]bool {
+// fetchAllTodos queries for all active todos and caches the result.
+// Returns a set of date keys ("2006-01-02") that have at least one agenda item.
+func (self *CommandAgenda) fetchAllTodos(core *commands.Core) map[string]bool {
 	params := map[string]string{
 		"query": `!IsProject() && !IsArchived() && IsTodo()`,
 	}
-	var todos common.Todos
-	commands.SendReceiveGet(core, "search", params, &todos)
+	self.allTodos = common.Todos{}
+	commands.SendReceiveGet(core, "search", params, &self.allTodos)
 	days := make(map[string]bool)
-	for _, t := range todos {
+	for _, t := range self.allTodos {
 		if t.Date != nil && !t.Date.Start.IsZero() {
 			days[t.Date.Start.Format("2006-01-02")] = true
 		}
 	}
 	return days
+}
+
+// renderWeekTable populates the week table with 7 day columns showing
+// color-coded tasks for the week containing CurDate.
+func (self *CommandAgenda) renderWeekTable() {
+	self.weekView.Clear()
+	today := time.Now()
+
+	// Find start of week (Sunday)
+	weekday := int(self.CurDate.Weekday())
+	weekStart := self.CurDate.AddDate(0, 0, -weekday)
+
+	dayNames := []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
+
+	// Header row
+	for col := 0; col < 7; col++ {
+		day := weekStart.AddDate(0, 0, col)
+		header := fmt.Sprintf(" %s %d ", dayNames[col], day.Day())
+		cell := tview.NewTableCell(header).
+			SetAlign(tview.AlignCenter).
+			SetExpansion(1).
+			SetSelectable(false)
+
+		isToday := day.Year() == today.Year() && day.Month() == today.Month() && day.Day() == today.Day()
+		isCurDay := day.Year() == self.CurDate.Year() && day.Month() == self.CurDate.Month() && day.Day() == self.CurDate.Day()
+
+		switch {
+		case isToday:
+			cell.SetBackgroundColor(tcell.ColorBlue).SetTextColor(tcell.ColorWhite)
+		case isCurDay:
+			cell.SetBackgroundColor(tcell.ColorDarkCyan).SetTextColor(tcell.ColorWhite)
+		default:
+			cell.SetTextColor(tcell.ColorGrey)
+		}
+		self.weekView.SetCell(0, col, cell)
+	}
+
+	// Group cached todos by day key
+	dayTodos := make(map[string][]common.Todo)
+	for _, t := range self.allTodos {
+		if t.Date != nil && !t.Date.Start.IsZero() {
+			key := t.Date.Start.Format("2006-01-02")
+			dayTodos[key] = append(dayTodos[key], t)
+		}
+	}
+
+	// Find max rows across the week
+	maxRows := 0
+	for col := 0; col < 7; col++ {
+		day := weekStart.AddDate(0, 0, col)
+		key := day.Format("2006-01-02")
+		if n := len(dayTodos[key]); n > maxRows {
+			maxRows = n
+		}
+	}
+
+	// Fill task cells
+	for col := 0; col < 7; col++ {
+		day := weekStart.AddDate(0, 0, col)
+		key := day.Format("2006-01-02")
+		todos := dayTodos[key]
+
+		for row, t := range todos {
+			timeStr := t.Date.Start.Format("15:04")
+			headline := t.Headline
+			label := timeStr + " " + headline
+
+			color := tcell.ColorWhite
+			if t.Status != "" {
+				if c, ok := self.AgendaStatusColors[t.Status]; ok {
+					color = tcell.GetColor(c)
+				}
+			}
+
+			cell := tview.NewTableCell(label).
+				SetTextColor(color).
+				SetExpansion(1).
+				SetAlign(tview.AlignLeft)
+			self.weekView.SetCell(row+1, col, cell)
+		}
+
+		// Fill empty rows so columns line up
+		for row := len(todos); row < maxRows; row++ {
+			self.weekView.SetCell(row+1, col, tview.NewTableCell("").SetExpansion(1))
+		}
+	}
 }
 
 // renderMonthLines renders a single month calendar as lines of tview-tagged text.
@@ -431,7 +519,7 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 	}
 	self.out.SetTitle(fmt.Sprintf("[::u]<P>[::-] %s [%d]", "Agenda", len(self.Reply)))
 	//fmt.Printf("[::u]<P>[::-] %s [%d]", "Agenda", len(self.Reply))
-	activeDays := self.fetchActiveDays(core)
+	activeDays := self.fetchAllTodos(core)
 	tm := self.CurDate
 	txt := renderThreeMonthCalendar(tm, activeDays)
 	txt += "     [blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
@@ -460,7 +548,7 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 		}
 	}
 	self.out.SetText(txt)
-	//fmt.Printf(txt)
+	self.renderWeekTable()
 }
 
 /*
@@ -482,6 +570,10 @@ func (self *CommandAgenda) Exec(core *commands.Core) {
 	//fmt.Printf("CommandAgenda called\n")
 	//box := tview.NewBox().SetBorder(true).SetTitle("Agenda")
 	self.out = tview.NewTextView()
+	self.weekView = tview.NewTable()
+	self.weekView.SetBorder(true).SetTitle(" Week ")
+	self.weekView.SetBorders(false)
+	self.weekView.SetFixed(1, 0)
 	self.statusBar = tview.NewTable()
 	self.statusBar.SetCell(0, 0, tview.NewTableCell(",:Prev"))
 	self.statusBar.SetCell(0, 1, tview.NewTableCell(",:Next"))
@@ -490,8 +582,9 @@ func (self *CommandAgenda) Exec(core *commands.Core) {
 	app := tview.NewApplication()
 
 	layout := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(self.out, 0, 1, true).
-		AddItem(self.statusBar, 1, 1, false)
+		AddItem(self.out, 0, 3, true).
+		AddItem(self.weekView, 0, 2, false).
+		AddItem(self.statusBar, 1, 0, false)
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return self.HandleShortcuts(event)
 	})

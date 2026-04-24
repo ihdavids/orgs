@@ -26,17 +26,19 @@ func (self *Date) Get() (time.Time, error) {
 }
 
 type Todo struct {
-	Headline string
-	Tags     []string
-	Props    map[string]string
-	Hash     string
-	Date     *org.OrgDate
-	Status   string
-	Filename string
-	LineNum  int
-	IsActive bool
-	Parent   string
-	Level    int
+	Headline    string
+	Tags        []string
+	Props       map[string]string
+	Hash        string
+	Date        *org.OrgDate
+	Deadline    *org.OrgDate
+	Status      string
+	Filename    string
+	LineNum     int
+	IsActive    bool
+	Parent      string
+	Level       int
+	Completions []string
 }
 
 func (self Todo) Is(other Todo) bool {

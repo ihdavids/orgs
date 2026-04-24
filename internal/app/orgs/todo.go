@@ -739,6 +739,23 @@ func QueryFullFileHtml(query *common.TodoHash) (common.FullTodo, error) {
 	return td, fmt.Errorf("failed to find todo by hash")
 }
 
+var habitDoneRe = regexp.MustCompile(`State\s+"DONE".*\[(\d{4}-\d{2}-\d{2})`)
+
+func parseHabitCompletions(v *org.Section) []string {
+	var completions []string
+	for _, n := range v.Headline.Children {
+		if d, ok := n.(org.Drawer); ok && d.Name == "LOGBOOK" {
+			for _, child := range d.Children {
+				line := child.String()
+				if m := habitDoneRe.FindStringSubmatch(line); m != nil {
+					completions = append(completions, m[1])
+				}
+			}
+		}
+	}
+	return completions
+}
+
 func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 	var title string
 	if f == nil {
@@ -768,7 +785,15 @@ func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 	if v != nil && v.Parent != nil && v.Parent.Hash != "" {
 		par = v.Parent.Hash
 	}
-	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Status: v.Headline.Status, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl}
+	var deadline *org.OrgDate
+	if v.Headline.Deadline != nil {
+		deadline = v.Headline.Deadline.Date
+	}
+	var completions []string
+	if props["STYLE"] == "habit" {
+		completions = parseHabitCompletions(v)
+	}
+	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Deadline: deadline, Status: v.Headline.Status, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl, Completions: completions}
 	return &t
 }
 
