@@ -298,6 +298,31 @@ func FileNameWithoutExt(fileName string) string {
 	return strings.TrimSuffix(filepath.Base(fileName), filepath.Ext(fileName))
 }
 
+func (self *CommandAgenda) RenderAllDayEntry(v common.Todo, index int) string {
+	fname := FileNameWithoutExt(v.Filename)
+	if len(fname) > 14 {
+		fname = fname[:14]
+	}
+	fname += ":"
+	todo := "    "
+	if v.Status != "" {
+		todo = v.Status
+		color := "red"
+		if c, ok := self.AgendaStatusColors[todo]; ok {
+			color = c
+		}
+		if len(v.Status) > 4 {
+			todo = v.Status[:4]
+		}
+		todo = "[" + color + "]" + todo
+	}
+	habit := self.BuildHabitDisplay(v)
+	if self.Selected == index {
+		return fmt.Sprintf("[%s]     %-15s [white:yellow]      [:none] %-8s %s [%s]%-45s %s%s\n", self.AgendaFilenameColor, fname, "", todo, self.AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), habit)
+	}
+	return fmt.Sprintf("[%s]     %-15s [green]      %-8s %s [%s]%-45s %s%s\n", self.AgendaFilenameColor, fname, "", todo, self.AgendaTextColor, v.Headline, self.BuildDeadlineDisplay(v), habit)
+}
+
 func (self *CommandAgenda) RenderAgendaEntry(v common.Todo, index int) string {
 	fname := FileNameWithoutExt(v.Filename)
 	if len(fname) > 14 {
@@ -599,6 +624,16 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 	end := 20
 	index := 0
 	now := time.Now()
+	// Render all-day / untimed entries (habits, scheduled items without a time)
+	for _, v := range self.Reply {
+		if v.Date == nil || !v.Date.HaveTime {
+			index += 1
+			txt += self.RenderAllDayEntry(v, index)
+		}
+	}
+	if index > 0 {
+		txt += "                     [grey]------------------------------------------\n"
+	}
 	for i := start; i < end; i += 1 {
 		displayTime := true
 		for _, v := range self.Reply {
@@ -613,7 +648,7 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 			txt += fmt.Sprintf("     [#ee00ee]%-15s %02d:%02d - - - - - - - - - - - - - - - - - - - - - \n", "now =>", now.Hour(), now.Minute())
 		}
 		for _, v := range self.Reply {
-			if v.Date.Start.Hour() == i {
+			if v.Date != nil && v.Date.HaveTime && v.Date.Start.Hour() == i {
 				index += 1
 				txt += self.RenderAgendaEntry(v, index)
 			}
