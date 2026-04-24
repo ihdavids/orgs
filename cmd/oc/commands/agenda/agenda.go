@@ -298,6 +298,119 @@ func (self *CommandAgenda) GetSelectedHash() string {
 	return ""
 }
 
+// fetchActiveDays queries for all active todos and returns a set of date keys ("2006-01-02")
+// that have at least one agenda item.
+func (self *CommandAgenda) fetchActiveDays(core *commands.Core) map[string]bool {
+	params := map[string]string{
+		"query": `!IsProject() && !IsArchived() && IsTodo()`,
+	}
+	var todos common.Todos
+	commands.SendReceiveGet(core, "search", params, &todos)
+	days := make(map[string]bool)
+	for _, t := range todos {
+		if t.Date != nil && !t.Date.Start.IsZero() {
+			days[t.Date.Start.Format("2006-01-02")] = true
+		}
+	}
+	return days
+}
+
+// renderMonthLines renders a single month calendar as lines of tview-tagged text.
+// Each line has exactly 21 visible characters (7 columns x 3 chars).
+func renderMonthLines(year int, month time.Month, today time.Time, activeDays map[string]bool) []string {
+	lines := make([]string, 0, 9)
+
+	// Centered month/year header
+	header := fmt.Sprintf("%s %d", month.String(), year)
+	pad := (21 - len(header)) / 2
+	if pad < 0 {
+		pad = 0
+	}
+	trail := 21 - pad - len(header)
+	if trail < 0 {
+		trail = 0
+	}
+	lines = append(lines, strings.Repeat(" ", pad)+"[::b]"+header+"[::-]"+strings.Repeat(" ", trail))
+
+	// Day-of-week header
+	lines = append(lines, "[grey] Su Mo Tu We Th Fr Sa[-]")
+
+	// First day and number of days
+	first := time.Date(year, month, 1, 0, 0, 0, 0, time.Local)
+	startDow := int(first.Weekday())
+	daysInMonth := time.Date(year, month+1, 0, 0, 0, 0, 0, time.Local).Day()
+
+	line := ""
+	col := 0
+
+	// Leading blank cells
+	for i := 0; i < startDow; i++ {
+		line += "   "
+		col++
+	}
+
+	for day := 1; day <= daysInMonth; day++ {
+		dateKey := fmt.Sprintf("%04d-%02d-%02d", year, int(month), day)
+		isToday := today.Year() == year && today.Month() == month && today.Day() == day
+		hasItems := activeDays[dateKey]
+
+		dayStr := fmt.Sprintf("%2d", day)
+		switch {
+		case isToday && hasItems:
+			line += fmt.Sprintf(" [black:green]%s[-:-]", dayStr)
+		case isToday:
+			line += fmt.Sprintf(" [white:blue]%s[-:-]", dayStr)
+		case hasItems:
+			line += fmt.Sprintf(" [green]%s[-]", dayStr)
+		default:
+			line += " " + dayStr
+		}
+		col++
+
+		if col == 7 {
+			lines = append(lines, line)
+			line = ""
+			col = 0
+		}
+	}
+
+	// Pad the last partial week with trailing blanks
+	if col > 0 {
+		for col < 7 {
+			line += "   "
+			col++
+		}
+		lines = append(lines, line)
+	}
+
+	// Pad to 9 lines so all months have the same height
+	blank := strings.Repeat(" ", 21)
+	for len(lines) < 9 {
+		lines = append(lines, blank)
+	}
+	return lines
+}
+
+// renderThreeMonthCalendar renders prev/current/next month side by side with
+// today highlighted and days with agenda items colored.
+func renderThreeMonthCalendar(curDate time.Time, activeDays map[string]bool) string {
+	today := time.Now()
+	prev := curDate.AddDate(0, -1, 0)
+	next := curDate.AddDate(0, 1, 0)
+
+	left := renderMonthLines(prev.Year(), prev.Month(), today, activeDays)
+	center := renderMonthLines(curDate.Year(), curDate.Month(), today, activeDays)
+	right := renderMonthLines(next.Year(), next.Month(), today, activeDays)
+
+	var sb strings.Builder
+	sb.WriteString("\n")
+	for i := 0; i < len(left); i++ {
+		sb.WriteString(fmt.Sprintf("  %s    %s    %s\n", left[i], center[i], right[i]))
+	}
+	sb.WriteString("\n")
+	return sb.String()
+}
+
 func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 	self.out.Clear()
 	//self.Core = core
@@ -318,8 +431,10 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 	}
 	self.out.SetTitle(fmt.Sprintf("[::u]<P>[::-] %s [%d]", "Agenda", len(self.Reply)))
 	//fmt.Printf("[::u]<P>[::-] %s [%d]", "Agenda", len(self.Reply))
+	activeDays := self.fetchActiveDays(core)
 	tm := self.CurDate
-	txt := "     [blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
+	txt := renderThreeMonthCalendar(tm, activeDays)
+	txt += "     [blue]" + tm.Format("Monday 02 January 2006") + "\n\n"
 	start := 8
 	end := 20
 	index := 0
