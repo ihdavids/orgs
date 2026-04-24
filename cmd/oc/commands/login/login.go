@@ -91,7 +91,8 @@ func (self *LoginCmd) Exec(core *commands.Core) {
 	} else {
 		fmt.Fprintf(os.Stderr, "Token saved to %s\n", core.ConfigFile)
 	}
-	fmt.Println(resp.Token)
+	// Don't show the token, but this is helpful for validating
+	//fmt.Println(resp.Token)
 }
 
 func saveTokenToConfig(configFile string, token string) error {
