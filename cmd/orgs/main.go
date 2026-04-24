@@ -60,12 +60,17 @@ func expandAliases(args []string) []string {
 }
 
 func main() {
+	orgs.DefaultKeystore()
 	f := logToFile()
 	defer f.Close()
 	orgs.Conf()
 	core := commands.NewCore(orgs.Conf().Url, orgs.Conf().Server)
 	core.StartServer = orgs.StartServer
 	core.EditorTemplate = orgs.Conf().EditorTemplate
+	core.ConfigFile = orgs.Conf().Config
+	if orgs.Conf().Token != "" {
+		core.Rest.Header.Set("Authorization", "Bearer "+orgs.Conf().Token)
+	}
 	core.Start()
 
 	args := flag.Args()

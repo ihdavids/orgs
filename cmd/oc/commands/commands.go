@@ -109,6 +109,7 @@ type Core struct {
 	Send           chan []byte
 	Rest           common.Rest
 	EditorTemplate []string
+	ConfigFile     string
 	StartServer    StartServerThunk
 	ServerSettings *common.ServerSettings
 }

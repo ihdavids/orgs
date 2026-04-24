@@ -47,37 +47,43 @@ func (self *Rest) Get(api string, ps map[string]string) string {
 		}
 	}
 	//fmt.Printf("URL STR: %s\n", base.String())
-	resp, err := http.Get(base.String())
+	req, err := http.NewRequest("GET", base.String(), nil)
+	if err != nil {
+		return fmt.Sprintf("Rest request error: %s", err)
+	}
+	req.Header = self.Header.Clone()
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println(err)
+		return fmt.Sprintf("Rest call error: %s", err)
 	}
-	if err == nil {
-		body, rerr := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
-		if rerr != nil {
-			log.Println(rerr)
-		}
-		return string(body)
+	body, rerr := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if rerr != nil {
+		log.Println(rerr)
 	}
-	return fmt.Sprintf("Rest call error: %s", err)
+	return string(body)
 }
 
 func (self *Rest) Post(api string, data []byte) ([]byte, error) {
-	url := self.Url + "/" + api
-	byteReader := bytes.NewReader(data)
-	resp, err := http.Post(url, "application/json", byteReader)
+	u := self.Url + "/" + api
+	req, err := http.NewRequest("POST", u, bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("Rest request error: %s", err)
+	}
+	req.Header = self.Header.Clone()
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println(err)
+		return nil, fmt.Errorf("Rest call error: %s", err)
 	}
-	if err == nil {
-		body, rerr := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
-		if rerr != nil {
-			log.Println(rerr)
-		}
-		return body, nil
+	body, rerr := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if rerr != nil {
+		log.Println(rerr)
 	}
-	return nil, fmt.Errorf("Rest call error: %s", err)
+	return body, nil
 }
 
 func RestGet[T any](self *Rest, api string, ps map[string]string) T {

@@ -1,7 +1,7 @@
 package login
 
-// Login authenticates with the orgs server using a username and password
-// and prints the generated JWT token to the command line.
+// Login authenticates with the orgs server using a username and password,
+// stores the token in the local config file, and prints it to stdout.
 
 import (
 	"bufio"
@@ -86,7 +86,33 @@ func (self *LoginCmd) Exec(core *commands.Core) {
 		fmt.Fprintln(os.Stderr, "login failed: server returned no token (check credentials)")
 		os.Exit(1)
 	}
+	if err := saveTokenToConfig(core.ConfigFile, resp.Token); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to save token to config: %s\n", err)
+	} else {
+		fmt.Fprintf(os.Stderr, "Token saved to %s\n", core.ConfigFile)
+	}
 	fmt.Println(resp.Token)
+}
+
+func saveTokenToConfig(configFile string, token string) error {
+	data, err := os.ReadFile(configFile)
+	if err != nil {
+		return fmt.Errorf("reading config %s: %w", configFile, err)
+	}
+	lines := strings.Split(string(data), "\n")
+	found := false
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "token:") {
+			lines[i] = fmt.Sprintf("token: %q", token)
+			found = true
+			break
+		}
+	}
+	if !found {
+		lines = append(lines, fmt.Sprintf("token: %q", token))
+	}
+	return os.WriteFile(configFile, []byte(strings.Join(lines, "\n")), 0600)
 }
 
 // init function is called at boot

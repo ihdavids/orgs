@@ -42,7 +42,7 @@ There is no Makefile, no lint config, and no test suite. `go vet ./...` and `go 
 
 - `flag.Parse()` is called **twice** — once before the YAML load (so `-config` can point at a file) and once after (so command-line flags override YAML). Anything that registers flags must do so in `SetupCommandLine` / `AddCommands` before the first parse.
 - `Conf()` is a lazy singleton; most of the codebase reaches the config via `orgs.Conf()` rather than passing it around.
-- The same `Config` struct holds both server settings (under `Server *common.ServerSettings`) and CLI-only options (`Url`, `EditorTemplate`, `Aliases`). The CLI reads `orgs.Conf().Url` to know which server to hit.
+- The same `Config` struct holds both server settings (under `Server *common.ServerSettings`) and CLI-only options (`Url`, `Token`, `EditorTemplate`, `Aliases`). The CLI reads `orgs.Conf().Url` to know which server to hit. The `Token` field stores the JWT from the last `login` command and is automatically applied as a Bearer header on startup.
 - Aliases (`aliases:` in YAML) are expanded in `cmd/orgs/main.go` *before* command dispatch, so `args[0]` may be rewritten into a multi-word command + flags.
 
 ## Architecture
@@ -64,7 +64,7 @@ There is no Makefile, no lint config, and no test suite. `go vet ./...` and `go 
 1. `orgs serve` calls `orgs.StartServer(sets *common.ServerSettings)` in `internal/app/orgs/serve.go`.
 2. It creates a `mux.Router`, calls `RestApi(router)` in `rest.go`, mounts static directories (`/images`, `/orgimages`, `/orgfonts`, `/`), starts the background plugins (`startPlugins`), and listens on HTTP and/or HTTPS depending on config.
 3. `RestApi` registers `POST /login` as the only **public** route, then mounts every other endpoint under a subrouter that uses the `authenticate` middleware from `auth.go`.
-4. `authenticate` accepts either an `Authorization: Bearer <token>` header **or** an `orgstoken` cookie. Tokens are JWE-encrypted JWS (`jwt.go`), with keys `OrgJWS` / `OrgJWE` from server settings, and expire after 5 minutes.
+4. `authenticate` accepts either an `Authorization: Bearer <token>` header **or** an `orgstoken` cookie. Tokens are JWE-encrypted JWS (`jwt.go`), signed with HS256 using `OrgJWS` and encrypted with PBES2 using `OrgJWE` from server settings, and expire after 5 minutes.
 5. Handlers in `rest.go` typically unmarshal JSON into a `common.*` type, delegate to a function in `orgdb.go` / `capture.go` / `refile.go` / etc., and JSON-encode the result.
 
 ### CLI subcommand pattern
@@ -90,8 +90,11 @@ Inside `Exec`, commands talk to the server using the helpers in `cmd/oc/commands
 
 - `SendReceiveGet[RESP](core, "path", params, &resp)` — wraps `common.RestGet`.
 - `SendReceivePost[REQ, RESP](core, "path", &req, &resp)` — wraps `common.RestPost`.
-- `core.Rest.Header` is where you attach an `Authorization: Bearer` header after logging in. The `login` command POSTs to `/login` and prints the returned JWE token; callers are expected to re-supply it on subsequent requests.
+- `core.Rest.Header` carries the `Authorization: Bearer` header. The `login` command POSTs credentials to `/login`, saves the returned token into the YAML config file (`token:` field), and prints it to stdout. On subsequent runs, `main.go` auto-loads the stored token onto `core.Rest.Header`, so all commands are automatically authenticated.
+- `core.ConfigFile` holds the path to the active config file, so commands can read/update it without importing `internal/app/orgs`.
 - `core.LaunchEditor(filename, line)` opens files in the editor configured by `editorTemplate`.
+
+**Import cycle constraint**: CLI command packages under `cmd/oc/commands/` **cannot** import `internal/app/orgs` — that package already imports `cmd/oc/commands/all` (which blank-imports every command), creating a cycle. Commands must only use `cmd/oc/commands` and `internal/common`. If you need config values, pass them through `Core` fields set in `main.go`.
 
 When adding a new CLI command: create `cmd/oc/commands/<name>/<name>.go`, implement the interface, register in `init()`, **and add the blank import to `cmd/oc/commands/all/all.go`**. Running `go build ./...` from the repo root is sufficient to verify it links.
 

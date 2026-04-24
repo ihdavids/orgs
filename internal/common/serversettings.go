@@ -1,11 +1,13 @@
 package common
 
 import (
-	"crypto/sha1"
+	//"crypto/sha1"
+	"crypto/rand"
+	//"crypto/rsa"
 	b64 "encoding/base64"
 	"fmt"
 	"log"
-	"math/rand"
+	mrand "math/rand"
 	"time"
 )
 
@@ -22,6 +24,8 @@ type ServerSettings struct {
 	  orgSalt: "Appended to the per user salt to help with rainbow tables"
 		#+END_SRC
 		EDOC */
+	//OrgJWS  string `yaml:"orgJWS"`
+	//OrgJWS  *rsa.PrivateKey `yaml:"orgJWS"`
 	OrgJWS  string `yaml:"orgJWS"`
 	OrgJWE  string `yaml:"orgJWE"`
 	OrgSalt string `yaml:"orgSalt"`
@@ -144,7 +148,7 @@ func (self *ServerSettings) Validate() {
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()"
 
 func generateRandomString(length int) string {
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano())) // Seed the random number generator
+	seededRand := mrand.New(mrand.NewSource(time.Now().UnixNano())) // Seed the random number generator
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = charset[seededRand.Intn(len(charset))]
@@ -153,9 +157,15 @@ func generateRandomString(length int) string {
 }
 
 func (self *ServerSettings) RandomKeyVal() string {
-	tHash := sha1.New()
-	tHash.Write([]byte(generateRandomString(20)))
-	return b64.StdEncoding.EncodeToString(tHash.Sum(nil))
+	//tHash := sha1.New()
+	//tHash.Write([]byte(generateRandomString(32)))
+	// tHash.Sum(nil)	// 32 bytes = 256 bits, recommended for HS256
+	key := make([]byte, 32)
+	_, err := rand.Read(key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return b64.StdEncoding.EncodeToString(key)
 }
 
 func (self *ServerSettings) Init() {
@@ -163,6 +173,7 @@ func (self *ServerSettings) Init() {
 	// But at least these are cryptographically sound as a time based
 	// randomly generated string that we sha1 hash and base 64 encode
 	// to produce something that should work as our keyset
+	//privateKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	self.OrgJWS = self.RandomKeyVal()
 	self.OrgJWE = self.RandomKeyVal()
 	// The default keystore is useless, we need to force the user to make one of their own
