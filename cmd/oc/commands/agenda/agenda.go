@@ -218,8 +218,80 @@ func (self *CommandAgenda) BuildDeadlineDisplay(v common.Todo) string {
 }
 
 func (self *CommandAgenda) BuildHabitDisplay(v common.Todo) string {
-	//  habitbar = "[_____________________]"
-	return ""
+	if v.Props == nil || v.Props["STYLE"] != "habit" {
+		return ""
+	}
+	// Determine repeat interval in days from Deadline or Date
+	intervalDays := 1
+	src := v.Deadline
+	if src == nil {
+		src = v.Date
+	}
+	if src != nil && src.RepeatDWMY != "" {
+		// Parse repeat interval: RepeatPre is like "+1", ".+2" etc, RepeatDWMY is "d","w","m","y"
+		n := 1
+		pre := src.RepeatPre
+		// Strip leading . or + to get the number
+		pre = strings.TrimLeft(pre, ".+")
+		if len(pre) > 0 {
+			if v, err := fmt.Sscanf(pre, "%d", &n); err == nil && v > 0 {
+				intervalDays = n
+			}
+		}
+		switch src.RepeatDWMY {
+		case "w":
+			intervalDays *= 7
+		case "m":
+			intervalDays *= 30
+		case "y":
+			intervalDays *= 365
+		}
+	}
+
+	// Build set of completion dates
+	doneSet := make(map[string]bool)
+	for _, c := range v.Completions {
+		doneSet[c] = true
+	}
+
+	today := time.Now().Truncate(24 * time.Hour)
+	var bar strings.Builder
+	bar.WriteString(" [white][[-:-]")
+	for i := 20; i >= 0; i-- {
+		day := today.AddDate(0, 0, -i)
+		dayStr := day.Format("2006-01-02")
+		done := doneSet[dayStr]
+
+		// Find days since last completion on or before this day
+		daysSinceLast := -1
+		for j := 0; j <= 21; j++ {
+			check := day.AddDate(0, 0, -j)
+			if doneSet[check.Format("2006-01-02")] {
+				daysSinceLast = j
+				break
+			}
+		}
+
+		// Determine color based on how overdue the habit is
+		color := "green" // due / on track
+		if daysSinceLast >= 0 && daysSinceLast < intervalDays {
+			color = "blue" // too early
+		} else if daysSinceLast > intervalDays+intervalDays/2 {
+			color = "red" // overdue
+		} else if daysSinceLast > intervalDays {
+			color = "yellow" // nearly overdue
+		}
+
+		sym := " "
+		if i == 0 {
+			sym = "!"
+		} else if done {
+			sym = "*"
+		}
+		bar.WriteString(fmt.Sprintf("[%s]%s", color, sym))
+	}
+	bar.WriteString("[white]][-]")
+	return bar.String()
 }
 
 func FileNameWithoutExt(fileName string) string {
