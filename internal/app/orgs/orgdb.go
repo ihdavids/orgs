@@ -556,8 +556,15 @@ func (self *OrgDb) ReloadFile(fname string) *common.OrgFile {
 }
 
 func (self *OrgDb) CreateOrgFile(fname string, title string) *common.OrgFile {
+	return self.CreateOrgFileFromTemplate(fname, title, "")
+}
+
+func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templateName string) *common.OrgFile {
 	if _, err := os.Stat(fname); err != nil {
-		template := Conf().NewFileTemplate
+		template := templateName
+		if template == "" {
+			template = Conf().NewFileTemplate
+		}
 		var context map[string]interface{} = make(map[string]interface{})
 		username := ""
 		if usr, ok := user.Current(); ok == nil {
@@ -623,6 +630,9 @@ func (self *OrgDb) FindByOlp(target *common.Target, allowCreate bool) (*common.O
 	if file == nil && allowCreate {
 		fname := self.GetFilepath(target.Filename)
 		file = self.CreateOrgFile(fname, "")
+	}
+	if file == nil {
+		return nil, nil
 	}
 	olp := strings.Split(target.Id, "::")
 	if len(olp) == 0 {

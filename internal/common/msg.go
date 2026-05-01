@@ -15,6 +15,12 @@ type Empty struct{}
 
 type FileList []string
 
+type NewFileRequest struct {
+	Filename string `json:"filename"`
+	Title    string `json:"title"`
+	Template string `json:"template"`
+}
+
 type Date string
 
 func (self *Date) Set(dt time.Time) {

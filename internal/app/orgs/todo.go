@@ -739,17 +739,19 @@ func QueryFullFileHtml(query *common.TodoHash) (common.FullTodo, error) {
 	return td, fmt.Errorf("failed to find todo by hash")
 }
 
-var habitDoneRe = regexp.MustCompile(`State\s+"DONE".*\[(\d{4}-\d{2}-\d{2})`)
+var habitDoneRe = regexp.MustCompile(`.*State\s+"DONE".*\[(\d{4}[-]\d{2}[-]\d{2})`)
 
 func parseHabitCompletions(v *org.Section) []string {
 	var completions []string
 	for _, n := range v.Headline.Children {
 		if d, ok := n.(org.Drawer); ok && d.Name == "LOGBOOK" {
-			for _, child := range d.Children {
-				line := child.String()
-				if m := habitDoneRe.FindStringSubmatch(line); m != nil {
-					completions = append(completions, m[1])
-				}
+			// The drawer's String() renders all children (Lists, Paragraphs, etc.)
+			// into org-mode text which we can regex over line by line.
+			text := d.String()
+			fmt.Printf("GOO: %s\n", text)
+			for _, m := range habitDoneRe.FindAllStringSubmatch(text, -1) {
+				fmt.Printf("HABIT: %s\n", m[1])
+				completions = append(completions, m[1])
 			}
 		}
 	}
@@ -790,7 +792,11 @@ func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 		deadline = v.Headline.Deadline.Date
 	}
 	var completions []string
+	if title == "Meditate for 10 minutes" {
+		fmt.Printf("PROPS: %v\n", props)
+	}
 	if props["STYLE"] == "habit" {
+		fmt.Printf("HAVE A HABIT\n")
 		completions = parseHabitCompletions(v)
 	}
 	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Deadline: deadline, Status: v.Headline.Status, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl, Completions: completions}

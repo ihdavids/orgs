@@ -1,6 +1,7 @@
 package all
 
 import (
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/gantt"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/git"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/googlecal"

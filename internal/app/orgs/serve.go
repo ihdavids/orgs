@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/mux"
+	"github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/rs/cors"
 )
@@ -108,6 +109,7 @@ func StartServer(sets *common.ServerSettings) {
 }
 
 func startPlugins(sets *common.ServerSettings) {
+	autoclockout.RegisterClockAccessor(Clock())
 	for _, plug := range sets.Plugins {
 		plug.Start(db)
 	}

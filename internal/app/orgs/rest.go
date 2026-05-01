@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -36,6 +38,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/findfile", RequestFindFileInDb)
 	api.HandleFunc("/files", RequestFiles)
 	api.HandleFunc("/file", CreateFile).Methods("POST")
+	api.HandleFunc("/dirs", RequestDirs)
+	api.HandleFunc("/newtemplates", RequestNewTemplates)
 	api.HandleFunc("/file/{type}", RequestFile)               // html etc
 	api.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                // Get all stored filters from the server
@@ -272,21 +276,63 @@ func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 func CreateFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	body, _ := io.ReadAll(r.Body)
-	// TODO: Handle this and allow creation of files.
-	fmt.Println(string(body))
-	/*
-		res, err := CreateDayPage()
-		if res == nil || err != nil {
-			if err == nil {
-				err = fmt.Errorf("")
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(fmt.Sprintf("Failed creating day page %s", err))
-		} else {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(res)
+	var req common.NewFileRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: fmt.Sprintf("Invalid request: %s", err)})
+		return
+	}
+	if req.Filename == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: "Filename is required"})
+		return
+	}
+	title := req.Title
+	if title == "" {
+		title = strings.TrimSuffix(filepath.Base(req.Filename), filepath.Ext(req.Filename))
+	}
+	file := GetDb().CreateOrgFileFromTemplate(req.Filename, title, req.Template)
+	if file != nil {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(common.FileList{file.Filename})
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: "Failed to create file"})
+	}
+}
+
+func RequestDirs(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	dirSet := map[string]bool{}
+	files := GetDb().GetFiles()
+	for _, f := range files {
+		dirSet[filepath.Dir(f)] = true
+	}
+	for _, d := range Conf().Server.OrgDirs {
+		dirSet[d] = true
+	}
+	dirs := make([]string, 0, len(dirSet))
+	for d := range dirSet {
+		dirs = append(dirs, d)
+	}
+	json.NewEncoder(w).Encode(dirs)
+}
+
+func RequestNewTemplates(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	newDir := filepath.Join(Conf().Server.TemplatePath, "new")
+	var templates []string
+	entries, err := os.ReadDir(newDir)
+	if err != nil {
+		json.NewEncoder(w).Encode(templates)
+		return
+	}
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".tpl") {
+			templates = append(templates, "new/"+e.Name())
 		}
-	*/
+	}
+	json.NewEncoder(w).Encode(templates)
 }
 
 // Change the status TODO,DONE etc in a todo head by hash
