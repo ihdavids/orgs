@@ -273,6 +273,52 @@ func GenerateClockTable(ofile *common.OrgFile, parent *org.Section, blk *org.Blo
 	return &res
 }
 
+func collectClockEntries(sec *org.Section, block *BlockTest, filename string, entries *[]common.ClockEntry) {
+	drawer := sec.Headline.FindDrawer(Conf().ClockIntoDrawer)
+	if drawer != nil && drawer.Children != nil {
+		var totalMins float64
+		for _, c := range drawer.Children {
+			if c.GetType() == org.ClockNode {
+				clk := c.(org.Clock)
+				if block == nil || block.Date.DateTimeInRange(clk.Date.Start) || block.Date.DateTimeInRange(clk.Date.End) {
+					totalMins += float64(clk.Date.DurationMins)
+				}
+			}
+		}
+		if totalMins > 0 {
+			*entries = append(*entries, common.ClockEntry{
+				Headline: common.GetSectionTitle(sec),
+				Filename: filename,
+				Level:    sec.Headline.Lvl,
+				Mins:     totalMins,
+			})
+		}
+	}
+	for _, c := range sec.Children {
+		collectClockEntries(c, block, filename, entries)
+	}
+}
+
+// GenerateClockReport builds a ClockReport across all files for a given block range.
+func GenerateClockReport(blockName string) *common.ClockReport {
+	block := ParseBlock(blockName)
+	report := &common.ClockReport{Block: blockName}
+	files := GetDb().GetFiles()
+	for _, fname := range files {
+		ofile := GetDb().GetFile(fname)
+		if ofile == nil || ofile.Doc == nil {
+			continue
+		}
+		for _, sec := range ofile.Doc.Outline.Children {
+			collectClockEntries(sec, block, fname, &report.Entries)
+		}
+	}
+	for _, e := range report.Entries {
+		report.TotalMin += e.Mins
+	}
+	return report
+}
+
 func init() {
 	Conf().PlugManager.AddBlockMethod("clocktable", GenerateClockTable)
 }

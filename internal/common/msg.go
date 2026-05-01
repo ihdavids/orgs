@@ -13,6 +13,19 @@ type OrgFile struct {
 
 type Empty struct{}
 
+type ClockEntry struct {
+	Headline string  `json:"headline"`
+	Filename string  `json:"filename"`
+	Level    int     `json:"level"`
+	Mins     float64 `json:"mins"`
+}
+
+type ClockReport struct {
+	Entries  []ClockEntry `json:"entries"`
+	TotalMin float64      `json:"totalMin"`
+	Block    string       `json:"block"`
+}
+
 type FileList []string
 
 type NewFileRequest struct {

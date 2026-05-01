@@ -5,6 +5,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/capture"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clockin"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clocks"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/clocktable"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clockout"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/daypage"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/export"

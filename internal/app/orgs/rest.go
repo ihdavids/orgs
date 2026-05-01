@@ -76,6 +76,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/clockin", PostClockIn).Methods("POST")
 	api.HandleFunc("/clockout", PostClockOut).Methods("POST")
 	api.HandleFunc("/clock", RequestClock)
+	api.HandleFunc("/clockreport", RequestClockReport)
 	api.HandleFunc("/execb", PostExecb).Methods("POST")
 	api.HandleFunc("/exectable", PostExect).Methods("POST")
 	api.HandleFunc("/execalltables", PostExecAllT).Methods("POST")
@@ -738,6 +739,16 @@ func PostClockOut(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("ClockOut to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
+}
+
+func RequestClockReport(w http.ResponseWriter, r *http.Request) {
+	block := r.URL.Query().Get("block")
+	if block == "" {
+		block = "today"
+	}
+	report := GenerateClockReport(block)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(report)
 }
 
 func PostExecb(w http.ResponseWriter, r *http.Request) {
