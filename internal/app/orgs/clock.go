@@ -2,10 +2,9 @@ package orgs
 
 /* SDOC: Editing
 * Clocking
-  
+
   TODO: Fill in information on how to use the orgs clocking features
 EDOC */
-
 
 import (
 	"encoding/json"
@@ -54,6 +53,8 @@ func (self *OrgsClock) ClockOut() (common.ResultMsg, error) {
 		clk.RecalcDuration()
 		clock := org.Clock{Date: clk}
 		// TODO: Update target with the clock
+		fmt.Printf("TARGET: %s\n", self.Target.Id)
+		fmt.Printf("FILE: %s\n", self.Target.Filename)
 		if ofile, secs := GetDb().GetFromTarget(self.Target, false); secs != nil {
 			drawer := secs.Headline.FindDrawer(Conf().ClockIntoDrawer)
 			if drawer != nil {

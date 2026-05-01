@@ -56,9 +56,10 @@ func NewOrgDb() *OrgDb {
 }
 
 func (self *OrgDb) ConvertTargetToOlp(t *common.Target) error {
-	_, sec := self.GetFromTarget(t, false)
+	file, sec := self.GetFromTarget(t, false)
 	if sec != nil {
 		t.Type = "file+olp"
+		t.Filename = file.Filename
 		t.Id = common.BuildOutlinePath(sec, "::")
 		return nil
 	}
