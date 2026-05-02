@@ -787,9 +787,13 @@ func (self *CommandAgenda) renderMonthGrid() {
 
 	// Header row with day names
 	for c := 0; c < 7; c++ {
+		color := tcell.ColorGrey
+		if c == 0 || c == 6 {
+			color = tcell.ColorPurple
+		}
 		cell := makeCell(cellPrefix(c) + "[::b]" + dayNames[c] + "[::-]").
 			SetAlign(tview.AlignLeft).
-			SetTextColor(tcell.ColorGrey)
+			SetTextColor(color)
 		self.monthGrid.SetCell(curRow, c, cell)
 	}
 	curRow++
