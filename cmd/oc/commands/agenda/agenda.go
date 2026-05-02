@@ -47,6 +47,10 @@ type CommandAgenda struct {
 	layout              *tview.Flex
 	screenHeight        int
 	screenWidth         int
+	monthCursorDay      int              // 1-based day of month
+	monthCursorEntry    int              // -1 = day header selected, 0+ = entry index
+	monthDayTodos       map[int][]common.Todo // day -> sorted todos for current month
+	monthMaxVis         int              // max visible entries per day cell
 }
 
 func NewCommandAgenda() *CommandAgenda {
@@ -398,23 +402,39 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 			self.ShowAgendaPane(self.core)
 		}
 		return nil
-	case 'j':
-		if self.viewMode == viewDay {
-			self.Selected += 1
-			if self.Selected >= len(self.Reply) {
-				self.Selected = len(self.Reply)
-			}
-			self.ShowAgendaPane(self.core)
+	case 'h':
+		if self.viewMode == viewMonth {
+			self.monthMoveCursorDay(-1)
+			return nil
 		}
+		return event
+	case 'l':
+		if self.viewMode == viewMonth {
+			self.monthMoveCursorDay(1)
+			return nil
+		}
+		return event
+	case 'j':
+		if self.viewMode == viewMonth {
+			self.monthMoveCursorEntry(1)
+			return nil
+		}
+		self.Selected += 1
+		if self.Selected >= len(self.Reply) {
+			self.Selected = len(self.Reply)
+		}
+		self.ShowAgendaPane(self.core)
 		return nil
 	case 'k':
-		if self.viewMode == viewDay {
-			self.Selected -= 1
-			if self.Selected <= 0 {
-				self.Selected = 0
-			}
-			self.ShowAgendaPane(self.core)
+		if self.viewMode == viewMonth {
+			self.monthMoveCursorEntry(-1)
+			return nil
 		}
+		self.Selected -= 1
+		if self.Selected <= 0 {
+			self.Selected = 0
+		}
+		self.ShowAgendaPane(self.core)
 		return nil
 	case 'n':
 		self.CurDate = time.Now()
@@ -427,6 +447,16 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 		return nil
 	}
 	if event.Key() == tcell.KeyEnter {
+		if self.viewMode == viewMonth {
+			if self.monthCursorEntry >= 0 {
+				todos := self.monthDayTodos[self.monthCursorDay]
+				if self.monthCursorEntry < len(todos) {
+					t := todos[self.monthCursorEntry]
+					self.core.LaunchEditor(t.Filename, t.LineNum+1)
+				}
+			}
+			return nil
+		}
 		if self.viewMode == viewDay {
 			self.ShowAgendaPane(self.core)
 			if self.Selected > 0 {
@@ -729,6 +759,16 @@ func (self *CommandAgenda) renderMonthGrid() {
 		weeks++
 	}
 
+	// Build day->todos lookup for cursor navigation
+	self.monthDayTodos = make(map[int][]common.Todo)
+	for w := 0; w < 6; w++ {
+		for c := 0; c < 7; c++ {
+			if di := grid[w][c]; di != nil {
+				self.monthDayTodos[di.day] = di.todos
+			}
+		}
+	}
+
 	// Compute how many entry rows per week we can afford.
 	// Terminal height from the screen, minus:
 	//   2 for monthGrid outer border (top + bottom)
@@ -758,6 +798,7 @@ func (self *CommandAgenda) renderMonthGrid() {
 	if maxVis < 1 {
 		maxVis = 1
 	}
+	self.monthMaxVis = maxVis
 
 	// Prefix for cells: adds a grey "│" divider before columns 1-6
 	cellPrefix := func(c int) string {
@@ -817,6 +858,7 @@ func (self *CommandAgenda) renderMonthGrid() {
 			}
 
 			// Day number cell
+			isCursorDay := di.day == self.monthCursorDay
 			isCurDay := di.date.Year() == self.CurDate.Year() &&
 				di.date.Month() == self.CurDate.Month() &&
 				di.date.Day() == self.CurDate.Day()
@@ -824,12 +866,16 @@ func (self *CommandAgenda) renderMonthGrid() {
 			dayNum := fmt.Sprintf("%d", di.day)
 			dayLabel := ""
 			switch {
+			case isCursorDay && self.monthCursorEntry == -1:
+				dayLabel = fmt.Sprintf("%s [white:darkmagenta] %s [-:-]", prefix, dayNum)
 			case di.isToday && len(di.todos) > 0:
 				dayLabel = fmt.Sprintf("%s [black:green] %s [-:-]", prefix, dayNum)
 			case di.isToday:
 				dayLabel = fmt.Sprintf("%s [white:blue] %s [-:-]", prefix, dayNum)
 			case isCurDay:
 				dayLabel = fmt.Sprintf("%s [white:darkcyan] %s [-:-]", prefix, dayNum)
+			case isCursorDay:
+				dayLabel = fmt.Sprintf("%s [yellow::b] %s[-::-]", prefix, dayNum)
 			case len(di.todos) > 0:
 				dayLabel = fmt.Sprintf("%s [green::b] %s[-::-]", prefix, dayNum)
 			default:
@@ -855,8 +901,13 @@ func (self *CommandAgenda) renderMonthGrid() {
 						}
 					}
 
-					entryLabel := fmt.Sprintf("%s [%s] %s[-]", prefix, color, label)
-					self.monthGrid.SetCell(curRow+1+r, c, makeCell(entryLabel))
+					if isCursorDay && self.monthCursorEntry == r {
+						entryLabel := fmt.Sprintf("%s [white:darkmagenta] %s [-:-]", prefix, label)
+						self.monthGrid.SetCell(curRow+1+r, c, makeCell(entryLabel))
+					} else {
+						entryLabel := fmt.Sprintf("%s [%s] %s[-]", prefix, color, label)
+						self.monthGrid.SetCell(curRow+1+r, c, makeCell(entryLabel))
+					}
 				} else if r == maxVis-1 && len(di.todos) > maxVis {
 					overflow := fmt.Sprintf("%s [grey] +%d more[-]", prefix, len(di.todos)-maxVis)
 					self.monthGrid.SetCell(curRow+1+r, c, makeCell(overflow))
@@ -875,11 +926,85 @@ func (self *CommandAgenda) renderMonthGrid() {
 	}
 }
 
+// monthMoveCursorDay moves the cursor left/right by delta days, wrapping months.
+func (self *CommandAgenda) monthMoveCursorDay(delta int) {
+	daysInMonth := time.Date(self.CurDate.Year(), self.CurDate.Month()+1, 0, 0, 0, 0, 0, time.Local).Day()
+	newDay := self.monthCursorDay + delta
+	if newDay < 1 {
+		// Wrap to previous month
+		self.CurDate = self.CurDate.AddDate(0, -1, 0)
+		prevDays := time.Date(self.CurDate.Year(), self.CurDate.Month()+1, 0, 0, 0, 0, 0, time.Local).Day()
+		self.monthCursorDay = prevDays
+		self.monthCursorEntry = -1
+		self.fetchAllTodos(self.core)
+	} else if newDay > daysInMonth {
+		// Wrap to next month
+		self.CurDate = self.CurDate.AddDate(0, 1, 0)
+		self.monthCursorDay = 1
+		self.monthCursorEntry = -1
+		self.fetchAllTodos(self.core)
+	} else {
+		self.monthCursorDay = newDay
+		self.monthCursorEntry = -1
+	}
+	self.renderMonthGrid()
+}
+
+// monthMoveCursorEntry moves the cursor up/down within a day's entries.
+// -1 = day header, 0+ = entry index. Moving past the top goes to day header,
+// moving past the bottom wraps to the next day.
+func (self *CommandAgenda) monthMoveCursorEntry(delta int) {
+	todos := self.monthDayTodos[self.monthCursorDay]
+	maxEntry := len(todos) - 1
+	if maxEntry < 0 {
+		maxEntry = -1
+	}
+	// Cap visible entries
+	if self.monthMaxVis > 0 && maxEntry >= self.monthMaxVis {
+		maxEntry = self.monthMaxVis - 1
+	}
+
+	newEntry := self.monthCursorEntry + delta
+	if newEntry < -1 {
+		// Already at day header, move to previous day
+		self.monthMoveCursorDay(-1)
+		// Position at last entry of new day
+		newTodos := self.monthDayTodos[self.monthCursorDay]
+		last := len(newTodos) - 1
+		if self.monthMaxVis > 0 && last >= self.monthMaxVis {
+			last = self.monthMaxVis - 1
+		}
+		if last < -1 {
+			last = -1
+		}
+		self.monthCursorEntry = last
+		self.renderMonthGrid()
+		return
+	}
+	if newEntry > maxEntry {
+		// Past last entry, move to next day header
+		self.monthMoveCursorDay(1)
+		self.monthCursorEntry = -1
+		self.renderMonthGrid()
+		return
+	}
+	self.monthCursorEntry = newEntry
+	self.renderMonthGrid()
+}
+
 func (self *CommandAgenda) switchView(mode int) {
 	self.viewMode = mode
 	self.layout.Clear()
 	switch mode {
 	case viewMonth:
+		// Initialize cursor to today's day if in current month, else day 1
+		now := time.Now()
+		if self.CurDate.Year() == now.Year() && self.CurDate.Month() == now.Month() {
+			self.monthCursorDay = now.Day()
+		} else {
+			self.monthCursorDay = 1
+		}
+		self.monthCursorEntry = -1
 		self.fetchAllTodos(self.core)
 		self.renderMonthGrid()
 		self.layout.
@@ -898,10 +1023,11 @@ func (self *CommandAgenda) updateStatusBar() {
 	self.statusBar.Clear()
 	switch self.viewMode {
 	case viewMonth:
-		self.statusBar.SetCell(0, 0, tview.NewTableCell(" ,:Prev Month "))
-		self.statusBar.SetCell(0, 1, tview.NewTableCell(" .:Next Month "))
-		self.statusBar.SetCell(0, 2, tview.NewTableCell(" n:Today "))
-		self.statusBar.SetCell(0, 3, tview.NewTableCell(" d:Day View "))
+		self.statusBar.SetCell(0, 0, tview.NewTableCell(" h/l:Day "))
+		self.statusBar.SetCell(0, 1, tview.NewTableCell(" j/k:Entry "))
+		self.statusBar.SetCell(0, 2, tview.NewTableCell(" ,/.:Month "))
+		self.statusBar.SetCell(0, 3, tview.NewTableCell(" n:Today "))
+		self.statusBar.SetCell(0, 4, tview.NewTableCell(" d:Day View "))
 	default:
 		self.statusBar.SetCell(0, 0, tview.NewTableCell(" ,:Prev "))
 		self.statusBar.SetCell(0, 1, tview.NewTableCell(" .:Next "))
