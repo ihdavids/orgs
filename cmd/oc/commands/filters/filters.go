@@ -75,7 +75,8 @@ func (self *Filter) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *Filter) SetupParameters(fset *flag.FlagSet) {
-	fset.StringVar(&self.DynamicQuery, "f", "", "Additional filtering for filter list")
+	fset.StringVar(&self.CoreQuery, "f", "", "Filter name to execute")
+	fset.StringVar(&self.DynamicQuery, "q", "", "Additional query to combine with filter")
 }
 
 func (self *Filter) Exec(core *commands.Core) {
