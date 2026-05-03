@@ -1078,6 +1078,15 @@ func SetThingChildren(n *org.Headline, s *org.Section, doit func(head *org.Headl
 			if SetThingChildren(&nn, s, doit) {
 				return true
 			}
+		case *org.Headline:
+			if nn.Index == s.Headline.Index {
+				result := doit(nn)
+				*nn = result
+				return true
+			}
+			if SetThingChildren(nn, s, doit) {
+				return true
+			}
 		}
 	}
 	return false
@@ -1093,6 +1102,15 @@ func SetThing(f *common.OrgFile, s *org.Section, doit func(head *org.Headline) o
 				return true
 			}
 			if SetThingChildren(&n, s, doit) {
+				return true
+			}
+		case *org.Headline:
+			if n.Index == s.Headline.Index {
+				result := doit(n)
+				*n = result
+				return true
+			}
+			if SetThingChildren(n, s, doit) {
 				return true
 			}
 		}
