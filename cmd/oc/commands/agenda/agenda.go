@@ -51,6 +51,7 @@ type CommandAgenda struct {
 	monthCursorEntry    int              // -1 = day header selected, 0+ = entry index
 	monthDayTodos       map[int][]common.Todo // day -> sorted todos for current month
 	monthMaxVis         int              // max visible entries per day cell
+	pages               *tview.Pages
 }
 
 func NewCommandAgenda() *CommandAgenda {
@@ -364,6 +365,10 @@ func (self *CommandAgenda) RenderAgendaEntry(v common.Todo, index int) string {
 }
 
 func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKey {
+	// When a popup is open, let it handle all input
+	if self.pages != nil && self.pages.HasPage("statusPopup") {
+		return event
+	}
 	if event.Key() == tcell.KeyEscape && self.viewMode == viewMonth {
 		self.switchView(viewDay)
 		self.updateStatusBar()
@@ -445,6 +450,12 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 			self.ShowAgendaPane(self.core)
 		}
 		return nil
+	case 't':
+		if self.viewMode == viewMonth && self.monthCursorEntry >= 0 {
+			self.showStatusPopup()
+			return nil
+		}
+		return event
 	}
 	if event.Key() == tcell.KeyEnter {
 		if self.viewMode == viewMonth {
@@ -883,6 +894,55 @@ func (self *CommandAgenda) renderMonthGrid() {
 		}
 	}
 
+	// Build next-month todos lookup
+	nextMonthName := nextMonthFirst.Month().String()
+	nextDayTodos := make(map[int][]common.Todo)
+	for _, t := range self.allTodos {
+		if t.Date != nil && !t.Date.Start.IsZero() {
+			d := t.Date.Start
+			if d.Year() == nextMonthFirst.Year() && d.Month() == nextMonthFirst.Month() {
+				nextDayTodos[d.Day()] = append(nextDayTodos[d.Day()], t)
+			}
+		}
+	}
+	// Sort each day's todos
+	for k, v := range nextDayTodos {
+		nextDayTodos[k] = sortTodosByTime(v)
+	}
+
+	// Helper: render a dimmed next-month day cell (number + entries)
+	renderDimDay := func(row, c, d int) {
+		dp := dimCellPrefix(c)
+		// Day number - show month name on day 1
+		dayStr := fmt.Sprintf("%d", d)
+		if d == 1 {
+			dayStr = fmt.Sprintf("%d %s", d, nextMonthName)
+		}
+		dayLabel := fmt.Sprintf("%s [#555555] %s[-]", dp, dayStr)
+		self.monthGrid.SetCell(row, c, makeCell(dayLabel))
+
+		// Dimmed entries
+		todos := nextDayTodos[d]
+		for r := 1; r < stride; r++ {
+			idx := r - 1
+			if idx < len(todos) && (idx < maxVis-1 || len(todos) <= maxVis) {
+				t := todos[idx]
+				timeStr := ""
+				if t.Date != nil && t.Date.HaveTime {
+					timeStr = t.Date.Start.Format("15:04") + " "
+				}
+				label := timeStr + t.Headline
+				entryLabel := fmt.Sprintf("%s [#444444] %s[-]", dp, label)
+				self.monthGrid.SetCell(row+r, c, makeCell(entryLabel))
+			} else if idx == maxVis-1 && len(todos) > maxVis {
+				overflow := fmt.Sprintf("%s [#333333] +%d more[-]", dp, len(todos)-maxVis)
+				self.monthGrid.SetCell(row+r, c, makeCell(overflow))
+			} else {
+				self.monthGrid.SetCell(row+r, c, makeCell(dp))
+			}
+		}
+	}
+
 	// Track whether trailing nil cells in the last week were filled with next-month days
 	lastWeekUsedNextMonth := lastWeekTrailingCol > 0
 
@@ -894,15 +954,11 @@ func (self *CommandAgenda) renderMonthGrid() {
 			if di == nil {
 				// In the last week, trailing nil cells get dimmed next-month days
 				if w == weeks-1 && lastWeekTrailingCol > 0 && c >= lastWeekTrailingCol {
-					dp := dimCellPrefix(c)
 					d := nextGrid[0][c]
 					if d > 0 {
-						dayLabel := fmt.Sprintf("%s [#555555] %d[-]", dp, d)
-						self.monthGrid.SetCell(curRow, c, makeCell(dayLabel))
-						for r := 1; r < stride; r++ {
-							self.monthGrid.SetCell(curRow+r, c, makeCell(dp))
-						}
+						renderDimDay(curRow, c, d)
 					} else {
+						dp := dimCellPrefix(c)
 						for r := 0; r < stride; r++ {
 							self.monthGrid.SetCell(curRow+r, c, makeCell(dp))
 						}
@@ -978,7 +1034,21 @@ func (self *CommandAgenda) renderMonthGrid() {
 
 		// Separator row between weeks
 		if w < weeks-1 {
-			makeSepRow(curRow)
+			// If the next week is the last one and it has inlined next-month days,
+			// embed the next month name above the column where day 1 falls
+			if w == weeks-2 && lastWeekUsedNextMonth {
+				for c := 0; c < 7; c++ {
+					if c == nextStartDow {
+						label := fmt.Sprintf("[#555555]─ %s ", nextMonthName) + strings.Repeat("─", colWidth) + "[-]"
+						self.monthGrid.SetCell(curRow, c, makeCell(label))
+					} else {
+						sep := "[grey]" + strings.Repeat("─", colWidth) + "[-]"
+						self.monthGrid.SetCell(curRow, c, makeCell(sep))
+					}
+				}
+			} else {
+				makeSepRow(curRow)
+			}
 			curRow++
 		}
 	}
@@ -992,26 +1062,35 @@ func (self *CommandAgenda) renderMonthGrid() {
 	}
 	if curRow < totalAvail && nextStart < nextWeeks {
 		for nw := nextStart; nw < nextWeeks && curRow < totalAvail; nw++ {
-			// Dimmed separator before each next-month week
-			makeDimSepRow(curRow)
+			// Dimmed separator — embed month name above day 1's column
+			if nw == 0 {
+				// Day 1 is in this row at column nextStartDow; put month name in the separator
+				for c := 0; c < 7; c++ {
+					if c == nextStartDow {
+						label := fmt.Sprintf("[#555555]─ %s ", nextMonthName) + strings.Repeat("─", colWidth) + "[-]"
+						self.monthGrid.SetCell(curRow, c, makeCell(label))
+					} else {
+						sep := "[#333333]" + strings.Repeat("─", colWidth) + "[-]"
+						self.monthGrid.SetCell(curRow, c, makeCell(sep))
+					}
+				}
+			} else {
+				makeDimSepRow(curRow)
+			}
 			curRow++
 			if curRow >= totalAvail {
 				break
 			}
 
 			for c := 0; c < 7; c++ {
-				prefix := dimCellPrefix(c)
 				d := nextGrid[nw][c]
 				if d == 0 {
+					dp := dimCellPrefix(c)
 					for r := 0; r < stride && curRow+r < totalAvail; r++ {
-						self.monthGrid.SetCell(curRow+r, c, makeCell(prefix))
+						self.monthGrid.SetCell(curRow+r, c, makeCell(dp))
 					}
 				} else {
-					dayLabel := fmt.Sprintf("%s [#555555] %d[-]", prefix, d)
-					self.monthGrid.SetCell(curRow, c, makeCell(dayLabel))
-					for r := 1; r < stride && curRow+r < totalAvail; r++ {
-						self.monthGrid.SetCell(curRow+r, c, makeCell(prefix))
-					}
+					renderDimDay(curRow, c, d)
 				}
 			}
 			curRow += stride
@@ -1085,6 +1164,124 @@ func (self *CommandAgenda) monthMoveCursorEntry(delta int) {
 	self.renderMonthGrid()
 }
 
+// showStatusPopup queries the server for valid statuses for the currently selected
+// todo entry and shows a popup list to pick a new status.
+func (self *CommandAgenda) showStatusPopup() {
+	if self.monthCursorEntry < 0 {
+		return
+	}
+	todos := self.monthDayTodos[self.monthCursorDay]
+	if self.monthCursorEntry >= len(todos) {
+		return
+	}
+	t := todos[self.monthCursorEntry]
+	if t.Hash == "" {
+		return
+	}
+
+	// Query valid statuses from server
+	var states common.TodoStatesResult
+	params := map[string]string{}
+	commands.SendReceiveGet(self.core, fmt.Sprintf("status/%s", t.Hash), params, &states)
+
+	allStates := append(states.Active, states.Done...)
+	if len(allStates) == 0 {
+		return
+	}
+
+	// Color map for status values
+	statusColors := map[string]string{
+		"TODO":        "pink",
+		"DONE":        "green",
+		"NEXT":        "blue",
+		"WAITING":     "orange",
+		"BLOCKED":     "red",
+		"CANCELLED":   "grey",
+		"PHONE":       "magenta",
+		"MEETING":     "magenta",
+		"INPROGRESS":  "yellow",
+		"IN-PROGRESS": "yellow",
+		"PAUSED":      "orange",
+		"BACKLOG":     "grey",
+	}
+	// Override with user-configured colors
+	for k, v := range self.AgendaStatusColors {
+		statusColors[k] = v
+	}
+
+	list := tview.NewList()
+	list.SetBorder(true).SetTitle(fmt.Sprintf(" Status: %s ", t.Headline))
+	list.SetTitleColor(tcell.ColorSkyblue)
+	list.ShowSecondaryText(false)
+	list.SetHighlightFullLine(true)
+	list.SetSelectedBackgroundColor(tcell.ColorDarkMagenta)
+
+	for _, s := range allStates {
+		status := s // capture for closure
+		color := "white"
+		if c, ok := statusColors[status]; ok {
+			color = c
+		}
+		cell := fmt.Sprintf("[%s]%s[-]", color, status)
+		if status == t.Status {
+			cell = fmt.Sprintf("[%s::b]* %s[-::-]", color, status)
+		}
+		list.AddItem(cell, "", 0, func() {
+			// Send status change to server
+			change := common.TodoItemChange{Hash: t.Hash, Value: status}
+			var result common.Result
+			commands.SendReceivePost(self.core, "status/change", &change, &result)
+
+			// Dismiss popup and refresh
+			self.pages.RemovePage("statusPopup")
+			self.app.SetFocus(self.monthGrid)
+			self.fetchAllTodos(self.core)
+			self.renderMonthGrid()
+		})
+	}
+
+	// Highlight current status in the list
+	for i, s := range allStates {
+		if s == t.Status {
+			list.SetCurrentItem(i)
+			break
+		}
+	}
+
+	list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEscape {
+			self.pages.RemovePage("statusPopup")
+			self.app.SetFocus(self.monthGrid)
+			return nil
+		}
+		return event
+	})
+
+	// Size the popup to fit the content
+	maxLen := 0
+	for _, s := range allStates {
+		if len(s) > maxLen {
+			maxLen = len(s)
+		}
+	}
+	popupWidth := maxLen + 8
+	if popupWidth < 20 {
+		popupWidth = 20
+	}
+	popupHeight := len(allStates) + 2
+	self.pages.AddPage("statusPopup",
+		tview.NewFlex().
+			AddItem(nil, 0, 1, false).
+			AddItem(tview.NewFlex().SetDirection(tview.FlexRow).
+				AddItem(nil, 0, 1, false).
+				AddItem(list, popupHeight, 0, true).
+				AddItem(nil, 0, 1, false),
+				popupWidth, 0, true).
+			AddItem(nil, 0, 1, false),
+		true, true)
+	self.app.SetFocus(list)
+}
+
 func (self *CommandAgenda) switchView(mode int) {
 	self.viewMode = mode
 	self.layout.Clear()
@@ -1120,7 +1317,8 @@ func (self *CommandAgenda) updateStatusBar() {
 		self.statusBar.SetCell(0, 1, tview.NewTableCell(" j/k:Entry "))
 		self.statusBar.SetCell(0, 2, tview.NewTableCell(" ,/.:Month "))
 		self.statusBar.SetCell(0, 3, tview.NewTableCell(" n:Today "))
-		self.statusBar.SetCell(0, 4, tview.NewTableCell(" d:Day View "))
+		self.statusBar.SetCell(0, 4, tview.NewTableCell(" t:Status "))
+		self.statusBar.SetCell(0, 5, tview.NewTableCell(" d:Day View "))
 	default:
 		self.statusBar.SetCell(0, 0, tview.NewTableCell(" ,:Prev "))
 		self.statusBar.SetCell(0, 1, tview.NewTableCell(" .:Next "))
@@ -1225,6 +1423,8 @@ func (self *CommandAgenda) Exec(core *commands.Core) {
 		AddItem(self.out, 0, 3, true).
 		AddItem(self.weekView, 0, 2, false).
 		AddItem(self.statusBar, 1, 0, false)
+	self.pages = tview.NewPages().
+		AddPage("main", self.layout, true, true)
 	self.app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return self.HandleShortcuts(event)
 	})
@@ -1236,7 +1436,7 @@ func (self *CommandAgenda) Exec(core *commands.Core) {
 	})
 	self.updateStatusBar()
 	self.ShowAgendaPane(core)
-	if err := self.app.SetRoot(self.layout, true).EnableMouse(true).Run(); err != nil {
+	if err := self.app.SetRoot(self.pages, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 	/*
