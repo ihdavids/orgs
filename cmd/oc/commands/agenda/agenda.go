@@ -755,6 +755,7 @@ func (self *CommandAgenda) renderMonthGrid() {
 		day++
 	}
 	weeks = week
+	lastWeekTrailingCol := col // columns >= this in the last week are trailing (next-month)
 	if col > 0 {
 		weeks++
 	}
@@ -845,14 +846,71 @@ func (self *CommandAgenda) renderMonthGrid() {
 
 	stride := 1 + maxVis
 
+	// Pre-compute next-month grid so we can fill trailing cells in the last week
+	nextMonthFirst := time.Date(curYear, curMonth+1, 1, 0, 0, 0, 0, time.Local)
+	nextDaysInMonth := time.Date(curYear, curMonth+2, 0, 0, 0, 0, 0, time.Local).Day()
+	nextStartDow := int(nextMonthFirst.Weekday())
+	var nextGrid [6][7]int
+	nextWeeks := 0
+	{
+		nd := nextStartDow
+		nw := 0
+		for d := 1; d <= nextDaysInMonth; d++ {
+			nextGrid[nw][nd] = d
+			nd++
+			if nd >= 7 {
+				nd = 0
+				nw++
+			}
+		}
+		nextWeeks = nw
+		if nd > 0 {
+			nextWeeks++
+		}
+	}
+
+	// Dim styles for next-month cells
+	dimCellPrefix := func(c int) string {
+		if c == 0 {
+			return ""
+		}
+		return "[#333333]│[-]"
+	}
+	makeDimSepRow := func(row int) {
+		for c := 0; c < 7; c++ {
+			sep := "[#333333]" + strings.Repeat("─", colWidth) + "[-]"
+			self.monthGrid.SetCell(row, c, makeCell(sep))
+		}
+	}
+
+	// Track whether trailing nil cells in the last week were filled with next-month days
+	lastWeekUsedNextMonth := lastWeekTrailingCol > 0
+
 	for w := 0; w < weeks; w++ {
 		for c := 0; c < 7; c++ {
 			di := grid[w][c]
 			prefix := cellPrefix(c)
 
 			if di == nil {
-				for r := 0; r < stride; r++ {
-					self.monthGrid.SetCell(curRow+r, c, makeCell(prefix))
+				// In the last week, trailing nil cells get dimmed next-month days
+				if w == weeks-1 && lastWeekTrailingCol > 0 && c >= lastWeekTrailingCol {
+					dp := dimCellPrefix(c)
+					d := nextGrid[0][c]
+					if d > 0 {
+						dayLabel := fmt.Sprintf("%s [#555555] %d[-]", dp, d)
+						self.monthGrid.SetCell(curRow, c, makeCell(dayLabel))
+						for r := 1; r < stride; r++ {
+							self.monthGrid.SetCell(curRow+r, c, makeCell(dp))
+						}
+					} else {
+						for r := 0; r < stride; r++ {
+							self.monthGrid.SetCell(curRow+r, c, makeCell(dp))
+						}
+					}
+				} else {
+					for r := 0; r < stride; r++ {
+						self.monthGrid.SetCell(curRow+r, c, makeCell(prefix))
+					}
 				}
 				continue
 			}
@@ -922,6 +980,41 @@ func (self *CommandAgenda) renderMonthGrid() {
 		if w < weeks-1 {
 			makeSepRow(curRow)
 			curRow++
+		}
+	}
+
+	// Fill remaining vertical space with additional next-month weeks (dimmed)
+	totalAvail := screenH
+	// Start from week 1 if we already inlined week 0 into the last current-month row
+	nextStart := 0
+	if lastWeekUsedNextMonth {
+		nextStart = 1
+	}
+	if curRow < totalAvail && nextStart < nextWeeks {
+		for nw := nextStart; nw < nextWeeks && curRow < totalAvail; nw++ {
+			// Dimmed separator before each next-month week
+			makeDimSepRow(curRow)
+			curRow++
+			if curRow >= totalAvail {
+				break
+			}
+
+			for c := 0; c < 7; c++ {
+				prefix := dimCellPrefix(c)
+				d := nextGrid[nw][c]
+				if d == 0 {
+					for r := 0; r < stride && curRow+r < totalAvail; r++ {
+						self.monthGrid.SetCell(curRow+r, c, makeCell(prefix))
+					}
+				} else {
+					dayLabel := fmt.Sprintf("%s [#555555] %d[-]", prefix, d)
+					self.monthGrid.SetCell(curRow, c, makeCell(dayLabel))
+					for r := 1; r < stride && curRow+r < totalAvail; r++ {
+						self.monthGrid.SetCell(curRow+r, c, makeCell(prefix))
+					}
+				}
+			}
+			curRow += stride
 		}
 	}
 }
