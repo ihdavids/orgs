@@ -52,12 +52,13 @@ type CommandAgenda struct {
 	monthDayTodos       map[int][]common.Todo // day -> sorted todos for current month
 	monthMaxVis         int              // max visible entries per day cell
 	pages               *tview.Pages
+	dayEntries          []common.Todo    // ordered list of entries in the day view (matches render order)
 }
 
 func NewCommandAgenda() *CommandAgenda {
 	var todo *CommandAgenda = new(CommandAgenda)
 	todo.CurDate = time.Now()
-	todo.Selected = 0
+	todo.Selected = 1
 	todo.ClearBlockView()
 	todo.AgendaTextColor = "yellow"
 	todo.AgendaFilenameColor = "darkcyan"
@@ -425,8 +426,8 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 			return nil
 		}
 		self.Selected += 1
-		if self.Selected >= len(self.Reply) {
-			self.Selected = len(self.Reply)
+		if self.Selected > len(self.dayEntries) {
+			self.Selected = len(self.dayEntries)
 		}
 		self.ShowAgendaPane(self.core)
 		return nil
@@ -436,8 +437,8 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 			return nil
 		}
 		self.Selected -= 1
-		if self.Selected <= 0 {
-			self.Selected = 0
+		if self.Selected < 1 {
+			self.Selected = 1
 		}
 		self.ShowAgendaPane(self.core)
 		return nil
@@ -452,7 +453,21 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 		return nil
 	case 't':
 		if self.viewMode == viewMonth && self.monthCursorEntry >= 0 {
-			self.showStatusPopup()
+			todos := self.monthDayTodos[self.monthCursorDay]
+			if self.monthCursorEntry < len(todos) {
+				self.showStatusPopupFor(todos[self.monthCursorEntry], self.monthGrid, func() {
+					self.fetchAllTodos(self.core)
+					self.renderMonthGrid()
+				})
+			}
+			return nil
+		}
+		if self.viewMode == viewDay {
+			if t := self.getSelectedDayTodo(); t != nil {
+				self.showStatusPopupFor(*t, self.out, func() {
+					self.ShowAgendaPane(self.core)
+				})
+			}
 			return nil
 		}
 		return event
@@ -469,9 +484,8 @@ func (self *CommandAgenda) HandleShortcuts(event *tcell.EventKey) *tcell.EventKe
 			return nil
 		}
 		if self.viewMode == viewDay {
-			self.ShowAgendaPane(self.core)
-			if self.Selected > 0 {
-				//LaunchEditor(self.Reply[self.Selected-1].Filename, self.Reply[self.Selected-1].LineNum+1)
+			if t := self.getSelectedDayTodo(); t != nil {
+				self.core.LaunchEditor(t.Filename, t.LineNum+1)
 			}
 		}
 		return nil
@@ -1164,17 +1178,18 @@ func (self *CommandAgenda) monthMoveCursorEntry(delta int) {
 	self.renderMonthGrid()
 }
 
-// showStatusPopup queries the server for valid statuses for the currently selected
-// todo entry and shows a popup list to pick a new status.
-func (self *CommandAgenda) showStatusPopup() {
-	if self.monthCursorEntry < 0 {
-		return
+// getSelectedDayTodo returns the currently selected todo in the day view, or nil.
+func (self *CommandAgenda) getSelectedDayTodo() *common.Todo {
+	idx := self.Selected - 1 // Selected is 1-based
+	if idx >= 0 && idx < len(self.dayEntries) {
+		return &self.dayEntries[idx]
 	}
-	todos := self.monthDayTodos[self.monthCursorDay]
-	if self.monthCursorEntry >= len(todos) {
-		return
-	}
-	t := todos[self.monthCursorEntry]
+	return nil
+}
+
+// showStatusPopupFor shows a status-change popup for the given todo.
+// focusTarget is the widget to return focus to, and onDone is called after a successful change.
+func (self *CommandAgenda) showStatusPopupFor(t common.Todo, focusTarget tview.Primitive, onDone func()) {
 	if t.Hash == "" {
 		return
 	}
@@ -1234,9 +1249,10 @@ func (self *CommandAgenda) showStatusPopup() {
 
 			// Dismiss popup and refresh
 			self.pages.RemovePage("statusPopup")
-			self.app.SetFocus(self.monthGrid)
-			self.fetchAllTodos(self.core)
-			self.renderMonthGrid()
+			self.app.SetFocus(focusTarget)
+			if onDone != nil {
+				onDone()
+			}
 		})
 	}
 
@@ -1251,7 +1267,7 @@ func (self *CommandAgenda) showStatusPopup() {
 	list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEscape {
 			self.pages.RemovePage("statusPopup")
-			self.app.SetFocus(self.monthGrid)
+			self.app.SetFocus(focusTarget)
 			return nil
 		}
 		return event
@@ -1301,6 +1317,7 @@ func (self *CommandAgenda) switchView(mode int) {
 			AddItem(self.monthGrid, 0, 1, true).
 			AddItem(self.statusBar, 1, 0, false)
 	default:
+		self.Selected = 1
 		self.layout.
 			AddItem(self.out, 0, 3, true).
 			AddItem(self.weekView, 0, 2, false).
@@ -1320,10 +1337,11 @@ func (self *CommandAgenda) updateStatusBar() {
 		self.statusBar.SetCell(0, 4, tview.NewTableCell(" t:Status "))
 		self.statusBar.SetCell(0, 5, tview.NewTableCell(" d:Day View "))
 	default:
-		self.statusBar.SetCell(0, 0, tview.NewTableCell(" ,:Prev "))
-		self.statusBar.SetCell(0, 1, tview.NewTableCell(" .:Next "))
+		self.statusBar.SetCell(0, 0, tview.NewTableCell(" j/k:Entry "))
+		self.statusBar.SetCell(0, 1, tview.NewTableCell(" ,/.:Day "))
 		self.statusBar.SetCell(0, 2, tview.NewTableCell(" n:Today "))
-		self.statusBar.SetCell(0, 3, tview.NewTableCell(" m:Month View "))
+		self.statusBar.SetCell(0, 3, tview.NewTableCell(" t:Status "))
+		self.statusBar.SetCell(0, 4, tview.NewTableCell(" m:Month View "))
 	}
 }
 
@@ -1355,10 +1373,12 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 	end := 20
 	index := 0
 	now := time.Now()
+	self.dayEntries = nil
 	// Render all-day / untimed entries (habits, scheduled items without a time)
 	for _, v := range self.Reply {
 		if v.Date == nil || !v.Date.HaveTime {
 			index += 1
+			self.dayEntries = append(self.dayEntries, v)
 			txt += self.RenderAllDayEntry(v, index)
 		}
 	}
@@ -1381,6 +1401,7 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 		for _, v := range self.Reply {
 			if v.Date != nil && v.Date.HaveTime && v.Date.Start.Hour() == i {
 				index += 1
+				self.dayEntries = append(self.dayEntries, v)
 				txt += self.RenderAgendaEntry(v, index)
 			}
 		}
