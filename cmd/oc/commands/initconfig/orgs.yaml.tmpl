@@ -1,0 +1,330 @@
+# =============================================================================
+# Orgs Configuration File (orgs.yaml)
+# =============================================================================
+# This file configures both the orgs server and the CLI client.
+# Place it next to your orgs binary or specify with: orgs -config /path/to/orgs.yaml
+#
+# The file is split into two main sections:
+#   1. "server:" - settings for the orgs HTTP/HTTPS server
+#   2. Top-level keys - settings for the CLI client and shared options
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SERVER CONFIGURATION
+# -----------------------------------------------------------------------------
+server:
+
+  # ---------------------------------------------------------------------------
+  # Org Directories
+  # ---------------------------------------------------------------------------
+  # List of directories containing your .org files. The server watches these
+  # directories for changes and parses all org files found within them.
+  # You MUST specify at least one directory.
+  orgDirs:
+    - "/path/to/your/org/files"
+
+  # ---------------------------------------------------------------------------
+  # Security / Authentication
+  # ---------------------------------------------------------------------------
+  # These keys are used for JWT token signing and encryption.
+  # If omitted, random keys are generated at startup (tokens won't persist
+  # across restarts). For production use, set your own stable keys.
+  #
+  # orgJWS: signing key for JWS (HS256). Use a strong random base64 string.
+  # orgJWS: "your-base64-encoded-signing-key"
+  #
+  # orgJWE: encryption key for JWE (PBES2). Use a strong random base64 string.
+  # orgJWE: "your-base64-encoded-encryption-key"
+  #
+  # orgSalt: appended to per-user salt to defend against rainbow tables.
+  # YOU MUST SET THIS to something unique. The default is insecure.
+  orgSalt: "CHANGE-ME-to-a-unique-random-string"
+
+  # Path to a YAML keystore file containing user credentials.
+  # Required for authentication to work. Format: username -> hashed password.
+  # keystore: "/path/to/keystore.yaml"
+
+  # ---------------------------------------------------------------------------
+  # Network / Ports
+  # ---------------------------------------------------------------------------
+  # HTTP port for the server (default: 8010)
+  port: 8010
+
+  # HTTPS/TLS port (default: 443)
+  tlsport: 443
+
+  # Whether to allow plain HTTP connections (default: false)
+  allowHttp: true
+
+  # Whether to allow HTTPS connections (default: true)
+  allowHttps: false
+
+  # TLS certificate and key file paths (required if allowHttps is true)
+  # servercrt: "server.crt"
+  # serverkey: "server.key"
+
+  # Base path for the REST API (default: "/org")
+  # servepath: "/org"
+
+  # ---------------------------------------------------------------------------
+  # Projects
+  # ---------------------------------------------------------------------------
+  # How to identify a "project" heading:
+  #   true  = a heading is a project if it has a :PROJECT: tag
+  #   false = a heading is a project if it has child headings with TODO states
+  useProjectTag: true
+
+  # ---------------------------------------------------------------------------
+  # TODO States
+  # ---------------------------------------------------------------------------
+  # Default TODO keyword sequence. Keywords before "|" are active states,
+  # keywords after "|" are done/closed states. These are used when an org file
+  # does not define its own #+TODO line.
+  defaultTodoStates: "TODO INPROGRESS IN-PROGRESS NEXT BLOCKED PAUSED WAITING PHONE MEETING BACKLOG | DONE CANCELLED"
+
+  # Which states count as "next actions" for agenda views
+  defaultNextStates: "NEXT"
+
+  # ---------------------------------------------------------------------------
+  # Templates
+  # ---------------------------------------------------------------------------
+  # Path to the templates directory (pongo2 templates for exports, day pages, etc.)
+  templatePath: "./templates"
+
+  # ---------------------------------------------------------------------------
+  # Day Pages
+  # ---------------------------------------------------------------------------
+  # Day pages are auto-generated org files for daily/weekly journaling and
+  # task tracking.
+  #
+  # Directory where day page files are created (should be inside an orgDir)
+  dayPagePath: "/path/to/your/org/files/worklog"
+
+  # Template file (inside templatePath) used to generate new day pages
+  dayPageTemplate: "daypage.tpl"
+
+  # Mode for day page generation: "week" or "day"
+  dayPageMode: "week"
+
+  # Which day of the week starts a new weekly day page (e.g., "Monday")
+  dayPageModeWeekDay: "Monday"
+
+  # How many weeks/days back to search for the previous day page to pull
+  # forward incomplete tasks (default: 30)
+  dayPageMaxSearch: 30
+
+  # ---------------------------------------------------------------------------
+  # Access Control
+  # ---------------------------------------------------------------------------
+  # Controls who can access the server. Options:
+  #   "*"    = allow all authenticated users
+  #   "null" = no access control (default, requires no auth)
+  # For multi-user setups, set to "*" and configure a keystore.
+  accessControl: "*"
+
+  # ---------------------------------------------------------------------------
+  # Refile Targets
+  # ---------------------------------------------------------------------------
+  # Regex patterns for org files that are valid refile destinations.
+  # Default: all .org files
+  refileTargets:
+    - ".*\\.org"
+
+  # ---------------------------------------------------------------------------
+  # Tag Groups
+  # ---------------------------------------------------------------------------
+  # Tag groups let you query against a group name that expands to multiple tags.
+  # Use InTagGroup('GROUPNAME') in queries to match any tag in the group.
+  #
+  # By default, orgs defines PERSONAL, HOME, and WORK groups. To disable the
+  # built-in groups, set noInternalTagGroups: true at the top level.
+  #
+  # tagGroups:
+  #   PERSONAL:
+  #     - FAMILY
+  #     - ME
+  #     - PERSONAL
+  #   WORK:
+  #     - WORK
+  #     - BACKLOG
+  #     - PROJECTX
+
+  # ---------------------------------------------------------------------------
+  # Exporters
+  # ---------------------------------------------------------------------------
+  # List of enabled export modules. Each exporter converts org content to a
+  # different output format. You must explicitly enable the ones you want.
+  #
+  # Available exporters: gantt, mermaid, mindmap, html, revealjs, impressjs, latex, pdf
+  #
+  # Some exporters accept properties (props) for customization.
+  exporters:
+    - name: "gantt"
+    - name: "mermaid"
+    - name: "mindmap"
+    - name: "html"
+      props:
+        fontfamily: "Underdog"
+    - name: "revealjs"
+    - name: "impressjs"
+    - name: "latex"
+    - name: "pdf"
+
+  # ---------------------------------------------------------------------------
+  # Plugins (Pollers)
+  # ---------------------------------------------------------------------------
+  # Background plugins that run periodically. Each has a name and a frequency
+  # (in seconds) controlling how often it fires.
+  #
+  # Available plugins: autoclockout, jira, todoist, googlecal, notify
+  #
+  # Example: auto clock-out at specific times of day
+  # plugins:
+  #   - name: "autoclockout"
+  #     freq: 60
+  #     clockouttimes:
+  #       - "17:30"
+
+  # ---------------------------------------------------------------------------
+  # Updaters
+  # ---------------------------------------------------------------------------
+  # Updater plugins that synchronize external data into your org files.
+  # updaters:
+  #   - name: "someupdater"
+
+  # ---------------------------------------------------------------------------
+  # Capture Templates
+  # ---------------------------------------------------------------------------
+  # Define templates for the capture system. Each template specifies:
+  #   - name: unique identifier
+  #   - type: entry | item | checkitem | plain | table-line
+  #   - target:
+  #       type: file+headline | file+datetree | file+olp+datetree
+  #       filename: target org file (relative to an orgDir)
+  #       id: headline path or identifier
+  #       template: (optional) pongo2 template for the captured content
+  #
+  # captureTemplates:
+  #   - name: "Todo"
+  #     type: "entry"
+  #     target:
+  #       type: "file+headline"
+  #       filename: "inbox.org"
+  #       id: "Captures"
+  #   - name: "Journal"
+  #     type: "entry"
+  #     target:
+  #       type: "file+datetree"
+  #       filename: "journal.org"
+  #       id: "Journal"
+
+# -----------------------------------------------------------------------------
+# CLIENT / SHARED CONFIGURATION
+# -----------------------------------------------------------------------------
+
+# URL of the orgs server that CLI commands will connect to
+url: "http://localhost:8010"
+
+# Author name used when generating new files or templates
+# author: "Your Name"
+
+# ---------------------------------------------------------------------------
+# Archive Settings
+# ---------------------------------------------------------------------------
+# Default archive location. %s is replaced by the current filename.
+# Format: "filename::headline" — omit filename to archive in same file,
+# omit headline to archive as top-level entries.
+archiveDefault: "%s_archive::"
+
+# Context info saved as properties when archiving a subtree.
+# Options: time, file, ltags, itags, todo, category, olpath
+archiveSaveContextInfo:
+  - time
+  - file
+  - ltags
+  - itags
+  - todo
+  - category
+  - olpath
+
+# Skip empty properties when saving archive context (default: true)
+archiveSkipEmptyProperties: true
+
+# Mark tasks as DONE when archived (default: false)
+# archiveMarkDone: false
+
+# ---------------------------------------------------------------------------
+# Date Tree Formatting
+# ---------------------------------------------------------------------------
+# Controls the heading format when using datetree capture targets.
+# Uses Go time format reference: Mon Jan 2 15:04:05 MST 2006
+dateTreeYearFormat: "2006"
+dateTreeMonthFormat: "January"
+dateTreeDayFormat: "02 Monday"
+
+# ---------------------------------------------------------------------------
+# Clock Settings
+# ---------------------------------------------------------------------------
+# Drawer name where clock entries are stored (default: "LOGBOOK")
+clockIntoDrawer: "LOGBOOK"
+
+# ---------------------------------------------------------------------------
+# Image and Font Paths
+# ---------------------------------------------------------------------------
+# Paths for images and fonts used in HTML exports
+templateImagesPath: "./templates/html_styles/images"
+templateFontPath: "./templates/fonts"
+
+# ---------------------------------------------------------------------------
+# New File Template
+# ---------------------------------------------------------------------------
+# Template file (in templatePath) used when creating new org files
+newFileTemplate: "newfile.tpl"
+
+# ---------------------------------------------------------------------------
+# Editor Integration
+# ---------------------------------------------------------------------------
+# Template for launching your editor from CLI commands.
+# {filename} and {linenum} are replaced with the target file and line.
+# editorTemplate: ["code", "-g", "{filename}:{linenum}"]
+# editorTemplate: ["emacsclient", "+{linenum}", "{filename}"]
+
+# ---------------------------------------------------------------------------
+# Filters
+# ---------------------------------------------------------------------------
+# Named query expressions that can be referenced in queries using {{ name }}.
+# Built-in filters (AllTasks, HomeTasks, WorkTasks, WorkProjects) are added
+# automatically unless noInternalFilters is true.
+#
+# filters:
+#   MyFilter: "!IsProject() && IsTodo() && !IsArchived() && HasTag('URGENT')"
+#
+# noInternalFilters: false
+
+# ---------------------------------------------------------------------------
+# Tag Groups (top-level, same as server.tagGroups)
+# ---------------------------------------------------------------------------
+# Tag groups defined here are merged with server-side groups.
+# Built-in groups (PERSONAL, HOME, WORK) are added automatically unless
+# noInternalTagGroups is true.
+#
+# tagGroups:
+#   PERSONAL:
+#     - FAMILY
+#     - ME
+#     - PERSONAL
+#   WORK:
+#     - WORK
+#     - BACKLOG
+#
+# noInternalTagGroups: false
+
+# ---------------------------------------------------------------------------
+# Aliases
+# ---------------------------------------------------------------------------
+# Command aliases for the CLI. The key becomes a command name that expands
+# to the value (a list of arguments). Additional arguments are appended.
+#
+# aliases:
+#   triage: ["refile", "-from", "inbox.org"]
+#   wa: ["agenda", "-days", "7"]

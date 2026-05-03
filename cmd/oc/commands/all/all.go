@@ -12,6 +12,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/files"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/filters"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/grep"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/initconfig"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/login"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/new"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/projects"
