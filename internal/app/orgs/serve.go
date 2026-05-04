@@ -280,10 +280,12 @@ func StartServer(sets *common.ServerSettings) {
 		if sets.AccessControl != "*" {
 			// Explicitly allow worg dev port over localhost
 			corsPolicy := cors.New(cors.Options{
-				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", sets.Port), "http://localhost:3000"},
+				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", sets.Port), "http://localhost:3000", "https://localhost:3000"},
+				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowedHeaders:   []string{"*"},
 				AllowCredentials: true,
 				//	// Enable Debugging for testing, consider disabling in production
-				//	Debug: true,
+				// Debug: true,
 			})
 			corsHandler = corsPolicy.Handler(corsHandler)
 		}
@@ -303,8 +305,10 @@ func StartServer(sets *common.ServerSettings) {
 		corsPolicy := cors.New(cors.Options{
 			AllowedOrigins:   []string{sets.AccessControl},
 			AllowCredentials: true,
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"*"},
 			//	// Enable Debugging for testing, consider disabling in production
-			//	Debug: true,
+			Debug: true,
 		})
 		corsHandler = corsPolicy.Handler(corsHandler)
 	}
