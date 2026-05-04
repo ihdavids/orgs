@@ -278,8 +278,9 @@ func StartServer(sets *common.ServerSettings) {
 	go func() {
 		corsHandler := cors.Default().Handler(router)
 		if sets.AccessControl != "*" {
+			// Explicitly allow worg dev port over localhost
 			corsPolicy := cors.New(cors.Options{
-				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", sets.Port)},
+				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", sets.Port), "http://localhost:3000"},
 				AllowCredentials: true,
 				//	// Enable Debugging for testing, consider disabling in production
 				//	Debug: true,
