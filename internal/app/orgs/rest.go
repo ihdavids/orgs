@@ -34,6 +34,7 @@ func RestApi(router *mux.Router) {
 	api := router.PathPrefix("").Subrouter()
 	api.Use(authenticate)
 
+	api.HandleFunc("/refresh", refresh).Methods("POST")
 	api.HandleFunc("/orgfile", RequestOrgFile)
 	api.HandleFunc("/findfile", RequestFindFileInDb)
 	api.HandleFunc("/files", RequestFiles)

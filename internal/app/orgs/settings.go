@@ -238,6 +238,7 @@ type Config struct {
 	// NON SERVE CONFIGURATION OPTIONS:
 	Url            string `yaml:"url"`
 	Token          string `yaml:"token"`
+	TokenExpiry    string `yaml:"tokenExpiry"`
 	EditorTemplate []string
 	// When a command is called we configure it and add it
 	// to the list to avoid having to redo that

@@ -26,9 +26,10 @@ type ServerSettings struct {
 		EDOC */
 	//OrgJWS  string `yaml:"orgJWS"`
 	//OrgJWS  *rsa.PrivateKey `yaml:"orgJWS"`
-	OrgJWS  string `yaml:"orgJWS"`
-	OrgJWE  string `yaml:"orgJWE"`
-	OrgSalt string `yaml:"orgSalt"`
+	OrgJWS       string `yaml:"orgJWS"`
+	OrgJWE       string `yaml:"orgJWE"`
+	OrgSalt      string `yaml:"orgSalt"`
+	TokenExpiry  string `yaml:"tokenExpiry"`
 
 	/* SDOC: Settings
 	* Orgs Keystore
@@ -133,6 +134,17 @@ type ServerSettings struct {
 		EDOC */
 }
 
+func (self *ServerSettings) GetTokenExpiry() time.Duration {
+	if self.TokenExpiry == "" {
+		return 1 * time.Hour
+	}
+	if d, err := time.ParseDuration(self.TokenExpiry); err == nil {
+		return d
+	}
+	log.Default().Printf("WARNING: Invalid tokenExpiry %q, using default 1h\n", self.TokenExpiry)
+	return 1 * time.Hour
+}
+
 func (self *ServerSettings) Validate() {
 	// You HAVE to have a orgdir
 	if len(self.OrgDirs) < 1 {
@@ -179,6 +191,7 @@ func (self *ServerSettings) Init() {
 	// The default keystore is useless, we need to force the user to make one of their own
 	self.Keystore = ""
 	self.OrgSalt = KBAD_SALT
+	self.TokenExpiry = "1h"
 	self.ServePath = "/org"
 	self.Port = 8010
 	self.TLSPort = 443

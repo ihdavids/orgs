@@ -7,8 +7,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/ihdavids/orgs/internal/app/orgs"
+	"github.com/ihdavids/orgs/internal/common"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 )
@@ -48,6 +51,38 @@ func logToFile() *os.File {
 	return f
 }
 
+type refreshResponse struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"ExpiresAt"`
+}
+
+// refreshToken calls POST /refresh to get a new token, updates the
+// Authorization header on core.Rest, and persists the new token and
+// expiry back to the config file.
+func refreshToken(core *commands.Core) {
+	resp, err := common.RestPost[refreshResponse](&core.Rest, "refresh", &struct{}{})
+	if err != nil || resp.Token == "" {
+		return
+	}
+	core.Rest.Header.Set("Authorization", "Bearer "+resp.Token)
+	// Persist refreshed token and expiry to config file
+	if data, err := os.ReadFile(core.ConfigFile); err == nil {
+		lines := strings.Split(string(data), "\n")
+		setLine := func(key, value string) {
+			for i, line := range lines {
+				if strings.HasPrefix(strings.TrimSpace(line), key+":") {
+					lines[i] = fmt.Sprintf("%s: %s", key, value)
+					return
+				}
+			}
+			lines = append(lines, fmt.Sprintf("%s: %s", key, value))
+		}
+		setLine("token", fmt.Sprintf("%q", resp.Token))
+		setLine("tokenExpiry", fmt.Sprintf("%q", resp.ExpiresAt.Format(time.RFC3339)))
+		os.WriteFile(core.ConfigFile, []byte(strings.Join(lines, "\n")), 0600)
+	}
+}
+
 // Aliases allow for command line helpers for the orgs command line tool.
 func expandAliases(args []string) []string {
 	if len(args) > 0 {
@@ -79,6 +114,17 @@ func main() {
 	// Execute command line options
 	for k, _ := range commands.CmdRegistry {
 		if len(args) > 0 && k == args[0] {
+			// Check token expiry for commands that talk to the server
+			if k != "login" && k != "serve" && orgs.Conf().TokenExpiry != "" {
+				if expiry, err := time.Parse(time.RFC3339, orgs.Conf().TokenExpiry); err == nil {
+					if time.Now().After(expiry) {
+						fmt.Fprintf(os.Stderr, "Token expired at %s. Please run: orgs login\n", expiry.Local().Format(time.RFC822))
+						os.Exit(1)
+					}
+					// Token still valid — refresh it before running the command
+					refreshToken(core)
+				}
+			}
 			v := commands.CmdRegistry[k]
 			//fmt.Printf("KEY: %v -> %v\n", k, args[1:])
 			mod := orgs.Conf().FindCommand(k)

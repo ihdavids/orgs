@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
@@ -27,7 +28,8 @@ type loginRequest struct {
 }
 
 type loginResponse struct {
-	Token string `json:"token"`
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"ExpiresAt"`
 }
 
 func (self *LoginCmd) Unmarshal(unmarshal func(interface{}) error) error {
@@ -86,33 +88,30 @@ func (self *LoginCmd) Exec(core *commands.Core) {
 		fmt.Fprintln(os.Stderr, "login failed: server returned no token (check credentials)")
 		os.Exit(1)
 	}
-	if err := saveTokenToConfig(core.ConfigFile, resp.Token); err != nil {
+	if err := saveTokenToConfig(core.ConfigFile, resp.Token, resp.ExpiresAt); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to save token to config: %s\n", err)
 	} else {
-		fmt.Fprintf(os.Stderr, "Token saved to %s\n", core.ConfigFile)
+		fmt.Fprintf(os.Stderr, "Token saved to %s (expires %s)\n", core.ConfigFile, resp.ExpiresAt.Local().Format(time.RFC822))
 	}
-	// Don't show the token, but this is helpful for validating
-	//fmt.Println(resp.Token)
 }
 
-func saveTokenToConfig(configFile string, token string) error {
+func saveTokenToConfig(configFile string, token string, expiresAt time.Time) error {
 	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return fmt.Errorf("reading config %s: %w", configFile, err)
 	}
 	lines := strings.Split(string(data), "\n")
-	found := false
-	for i, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "token:") {
-			lines[i] = fmt.Sprintf("token: %q", token)
-			found = true
-			break
+	setLine := func(key, value string) {
+		for i, line := range lines {
+			if strings.HasPrefix(strings.TrimSpace(line), key+":") {
+				lines[i] = fmt.Sprintf("%s: %s", key, value)
+				return
+			}
 		}
+		lines = append(lines, fmt.Sprintf("%s: %s", key, value))
 	}
-	if !found {
-		lines = append(lines, fmt.Sprintf("token: %q", token))
-	}
+	setLine("token", fmt.Sprintf("%q", token))
+	setLine("tokenExpiry", fmt.Sprintf("%q", expiresAt.Format(time.RFC3339)))
 	return os.WriteFile(configFile, []byte(strings.Join(lines, "\n")), 0600)
 }
 

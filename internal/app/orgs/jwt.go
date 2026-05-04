@@ -18,9 +18,9 @@ type Claims struct {
 
 const kORGS_ISSUER = "ORGS"
 
-// Generates a JWS for a user.
-func generateToken(username string) (string, error) {
-	expirationTime := time.Now().Add(5 * time.Minute)
+// Generates a JWS for a user. Returns the token string and expiration time.
+func generateToken(username string) (string, time.Time, error) {
+	expirationTime := time.Now().Add(Conf().Server.GetTokenExpiry())
 
 	claims := &Claims{
 		Username: username,
@@ -33,17 +33,14 @@ func generateToken(username string) (string, error) {
 	jwsKey := []byte(Conf().Server.OrgJWS)
 	if signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwsKey}, nil); err != nil {
 		fmt.Printf("Failed to get new signer: %v\n", err)
-		return "", err
+		return "", expirationTime, err
 	} else {
 		if rawJwt, err := jwt.Signed(signer).Claims(claims).Serialize(); err != nil {
-			return "", err
+			return "", expirationTime, err
 		} else {
-			return rawJwt, nil
+			return rawJwt, expirationTime, nil
 		}
 	}
-	//token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	//tokenString, err := token.SignedString(jwtKey)
-	//return tokenString, err
 }
 
 func encryptJWT(jwtToken string, salt []byte) (string, error) {
@@ -85,14 +82,14 @@ func decryptJWT(jweToken string) ([]byte, error) {
 // After user validation we create a JWT/JWS AND a JWE from that JWS
 // that we can then store in a variety of ways and validate that
 // the user has authenticated after the fact
-func GenerateEncryptedToken(username string) (string, error) {
-	if token, err := generateToken(username); err != nil {
-		return "err", err
+func GenerateEncryptedToken(username string) (string, time.Time, error) {
+	if token, expiresAt, err := generateToken(username); err != nil {
+		return "err", expiresAt, err
 	} else {
 		if etoken, err := encryptJWT(token, []byte(Conf().Server.OrgSalt)); err != nil {
-			return "err", err
+			return "err", expiresAt, err
 		} else {
-			return etoken, nil
+			return etoken, expiresAt, nil
 		}
 	}
 }

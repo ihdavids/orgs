@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +37,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	//fmt.Printf("Encrypted token gen\n")
-	token, err := GenerateEncryptedToken(creds.Username)
+	token, expiresAt, err := GenerateEncryptedToken(creds.Username)
 	if err != nil {
 		fmt.Printf("bad token: %v [%s]\n", err, creds.Username)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -46,19 +45,64 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encoded := base64.StdEncoding.EncodeToString([]byte(token))
-	//fmt.Printf("Setting as a cookie: [%s]\n", encoded)
 	http.SetCookie(w, &http.Cookie{
-		Name:  "orgstoken",
-		Value: encoded,
-		// TODO: Make this configurable
-		Expires:  time.Now().Add(5 * time.Minute),
+		Name:     "orgstoken",
+		Value:    encoded,
+		Expires:  expiresAt,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	//fmt.Printf("Returning the token\n")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token":     token,
+		"ExpiresAt": expiresAt,
+	})
+}
+
+func refresh(w http.ResponseWriter, r *http.Request) {
+	var tokenStr string
+
+	if auth := r.Header.Get("Authorization"); strings.HasPrefix(auth, "Bearer ") {
+		tokenStr = strings.TrimPrefix(auth, "Bearer ")
+	} else if c, err := r.Cookie("orgstoken"); err == nil {
+		if val, err := base64.StdEncoding.DecodeString(c.Value); err == nil {
+			tokenStr = string(val)
+		}
+	}
+	if tokenStr == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	claims := &Claims{}
+	if _, err := ValidateEncryptedToken(tokenStr, claims); err != nil {
+		fmt.Printf("Refresh: failed to validate existing token: %v\n", err)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	token, expiresAt, err := GenerateEncryptedToken(claims.Username)
+	if err != nil {
+		fmt.Printf("Refresh: failed to generate token: %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	encoded := base64.StdEncoding.EncodeToString([]byte(token))
+	http.SetCookie(w, &http.Cookie{
+		Name:     "orgstoken",
+		Value:    encoded,
+		Expires:  expiresAt,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token":     token,
+		"ExpiresAt": expiresAt,
+	})
 }
 
 func authenticate(next http.Handler) http.Handler {
