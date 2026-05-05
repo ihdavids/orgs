@@ -2,6 +2,7 @@ package orgs
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/worg"
 	"github.com/rs/cors"
 )
 
@@ -264,9 +266,9 @@ func StartServer(sets *common.ServerSettings) {
 			}
 		}
 	}
-	// END ROUTING TABLE PathPrefix("/") match '/*' request
-	// This needs to be replaced by an org embedded mechanism so it's built in to orgs
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./web")))
+	// Serve the embedded worg frontend
+	webFS, _ := fs.Sub(worg.Content, ".")
+	router.PathPrefix("/").Handler(http.FileServer(http.FS(webFS)))
 
 	// http.Handle(Conf().WebServePath, http.StripPrefix(Conf().WebServePath, fileServer))
 	// This is annoying, I can't seem to handle binding to anything other than /
