@@ -85,6 +85,12 @@ type TodoPropertyChange struct {
 	Value string
 }
 
+type TodoDateChange struct {
+	Hash     string
+	Name     string // "SCHEDULED", "DEADLINE", "CLOSED", or "TIMESTAMP"
+	Value    string // org date string e.g. "<2024-01-01 Mon>" or "" to clear
+}
+
 type Todos []Todo
 
 type StringQuery struct {

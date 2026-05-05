@@ -1138,6 +1138,60 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	return common.Result{Ok: didWrite}, nil
 }
 
+func ChangeDate(query *common.TodoDateChange) (common.Result, error) {
+	didWrite := true
+	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
+			if query.Value == "" {
+				// Clear the date
+				switch query.Name {
+				case "SCHEDULED":
+					n.Scheduled = nil
+				case "DEADLINE":
+					n.Deadline = nil
+				case "CLOSED":
+					n.Closed = nil
+				case "TIMESTAMP":
+					n.Timestamp = nil
+				}
+			} else {
+				date, dtype := org.ParseSDC(query.Name + ": " + query.Value)
+				if date != nil {
+					sdc := &org.SDC{Date: date, DateType: dtype}
+					switch query.Name {
+					case "SCHEDULED":
+						n.Scheduled = sdc
+					case "DEADLINE":
+						n.Deadline = sdc
+					case "CLOSED":
+						n.Closed = sdc
+					}
+				} else {
+					// Try parsing as a bare timestamp
+					date, _, _ = org.ParseTimestamp(query.Value)
+					if date != nil {
+						switch query.Name {
+						case "TIMESTAMP":
+							n.Timestamp = &org.Timestamp{Time: date}
+						case "SCHEDULED":
+							n.Scheduled = &org.SDC{Date: date, DateType: org.Scheduled}
+						case "DEADLINE":
+							n.Deadline = &org.SDC{Date: date, DateType: org.Deadline}
+						case "CLOSED":
+							n.Closed = &org.SDC{Date: date, DateType: org.Closed}
+						}
+					}
+				}
+			}
+			return *n
+		}); set {
+			didWrite = WriteOutOrgFile(f)
+		}
+	}
+	return common.Result{Ok: didWrite}, nil
+}
+
 func IsPropertyNameValid(hash *common.TodoHash, name string) bool {
 	return true
 }

@@ -61,6 +61,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/daypage", PostCreateDayPage).Methods("POST")
 	api.HandleFunc("/status/change", PostChangeStatus).Methods("POST")
 	api.HandleFunc("/status/{hash}", RequestValidStatus)
+	api.HandleFunc("/date/change", PostChangeDate).Methods("POST")
 	api.HandleFunc("/property", PostChangeProperty).Methods("POST")
 	api.HandleFunc("/alltags", RequestTags)
 	api.HandleFunc("/tags", PostToggleTags).Methods("POST")
@@ -345,6 +346,27 @@ func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		var reply common.Result
 		reply, err = ChangeStatus(&args)
+		if err == nil {
+			json.NewEncoder(w).Encode(reply)
+		} else {
+			json.NewEncoder(w).Encode(err)
+		}
+	} else {
+		json.NewEncoder(w).Encode(err)
+	}
+}
+
+// SDOC: date/change
+// Change a date on a node (SCHEDULED, DEADLINE, CLOSED, or TIMESTAMP).
+// Post a TodoDateChange with Hash, Name (date type), and Value (org date string or "" to clear).
+// EDOC
+func PostChangeDate(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	var args common.TodoDateChange
+	var err = json.Unmarshal(body, &args)
+	if err == nil {
+		var reply common.Result
+		reply, err = ChangeDate(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
