@@ -1138,22 +1138,70 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	return common.Result{Ok: didWrite}, nil
 }
 
+// removeChildByType removes the first child node matching the given type from a headline's children.
+func removeSDCChild(n *org.Headline, dtype org.DateType) {
+	for i, child := range n.Children {
+		if sdc, ok := child.(org.SDC); ok && sdc.DateType == dtype {
+			n.Children = append(n.Children[:i], n.Children[i+1:]...)
+			return
+		}
+		if sdc, ok := child.(*org.SDC); ok && sdc.DateType == dtype {
+			n.Children = append(n.Children[:i], n.Children[i+1:]...)
+			return
+		}
+	}
+}
+
+func removeTimestampChild(n *org.Headline) {
+	for i, child := range n.Children {
+		if _, ok := child.(org.Timestamp); ok {
+			n.Children = append(n.Children[:i], n.Children[i+1:]...)
+			return
+		}
+		if _, ok := child.(*org.Timestamp); ok {
+			n.Children = append(n.Children[:i], n.Children[i+1:]...)
+			return
+		}
+	}
+}
+
+// insertSDCChild inserts an SDC node at the beginning of the children list (after properties).
+func insertSDCChild(n *org.Headline, sdc *org.SDC) {
+	// Insert after any PropertyDrawer at the start
+	idx := 0
+	for i, child := range n.Children {
+		if _, ok := child.(*org.PropertyDrawer); ok {
+			idx = i + 1
+		} else if _, ok := child.(org.PropertyDrawer); ok {
+			idx = i + 1
+		} else {
+			break
+		}
+	}
+	lb := org.LineBreak{Count: 1}
+	n.Children = append(n.Children[:idx], append([]org.Node{*sdc, lb}, n.Children[idx:]...)...)
+}
+
 func ChangeDate(query *common.TodoDateChange) (common.Result, error) {
 	didWrite := true
 	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
 		f := GetDb().ByHashToFile[(string)(query.Hash)]
 		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
 			if query.Value == "" {
-				// Clear the date
+				// Clear the date — remove from struct and children
 				switch query.Name {
 				case "SCHEDULED":
 					n.Scheduled = nil
+					removeSDCChild(n, org.Scheduled)
 				case "DEADLINE":
 					n.Deadline = nil
+					removeSDCChild(n, org.Deadline)
 				case "CLOSED":
 					n.Closed = nil
+					removeSDCChild(n, org.Closed)
 				case "TIMESTAMP":
 					n.Timestamp = nil
+					removeTimestampChild(n)
 				}
 			} else {
 				date, dtype := org.ParseSDC(query.Name + ": " + query.Value)
@@ -1161,11 +1209,17 @@ func ChangeDate(query *common.TodoDateChange) (common.Result, error) {
 					sdc := &org.SDC{Date: date, DateType: dtype}
 					switch query.Name {
 					case "SCHEDULED":
+						removeSDCChild(n, org.Scheduled)
 						n.Scheduled = sdc
+						insertSDCChild(n, sdc)
 					case "DEADLINE":
+						removeSDCChild(n, org.Deadline)
 						n.Deadline = sdc
+						insertSDCChild(n, sdc)
 					case "CLOSED":
+						removeSDCChild(n, org.Closed)
 						n.Closed = sdc
+						insertSDCChild(n, sdc)
 					}
 				} else {
 					// Try parsing as a bare timestamp
@@ -1173,13 +1227,37 @@ func ChangeDate(query *common.TodoDateChange) (common.Result, error) {
 					if date != nil {
 						switch query.Name {
 						case "TIMESTAMP":
-							n.Timestamp = &org.Timestamp{Time: date}
+							removeTimestampChild(n)
+							ts := &org.Timestamp{Time: date}
+							n.Timestamp = ts
+							// Insert timestamp at beginning of children (after properties)
+							idx := 0
+							for i, child := range n.Children {
+								if _, ok := child.(*org.PropertyDrawer); ok {
+									idx = i + 1
+								} else if _, ok := child.(org.PropertyDrawer); ok {
+									idx = i + 1
+								} else {
+									break
+								}
+							}
+							lb := org.LineBreak{Count: 1}
+							n.Children = append(n.Children[:idx], append([]org.Node{*ts, lb}, n.Children[idx:]...)...)
 						case "SCHEDULED":
-							n.Scheduled = &org.SDC{Date: date, DateType: org.Scheduled}
+							removeSDCChild(n, org.Scheduled)
+							sdc := &org.SDC{Date: date, DateType: org.Scheduled}
+							n.Scheduled = sdc
+							insertSDCChild(n, sdc)
 						case "DEADLINE":
-							n.Deadline = &org.SDC{Date: date, DateType: org.Deadline}
+							removeSDCChild(n, org.Deadline)
+							sdc := &org.SDC{Date: date, DateType: org.Deadline}
+							n.Deadline = sdc
+							insertSDCChild(n, sdc)
 						case "CLOSED":
-							n.Closed = &org.SDC{Date: date, DateType: org.Closed}
+							removeSDCChild(n, org.Closed)
+							sdc := &org.SDC{Date: date, DateType: org.Closed}
+							n.Closed = sdc
+							insertSDCChild(n, sdc)
 						}
 					}
 				}
