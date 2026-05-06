@@ -62,6 +62,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/status/change", PostChangeStatus).Methods("POST")
 	api.HandleFunc("/status/{hash}", RequestValidStatus)
 	api.HandleFunc("/date/change", PostChangeDate).Methods("POST")
+	api.HandleFunc("/date/change", DeleteDate).Methods("DELETE")
 	api.HandleFunc("/property", PostChangeProperty).Methods("POST")
 	api.HandleFunc("/alltags", RequestTags)
 	api.HandleFunc("/tags", PostToggleTags).Methods("POST")
@@ -365,6 +366,28 @@ func PostChangeDate(w http.ResponseWriter, r *http.Request) {
 	var args common.TodoDateChange
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
+		var reply common.Result
+		reply, err = ChangeDate(&args)
+		if err == nil {
+			json.NewEncoder(w).Encode(reply)
+		} else {
+			json.NewEncoder(w).Encode(err)
+		}
+	} else {
+		json.NewEncoder(w).Encode(err)
+	}
+}
+
+// SDOC: date/remove
+// Remove a date from a node (SCHEDULED, DEADLINE, CLOSED, or TIMESTAMP).
+// Send a DELETE with a TodoDateChange containing Hash and Name; Value is ignored.
+// EDOC
+func DeleteDate(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	var args common.TodoDateChange
+	var err = json.Unmarshal(body, &args)
+	if err == nil {
+		args.Value = ""
 		var reply common.Result
 		reply, err = ChangeDate(&args)
 		if err == nil {
