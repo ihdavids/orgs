@@ -20,7 +20,7 @@ require (
 	github.com/gorilla/rpc v1.2.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/ides15/todoist v0.0.0-20220427224039-71f7428f4d5a
-	github.com/ihdavids/go-org v1.6.3-0.20260425032802-92af1b78209b
+	github.com/ihdavids/go-org v1.6.3-0.20260506050446-28600e1818bc
 	github.com/ihdavids/govaluate v0.0.0-20231220060452-759d66a62509
 	github.com/ihdavids/tablewriter v0.0.0-20231130030027-2e70cfc41f0c
 	github.com/junegunn/fzf v0.65.2
@@ -38,6 +38,7 @@ require (
 require (
 	cloud.google.com/go/compute v1.10.0 // indirect
 	github.com/ChannelMeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61 // indirect
+	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charlievieth/fastwalk v1.0.12 // indirect
@@ -46,6 +47,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect
+	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
