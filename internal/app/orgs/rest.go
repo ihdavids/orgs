@@ -60,6 +60,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/daypage/{date}", RequestDayPageAt).Methods("GET")
 	api.HandleFunc("/daypage", PostCreateDayPage).Methods("POST")
 	api.HandleFunc("/status/change", PostChangeStatus).Methods("POST")
+	api.HandleFunc("/headline/change", PostRenameHeadline).Methods("POST")
 	api.HandleFunc("/status/{hash}", RequestValidStatus)
 	api.HandleFunc("/date/change", PostChangeDate).Methods("POST")
 	api.HandleFunc("/date/change", DeleteDate).Methods("DELETE")
@@ -347,6 +348,24 @@ func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		var reply common.Result
 		reply, err = ChangeStatus(&args)
+		if err == nil {
+			json.NewEncoder(w).Encode(reply)
+		} else {
+			json.NewEncoder(w).Encode(err)
+		}
+	} else {
+		json.NewEncoder(w).Encode(err)
+	}
+}
+
+// Rename the headline of a todo by hash
+func PostRenameHeadline(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	var args common.TodoItemChange
+	var err = json.Unmarshal(body, &args)
+	if err == nil {
+		var reply common.Result
+		reply, err = RenameHeadline(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {

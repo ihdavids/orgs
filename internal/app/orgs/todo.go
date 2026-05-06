@@ -1138,6 +1138,20 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	return common.Result{Ok: didWrite}, nil
 }
 
+func RenameHeadline(query *common.TodoItemChange) (common.Result, error) {
+	didWrite := true
+	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
+			n.Title = []org.Node{org.Text{Content: query.Value}}
+			return *n
+		}); set {
+			didWrite = WriteOutOrgFile(f)
+		}
+	}
+	return common.Result{Ok: didWrite}, nil
+}
+
 // removeChildByType removes the first child node matching the given type from a headline's children.
 func removeSDCChild(n *org.Headline, dtype org.DateType) {
 	// Iterate backwards to safely remove all matching SDC children
