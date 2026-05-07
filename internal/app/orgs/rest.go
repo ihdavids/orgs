@@ -20,8 +20,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	//"time"
 	"math/rand"
+	"time"
 )
 
 func RestApi(router *mux.Router) {
@@ -49,6 +49,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/search", RequestTodosExpr)
 	api.HandleFunc("/lookuphash", RequestHash)
 	api.HandleFunc("/todohtml/{hash}", RequestFullTodoHtml)
+	api.HandleFunc("/logbook/{hash}", RequestLogbook)
 	api.HandleFunc("/filehtml/{hash}", RequestFullFileHtml)
 	api.HandleFunc("/todofull/{hash}", RequestFullTodo)
 	api.HandleFunc("/hash/{hash}", RequestByHash)
@@ -814,6 +815,41 @@ func RequestClockReport(w http.ResponseWriter, r *http.Request) {
 	report := GenerateClockReport(block)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(report)
+}
+
+func RequestLogbook(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	if h, err := GetHash(vars, "hash"); err == nil {
+		hash := string(h)
+		if s, ok := GetDb().ByHash[hash]; ok {
+			var logbook common.Logbook
+			drawer := s.Headline.FindDrawer(Conf().ClockIntoDrawer)
+			if drawer != nil && drawer.Children != nil {
+				for _, c := range drawer.Children {
+					if c.GetType() == org.ClockNode {
+						clk := c.(org.Clock)
+						entry := common.LogbookEntry{
+							Start: clk.Date.Start.Format(time.RFC3339),
+							Mins:  float64(clk.Date.DurationMins),
+						}
+						if !clk.Date.End.IsZero() {
+							entry.End = clk.Date.End.Format(time.RFC3339)
+						}
+						logbook.Entries = append(logbook.Entries, entry)
+						logbook.TotalMin += entry.Mins
+					}
+				}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(logbook)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "not found"})
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(err)
+	}
 }
 
 func PostExecb(w http.ResponseWriter, r *http.Request) {

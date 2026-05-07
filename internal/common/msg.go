@@ -20,6 +20,17 @@ type ClockEntry struct {
 	Mins     float64 `json:"mins"`
 }
 
+type LogbookEntry struct {
+	Start string  `json:"start"`
+	End   string  `json:"end"`
+	Mins  float64 `json:"mins"`
+}
+
+type Logbook struct {
+	Entries  []LogbookEntry `json:"entries"`
+	TotalMin float64        `json:"totalMin"`
+}
+
 type ClockReport struct {
 	Entries  []ClockEntry `json:"entries"`
 	TotalMin float64      `json:"totalMin"`
