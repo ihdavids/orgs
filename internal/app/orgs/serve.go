@@ -236,6 +236,7 @@ func StartServer(sets *common.ServerSettings) {
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
+	LoadExtensions()
 	GetDb().Watch()
 	defer func() {
 		GetDb().Close()

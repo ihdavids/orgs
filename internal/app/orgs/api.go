@@ -135,7 +135,7 @@ func (s *Db) ExportToString(args *common.ExportToFile, reply *common.ResultMsg) 
 
 func (s *Db) QueryCaptureTemplates(args *string, reply *[]common.CaptureTemplate) error {
 	var err error = nil
-	*reply, err = QueryCaptureTemplates()
+	*reply, err = QueryCaptureTemplates("")
 	if err != nil {
 		fmt.Printf("QueryCaptureTemplates: %s", err.Error())
 	}

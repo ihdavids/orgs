@@ -89,6 +89,17 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tablerandomget", RequestTableRandomGet)
 	api.HandleFunc("/tablenames", RequestTableNames)
 
+	// Per-user extensions: stored queries
+	api.HandleFunc("/ext/queries", RequestStoredQueries).Methods("GET")
+	api.HandleFunc("/ext/query", RequestStoredQuery).Methods("GET")
+	api.HandleFunc("/ext/query", PostStoredQuery).Methods("POST")
+	api.HandleFunc("/ext/query", DeleteStoredQuery).Methods("DELETE")
+
+	// Per-user extensions: capture templates
+	api.HandleFunc("/ext/capture/templates", RequestUserCaptureTemplates).Methods("GET")
+	api.HandleFunc("/ext/capture/template", PostUserCaptureTemplate).Methods("POST")
+	api.HandleFunc("/ext/capture/template", DeleteUserCaptureTemplate).Methods("DELETE")
+
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
@@ -594,7 +605,8 @@ func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 
 // Request a list of capture templates defined on the server
 func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
-	res, err := QueryCaptureTemplates()
+	username := GetUsername(r)
+	res, err := QueryCaptureTemplates(username)
 	if err != nil {
 		fmt.Printf("QueryCaptureTemplates: %s", err.Error())
 	}
@@ -610,13 +622,14 @@ func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 
 func PostCapture(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("PostCapture")
+	username := GetUsername(r)
 	body, _ := io.ReadAll(r.Body)
 	var args common.Capture
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
 		fmt.Println("  Deserialized", args)
 		var reply common.ResultMsg
-		reply, err = Capture(db, &args)
+		reply, err = Capture(db, &args, username)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {

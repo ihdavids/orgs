@@ -77,7 +77,16 @@ import (
 
 type FindInsertPosition func(sec *org.Section, typeName string) *org.Pos
 
-func FindCaptureTemplate(name string) *common.CaptureTemplate {
+func FindCaptureTemplate(name string, username string) *common.CaptureTemplate {
+	// Check user-specific templates first
+	if username != "" && GetExtensions() != nil {
+		for _, cap := range GetExtensions().GetUserCaptureTemplates(username) {
+			if cap.Name == name {
+				return &cap
+			}
+		}
+	}
+	// Fall back to global templates
 	for _, cap := range Conf().Server.CaptureTemplates {
 		if cap.Name == name {
 			return &cap
@@ -384,9 +393,9 @@ func InsertItemUsingTemplate(args *common.Capture, filename string, sec *org.Sec
 	}
 }
 
-func Capture(db common.ODb, args *common.Capture) (common.ResultMsg, error) {
+func Capture(db common.ODb, args *common.Capture, username string) (common.ResultMsg, error) {
 	var res common.ResultMsg = common.ResultMsg{}
-	temp := FindCaptureTemplate(args.Template)
+	temp := FindCaptureTemplate(args.Template, username)
 	res.Ok = false
 	res.Msg = "Capture: unknown failure, did not capture"
 	if temp != nil {
@@ -420,12 +429,31 @@ func Capture(db common.ODb, args *common.Capture) (common.ResultMsg, error) {
 	}
 }
 
-func QueryCaptureTemplates() ([]common.CaptureTemplate, error) {
-
-	var res []common.CaptureTemplate = Conf().Server.CaptureTemplates
-	if res != nil {
-		return res, nil
-	} else {
-		return []common.CaptureTemplate{}, fmt.Errorf("Capture: failed to find any capture templates")
+func QueryCaptureTemplates(username string) ([]common.CaptureTemplate, error) {
+	var res []common.CaptureTemplate
+	// Start with global templates
+	if Conf().Server.CaptureTemplates != nil {
+		res = append(res, Conf().Server.CaptureTemplates...)
 	}
+	// Merge in user-specific templates (user templates with the same name override global)
+	if username != "" && GetExtensions() != nil {
+		userTemplates := GetExtensions().GetUserCaptureTemplates(username)
+		for _, ut := range userTemplates {
+			found := false
+			for i := range res {
+				if res[i].Name == ut.Name {
+					res[i] = ut
+					found = true
+					break
+				}
+			}
+			if !found {
+				res = append(res, ut)
+			}
+		}
+	}
+	if len(res) > 0 {
+		return res, nil
+	}
+	return []common.CaptureTemplate{}, fmt.Errorf("Capture: failed to find any capture templates")
 }

@@ -1,6 +1,7 @@
 package orgs
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
@@ -8,6 +9,18 @@ import (
 	"net/http"
 	"strings"
 )
+
+type contextKey string
+
+const contextKeyUsername contextKey = "username"
+
+// GetUsername extracts the authenticated username from the request context.
+func GetUsername(r *http.Request) string {
+	if v, ok := r.Context().Value(contextKeyUsername).(string); ok {
+		return v
+	}
+	return ""
+}
 
 func login(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
@@ -133,6 +146,7 @@ func authenticate(next http.Handler) http.Handler {
 			return
 		}
 		fmt.Printf("AUTHENTICATION OKAY\n")
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), contextKeyUsername, claims.Username)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

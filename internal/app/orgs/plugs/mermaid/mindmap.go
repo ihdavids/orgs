@@ -120,17 +120,26 @@ func getMindMapStyle(td *common.Todo) (string, string) {
 	return formatstart, formatend
 }
 
-func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db common.ODb, namesMap map[string]string, have map[string]*common.Todo, idx *int, td *common.Todo) {
+func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db common.ODb, namesMap map[string]string, have map[string]*common.Todo, minLevel int, idx *int, td *common.Todo) {
 	name := EscapeQuotes(strings.TrimSpace(td.Headline))
 	hash := getMindMapName(namesMap, td, idx)
-	indentStart := "      "
 	prefix := ""
 	if *idx == 1 && hash != "root" {
 		prefix = "    root\n"
-	} else if *idx == 1 && hash == "root" {
-		indentStart = "  "
 	}
-	indent := fmt.Sprintf("%*s", td.Level*2+6, indentStart)
+	// Mermaid mindmap uses indentation to define hierarchy.
+	// Root is at 8 spaces, each level deeper adds 2 more spaces.
+	depth := td.Level - minLevel
+	if hash == "root" {
+		depth = 0
+	} else if prefix != "" {
+		// synthetic root was added, so children are one level deeper
+		depth = 1
+	} else {
+		// offset by 1 because root is depth 0
+		depth = depth + 1
+	}
+	indent := strings.Repeat("  ", 4+depth)
 
 	formatstart, formatend := getMindMapStyle(td)
 	m := map[string]interface{}{"prefix": prefix, "name": name, "idx": idx, "hash": hash, "indent": indent, "formatstart": formatstart, "formatend": formatend}
@@ -155,7 +164,7 @@ func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts 
 	fmt.Println(self.Props)
 	plugs.ExpandTemplateIntoBuf(o, mindMapDocStart, self.Props)
 
-	minTd, cntAtMin := lookForRootNode(tds)
+	minTd, cntAtMin, minLevel := lookForRootNode(tds)
 	var idx = 0
 	namesMap := map[string]string{}
 
@@ -167,7 +176,7 @@ func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts 
 	}
 
 	for _, td := range tds {
-		self.MindMapExportRes(o, db, namesMap, have, &idx, &td)
+		self.MindMapExportRes(o, db, namesMap, have, minLevel, &idx, &td)
 	}
 	plugs.ExpandTemplateIntoBuf(o, mindMapDocEnd, self.Props)
 	fo, err := os.Create(to)
@@ -191,7 +200,7 @@ func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts 
 	return res
 }
 
-func lookForRootNode(tds common.Todos) (common.Todo, int) {
+func lookForRootNode(tds common.Todos) (common.Todo, int, int) {
 	var minTd common.Todo
 	var minLvl = 99999
 	cntAtMin := 0
@@ -205,7 +214,7 @@ func lookForRootNode(tds common.Todos) (common.Todo, int) {
 			minTd = td
 		}
 	}
-	return minTd, cntAtMin
+	return minTd, cntAtMin, minLvl
 }
 
 func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
@@ -227,7 +236,7 @@ func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts str
 	//fmt.Println(self.Props)
 	plugs.ExpandTemplateIntoBuf(o, mindMapDocStart, self.Props)
 
-	minTd, cntAtMin := lookForRootNode(tds)
+	minTd, cntAtMin, minLevel := lookForRootNode(tds)
 
 	namesMap := map[string]string{}
 	idx := 0
@@ -238,7 +247,7 @@ func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts str
 		idx = 1
 	}
 	for _, td := range tds {
-		self.MindMapExportRes(o, db, namesMap, have, &idx, &td)
+		self.MindMapExportRes(o, db, namesMap, have, minLevel, &idx, &td)
 	}
 	plugs.ExpandTemplateIntoBuf(o, mindMapStartMarkers, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, mindMapEndMarkers, self.Props)
