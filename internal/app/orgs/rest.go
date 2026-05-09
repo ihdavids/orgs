@@ -62,6 +62,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/daypage", PostCreateDayPage).Methods("POST")
 	api.HandleFunc("/status/change", PostChangeStatus).Methods("POST")
 	api.HandleFunc("/headline/change", PostRenameHeadline).Methods("POST")
+	api.HandleFunc("/body/change", PostChangeBody).Methods("POST")
 	api.HandleFunc("/status/{hash}", RequestValidStatus)
 	api.HandleFunc("/date/change", PostChangeDate).Methods("POST")
 	api.HandleFunc("/date/change", DeleteDate).Methods("DELETE")
@@ -378,6 +379,24 @@ func PostRenameHeadline(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		var reply common.Result
 		reply, err = RenameHeadline(&args)
+		if err == nil {
+			json.NewEncoder(w).Encode(reply)
+		} else {
+			json.NewEncoder(w).Encode(err)
+		}
+	} else {
+		json.NewEncoder(w).Encode(err)
+	}
+}
+
+// Change the body content of a node by hash
+func PostChangeBody(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	var args common.TodoItemChange
+	var err = json.Unmarshal(body, &args)
+	if err == nil {
+		var reply common.Result
+		reply, err = ChangeBody(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {

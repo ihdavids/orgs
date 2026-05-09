@@ -1152,6 +1152,31 @@ func RenameHeadline(query *common.TodoItemChange) (common.Result, error) {
 	return common.Result{Ok: didWrite}, nil
 }
 
+func ChangeBody(query *common.TodoItemChange) (common.Result, error) {
+	didWrite := true
+	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		// Parse the new body content as org-mode text
+		bodyDoc := org.New().Parse(strings.NewReader(query.Value), "./")
+		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
+			// Preserve child headlines, replace body content
+			var childHeadlines []org.Node
+			for _, c := range n.Children {
+				switch c.(type) {
+				case org.Headline:
+					childHeadlines = append(childHeadlines, c)
+				}
+			}
+			// New children = parsed body nodes + preserved child headlines
+			n.Children = append(bodyDoc.Nodes, childHeadlines...)
+			return *n
+		}); set {
+			didWrite = WriteOutOrgFile(f)
+		}
+	}
+	return common.Result{Ok: didWrite}, nil
+}
+
 // removeChildByType removes the first child node matching the given type from a headline's children.
 func removeSDCChild(n *org.Headline, dtype org.DateType) {
 	// Iterate backwards to safely remove all matching SDC children
