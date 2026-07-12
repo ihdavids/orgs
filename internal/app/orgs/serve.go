@@ -279,8 +279,15 @@ func StartServer(sets *common.ServerSettings) {
 
 	// Allow http connections but only from localhost
 	go func() {
-		corsHandler := cors.Default().Handler(router)
-		if sets.AccessControl != "*" {
+		var corsHandler http.Handler
+		if sets.AccessControl == "*" {
+			corsPolicy := cors.New(cors.Options{
+				AllowedOrigins:   []string{"*"},
+				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowedHeaders:   []string{"*"},
+			})
+			corsHandler = corsPolicy.Handler(router)
+		} else {
 			// Explicitly allow worg dev port over localhost
 			corsPolicy := cors.New(cors.Options{
 				AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%d", sets.Port), "http://localhost:3000", "https://localhost:3000"},
@@ -290,7 +297,7 @@ func StartServer(sets *common.ServerSettings) {
 				//	// Enable Debugging for testing, consider disabling in production
 				// Debug: true,
 			})
-			corsHandler = corsPolicy.Handler(corsHandler)
+			corsHandler = corsPolicy.Handler(router)
 		}
 		//if orgs.Conf().AllowHttp {
 		fmt.Printf("HTTP PORT: %d\n", sets.Port)
@@ -303,25 +310,30 @@ func StartServer(sets *common.ServerSettings) {
 		//}
 	}()
 
-	corsHandler := cors.Default().Handler(router)
-	if sets.AccessControl != "*" {
-		corsPolicy := cors.New(cors.Options{
-			AllowedOrigins:   []string{sets.AccessControl},
-			AllowCredentials: true,
-			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowedHeaders:   []string{"*"},
-			//	// Enable Debugging for testing, consider disabling in production
-			Debug: true,
-		})
-		corsHandler = corsPolicy.Handler(corsHandler)
-	}
 	// Allow https connections
 	if sets.AllowHttps {
+		var tlsCorsHandler http.Handler
+		if sets.AccessControl == "*" {
+			corsPolicy := cors.New(cors.Options{
+				AllowedOrigins:   []string{"*"},
+				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowedHeaders:   []string{"*"},
+			})
+			tlsCorsHandler = corsPolicy.Handler(router)
+		} else {
+			corsPolicy := cors.New(cors.Options{
+				AllowedOrigins:   []string{sets.AccessControl},
+				AllowCredentials: true,
+				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowedHeaders:   []string{"*"},
+				Debug: true,
+			})
+			tlsCorsHandler = corsPolicy.Handler(router)
+		}
 		fmt.Printf("PORT: %d\n", sets.TLSPort)
-		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
 		servercrt := sets.ServerCrt
 		serverkey := sets.ServerKey
-		err := http.ListenAndServeTLS(fmt.Sprint(":", sets.TLSPort), servercrt, serverkey, corsHandler)
+		err := http.ListenAndServeTLS(fmt.Sprint(":", sets.TLSPort), servercrt, serverkey, tlsCorsHandler)
 		if err != nil {
 			log.Fatal("ListenAndServeTLS: ", err)
 		}
