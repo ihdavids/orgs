@@ -78,6 +78,7 @@ type ServerSettings struct {
 	UseTagForProjects bool   `yaml:"useProjectTag"`
 	AllowHttp         bool   `yaml:"allowHttp"`
 	AllowHttps        bool   `yaml:"allowHttps"`
+	NoAuth            bool   `yaml:"noAuth"`
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
 	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`

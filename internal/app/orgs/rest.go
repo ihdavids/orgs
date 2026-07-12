@@ -32,7 +32,11 @@ func RestApi(router *mux.Router) {
 
 	// Protected routes - all endpoints below require a valid JWS token
 	api := router.PathPrefix("").Subrouter()
-	api.Use(authenticate)
+	if !Conf().Server.NoAuth {
+		api.Use(authenticate)
+	} else {
+		fmt.Println("WARNING: Authentication is disabled (noAuth: true)")
+	}
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
 	api.HandleFunc("/orgfile", RequestOrgFile)
