@@ -205,15 +205,24 @@ func getDocHeaderArgs(doc *org.Document) map[string]string {
 	return defaults
 }
 
-// tangleResult holds the result of tangling a single file.
-type tangleResult struct {
-	Filename string
-	Lines    int
+// TangleFile holds the assembled content for a single tangle output file.
+type TangleFile struct {
+	Filename   string      `json:"filename"`
+	Content    string      `json:"content"`
+	Lang       string      `json:"lang"`
+	Lines      int         `json:"lines"`
+	TangleMode os.FileMode `json:"-"`
+	Mkdirp     bool        `json:"-"`
 }
 
-// doTangle processes a parsed org document and tangles its source blocks.
-// baseDir is the directory of the org file, used to resolve relative tangle paths.
-func doTangle(doc *org.Document, baseDir string) ([]tangleResult, error) {
+// TangleResult is the structured response from a tangle operation.
+type TangleResult struct {
+	Files []TangleFile `json:"files"`
+}
+
+// assembleTangle processes a parsed org document and assembles the tangled content
+// without writing to disk. baseDir is used to resolve relative tangle paths.
+func assembleTangle(doc *org.Document, baseDir string) (*TangleResult, error) {
 	docDefaults := getDocHeaderArgs(doc)
 	allBlocks := collectBlocks(doc.Nodes)
 
@@ -278,22 +287,15 @@ func doTangle(doc *org.Document, baseDir string) ([]tangleResult, error) {
 		files[tanglePath].blocks = append(files[tanglePath].blocks, tb)
 	}
 
-	// Third pass: write files
-	var results []tangleResult
+	// Third pass: assemble content for each file
+	result := &TangleResult{}
 	for _, path := range fileOrder {
 		entry := files[path]
 		if len(entry.blocks) == 0 {
 			continue
 		}
 
-		// Use settings from the first block for file-level options
 		first := entry.blocks[0]
-
-		if first.mkdirp {
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-				return nil, fmt.Errorf("failed to create directory for %s: %v", path, err)
-			}
-		}
 
 		var sb strings.Builder
 		if first.shebang != "" {
@@ -317,52 +319,78 @@ func doTangle(doc *org.Document, baseDir string) ([]tangleResult, error) {
 		}
 
 		content := sb.String()
-		// Ensure file ends with a newline
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
 
-		if err := os.WriteFile(path, []byte(content), first.tangleMode); err != nil {
-			return nil, fmt.Errorf("failed to write %s: %v", path, err)
-		}
-
-		lineCount := strings.Count(content, "\n")
-		results = append(results, tangleResult{Filename: path, Lines: lineCount})
-		log.Printf("TANGLE: wrote %s (%d lines)\n", path, lineCount)
+		result.Files = append(result.Files, TangleFile{
+			Filename:   path,
+			Content:    content,
+			Lang:       first.lang,
+			Lines:      strings.Count(content, "\n"),
+			TangleMode: first.tangleMode,
+			Mkdirp:     first.mkdirp,
+		})
 	}
 
-	return results, nil
+	return result, nil
+}
+
+// writeTangleFiles writes the assembled tangle results to disk.
+func writeTangleFiles(result *TangleResult) error {
+	for _, tf := range result.Files {
+		if tf.Mkdirp {
+			if err := os.MkdirAll(filepath.Dir(tf.Filename), 0755); err != nil {
+				return fmt.Errorf("failed to create directory for %s: %v", tf.Filename, err)
+			}
+		}
+		if err := os.WriteFile(tf.Filename, []byte(tf.Content), tf.TangleMode); err != nil {
+			return fmt.Errorf("failed to write %s: %v", tf.Filename, err)
+		}
+		log.Printf("TANGLE: wrote %s (%d lines)\n", tf.Filename, tf.Lines)
+	}
+	return nil
+}
+
+// Tangle assembles tangle output for an org file from the database.
+// If write is true, it also writes the files to disk.
+func Tangle(db common.ODb, query string, write bool) (*TangleResult, error) {
+	f := db.GetFile(query)
+	if f == nil {
+		return nil, fmt.Errorf("tangle: file not found: %s", query)
+	}
+	baseDir := filepath.Dir(f.Filename)
+	result, err := assembleTangle(f.Doc, baseDir)
+	if err != nil {
+		return nil, err
+	}
+	if write {
+		if err := writeTangleFiles(result); err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
 }
 
 // Export tangles the org file specified by query and writes the output files to disk.
 func (self *OrgTangleExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	f := db.GetFile(query)
-	if f == nil {
-		return fmt.Errorf("tangle: file not found: %s", query)
-	}
-	baseDir := filepath.Dir(f.Filename)
-	_, err := doTangle(f.Doc, baseDir)
+	_, err := Tangle(db, query, true)
 	return err
 }
 
 // ExportToString tangles the org file and returns a summary of what was written.
 func (self *OrgTangleExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
-	f := db.GetFile(query)
-	if f == nil {
-		return fmt.Errorf("tangle: file not found: %s", query), ""
-	}
-	baseDir := filepath.Dir(f.Filename)
-	results, err := doTangle(f.Doc, baseDir)
+	result, err := Tangle(db, query, true)
 	if err != nil {
 		return err, ""
 	}
-	if len(results) == 0 {
+	if len(result.Files) == 0 {
 		return nil, "No blocks to tangle"
 	}
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Tangled %d file(s):\n", len(results)))
-	for _, r := range results {
-		sb.WriteString(fmt.Sprintf("  %s (%d lines)\n", r.Filename, r.Lines))
+	sb.WriteString(fmt.Sprintf("Tangled %d file(s):\n", len(result.Files)))
+	for _, tf := range result.Files {
+		sb.WriteString(fmt.Sprintf("  %s (%d lines)\n", tf.Filename, tf.Lines))
 	}
 	return nil, sb.String()
 }

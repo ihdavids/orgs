@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
 	"github.com/ihdavids/orgs/internal/common"
 
 	//"log"
@@ -93,6 +94,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tableformulainfo", PostFormulaInfo).Methods("POST")
 	api.HandleFunc("/tablerandomget", RequestTableRandomGet)
 	api.HandleFunc("/tablenames", RequestTableNames)
+	api.HandleFunc("/tangle", RequestTangle)
 
 	// Per-user extensions: stored queries
 	api.HandleFunc("/ext/queries", RequestStoredQueries).Methods("GET")
@@ -235,6 +237,28 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// RequestTangle handles the /tangle endpoint.
+// Query params:
+//   - filename: the org file to tangle
+//   - write=t: also write tangled files to disk (default: content only in response)
+func RequestTangle(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("filename")
+	if query == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "filename parameter required"})
+		return
+	}
+	writeToDisk := r.URL.Query().Get("write") == "t"
+	result, err := tangle.Tangle(db, query, writeToDisk)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
 }
 
 func RequestRefileTargets(w http.ResponseWriter, r *http.Request) {
