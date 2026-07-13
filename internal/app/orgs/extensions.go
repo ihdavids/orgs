@@ -201,6 +201,24 @@ func (self *ExtensionsConfig) DeleteUserCaptureTemplate(username, name string) e
 // REST Handlers — Stored Queries
 // ---------------------------------------------------------------------------
 
+/* SDOC: API
+* GET /ext/queries — List Stored Queries
+	Returns all stored queries for the authenticated user. Stored queries are named
+	search expressions that users can save for quick recall. They are persisted in the
+	per-user extensions YAML file.
+
+	*Method:* =GET=
+
+	*Parameters:* None (user identity is derived from the auth token).
+
+	*Response:* A JSON array of =StoredQuery= objects:
+	#+BEGIN_SRC json
+	[{"name": "My Tasks", "query": "TODO=\"TODO\"+HOME"}]
+	#+END_SRC
+	Returns an empty array if the user has no stored queries.
+
+	*Errors:* =401= if not authenticated.
+	EDOC */
 func RequestStoredQueries(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
@@ -211,6 +229,24 @@ func RequestStoredQueries(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(GetExtensions().GetStoredQueries(username))
 }
 
+/* SDOC: API
+* GET /ext/query — Get a Stored Query by Name
+	Returns a single stored query for the authenticated user, looked up by name.
+
+	*Method:* =GET=
+
+	*Query Parameters:*
+	| Parameter | Type   | Required | Description                           |
+	|-----------+--------+----------+---------------------------------------|
+	| =name=    | string | yes      | The name of the stored query.         |
+
+	*Response:* A =StoredQuery= JSON object: ={"name": "...", "query": "..."}=.
+
+	*Errors:*
+	- =401= if not authenticated.
+	- =400= if =name= is missing.
+	- =404= if the named query does not exist.
+	EDOC */
 func RequestStoredQuery(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
@@ -233,6 +269,25 @@ func RequestStoredQuery(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(sq)
 }
 
+/* SDOC: API
+* POST /ext/query — Create or Update a Stored Query
+	Creates a new stored query or updates an existing one (matched by name) for the
+	authenticated user. The query is persisted to the extensions YAML file.
+
+	*Method:* =POST=
+
+	*Request Body (JSON):*
+	| Field   | Type   | Required | Description                                  |
+	|---------+--------+----------+----------------------------------------------|
+	| =name=  | string | yes      | The name for the stored query.               |
+	| =query= | string | yes      | The search expression to save.               |
+
+	*Response:* A =ResultMsg= JSON object confirming the save.
+
+	*Errors:*
+	- =401= if not authenticated.
+	- =400= if =name= or =query= is empty.
+	EDOC */
 func PostStoredQuery(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
@@ -260,6 +315,25 @@ func PostStoredQuery(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(common.ResultMsg{Ok: true, Msg: fmt.Sprintf("stored query %q saved", sq.Name)})
 }
 
+/* SDOC: API
+* DELETE /ext/query — Delete a Stored Query
+	Deletes a stored query by name for the authenticated user. The change is
+	persisted to the extensions YAML file.
+
+	*Method:* =DELETE=
+
+	*Query Parameters:*
+	| Parameter | Type   | Required | Description                           |
+	|-----------+--------+----------+---------------------------------------|
+	| =name=    | string | yes      | The name of the stored query to delete.|
+
+	*Response:* A =ResultMsg= JSON object confirming the deletion.
+
+	*Errors:*
+	- =401= if not authenticated.
+	- =400= if =name= is missing.
+	- =404= if the named query does not exist.
+	EDOC */
 func DeleteStoredQuery(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
@@ -285,6 +359,21 @@ func DeleteStoredQuery(w http.ResponseWriter, r *http.Request) {
 // REST Handlers — User Capture Templates
 // ---------------------------------------------------------------------------
 
+/* SDOC: API
+* GET /ext/capture/templates — List User Capture Templates
+	Returns the per-user capture templates for the authenticated user. These are in
+	addition to the server-wide templates defined in config. Per-user templates are
+	stored in the extensions YAML file.
+
+	*Method:* =GET=
+
+	*Parameters:* None (user identity is derived from the auth token).
+
+	*Response:* A JSON array of =CaptureTemplate= objects. Returns an empty array if
+	the user has no custom templates.
+
+	*Errors:* =401= if not authenticated.
+	EDOC */
 func RequestUserCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
@@ -295,6 +384,27 @@ func RequestUserCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(GetExtensions().GetUserCaptureTemplates(username))
 }
 
+/* SDOC: API
+* POST /ext/capture/template — Create or Update a User Capture Template
+	Creates a new per-user capture template or updates an existing one (matched by name).
+	The template is persisted to the extensions YAML file.
+
+	*Method:* =POST=
+
+	*Request Body (JSON):* A =CaptureTemplate= object.
+	| Field      | Type   | Required | Description                                              |
+	|------------+--------+----------+----------------------------------------------------------|
+	| =name=     | string | yes      | The template name (used for matching and display).       |
+	| =type=     | string | no       | Entry type (e.g. =entry=).                               |
+	| =target=   | Target | no       | Where captured content should be filed.                  |
+	| =template= | string | no       | Template text suggestion for the calling program.        |
+
+	*Response:* A =ResultMsg= JSON object confirming the save.
+
+	*Errors:*
+	- =401= if not authenticated.
+	- =400= if =name= is empty.
+	EDOC */
 func PostUserCaptureTemplate(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
@@ -322,6 +432,25 @@ func PostUserCaptureTemplate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(common.ResultMsg{Ok: true, Msg: fmt.Sprintf("capture template %q saved", ct.Name)})
 }
 
+/* SDOC: API
+* DELETE /ext/capture/template — Delete a User Capture Template
+	Deletes a per-user capture template by name. The change is persisted to the
+	extensions YAML file.
+
+	*Method:* =DELETE=
+
+	*Query Parameters:*
+	| Parameter | Type   | Required | Description                                   |
+	|-----------+--------+----------+-----------------------------------------------|
+	| =name=    | string | yes      | The name of the capture template to delete.   |
+
+	*Response:* A =ResultMsg= JSON object confirming the deletion.
+
+	*Errors:*
+	- =401= if not authenticated.
+	- =400= if =name= is missing.
+	- =404= if the named template does not exist.
+	EDOC */
 func DeleteUserCaptureTemplate(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	if username == "" {
