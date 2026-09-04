@@ -1,0 +1,8 @@
+users:
+  admin:
+    storedQueries:
+    - name: Todos
+      query: '!IsArchived() && IsStatus(''TODO'')'
+    - name: Orch
+      query: '!IsArchived() && IsStatus(''TODO'') && HasTags(''ORCHESTRATION25'')'
+    captureTemplates: []
