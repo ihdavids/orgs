@@ -96,6 +96,20 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tablenames", RequestTableNames)
 	api.HandleFunc("/tangle", RequestTangle)
 
+	// Dungeons & Dragons character module
+	api.HandleFunc("/dnd/rulesets", RequestDndRulesets).Methods("GET")
+	api.HandleFunc("/dnd/reload", PostDndReload).Methods("POST")
+	api.HandleFunc("/dnd/catalog", RequestDndCatalog).Methods("GET")
+	api.HandleFunc("/dnd/characters", RequestDndCharacters).Methods("GET")
+	api.HandleFunc("/dnd/sheet", RequestDndSheet).Methods("GET")
+	api.HandleFunc("/dnd/session", PostDndSession).Methods("POST")
+	api.HandleFunc("/dnd/session/{id}", RequestDndSession).Methods("GET")
+	api.HandleFunc("/dnd/session/{id}", DeleteDndSession).Methods("DELETE")
+	api.HandleFunc("/dnd/answer", PostDndAnswer).Methods("POST")
+	api.HandleFunc("/dnd/random", PostDndRandom).Methods("POST")
+	api.HandleFunc("/dnd/save", PostDndSave).Methods("POST")
+	api.HandleFunc("/dnd/refresh", PostDndRefresh).Methods("POST")
+
 	// Per-user extensions: stored queries
 	api.HandleFunc("/ext/queries", RequestStoredQueries).Methods("GET")
 	api.HandleFunc("/ext/query", RequestStoredQuery).Methods("GET")

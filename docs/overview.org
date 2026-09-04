@@ -20,6 +20,9 @@
   	- revealjs  - Convert an org file to a revealjs presentation
   	- impressjs - Convert an org file to an impressjs presentation
   	- latex     - Export an org file to a latex file (pdf)
+  	- dndsheet  - Render a D&D character sheet as html
+  	- dndlatex  - Render a D&D character sheet as latex
+  	- dndpdf    - Render a D&D character sheet as a pdf
   - An importer framework for syncing periodically with 3rd party services
   	- git
   	- google calendar
@@ -30,6 +33,7 @@
   - Refiling and archiving capabilities
   - Generators
   	- daypage - Create and jump to a daily log file
+  	- dnd     - Build Dungeons & Dragons characters and render their sheets
   - Fast table evaluation
   - A flexible query language
   - Clocking in and out

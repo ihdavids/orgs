@@ -1,0 +1,653 @@
+# ---------------------------------------------------------------------------
+# SRD 5.1: skills, races, backgrounds, feats
+#
+# GENERATED FILE - do not edit by hand.
+# Regenerate with: python3 tools/dndsrd/gen_srd.py [srd-path] [out-dir]
+#
+# This work includes material taken from the System Reference Document 5.1
+# ("SRD 5.1") by Wizards of the Coast LLC, available at
+# https://dnd.wizards.com/resources/systems-reference-document and licensed
+# under the Creative Commons Attribution 4.0 International License
+# (https://creativecommons.org/licenses/by/4.0/legalcode).
+#
+# To add or override content, drop your own yaml module with "id: srd" into
+# one of your configured dndPaths. See the dnd module documentation.
+# ---------------------------------------------------------------------------
+id: "srd"
+name: "SRD 5.1 Core Rules"
+version: "5.1"
+description: "The core races, classes, backgrounds, equipment and spells of fifth edition, generated from the SRD 5.1."
+languages:
+  - "Common"
+  - "Dwarvish"
+  - "Elvish"
+  - "Giant"
+  - "Gnomish"
+  - "Goblin"
+  - "Halfling"
+  - "Orc"
+  - "Abyssal"
+  - "Celestial"
+  - "Draconic"
+  - "Deep Speech"
+  - "Infernal"
+  - "Primordial"
+  - "Sylvan"
+  - "Undercommon"
+alignments:
+  - "Lawful Good"
+  - "Neutral Good"
+  - "Chaotic Good"
+  - "Lawful Neutral"
+  - "True Neutral"
+  - "Chaotic Neutral"
+  - "Lawful Evil"
+  - "Neutral Evil"
+  - "Chaotic Evil"
+skills:
+  - id: "acrobatics"
+    name: "Acrobatics"
+    ability: "dex"
+    text: "Keep your balance, tumble, flip and stay on your feet."
+  - id: "animal-handling"
+    name: "Animal Handling"
+    ability: "wis"
+    text: "Calm, control or read the intentions of an animal."
+  - id: "arcana"
+    name: "Arcana"
+    ability: "int"
+    text: "Recall lore about spells, magic items and planes of existence."
+  - id: "athletics"
+    name: "Athletics"
+    ability: "str"
+    text: "Climb, jump, swim and grapple."
+  - id: "deception"
+    name: "Deception"
+    ability: "cha"
+    text: "Convincingly hide the truth."
+  - id: "history"
+    name: "History"
+    ability: "int"
+    text: "Recall lore about events, people, wars and civilisations."
+  - id: "insight"
+    name: "Insight"
+    ability: "wis"
+    text: "Determine the true intentions of a creature."
+  - id: "intimidation"
+    name: "Intimidation"
+    ability: "cha"
+    text: "Influence someone through overt threats."
+  - id: "investigation"
+    name: "Investigation"
+    ability: "int"
+    text: "Look for clues and make deductions from them."
+  - id: "medicine"
+    name: "Medicine"
+    ability: "wis"
+    text: "Stabilise a dying companion or diagnose an illness."
+  - id: "nature"
+    name: "Nature"
+    ability: "int"
+    text: "Recall lore about terrain, plants, animals and weather."
+  - id: "perception"
+    name: "Perception"
+    ability: "wis"
+    text: "Spot, hear or otherwise detect something."
+  - id: "performance"
+    name: "Performance"
+    ability: "cha"
+    text: "Delight an audience with music, dance, acting or storytelling."
+  - id: "persuasion"
+    name: "Persuasion"
+    ability: "cha"
+    text: "Influence someone with tact, social grace or good nature."
+  - id: "religion"
+    name: "Religion"
+    ability: "int"
+    text: "Recall lore about deities, rites, prayers and holy symbols."
+  - id: "sleight-of-hand"
+    name: "Sleight of Hand"
+    ability: "dex"
+    text: "Plant something, conceal an object or pick a pocket."
+  - id: "stealth"
+    name: "Stealth"
+    ability: "dex"
+    text: "Conceal yourself from enemies and move silently."
+  - id: "survival"
+    name: "Survival"
+    ability: "wis"
+    text: "Follow tracks, hunt, navigate and avoid natural hazards."
+races:
+  - id: "dragonborn"
+    name: "Dragonborn"
+    source: "SRD"
+    size: "Medium"
+    speed: 30
+    languages: ["Common", "Draconic"]
+    traits:
+      - name: "Draconic Ancestry"
+        text: "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type, as shown in the table."
+      - name: "Breath Weapon"
+        text: |-
+          You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation.
+          When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level.
+          After you use your breath weapon, you can't use it again until you complete a short or long rest.
+      - name: "Damage Resistance"
+        text: "You have resistance to the damage type associated with your draconic ancestry."
+    abilityBonuses:
+      str: 2
+      cha: 1
+    age: "Young dragonborn grow quickly. They walk hours after hatching, attain the size and development of a 10-year-old human child by the age of 3, and reach adulthood by 15. They live to be around 80."
+    alignment: "Dragonborn tend to extremes, making a conscious choice for one side or the other in the cosmic war between good and evil. Most dragonborn are good, but those who side with evil can be terrible villains."
+    choices:
+      - id: "draconic-ancestry"
+        name: "Draconic Ancestry"
+        kind: "options"
+        count: 1
+        options:
+          - name: "Black (acid)"
+            text: "Acid damage, 5 by 30 ft. line (Dex. save)."
+          - name: "Blue (lightning)"
+            text: "Lightning damage, 5 by 30 ft. line (Dex. save)."
+          - name: "Brass (fire)"
+            text: "Fire damage, 5 by 30 ft. line (Dex. save)."
+          - name: "Bronze (lightning)"
+            text: "Lightning damage, 5 by 30 ft. line (Dex. save)."
+          - name: "Copper (acid)"
+            text: "Acid damage, 5 by 30 ft. line (Dex. save)."
+          - name: "Gold (fire)"
+            text: "Fire damage, 15 ft. cone (Dex. save)."
+          - name: "Green (poison)"
+            text: "Poison damage, 15 ft. cone (Con. save)."
+          - name: "Red (fire)"
+            text: "Fire damage, 15 ft. cone (Dex. save)."
+          - name: "Silver (cold)"
+            text: "Cold damage, 15 ft. cone (Con. save)."
+          - name: "White (cold)"
+            text: "Cold damage, 15 ft. cone (Con. save)."
+        prompt: "Choose your draconic ancestry, it sets your breath weapon and resistance."
+    names:
+      - "Arjhan"
+      - "Balasar"
+      - "Donaar"
+      - "Ghesh"
+      - "Kriv"
+      - "Medrash"
+      - "Rhogar"
+      - "Torinn"
+      - "Akra"
+      - "Biri"
+      - "Harann"
+      - "Kava"
+      - "Korinn"
+      - "Mishann"
+      - "Sora"
+      - "Thava"
+    summary: "STR +2, CHA +1"
+  - id: "dwarf"
+    name: "Dwarf"
+    source: "SRD"
+    size: "Medium"
+    speed: 25
+    languages: ["Common", "Dwarvish"]
+    traits:
+      - name: "Darkvision"
+        text: "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+      - name: "Dwarven Resilience"
+        text: "You have advantage on saving throws against poison, and you have resistance against poison damage."
+      - name: "Dwarven Combat Training"
+        text: "You have proficiency with the battleaxe, handaxe, light hammer, and warhammer."
+      - name: "Tool Proficiency"
+        text: "You gain proficiency with the artisan's tools of your choice: smith's tools, brewer's supplies, or mason's tools."
+      - name: "Stonecunning"
+        text: "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus."
+    abilityBonuses:
+      con: 2
+    age: "Dwarves mature at the same rate as humans, but they're considered young until they reach the age of 50. On average, they live about 350 years."
+    alignment: "Most dwarves are lawful, believing firmly in the benefits of a well-ordered society. They tend toward good as well, with a strong sense of fair play and a belief that everyone deserves to share in the benefits of a just order."
+    darkvision: 60
+    proficiencies:
+      weapons: ["battleaxe", "handaxe", "light-hammer", "warhammer"]
+    choices:
+      - id: "dwarf-tools"
+        name: "Tool Proficiency"
+        kind: "tools"
+        count: 1
+        from: ["smith's tools", "brewer's supplies", "mason's tools"]
+        prompt: "Choose one set of artisan's tools."
+    names:
+      - "Adrik"
+      - "Baern"
+      - "Dain"
+      - "Gardain"
+      - "Harbek"
+      - "Kildrak"
+      - "Rurik"
+      - "Thoradin"
+      - "Bardryn"
+      - "Diesa"
+      - "Eldeth"
+      - "Gunnloda"
+      - "Kathra"
+      - "Riswynn"
+      - "Torbera"
+      - "Vistra"
+    subraces:
+      - id: "hill-dwarf"
+        name: "Hill Dwarf"
+        source: "SRD"
+        traits:
+          - name: "Dwarven Toughness"
+            text: "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level."
+        abilityBonuses:
+          wis: 1
+        hpPerLevel: 1
+        summary: "WIS +1"
+        text: "As a hill dwarf, you have keen senses, deep intuition, and remarkable resilience."
+    summary: "CON +2, darkvision 60 ft, speed 25 ft"
+  - id: "elf"
+    name: "Elf"
+    source: "SRD"
+    size: "Medium"
+    speed: 30
+    languages: ["Common", "Elvish"]
+    traits:
+      - name: "Darkvision"
+        text: "Accustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+      - name: "Keen Senses"
+        text: "You have proficiency in the Perception skill."
+      - name: "Fey Ancestry"
+        text: "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+      - name: "Trance"
+        text: |-
+          Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is "trance.") While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice.
+          After resting in this way, you gain the same benefit that a human does from 8 hours of sleep.
+    abilityBonuses:
+      dex: 2
+    age: "Although elves reach physical maturity at about the same age as humans, the elven understanding of adulthood goes beyond physical growth to encompass worldly experience. An elf typically claims adulthood and an adult name around the age of 100 and can live to be 750 years old."
+    alignment: "Elves love freedom, variety, and self- expression, so they lean strongly toward the gentler aspects of chaos. They value and protect others' freedom as well as their own, and they are more often good than not. The drow are an exception; their exile has made them vicious and dangerous. Drow are more often evil than not."
+    darkvision: 60
+    proficiencies:
+      skills: ["perception"]
+    names:
+      - "Adran"
+      - "Aelar"
+      - "Beiro"
+      - "Carric"
+      - "Erdan"
+      - "Heian"
+      - "Lucan"
+      - "Peren"
+      - "Adrie"
+      - "Althaea"
+      - "Caelynn"
+      - "Drusilia"
+      - "Jelenneth"
+      - "Keyleth"
+      - "Leshanna"
+      - "Silaqui"
+    subraces:
+      - id: "high-elf"
+        name: "High Elf"
+        source: "SRD"
+        traits:
+          - name: "Elf Weapon Training"
+            text: "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+          - name: "Cantrip"
+            text: "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it."
+          - name: "Extra Language"
+            text: "You can speak, read, and write one extra language of your choice."
+        abilityBonuses:
+          int: 1
+        proficiencies:
+          weapons: ["longsword", "shortsword", "shortbow", "longbow"]
+        choices:
+          - id: "elf-cantrip"
+            name: "Elven Cantrip"
+            kind: "spells"
+            count: 1
+            from: ["wizard"]
+            spellLevels: [0]
+            prompt: "Choose a wizard cantrip, Intelligence is your spellcasting ability for it."
+        extraLanguages: 1
+        summary: "INT +1"
+        text: "As a high elf, you have a keen mind and a mastery of at least the basics of magic. In many fantasy gaming worlds, there are two kinds of high elves. One type is haughty and reclusive, believing themselves to be superior to non-elves and even other elves. The other type is more common and more friendly, and often encountered among humans and other races."
+    summary: "DEX +2, darkvision 60 ft"
+  - id: "gnome"
+    name: "Gnome"
+    source: "SRD"
+    size: "Small"
+    speed: 25
+    languages: ["Common", "Gnomish"]
+    traits:
+      - name: "Darkvision"
+        text: "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+      - name: "Gnome Cunning"
+        text: "You have advantage on all Intelligence, Wisdom, and Charisma saving throws against magic."
+    abilityBonuses:
+      int: 2
+    age: "Gnomes mature at the same rate humans do, and most are expected to settle down into an adult life by around age 40. They can live 350 to almost 500 years."
+    alignment: "Gnomes are most often good. Those who tend toward law are sages, engineers, researchers, scholars, investigators, or inventors. Those who tend toward chaos are minstrels, tricksters, wanderers, or fanciful jewelers. Gnomes are good-hearted, and even the tricksters among them are more playful than vicious."
+    darkvision: 60
+    names:
+      - "Boddynock"
+      - "Dimble"
+      - "Fonkin"
+      - "Gerbo"
+      - "Nackle"
+      - "Seebo"
+      - "Warryn"
+      - "Zook"
+      - "Bimpnottin"
+      - "Caramip"
+      - "Duvamil"
+      - "Ella"
+      - "Nissa"
+      - "Oda"
+      - "Roywyn"
+      - "Shamil"
+    subraces:
+      - id: "rock-gnome"
+        name: "Rock Gnome"
+        source: "SRD"
+        traits:
+          - name: "Artificer's Lore"
+            text: "Whenever you make an Intelligence (History) check related to magic items, alchemical objects, or technological devices, you can add twice your proficiency bonus, instead of any proficiency bonus you normally apply."
+          - name: "Tinker"
+            text: |-
+              You have proficiency with artisan's tools (tinker's tools). Using those tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time.
+              When you create a device, choose one of the following options:
+          - name: "Clockwork Toy"
+            text: "This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents."
+          - name: "Fire Starter"
+            text: "The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action."
+          - name: "Music Box"
+            text: "When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed."
+        abilityBonuses:
+          con: 1
+        summary: "CON +1"
+        text: "As a rock gnome, you have a natural inventiveness and hardiness beyond that of other gnomes."
+    summary: "INT +2, darkvision 60 ft, speed 25 ft"
+  - id: "half-elf"
+    name: "Half-Elf"
+    source: "SRD"
+    size: "Medium"
+    speed: 30
+    languages: ["Common", "Elvish"]
+    traits:
+      - name: "Darkvision"
+        text: "Thanks to your elf blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+      - name: "Fey Ancestry"
+        text: "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+      - name: "Skill Versatility"
+        text: "You gain proficiency in two skills of your choice."
+    abilityBonuses:
+      cha: 2
+    abilityChoice:
+      count: 2
+      amount: 1
+    age: "Half-elves mature at the same rate humans do and reach adulthood around the age of 20. They live much longer than humans, however, often exceeding 180 years."
+    alignment: "Half-elves share the chaotic bent of their elven heritage. They value both personal freedom and creative expression, demonstrating neither love of leaders nor desire for followers. They chafe at rules, resent others' demands, and sometimes prove unreliable, or at least unpredictable."
+    darkvision: 60
+    choices:
+      - id: "skill-versatility"
+        name: "Skill Versatility"
+        kind: "skills"
+        count: 2
+        prompt: "Choose two skill proficiencies of your choice."
+    extraLanguages: 1
+    names:
+      - "Aramil"
+      - "Berrian"
+      - "Dayereth"
+      - "Hadarai"
+      - "Immeral"
+      - "Rolen"
+      - "Theren"
+      - "Varis"
+      - "Bethrynna"
+      - "Caelynn"
+      - "Felosial"
+      - "Meriele"
+      - "Shanairra"
+      - "Thia"
+      - "Valna"
+      - "Ielenia"
+    summary: "CHA +2, +1 to 2 abilities of your choice, darkvision 60 ft"
+  - id: "half-orc"
+    name: "Half-Orc"
+    source: "SRD"
+    size: "Medium"
+    speed: 30
+    languages: ["Common", "Orc"]
+    traits:
+      - name: "Darkvision"
+        text: "Thanks to your orc blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+      - name: "Menacing"
+        text: "You gain proficiency in the Intimidation skill."
+      - name: "Relentless Endurance"
+        text: "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest."
+      - name: "Savage Attacks"
+        text: "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage of the critical hit."
+    abilityBonuses:
+      str: 2
+      con: 1
+    age: "Half-orcs mature a little faster than humans, reaching adulthood around age 14. They age noticeably faster and rarely live longer than 75 years."
+    alignment: "Half-orcs inherit a tendency toward chaos from their orc parents and are not strongly inclined toward good. Half-orcs raised among orcs and willing to live out their lives among them are usually evil."
+    darkvision: 60
+    proficiencies:
+      skills: ["intimidation", "intimidation"]
+    names:
+      - "Dench"
+      - "Feng"
+      - "Gell"
+      - "Henk"
+      - "Holg"
+      - "Imsh"
+      - "Keth"
+      - "Mhurren"
+      - "Baggi"
+      - "Emen"
+      - "Myev"
+      - "Neega"
+      - "Ovak"
+      - "Shautha"
+      - "Sutha"
+      - "Volen"
+    summary: "STR +2, CON +1, darkvision 60 ft"
+  - id: "halfling"
+    name: "Halfling"
+    source: "SRD"
+    size: "Small"
+    speed: 25
+    languages: ["Common", "Halfling"]
+    traits:
+      - name: "Lucky"
+        text: "When you roll a 1 on the d20 for an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll."
+      - name: "Brave"
+        text: "You have advantage on saving throws against being frightened."
+      - name: "Halfling Nimbleness"
+        text: "You can move through the space of any creature that is of a size larger than yours."
+    abilityBonuses:
+      dex: 2
+    age: "A halfling reaches adulthood at the age of 20 and generally lives into the middle of his or her second century."
+    alignment: "Most halflings are lawful good. As a rule, they are good-hearted and kind, hate to see others in pain, and have no tolerance for oppression. They are also very orderly and traditional, leaning heavily on the support of their community and the comfort of their old ways."
+    names:
+      - "Alton"
+      - "Cade"
+      - "Corrin"
+      - "Eldon"
+      - "Garret"
+      - "Lyle"
+      - "Milo"
+      - "Roscoe"
+      - "Andry"
+      - "Bree"
+      - "Callie"
+      - "Cora"
+      - "Jillian"
+      - "Lavinia"
+      - "Portia"
+      - "Seraphina"
+    subraces:
+      - id: "lightfoot"
+        name: "Lightfoot"
+        source: "SRD"
+        traits:
+          - name: "Naturally Stealthy"
+            text: "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you."
+        abilityBonuses:
+          cha: 1
+        summary: "CHA +1"
+        text: "As a lightfoot halfling, you can easily hide from notice, even using other people as cover. You're inclined to be affable and get along well with others."
+    summary: "DEX +2, speed 25 ft"
+  - id: "human"
+    name: "Human"
+    source: "SRD"
+    size: "Medium"
+    speed: 30
+    languages: ["Common"]
+    abilityBonuses:
+      str: 1
+      dex: 1
+      con: 1
+      int: 1
+      wis: 1
+      cha: 1
+    age: "Humans reach adulthood in their late teens and live less than a century."
+    alignment: "Humans tend toward no particular alignment. The best and the worst are found among them."
+    extraLanguages: 1
+    names:
+      - "Anton"
+      - "Diero"
+      - "Marcon"
+      - "Pieron"
+      - "Rimardo"
+      - "Bor"
+      - "Fodel"
+      - "Darvin"
+      - "Iuliana"
+      - "Kara"
+      - "Katernin"
+      - "Seipora"
+      - "Shandri"
+      - "Rowan"
+      - "Morgan"
+      - "Elena"
+    summary: "STR +1, DEX +1, CON +1, INT +1, WIS +1, CHA +1"
+  - id: "tiefling"
+    name: "Tiefling"
+    source: "SRD"
+    size: "Medium"
+    speed: 30
+    languages: ["Common", "Infernal"]
+    traits:
+      - name: "Darkvision"
+        text: "Thanks to your infernal heritage, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+      - name: "Hellish Resistance"
+        text: "You have resistance to fire damage."
+      - name: "Infernal Legacy"
+        text: "You know the thaumaturgy cantrip. When you reach 3rd level, you can cast the hellish rebuke spell as a 2nd-level spell once with this trait and regain the ability to do so when you finish a long rest. When you reach 5th level, you can cast the darkness spell once with this trait and regain the ability to do so when you finish a long rest. Charisma is your spellcasting ability for these spells."
+    abilityBonuses:
+      int: 1
+      cha: 2
+    age: "Tieflings mature at the same rate as humans but live a few years longer."
+    alignment: "Tieflings might not have an innate tendency toward evil, but many of them end up there. Evil or not, an independent nature inclines many tieflings toward a chaotic alignment."
+    darkvision: 60
+    spells:
+      - id: "thaumaturgy"
+        level: 1
+        ability: "cha"
+      - id: "hellish-rebuke"
+        level: 3
+        ability: "cha"
+      - id: "darkness"
+        level: 5
+        ability: "cha"
+    names:
+      - "Akmenos"
+      - "Amnon"
+      - "Barakas"
+      - "Damakos"
+      - "Ekemon"
+      - "Kairon"
+      - "Melech"
+      - "Skamos"
+      - "Akta"
+      - "Bryseis"
+      - "Damaia"
+      - "Kallista"
+      - "Lerissa"
+      - "Nemeia"
+      - "Orianna"
+      - "Rieta"
+    summary: "INT +1, CHA +2, darkvision 60 ft"
+backgrounds:
+  - id: "acolyte"
+    name: "Acolyte"
+    source: "SRD"
+    proficiencies:
+      skills: ["insight", "religion"]
+    text: "You have spent your life in the service of a temple to a specific god or pantheon of gods. You act as an intermediary between the realm of the holy and the mortal world, performing sacred rites and offering sacrifices in order to conduct worshipers into the presence of the divine. You are not necessarily a cleric - performing sacred rites is not the same thing as channeling divine power."
+    languages: 2
+    equipment:
+      - id: "holy-symbol"
+        qty: 1
+      - id: "book"
+        qty: 1
+      - id: "incense"
+        qty: 5
+      - id: "vestments"
+        qty: 1
+      - id: "clothes-common"
+        qty: 1
+      - id: "pouch"
+        qty: 1
+    gold: 15
+    feature:
+      name: "Shelter of the Faithful"
+      text: |-
+        As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle.
+
+        You might also have ties to a specific temple dedicated to your chosen deity or pantheon, and you have a residence there. This could be the temple where you used to serve, if you remain on good terms with it, or a temple where you have found a new home. While near your temple, you can call upon the priests for assistance, provided the assistance you ask for is not hazardous and you remain in good standing with your temple.
+    traits:
+      - "I idolize a particular hero of my faith, and constantly refer to that person's deeds and example."
+      - "I can find common ground between the fiercest enemies, empathizing with them and always working toward peace."
+      - "I see omens in every event and action. The gods try to speak to us, we just need to listen"
+      - "Nothing can shake my optimistic attitude."
+      - "I quote (or misquote) sacred texts and proverbs in almost every situation."
+      - "I am tolerant (or intolerant) of other faiths and respect (or condemn) the worship of other gods."
+      - "I've enjoyed fine food, drink, and high society among my temple's elite. Rough living grates on me."
+      - "I've spent so long in the temple that I have little practical experience dealing with people in the outside world."
+    ideals:
+      - "Tradition. The ancient traditions of worship and sacrifice must be preserved and upheld. (Lawful)"
+      - "Charity. I always try to help those in need, no matter what the personal cost. (Good)"
+      - "Change. We must help bring about the changes the gods are constantly working in the world. (Chaotic)"
+      - "Power. I hope to one day rise to the top of my faith's religious hierarchy. (Lawful)"
+      - "Faith. I trust that my deity will guide my actions. I have faith that if I work hard, things will go well. (Lawful)"
+      - "Aspiration. I seek to prove myself worthy of my god's favor by matching my actions against his or her teachings. (Any)"
+    bonds:
+      - "I would die to recover an ancient relic of my faith that was lost long ago."
+      - "I will someday get revenge on the corrupt temple hierarchy who branded me a heretic."
+      - "I owe my life to the priest who took me in when my parents died."
+      - "Everything I do is for the common people."
+      - "I will do anything to protect the temple where I served."
+      - "I seek to preserve a sacred text that my enemies consider heretical and seek to destroy."
+    flaws:
+      - "I judge others harshly, and myself even more severely."
+      - "I put too much trust in those who wield power within my temple's hierarchy."
+      - "My piety sometimes leads me to blindly trust those that profess faith in my god."
+      - "I am inflexible in my thinking."
+      - "I am suspicious of strangers and expect the worst of them."
+      - "Once I pick a goal, I become obsessed with it to the detriment of everything else in my life."
+    summary: "Insight, Religion - Shelter of the Faithful"
+feats:
+  - id: "grappler"
+    name: "Grappler"
+    source: "SRD"
+    prerequisite: "Strength 13 or higher"
+    text: |-
+      You've developed the skills necessary to hold your own in close-quarters grappling. You gain the following benefits:
+
+      - You have advantage on attack rolls against a creature you are grappling.
+      - You can use your action to try to pin a creature grappled by you. To do so, make another grapple check. If you succeed, you and the creature are both restrained until the grapple ends.

@@ -1,0 +1,135 @@
+# ---------------------------------------------------------------------------
+# Example add on module.
+#
+# This file shows the two ways of extending the dnd module:
+#
+#  1. Declaring a *new ruleset* that inherits everything from another one
+#     (extends: srd). Players pick it at the start of character creation.
+#  2. Adding entries to an existing ruleset. Anything with an id that already
+#     exists extends that entry instead of replacing it, so the Fighter below
+#     gains a new martial archetype without restating the class.
+#
+# Delete this file if you do not want it, or copy it as the starting point for
+# your own campaign content.
+# ---------------------------------------------------------------------------
+id: emberfall
+name: "Emberfall (example homebrew)"
+version: "0.1"
+extends: srd
+description: "A small demonstration ruleset: one new race, one new subclass and one new background."
+
+races:
+  - id: emberkin
+    name: Emberkin
+    source: Emberfall
+    summary: "CON +2, CHA +1, fire in the blood."
+    text: "Descendants of those who sheltered in the volcano's heart during the Long Winter, emberkin run hot in body and temper."
+    size: Medium
+    speed: 30
+    darkvision: 60
+    abilityBonuses: {con: 2, cha: 1}
+    age: "Emberkin mature at the same rate as humans and rarely live past 90."
+    alignment: "Emberkin lean chaotic, prizing the moment over the plan."
+    languages: [Common, Ignan]
+    names: [Ashka, Cinder, Dwal, Emberlyn, Kilna, Marrow, Pyre, Sesk, Tarn, Vess]
+    spells:
+      - {id: produce-flame, level: 1, ability: cha}
+    traits:
+      - name: Darkvision
+        text: "You can see in dim light within 60 feet as if it were bright light, and in darkness as if it were dim light."
+      - name: Ember Blood
+        text: "You have resistance to fire damage and you are immune to the effects of extreme heat."
+      - name: Kindle
+        text: "You know the produce flame cantrip. Charisma is your spellcasting ability for it."
+      - name: Banked Coals
+        text: "When you drop to 0 hit points but are not killed outright, you can use your reaction to deal 1d6 fire damage to each creature within 5 feet of you."
+
+classes:
+  # Only the id and the new subclass are needed, the rest of the fighter is
+  # inherited from the srd module.
+  - id: fighter
+    subclasses:
+      - id: ashen-guard
+        name: Ashen Guard
+        source: Emberfall
+        summary: "A fighter who fights beside a bonded flame."
+        text: "The Ashen Guard carry a coal from the first hearth, and it answers when they call."
+        features:
+          - name: Bonded Flame
+            level: 3
+            text: "You can use a bonus action to wreathe your weapon in flame for 1 minute. While it burns, your attacks with that weapon deal an extra 1d4 fire damage. You can do this a number of times equal to your proficiency bonus per long rest."
+          - name: Cinder Step
+            level: 7
+            text: "When a creature within 30 feet of you takes fire damage, you can use your reaction to teleport to an unoccupied space within 5 feet of it."
+          - name: Ash and Iron
+            level: 10
+            text: "You gain resistance to fire damage, and your Bonded Flame damage increases to 1d6."
+          - name: Pyre Ward
+            level: 15
+            text: "When you are reduced to half your hit points or fewer, your Bonded Flame ignites automatically and you gain temporary hit points equal to your fighter level."
+          - name: Everburning
+            level: 18
+            text: "Your Bonded Flame damage increases to 1d8 and it no longer has a duration, it burns until you dismiss it."
+
+backgrounds:
+  - id: hearthkeeper
+    name: Hearthkeeper
+    source: Emberfall
+    summary: "Insight, Survival - you kept the fire alive."
+    text: "Somebody has to keep the great hearth burning through the winter. For years, that somebody was you."
+    proficiencies:
+      skills: [insight, survival]
+      tools: ["cook's utensils"]
+    languages: 1
+    gold: 12
+    equipment:
+      - {id: tinderbox, qty: 1}
+      - {id: blanket, qty: 1}
+      - {id: clothes-common, qty: 1}
+      - {id: pouch, qty: 1}
+    feature:
+      name: Keeper of the Coals
+      text: "Any settlement that keeps a communal fire will find you a place beside it. You and your companions can expect a night's shelter, a hot meal and the local news wherever a hearth burns."
+    traits:
+      - "I measure time in fuel, not hours."
+      - "I am uneasy in rooms without a fire in them."
+      - "I greet every stranger the way I would greet a traveller in a blizzard."
+      - "I talk to the fire when I think nobody is listening."
+    ideals:
+      - "Duty. The fire does not keep itself."
+      - "Hospitality. No one is turned away from my hearth."
+      - "Memory. Fire is how we carry the past forward."
+      - "Warmth. Every cold thing in the world can be mended with enough heat."
+    bonds:
+      - "The hearth I tended went out on my watch, and someone died for it."
+      - "I carry a coal from my home fire and it has never gone cold."
+      - "The village that raised me is still waiting for me to come back."
+      - "I owe my life to a stranger who shared their fire with me."
+    flaws:
+      - "I am reckless with flame."
+      - "I trust anyone who shares a meal with me, no matter what they have done."
+      - "I cannot bear to be alone in the dark."
+      - "I hoard fuel, food and blankets far past the point of sense."
+
+items:
+  - id: hearth-coal
+    name: Hearth coal
+    kind: gear
+    category: gear
+    cost: "-"
+    weight: 1
+    text: "A coal from a fire that has never gone out. It is always faintly warm."
+
+spells:
+  - id: emberfalls-warmth
+    name: "Emberfall's Warmth"
+    source: Emberfall
+    level: 1
+    school: Evocation
+    castingTime: "1 action"
+    range: "Touch"
+    components: "V, S"
+    duration: "1 hour"
+    classes: [cleric, druid, sorcerer, warlock]
+    text: "You touch a willing creature. For the duration it is immune to the effects of extreme cold, and the first time each round it takes cold damage it reduces that damage by 5."
+    higherLevel: "When you cast this spell using a spell slot of 2nd level or higher, you can touch one additional creature for each slot level above 1st."

@@ -15,5 +15,6 @@ import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todoist"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/latex"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/confluence"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/dnd"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
 )

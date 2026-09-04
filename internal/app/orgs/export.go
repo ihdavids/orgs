@@ -16,9 +16,11 @@ import (
 func ExportToFile(db common.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
 	fmt.Printf("EXPORT CALLED!\n")
 	var didWrite = false
+	var found = false
 	msg := "Unknown Error"
 	for _, exp := range Conf().Server.Exporters {
 		if exp.Name == args.Name {
+			found = true
 			err := exp.Plugin.Export(db, args.Query, args.Filename, args.Opts, args.Props)
 			if err == nil {
 				didWrite = true
@@ -31,8 +33,12 @@ func ExportToFile(db common.ODb, args *common.ExportToFile) (common.ResultMsg, e
 			break
 		}
 	}
-	if !didWrite {
+	// Only claim the exporter is missing when it really is, otherwise the
+	// reason the export failed would be thrown away.
+	if !found {
 		msg = fmt.Sprintf("ERROR: Did not export is %s setup in the config file?\n", args.Name)
+	}
+	if !didWrite {
 		log.Printf("%v", msg)
 	}
 	return common.ResultMsg{Ok: didWrite, Msg: msg}, nil

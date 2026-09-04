@@ -1,0 +1,1097 @@
+
+/*
+body {
+  font-family: "Bookmania";
+  font-size: .8rem;
+  text-rendering: optimizeLegibility;
+  color: #000;
+}
+
+p {
+  padding: .4em 0;
+  line-height: 1.3em;
+}
+
+//
+// Headings
+//
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Mrs Eaves OT";
+  font-variant: small-caps;
+  font-weight: 800;
+  margin-top: .5em;
+}
+
+h1 {
+  font-size: 2.4rem;
+  column-span: all;
+}
+
+h2 {
+  font-size: .705cm;
+}
+
+h3 {
+  border-bottom: 2px solid #c9ad6a;
+  font-size: .529cm;
+}
+
+h4 {
+  font-size: .458cm;
+  margin-bottom: 0;
+}
+
+h5 {
+  font-family: "Scala Sans SC";
+  font-size: .423cm;
+  font-variant: normal;
+}
+
+h6 {
+
+}
+*/
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inconsolata"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/monokai.min.css">
+  <style>
+  table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+	border-collapse:separate;	
+	border-radius: 20px;
+	
+	}
+	thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+	border-radius:6px;
+	}
+	th, td {
+	    padding: 12px 15px;
+	}
+	tbody tr {
+ 	   border-bottom: 1px solid #dddddd;
+	}
+	tbody tr:nth-of-type(even) {
+	    background-color: #232323;
+	}
+	tbody tr:last-of-type {
+ 	   border-bottom: 2px solid #009879;
+	}
+	tbody tr.active-row {
+	    font-weight: bold;
+	    color: #009879;
+	}
+	img {
+  		box-shadow: 5px 5px 15px 0px #aa8;
+		-webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));
+	}
+  </style>
+
+
+<style>
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0; }
+  
+  html {
+	font: 100%/1.5 sans-serif;
+	word-wrap: break-word;
+	padding: 1.5em; }
+  
+  @media (min-width: 768px) {
+	html { font-size: 125%; } }
+  
+  h1, h2, h3, h4 {
+	margin: 2.5rem 0 1.5rem 0;
+	line-height: 1.25; }
+
+  h1 {
+	font-size: 22pt;
+  }
+  h2 {
+	font-size: 20pt;
+	font-family: 'Courier New';
+	color:#888;
+  }
+  h3 {
+	font-size: 16pt;
+	color:#777;
+  }
+  h4 {
+	font-size: 14pt;
+  }
+  
+  .title {
+	font-size: 2.5em; }
+  
+  .subtitle {
+	font-weight: normal;
+	font-size: 0.75em;
+	color: #666; }
+  
+  a {
+	color: #fa6432;
+	text-decoration: none; }
+  a:hover, a:focus, a:active {
+	text-decoration: underline; }
+  
+  p {
+	margin: 1em 0; }
+  p code {
+	background-color: #eee;
+	padding: 0.05em 0.2em;
+	border: 1px solid #ccc; }
+  
+  ol, ul {
+	margin: 1em; }
+  ol li ol, ol li ul, ul li ol, ul li ul {
+	margin: 0 2em; }
+  ol li p, ul li p {
+	margin: 0; }
+  
+  img {
+	max-width: 100%;
+	display: block;
+	margin: 0 auto;
+	padding: 0.5em; }
+  
+  blockquote {
+	padding-left: 1em;
+	font-style: italic;
+	border-left: solid 1px #fa6432; }
+  
+  table {
+	font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
+	font-size: 1rem;
+	text-align: left;
+	caption-side: bottom;
+	margin-bottom: 2em; }
+  table * {
+	border: none; }
+  table thead, table tr {
+	display: table;
+	table-layout: fixed;
+	width: 100%; }
+  table tr:nth-child(even) { }
+  table tbody {
+	display: block;
+	max-height: 70vh;
+	overflow-y: auto; }
+  table td, table th {
+	padding: 0.25em; }
+  
+  table, .highlight > pre, pre.example {
+	max-height: 70vh;
+	margin: 1em 0;
+	padding: 1em;
+	overflow: auto;
+	font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
+	font-size: 0.85rem;
+	border: 1px dashed rgba(250, 100, 50, 0.5); }
+  
+  figure {
+	margin: 1em 0;
+  }
+  
+  figcaption {
+	font-family: monospace, monospace; /* https://github.com/necolas/normalize.css#extended-details-and-known-issues */
+	font-size: 0.75em;
+	text-align: center;
+	color: grey; }
+  
+  .footnote-definition sup {
+	float: left; }
+  
+  .footnote-definition .footnote-body {
+	margin: 1em 0;
+	padding: 0 1em;
+	border: 1px solid rgba(250, 100, 50, 0.3);
+	background-color: #ccc; }
+  .footnote-definition .footnote-body p:only-child {
+	margin: 0.2em 0; }
+  
+  .align-left   { text-align: left;   }
+  .align-center { text-align: center; }
+  .align-right  { text-align: right;  }
+  
+  
+  dl { font-family: monospace, monospace; }
+  dl > dt { font-weight: bold; }
+  dl > dd { margin: 1em; }
+  
+  .todo, .priority, .tags {
+	font-size: 0.8em;
+	color: red;
+  }
+  
+  .timestamp {
+	background-color: #eee;
+	padding: 0.05em 0.2em;
+	border: 1px solid #ccc; }
+
+</style>
+</head>
+<body>
+
+	<script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
+
+    
+    <h2>Start in Town</h2><ul>
+<li>Do not know each other.</li>
+<li>Wavermeet</li>
+<li>Failed rope pull</li>
+<li>Success on 2nd pull</li>
+<li>Introductions happen</li>
+<li>
+<p>Sarah at a table tells about toxic spill in her grandfathers workshop</p>
+<ul>
+<li>Birds needs saving</li>
+</ul>
+</li>
+</ul>
+<h3>Sam the Bartender</h3><ul>
+<li>Account started 1 silver a night</li>
+<li>Kobold jail break</li>
+<li>Need evidence</li>
+<li>Something needed for his daughters trial</li>
+<li>In a silver box, don&#39;t open it.	</li>
+</ul>
+<h3>Fox Person &amp; Ranger</h3><ul>
+<li>Rox the fox</li>
+<li>Goblin gang in the forrest</li>
+<li>Strider - high pitched voice (ranger)</li>
+</ul>
+<h2>Police Station Question </h2><ul>
+<li>Adana investigates
+20 roll</li>
+</ul>
+<p>Initiative rolled </p>
+<table>
+<thead>
+<tr>
+<th class="align-right"></th>
+<th></th>
+<th>Damage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="align-right">12</td>
+<td>Adana</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">10</td>
+<td>Eli</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">11</td>
+<td>Kobo</td>
+<td>8 +13</td>
+</tr>
+</tbody>
+</table>
+<h3>Reel to Reel</h3><ul>
+<li>Smith has the ring … get it .. or</li>
+</ul>
+<h3>Evidence missing</h3><ul>
+<li>No evidence in the evidence room.</li>
+</ul>
+<h3>Dwarf in the upper room</h3><ul>
+<li>Kobolds stole his mustach
+(nose hairs)</li>
+<li>They also took all the evidence
+Smihaven is the dwarfs name</li>
+</ul>
+<h3>Kobods In Hallway</h3><table>
+<thead>
+<tr>
+<th class="align-right"></th>
+<th></th>
+<th class="align-right"></th>
+<th>Adana Damage</th>
+<th>Eli Damage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="align-right">18</td>
+<td>Eli</td>
+<td class="align-right"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">16</td>
+<td>K1</td>
+<td class="align-right"></td>
+<td></td>
+<td>7+5</td>
+</tr>
+<tr>
+<td class="align-right">15</td>
+<td>K2</td>
+<td class="align-right"></td>
+<td>6 damage</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">8</td>
+<td>Adana</td>
+<td class="align-right"></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Eli got a emerald</li>
+<li>Adana got a ruby</li>
+<li>Adana gets a teapot</li>
+</ul>
+<h3>Mouse hole</h3><ul>
+<li>mouse used string to get at some cheese</li>
+<li>Did not complete this…</li>
+</ul>
+<h3>Rusty Spoon</h3><ul>
+<li>Eli got a rusty spoon in one of the rooms</li>
+</ul>
+<h3>Downstairs Kobolds Fight</h3><table>
+<thead>
+<tr>
+<th class="align-right"></th>
+<th></th>
+<th>Damage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="align-right">14</td>
+<td><strong>K1</strong></td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">13</td>
+<td>K2</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">13</td>
+<td>K5</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">12</td>
+<td><strong>Adana</strong></td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">11</td>
+<td>K3</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">11</td>
+<td>K6</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">10</td>
+<td><strong>E</strong></td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">8</td>
+<td>K4</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Got evidence - parchment inkeeper is smuggling weapons</li>
+<li>Shawn (leader of kobolds) is hurt and will give them something</li>
+</ul>
+<h4>Dwarf confirmed smuggling</h4><ul>
+<li>Dwarf confirmed that the evidence is actually against SAM for his smuggling operation    </li>
+</ul>
+<h4>Police</h4><ul>
+<li>They are apparently out in the woods helping with the goblin problem.</li>
+</ul>
+<p>300XP Given</p>
+<h3>Lab Adventure</h3><ul>
+<li>Rats along the way</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th class="align-right"></th>
+<th></th>
+<th>Damage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="align-right">18</td>
+<td>E</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">18</td>
+<td>R1</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">17</td>
+<td>A</td>
+<td>2 R1</td>
+</tr>
+<tr>
+<td class="align-right">12</td>
+<td>R2</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">9</td>
+<td>R3</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4>Dwarf On Island</h4><ul>
+<li>Turn off 2nd lever not 3rd</li>
+<li>Grampa somewhere inside</li>
+<li>Not sure about the birds</li>
+<li>Toxic spill might be hurting the fishes</li>
+<li>NAME: Wilhamen</li>
+</ul>
+<h4>Door Is Locked </h4><ul>
+<li>Acid everywhere </li>
+<li>Memphit in the rafters</li>
+<li>Button hides staircases</li>
+<li>Other button controls traps</li>
+<li>Other buttons launches them all over</li>
+<li>Memphits attacking</li>
+</ul>
+<h4>Mempit attack</h4><table>
+<tbody>
+<tr>
+<td class="align-right"></td>
+<td></td>
+<td>Damage</td>
+</tr>
+<tr>
+<td class="align-right">14</td>
+<td>A</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">12</td>
+<td>M1</td>
+<td>8+6</td>
+</tr>
+<tr>
+<td class="align-right">11</td>
+<td>E</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">7</td>
+<td>M2</td>
+<td>Charmed</td>
+</tr>
+</tbody>
+</table>
+<h4>Purple goo</h4><ul>
+<li>Purple stuff turned the birds into memphits</li>
+<li>pumping gunk out into the bay</li>
+<li>Man talked about baking soda volcanos</li>
+<li>Missing the lever thing</li>
+<li>Sign said: To turn off machine use lever</li>
+</ul>
+<h5>Candy Floss Machine </h5><ul>
+<li>pull big lever after selecting flavor</li>
+</ul>
+<h5>Taffy Puller on top floor in middle</h5><h5>Found lever in top floor, turned off machine</h5><ul>
+<li>Piranahs in the water</li>
+<li>Dwarf thanked them.</li>
+<li>Heading back to the inn</li>
+</ul>
+<p>150 XP given</p>
+<h2>Character Stats</h2><table>
+<tbody>
+<tr>
+<td>Eli</td>
+<td class="align-right">17</td>
+<td class="align-right">17</td>
+</tr>
+<tr>
+<td>Adana</td>
+<td class="align-right">19</td>
+<td class="align-right">19</td>
+</tr>
+</tbody>
+</table>
+<h2>Play Session 3</h2><ul>
+<li>Took a long rest</li>
+<li>Got character stats above.</li>
+<li>
+<p>Sara in the bar</p>
+<ul>
+<li>** Shopping list of potions is found in a bandit camp.</li>
+<li>
+<p>** A set of shackles lays by the side of the road, without the prisoner!</p>
+<ul>
+<li>Old and rusty looks like someone picked them with a set of twigs.</li>
+</ul>
+</li>
+<li>
+<p>** A smiling roadside merchant roasts rats, frogs and squirrels on sticks and offers a bite to the party?</p>
+<ul>
+<li>jim the merchant</li>
+<li>He is actually a ex bandit and will tell them about the bandit lord running guns, but now trying to shift into alchemy.</li>
+<li>But only if they bribe, or feed him something better.</li>
+<li>Eventually once they get the fake dragons tear from Sams hideout they will find the guy burried up to his head by an anthill and if they save him.
+he will send them to an old dragons hoard where they can get a real dragons tear!</li>
+<li>doesn&#39;t like squirrel</li>
+<li>sold eli a friendship bracelet for 2 copper</li>
+</ul>
+</li>
+<li>** A hungry hobbit jumps on Eli and tries to steal his pack. No more fish! No more fish! repeating and runs off.</li>
+<li>
+<p>** A slippery mudslide leaves party in gully, can they climb out?</p>
+<ul>
+<li>Caven centipedes do not want to let them out, cut the vines. Have to feed the centipeds. There are plants in the gulley that the centipeds eat.</li>
+<li>Sentient flowers in the ravine. might help or hinder.</li>
+<li>Want someone to talk to!</li>
+</ul>
+</li>
+<li>
+<p>** Three young men work on tipping over an occupied outshouse… With the owner inside. The owner will tell them about helping the local goblins with food.</p>
+<ul>
+<li>Kids are trying to get into the gang of bandits.</li>
+<li>
+<p>Farm is protected by wards</p>
+<ul>
+<li>Obvious when they go off.</li>
+<li>But when they go off they get covered in salt! Encounter with giant slugs.</li>
+</ul>
+</li>
+<li>
+<p>Farmer tells the kids he is going to have to move if the rumors are true that all the fishing industry has gone belly up.</p>
+<ul>
+<li>Someone needs to do something to help</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>** A well spoken lizard man (aaron) wearing fine studded leather armor is trapped under a fallen tree. He begs the party to come to his aid?</p>
+<ul>
+<li>Will this guy tell them about goblins being good?</li>
+<li>dinglehoppers - hair cut and styler</li>
+<li>Goblins are actually good? Trying to help goblins steal potion ingredients</li>
+<li>Also he lived in the town but is leaving for good now because the fish have all become Piranahs, his food source has dried up so he is moving…</li>
+</ul>
+</li>
+<li>
+<p>HERE (Jane) A very small goblin wearing an old carpet as a cape leaps into the path and demands tribute.</p>
+<ul>
+<li>He will tell them the goblins are trying to stop an evil alchemist from replicating a candy bioweapon.</li>
+<li>He will also give them a key to the dome… IF they pay him. Also he has wings which he thinks are HORRIBLE because goblins shouldn&#39;t have wings and he got them from someone experimenting on him.</li>
+<li>Knows there is a wizard that lives somewhere in the forest that might help make an antidote if you can get him a dragons tear.</li>
+<li>Challenging them to a wrestling match.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>Recap</h2><ul>
+<li>Our story started with Sara in the bar who was worried about her dad in the 
+factory.</li>
+<li>We met sam the innkeeper that wanted the party to steal something from the police while
+they were out dealing with the spill! But it turned out he tried to double cross them!</li>
+<li>Sam has fled, he is actually a smuggler of some sort, it may have been weapons? We don&#39;t really know.</li>
+<li>We learned from jim the ex bandit merchant he told them about the bandit lord
+ running weapons, but now trying to shift into alchemy.</li>
+<li>Sabotage at the candy factory has resulted in an environmental incident.</li>
+<li>Piranahs and memphits were a result of the spill.</li>
+<li>We rescued an old guy from the mixer. He fainted a bunch and he warned us about the piranas</li>
+<li>We learned that there is an evil alchemist that wants to learn how to duplicate the
+toxic sludge to make soldiers</li>
+<li>
+<p>We met Jane a small goblin that had wings and is desperate to lose them.</p>
+<ul>
+<li>Jane has offered to give them a key to the bandits dome if we could beat her in
+a wrestling match.</li>
+<li>Jane also mentioned something about a wizard</li>
+</ul>
+</li>
+</ul>
+<h2>12/24/2022</h2><ul>
+<li>Adana beats jane in a wrestling match 2 rolls</li>
+<li>Shadow is distrustful of the wizard Tynadreus</li>
+</ul>
+<p>Dryads told them about back entrance</p>
+<p>
+  Took down 2 goblins in entrance way</p>
+<table>
+<tbody>
+<tr>
+<td>G1</td>
+<td class="align-right">7</td>
+<td class="align-right"></td>
+</tr>
+<tr>
+<td>G2</td>
+<td class="align-right">7</td>
+<td class="align-right"></td>
+</tr>
+</tbody>
+</table>
+<p>
+  Adana learned her cloack turned black in a dark room can give her +1 on stealth</p>
+<p>
+  Level up to 3
+  Got bag of tricks but don&#39;t know what it is.
+  It will contain the dragons tear if they can figure out how to get it. 
+  (rust colored bag)</p>
+<p>
+  Eli learned infernal
+  Adana can wildshape
+  Eli has breath weapon.</p>
+<h2>12/26/2022</h2><p>Recap:</p>
+<ul>
+<li>Last time we rescued a recipe from grannys bakery</li>
+<li>The wizards (jane) goblin with wings gave you a key to the dome </li>
+<li>The wizard also gave shadow a rust colored bag that is as of yet unientified</li>
+<li>The imp has told you where the bandits lair is and will lead you there!</li>
+</ul>
+<h3>Discovered What Bag Does</h3><ul>
+<li>Goat and Rat</li>
+</ul>
+<h3>Met Roxy Fox</h3><ul>
+<li>He will meet them in 2 days time at the wizards tower</li>
+<li>Explained he has infiltrated the badit gang</li>
+<li>Found more than they bargained for.</li>
+<li>Goblins AND Bandits</li>
+</ul>
+<h3>Bat Room</h3><ul>
+<li>Spoke to the fungus</li>
+<li>Bats swarmed</li>
+<li>Stellaluna</li>
+<li>Adana is a spider… you look tasty…</li>
+<li>Bats threaten to eat her.</li>
+<li>She changes back</li>
+</ul>
+<h3>Plowed Forward</h3><ul>
+<li>Eli stealthed up and then plowed forward.
+DC Check avoided the trap but saw the letters on the floor for the entrance</li>
+</ul>
+<h2>12/28/2022</h2><h3>Recap</h3><p>When last we played the team learned about their new bag of tricks
+   The fought a battle in the entrace to the bandits lair and spoke to foxy roxy about
+   her being undercover.
+   They fought a bandit trying to cut down a rope bridge, met some fungus and bats and
+   discovered a trap after the rope bride.</p>
+<p>
+   They are to meet Foxy Roxy in a couple days time by the wizards tower to share what
+   they have found in the caves.</p>
+<h3>Play</h3><table>
+<tbody>
+<tr>
+<td class="align-right">1d8</td>
+<td>Animal</td>
+<td>Info</td>
+</tr>
+<tr>
+<td class="align-right">—</td>
+<td>—————-</td>
+<td>—————————————————————</td>
+</tr>
+<tr>
+<td class="align-right">1</td>
+<td>Rat</td>
+<td><a href="https://roll20.net/compendium/dnd5e/Rat#h-Rat">https://roll20.net/compendium/dnd5e/Rat#h-Rat</a></td>
+</tr>
+<tr>
+<td class="align-right">2</td>
+<td>Owl</td>
+<td><a href="https://roll20.net/compendium/dnd5e/Owl#h-Owl">https://roll20.net/compendium/dnd5e/Owl#h-Owl</a></td>
+</tr>
+<tr>
+<td class="align-right">3</td>
+<td>Mastiff</td>
+<td><a href="https://roll20.net/compendium/dnd5e/Mastiff#h-Mastiff">https://roll20.net/compendium/dnd5e/Mastiff#h-Mastiff</a></td>
+</tr>
+<tr>
+<td class="align-right">4</td>
+<td>Goat</td>
+<td><a href="https://roll20.net/compendium/dnd5e/Goat#h-Goat">https://roll20.net/compendium/dnd5e/Goat#h-Goat</a></td>
+</tr>
+<tr>
+<td class="align-right">5</td>
+<td>Giant goat (RAM)</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">6</td>
+<td>Giant boar</td>
+<td></td>
+</tr>
+<tr>
+<td class="align-right">7</td>
+<td>Lion</td>
+<td><a href="https://roll20.net/compendium/dnd5e/Lion#h-Lion">https://roll20.net/compendium/dnd5e/Lion#h-Lion</a></td>
+</tr>
+<tr>
+<td class="align-right">8</td>
+<td>Brown Bear</td>
+<td><a href="https://roll20.net/compendium/dnd5e/Brown">https://roll20.net/compendium/dnd5e/Brown</a>%20Bear#h-Brown%20Bear</td>
+</tr>
+</tbody>
+</table>
+<h4>Guard Room Battle!</h4><ul>
+<li>Took little damage</li>
+</ul>
+<h4>Bribed the cook</h4><ul>
+<li>Apples and turnips</li>
+</ul>
+<h4>Rest in Guard Room</h4><ul>
+<li>Stacked up the crates and took a full long rest</li>
+</ul>
+<h4>Ongoing Battle</h4><ul>
+<li>Kids opted to avoid it. 2 goblins, 1 gnoll and 2 brigands are fighting</li>
+</ul>
+<h4>Ooze</h4><ul>
+<li>Kids trapped an ooze in the one bedroom</li>
+</ul>
+<h4>Acid Trap</h4><ul>
+<li>Kids triggered the acid trap in the one room</li>
+</ul>
+<h4>Magic Mirror</h4><ul>
+<li>Kids did not discover the endpoint of the mirror could be changed but
+discovered that it would teleport them.</li>
+</ul>
+<h4>Statue Room</h4><ul>
+<li>Kids entered the room, think the guy is sam?</li>
+</ul>
+<h2>Story Arcs</h2><ul>
+<li>Sam is a smuggler</li>
+<li>Birds got transformed into memphits</li>
+<li>Fish are transformed into Piranahs (Need an antidote) was trying to make the world greatest candy</li>
+<li>
+<p>Rox the Fox and Strider are going out to deal with goblins in the forest. What is their real story?</p>
+<ul>
+<li>They actually are investigating Sam who is the badguy.</li>
+<li>Trying to get stolen key to Sams underground lair to ingratiate themselves into Sams gang.</li>
+<li></li>
+</ul>
+</li>
+<li>
+<p>Sword coast map is outside</p>
+<ul>
+<li>
+<p>** A smiling roadside merchant roasts rats, frogs and squirrels on sticks and offers a bite to the party?</p>
+<ul>
+<li>He is actually a ex bandit and will tell them about the bandit lord running guns, but now trying to shift into alchemy.</li>
+<li>But only if they bribe, or feed him something better.</li>
+<li>Eventually once they get the fake dragons tear from Sams hideout they will find the guy burried up to his head by an anthill and if they save him.
+he will send them to an old dragons hoard where they can get a real dragons tear!</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>At the inn Sam is gone we don&#39;t know where he is.</li>
+<li>Goblins indicate that Sam had procured a dragons tear, was trying to get it for a local wizard who would either make the antidote or teach him to make the purple goo if someone would just get him a dragons tear.</li>
+<li>Sam wants to weaponize the local population! Sell purple goo too the highest bidder!</li>
+</ul>
+<ul>
+<li>Underground smugglers cavern (get a key from the goblins)</li>
+<li>Sam is trying to figure out how to reproduce the purple goo.</li>
+<li></li>
+</ul>
+<h2>Silly Trap Ideas:</h2><p>literally a bucket of spaghetti on top of a door.
+alligators on ropes swinging from the ceiling.
+magical trap that makes people speak backwards.
+a giant slingshot that launches pcs.
+mechanical arms that tickle the party. </p>
+<p>
+When they walk in the room the doors all lock. There is a timer counting down from 60 seconds. There is a button in the middle of the room that resets the timer to 60 seconds.
+If the timer ever gets to 0, the doors unlock.</p>
+<p>
+A water trap that’s actually just a water slide out of the cave.</p>
+<p>
+A trap that creates a bunch of bubbles, trapping any who touch them within its soapy prison and floating them upward until it is popped.</p>
+<p>
+Doors that only open if the players compliment whatever monster lairs in the dungeon. Magic items that only work if the players use ridiculous command words. I remember someone saying in an interview they had a rod of wonder that only worked if they said &#34;wubba wubba&#34;.</p>
+<p>
+DUMB KOBOLD TRAPS:
+Tiger on a stick: trip wire that slings a tiger wrapped to a log around a corner that mauls anyone it is wacked against but stays stuck to the log. The tiger could possibly be dead from not being fed or have a few kobold bodies next go its resting spot that died setting up the trap.</p>
+<p>
+Dinner of dispair: an obvious trap where a fancy (in kobold terms) meal is left out but there is something blatently stuffed with explosives. Should the party investigate a kobold fire mage comes out and divulges his masterful plan to explode them all and gloats how stupid they are. This giving ample time for them to just shoot him or walk away. Should they just stand around and wait fof him to finish he firebolts the explosives</p>
+<p>
+Kobold chest lord: upon opening a chest a kobold hops out and demands shineys for its contents. If denied or attacked he hops back into the chest with his arms and legs protruding out and fights with the stats of a kobold dragonshield and possibly has kobolds in oversized coin pouches assisting him.</p>
+<p>
+Falling shop: a trap involving a fake store in a place it does not belong run by kobold with a fake mustache that says he is just a halfling. The store is VERY carefully built to have a single stick be removable to collapse the ramshackle building. Above the players are many heavy stones and bricks to add some real pain if they fall prey to it. The kobolc will attempt to find any reason to &#34;go in the back&#34; while the group stays inside then triggers the trap. Fighting in the building is ill advised as it takes very little disruption to make it collapse.</p>
+<p>
+A pit trap that’s 1ft deep just to scare them or put them on edge.</p>
+<p>
+Magic item. Amulet of stickiness. Atune to it and everything they touch becomes stick to them. Much like super super duper glue on the hands.</p>
+<p>
+Maybe if the Gnome was launched from a cannon or ballista? Double damage, I&#39;d think.</p>
+<p>
+My favorite is kind of a &#34;classic&#34; and works well at low levels to make the PCs hate and fear the DM. An open spiked pit blocks a tunnel. It looks to have been triggered some time ago, but a failed jump will still send a character plummeting toward some nasty-looking spikes. The characters will generally assume it&#39;s just your run-of-the-mill dungeon hazard and hop over it, especially if the DM just mentions it offhand.</p>
+<p>
+On the other side of the pit is another trap, which they will land on when they jump. Bonus points if it slopes the floor toward the pit.</p>
+<hr>
+<p>The nursing home trap.
+Requires a bit of backstory. The PCs found themselves in a retirement home run by and for the temple of Nerull. It was filled with elderly, senile, and extremely powerful clerics and necromancers. In order to keep them a bit more docile, a constant anti-magic field trap was in place on the entire floor. The party rogue, not cluing in to the nature of the place after several hints, is searching for traps.</p>
+<p>
+Him: &#34;I roll a [whatever] on my search check. Do I find any traps?&#34;
+Me: &#34;Why yes, you do!&#34;
+Him: &#34;I disarm it. I roll a[nother whatever] on my disable device check.&#34;</p>
+<p>
+And then the party got mobbed by a double handful of casters, each lobbing off spells chosen completely at random from the PHB. It was rather entertaining…</p>
+<hr>
+<p>Watch me crash: Open spiked pit or already triggered spike trap. the corridor on the other side is actually an illusion on a wall, hiding a portal. The ceiling just above the pit is also hiding a portal, pointing downwards. Person jumps over the pit, gets teleported around and falls (plus the added speed of his or her&#39;s running jump) straight down into the spiked pit.</p>
+<p>
+The naughty spyglass: A normal looking spyglass, old-fashioned model. When the looter picks it up and looks into it he or she sees an attractive naked person of the opposite sex, but out of focus. When he or she tries to adjust the focus, a spring-powered small blade is triggered that stabs the lookers eye. The combination of a small illusion spell and a mean old-fashioned trap.</p>
+<p>
+The Paladin&#39;s Horror: …Well actually the horror of any well-armored player. Room or wide corridor with a floor tile that activates large magnets on the walls. Anyone wearing metal armor has to do a STR saving throw or be attached to the wall. At the same time a hidden door is opened and 1d6 rust monsters come into the dungeon…</p>
+<p>
+Prepared for dinner: (inspired by comment above) Either a psychological gag or a real horrific fate… Basically a simple trap that either sprays or dumps BBQ sauce on the players. If you are nice, and play it right, they will expect something big and nasty coming to eat them soon. If you are not nice, the next room will be filled with 2000 kobolds preparing for a BBQ… </p>
+<hr>
+<p>One more: The Pack Man: One or more PCs are teleported via trap to a large room built like a labyrinth. On the floor are (mundane objects, pebbles or priceless gems, depending on the DMs liking). In the middle of two of the sides are teleports that goes back and forth, so you can go left and come out on the right side of the maze and the other way around.
+The labyrinth is also home to four more or less unkillable foes (adamantum golems or something like that) that more or less move randomly but will in a hap-hazard way pursue a PC if he or she is spotted.
+The only way to get out of this is to collect all the (mundane objects, pebbles or priceless gems, depending on the DMs liking). That will stop the golems in their tracks and open up a portal back.</p>
+<hr>
+<p>One such trap has a phantom trap is created in an obvious spot. When this phantom trap is disarmed by the party&#39;s rogue, the real trap is triggered and gas is released from the ceiling. The entrance and exit to the room become subject to one of those classic sliding doors which close from top to bottom, requiring the party to make a quick escape. Those who are too slow suffer a horrible death in they fail their fortitude save. If the trap isn&#39;t disarmed by the rogue then several inanimate objects in the room burst into life and attack the party. Once the group destroys the animated objects and continue onwards, when they reach the center of the room (in aspect of the distance between the entrance and the exit) the gas trap is triggered.</p>
+<p>
+Another trap consists of a pit and some water. Once the party passes a certain point in the room, a mass of water is released (either stored, conjured or shadow conjured) behind the party. If they succeed a strength check (Or a climb check, if one of the party members is of small size and climbs onto the wall to wait it out) they manage to resist the water and stay on their feet. If not they are pushed into a pitfall. If you&#39;re running a game with a skill like swim, now&#39;s the time to make some checks and see if someone drowns or not. If they succeed the swim save (of if you don&#39;t have one) they can try to climb up the wall and return to their party. Those that are unable to reach the wall or can&#39;t move up it fast enough are greeted with a/an &lt;insert aquatic creature here&gt; that threatens to kill them if they&#39;re too slow.</p>
+<p>
+There are several more &#34;traps&#34; I can think of, including:</p>
+<ul>
+<li>Explosive loot</li>
+<li>Illusions that make fellow party members seem like monsters</li>
+<li>Colourless gases with effects similar to a prismatic spray spell, causing effects ranging from confusion, disease, hallucinations, haste, slow, invisiblity and death.</li>
+</ul>
+<hr>
+<p>A corridor that, when you enter it, the door automatically shuts behind you. Doesn&#39;t lock or anything, it just won&#39;t stay open. At the other end is another door. Through that door is an identical corridor. Through the door at the end of that one is another identical corridor. Repeat until you get bored. Add an illusion spell that duplicates any marks the PCs make on the walls onto all the corridors. They&#39;ll think they&#39;re caught in a teleport loop, when they&#39;re not at all. Hilarity will likely ensue.</p>
+<p>
+In a similar vein, have a crossroads, with all four paths leading to it being identical as far as can be seen from the crossroads. When they get to the centre, a Deeper Darkness descends for one round, then lifts. Nothing appears to have changed. In reality, they&#39;ve been randomly teleported to face a different way at the same crossroads. If you&#39;re feeling particularly evil, add a Reverse Gravity effect so that sometimes they get teleported to the ceiling as well, without realising.</p>
+<h2>One Shot Ideas:</h2><h3>Grammys Apple Pie</h3><p>
+Giant spiders capturing faeries in their webs.</p>
+<p>
+The fey invite her to a summer court party. She quickly discovers that she&#39;s there for entertainment and pranks more than anything else. The fey have anticipated just about every reaction she can have to this, and anyone who is caught being sympathetic to her will lose face.</p>
+<p>
+A very large and very slow golem is walking towards the town. It stops to smash smash any structures in its path. It&#39;s powered by an elemental trapped in a gem in its head, who isn&#39;t very happy about the arrangement either.</p>
+<p>
+A rabbit runs out of the woods yelling for help. Wolves are chasing after it. She helps and it turns out its not a rabbit but some kind of forest spirit in disguise.</p>
+<p>
+Walking through the city and someone has their coin purse stolen by a thief! OH NO! She has to catch them/find them and return the coin purse.</p>
+<p>
+An evil wizard(Who will be much more BBEG from movies then your typical D&amp;D villian) has an evil plot and she will need to go into the dungeons to stop him.</p>
+<p>
+Cockatrice trap. Pressure plate. Runs at players but a scratch causes petrification for 24 hours unless you save against it.</p>
+<p>
+  The trees around a small hamlet begin to form fearsome-looking faces. While initially harmless, small animals and eventually children begin to disappear. An evil druid and their dryad companions want the land the hamlet resides on, and will do anything to take it.</p>
+<p>
+Rain falls from the sky on a sunny day which burns unprotected skin! This dangerous squall continues off and on for thirty minutes, causing creatures to make a DC 14 Con save to resist the rain unless cover is found. An apprentice mage is experimenting with elemental forces nearby and is unaware of the damage they’re causing. </p>
+<p>
+A passing beggar asks for unusual trinkets instead of money or food. They are a young silver dragon under a curse that prevents them from changing back into their original form, as well as forbids them from asking for help. The dragon hopes to find a curio that will help break the spell. </p>
+<p>
+A bookseller in town is having a one-day-only auction on antique books, one of which contains a particularly powerful enchantment. An assassin wishes to purchase the book legally at the auction, but will take deadly steps to obtain it if opposed.</p>
+<p>
+Two goblin children argue and tumble out of a nearby bush. They stop fighting as they realize they are separated from their tribe, and plead with the adventurers to help them find their way back home. The children constantly bicker among themselves and draw attention from all kinds of nearby monsters.</p>
+<p>
+A trio of semi-intelligent scarecrows stalk the inhabitants of a small farming commune, attacking anyone that leaves their home after nightfall. The residents try to send for help, but the scarecrows slay anyone who comes to aid. A teenage boy unwittingly controls the monsters, as they act out through his fears and emotions. </p>
+<p>
+A scared and very confused minotaur appears in the space in front of the adventurers. It pleads with them to help it return to its labyrinth a far distance away. In return it promises to lead them to its treasure once they arrive.</p>
+<p>
+The adventurers happen upon a weary and wounded band of soldiers returning from a nearby skirmish. The captain (veteran) claims that they were ambushed recently, and could use the extra help to see them to their next post. He offers the party a generous stipend to travel with the wounded soldiers and help fight against their foes. </p>
+<p>
+Gray mist flows over the ground, causing ethereal skeletons to rise from the earth en masse. The undead attack is unending, and the only defensible location is a small wooden cabin nearby. The adventurers must take shelter and survive the night.</p>
+<p>
+The ground opens up beneath the feet of the adventurers, dropping them thirty feet into a lost and buried dwarven ruins. The ruins stretch further underground some distance into what was once a manor home. A pack of basilisks live within, as well as an untouched collection of dwarven treasure surrounded by life-like statues. </p>
+<h2>8/5/2023</h2><h3>Wizards Tower 2</h3><ul>
+<li>Triangle can teleport across the room</li>
+</ul>
+<h3>Wizards Tower 3</h3><ul>
+<li>Volos guide to everything (blank)</li>
+<li>Bag of wonders (pheonix feather and an orange) level of concentration determines what comes out of the bag</li>
+<li>No books about dragons or pokemons</li>
+<li>DRAGON BOOK:</li>
+</ul>
+<p>Dragons (or wyrms)[5] were very powerful and magical creatures.[3] There were several types of dragons,[2] the most common of which were chromatic and metallic, which were evil and good respectively.[1] They were an ancient race. Few species that still exist can claim longer lineage.[3] Dragons were the bane of the creator races of Toril; their line was so old, they had their own realm during the first recorded exploits of the elves.[6] In recent times, the dragons of Toril were nearly all recluses or at the very least deceptive to their true nature, living amongst other species in polymorphed form </p>
+<ul>
+<li>Books about monks.
+eli put it in his bag.</li>
+<li>Adana took a book about druids </li>
+<li>Eli took a book about hawks</li>
+</ul>
+<h3>Wizards Tower 4</h3><ul>
+<li>Fire sprite, like to burn.</li>
+<li>Fed him paper</li>
+<li>Learned about wizard using him to cook</li>
+<li>Found vinegar in a barrel</li>
+<li>Talking cloak, water makes him talk backwards</li>
+<li>Skipped the water snakes </li>
+</ul>
+<h3>Wizards Tower 5</h3><ul>
+<li>Wizard took the alchemists jug (will repair it)</li>
+<li>Wizard told them their egss are pokemon and recommend they go to the ruins on the right bottom to figure out how to hatch them</li>
+</ul>
+<h2>Wizards Tower Hook</h2><ul>
+<li>Wizard having investigated the alchemist jug while you look at the map says he needs some western owl feathers</li>
+<li>He also needs some centiped knuckles from 3 giant centipedes</li>
+<li>He says, the owls you might meet almost anywhere, even on the path to those ruins they talked about but the centipeds,
+as far as he knows can only be found in the 2nd level of the dwarish mines. Pity the main entrance to the mines were closed off. There is a portal
+that will take you to one of 3 areas in the 1st level of the mine, but, urrrrh, it was turned off a while back. He rummages around in a chest nearby and pulls out a little
+box with a couple of colored buttons (red, green and blue) He tells you that opens and closes the portal but he has forgotten how to use it.</li>
+<li>He indicates that he knows there is a gnomish inventor that works out of St Faux, can invent anything.</li>
+</ul>
+<h3>8/6/2023</h3><ul>
+<li>Matter transformation needs dragon saliva for bigger things</li>
+<li>Sam can help them with the button box</li>
+<li>Eli to make deal with fire sprite.</li>
+<li>Sam triggered the portal </li>
+<li>The team is in the first layer of the dungeon</li>
+<li>Met lizards, fed them, dewdrop fought some fish</li>
+<li>had a fight with a bear and a scorpion</li>
+<li>Got 9 gold</li>
+<li>Got pincer and stringer</li>
+<li>Forget is lit, something is down here?</li>
+</ul>
+<h2>Ideas For Next Game</h2><ul>
+<li>The maze is just a maze but I need some fun traps to work through</li>
+<li>Knucles let the kids finally unlock alchemist jug which gives them hint about gnomish inventor.</li>
+<li>Sam is going to try to bring in adventurers to the inn, that &#34;might work&#34;</li>
+<li>Still have some hook about those bandits… need to spread the word that East Chester is not to be trifled with.</li>
+<li>Loxan Ruins, some fungus makes you invisible to get by trees, but then you can&#39;t communicate with other creatures… So need other fungus to make you visible</li>
+</ul>
+<h3>Traps</h3><ul>
+<li>Walls closing in</li>
+<li>Spring traps</li>
+<li>rolling boulder trap</li>
+<li>Flame traps</li>
+<li>Spike traps</li>
+<li>Air elemental pushes you back on spikes if he doesn&#39;t like you</li>
+<li>Flowers that put you to sleep…</li>
+<li>Crazy bouncy dust</li>
+</ul>
+<h2>10/15/2023</h2><ul>
+<li>Fought golem - got gear and 7 rusty screws </li>
+<li>Eli got cursed crossbow. Dows it miss a lot?</li>
+<li>Adana got shield and a bowstaff</li>
+<li>Adana got an inspiration point for her owl / bear feeding effort</li>
+<li>Adana dropped a mushroom guy in the water avoiding his poison cloud. (She was picking mushrooms)</li>
+<li>The kids learned they have to use material components on their spells. (Jump requires grasshopper legs)</li>
+<li>Got over acid using mushroom boat</li>
+<li>Kids kept trying to drop mushrooms into the acid to change its consistency.</li>
+<li>Orbs are not showing properly in the secondary maps</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Orb</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Red</td>
+<td>Invisible</td>
+</tr>
+<tr>
+<td>Blue</td>
+<td>Mute</td>
+</tr>
+<tr>
+<td>Yellow</td>
+<td>LOUD</td>
+</tr>
+<tr>
+<td>Purple</td>
+<td>Negates effects</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Eli got an acid egg, what is it?</li>
+<li>4 gp gotten</li>
+<li>Green rock was hiding centepides</li>
+</ul>
+<h2>Dec 30 2023</h2><p>A: 19
+   E: 16 
+   C: 14</p>
+<ul>
+<li>Kill 2 centipedes</li>
+</ul>
+<h3>Took Teleport  </h3><ul>
+<li>Ended up by air elemental</li>
+</ul>
+<h3>Teleported Back Home</h3><ul>
+<li>Eli caught trout let go</li>
+<li>Aligator ran away</li>
+<li>Ray flew over</li>
+<li>Caught 2 yellow tales</li>
+<li>Caught an eel it is electric</li>
+<li>Fed fish cheese and bread didn&#39;t like  </li>
+<li>Fed fish aphids, they liked it</li>
+</ul>
+<h3>Athelas</h3><ul>
+<li>Adana found some, can make a minor healing potion with it.</li>
+</ul>
+<h3>Looking for Owl Feathers </h3><ul>
+<li>Travelled to St Faux</li>
+<li>Paid Bridge troll 1pg 1silver and some bread</li>
+<li>Shadow bought a fishing rod from a hob goblin</li>
+<li>Met Volo at Tavern</li>
+<li>Volo asked them to deal with some spitting lizards</li>
+<li>Stopped at a herbalism store</li>
+</ul>
+<h3>Goat Town</h3><ul>
+<li>Herbalist.</li>
+<li>Went to Zenharahim Warehouse and stole spitting lizard repellant</li>
+<li>Got a free meal from the tavern</li>
+<li>Drove off the lizards</li>
+<li>Still looking for the owl</li>
+<li>Got 300 XP</li>
+<li>Going south to find stuff.</li>
+</ul>
+
+    
+
+	<script type="module">
+	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+	  mermaid.initialize({ startOnLoad: true });
+	</script>
+    
+	
+    
+
+</body>
+</html>

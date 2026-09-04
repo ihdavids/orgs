@@ -82,6 +82,21 @@ type ServerSettings struct {
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
 	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`
+	/* SDOC: Settings
+	* Dnd Paths
+		Where the dnd module looks for ruleset yaml modules (extra races,
+		classes, backgrounds, spells or whole homebrew rulesets). The built in
+		SRD data is always loaded first, these directories are merged on top.
+
+		#+BEGIN_SRC yaml
+	  dndPaths:
+	    - "/Users/me/dnd/homebrew"
+		#+END_SRC
+
+		When this is empty the module still searches =<templatePath>/dnd=,
+		=./templates/dnd= and =~/.orgs/dnd=.
+		EDOC */
+	DndPaths []string `yaml:"dndPaths"`
 	DayPageTemplate   string `yaml:"dayPageTemplate"`
 	/* SDOC: Settings
 	* Day Page

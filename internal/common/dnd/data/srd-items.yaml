@@ -1,0 +1,1540 @@
+# ---------------------------------------------------------------------------
+# SRD 5.1: weapons, armor, gear and packs
+#
+# GENERATED FILE - do not edit by hand.
+# Regenerate with: python3 tools/dndsrd/gen_srd.py [srd-path] [out-dir]
+#
+# This work includes material taken from the System Reference Document 5.1
+# ("SRD 5.1") by Wizards of the Coast LLC, available at
+# https://dnd.wizards.com/resources/systems-reference-document and licensed
+# under the Creative Commons Attribution 4.0 International License
+# (https://creativecommons.org/licenses/by/4.0/legalcode).
+#
+# To add or override content, drop your own yaml module with "id: srd" into
+# one of your configured dndPaths. See the dnd module documentation.
+# ---------------------------------------------------------------------------
+id: "srd"
+name: "SRD 5.1 Core Rules"
+version: "5.1"
+description: "The core races, classes, backgrounds, equipment and spells of fifth edition, generated from the SRD 5.1."
+items:
+  - id: "club"
+    name: "Club"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "1 sp"
+    damage: "1d4"
+    damageType: "bludgeoning"
+    weight: 2
+    properties: ["light"]
+  - id: "dagger"
+    name: "Dagger"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "2 gp"
+    damage: "1d4"
+    damageType: "piercing"
+    weight: 1
+    properties: ["finesse", "light", "thrown"]
+    range: "20/60"
+  - id: "greatclub"
+    name: "Greatclub"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "2 sp"
+    damage: "1d8"
+    damageType: "bludgeoning"
+    weight: 10
+    properties: ["two-handed"]
+  - id: "handaxe"
+    name: "Handaxe"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "5 gp"
+    damage: "1d6"
+    damageType: "slashing"
+    weight: 2
+    properties: ["light", "thrown"]
+    range: "20/60"
+  - id: "javelin"
+    name: "Javelin"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "5 sp"
+    damage: "1d6"
+    damageType: "piercing"
+    weight: 2
+    properties: ["thrown"]
+    range: "30/120"
+  - id: "light-hammer"
+    name: "Light hammer"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "2 gp"
+    damage: "1d4"
+    damageType: "bludgeoning"
+    weight: 2
+    properties: ["light", "thrown"]
+    range: "20/60"
+  - id: "mace"
+    name: "Mace"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "5 gp"
+    damage: "1d6"
+    damageType: "bludgeoning"
+    weight: 4
+  - id: "quarterstaff"
+    name: "Quarterstaff"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "2 sp"
+    damage: "1d6"
+    damageType: "bludgeoning"
+    weight: 4
+    properties: ["versatile"]
+    versatile: "1d8"
+  - id: "sickle"
+    name: "Sickle"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "1 gp"
+    damage: "1d4"
+    damageType: "slashing"
+    weight: 2
+    properties: ["light"]
+  - id: "spear"
+    name: "Spear"
+    kind: "weapon"
+    category: "simple-melee"
+    cost: "1 gp"
+    damage: "1d6"
+    damageType: "piercing"
+    weight: 3
+    properties: ["thrown", "versatile"]
+    versatile: "1d8"
+    range: "20/60"
+  - id: "crossbow-light"
+    name: "Crossbow, light"
+    kind: "weapon"
+    category: "simple-ranged"
+    cost: "25 gp"
+    damage: "1d8"
+    damageType: "piercing"
+    weight: 5
+    properties: ["ammunition", "loading", "two-handed"]
+    range: "80/320"
+  - id: "dart"
+    name: "Dart"
+    kind: "weapon"
+    category: "simple-ranged"
+    cost: "5 cp"
+    damage: "1d4"
+    damageType: "piercing"
+    weight: 0.25
+    properties: ["finesse", "thrown"]
+    range: "20/60"
+  - id: "shortbow"
+    name: "Shortbow"
+    kind: "weapon"
+    category: "simple-ranged"
+    cost: "25 gp"
+    damage: "1d6"
+    damageType: "piercing"
+    weight: 2
+    properties: ["ammunition", "two-handed"]
+    range: "80/320"
+  - id: "sling"
+    name: "Sling"
+    kind: "weapon"
+    category: "simple-ranged"
+    cost: "1 sp"
+    damage: "1d4"
+    damageType: "bludgeoning"
+    weight: 0
+    properties: ["ammunition"]
+    range: "30/120"
+  - id: "battleaxe"
+    name: "Battleaxe"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "10 gp"
+    damage: "1d8"
+    damageType: "slashing"
+    weight: 4
+    properties: ["versatile"]
+    versatile: "1d10"
+  - id: "flail"
+    name: "Flail"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "10 gp"
+    damage: "1d8"
+    damageType: "bludgeoning"
+    weight: 2
+  - id: "glaive"
+    name: "Glaive"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "20 gp"
+    damage: "1d10"
+    damageType: "slashing"
+    weight: 6
+    properties: ["heavy", "reach", "two-handed"]
+  - id: "greataxe"
+    name: "Greataxe"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "30 gp"
+    damage: "1d12"
+    damageType: "slashing"
+    weight: 7
+    properties: ["heavy", "two-handed"]
+  - id: "greatsword"
+    name: "Greatsword"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "50 gp"
+    damage: "2d6"
+    damageType: "slashing"
+    weight: 6
+    properties: ["heavy", "two-handed"]
+  - id: "halberd"
+    name: "Halberd"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "20 gp"
+    damage: "1d10"
+    damageType: "slashing"
+    weight: 6
+    properties: ["heavy", "reach", "two-handed"]
+  - id: "lance"
+    name: "Lance"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "10 gp"
+    damage: "1d12"
+    damageType: "piercing"
+    weight: 6
+    properties: ["reach", "special"]
+  - id: "longsword"
+    name: "Longsword"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "15 gp"
+    damage: "1d8"
+    damageType: "slashing"
+    weight: 3
+    properties: ["versatile"]
+    versatile: "1d10"
+  - id: "maul"
+    name: "Maul"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "10 gp"
+    damage: "2d6"
+    damageType: "bludgeoning"
+    weight: 10
+    properties: ["heavy", "two-handed"]
+  - id: "morningstar"
+    name: "Morningstar"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "15 gp"
+    damage: "1d8"
+    damageType: "piercing"
+    weight: 4
+  - id: "pike"
+    name: "Pike"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "5 gp"
+    damage: "1d10"
+    damageType: "piercing"
+    weight: 18
+    properties: ["heavy", "reach", "two-handed"]
+  - id: "rapier"
+    name: "Rapier"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "25 gp"
+    damage: "1d8"
+    damageType: "piercing"
+    weight: 2
+    properties: ["finesse"]
+  - id: "scimitar"
+    name: "Scimitar"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "25 gp"
+    damage: "1d6"
+    damageType: "slashing"
+    weight: 3
+    properties: ["finesse", "light"]
+  - id: "shortsword"
+    name: "Shortsword"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "10 gp"
+    damage: "1d6"
+    damageType: "piercing"
+    weight: 2
+    properties: ["finesse", "light"]
+  - id: "trident"
+    name: "Trident"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "5 gp"
+    damage: "1d6"
+    damageType: "piercing"
+    weight: 4
+    properties: ["thrown", "versatile"]
+    versatile: "1d8"
+    range: "20/60"
+  - id: "war-pick"
+    name: "War pick"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "5 gp"
+    damage: "1d8"
+    damageType: "piercing"
+    weight: 2
+  - id: "warhammer"
+    name: "Warhammer"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "15 gp"
+    damage: "1d8"
+    damageType: "bludgeoning"
+    weight: 2
+    properties: ["versatile"]
+    versatile: "1d10"
+  - id: "whip"
+    name: "Whip"
+    kind: "weapon"
+    category: "martial-melee"
+    cost: "2 gp"
+    damage: "1d4"
+    damageType: "slashing"
+    weight: 3
+    properties: ["finesse", "reach"]
+  - id: "blowgun"
+    name: "Blowgun"
+    kind: "weapon"
+    category: "martial-ranged"
+    cost: "10 gp"
+    weight: 1
+    properties: ["ammunition", "loading"]
+    range: "25/100"
+  - id: "crossbow-hand"
+    name: "Crossbow, hand"
+    kind: "weapon"
+    category: "martial-ranged"
+    cost: "75 gp"
+    damage: "1d6"
+    damageType: "piercing"
+    weight: 3
+    properties: ["ammunition", "light", "loading"]
+    range: "30/120"
+  - id: "crossbow-heavy"
+    name: "Crossbow, heavy"
+    kind: "weapon"
+    category: "martial-ranged"
+    cost: "50 gp"
+    damage: "1d10"
+    damageType: "piercing"
+    weight: 18
+    properties: ["ammunition", "heavy", "loading", "two-handed"]
+    range: "100/400"
+  - id: "longbow"
+    name: "Longbow"
+    kind: "weapon"
+    category: "martial-ranged"
+    cost: "50 gp"
+    damage: "1d8"
+    damageType: "piercing"
+    weight: 2
+    properties: ["ammunition", "heavy", "two-handed"]
+    range: "150/600"
+  - id: "net"
+    name: "Net"
+    kind: "weapon"
+    category: "martial-ranged"
+    cost: "1 gp"
+    weight: 3
+    properties: ["special", "thrown"]
+    range: "5/15"
+  - id: "padded"
+    name: "Padded"
+    kind: "armor"
+    category: "light-armor"
+    armorType: "light"
+    cost: "5 gp"
+    ac: 11
+    dexMax: 0
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: true
+    weight: 8
+  - id: "leather"
+    name: "Leather"
+    kind: "armor"
+    category: "light-armor"
+    armorType: "light"
+    cost: "10 gp"
+    ac: 11
+    dexMax: 0
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: false
+    weight: 10
+  - id: "studded-leather"
+    name: "Studded leather"
+    kind: "armor"
+    category: "light-armor"
+    armorType: "light"
+    cost: "45 gp"
+    ac: 12
+    dexMax: 0
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: false
+    weight: 13
+  - id: "hide"
+    name: "Hide"
+    kind: "armor"
+    category: "medium-armor"
+    armorType: "medium"
+    cost: "10 gp"
+    ac: 12
+    dexMax: 2
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: false
+    weight: 12
+  - id: "chain-shirt"
+    name: "Chain shirt"
+    kind: "armor"
+    category: "medium-armor"
+    armorType: "medium"
+    cost: "50 gp"
+    ac: 13
+    dexMax: 2
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: false
+    weight: 20
+  - id: "scale-mail"
+    name: "Scale mail"
+    kind: "armor"
+    category: "medium-armor"
+    armorType: "medium"
+    cost: "50 gp"
+    ac: 14
+    dexMax: 2
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: true
+    weight: 45
+  - id: "breastplate"
+    name: "Breastplate"
+    kind: "armor"
+    category: "medium-armor"
+    armorType: "medium"
+    cost: "400 gp"
+    ac: 14
+    dexMax: 2
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: false
+    weight: 20
+  - id: "half-plate"
+    name: "Half plate"
+    kind: "armor"
+    category: "medium-armor"
+    armorType: "medium"
+    cost: "750 gp"
+    ac: 15
+    dexMax: 2
+    noDex: false
+    strengthReq: 0
+    stealthDisadvantage: true
+    weight: 40
+  - id: "ring-mail"
+    name: "Ring mail"
+    kind: "armor"
+    category: "heavy-armor"
+    armorType: "heavy"
+    cost: "30 gp"
+    ac: 14
+    dexMax: 0
+    noDex: true
+    strengthReq: 0
+    stealthDisadvantage: true
+    weight: 40
+  - id: "chain-mail"
+    name: "Chain mail"
+    kind: "armor"
+    category: "heavy-armor"
+    armorType: "heavy"
+    cost: "75 gp"
+    ac: 16
+    dexMax: 0
+    noDex: true
+    strengthReq: 13
+    stealthDisadvantage: true
+    weight: 55
+  - id: "splint"
+    name: "Splint"
+    kind: "armor"
+    category: "heavy-armor"
+    armorType: "heavy"
+    cost: "200 gp"
+    ac: 17
+    dexMax: 0
+    noDex: true
+    strengthReq: 15
+    stealthDisadvantage: true
+    weight: 60
+  - id: "plate"
+    name: "Plate"
+    kind: "armor"
+    category: "heavy-armor"
+    armorType: "heavy"
+    cost: "1,500 gp"
+    ac: 18
+    dexMax: 0
+    noDex: true
+    strengthReq: 15
+    stealthDisadvantage: true
+    weight: 65
+  - id: "shield"
+    name: "Shield"
+    kind: "shield"
+    category: "shield-armor"
+    armorType: "shield"
+    cost: "10 gp"
+    ac: 2
+    dexMax: 0
+    noDex: true
+    strengthReq: 0
+    stealthDisadvantage: false
+    weight: 6
+  - id: "abacus"
+    name: "Abacus"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 2
+  - id: "acid-vial"
+    name: "Acid (vial)"
+    kind: "gear"
+    category: "gear"
+    cost: "25 gp"
+    weight: 1
+  - id: "alchemists-fire-flask"
+    name: "Alchemist's fire (flask)"
+    kind: "gear"
+    category: "gear"
+    cost: "50 gp"
+    weight: 1
+  - id: "arrows-20"
+    name: "Arrows (20)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 1
+  - id: "blowgun-needles-50"
+    name: "Blowgun needles (50)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 1
+  - id: "crossbow-bolts-20"
+    name: "Crossbow bolts (20)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 1.5
+  - id: "sling-bullets-20"
+    name: "Sling bullets (20)"
+    kind: "gear"
+    category: "gear"
+    cost: "4 cp"
+    weight: 1.5
+  - id: "antitoxin-vial"
+    name: "Antitoxin (vial)"
+    kind: "gear"
+    category: "gear"
+    cost: "50 gp"
+    weight: 0
+  - id: "crystal"
+    name: "Crystal"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 1
+  - id: "orb"
+    name: "Orb"
+    kind: "gear"
+    category: "gear"
+    cost: "20 gp"
+    weight: 3
+  - id: "rod"
+    name: "Rod"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 2
+  - id: "staff"
+    name: "Staff"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 4
+  - id: "wand"
+    name: "Wand"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 1
+  - id: "backpack"
+    name: "Backpack"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 5
+  - id: "ball-bearings-bag-of-1-000"
+    name: "Ball bearings (bag of 1,000)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 2
+  - id: "barrel"
+    name: "Barrel"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 70
+  - id: "basket"
+    name: "Basket"
+    kind: "gear"
+    category: "gear"
+    cost: "4 sp"
+    weight: 2
+  - id: "bedroll"
+    name: "Bedroll"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 7
+  - id: "bell"
+    name: "Bell"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 0
+  - id: "blanket"
+    name: "Blanket"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 3
+  - id: "block-and-tackle"
+    name: "Block and tackle"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 5
+  - id: "book"
+    name: "Book"
+    kind: "gear"
+    category: "gear"
+    cost: "25 gp"
+    weight: 5
+  - id: "bottle-glass"
+    name: "Bottle, glass"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 2
+  - id: "bucket"
+    name: "Bucket"
+    kind: "gear"
+    category: "gear"
+    cost: "5 cp"
+    weight: 2
+  - id: "caltrops-bag-of-20"
+    name: "Caltrops (bag of 20)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 2
+  - id: "candle"
+    name: "Candle"
+    kind: "gear"
+    category: "gear"
+    cost: "1 cp"
+    weight: 0
+  - id: "case-crossbow-bolt"
+    name: "Case, crossbow bolt"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 1
+  - id: "case-map-or-scroll"
+    name: "Case, map or scroll"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 1
+  - id: "chain-10-feet"
+    name: "Chain (10 feet)"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 10
+  - id: "chalk-1-piece"
+    name: "Chalk (1 piece)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 cp"
+    weight: 0
+  - id: "chest"
+    name: "Chest"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 25
+  - id: "climbers-kit"
+    name: "Climber's kit"
+    kind: "gear"
+    category: "gear"
+    cost: "25 gp"
+    weight: 12
+  - id: "clothes-common"
+    name: "Clothes, common"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 3
+  - id: "clothes-costume"
+    name: "Clothes, costume"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 4
+  - id: "clothes-fine"
+    name: "Clothes, fine"
+    kind: "gear"
+    category: "gear"
+    cost: "15 gp"
+    weight: 6
+  - id: "clothes-travelers"
+    name: "Clothes, traveler's"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 4
+  - id: "component-pouch"
+    name: "Component pouch"
+    kind: "gear"
+    category: "gear"
+    cost: "25 gp"
+    weight: 2
+  - id: "crowbar"
+    name: "Crowbar"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 5
+  - id: "sprig-of-mistletoe"
+    name: "Sprig of mistletoe"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 0
+  - id: "totem"
+    name: "Totem"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 0
+  - id: "wooden-staff"
+    name: "Wooden staff"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 4
+  - id: "yew-wand"
+    name: "Yew wand"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 1
+  - id: "fishing-tackle"
+    name: "Fishing tackle"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 4
+  - id: "flask-or-tankard"
+    name: "Flask or tankard"
+    kind: "gear"
+    category: "gear"
+    cost: "2 cp"
+    weight: 1
+  - id: "grappling-hook"
+    name: "Grappling hook"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 4
+  - id: "hammer"
+    name: "Hammer"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 3
+  - id: "hammer-sledge"
+    name: "Hammer, sledge"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 10
+  - id: "healers-kit"
+    name: "Healer's kit"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 3
+  - id: "amulet"
+    name: "Amulet"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 1
+  - id: "emblem"
+    name: "Emblem"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 0
+  - id: "reliquary"
+    name: "Reliquary"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 2
+  - id: "holy-water-flask"
+    name: "Holy water (flask)"
+    kind: "gear"
+    category: "gear"
+    cost: "25 gp"
+    weight: 1
+  - id: "hourglass"
+    name: "Hourglass"
+    kind: "gear"
+    category: "gear"
+    cost: "25 gp"
+    weight: 1
+  - id: "hunting-trap"
+    name: "Hunting trap"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 25
+  - id: "ink-1-ounce-bottle"
+    name: "Ink (1 ounce bottle)"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 0
+  - id: "ink-pen"
+    name: "Ink pen"
+    kind: "gear"
+    category: "gear"
+    cost: "2 cp"
+    weight: 0
+  - id: "jug-or-pitcher"
+    name: "Jug or pitcher"
+    kind: "gear"
+    category: "gear"
+    cost: "2 cp"
+    weight: 4
+  - id: "ladder-10-foot"
+    name: "Ladder (10-foot)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 sp"
+    weight: 25
+  - id: "lamp"
+    name: "Lamp"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 1
+  - id: "lantern-bullseye"
+    name: "Lantern, bullseye"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 2
+  - id: "lantern-hooded"
+    name: "Lantern, hooded"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 2
+  - id: "lock"
+    name: "Lock"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 1
+  - id: "magnifying-glass"
+    name: "Magnifying glass"
+    kind: "gear"
+    category: "gear"
+    cost: "100 gp"
+    weight: 0
+  - id: "manacles"
+    name: "Manacles"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 6
+  - id: "mess-kit"
+    name: "Mess kit"
+    kind: "gear"
+    category: "gear"
+    cost: "2 sp"
+    weight: 1
+  - id: "mirror-steel"
+    name: "Mirror, steel"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 0.5
+  - id: "oil-flask"
+    name: "Oil (flask)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 sp"
+    weight: 1
+  - id: "paper-one-sheet"
+    name: "Paper (one sheet)"
+    kind: "gear"
+    category: "gear"
+    cost: "2 sp"
+    weight: 0
+  - id: "parchment-one-sheet"
+    name: "Parchment (one sheet)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 sp"
+    weight: 0
+  - id: "perfume-vial"
+    name: "Perfume (vial)"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 0
+  - id: "pick-miners"
+    name: "Pick, miner's"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 10
+  - id: "piton"
+    name: "Piton"
+    kind: "gear"
+    category: "gear"
+    cost: "5 cp"
+    weight: 0.25
+  - id: "poison-basic-vial"
+    name: "Poison, basic (vial)"
+    kind: "gear"
+    category: "gear"
+    cost: "100 gp"
+    weight: 0
+  - id: "pole-10-foot"
+    name: "Pole (10-foot)"
+    kind: "gear"
+    category: "gear"
+    cost: "5 cp"
+    weight: 7
+  - id: "pot-iron"
+    name: "Pot, iron"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 10
+  - id: "potion-of-healing-5"
+    name: "Potion of healing 5"
+    kind: "gear"
+    category: "gear"
+    cost: "0 gp"
+    weight: 0.5
+  - id: "pouch"
+    name: "Pouch"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 1
+  - id: "quiver"
+    name: "Quiver"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 1
+  - id: "ram-portable"
+    name: "Ram, portable"
+    kind: "gear"
+    category: "gear"
+    cost: "4 gp"
+    weight: 35
+  - id: "rations-1-day"
+    name: "Rations (1 day)"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 2
+  - id: "robes"
+    name: "Robes"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 4
+  - id: "rope-hempen-50-feet"
+    name: "Rope, hempen (50 feet)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 10
+  - id: "rope-silk-50-feet"
+    name: "Rope, silk (50 feet)"
+    kind: "gear"
+    category: "gear"
+    cost: "10 gp"
+    weight: 5
+  - id: "sack"
+    name: "Sack"
+    kind: "gear"
+    category: "gear"
+    cost: "1 cp"
+    weight: 0.5
+  - id: "scale-merchants"
+    name: "Scale, merchant's"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 3
+  - id: "sealing-wax"
+    name: "Sealing wax"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 0
+  - id: "shovel"
+    name: "Shovel"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 5
+  - id: "signal-whistle"
+    name: "Signal whistle"
+    kind: "gear"
+    category: "gear"
+    cost: "5 cp"
+    weight: 0
+  - id: "signet-ring"
+    name: "Signet ring"
+    kind: "gear"
+    category: "gear"
+    cost: "5 gp"
+    weight: 0
+  - id: "soap"
+    name: "Soap"
+    kind: "gear"
+    category: "gear"
+    cost: "2 cp"
+    weight: 0
+  - id: "spellbook"
+    name: "Spellbook"
+    kind: "gear"
+    category: "gear"
+    cost: "50 gp"
+    weight: 3
+  - id: "spikes-iron-10"
+    name: "Spikes, iron (10)"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 5
+  - id: "spyglass"
+    name: "Spyglass"
+    kind: "gear"
+    category: "gear"
+    cost: "1,000 gp"
+    weight: 1
+  - id: "tent-two-person"
+    name: "Tent, two-person"
+    kind: "gear"
+    category: "gear"
+    cost: "2 gp"
+    weight: 20
+  - id: "tinderbox"
+    name: "Tinderbox"
+    kind: "gear"
+    category: "gear"
+    cost: "5 sp"
+    weight: 1
+  - id: "torch"
+    name: "Torch"
+    kind: "gear"
+    category: "gear"
+    cost: "1 cp"
+    weight: 1
+  - id: "vial"
+    name: "Vial"
+    kind: "gear"
+    category: "gear"
+    cost: "1 gp"
+    weight: 0
+  - id: "waterskin"
+    name: "Waterskin"
+    kind: "gear"
+    category: "gear"
+    cost: "2 sp"
+    weight: 0
+  - id: "whetstone"
+    name: "Whetstone"
+    kind: "gear"
+    category: "gear"
+    cost: "1 cp"
+    weight: 1
+  - id: "burglars-pack"
+    name: "Burglar's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "16 gp"
+    weight: 0
+    contents:
+      - id: "backpack"
+        qty: 1
+      - id: "ball-bearings-bag-of-1-000"
+        qty: 0
+      - id: "bell"
+        qty: 1
+      - id: "candle"
+        qty: 5
+      - id: "crowbar"
+        qty: 1
+      - id: "hammer"
+        qty: 1
+      - id: "piton"
+        qty: 10
+      - id: "lantern-hooded"
+        qty: 1
+      - id: "rations-1-day"
+        qty: 5
+      - id: "tinderbox"
+        qty: 1
+      - id: "waterskin"
+        qty: 1
+      - id: "rope-hempen-50-feet"
+        qty: 1
+  - id: "diplomats-pack"
+    name: "Diplomat's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "39 gp"
+    weight: 0
+    contents:
+      - id: "chest"
+        qty: 1
+      - id: "ink-pen"
+        qty: 1
+      - id: "lamp"
+        qty: 1
+      - id: "sealing-wax"
+        qty: 1
+      - id: "soap"
+        qty: 1
+  - id: "dungeoneers-pack"
+    name: "Dungeoneer's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "12 gp"
+    weight: 0
+    contents:
+      - id: "backpack"
+        qty: 1
+      - id: "crowbar"
+        qty: 1
+      - id: "hammer"
+        qty: 1
+      - id: "piton"
+        qty: 10
+      - id: "torch"
+        qty: 10
+      - id: "tinderbox"
+        qty: 1
+      - id: "rations-1-day"
+        qty: 10
+      - id: "waterskin"
+        qty: 1
+      - id: "rope-hempen-50-feet"
+        qty: 1
+  - id: "entertainers-pack"
+    name: "Entertainer's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "40 gp"
+    weight: 0
+    contents:
+      - id: "backpack"
+        qty: 1
+      - id: "bedroll"
+        qty: 1
+      - id: "clothes-costume"
+        qty: 2
+      - id: "candle"
+        qty: 5
+      - id: "rations-1-day"
+        qty: 5
+      - id: "waterskin"
+        qty: 1
+  - id: "explorers-pack"
+    name: "Explorer's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "10 gp"
+    weight: 0
+    contents:
+      - id: "backpack"
+        qty: 1
+      - id: "bedroll"
+        qty: 1
+      - id: "mess-kit"
+        qty: 1
+      - id: "tinderbox"
+        qty: 1
+      - id: "torch"
+        qty: 10
+      - id: "rations-1-day"
+        qty: 10
+      - id: "waterskin"
+        qty: 1
+      - id: "rope-hempen-50-feet"
+        qty: 1
+  - id: "priests-pack"
+    name: "Priest's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "19 gp"
+    weight: 0
+    contents:
+      - id: "backpack"
+        qty: 1
+      - id: "blanket"
+        qty: 1
+      - id: "candle"
+        qty: 10
+      - id: "tinderbox"
+        qty: 1
+      - id: "rations-1-day"
+        qty: 2
+      - id: "waterskin"
+        qty: 1
+  - id: "scholars-pack"
+    name: "Scholar's Pack"
+    kind: "pack"
+    category: "pack"
+    cost: "40 gp"
+    weight: 0
+    contents:
+      - id: "backpack"
+        qty: 1
+      - id: "ink-pen"
+        qty: 1
+  - id: "alchemists-supplies"
+    name: "Alchemist's supplies"
+    kind: "tool"
+    category: "tool"
+    cost: "50 gp"
+    weight: 8
+  - id: "brewers-supplies"
+    name: "Brewer's supplies"
+    kind: "tool"
+    category: "tool"
+    cost: "20 gp"
+    weight: 9
+  - id: "calligraphers-supplies"
+    name: "Calligrapher's supplies"
+    kind: "tool"
+    category: "tool"
+    cost: "10 gp"
+    weight: 5
+  - id: "carpenters-tools"
+    name: "Carpenter's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "8 gp"
+    weight: 6
+  - id: "cartographers-tools"
+    name: "Cartographer's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "15 gp"
+    weight: 6
+  - id: "cobblers-tools"
+    name: "Cobbler's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "5 gp"
+    weight: 5
+  - id: "cooks-utensils"
+    name: "Cook's utensils"
+    kind: "tool"
+    category: "tool"
+    cost: "1 gp"
+    weight: 8
+  - id: "glassblowers-tools"
+    name: "Glassblower's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "30 gp"
+    weight: 5
+  - id: "jewelers-tools"
+    name: "Jeweler's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "25 gp"
+    weight: 2
+  - id: "leatherworkers-tools"
+    name: "Leatherworker's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "5 gp"
+    weight: 5
+  - id: "masons-tools"
+    name: "Mason's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "10 gp"
+    weight: 8
+  - id: "painters-supplies"
+    name: "Painter's supplies"
+    kind: "tool"
+    category: "tool"
+    cost: "10 gp"
+    weight: 5
+  - id: "potters-tools"
+    name: "Potter's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "10 gp"
+    weight: 3
+  - id: "smiths-tools"
+    name: "Smith's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "20 gp"
+    weight: 8
+  - id: "tinkers-tools"
+    name: "Tinker's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "50 gp"
+    weight: 10
+  - id: "weavers-tools"
+    name: "Weaver's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "1 gp"
+    weight: 5
+  - id: "woodcarvers-tools"
+    name: "Woodcarver's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "1 gp"
+    weight: 5
+  - id: "disguise-kit"
+    name: "Disguise kit"
+    kind: "tool"
+    category: "tool"
+    cost: "25 gp"
+    weight: 3
+  - id: "forgery-kit"
+    name: "Forgery kit"
+    kind: "tool"
+    category: "tool"
+    cost: "15 gp"
+    weight: 5
+  - id: "dice-set"
+    name: "Dice set"
+    kind: "tool"
+    category: "tool"
+    cost: "1 sp"
+    weight: 0
+  - id: "playing-card-set"
+    name: "Playing card set"
+    kind: "tool"
+    category: "tool"
+    cost: "5 sp"
+    weight: 0
+  - id: "herbalism-kit"
+    name: "Herbalism kit"
+    kind: "tool"
+    category: "tool"
+    cost: "5 gp"
+    weight: 3
+  - id: "bagpipes"
+    name: "Bagpipes"
+    kind: "tool"
+    category: "tool"
+    cost: "30 gp"
+    weight: 6
+  - id: "drum"
+    name: "Drum"
+    kind: "tool"
+    category: "tool"
+    cost: "6 gp"
+    weight: 3
+  - id: "dulcimer"
+    name: "Dulcimer"
+    kind: "tool"
+    category: "tool"
+    cost: "25 gp"
+    weight: 10
+  - id: "flute"
+    name: "Flute"
+    kind: "tool"
+    category: "tool"
+    cost: "2 gp"
+    weight: 1
+  - id: "lute"
+    name: "Lute"
+    kind: "tool"
+    category: "tool"
+    cost: "35 gp"
+    weight: 2
+  - id: "lyre"
+    name: "Lyre"
+    kind: "tool"
+    category: "tool"
+    cost: "30 gp"
+    weight: 2
+  - id: "horn"
+    name: "Horn"
+    kind: "tool"
+    category: "tool"
+    cost: "3 gp"
+    weight: 2
+  - id: "pan-flute"
+    name: "Pan flute"
+    kind: "tool"
+    category: "tool"
+    cost: "12 gp"
+    weight: 2
+  - id: "shawm"
+    name: "Shawm"
+    kind: "tool"
+    category: "tool"
+    cost: "2 gp"
+    weight: 1
+  - id: "viol"
+    name: "Viol"
+    kind: "tool"
+    category: "tool"
+    cost: "30 gp"
+    weight: 1
+  - id: "navigators-tools"
+    name: "Navigator's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "25 gp"
+    weight: 2
+  - id: "poisoners-kit"
+    name: "Poisoner's kit"
+    kind: "tool"
+    category: "tool"
+    cost: "50 gp"
+    weight: 2
+  - id: "thieves-tools"
+    name: "Thieves' tools"
+    kind: "tool"
+    category: "tool"
+    cost: "25 gp"
+    weight: 1
+  - id: "vehicles-land-or-water"
+    name: "Vehicles (land or water)"
+    kind: "tool"
+    category: "tool"
+    cost: "*"
+    weight: 0
+  - id: "arcane-focus"
+    name: "Arcane focus"
+    kind: "gear"
+    category: "focus"
+    cost: "10 gp"
+    weight: 2
+    text: "A crystal, orb, rod, staff or wand used to channel arcane magic."
+  - id: "druidic-focus"
+    name: "Druidic focus"
+    kind: "gear"
+    category: "focus"
+    cost: "10 gp"
+    weight: 2
+    text: "A sprig of mistletoe, totem, wooden staff or yew wand."
+  - id: "holy-symbol"
+    name: "Holy symbol"
+    kind: "gear"
+    category: "focus"
+    cost: "5 gp"
+    weight: 1
+    text: "An amulet, emblem or reliquary used as a divine spellcasting focus."
+  - id: "musical-instrument"
+    name: "Musical instrument"
+    kind: "tool"
+    category: "tool"
+    cost: "20 gp"
+    weight: 3
+    text: "Any one musical instrument of your choice."
+  - id: "artisans-tools"
+    name: "Artisan's tools"
+    kind: "tool"
+    category: "tool"
+    cost: "15 gp"
+    weight: 5
+    text: "Any one set of artisan's tools of your choice."
+  - id: "gaming-set"
+    name: "Gaming set"
+    kind: "tool"
+    category: "tool"
+    cost: "1 gp"
+    weight: 0
+    text: "Any one gaming set of your choice."
+  - id: "vestments"
+    name: "Vestments"
+    kind: "gear"
+    category: "gear"
+    cost: "-"
+    weight: 4
+    text: "The garments of a priest of your faith."
+  - id: "incense"
+    name: "Stick of incense"
+    kind: "gear"
+    category: "gear"
+    cost: "-"
+    weight: 0
+    text: "Burned during rites and devotions."
+  - id: "monk-weapon"
+    name: "Monk weapon"
+    kind: "gear"
+    category: "gear"
+    cost: "-"
+    weight: 0
+    text: "Any shortsword or simple melee weapon without the two handed or heavy property."
