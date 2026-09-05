@@ -40,6 +40,42 @@ package dnd
   your template folder. Both are ordinary pongo2 templates and receive the
   fully computed sheet, so you can restyle them without touching any go code.
 
+** The html sheet rolls dice
+
+  =dndsheet= is interactive. Everything with a number behind it is clickable:
+  ability checks, saving throws, skills, initiative, attack and damage lines,
+  the spell attack bonus, hit dice, death saves, and every dice expression
+  that appears in a spell or feature description. A d20 roll reports all
+  three outcomes at once - normal, with advantage and with disadvantage -
+  from the same pair of dice, and a damage roll reports its total alongside
+  what it would be on a critical.
+
+  Results land in a tray on the right hand edge, which also keeps the roll
+  history; the tab on the edge shows and hides it, and clicking a line of
+  history rolls that same thing again.
+
+  The dice button in the bottom corner opens a custom roll panel for one off
+  rolls: tap the dice to build a pool, nudge the modifier, or just type an
+  expression like =2d6 + 3=. A lone d20 is treated as a check and reports all
+  three outcomes; anything else reports its total. Custom rolls animate and
+  land in the history exactly like a roll made from the sheet. Dice are thrown in 3d across the sheet
+  itself, which acts as the table: they arc away from wherever you clicked
+  towards the clearest patch of page, bounce off the edges of the parchment,
+  settle showing the rolled face, and then melt away.
+
+  The throw is deliberately brief - roughly two and a half seconds from click
+  to gone, of which about a second is the dice actually tumbling and bouncing.
+  A die that takes longer than that to tell you its number is in the way.
+
+  Every die from a d4 to a d20 is thrown in 3d. A d100 is rolled and reported
+  like any other, but not animated: a percentile die's faces read 00 to 90, so
+  there is no face for a 57 to land on and a die showing the wrong number is
+  worse than no die at all.
+
+  This is all plain javascript embedded in the template, with no external
+  dependencies, so a sheet saved to disk keeps working, and printing hides
+  the tray and the dice.
+
 EDOC */
 
 import (

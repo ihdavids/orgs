@@ -81,6 +81,48 @@ func ProficiencyBonus(level int) int {
 	return 2 + (level-1)/4
 }
 
+// EvalBonus works out what a bonus formula is worth for a given character.
+//
+// A formula is a list of terms joined with "+". A term is a whole number, an
+// ability id whose modifier is added, or the proficiency bonus written as
+// "prof", "prof/2" (rounded down) or "prof/2up" (rounded up). Whitespace and
+// case do not matter, and a term that means nothing is skipped rather than
+// failing the whole sheet - a typo in a homebrew module should cost you one
+// bonus, not the character.
+//
+//	EvalBonus("5", mods, 3)          // 5,  Alert
+//	EvalBonus("prof/2", mods, 5)     // 2,  Jack of All Trades
+//	EvalBonus("prof/2up", mods, 5)   // 3,  Remarkable Athlete
+//	EvalBonus("cha", mods, 3)        // the charisma modifier
+func EvalBonus(formula string, mods map[string]int, proficiency int) int {
+	total := 0
+	for _, part := range strings.Split(formula, "+") {
+		part = strings.ToLower(strings.TrimSpace(part))
+		if part == "" {
+			continue
+		}
+		switch part {
+		case "prof", "proficiency":
+			total += proficiency
+			continue
+		case "prof/2", "proficiency/2":
+			total += proficiency / 2
+			continue
+		case "prof/2up", "proficiency/2up":
+			total += (proficiency + 1) / 2
+			continue
+		}
+		if m, ok := mods[part]; ok {
+			total += m
+			continue
+		}
+		if n, err := strconv.Atoi(part); err == nil {
+			total += n
+		}
+	}
+	return total
+}
+
 func containsStr(list []string, v string) bool {
 	for _, s := range list {
 		if strings.EqualFold(s, v) {

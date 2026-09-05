@@ -258,7 +258,7 @@
 \hline\\[-7pt]
 {% for a in sheet.attacks %}{\small {{ a.name }} } & {\small {{ a.bonus }} } & {\small {{ a.damage }} {\tiny {{ a.type }} } }\\
 {% endfor %}\end{tabularx}
-{% for a in sheet.attacks %}{% if a.notes %}{\tiny\color{dndmuted} {{ a.name }}: {{ a.notes }} }\par
+{% for a in sheet.attacks %}{% if a.notes %}{\tiny\color{dndmuted} {{ a.name }}: {{ a.notes }}{% if a.versatile %}, {{ a.versatile }} two handed{% endif %} }\par
 {% endif %}{% endfor %}}
 
 \sheetbox{\colBin}{Equipment}%

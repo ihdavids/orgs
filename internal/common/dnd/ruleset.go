@@ -53,6 +53,41 @@ package dnd
   1. The built in SRD data compiled into the binary.
   2. Every directory listed in =dndPaths= in your server settings.
   3. =<templatePath>/dnd= and =./templates/dnd=.
+
+** Attaching numbers to a feature
+
+  The SRD data carries the rules /text/ of every feature but no mechanics -
+  it is prose, and the generator does not try to read numbers out of it. A
+  =bonuses= block attaches the numbers, so a value the sheet computes (and a
+  roll made from it) agrees with the character:
+
+  #+BEGIN_SRC yaml
+  id: srd
+  classes:
+    - id: bard
+      features:
+        - name: "Jack of All Trades"
+          level: 2
+          bonuses:
+            checks: "prof/2"
+  #+END_SRC
+
+  Features merge by name and level, field by field, so only the block above
+  is needed - the srd rules text is left alone. The fields are:
+
+  | field      | effect                                                     |
+  |------------+------------------------------------------------------------|
+  | checks     | ability checks, and skills not already adding proficiency  |
+  | abilities  | restricts =checks= to these abilities (default: all six)   |
+  | initiative | initiative, on top of whatever =checks= gives it           |
+  | saves      | every saving throw, death saving throws included           |
+  | deathSave  | death saving throws only                                   |
+  | minimum    | floors the evaluated bonus                                 |
+
+  Each value is a formula: terms joined with "+", where a term is a number,
+  an ability id whose modifier is added, or the proficiency bonus as =prof=,
+  =prof/2= (rounded down) or =prof/2up= (rounded up). A feat takes the same
+  block. See =templates/dnd/bonuses.yaml= for worked examples.
 EDOC */
 
 import (
@@ -485,12 +520,31 @@ func mergeClass(dst, src *Class) {
 	}
 }
 
+// mergeTraits merges by name and level, field by field, so that an add on
+// module can attach a bonuses block to a feature the srd already defines
+// without having to restate its rules text:
+//
+//	classes:
+//	  - id: "bard"
+//	    features:
+//	      - name: "Jack of All Trades"
+//	        level: 2
+//	        bonuses:
+//	          checks: "prof/2"
+//
+// A module that does supply text still replaces the text, as before.
 func mergeTraits(dst, src []Trait) []Trait {
 	for _, t := range src {
 		found := false
 		for i := range dst {
 			if dst[i].Name == t.Name && dst[i].Level == t.Level {
-				dst[i] = t
+				if t.Text != "" {
+					dst[i].Text = t.Text
+				}
+				if t.Source != "" {
+					dst[i].Source = t.Source
+				}
+				dst[i].Bonuses = mergeBonuses(dst[i].Bonuses, t.Bonuses)
 				found = true
 				break
 			}
@@ -498,6 +552,30 @@ func mergeTraits(dst, src []Trait) []Trait {
 		if !found {
 			dst = append(dst, t)
 		}
+	}
+	return dst
+}
+
+// mergeBonuses lets a module set the fields it cares about and leave the rest
+// of an existing block alone.
+func mergeBonuses(dst, src Bonuses) Bonuses {
+	if src.Checks != "" {
+		dst.Checks = src.Checks
+	}
+	if src.Initiative != "" {
+		dst.Initiative = src.Initiative
+	}
+	if src.Saves != "" {
+		dst.Saves = src.Saves
+	}
+	if src.DeathSave != "" {
+		dst.DeathSave = src.DeathSave
+	}
+	if len(src.Abilities) > 0 {
+		dst.Abilities = src.Abilities
+	}
+	if src.Minimum != 0 {
+		dst.Minimum = src.Minimum
 	}
 	return dst
 }

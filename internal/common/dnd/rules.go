@@ -249,8 +249,13 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	// saving throw, and the saves are computed immediately below.
 	magic := magicItems(c, rs, s)
 
-	// ---- abilities and saves ---------------------------------------------
-	s.AbilityMap = map[string]AbilityView{}
+	// ---- traits, features and the bonuses they carry ----------------------
+	// Collected before the saves because a paladin's aura raises every one of
+	// them, and before initiative because a bard's Jack of All Trades does.
+	s.Traits = collectTraits(rs, c, race, sub)
+	s.Features = collectFeatures(rs, c, bg)
+	scores := map[string]int{}
+	rawMods := map[string]int{}
 	for _, a := range AbilityOrder {
 		score := 10
 		if c.Abilities != nil {
@@ -258,14 +263,25 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 				score = v
 			}
 		}
-		mod := AbilityMod(score)
-		save := mod + magic.save
+		scores[a] = score
+		rawMods[a] = AbilityMod(score)
+	}
+	bonus := collectBonuses(rs, c, s.Traits, s.Features, rawMods, s.Proficiency)
+
+	// ---- abilities and saves ---------------------------------------------
+	s.AbilityMap = map[string]AbilityView{}
+	for _, a := range AbilityOrder {
+		score := scores[a]
+		mod := rawMods[a]
+		save := mod + magic.save + bonus.saves
 		if saveProf[a] {
 			save += s.Proficiency
 		}
+		check := mod + bonus.checks[a]
 		av := AbilityView{
 			Id: a, Name: AbilityNames[a], Short: AbilityShort[a],
 			Score: score, Modifier: mod, Mod: Signed(mod),
+			Check: check, CheckStr: Signed(check),
 			Save: save, SaveStr: Signed(save), SaveProf: saveProf[a],
 		}
 		s.Abilities = append(s.Abilities, av)
@@ -273,6 +289,11 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 		s.Saves = append(s.Saves, av)
 	}
 	mod := func(a string) int { return s.AbilityMap[a].Modifier }
+
+	// A death save is a flat d20, but it is still a saving throw, so a ring of
+	// protection or a paladin's aura applies to it.
+	s.DeathSaveBonus = magic.save + bonus.saves + bonus.deathSave
+	s.DeathSaveStr = Signed(s.DeathSaveBonus)
 
 	// ---- skills -----------------------------------------------------------
 	skills := rs.Skills
@@ -292,6 +313,11 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 				m += s.Proficiency // expertise implies proficiency
 			}
 		}
+		// Jack of All Trades and Remarkable Athlete are both worded as
+		// applying only to checks that do not already add proficiency.
+		if !prof && !exp {
+			m += bonus.checks[sk.Ability]
+		}
 		sv := SkillView{
 			Id: sk.Id, Name: sk.Name, Ability: sk.Ability, Short: AbilityShort[sk.Ability],
 			Modifier: m, Mod: Signed(m), Proficent: prof, Expertise: exp, Passive: 10 + m,
@@ -306,10 +332,6 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 			s.PassiveInvestigation = 10 + m
 		}
 	}
-
-	// ---- features ---------------------------------------------------------
-	s.Traits = collectTraits(rs, c, race, sub)
-	s.Features = collectFeatures(rs, c, bg)
 
 	// ---- hit points -------------------------------------------------------
 	s.HPMax = c.HPMax
@@ -334,7 +356,9 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 
 	// ---- armour class, initiative, movement -------------------------------
 	s.AC, s.ACSource = computeAC(c, rs, s, magic)
-	s.Initiative = mod(DEX)
+	// Initiative is a dexterity check, so it takes the check bonus as well as
+	// anything pointed at initiative specifically (the Alert feat).
+	s.Initiative = mod(DEX) + bonus.checks[DEX] + bonus.initiative
 	s.InitiativeStr = Signed(s.Initiative)
 	str := s.AbilityMap[STR].Score
 	s.CarryCapacity = str * 15
@@ -433,6 +457,63 @@ var DefaultSkills = []Skill{
 	{Id: "sleight-of-hand", Name: "Sleight of Hand", Ability: DEX},
 	{Id: "stealth", Name: "Stealth", Ability: DEX},
 	{Id: "survival", Name: "Survival", Ability: WIS},
+}
+
+// bonusTotals is everything the data driven Bonuses blocks added up.
+type bonusTotals struct {
+	// checks is per ability, because Remarkable Athlete only covers three.
+	checks     map[string]int
+	initiative int
+	saves      int
+	deathSave  int
+}
+
+// collectBonuses adds up the Bonuses blocks on everything the character has:
+// racial traits, class and subclass features, the options they picked, their
+// background feature and their feats.
+//
+// The traits and features are passed in already collected and already level
+// gated, so a feature the character has not reached yet cannot pay out early.
+func collectBonuses(rs *Ruleset, c *Character, traits, features []Trait,
+	mods map[string]int, prof int) bonusTotals {
+	b := bonusTotals{checks: map[string]int{}}
+	eval := func(formula string, minimum int) int {
+		if formula == "" {
+			return 0
+		}
+		v := EvalBonus(formula, mods, prof)
+		if v < minimum {
+			v = minimum
+		}
+		return v
+	}
+	apply := func(bs Bonuses) {
+		if bs.Checks != "" {
+			v := eval(bs.Checks, bs.Minimum)
+			abilities := bs.Abilities
+			if len(abilities) == 0 {
+				abilities = AbilityOrder
+			}
+			for _, a := range abilities {
+				b.checks[strings.ToLower(strings.TrimSpace(a))] += v
+			}
+		}
+		b.initiative += eval(bs.Initiative, bs.Minimum)
+		b.saves += eval(bs.Saves, bs.Minimum)
+		b.deathSave += eval(bs.DeathSave, bs.Minimum)
+	}
+	for _, t := range traits {
+		apply(t.Bonuses)
+	}
+	for _, f := range features {
+		apply(f.Bonuses)
+	}
+	for _, id := range c.Feats {
+		if ft := rs.Feat(id); ft != nil {
+			apply(ft.Bonuses)
+		}
+	}
+	return b
 }
 
 func collectTraits(rs *Ruleset, c *Character, race, sub *Race) []Trait {
@@ -883,12 +964,14 @@ func computeAttacks(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) []At
 		if len(it.Properties) > 0 {
 			notes += ", " + strings.Join(it.Properties, ", ")
 		}
+		// Versatile damage is carried as its own field rather than folded into
+		// the notes, so that a sheet can roll the two handed damage on its own.
+		versatile := ""
 		if it.Versatile != "" {
-			v := it.Versatile
+			versatile = it.Versatile
 			if dmgMod != 0 {
-				v = fmt.Sprintf("%s%s", v, Signed(dmgMod))
+				versatile = fmt.Sprintf("%s%s", versatile, Signed(dmgMod))
 			}
-			notes = strings.TrimSpace(notes + " (" + v + " two handed)")
 		}
 		if !prof {
 			notes = strings.TrimSpace(notes + ", not proficient")
@@ -908,8 +991,9 @@ func computeAttacks(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) []At
 			}
 		}
 		out = append(out, AttackView{
-			Name: it.Name, Bonus: Signed(bonus), Damage: dmg, Type: it.DamageType,
-			Range: rng, Notes: strings.TrimSpace(notes), Proficent: prof,
+			Name: it.Name, Bonus: Signed(bonus), Damage: dmg, Versatile: versatile,
+			Type: it.DamageType, Range: rng, Notes: strings.TrimSpace(notes),
+			Proficent: prof,
 		})
 	}
 	// Unarmed strike is always available.

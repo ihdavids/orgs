@@ -72,6 +72,44 @@ type Trait struct {
 	Level int    `yaml:"level" json:"level"`
 	// Source is filled in by the engine so a sheet can say where a trait came from.
 	Source string `yaml:"source" json:"source"`
+	// Bonuses are the numbers this trait actually moves on the sheet. Most
+	// traits leave it empty and are pure prose.
+	Bonuses Bonuses `yaml:"bonuses" json:"bonuses"`
+}
+
+// Bonuses are the mechanical adjustments a trait, feature or feat hands out.
+//
+// Every field is a formula in the same style as a class's unarmoredAc: terms
+// joined with "+", where a term is a number, an ability id whose modifier is
+// added, or the proficiency bonus as "prof", "prof/2" (rounded down) or
+// "prof/2up" (rounded up). This keeps the interesting cases in data rather
+// than in go, so a homebrew module can grant a bonus without new code:
+//
+//	bonuses:
+//	  initiative: "5"                       # Alert
+//	  checks: "prof/2"                      # Jack of All Trades
+//	  checks: "prof/2up"                    # Remarkable Athlete...
+//	  abilities: ["str", "dex", "con"]      # ...but only these three
+//	  saves: "cha"                          # Aura of Protection
+//	  minimum: 1                            # "with a minimum bonus of +1"
+type Bonuses struct {
+	// Checks is added to ability checks, and to skill checks that do not
+	// already include the proficiency bonus, which is how both Jack of All
+	// Trades and Remarkable Athlete are worded. Initiative is a dexterity
+	// check, so it picks this up too.
+	Checks string `yaml:"checks" json:"checks"`
+	// Initiative is added to initiative on top of whatever Checks grants it.
+	Initiative string `yaml:"initiative" json:"initiative"`
+	// Saves is added to every saving throw, death saving throws included.
+	Saves string `yaml:"saves" json:"saves"`
+	// DeathSave is added to death saving throws only.
+	DeathSave string `yaml:"deathSave" json:"deathSave"`
+	// Abilities restricts Checks to checks based on these abilities. Empty,
+	// the usual case, means all six.
+	Abilities []string `yaml:"abilities" json:"abilities"`
+	// Minimum floors each evaluated bonus. It exists for the "minimum bonus
+	// of +1" wording on a paladin's aura.
+	Minimum int `yaml:"minimum" json:"minimum"`
 }
 
 // Proficiencies is the set of things a race/class/background can make you good at.
@@ -491,6 +529,8 @@ type Feat struct {
 	// collected alongside race, class and subclass choices, so a feat can ask
 	// anything those can ask without new code.
 	Choices []Choice `yaml:"choices" json:"choices"`
+	// Bonuses are the numbers the feat moves, the same as on a Trait.
+	Bonuses Bonuses `yaml:"bonuses" json:"bonuses"`
 }
 
 // Ruleset is a complete (possibly merged) set of rules data.
@@ -666,6 +706,10 @@ type AbilityView struct {
 	Score    int    `json:"score"`
 	Modifier int    `json:"modifier"`
 	Mod      string `json:"mod"`
+	// Check is what you actually add to an ability check. It is the plain
+	// modifier unless something like Jack of All Trades is in play.
+	Check    int    `json:"check"`
+	CheckStr string `json:"checkStr"`
 	Save     int    `json:"save"`
 	SaveStr  string `json:"saveStr"`
 	SaveProf bool   `json:"saveProf"`
@@ -686,9 +730,13 @@ type SkillView struct {
 
 // AttackView is one row of the attacks table.
 type AttackView struct {
-	Name      string `json:"name"`
-	Bonus     string `json:"bonus"`
-	Damage    string `json:"damage"`
+	Name   string `json:"name"`
+	Bonus  string `json:"bonus"`
+	Damage string `json:"damage"`
+	// Versatile is the two handed damage of a versatile weapon, already
+	// carrying the same ability and magic modifiers as Damage. It is a
+	// separate field rather than a note so a sheet can roll it on its own.
+	Versatile string `json:"versatile"`
 	Type      string `json:"type"`
 	Range     string `json:"range"`
 	Notes     string `json:"notes"`
@@ -791,7 +839,12 @@ type Sheet struct {
 	HitDice     string `json:"hitDice"`
 	HitDiceUsed int    `json:"hitDiceUsed"`
 	DeathSaves  string `json:"deathSaves"`
-	Inspiration bool   `json:"inspiration"`
+	// DeathSaveBonus is what a death saving throw adds. It is normally zero -
+	// a death save is a flat d20 - but a ring of protection or a paladin's
+	// aura are saving throw bonuses and so apply to it.
+	DeathSaveBonus int    `json:"deathSaveBonus"`
+	DeathSaveStr   string `json:"deathSaveStr"`
+	Inspiration    bool   `json:"inspiration"`
 
 	Attacks       []AttackView `json:"attacks"`
 	Equipment     []Gear       `json:"equipment"`
