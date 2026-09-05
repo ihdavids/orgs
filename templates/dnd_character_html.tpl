@@ -457,7 +457,7 @@ footer.sheet-foot {
 #dice-custom {
   position: absolute;
   right: 0; bottom: 66px;
-  width: 292px;
+  width: 320px;
   max-width: calc(100vw - 44px);
   padding: 12px;
   border: 1px solid rgba(184,134,11,.5);
@@ -480,7 +480,9 @@ footer.sheet-foot {
 }
 #dice-custom.nope { animation: dice-nope .22s ease 1; }
 
-#dice-custom .dc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+#dice-custom .dc-head, #dnd-sess .dc-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+}
 #dice-custom h3 {
   flex: 1; margin: 0;
   font-family: Cinzel, "Trajan Pro", Georgia, serif;
@@ -542,10 +544,10 @@ footer.sheet-foot {
 }
 
 .dc-hint { margin: 9px 0 10px; font-size: .64rem; line-height: 1.5; color: #7e735d; }
-.dc-actions { display: flex; align-items: center; gap: 8px; }
+.dc-actions { display: flex; align-items: center; gap: 6px; }
 .dc-actions .dt-btn { flex: 0 0 auto; }
 .dc-roll {
-  flex: 1;
+  flex: 1; min-width: 5.4em;
   padding: 8px 0;
   font: 700 .74rem/1 Cinzel, "Trajan Pro", Georgia, serif;
   letter-spacing: .16em; text-transform: uppercase;
@@ -564,9 +566,324 @@ footer.sheet-foot {
   #dice-custom.nope { animation: none; }
 }
 
+/* ---------------- session log: panel, notes drawer, search ---------------- */
+:root { --notes-h: 46vh; }
+@media (max-height: 620px) { :root { --notes-h: 62vh; } }
+
+#dnd-sess {
+  position: absolute;
+  right: 0; bottom: 66px;
+  width: 320px;
+  max-width: calc(100vw - 44px);
+  padding: 12px;
+  border: 1px solid rgba(184,134,11,.5);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #241f1a, #17140f);
+  box-shadow: 0 16px 44px rgba(0,0,0,.55);
+  color: #ece2cd;
+  font-family: "EB Garamond", Palatino, Georgia, serif;
+  opacity: 0;
+  transform: translateY(14px) scale(.97);
+  transform-origin: 100% 100%;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .24s cubic-bezier(.2,.8,.3,1);
+}
+#dnd-sess.open { opacity: 1; transform: none; pointer-events: auto; }
+#dnd-sess h3 {
+  flex: 1; margin: 0;
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-size: .74rem; text-transform: uppercase;
+  letter-spacing: .16em; color: var(--accent-2);
+}
+.sess-label {
+  display: block; margin: 8px 0 3px;
+  font-size: .58rem; text-transform: uppercase; letter-spacing: .12em; color: #9d9078;
+}
+.nd-input {
+  width: 100%;
+  padding: 6px 8px;
+  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-size: .92rem;
+  color: #f4e6c2;
+  background: rgba(0,0,0,.3);
+  border: 1px solid rgba(184,134,11,.4);
+  border-radius: 6px;
+}
+.nd-input:focus { outline: none; border-color: rgba(184,134,11,.85); }
+.nd-input::placeholder { color: #6f6553; }
+#dnd-sess .dc-actions { margin-top: 10px; }
+.sess-live {
+  display: flex; align-items: center; gap: 7px;
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-size: .95rem; color: #f0e2c0;
+}
+.sess-file {
+  margin-top: 3px;
+  font-size: .6rem; color: #7e735d;
+  overflow-wrap: anywhere;
+}
+.sess-counts { margin-top: 6px; font-size: .72rem; color: #a4977c; }
+.sess-login {
+  margin-top: 10px; padding-top: 9px;
+  border-top: 1px solid rgba(184,134,11,.22);
+}
+.sess-login .nd-input { margin-bottom: 5px; }
+.sess-server { margin-top: 10px; font-size: .62rem; color: #7e735d; }
+.sess-server summary {
+  cursor: pointer; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 5px;
+}
+.nd-err {
+  margin-top: 9px; padding: 6px 8px;
+  font-size: .72rem; color: #f0b8ae;
+  background: rgba(160,60,50,.16);
+  border: 1px solid rgba(200,90,80,.4); border-radius: 5px;
+}
+@keyframes rec-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+.rec-dot {
+  display: inline-block; flex: 0 0 auto;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #d2544a; box-shadow: 0 0 7px rgba(210,84,74,.75);
+  animation: rec-blink 1.8s ease-in-out infinite;
+}
+#dice-fab.rec::after {
+  content: ""; position: absolute;
+  right: 2px; top: 2px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #d2544a; box-shadow: 0 0 7px rgba(210,84,74,.75);
+}
+#dice-fab { position: relative; }
+
+/* ---- the notes drawer ---- */
+#notes-tab {
+  position: fixed;
+  left: 28px; bottom: 0;
+  z-index: 95;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 15px 9px;
+  background: linear-gradient(180deg, #2c2620, #1a1713);
+  color: var(--accent-2);
+  border: 1px solid rgba(184,134,11,.55);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  font: 700 .62rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  letter-spacing: .16em; text-transform: uppercase;
+  box-shadow: 0 -5px 16px rgba(0,0,0,.4);
+  transition: bottom .28s cubic-bezier(.2,.8,.3,1), background .15s ease;
+}
+#notes-tab:hover { background: linear-gradient(180deg, #3a3227, #211c17); }
+#notes-tab.raised { bottom: var(--notes-h); }
+#notes-tab svg, #notes-drawer h2 svg {
+  width: 15px; height: 15px;
+  fill: none; stroke: currentColor;
+  stroke-width: 1.35; stroke-linejoin: round; stroke-linecap: round;
+}
+#notes-tab em {
+  font-style: normal; letter-spacing: .04em; text-transform: none;
+  font-family: "EB Garamond", Palatino, Georgia, serif; color: #cdbe98;
+  max-width: 15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#notes-tab.rec { border-color: rgba(210,84,74,.6); }
+#notes-tab.rec::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: #d2544a; box-shadow: 0 0 7px rgba(210,84,74,.75);
+  animation: rec-blink 1.8s ease-in-out infinite;
+}
+
+#notes-drawer {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: var(--notes-h);
+  z-index: 93;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #241f1a, #17140f);
+  border-top: 3px double var(--accent-2);
+  box-shadow: 0 -16px 44px rgba(0,0,0,.55);
+  color: #ece2cd;
+  font-family: "EB Garamond", Palatino, Georgia, serif;
+  transform: translateY(101%);
+  transition: transform .28s cubic-bezier(.2,.8,.3,1), right .28s cubic-bezier(.2,.8,.3,1);
+}
+#notes-drawer.open { transform: none; }
+#notes-drawer.tray-open { right: var(--tray-w); }
+.nd-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(184,134,11,.3);
+}
+#notes-drawer h2 {
+  margin: 0; display: flex; align-items: center; gap: 7px;
+  font-size: .74rem; text-transform: uppercase;
+  letter-spacing: .16em; color: var(--accent-2);
+}
+.nd-tabs { display: flex; gap: 5px; }
+.nd-tab {
+  font: inherit; font-size: .66rem; text-transform: uppercase; letter-spacing: .1em;
+  background: transparent; color: #9d9078;
+  border: 1px solid transparent; border-radius: 5px;
+  padding: 4px 9px; cursor: pointer;
+}
+.nd-tab:hover { color: #e2d3ae; background: rgba(184,134,11,.12); }
+.nd-tab.on {
+  color: #f0e2c0;
+  border-color: rgba(184,134,11,.55);
+  background: rgba(184,134,11,.16);
+}
+.nd-status {
+  flex: 1; text-align: right;
+  display: flex; align-items: center; justify-content: flex-end; gap: 7px;
+  font-size: .72rem; color: #cdbe98;
+}
+.nd-off { color: #7e735d; font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; }
+.nd-warn { color: #e0b166; font-size: .66rem; }
+.nd-body { flex: 1; min-height: 0; display: flex; }
+.nd-view { flex: 1; min-width: 0; display: none; flex-direction: column; padding: 12px 14px; }
+.nd-view.on { display: flex; }
+.nd-toolbar {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
+}
+.nd-toolbar .nd-input { flex: 1; }
+.nd-title { font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0; }
+.nd-meta { flex: 1; font-size: .68rem; color: #7e735d; }
+.nd-sub {
+  font: 700 .6rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  letter-spacing: .18em; text-transform: uppercase; color: #8d8168;
+  padding-bottom: 7px; margin-bottom: 9px;
+  border-bottom: 1px solid rgba(184,134,11,.2);
+}
+
+.nd-split { flex: 1; min-height: 0; display: flex; gap: 18px; }
+.nd-compose { flex: 0 0 40%; display: flex; flex-direction: column; min-height: 0; }
+#note-text {
+  flex: 1; min-height: 78px; resize: none;
+  padding: 9px 11px;
+  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-size: .95rem; line-height: 1.5;
+  color: #f4e6c2;
+  background: rgba(0,0,0,.3);
+  border: 1px solid rgba(184,134,11,.4);
+  border-radius: 7px;
+}
+#note-text:focus { outline: none; border-color: rgba(184,134,11,.85); }
+#note-text::placeholder { color: #6f6553; }
+.nd-compose-foot { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.nd-hint { flex: 1; font-size: .62rem; color: #7e735d; }
+.nd-compose-foot .dc-roll { flex: 0 0 auto; padding: 8px 14px; }
+.note-preview {
+  margin-top: 9px; max-height: 34%; overflow-y: auto;
+  padding: 8px 10px;
+  border: 1px dashed rgba(184,134,11,.32); border-radius: 7px;
+}
+.nd-stream, .nd-col { flex: 1; min-width: 0; overflow-y: auto; padding-right: 6px; }
+.nd-detail { flex: 1; min-height: 0; display: flex; gap: 18px; }
+.note-entry {
+  border-left: 2px solid rgba(184,134,11,.35);
+  padding: 1px 0 1px 11px;
+  margin-bottom: 13px;
+}
+.note-time {
+  font: 700 .58rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  letter-spacing: .14em; color: #8d8168; margin-bottom: 4px;
+}
+
+/* org markup as it appears in a note */
+.org-rich { font-size: .9rem; line-height: 1.55; color: #ded2b8; }
+.org-rich p { margin: 0 0 7px; }
+.org-rich h3, .org-rich h4 {
+  margin: 9px 0 5px;
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  color: #f0e2c0; font-size: .92rem; letter-spacing: .04em;
+}
+.org-rich h4 { font-size: .82rem; color: #dcc890; }
+.org-rich ul, .org-rich ol { margin: 0 0 7px; padding-left: 19px; }
+.org-rich li { margin-bottom: 2px; }
+.org-rich code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .82em; color: #e8cf95;
+  background: rgba(184,134,11,.14); border-radius: 3px; padding: 0 3px;
+}
+.org-rich pre {
+  margin: 0 0 7px; padding: 7px 9px; overflow-x: auto;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .78rem;
+  background: rgba(0,0,0,.32); border: 1px solid rgba(184,134,11,.22); border-radius: 6px;
+}
+.org-rich blockquote {
+  margin: 0 0 7px; padding: 4px 11px;
+  border-left: 3px solid rgba(184,134,11,.5); color: #cdbe98; font-style: italic;
+}
+.org-rich a { color: var(--accent-2); }
+.org-rich .org-table {
+  width: auto; border-collapse: collapse; margin: 0 0 8px; font-size: .82rem;
+}
+/* The sheet itself is dark ink on parchment, so a table in a note has to say
+   what colour it is or it inherits the page's ink onto the dark drawer. */
+.org-rich .org-table td {
+  border: 1px solid rgba(184,134,11,.22); padding: 3px 7px; color: #ded2b8;
+}
+
+/* session list, search hits and the roll log */
+.sess-row, .hit {
+  display: flex; align-items: baseline; gap: 11px;
+  width: 100%; text-align: left;
+  background: transparent; border: 0;
+  border-bottom: 1px dotted rgba(184,134,11,.2);
+  color: #cfc3a8; font: inherit; font-size: .84rem;
+  padding: 7px 5px; cursor: pointer;
+}
+.sess-row:hover, .hit:hover { background: rgba(184,134,11,.13); }
+.sess-row.here { background: rgba(184,134,11,.1); }
+.sess-date { flex: 0 0 auto; width: 6.6em; font-size: .68rem; color: #7e735d; }
+.sess-name {
+  flex: 0 0 auto; max-width: 16em;
+  font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sess-sum {
+  flex: 1; min-width: 0; color: #a4977c;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sess-who {
+  flex: 0 0 auto; max-width: 14em; font-size: .72rem; color: #8d8168;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sess-meta { flex: 0 0 auto; font-size: .64rem; color: #7e735d; }
+.hit { flex-direction: column; gap: 3px; }
+.hit-head {
+  display: flex; gap: 9px; align-items: baseline; width: 100%;
+  font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0; font-size: .8rem;
+}
+.hit-where { font-family: inherit; font-size: .64rem; color: #7e735d; }
+.hit-text { color: #bfb298; font-size: .82rem; }
+.log-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.log-table th {
+  text-align: left; padding: 3px 6px;
+  font: 700 .58rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  letter-spacing: .12em; text-transform: uppercase; color: #8d8168;
+  border-bottom: 1px solid rgba(184,134,11,.3);
+}
+.log-table td {
+  padding: 3px 6px; border-bottom: 1px dotted rgba(184,134,11,.16); color: #cfc3a8;
+}
+.log-table td.num {
+  font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0;
+}
+.log-table td.dim { color: #7e735d; font-size: .72rem; }
+
+@media (max-width: 860px) {
+  .nd-split, .nd-detail { flex-direction: column; }
+  .nd-compose { flex: 0 0 auto; }
+  #note-text { min-height: 66px; }
+  .sess-sum, .sess-who { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #notes-drawer, #notes-tab, #dnd-sess { transition: none; }
+  .rec-dot, #notes-tab.rec::before { animation: none; }
+}
+
 @media print {
   body { background: #fff; }
-  #dice-canvas, #dice-tray, #dice-tab, #dice-dock { display: none !important; }
+  #dice-canvas, #dice-tray, #dice-tab, #dice-dock,
+  #notes-drawer, #notes-tab { display: none !important; }
   .rollable {
     text-decoration: none !important;
     box-shadow: none !important;
@@ -871,6 +1188,9 @@ footer.sheet-foot {
   </footer>
 </div>
 
+<div id="dnd-log-config" hidden
+     data-server="{{ serverUrl }}" data-character="{{ sheet.name }}"
+     data-character-id="{{ sheet.id }}"></div>
 <noscript><style>.rollable { cursor: auto; text-decoration: none; }</style></noscript>
 <script>
 /* ---------------------------------------------------------------------------
@@ -1871,8 +2191,11 @@ footer.sheet-foot {
     });
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') { return; }
-      // The custom roll panel sits on top, so it closes first.
+      // Whatever is on top closes first.
+      if (sessPanel && sessPanel.classList.contains('open')) { setSessPanel(false); return; }
       if (panel && panel.classList.contains('open')) { setPanel(false); return; }
+      if (drawer && drawer.classList.contains('open') &&
+          !drawer.contains(document.activeElement)) { setDrawer(false); return; }
       if (tray.classList.contains('open')) { setTray(false); }
     });
     renderHistory();
@@ -1883,6 +2206,7 @@ footer.sheet-foot {
     tab.classList.toggle('shifted', open);
     tab.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (dock) { dock.classList.toggle('shifted', open); }
+    if (drawer) { drawer.classList.toggle('tray-open', open); }
   }
 
   function esc(s) {
@@ -2084,6 +2408,10 @@ footer.sheet-foot {
       '<div class="dc-hint"></div>' +
       '<div class="dc-actions">' +
         '<button type="button" class="dt-btn" id="dice-custom-clear">Clear</button>' +
+        '<button type="button" class="dt-btn" id="sess-open" ' +
+          'title="Start or manage the recorded play session">Session</button>' +
+        '<button type="button" class="dt-btn" id="sess-list" ' +
+          'title="Every session you have played">Sessions</button>' +
         '<button type="button" class="dc-roll" id="dice-custom-roll">Roll</button>' +
       '</div>';
     dock.appendChild(panel);
@@ -2113,6 +2441,16 @@ footer.sheet-foot {
       exprInput.focus();
     });
     panel.querySelector('#dice-custom-roll').addEventListener('click', customRoll);
+    panel.querySelector('#sess-open').addEventListener('click', function () {
+      setPanel(false);
+      setSessPanel(true);
+    });
+    panel.querySelector('#sess-list').addEventListener('click', function () {
+      setPanel(false);
+      setDrawer(true);
+      setView('sessions');
+      loadSessions();
+    });
     panel.addEventListener('click', function (e) {
       var b = e.target.closest('[data-die]');
       if (b) { addDie(parseInt(b.getAttribute('data-die'), 10)); return; }
@@ -2194,6 +2532,7 @@ footer.sheet-foot {
     if (history.length > 60) { history.length = 60; }
     latestEl.innerHTML = latestCard(result);
     renderHistory();
+    logRoll(result);
     if (autoBox.checked) { setTray(true); }
     tab.classList.remove('pulse');
     void tab.offsetWidth;
@@ -2295,6 +2634,811 @@ footer.sheet-foot {
     });
   }
 
+  // ------------------------------------------------- session log and notes
+  // The sheet can record a night's play into an org file on the orgs server:
+  // every roll into a table, every note into the notes section. All of it is
+  // optional - with no server reachable, or no session started, the sheet
+  // behaves exactly as it always did and nothing here gets in the way.
+
+  var LOG = {
+    url: '', token: '', expires: 0, session: null,
+    rolls: [], notes: [], stream: [],
+    busy: false, error: '', needLogin: false
+  };
+  var CHARACTER = '', CHARACTER_ID = '';
+  var STORE_KEY = 'orgs.dnd.sessionlog';
+  var drawer, notesTab, sessPanel, view = 'notes', refreshTimer = null;
+
+  var QUILL_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M20.5 3.2c-6 .6-10.4 3.4-12.6 7.3-1 1.8-1.4 3.6-1.5 5.2"/>' +
+    '<path d="M3.6 20.4c1.2-2.6 3-4.6 5.2-6"/>' +
+    '<path d="M9.2 15.9c4.4.5 8-1.6 9.6-5.2"/></svg>';
+
+  // ------------------------------------------------------------ storage
+  function saveLog() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        url: LOG.url, token: LOG.token, expires: LOG.expires,
+        session: LOG.session, rolls: LOG.rolls, notes: LOG.notes
+      }));
+    } catch (e) { /* private browsing, nothing worth doing about it */ }
+  }
+
+  function loadLog() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORE_KEY); } catch (e) { return; }
+    if (!raw) { return; }
+    try {
+      var v = JSON.parse(raw) || {};
+      if (v.url) { LOG.url = v.url; }
+      LOG.token = v.token || '';
+      LOG.expires = v.expires || 0;
+      LOG.session = v.session || null;
+      LOG.rolls = v.rolls || [];
+      LOG.notes = v.notes || [];
+    } catch (e) { /* a corrupt entry is not worth a broken sheet */ }
+  }
+
+  // ------------------------------------------------------------- server
+  function apiUrl(path) {
+    return String(LOG.url || '').replace(/\/+$/, '') + path;
+  }
+
+  function loginNeeded() {
+    LOG.needLogin = true;
+    var e = new Error('sign in to the orgs server to record this session');
+    e.status = 401;
+    return e;
+  }
+
+  function request(method, path, body, auth) {
+    if (!LOG.url) { return Promise.reject(new Error('no orgs server address set')); }
+    var opts = { method: method, headers: {}, mode: 'cors' };
+    if (body !== undefined && body !== null) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    if (auth !== false && LOG.token) { opts.headers.Authorization = 'Bearer ' + LOG.token; }
+    return fetch(apiUrl(path), opts).then(function (res) {
+      if (res.status === 401 || res.status === 403) { throw loginNeeded(); }
+      if (!res.ok) {
+        return res.text().then(function (text) {
+          var e = new Error(serverError(text) || ('the server said ' + res.status));
+          e.status = res.status;
+          throw e;
+        });
+      }
+      var type = res.headers.get('content-type') || '';
+      return type.indexOf('json') >= 0 ? res.json() : res.text();
+    });
+  }
+
+  // The api returns either a plain string or a {ok, msg} envelope on failure.
+  function serverError(text) {
+    if (!text) { return ''; }
+    try {
+      var v = JSON.parse(text);
+      if (typeof v === 'string') { return v; }
+      if (v && v.msg) { return v.msg; }
+    } catch (e) { /* not json, use it as it came */ }
+    return String(text).slice(0, 200);
+  }
+
+  // A token only lasts an hour, so renew it before it lapses rather than
+  // finding out halfway through a fight.
+  function api(method, path, body) {
+    var soon = LOG.expires && Date.now() > LOG.expires - 30000;
+    var start = soon && LOG.token ? renewToken() : Promise.resolve();
+    return start.then(function () {
+      return request(method, path, body);
+    }).catch(function (err) {
+      if (err.status !== 401 || !LOG.token) { throw err; }
+      return renewToken().then(function () { return request(method, path, body); });
+    });
+  }
+
+  function renewToken() {
+    if (!LOG.token) { return Promise.reject(loginNeeded()); }
+    return request('POST', '/refresh', null).then(keepToken, function () {
+      LOG.token = '';
+      saveLog();
+      throw loginNeeded();
+    });
+  }
+
+  function keepToken(res) {
+    LOG.token = (res && res.token) || '';
+    LOG.expires = res && res.ExpiresAt ? Date.parse(res.ExpiresAt) : 0;
+    LOG.needLogin = false;
+    saveLog();
+    scheduleRenew();
+    return res;
+  }
+
+  function scheduleRenew() {
+    if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    if (!LOG.expires || !LOG.token) { return; }
+    var wait = LOG.expires - Date.now() - 60000;
+    refreshTimer = setTimeout(function () {
+      renewToken().catch(function () { renderSession(); });
+    }, Math.max(15000, wait));
+  }
+
+  function signIn(user, pass) {
+    return request('POST', '/login', { username: user, password: pass }, false)
+      .then(keepToken);
+  }
+
+  // ------------------------------------------------------- the write queue
+  // Rolls and notes are queued and flushed, so a server that is briefly away
+  // costs you nothing: the queue is on disk and goes out with the next one.
+  function flush() {
+    if (LOG.busy || !LOG.session || !LOG.url) { return; }
+    var rolls = LOG.rolls.slice(0, 25);
+    var notes = LOG.notes.slice(0, 10);
+    if (!rolls.length && !notes.length) { return; }
+    var path = '/dnd/play/session/' + encodeURIComponent(LOG.session.id);
+    var send = rolls.length
+      ? api('POST', path + '/roll', who({ rolls: rolls }))
+      : api('POST', path + '/note', who({ notes: notes }));
+    LOG.busy = true;
+    send.then(function (info) {
+      if (rolls.length) { LOG.rolls = LOG.rolls.slice(rolls.length); }
+      else { LOG.notes = LOG.notes.slice(notes.length); }
+      if (info && info.id) { LOG.session = info; }
+      LOG.busy = false;
+      LOG.error = '';
+      saveLog();
+      renderSession();
+      flush();
+    }, function (err) {
+      LOG.busy = false;
+      LOG.error = err.message || String(err);
+      renderSession();
+    });
+  }
+
+  function pending() { return LOG.rolls.length + LOG.notes.length; }
+
+  // Every write names the character, so the session file can list who played
+  // and carry their id for later queries.
+  function who(body) {
+    body.character = CHARACTER;
+    body.characterId = CHARACTER_ID;
+    return body;
+  }
+
+  function clockNow() {
+    var now = new Date();
+    return ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+  }
+
+  // logRoll turns a result from the tray into a row of the session table.
+  function logRoll(r) {
+    if (!LOG.session) { return; }
+    var row = { time: r.time, character: CHARACTER, label: r.label, formula: r.formula };
+    if (r.kind === 'check') {
+      row.result = String(r.normal);
+      row.dice = 'd20 ' + r.pair[0] + ', d20 ' + r.pair[1];
+      row.notes = 'adv ' + r.adv + ', dis ' + r.dis +
+        (r.mod ? ', mod ' + signed(r.mod) : '');
+    } else {
+      row.result = String(r.total);
+      row.dice = r.detail;
+      row.notes = (r.crit === null || r.crit === undefined) ? '' : 'crit ' + r.crit;
+    }
+    LOG.rolls.push(row);
+    saveLog();
+    flush();
+    renderSession();
+  }
+
+  function logNote(text) {
+    if (!LOG.session || !String(text).trim()) { return; }
+    var note = { time: clockNow(), text: text };
+    LOG.notes.push(note);
+    LOG.stream.push(note);
+    saveLog();
+    flush();
+    renderNotes();
+  }
+
+  // --------------------------------------------------------- session state
+  function startSession(name, summary) {
+    return api('POST', '/dnd/play/session', who({ name: name, summary: summary }))
+      .then(function (info) {
+        LOG.session = info;
+        LOG.error = '';
+        LOG.stream = [];
+        saveLog();
+        renderSession();
+        flush();
+        return loadStream(info.id);
+      });
+  }
+
+  function resumeSession(info) {
+    LOG.session = info;
+    LOG.error = '';
+    saveLog();
+    renderSession();
+    flush();
+    return loadStream(info.id);
+  }
+
+  function stopSession() {
+    LOG.session = null;
+    LOG.stream = [];
+    saveLog();
+    renderSession();
+    renderNotes();
+  }
+
+  // loadStream pulls the notes already in the file so the stream reads as the
+  // whole evening, not just what this browser happens to have typed.
+  function loadStream(id) {
+    return api('GET', '/dnd/play/session/' + encodeURIComponent(id)).then(function (d) {
+      LOG.stream = (d && d.noteLog) || [];
+      renderNotes();
+      return d;
+    }, function (err) {
+      LOG.error = err.message || String(err);
+      renderNotes();
+    });
+  }
+
+  // ---------------------------------------------------------- org markup
+  // Just enough org to make a note look like a note: headings, lists, tables,
+  // quotes, source blocks and the usual inline emphasis.
+  function orgInline(s) {
+    s = esc(s);
+    s = s.replace(/\[\[([^\]]+)\]\[([^\]]+)\]\]/g, function (m, href, label) {
+      return '<a href="' + href + '" rel="noreferrer noopener" target="_blank">' + label + '</a>';
+    });
+    s = s.replace(/\[\[([^\]]+)\]\]/g,
+      '<a href="$1" rel="noreferrer noopener" target="_blank">$1</a>');
+    s = s.replace(/(^|[\s([{])\*([^*\n]+)\*(?=$|[\s.,;:!?)\]}])/g, '$1<b>$2</b>');
+    s = s.replace(/(^|[\s([{])\/([^/\n]+)\/(?=$|[\s.,;:!?)\]}])/g, '$1<i>$2</i>');
+    s = s.replace(/(^|[\s([{])_([^_\n]+)_(?=$|[\s.,;:!?)\]}])/g, '$1<u>$2</u>');
+    s = s.replace(/(^|[\s([{])=([^=\n]+)=(?=$|[\s.,;:!?)\]}])/g, '$1<code>$2</code>');
+    s = s.replace(/(^|[\s([{])~([^~\n]+)~(?=$|[\s.,;:!?)\]}])/g, '$1<code>$2</code>');
+    s = s.replace(/(^|[\s([{])\+([^+\n]+)\+(?=$|[\s.,;:!?)\]}])/g, '$1<s>$2</s>');
+    return s;
+  }
+
+  function blockHtml(block) {
+    if (block.kind === 'quote') {
+      return '<blockquote>' + orgInline(block.text || '') + '</blockquote>';
+    }
+    return '<pre>' + esc(block.text || '') + '</pre>';
+  }
+
+  function orgToHtml(text) {
+    var lines = String(text === null || text === undefined ? '' : text).split('\n');
+    var out = [], list = null, table = false, block = null, para = [];
+    function closeList() { if (list) { out.push('</' + list + '>'); list = null; } }
+    function closeTable() { if (table) { out.push('</tbody></table>'); table = false; } }
+    function closePara() {
+      if (para.length) { out.push('<p>' + orgInline(para.join(' ')) + '</p>'); para = []; }
+    }
+    function closeAll() { closePara(); closeList(); closeTable(); }
+
+    lines.forEach(function (line) {
+      var t = line.trim();
+      if (block) {
+        if (/^#\+END_/i.test(t)) {
+          out.push(blockHtml(block));
+          block = null;
+          return;
+        }
+        block.text = (block.text ? block.text + '\n' : '') + line;
+        return;
+      }
+      var begin = /^#\+BEGIN_(\w+)/i.exec(t);
+      if (begin) {
+        closeAll();
+        block = { text: '', kind: begin[1].toLowerCase() };
+        return;
+      }
+      if (/^#\+/.test(t)) { return; }
+      var head = /^(\*+)\s+(.*)$/.exec(t);
+      if (head) {
+        closeAll();
+        var lvl = Math.min(4, head[1].length + 2);
+        out.push('<h' + lvl + '>' + orgInline(head[2]) + '</h' + lvl + '>');
+        return;
+      }
+      if (/^\|/.test(t)) {
+        closePara(); closeList();
+        if (/^\|[-+]/.test(t)) { return; }
+        var cells = t.replace(/^\|/, '').replace(/\|$/, '').split('|');
+        if (!table) {
+          out.push('<table class="org-table"><tbody>');
+          table = true;
+        }
+        out.push('<tr>' + cells.map(function (c) {
+          return '<td>' + orgInline(c.trim()) + '</td>';
+        }).join('') + '</tr>');
+        return;
+      }
+      closeTable();
+      var bullet = /^[-+*]\s+(.*)$/.exec(t);
+      var number = /^(\d+)[.)]\s+(.*)$/.exec(t);
+      if (bullet || number) {
+        closePara();
+        var want = bullet ? 'ul' : 'ol';
+        if (list && list !== want) { closeList(); }
+        if (!list) { out.push('<' + want + '>'); list = want; }
+        out.push('<li>' + orgInline(bullet ? bullet[1] : number[2]) + '</li>');
+        return;
+      }
+      if (t === '') { closePara(); closeList(); return; }
+      para.push(t);
+    });
+    if (block) { out.push(blockHtml(block)); }
+    closeAll();
+    return out.join('');
+  }
+
+  // ------------------------------------------------------- the notes panel
+  function setDrawer(open) {
+    drawer.classList.toggle('open', open);
+    notesTab.classList.toggle('raised', open);
+    notesTab.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (dock) { dock.classList.toggle('raised', open); }
+    if (open) {
+      var box = drawer.querySelector('#note-text');
+      if (view === 'notes' && box) { box.focus(); }
+    }
+  }
+
+  function setView(name) {
+    view = name;
+    Array.prototype.forEach.call(drawer.querySelectorAll('.nd-view'), function (el) {
+      el.classList.toggle('on', el.id === 'view-' + name);
+    });
+    Array.prototype.forEach.call(drawer.querySelectorAll('.nd-tab'), function (el) {
+      var owns = el.getAttribute('data-view') === name ||
+        (name === 'detail' && el.getAttribute('data-view') === 'sessions');
+      el.classList.toggle('on', owns);
+    });
+  }
+
+  function noteCard(n) {
+    return '<div class="note-entry"><div class="note-time">' + esc(n.time || '') + '</div>' +
+      '<div class="org-rich">' + orgToHtml(n.text) + '</div></div>';
+  }
+
+  function renderNotes() {
+    var stream = document.getElementById('note-stream');
+    if (!stream) { return; }
+    if (!LOG.session) {
+      stream.innerHTML = '<div class="dt-empty">No session is being recorded. ' +
+        'Press <b>Session</b> on the dice panel to start one and your notes and ' +
+        'rolls will be written to an org file.</div>';
+      return;
+    }
+    if (!LOG.stream.length) {
+      stream.innerHTML = '<div class="dt-empty">No notes yet in ' +
+        esc(LOG.session.name) + '.</div>';
+      return;
+    }
+    var items = LOG.stream.slice().reverse().map(noteCard).join('');
+    stream.innerHTML = items;
+  }
+
+  // Who played, for the session list and the session view.
+  function castOf(s) {
+    return (s.characters || []).map(function (c) { return c.name || c.id; })
+      .filter(Boolean).join(', ');
+  }
+
+  function rollTable(rolls) {
+    if (!rolls.length) { return '<div class="dt-empty">No rolls recorded.</div>'; }
+    return '<table class="log-table"><thead><tr>' +
+      '<th>Time</th><th>Who</th><th>Roll</th><th>Formula</th><th>Result</th><th>Dice</th>' +
+      '</tr></thead><tbody>' +
+      rolls.map(function (r) {
+        return '<tr><td>' + esc(r.time || '') + '</td><td>' + esc(r.character || '') +
+          '</td><td>' + esc(r.label || '') + '</td><td>' + esc(r.formula || '') +
+          '</td><td class="num">' + esc(r.result || '') + '</td><td class="dim">' +
+          esc(r.dice || '') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  // ---------------------------------------------------------- session list
+  function renderSessionList(list) {
+    var el = document.getElementById('sessions-list');
+    if (!el) { return; }
+    if (!list.length) {
+      el.innerHTML = '<div class="dt-empty">No sessions yet.</div>';
+      return;
+    }
+    el.innerHTML = list.map(function (s) {
+      var here = LOG.session && LOG.session.id === s.id;
+      return '<button type="button" class="sess-row' + (here ? ' here' : '') +
+        '" data-session="' + esc(s.id) + '">' +
+        '<span class="sess-date">' + esc(s.date || '') + '</span>' +
+        '<span class="sess-name">' + esc(s.name || s.id) + '</span>' +
+        '<span class="sess-sum">' + esc(s.summary || 'No summary yet') + '</span>' +
+        '<span class="sess-who">' + esc(castOf(s)) + '</span>' +
+        '<span class="sess-meta">' + s.rolls + ' rolls &middot; ' + s.notes + ' notes</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  function loadSessions() {
+    var el = document.getElementById('sessions-list');
+    if (el) { el.innerHTML = '<div class="dt-empty">Loading&hellip;</div>'; }
+    api('GET', '/dnd/play/sessions').then(function (list) {
+      renderSessionList(list || []);
+    }, function (err) {
+      if (el) { el.innerHTML = '<div class="nd-err">' + esc(err.message || String(err)) + '</div>'; }
+      renderSession();
+    });
+  }
+
+  function openSession(id) {
+    var el = document.getElementById('view-detail');
+    el.innerHTML = '<div class="dt-empty">Loading&hellip;</div>';
+    setView('detail');
+    api('GET', '/dnd/play/session/' + encodeURIComponent(id)).then(renderDetail, function (err) {
+      el.innerHTML = '<div class="nd-err">' + esc(err.message || String(err)) + '</div>';
+    });
+  }
+
+  function renderDetail(d) {
+    var el = document.getElementById('view-detail');
+    var rolls = d.rollLog || [], notes = d.noteLog || [];
+    var here = LOG.session && LOG.session.id === d.id;
+    el.innerHTML =
+      '<div class="nd-toolbar">' +
+        '<button type="button" class="dt-btn" id="detail-back">&larr; Sessions</button>' +
+        '<b class="nd-title">' + esc(d.name || d.id) + '</b>' +
+        '<span class="nd-meta">' + esc(d.date || '') +
+          (castOf(d) ? ' &middot; ' + esc(castOf(d)) : '') +
+          ' &middot; ' + rolls.length + ' rolls &middot; ' + notes.length + ' notes</span>' +
+        '<button type="button" class="dt-btn" id="detail-resume"' + (here ? ' disabled' : '') +
+          '>' + (here ? 'Recording here' : 'Record here') + '</button>' +
+      '</div>' +
+      '<div class="nd-toolbar">' +
+        '<input type="text" id="detail-summary" class="nd-input" placeholder="One line summary" ' +
+          'value="' + esc(d.summary || '') + '">' +
+        '<button type="button" class="dt-btn" id="detail-summary-save">Save summary</button>' +
+      '</div>' +
+      '<div class="nd-detail">' +
+        '<div class="nd-col"><div class="nd-sub">Notes</div>' +
+          (notes.length ? notes.map(noteCard).join('') : '<div class="dt-empty">No notes.</div>') +
+        '</div>' +
+        '<div class="nd-col"><div class="nd-sub">Rolls</div>' + rollTable(rolls) + '</div>' +
+      '</div>';
+
+    el.querySelector('#detail-back').addEventListener('click', function () {
+      setView('sessions');
+      loadSessions();
+    });
+    el.querySelector('#detail-resume').addEventListener('click', function () {
+      resumeSession({ id: d.id, name: d.name, date: d.date, file: d.file,
+                      summary: d.summary, rolls: d.rolls, notes: d.notes });
+      setView('notes');
+    });
+    el.querySelector('#detail-summary-save').addEventListener('click', function () {
+      var text = el.querySelector('#detail-summary').value;
+      api('POST', '/dnd/play/session/' + encodeURIComponent(d.id) + '/summary',
+          { summary: text }).then(function (info) {
+        d.summary = info.summary;
+        if (LOG.session && LOG.session.id === info.id) { LOG.session = info; saveLog(); }
+        renderSession();
+      }, function (err) {
+        LOG.error = err.message || String(err);
+        renderSession();
+      });
+    });
+  }
+
+  // --------------------------------------------------------------- search
+  function runSearch() {
+    var q = drawer.querySelector('#search-q').value;
+    var el = drawer.querySelector('#search-results');
+    if (!String(q).trim()) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="dt-empty">Searching&hellip;</div>';
+    api('GET', '/dnd/play/search?q=' + encodeURIComponent(q)).then(function (hits) {
+      hits = hits || [];
+      if (!hits.length) {
+        el.innerHTML = '<div class="dt-empty">Nothing in any session mentions ' +
+          esc(q) + '.</div>';
+        return;
+      }
+      el.innerHTML = hits.map(function (h) {
+        return '<button type="button" class="hit" data-session="' + esc(h.id) + '">' +
+          '<span class="hit-head">' + esc(h.name || h.id) +
+            '<span class="hit-where">' + esc(h.date || '') +
+            (h.context ? ' &middot; ' + esc(h.context) : '') + '</span></span>' +
+          '<span class="hit-text">' + esc(h.text) + '</span>' +
+          '</button>';
+      }).join('');
+    }, function (err) {
+      el.innerHTML = '<div class="nd-err">' + esc(err.message || String(err)) + '</div>';
+    });
+  }
+
+  // -------------------------------------------------- the session controls
+  function setSessPanel(open) {
+    sessPanel.classList.toggle('open', open);
+    if (open) {
+      renderSession();
+      var name = sessPanel.querySelector('#sess-name');
+      if (name && !LOG.session) { name.focus(); }
+    }
+  }
+
+  function renderSession() {
+    var recording = !!LOG.session;
+    if (notesTab) {
+      notesTab.classList.toggle('rec', recording);
+      var badge = notesTab.querySelector('#notes-tab-badge');
+      if (badge) { badge.textContent = recording ? LOG.session.name : ''; }
+    }
+    if (fab) { fab.classList.toggle('rec', recording); }
+    var status = document.getElementById('nd-status');
+    if (status) {
+      status.innerHTML = recording
+        ? '<span class="rec-dot"></span>' + esc(LOG.session.name) +
+          (pending() ? ' <span class="nd-warn">' + pending() + ' waiting</span>' : '')
+        : '<span class="nd-off">not recording</span>';
+    }
+    if (!sessPanel) { return; }
+    var body = sessPanel.querySelector('#sess-body');
+    var out = '';
+    if (recording) {
+      out += '<div class="sess-live"><span class="rec-dot"></span>' +
+        esc(LOG.session.name) + '</div>' +
+        '<div class="sess-file">' + esc(LOG.session.file || '') + '</div>' +
+        '<div class="sess-counts">' + (LOG.session.rolls || 0) + ' rolls &middot; ' +
+        (LOG.session.notes || 0) + ' notes' +
+        (pending() ? ' &middot; <b>' + pending() + ' waiting to send</b>' : '') + '</div>' +
+        '<div class="dc-actions">' +
+          '<button type="button" class="dt-btn" id="sess-stop">Stop recording</button>' +
+          '<button type="button" class="dt-btn" id="sess-notes">Notes</button>' +
+        '</div>';
+    } else {
+      out += '<label class="sess-label" for="sess-name">Session name</label>' +
+        '<input type="text" id="sess-name" class="nd-input" placeholder="' +
+          esc(defaultSessionName()) + '" autocomplete="off">' +
+        '<label class="sess-label" for="sess-summary">Summary</label>' +
+        '<input type="text" id="sess-summary" class="nd-input" ' +
+          'placeholder="One line, shown in the session list" autocomplete="off">' +
+        '<div class="dc-actions"><button type="button" class="dc-roll" id="sess-start">' +
+          'Start session</button></div>';
+    }
+    if (LOG.needLogin) {
+      out += '<div class="sess-login"><div class="sess-label">Sign in to ' +
+        esc(LOG.url || 'the server') + '</div>' +
+        '<input type="text" id="sess-user" class="nd-input" placeholder="user" ' +
+          'autocomplete="username">' +
+        '<input type="password" id="sess-pass" class="nd-input" placeholder="password" ' +
+          'autocomplete="current-password">' +
+        '<div class="dc-actions"><button type="button" class="dt-btn" id="sess-login">' +
+          'Sign in</button></div></div>';
+    }
+    out += '<details class="sess-server"' + (LOG.url ? '' : ' open') + '>' +
+      '<summary>Server</summary>' +
+      '<input type="text" id="sess-url" class="nd-input" placeholder="http://localhost:8010" ' +
+        'value="' + esc(LOG.url || '') + '"></details>';
+    if (LOG.error) { out += '<div class="nd-err">' + esc(LOG.error) + '</div>'; }
+    body.innerHTML = out;
+  }
+
+  function defaultSessionName() {
+    var d = new Date();
+    return 'Session ' + d.toDateString().slice(0, 10);
+  }
+
+  function sessionAction(e) {
+    var id = e.target.id || (e.target.closest('button') || {}).id;
+    if (!id) { return; }
+    if (id === 'sess-start') {
+      LOG.error = '';
+      var name = sessPanel.querySelector('#sess-name').value;
+      var summary = sessPanel.querySelector('#sess-summary').value;
+      startSession(name, summary).then(function () {
+        setSessPanel(false);
+        setDrawer(true);
+        setView('notes');
+      }, function (err) {
+        LOG.error = err.message || String(err);
+        renderSession();
+      });
+      return;
+    }
+    if (id === 'sess-stop') { stopSession(); return; }
+    if (id === 'sess-notes') { setSessPanel(false); setDrawer(true); setView('notes'); return; }
+    if (id === 'sess-login') {
+      var user = sessPanel.querySelector('#sess-user').value;
+      var pass = sessPanel.querySelector('#sess-pass').value;
+      LOG.error = '';
+      signIn(user, pass).then(function () {
+        renderSession();
+        flush();
+      }, function (err) {
+        LOG.error = err.message || String(err);
+        renderSession();
+      });
+    }
+  }
+
+  function buildSessionPanel() {
+    sessPanel = document.createElement('aside');
+    sessPanel.id = 'dnd-sess';
+    sessPanel.setAttribute('aria-label', 'Play session');
+    sessPanel.innerHTML =
+      '<div class="dc-head"><h3>Play Session</h3>' +
+        '<button type="button" class="dt-btn dt-x" id="sess-close" ' +
+        'aria-label="Close session panel">&times;</button></div>' +
+      '<div id="sess-body"></div>' +
+      '<div class="dc-hint">Rolls and notes are appended to a dated org file ' +
+        'in your session folder.</div>';
+    dock.insertBefore(sessPanel, dock.firstChild);
+    sessPanel.querySelector('#sess-close').addEventListener('click', function () {
+      setSessPanel(false);
+    });
+    sessPanel.addEventListener('click', sessionAction);
+    sessPanel.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') { return; }
+      if (e.target.id === 'sess-name' || e.target.id === 'sess-summary') {
+        e.preventDefault();
+        sessionAction({ target: { id: 'sess-start' } });
+      } else if (e.target.id === 'sess-user' || e.target.id === 'sess-pass') {
+        e.preventDefault();
+        sessionAction({ target: { id: 'sess-login' } });
+      }
+    });
+    sessPanel.addEventListener('change', function (e) {
+      if (e.target.id !== 'sess-url') { return; }
+      LOG.url = e.target.value.trim();
+      LOG.error = '';
+      saveLog();
+    });
+  }
+
+  function buildNotesDrawer() {
+    notesTab = document.createElement('button');
+    notesTab.id = 'notes-tab';
+    notesTab.type = 'button';
+    notesTab.setAttribute('aria-expanded', 'false');
+    notesTab.innerHTML = QUILL_ICON + '<span>Session Notes</span>' +
+      '<em id="notes-tab-badge"></em>';
+    document.body.appendChild(notesTab);
+
+    drawer = document.createElement('aside');
+    drawer.id = 'notes-drawer';
+    drawer.setAttribute('aria-label', 'Session notes');
+    drawer.innerHTML =
+      '<div class="nd-head">' +
+        '<h2>' + QUILL_ICON + 'Session</h2>' +
+        '<div class="nd-tabs">' +
+          '<button type="button" class="nd-tab on" data-view="notes">Notes</button>' +
+          '<button type="button" class="nd-tab" data-view="sessions">Sessions</button>' +
+          '<button type="button" class="nd-tab" data-view="search">Search</button>' +
+        '</div>' +
+        '<span class="nd-status" id="nd-status"></span>' +
+        '<button type="button" class="dt-btn dt-x" id="notes-close" ' +
+          'aria-label="Hide session notes">&times;</button>' +
+      '</div>' +
+      '<div class="nd-body">' +
+        '<div class="nd-view on" id="view-notes"><div class="nd-split">' +
+          '<div class="nd-compose">' +
+            '<textarea id="note-text" spellcheck="true" ' +
+              'placeholder="What just happened?&#10;&#10;Org markup works here: * a heading, ' +
+              '- a list, *bold*, /italic/, =code= and [[links][links]]."></textarea>' +
+            '<div class="nd-compose-foot">' +
+              '<span class="nd-hint">Ctrl + Enter adds the note</span>' +
+              '<button type="button" class="dt-btn" id="note-preview-btn">Preview</button>' +
+              '<button type="button" class="dc-roll" id="note-save">Add note</button>' +
+            '</div>' +
+            '<div class="org-rich note-preview" id="note-preview" hidden></div>' +
+          '</div>' +
+          '<div class="nd-stream" id="note-stream"></div>' +
+        '</div></div>' +
+        '<div class="nd-view" id="view-sessions">' +
+          '<div class="nd-toolbar">' +
+            '<button type="button" class="dt-btn" id="sessions-refresh">Refresh</button>' +
+            '<span class="nd-meta">Every session you have played, newest first. ' +
+              'Pick one to read its notes and rolls.</span>' +
+          '</div>' +
+          '<div id="sessions-list"></div>' +
+        '</div>' +
+        '<div class="nd-view" id="view-search">' +
+          '<div class="nd-toolbar">' +
+            '<input type="search" id="search-q" class="nd-input" ' +
+              'placeholder="Search every session: a name, a place, a spell...">' +
+            '<button type="button" class="dt-btn" id="search-go">Search</button>' +
+          '</div>' +
+          '<div id="search-results"></div>' +
+        '</div>' +
+        '<div class="nd-view" id="view-detail"></div>' +
+      '</div>';
+    document.body.appendChild(drawer);
+
+    notesTab.addEventListener('click', function () {
+      setDrawer(!drawer.classList.contains('open'));
+    });
+    drawer.querySelector('#notes-close').addEventListener('click', function () {
+      setDrawer(false);
+    });
+    drawer.querySelector('.nd-tabs').addEventListener('click', function (e) {
+      var b = e.target.closest('.nd-tab');
+      if (!b) { return; }
+      var name = b.getAttribute('data-view');
+      setView(name);
+      if (name === 'sessions') { loadSessions(); }
+    });
+
+    var box = drawer.querySelector('#note-text');
+    var preview = drawer.querySelector('#note-preview');
+    drawer.querySelector('#note-save').addEventListener('click', function () {
+      if (!LOG.session) {
+        setSessPanel(true);
+        return;
+      }
+      logNote(box.value);
+      box.value = '';
+      preview.hidden = true;
+      box.focus();
+    });
+    drawer.querySelector('#note-preview-btn').addEventListener('click', function () {
+      preview.hidden = !preview.hidden;
+      if (!preview.hidden) { preview.innerHTML = orgToHtml(box.value); }
+    });
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        drawer.querySelector('#note-save').click();
+      }
+    });
+    box.addEventListener('input', function () {
+      if (!preview.hidden) { preview.innerHTML = orgToHtml(box.value); }
+    });
+
+    drawer.querySelector('#sessions-refresh').addEventListener('click', loadSessions);
+    drawer.querySelector('#view-sessions').addEventListener('click', function (e) {
+      var row = e.target.closest('[data-session]');
+      if (row) { openSession(row.getAttribute('data-session')); }
+    });
+    drawer.querySelector('#search-go').addEventListener('click', runSearch);
+    drawer.querySelector('#search-q').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
+    });
+    drawer.querySelector('#search-results').addEventListener('click', function (e) {
+      var row = e.target.closest('[data-session]');
+      if (row) { openSession(row.getAttribute('data-session')); }
+    });
+  }
+
+  // The sheet is normally opened straight off disk, so the server it was
+  // exported from is baked in; anything else is remembered from last time.
+  function buildSessionLog() {
+    var cfg = document.getElementById('dnd-log-config');
+    if (cfg) {
+      LOG.url = cfg.getAttribute('data-server') || '';
+      CHARACTER = cfg.getAttribute('data-character') || '';
+      CHARACTER_ID = cfg.getAttribute('data-character-id') || '';
+    }
+    if (!LOG.url && location.protocol.indexOf('http') === 0) { LOG.url = location.origin; }
+    loadLog();
+    buildSessionPanel();
+    buildNotesDrawer();
+    renderSession();
+    renderNotes();
+    if (LOG.session) {
+      scheduleRenew();
+      loadStream(LOG.session.id);
+      flush();
+    }
+    // Anything the server could not take is retried quietly in the background.
+    setInterval(function () { if (pending()) { flush(); } }, 20000);
+  }
+
   function init() {
     var canvas = document.createElement('canvas');
     canvas.id = 'dice-canvas';
@@ -2302,6 +3446,7 @@ footer.sheet-foot {
     board = new DiceBoard(canvas);
     buildTray();
     buildCustomDock();
+    buildSessionLog();
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-kind]'), prepare);
     Array.prototype.forEach.call(

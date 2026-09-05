@@ -610,6 +610,10 @@ type Money struct {
 // Character is the persistent state of a player character. This is exactly
 // what round trips through the org file.
 type Character struct {
+	// Id is the stable identity of this character, written into the sheet as
+	// DND_ID and stamped onto every play session the character appears in so
+	// that a query can gather everything about them.
+	Id      string `yaml:"id" json:"id"`
 	Name    string `yaml:"name" json:"name"`
 	Player  string `yaml:"player" json:"player"`
 	Ruleset string `yaml:"ruleset" json:"ruleset"`
@@ -800,6 +804,7 @@ type SpellEntry struct {
 type Sheet struct {
 	Character *Character `json:"character"`
 
+	Id           string `json:"id"`
 	Name         string `json:"name"`
 	Player       string `json:"player"`
 	RaceName     string `json:"raceName"`

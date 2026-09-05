@@ -68,6 +68,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	}
 	level := c.TotalLevel()
 
+	s.Id = CharacterId(c)
 	s.Name = c.Name
 	s.Player = c.Player
 	s.Alignment = c.Alignment

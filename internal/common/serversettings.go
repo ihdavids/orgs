@@ -26,10 +26,10 @@ type ServerSettings struct {
 		EDOC */
 	//OrgJWS  string `yaml:"orgJWS"`
 	//OrgJWS  *rsa.PrivateKey `yaml:"orgJWS"`
-	OrgJWS       string `yaml:"orgJWS"`
-	OrgJWE       string `yaml:"orgJWE"`
-	OrgSalt      string `yaml:"orgSalt"`
-	TokenExpiry  string `yaml:"tokenExpiry"`
+	OrgJWS      string `yaml:"orgJWS"`
+	OrgJWE      string `yaml:"orgJWE"`
+	OrgSalt     string `yaml:"orgSalt"`
+	TokenExpiry string `yaml:"tokenExpiry"`
 
 	/* SDOC: Settings
 	* Orgs Keystore
@@ -97,7 +97,25 @@ type ServerSettings struct {
 		=./templates/dnd= and =~/.orgs/dnd=.
 		EDOC */
 	DndPaths []string `yaml:"dndPaths"`
-	DayPageTemplate   string `yaml:"dayPageTemplate"`
+	/* SDOC: Settings
+	* Dnd Session Path
+		Where play session logs are written. Starting a session from a
+		character sheet creates a dated org file in this folder and every roll
+		you make and note you take is appended to it.
+
+		#+BEGIN_SRC yaml
+	  dndSessionPath: "/Users/me/dev/gtd/dndsessions"
+	  dndSessionTemplate: "dndsession.tpl"
+		#+END_SRC
+
+		A relative path is taken relative to your first orgDir, and when the
+		setting is left out entirely the folder is =<orgDir>/dndsessions=. Keep
+		it inside an orgDir so that the sessions land in your org database and
+		can be searched, agenda'd and archived like everything else.
+		EDOC */
+	DndSessionPath     string `yaml:"dndSessionPath"`
+	DndSessionTemplate string `yaml:"dndSessionTemplate"`
+	DayPageTemplate    string `yaml:"dayPageTemplate"`
 	/* SDOC: Settings
 	* Day Page
 		The day page system has a number of settings that can be used to control
@@ -217,6 +235,8 @@ func (self *ServerSettings) Init() {
 	self.AllowHttps = true
 	self.TemplatePath = "./templates"
 	self.DayPageTemplate = "daypage.tpl"
+	self.DndSessionTemplate = "dndsession.tpl"
+	self.DndSessionPath = "dndsessions"
 	self.DayPagePath = "./daypages"
 	self.DayPageMode = "week"
 	self.DayPageModeWeekDay = "Monday"

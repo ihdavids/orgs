@@ -110,6 +110,15 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/save", PostDndSave).Methods("POST")
 	api.HandleFunc("/dnd/refresh", PostDndRefresh).Methods("POST")
 
+	// Dungeons & Dragons play session logs
+	api.HandleFunc("/dnd/play/sessions", RequestDndPlaySessions).Methods("GET")
+	api.HandleFunc("/dnd/play/search", RequestDndPlaySearch).Methods("GET")
+	api.HandleFunc("/dnd/play/session", PostDndPlaySession).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}", RequestDndPlaySession).Methods("GET")
+	api.HandleFunc("/dnd/play/session/{id}/roll", PostDndPlayRoll).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/note", PostDndPlayNote).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/summary", PostDndPlaySummary).Methods("POST")
+
 	// Per-user extensions: stored queries
 	api.HandleFunc("/ext/queries", RequestStoredQueries).Methods("GET")
 	api.HandleFunc("/ext/query", RequestStoredQuery).Methods("GET")

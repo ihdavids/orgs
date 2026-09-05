@@ -73,12 +73,14 @@
 
   #+BEGIN_SRC org
   ,#+TITLE: Lyra Silverleaf
+  ,#+DND_ID: lyra-silverleaf-4c1f2a
   ,#+DND_RULESET: srd
   ,#+LATEX_CLASS: dndcharacter
   ,#+LATEX_TEMPLATE: dnd_character.tpl
 
   ,* Lyra Silverleaf                                          :dnd:character:
   ,:PROPERTIES:
+  ,:DND_ID:         lyra-silverleaf-4c1f2a
   ,:DND_RACE:       elf
   ,:DND_SUBRACE:    high-elf
   ,:DND_CLASSES:    wizard:evocation:3
@@ -89,6 +91,18 @@
 
   =DND_CLASSES= is a comma separated list of =class:subclass:level= entries,
   which is also how multiclassing is stored.
+
+  =DND_ID= is the character's identity. Every play session the character
+  appears in gets a heading carrying the same id, so one query gathers the
+  sheet and every night they played:
+
+  #+BEGIN_SRC text
+  MatchProperty("DND_ID", "lyra-silverleaf-4c1f2a")
+  #+END_SRC
+
+  A sheet written before ids existed does not need editing: the id is derived
+  from the character's name until it is written down, so it is the same id
+  either way, and the next =orgs dnd refresh= stores it.
 
   Because nothing derived is stored, levelling up is an edit and a refresh:
 
@@ -118,6 +132,56 @@
   {% for s in sheet.skills %}{% if s.proficient %}*{% endif %} {{ s.name }} {{ s.mod }}
   {% endfor %}
   #+END_SRC
+
+* Recording a session
+
+  The html sheet can write what happens at the table into an org file. The
+  =Session= button beside =Roll= starts a session and the =Sessions= button
+  next to it lists the ones you have played; the drawer along the bottom of
+  the page takes notes, reads them back formatted, and searches every session
+  you have ever recorded.
+
+  #+BEGIN_SRC yaml
+  server:
+    dndSessionPath: "/Users/me/dev/gtd/dndsessions"   # relative paths hang off orgDir
+    dndSessionTemplate: "dndsession.tpl"
+  #+END_SRC
+
+  A session is an ordinary org file:
+
+  #+BEGIN_SRC org
+  ,#+TITLE: Goblin Ambush
+  ,#+DATE: [2025-09-05 Fri]
+  ,#+SUMMARY: Ambushed on the road to Phandalin, Sildar is missing.
+  ,#+CHARACTERS: Lyra Silverleaf
+  ,#+FILETAGS: :dnd:session:
+
+  ,* Characters
+  ,** Lyra Silverleaf
+  ,   :PROPERTIES:
+  ,   :DND_ID:        lyra-silverleaf-4c1f2a
+  ,   :DND_CHARACTER: Lyra Silverleaf
+  ,   :END:
+
+  ,* Notes
+  ,** 19:32
+     The wagon tracks leave the road here.
+
+  ,* Rolls
+  ,#+NAME: rolls
+  | Time  | Character | Roll       | Formula | Result | Dice   | Notes          |
+  |-------+-----------+------------+---------+--------+--------+----------------|
+  | 19:33 | Lyra      | Perception | d20 +5  | 18     | d20 13 | adv 22, dis 18 |
+  #+END_SRC
+
+  Notes are org markup and are stored as you typed them; headings inside a
+  note are pushed down so they nest under the timestamped entry. Only the
+  =* Notes= heading, the table named =rolls= and the =#+SUMMARY:= keyword are
+  load bearing, so the rest of the file is yours to reorganise.
+
+  Rolls and notes made while the server is unreachable are queued in the page
+  and sent with the next one, and the sheet renews its login token while you
+  play, so a laptop that sleeps mid dungeon loses nothing.
 
 * Browsing the rules
 
@@ -263,6 +327,18 @@
   | =/dnd/refresh=       | POST   | Recompute a sheet after hand editing        |
   | =/dnd/sheet=         | GET    | The fully computed sheet as JSON            |
   | =/dnd/characters=    | GET    | Every character sheet the server knows      |
+
+  And the play session log:
+
+  | Endpoint                            | Method | Purpose                          |
+  |-------------------------------------+--------+----------------------------------|
+  | =/dnd/play/session=                 | POST   | Start or reopen a session        |
+  | =/dnd/play/sessions=                | GET    | Every session, newest first      |
+  | =/dnd/play/session/{id}=            | GET    | One session: its rolls and notes |
+  | =/dnd/play/session/{id}/roll=       | POST   | Append rolls to the roll table   |
+  | =/dnd/play/session/{id}/note=       | POST   | Append notes                     |
+  | =/dnd/play/session/{id}/summary=    | POST   | Set the one line summary         |
+  | =/dnd/play/search=                  | GET    | Search every session log         |
 
   A prompt carries =kind= (=select=, =multiselect=, =text=, =longtext=,
   =number=, =abilities=, =fields= or =done=), the valid =options=, =advice=

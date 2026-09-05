@@ -11,18 +11,20 @@ package dnd
 
   #+BEGIN_SRC org
   ,#+TITLE: Lyra Silverleaf
+  ,#+DND_ID: lyra-silverleaf-4c1f2a
   ,#+DND_RULESET: srd
   ,#+LATEX_CLASS: dndcharacter
   ,#+LATEX_TEMPLATE: dnd_character.tpl
 
   ,* Lyra Silverleaf                                          :dnd:character:
-  ,:PROPERTIES:
-  ,:DND_RACE:       elf
-  ,:DND_SUBRACE:    high-elf
-  ,:DND_CLASSES:    wizard:evocation:3
-  ,:DND_BACKGROUND: sage
-  ,:DND_STR:        8
-  ,:END:
+  ,   :PROPERTIES:
+  ,   :DND_ID:         lyra-silverleaf-4c1f2a
+  ,   :DND_RACE:       elf
+  ,   :DND_SUBRACE:    high-elf
+  ,   :DND_CLASSES:    wizard:evocation:3
+  ,   :DND_BACKGROUND: sage
+  ,   :DND_STR:        8
+  ,   :END:
   #+END_SRC
 
   The =DND_CLASSES= property is a comma separated list of
@@ -30,7 +32,9 @@ package dnd
 EDOC */
 
 import (
+	"crypto/sha1"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -38,6 +42,7 @@ import (
 
 // Property names used in the character property drawer.
 const (
+	PropId         = "DND_ID"
 	PropName       = "DND_NAME"
 	PropPlayer     = "DND_PLAYER"
 	PropRuleset    = "DND_RULESET"
@@ -79,6 +84,7 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	if c.Player != "" {
 		w("#+AUTHOR: %s\n", c.Player)
 	}
+	w("#+DND_ID: %s\n", CharacterId(c))
 	w("#+DND_RULESET: %s\n", orDefault(c.Ruleset, DefaultRuleset))
 	w("#+LATEX_CLASS: dndcharacter\n")
 	w("#+LATEX_TEMPLATE: dnd_character.tpl\n")
@@ -89,8 +95,12 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 
 	// ---- identity ---------------------------------------------------------
 	w("* %s\n", title)
-	w(":PROPERTIES:\n")
+	// The drawer has to be indented: go-org only attaches a property drawer to
+	// its headline when it is, and an unattached drawer is invisible to every
+	// org query, which is the whole point of storing DND_ID here.
+	w("   :PROPERTIES:\n")
 	props := [][2]string{
+		{PropId, CharacterId(c)},
 		{PropName, c.Name},
 		{PropPlayer, c.Player},
 		{PropRuleset, orDefault(c.Ruleset, DefaultRuleset)},
@@ -138,9 +148,9 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		}
 	}
 	for _, p := range props {
-		w(":%s:%s %s\n", p[0], strings.Repeat(" ", width-len(p[0])), p[1])
+		w("   :%s:%s %s\n", p[0], strings.Repeat(" ", width-len(p[0])), p[1])
 	}
-	w(":END:\n\n")
+	w("   :END:\n\n")
 
 	w("%s, %s. %s. %s.\n\n", s.RaceName, s.ClassLine, orDefault(s.Background, "No background"),
 		orDefault(s.Alignment, "Unaligned"))
@@ -339,6 +349,41 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	return b.String()
 }
 
+// CharacterId reports the character's id, deriving a stable one from the name
+// when the sheet has never been given one. Deriving rather than generating
+// matters: a sheet written before ids existed keeps the same id every time it
+// is read, so the sessions it already appears in still line up. Once the sheet
+// is next written the id is stored in DND_ID and a later rename cannot move it.
+func CharacterId(c *Character) string {
+	if c == nil {
+		return ""
+	}
+	if strings.TrimSpace(c.Id) != "" {
+		return strings.TrimSpace(c.Id)
+	}
+	return DeriveCharacterId(c.Name)
+}
+
+// DeriveCharacterId builds a readable, stable id from a character name.
+func DeriveCharacterId(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		name = "unnamed adventurer"
+	}
+	sum := sha1.Sum([]byte(strings.ToLower(name)))
+	slug := idStrip.ReplaceAllString(strings.ToLower(name), "-")
+	slug = strings.Trim(idStrip.ReplaceAllString(slug, "-"), "-")
+	if slug == "" {
+		slug = "character"
+	}
+	if len(slug) > 32 {
+		slug = strings.Trim(slug[:32], "-")
+	}
+	return fmt.Sprintf("%s-%x", slug, sum[:3])
+}
+
+var idStrip = regexp.MustCompile(`[^a-z0-9]+`)
+
 func writeSection(b *strings.Builder, heading, text string) {
 	fmt.Fprintf(b, "%s\n", heading)
 	if strings.TrimSpace(text) != "" {
@@ -402,6 +447,10 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 		line := strings.TrimRight(raw, " \t\r")
 		trimmed := strings.TrimSpace(line)
 
+		if strings.HasPrefix(trimmed, "#+DND_ID:") {
+			c.Id = strings.TrimSpace(strings.TrimPrefix(trimmed, "#+DND_ID:"))
+			continue
+		}
 		if strings.HasPrefix(trimmed, "#+DND_RULESET:") {
 			c.Ruleset = strings.TrimSpace(strings.TrimPrefix(trimmed, "#+DND_RULESET:"))
 			continue
@@ -623,6 +672,10 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 
 func applyProperty(c *Character, key, val string) {
 	switch key {
+	case PropId:
+		if val != "" {
+			c.Id = val
+		}
 	case PropName:
 		if val != "" {
 			c.Name = val

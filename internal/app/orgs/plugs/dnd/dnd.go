@@ -76,6 +76,46 @@ package dnd
   dependencies, so a sheet saved to disk keeps working, and printing hides
   the tray and the dice.
 
+** Recording a session
+
+  The dice panel has a =Session= button beside =Roll= that starts a play
+  session, and a =Sessions= button beside it that lists every session you
+  have played. While a session is running every roll you make is appended to
+  a roll table in a dated org file, and the notes drawer along the bottom of
+  the page writes what you type into the same file.
+
+  The session folder is =dndSessionPath= in your orgs.yaml, relative to your
+  first orgDir unless you give an absolute path:
+
+  #+BEGIN_SRC yaml
+  server:
+    dndSessionPath: "/Users/me/dev/gtd/dndsessions"
+    dndSessionTemplate: "dndsession.tpl"
+  #+END_SRC
+
+  New session files are expanded from =dndsession.tpl=. Keep the =* Notes=
+  heading and the table named =rolls= in it - those are what the sheet
+  appends to - and the rest of the file is yours.
+
+  The notes drawer takes org markup and shows it back to you formatted:
+  headings, lists, tables, quotes, source blocks and the usual emphasis all
+  survive the round trip into the file. Headings you type are pushed down a
+  couple of levels so that they nest under the timestamped entry rather than
+  breaking out of the notes section.
+
+  The drawer has three tabs. =Notes= is the composer and the running note
+  stream. =Sessions= lists every session with its one line summary, and
+  picking one shows the notes and rolls from that night. =Search= greps every
+  session file you have, which is how you find out what the innkeeper's name
+  was three months ago.
+
+  The sheet talks to the server it was exported from, remembered in the page
+  and overridable under =Server= in the session panel. If the server wants
+  authentication the panel asks for a user and password, keeps the token in
+  local storage and renews it while you play. Rolls and notes made while the
+  server is unreachable are queued on disk and go out with the next one, so a
+  laptop that sleeps mid dungeon loses nothing.
+
 EDOC */
 
 import (
@@ -259,6 +299,17 @@ func (self *SheetExporter) context(sheet *dnd.Sheet, props map[string]string) ma
 	}
 	if _, ok := ctx["fontfamily"]; !ok {
 		ctx["fontfamily"] = "Cinzel"
+	}
+	// The html sheet talks back to the server to log play sessions. Point it
+	// at the server that exported it unless the config says otherwise, since
+	// the sheet is usually opened straight off disk and has no origin of its
+	// own to fall back on.
+	if v, ok := ctx["serverUrl"]; !ok || fmt.Sprintf("%v", v) == "" {
+		url := ""
+		if self.pm != nil && self.pm.Port > 0 {
+			url = fmt.Sprintf("http://localhost:%d", self.pm.Port)
+		}
+		ctx["serverUrl"] = url
 	}
 	ctx["title"] = sheet.Name
 	return ctx
