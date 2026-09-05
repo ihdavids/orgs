@@ -97,42 +97,54 @@
   \begin{tikzpicture}\node[panel] (bx) {\usebox{\dndbuf}};\end{tikzpicture}\par\vspace{5pt}%
 }
 
-% \abilitytile{name}{mod}{score}
+% Tiles are laid out by hand rather than with a tabular: the label hangs from
+% the top edge, the sub-caption sits on the bottom edge, and the value is
+% centred in what is left between them (a strut on the sub keeps that centre
+% in the same place whether or not the tile has a sub-caption).
+\newsavebox{\dndlabbuf}
+\newsavebox{\dndvalbuf}
+\newsavebox{\dndsubbuf}
+\newlength{\dndtilew}
+\newlength{\dndtileh}\setlength{\dndtileh}{42pt}
+\newlength{\dndabilityh}\setlength{\dndabilityh}{38pt}
+
+% \dndtile{node style}{min width}{label}{value}{sub}
+\newcommand{\dndtile}[5]{%
+  \sbox{\dndlabbuf}{\scriptsize\dndhead{#3}}%
+  \sbox{\dndvalbuf}{\fontsize{14}{14}\selectfont\bfseries #4}%
+  \sbox{\dndsubbuf}{\tiny\color{dndmuted}\strut #5}%
+  \setlength{\dndtilew}{\wd\dndlabbuf}%
+  \ifdim\wd\dndvalbuf>\dndtilew\setlength{\dndtilew}{\wd\dndvalbuf}\fi
+  \ifdim\wd\dndsubbuf>\dndtilew\setlength{\dndtilew}{\wd\dndsubbuf}\fi
+  \addtolength{\dndtilew}{10pt}%
+  \ifdim\dndtilew<\dimexpr#2\relax\setlength{\dndtilew}{\dimexpr#2\relax}\fi
+  \begin{tikzpicture}
+    \node[#1, inner sep=0pt, minimum width=\dndtilew, minimum height=\dndtileh] (t) {};
+    \node[inner sep=0pt, anchor=north] at ([yshift=-3.5pt]t.north) {\usebox{\dndlabbuf}};
+    \node[inner sep=0pt, anchor=south] at ([yshift=2.5pt]t.south) {\usebox{\dndsubbuf}};
+    \node[inner sep=0pt] at ([yshift=-1pt]t.center) {\usebox{\dndvalbuf}};
+  \end{tikzpicture}%
+}
+
+% \abilitytile{name}{mod}{score} - the score circle straddles the bottom edge,
+% so the modifier is centred between the label and the top of that circle.
 \newcommand{\abilitytile}[3]{%
   \begin{tikzpicture}
-    \node[tile, minimum width=1.0in, minimum height=0.5in] (a)
-      {\begin{tabular}{c}
-         {\scriptsize\dndhead{#1}}\\[-4pt]
-         {\fontsize{17}{17}\selectfont\bfseries #2}\\[1pt]
-       \end{tabular}};
+    \node[tile, inner sep=0pt, minimum width=1.0in, minimum height=\dndabilityh] (a) {};
+    \node[inner sep=0pt, anchor=north] at ([yshift=-3.5pt]a.north)
+      {\scriptsize\dndhead{#1}};
+    \node[inner sep=0pt] at ([yshift=-1.5pt]a.center)
+      {\fontsize{16}{16}\selectfont\bfseries #2};
     \node[draw=dndline, line width=0.8pt, circle, fill=dndpanel, inner sep=1pt,
           minimum size=14pt, font=\scriptsize] at (a.south) {#3};
   \end{tikzpicture}%
 }
 
 % \stattile{width}{label}{value}{sub}
-\newcommand{\stattile}[4]{%
-  \begin{tikzpicture}
-    \node[tile, minimum width=#1, minimum height=0.46in]
-      {\begin{tabular}{c}
-         {\scriptsize\dndhead{#2}}\\[-4pt]
-         {\fontsize{15}{15}\selectfont\bfseries #3}\\[-3pt]
-         {\tiny\color{dndmuted} #4}
-       \end{tabular}};
-  \end{tikzpicture}%
-}
+\newcommand{\stattile}[4]{\dndtile{tile}{#1}{#2}{#3}{#4}}
 
 % \shieldtileX{width}{label}{value}{sub} - the armour class tile
-\newcommand{\shieldtileX}[4]{%
-  \begin{tikzpicture}
-    \node[shieldtile, minimum width=#1, minimum height=0.46in]
-      {\begin{tabular}{c}
-         {\scriptsize\dndhead{#2}}\\[-4pt]
-         {\fontsize{15}{15}\selectfont\bfseries #3}\\[-3pt]
-         {\tiny\color{dndmuted} #4}
-       \end{tabular}};
-  \end{tikzpicture}%
-}
+\newcommand{\shieldtileX}[4]{\dndtile{shieldtile}{#1}{#2}{#3}{#4}}
 
 % proficiency pips
 \newcommand{\pipon}{\tikz[baseline=-0.5ex]\node[draw=dndink, line width=0.6pt, circle,
