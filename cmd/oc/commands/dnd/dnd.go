@@ -27,6 +27,29 @@ package dnd
   that suit your class with a star, and lets you ask for the full rules text,
   roll the choice randomly, or step back to change your mind.
 
+  On a wide enough terminal the chooser is drawn in two panes: the list on the
+  left, and the full rules text of whatever the cursor is on - the spell, item,
+  feat or feature - on the right, so you can read before you commit. When a
+  question takes several answers the header keeps a running count of what you
+  have ticked ("selected 1 of 2") along with their names, and if you confirm the
+  wrong number the list comes back with your picks still selected so you only
+  have to correct them.
+
+  Long lists are filtered by typing. The match is fuzzy on the name of an
+  option, so =eldbl= finds Eldritch Blast, and a plain word also matches the
+  summary beside it, so =fire= finds the spells that only mention it. The
+  filter is editable: backspace takes a character off and the list widens
+  again, =ctrl+w= takes a word, and escape clears it. The count beside the
+  question says how much of the list you are looking at.
+
+  The appearance questions - age, height, weight, eyes, skin and hair - come
+  with suggestions drawn from your race and your class, so a hill dwarf druid
+  is offered warm hazel eyes and leaf tangled hair, and a tiefling warlock is
+  offered eyes that are a solid orb of colour. You can still type your own, but
+  it has to make sense: heights and weights are read in either imperial or
+  metric and have to land somewhere your race could plausibly be, and a colour
+  has to be a word rather than a number.
+
 EDOC */
 
 import (
@@ -50,6 +73,9 @@ const (
 	entryCustom  = "  ···  write my own"
 	entrySkip    = "  ···  skip this"
 	entryQuit    = "  ···  quit without saving"
+	entryAgain   = "  ···  let me pick again"
+	entryFill    = "  ···  fill them in"
+	entryBlank   = "  ···  leave this blank"
 )
 
 // simple ansi styling, kept minimal so it degrades gracefully
@@ -60,10 +86,16 @@ const (
 	cRed   = "\033[31m"
 	cGold  = "\033[33m"
 	cCyan  = "\033[36m"
+	cGreen = "\033[32m"
 )
 
 type Dnd struct {
 	fset *flag.FlagSet
+
+	// lastPicks remembers what was chosen for each step, so that a rejected
+	// answer (or a wrong count) comes back with those choices still selected
+	// instead of an empty list.
+	lastPicks map[string][]string
 
 	Ruleset string
 	Name    string
@@ -225,6 +257,7 @@ func (self *Dnd) runNew(core *commands.Core) {
 		}
 		ans.Session = prompt.Session
 		ans.Step = prompt.Step
+		self.remember(prompt.Step, ans)
 		next, err := post[dnd.Answer, dnd.Prompt](core, "dnd/answer", ans)
 		if err != nil {
 			fmt.Printf("%sserver error: %s%s\n", cRed, err, cReset)
@@ -294,6 +327,26 @@ func (self *Dnd) runNew(core *commands.Core) {
 	if self.Open {
 		core.LaunchEditor(res.Filename, 0)
 	}
+}
+
+// remember stores the choices made for a step so that they can be pre-selected
+// if we end up asking the same question again.
+func (self *Dnd) remember(step string, a *dnd.Answer) {
+	if step == "" || a == nil || len(a.Values) == 0 {
+		return
+	}
+	if self.lastPicks == nil {
+		self.lastPicks = map[string][]string{}
+	}
+	self.lastPicks[step] = a.Values
+}
+
+// previous is what was chosen for this step last time round, if anything.
+func (self *Dnd) previous(p *dnd.Prompt) []string {
+	if len(p.Defaults) > 0 {
+		return p.Defaults
+	}
+	return self.lastPicks[p.Step]
 }
 
 // ask turns one prompt into an answer, returning quit=true if the player bails.
@@ -422,14 +475,16 @@ func (self *Dnd) askSelect(p *dnd.Prompt) (*dnd.Answer, bool) {
 		opts, byLabel := self.menu(p)
 		choice := ""
 		def := ""
+		prev := self.previous(p)
 		for _, o := range p.Options {
-			if o.Id == p.Default {
+			if o.Id == p.Default || (p.Default == "" && len(prev) > 0 && o.Id == prev[0]) {
 				def = label(o)
 			}
 		}
-		err := survey.AskOne(&survey.Select{
-			Message: p.Question, Options: opts, Default: def, Help: p.Help, PageSize: 14,
-		}, &choice, nil)
+		err := paneAsk(&survey.Select{
+			Message: p.Question, Options: opts, Default: def, Help: p.Help,
+			PageSize: panePageSize(),
+		}, &choice, &paneCtx{byLabel: byLabel})
 		if err != nil {
 			return nil, true
 		}
@@ -452,23 +507,31 @@ func (self *Dnd) askSelect(p *dnd.Prompt) (*dnd.Answer, bool) {
 }
 
 func (self *Dnd) askMulti(p *dnd.Prompt) (*dnd.Answer, bool) {
-	want := p.Min
-	if want <= 0 {
-		want = p.Max
+	wantMin, wantMax := p.Min, p.Max
+	if wantMin <= 0 && wantMax > 0 {
+		wantMin = wantMax
+	}
+	opts, byLabel := multiLabels(p.Options)
+	// whatever was picked last time (or pre-selected by the server) starts ticked
+	prev := self.previous(p)
+	picked := []string{}
+	for _, l := range opts {
+		if hasStr(prev, byLabel[l].Id) {
+			picked = append(picked, l)
+		}
 	}
 	for {
-		opts, byLabel := multiLabels(p.Options)
-		picked := []string{}
-		msg := p.Question
-		if want > 0 {
-			msg = fmt.Sprintf("%s (pick %d, space to select, enter to confirm)", p.Question, want)
-		}
-		if err := survey.AskOne(&survey.MultiSelect{
-			Message: msg, Options: opts, Help: p.Help, PageSize: 16,
-		}, &picked, nil); err != nil {
+		sel := []string{}
+		// Default carries the previous attempt back into the list, so a wrong
+		// count is corrected rather than started over from nothing.
+		if err := paneAsk(&survey.MultiSelect{
+			Message: p.Question, Options: opts, Default: picked,
+			Help: p.Help, PageSize: panePageSize(),
+		}, &sel, &paneCtx{byLabel: byLabel, multi: true, min: wantMin, max: wantMax}); err != nil {
 			return nil, true
 		}
-		if want > 0 && len(picked) == want || want == 0 && len(picked) > 0 {
+		picked = sel
+		if countOk(len(picked), wantMin, wantMax) {
 			vals := []string{}
 			for _, l := range picked {
 				vals = append(vals, byLabel[l].Id)
@@ -476,11 +539,12 @@ func (self *Dnd) askMulti(p *dnd.Prompt) (*dnd.Answer, bool) {
 			return &dnd.Answer{Values: vals}, false
 		}
 		if len(picked) > 0 {
-			fmt.Printf("%s  pick exactly %d, you picked %d%s\n", cRed, want, len(picked), cReset)
+			fmt.Printf("%s  %s, you picked %d. They are still selected, adjust them.%s\n",
+				cRed, needText(wantMin, wantMax), len(picked), cReset)
 			continue
 		}
 		// Nothing selected: offer the ways out rather than asking again.
-		menu := []string{"  ···  let me pick again"}
+		menu := []string{entryAgain}
 		if len(p.Options) > 0 {
 			menu = append(menu, entryDetails)
 		}
@@ -491,14 +555,14 @@ func (self *Dnd) askMulti(p *dnd.Prompt) (*dnd.Answer, bool) {
 			menu = append(menu, entrySkip)
 		}
 		menu = append(menu, entryBack, entryQuit)
-		sel := ""
-		if err := survey.AskOne(&survey.Select{
+		choice := ""
+		if err := paneAsk(&survey.Select{
 			Message: "You selected nothing. What would you like to do?",
 			Options: menu, PageSize: 8,
-		}, &sel, nil); err != nil {
+		}, &choice, &paneCtx{}); err != nil {
 			return nil, true
 		}
-		switch sel {
+		switch choice {
 		case entryDetails:
 			self.showDetails(p)
 		case entryRandom:
@@ -534,9 +598,9 @@ func (self *Dnd) askText(p *dnd.Prompt) (*dnd.Answer, bool) {
 	if len(p.Options) > 0 {
 		opts, byLabel := self.menu(p, entryCustom)
 		choice := ""
-		if err := survey.AskOne(&survey.Select{
-			Message: p.Question, Options: opts, Help: p.Help, PageSize: 14,
-		}, &choice, nil); err != nil {
+		if err := paneAsk(&survey.Select{
+			Message: p.Question, Options: opts, Help: p.Help, PageSize: panePageSize(),
+		}, &choice, &paneCtx{byLabel: byLabel}); err != nil {
 			return nil, true
 		}
 		switch choice {
@@ -718,19 +782,161 @@ func (self *Dnd) previewScores(p *dnd.Prompt, nums map[string]int) {
 	fmt.Printf("%s  final scores: %s%s\n", cDim, strings.Join(parts, "  "), cReset)
 }
 
+// what asking for one field ended in
+const (
+	fieldOk = iota
+	fieldBack
+	fieldQuit
+)
+
+// askFields walks a multi line prompt - the appearance step - one field at a
+// time. Each field carries its own suggestions and its own bounds, so the
+// answers are offered rather than demanded, and checked before they are sent.
 func (self *Dnd) askFields(p *dnd.Prompt) (*dnd.Answer, bool) {
-	fill := false
-	survey.AskOne(&survey.Confirm{Message: p.Question, Default: false, Help: p.Help}, &fill, nil)
-	if !fill {
-		return &dnd.Answer{Skip: true}, false
+	menu := []string{entryFill}
+	if p.AllowRandom {
+		menu = append(menu, entryRandom)
 	}
-	values := []string{}
-	for _, f := range p.Fields {
-		text := ""
-		survey.AskOne(&survey.Input{Message: f.Name + ":"}, &text, nil)
-		values = append(values, strings.TrimSpace(text))
+	if p.AllowSkip {
+		menu = append(menu, entrySkip)
+	}
+	menu = append(menu, entryBack, entryQuit)
+	choice := ""
+	if err := paneAsk(&survey.Select{
+		Message: p.Question, Options: menu, Help: p.Help, PageSize: 8,
+	}, &choice, &paneCtx{}); err != nil {
+		return nil, true
+	}
+	switch choice {
+	case entryRandom:
+		return &dnd.Answer{Random: true}, false
+	case entrySkip:
+		return &dnd.Answer{Skip: true}, false
+	case entryBack:
+		return &dnd.Answer{Back: true}, false
+	case entryQuit:
+		return nil, true
+	}
+
+	values := make([]string, len(p.Fields))
+	for i := 0; i < len(p.Fields); {
+		// Stepping back onto a field brings the answer you already gave with
+		// you, so a correction is a correction rather than a retype.
+		f := p.Fields[i]
+		f.Text = values[i]
+		v, what := self.askField(f)
+		switch what {
+		case fieldQuit:
+			return nil, true
+		case fieldBack:
+			if i == 0 {
+				// backing out of the first field leaves the step entirely
+				return &dnd.Answer{Back: true}, false
+			}
+			i--
+			continue
+		}
+		values[i] = v
+		i++
 	}
 	return &dnd.Answer{Values: values}, false
+}
+
+// askField asks for one line of a fields prompt: pick a suggestion, write your
+// own, roll for it, or leave it blank.
+func (self *Dnd) askField(f dnd.Field) (string, int) {
+	message := f.Name + "?"
+	if f.Hint != "" {
+		message += "  (" + f.Hint + ")"
+	}
+	for {
+		if len(f.Options) == 0 {
+			return self.askFieldText(f, message)
+		}
+		opts, byLabel := fieldLabels(f)
+		if f.AllowCustom {
+			opts = append(opts, entryCustom)
+		}
+		opts = append(opts, entryRandom, entryBlank, entryBack, entryQuit)
+		choice := ""
+		if err := paneAsk(&survey.Select{
+			Message: message, Options: opts, Default: labelOf(byLabel, f.Text),
+			Help: f.Hint, PageSize: panePageSize(),
+		}, &choice, &paneCtx{byLabel: byLabel}); err != nil {
+			return "", fieldQuit
+		}
+		switch choice {
+		case entryRandom:
+			return dnd.RandomAppearanceValue(f), fieldOk
+		case entryBlank:
+			return "", fieldOk
+		case entryBack:
+			return "", fieldBack
+		case entryQuit:
+			return "", fieldQuit
+		case entryCustom:
+			return self.askFieldText(f, message)
+		}
+		v, err := dnd.ValidateField(f, byLabel[choice].Name)
+		if err != nil {
+			// A suggestion that does not validate means the tables disagree
+			// with the bounds, which is a bug rather than a bad answer.
+			fmt.Printf("%s  %s%s\n", cRed, err, cReset)
+			continue
+		}
+		return v, fieldOk
+	}
+}
+
+// askFieldText takes a typed value, checking it before accepting it. An empty
+// line leaves the field out.
+func (self *Dnd) askFieldText(f dnd.Field, message string) (string, int) {
+	for {
+		text := ""
+		if err := survey.AskOne(&survey.Input{
+			Message: message, Default: f.Text, Help: f.Hint,
+		}, &text, nil); err != nil {
+			return "", fieldQuit
+		}
+		v, err := dnd.ValidateField(f, text)
+		if err != nil {
+			fmt.Printf("%s  %s%s\n", cRed, err, cReset)
+			continue
+		}
+		return v, fieldOk
+	}
+}
+
+// fieldLabels renders the suggestions of one field as menu entries.
+func fieldLabels(f dnd.Field) ([]string, map[string]dnd.Option) {
+	opts := []string{}
+	byLabel := map[string]dnd.Option{}
+	for _, o := range f.Options {
+		l := label(o)
+		for {
+			if _, dup := byLabel[l]; !dup {
+				break
+			}
+			l += " " // two suggestions that render identically, keep them distinct
+		}
+		byLabel[l] = o
+		opts = append(opts, l)
+	}
+	return opts, byLabel
+}
+
+// labelOf finds the menu entry for a value, so a field that already has one
+// starts with it selected.
+func labelOf(byLabel map[string]dnd.Option, value string) string {
+	if value == "" {
+		return ""
+	}
+	for l, o := range byLabel {
+		if strings.EqualFold(o.Name, value) || strings.EqualFold(o.Id, value) {
+			return l
+		}
+	}
+	return ""
 }
 
 // ----------------------------------------------------------------------------
@@ -887,7 +1093,12 @@ func (self *Dnd) runSheet(core *commands.Core) {
 	})
 	if !res.Ok {
 		fmt.Printf("%sexport failed: %s%s\n", cRed, res.Msg, cReset)
-		fmt.Printf("%sis the %s exporter enabled in your server config?%s\n", cDim, exporter, cReset)
+		// The server only reports "setup in the config file" when the exporter is
+		// genuinely missing. Every other failure already explains itself, so do not
+		// send people off to check a config that is fine.
+		if strings.Contains(res.Msg, "setup in the config file") {
+			fmt.Printf("%sadd \"%s\" to server.exporters in your server config%s\n", cDim, exporter, cReset)
+		}
 		return
 	}
 	if !self.Local {

@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A second binary, `cmd/docex`, scrapes `SDOC:` / `EDOC` marker comments out of the Go sources to generate documentation — it is not needed for normal builds.
 
-Go module: `github.com/ihdavids/orgs` (Go 1.23+, toolchain 1.24.2). There are currently no `_test.go` files in the repo.
+Go module: `github.com/ihdavids/orgs` (Go 1.23+, toolchain 1.24.2). There is no test suite to speak of - the only `_test.go` files cover the D&D appearance step and the CLI list chooser.
 
 ## Build and run
 
@@ -34,7 +34,7 @@ go build -o orgs ./cmd/orgs
 go build -o docex ./cmd/docex
 ```
 
-There is no Makefile, no lint config, and no test suite. `go vet ./...` and `go build ./...` are the practical health checks.
+There is no Makefile and no lint config. `go vet ./...` and `go build ./...` are the practical health checks. `go test ./internal/common/dnd/ ./cmd/oc/commands/dnd/` runs the handful of tests that do exist - a plain `go test ./...` fails on the vet check `go test` runs by default, over pre-existing `fmt.Printf` calls in several plugins.
 
 ## Configuration
 

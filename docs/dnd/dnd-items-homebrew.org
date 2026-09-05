@@ -1,0 +1,124 @@
+#+TITLE: D&D Item Catalog - Homebrew
+#+CATEGORY: dnd-items
+#+SOURCE: Homebrew
+#+STARTUP: overview
+
+#+BEGIN_COMMENT
+This file is YOURS. The generator seeds it once and never overwrites it.
+
+Add items as second level headings anywhere in this file. Everything in the
+PROPERTIES drawer becomes a column in dnd-items-index.org the next time you run
+
+    python3 tools/dnditems/gen_items.py
+
+Recognised drawer keys, all optional except ID:
+
+  ID CATEGORY KIND SUBTYPE RARITY TIER LEVEL ATTUNEMENT BONUS DAMAGE
+  DAMAGETYPE AC CHARGES RANGE TRAITS COST COSTGP WEIGHT
+
+SOURCE defaults to the #+SOURCE line above, so you only set it per item if one
+file holds several sources. COSTGP is the cost normalised to gold pieces, which
+is what the index sorts on. RARITY drives TIER and LEVEL if you leave those
+blank: common/uncommon -> 1-4, rare -> 5-10, very rare -> 11-16,
+legendary -> 17-20.
+
+Drop other third party or converted sources into their own file named
+dnd-items-<source>.org next to this one and they will be picked up too.
+#+END_COMMENT
+
+* Magic Items
+** Ledger of Debts Unpaid
+   :PROPERTIES:
+   :ID:          ledger-of-debts-unpaid
+   :CATEGORY:    magic item
+   :KIND:        wondrous item
+   :RARITY:      rare
+   :ATTUNEMENT:  yes
+   :CHARGES:     3
+   :TRAITS:      attunement, charges
+   :END:
+
+   #+BEGIN_QUOTE
+   A merchant's account book bound in grey hide, its columns already filled in
+   a hand nobody recognises, always one entry ahead of the person holding it.
+   #+END_QUOTE
+
+   *Capabilities*
+   - Type :: Wondrous item
+   - Rarity :: rare
+   - Attunement :: required
+   - Usual tier :: character levels 5-10
+   - Charges :: 3
+
+   *Rules*
+   While attuned to this ledger you know, on sight, whether a creature owes you
+   a favour, a debt or a grudge, and roughly how large it is.
+
+   The ledger has 3 charges and regains all of them at dawn. As an action you
+   can expend a charge and name a creature you can see that owes you a debt.
+   Until the end of your next turn that creature has disadvantage on attack
+   rolls against you. If the debt was a life you saved, the creature must
+   instead succeed on a DC 15 Wisdom saving throw or be charmed by you for
+   1 minute.
+
+** Quiet Coat
+   :PROPERTIES:
+   :ID:          quiet-coat
+   :CATEGORY:    magic item
+   :KIND:        wondrous item
+   :RARITY:      uncommon
+   :ATTUNEMENT:  no
+   :END:
+
+   #+BEGIN_QUOTE
+   A long travelling coat of undyed wool that never rustles, never flaps, and
+   never quite catches the light the way the rest of you does.
+   #+END_QUOTE
+
+   *Capabilities*
+   - Type :: Wondrous item
+   - Rarity :: uncommon
+   - Attunement :: not required
+   - Usual tier :: character levels 1-4
+
+   *Rules*
+   While wearing this coat you have advantage on Dexterity (Stealth) checks
+   made to move quietly, and armor you wear under it never imposes
+   disadvantage on Stealth checks from noise alone.
+
+* Weapons
+** Tollkeeper's Bill
+   :PROPERTIES:
+   :ID:          tollkeepers-bill
+   :CATEGORY:    weapon
+   :KIND:        weapon
+   :SUBTYPE:     martial-melee
+   :RARITY:      uncommon
+   :ATTUNEMENT:  no
+   :BONUS:       +1
+   :DAMAGE:      1d10
+   :DAMAGETYPE:  slashing
+   :TRAITS:      heavy, reach, two-handed
+   :COST:        350 gp
+   :COSTGP:      350
+   :WEIGHT:      6
+   :END:
+
+   #+BEGIN_QUOTE
+   A bridge guard's halberd, the haft worn smooth by generations of bored
+   hands, the hook still bright from pulling people back from the rail.
+   #+END_QUOTE
+
+   *Capabilities*
+   - Type :: Weapon (halberd)
+   - Rarity :: uncommon
+   - Attunement :: not required
+   - Bonus :: +1
+   - Damage :: 1d10 slashing
+   - Properties :: heavy, reach, two-handed
+
+   *Rules*
+   You have a +1 bonus to attack and damage rolls made with this magic weapon.
+
+   When you hit a creature with an opportunity attack using this weapon, you
+   can use your reaction to move the target 5 feet toward you.

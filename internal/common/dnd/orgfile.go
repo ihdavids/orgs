@@ -199,16 +199,38 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	// ---- equipment (parsed back) -----------------------------------------
 	w("** Equipment\n")
 	w("Edit this table freely, it is read back in when the sheet is loaded.\n")
-	rows = [][]string{{"Item", "Qty", "Equipped", "Weight", "Notes"}}
+	rows = [][]string{{"Item", "Qty", "Equipped", "Attuned", "Weight", "Notes"}}
 	for _, g := range s.Equipment {
 		rows = append(rows, []string{g.Name, itoa(g.Qty), yesNo(g.Equipped),
-			trimFloat(g.Weight), g.Notes})
+			yesNo(g.Attuned), trimFloat(g.Weight), g.Notes})
 	}
 	w("%s\n", orgTable(rows, 1))
 	w("Carrying %.1f lb of %d lb capacity (push/drag/lift %d lb).\n",
 		s.Weight, s.CarryCapacity, s.PushDragLift)
 	w("Coins: %d cp, %d sp, %d ep, %d gp, %d pp.\n\n",
 		s.Money.CP, s.Money.SP, s.Money.EP, s.Money.GP, s.Money.PP)
+
+	// ---- magic items (derived from the equipment table above) -------------
+	if len(s.MagicItems) > 0 {
+		w("** Magic Items\n")
+		w("Derived from the equipment table, edit the Attuned column there.\n")
+		rows = [][]string{{"Item", "Rarity", "Attunement", "Effect"}}
+		for _, m := range s.MagicItems {
+			att := "-"
+			switch m.Attunement {
+			case "attuned":
+				att = "attuned"
+			case "required":
+				att = "needs attunement"
+			}
+			if m.Note != "" {
+				att += " " + m.Note
+			}
+			rows = append(rows, []string{m.Name, m.Rarity, att, m.Effect})
+		}
+		w("%s\n", orgTable(rows, 1))
+		w("Attunement: %d of %d slots used.\n\n", s.AttunementUsed, s.AttunementSlots)
+	}
 
 	// ---- proficiencies ----------------------------------------------------
 	w("** Proficiencies & Languages\n")
@@ -459,11 +481,35 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 	}
 
 	// equipment table
+	//
+	// Columns are located by their header rather than by position, so a sheet
+	// written before the Attuned column existed still reads correctly, and a
+	// hand edited table may reorder or drop columns. Without a header row the
+	// original order is assumed.
+	col := map[string]int{"item": 0, "qty": 1, "equipped": 2, "weight": 3, "notes": 4}
+	for _, row := range tables["equipment"] {
+		if len(row) == 0 || !strings.EqualFold(strings.TrimSpace(row[0]), "Item") {
+			continue
+		}
+		found := map[string]int{}
+		for i, h := range row {
+			found[strings.ToLower(strings.TrimSpace(h))] = i
+		}
+		col = found
+		break
+	}
+	cell := func(row []string, name string) string {
+		i, ok := col[name]
+		if !ok || i >= len(row) {
+			return ""
+		}
+		return strings.TrimSpace(row[i])
+	}
 	for _, row := range tables["equipment"] {
 		if len(row) == 0 {
 			continue
 		}
-		name := strings.TrimSpace(row[0])
+		name := cell(row, "item")
 		if name == "" || strings.EqualFold(name, "Item") {
 			continue
 		}
@@ -475,22 +521,19 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 				g.Weight = it.Weight
 			}
 		}
-		if len(row) > 1 && strings.TrimSpace(row[1]) != "" {
-			if q := atoi(row[1]); q > 0 {
+		if v := cell(row, "qty"); v != "" {
+			if q := atoi(v); q > 0 {
 				g.Qty = q
 			}
 		}
-		if len(row) > 2 {
-			g.Equipped = isYes(row[2])
-		}
-		if len(row) > 3 && strings.TrimSpace(row[3]) != "" {
-			if f, err := strconv.ParseFloat(strings.TrimSpace(row[3]), 64); err == nil {
+		g.Equipped = isYes(cell(row, "equipped"))
+		g.Attuned = isYes(cell(row, "attuned"))
+		if v := cell(row, "weight"); v != "" {
+			if f, err := strconv.ParseFloat(v, 64); err == nil {
 				g.Weight = f
 			}
 		}
-		if len(row) > 4 {
-			g.Notes = strings.TrimSpace(row[4])
-		}
+		g.Notes = cell(row, "notes")
 		c.Equipment = append(c.Equipment, g)
 	}
 
@@ -571,6 +614,10 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 	if len(c.Classes) == 0 {
 		c.Classes = []ClassLevel{{Class: "", Level: 1}}
 	}
+	// Only the spell table is read back out of the sheet, so a character
+	// written before its subclass granted spells - or hand edited - picks the
+	// free ones up here. appendSpell makes this a no-op when they are present.
+	GrantSubclassSpells(c, rs)
 	return c, nil
 }
 

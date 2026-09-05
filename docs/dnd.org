@@ -1,0 +1,278 @@
+#+TITLE: The Dungeons & Dragons Module
+#+AUTHOR: orgs
+
+* Introduction
+
+  The dnd module turns orgs into a character builder and character sheet
+  renderer. It gives you:
+
+  - A guided character creation flow over REST, where the server offers the
+    valid choices at every step with the summary and rules text for each one.
+  - Characters stored as ordinary, hand editable org files.
+  - A rules engine that derives everything else: modifiers, saving throws,
+    skills, armour class, attacks, hit dice, spell slots, save DCs, carrying
+    capacity and the collected feature text.
+  - Two character sheet renderers, an html sheet for the screen and a latex
+    sheet that compiles to a printable pdf.
+  - An add on system: races, classes, subclasses, backgrounds, items, spells
+    and whole rulesets are yaml files you can drop into a folder.
+
+  The bundled rules are the SRD 5.1, published by Wizards of the Coast under
+  the Creative Commons Attribution 4.0 licence.
+
+* Setup
+
+  Enable the exporters you want in your =orgs.yaml=, and point the module at
+  any folders holding your own content:
+
+  #+BEGIN_SRC yaml
+  server:
+    exporters:
+      - name: "dndsheet"     # html character sheet
+      - name: "dndlatex"     # .tex character sheet
+      - name: "dndpdf"       # pdf, needs pdflatex on the server
+        props:
+          pdflatex: "/Library/TeX/texbin/pdflatex"
+    dndPaths:
+      - "/Users/me/dnd/homebrew"
+  #+END_SRC
+
+  The REST API and the interactive builder work without any configuration at
+  all: the SRD data is compiled into the binary, and =templates/dnd= plus
+  =~/.orgs/dnd= are searched for add on modules by default. Only the
+  exporters need enabling, because that is how every orgs exporter works.
+
+  The pdf exporter shells out to =pdflatex=. On a full TeX Live or MacTeX
+  install nothing else is needed: the sheet uses =tikz=, and picks up
+  =ebgaramond= and =cinzel= if they are installed, falling back to the
+  standard fonts if they are not.
+
+* Creating a character
+
+  #+BEGIN_SRC bash
+  orgs dnd new                              # the guided flow
+  orgs dnd new -level 3 -name Lyra -open    # skip the first questions
+  orgs dnd random -level 5 -out npc.org     # roll a complete character
+  #+END_SRC
+
+  Every prompt lists the valid options with a one line summary. A star marks
+  the ones that suit what you have already picked (races that boost your
+  class's primary ability, skills keyed to your best scores). Each prompt also
+  offers to show the full rules text for every option, to choose for you, or
+  to step back and change an earlier answer.
+
+  Going back is safe. The server replays your remaining answers onto a fresh
+  character, so switching class after picking skills cannot leave a stray
+  proficiency behind.
+
+* The character file
+
+  A character is a normal org file. The property drawer of the top heading
+  holds the state, and two tables (equipment and spells) are read back in.
+  Everything else is regenerated whenever the sheet is written.
+
+  #+BEGIN_SRC org
+  ,#+TITLE: Lyra Silverleaf
+  ,#+DND_RULESET: srd
+  ,#+LATEX_CLASS: dndcharacter
+  ,#+LATEX_TEMPLATE: dnd_character.tpl
+
+  ,* Lyra Silverleaf                                          :dnd:character:
+  ,:PROPERTIES:
+  ,:DND_RACE:       elf
+  ,:DND_SUBRACE:    high-elf
+  ,:DND_CLASSES:    wizard:evocation:3
+  ,:DND_BACKGROUND: sage
+  ,:DND_STR:        8
+  ,:END:
+  #+END_SRC
+
+  =DND_CLASSES= is a comma separated list of =class:subclass:level= entries,
+  which is also how multiclassing is stored.
+
+  Because nothing derived is stored, levelling up is an edit and a refresh:
+
+  #+BEGIN_SRC bash
+  # change DND_CLASSES to wizard:evocation:4, then
+  orgs dnd refresh -file lyra.org
+  #+END_SRC
+
+  Hit points recompute, the proficiency bonus moves to +2, new spell slots
+  appear, the new class features are added and every skill row updates. Set
+  =DND_HP_MAX= to 0 first if you want the average hit point rule applied
+  rather than keeping your rolled total.
+
+* Rendering a sheet
+
+  #+BEGIN_SRC bash
+  orgs dnd show  -file lyra.org                          # in the terminal
+  orgs dnd sheet -file lyra.org -format html -out l.html
+  orgs dnd sheet -file lyra.org -format pdf  -out l.pdf
+  #+END_SRC
+
+  Both sheets are pongo2 templates in your template folder,
+  =dnd_character_html.tpl= and =dnd_character.tpl=. They receive the whole
+  computed sheet as =sheet=, so restyling them needs no go code:
+
+  #+BEGIN_SRC django
+  {% for s in sheet.skills %}{% if s.proficient %}*{% endif %} {{ s.name }} {{ s.mod }}
+  {% endfor %}
+  #+END_SRC
+
+* Browsing the rules
+
+  #+BEGIN_SRC bash
+  orgs dnd list classes
+  orgs dnd list spells -id wizard -filter fire
+  orgs dnd list subclasses -id fighter
+  orgs dnd info -kind class -id wizard
+  orgs dnd rulesets            # which modules are loaded
+  orgs dnd reload              # re-read them after editing
+  orgs dnd characters          # every sheet the server knows about
+  #+END_SRC
+
+* Writing an add on module
+
+  A module is one yaml file. Everything in it is merged into the ruleset named
+  by its =id=, so adding content is as simple as dropping a file into a folder
+  on your =dndPaths=:
+
+  #+BEGIN_SRC yaml
+  id: srd
+  races:
+    - id: aasimar
+      name: Aasimar
+      speed: 30
+      darkvision: 60
+      abilityBonuses: {cha: 2}
+      traits:
+        - name: Celestial Resistance
+          text: "You have resistance to necrotic and radiant damage."
+  #+END_SRC
+
+  An entry whose id already exists *extends* that entry rather than replacing
+  it, so a module can add one subclass to an existing class:
+
+  #+BEGIN_SRC yaml
+  id: srd
+  classes:
+    - id: fighter
+      subclasses:
+        - id: ashen-guard
+          name: Ashen Guard
+          features:
+            - {name: Bonded Flame, level: 3, text: "..."}
+  #+END_SRC
+
+  Use =extends= to build a whole variant game that inherits the core data
+  without copying it. Players then pick the ruleset as the first question of
+  character creation:
+
+  #+BEGIN_SRC yaml
+  id: emberfall
+  name: "Emberfall"
+  extends: srd
+  #+END_SRC
+
+  =templates/dnd/homebrew-example.yaml= is a working example of all three
+  techniques, and =templates/dnd/backgrounds.yaml= adds the twelve
+  backgrounds the SRD does not publish.
+
+** Choices
+
+   Anything of the form "choose N of these" is data, not code. A =choices=
+   block on a race, class, subclass or background automatically becomes a
+   prompt during character creation:
+
+   #+BEGIN_SRC yaml
+   choices:
+     - id: elf-cantrip
+       name: "Elven Cantrip"
+       kind: spells        # skills|languages|tools|options|spells|expertise
+       count: 1
+       from: [wizard]
+       spellLevels: [0]
+       prompt: "Choose a wizard cantrip."
+   #+END_SRC
+
+   =countByLevel= replaces =count= when the number grows with level, which is
+   how warlock invocations and sorcerer metamagic work.
+
+* The item catalog
+
+  =docs/dnd/= holds a browsable catalog of every item, one org file per source,
+  generated separately from the ruleset yaml:
+
+  | File                     | What it holds                                    |
+  |--------------------------+--------------------------------------------------|
+  | =dnd-items-srd.org=      | All 464 SRD 5.1 items, mundane and magic         |
+  | =dnd-items-homebrew.org= | Yours. Seeded once, never overwritten            |
+  | =dnd-items-index.org=    | The master table, built from every source file   |
+
+  Each item is a heading with a PROPERTIES drawer of normalised columns, a
+  flavor quote, a =Capabilities= definition list and the full rules text. The
+  index turns those drawers into one sortable table, plus a table per tier so
+  a random treasure roll is a random row.
+
+  #+BEGIN_SRC bash
+  python3 tools/dnditems/gen_items.py ../dndsrd docs/dnd
+  #+END_SRC
+
+  To add your own items, put them in =dnd-items-homebrew.org= - or in a new
+  =dnd-items-<source>.org= beside it for a third party or converted source -
+  as second level headings with the same drawer keys, then run the generator
+  again. It reads every source file back out of org, so anything you add shows
+  up in the index. Only the SRD file and the index are regenerated; your files
+  are read, never written.
+
+  Because the items are ordinary org headings, the server can query them. Point
+  an =orgDirs= entry at =docs/dnd= and the drawers become searchable:
+
+  #+BEGIN_SRC bash
+  orgs grep -query 'MatchProperty("RARITY","^rare$")'
+  orgs grep -query 'MatchProperty("KIND","wand") && MatchProperty("ATTUNEMENT","yes")'
+  #+END_SRC
+
+  The catalog is a reference for play, separate from
+  =internal/common/dnd/data/srd-items.yaml=, which is the smaller set of items
+  the rules engine needs for equipping a character.
+
+* Regenerating the SRD data
+
+  =internal/common/dnd/data/*.yaml= is generated from the markdown SRD at
+  [[https://github.com/OldManUmby/DND.SRD.Wiki]]:
+
+  #+BEGIN_SRC bash
+  python3 tools/dndsrd/gen_srd.py ../dndsrd internal/common/dnd/data
+  #+END_SRC
+
+  Do not hand edit those files, put your changes in a module instead.
+
+* REST API
+
+  | Endpoint             | Method | Purpose                                     |
+  |----------------------+--------+---------------------------------------------|
+  | =/dnd/rulesets=      | GET    | Loaded rulesets and the modules behind them |
+  | =/dnd/reload=        | POST   | Re-read the yaml modules                    |
+  | =/dnd/catalog=       | GET    | Browse races, classes, spells, items...     |
+  | =/dnd/session=       | POST   | Start character creation, returns a prompt  |
+  | =/dnd/session/{id}=  | GET    | The prompt a session is waiting on          |
+  | =/dnd/answer=        | POST   | Answer a prompt, returns the next one       |
+  | =/dnd/random=        | POST   | Roll a complete character                   |
+  | =/dnd/save=          | POST   | Write a character out as an org file        |
+  | =/dnd/refresh=       | POST   | Recompute a sheet after hand editing        |
+  | =/dnd/sheet=         | GET    | The fully computed sheet as JSON            |
+  | =/dnd/characters=    | GET    | Every character sheet the server knows      |
+
+  A prompt carries =kind= (=select=, =multiselect=, =text=, =longtext=,
+  =number=, =abilities=, =fields= or =done=), the valid =options=, =advice=
+  based on the character so far, and a =progress= counter, which is all a
+  client needs to render the flow without knowing any rules.
+
+* Licence
+
+  This module includes material from the System Reference Document 5.1 by
+  Wizards of the Coast LLC, available at
+  [[https://dnd.wizards.com/resources/systems-reference-document]] and licensed
+  under the Creative Commons Attribution 4.0 International License,
+  [[https://creativecommons.org/licenses/by/4.0/legalcode]].

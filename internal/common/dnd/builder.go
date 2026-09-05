@@ -337,6 +337,13 @@ func (s *Session) steps(rs *Ruleset) []stepDef {
 			}
 		}
 	}
+	// Half feats ask which ability they raise. The step only exists once the
+	// feat has been taken, which is why it comes after the improvements.
+	for _, id := range c.Feats {
+		if ft := rs.Feat(id); ft != nil && ft.AbilityChoice != nil {
+			steps = append(steps, stepFeatAbilityChoice(id))
+		}
+	}
 	if cls != nil {
 		steps = append(steps, stepSkills(cls))
 	}
@@ -404,6 +411,11 @@ func collectChoices(rs *Ruleset, c *Character) []Choice {
 	}
 	if bg := rs.Background(c.Background); bg != nil {
 		out = append(out, bg.Choices...)
+	}
+	for _, id := range c.Feats {
+		if ft := rs.Feat(id); ft != nil {
+			out = append(out, ft.Choices...)
+		}
 	}
 	_ = level
 	return out
@@ -892,6 +904,75 @@ func stepRaceAbilityChoice(race *Race) stepDef {
 	}
 }
 
+// featAbilityChoiceId is the Choices key holding the ability picked for a
+// feat's abilityChoice. Kept stable so a sheet round trips.
+func featAbilityChoiceId(featId string) string { return "feat-ability-" + featId }
+
+// stepFeatAbilityChoice is the "+1 to Strength or Dexterity" prompt that half
+// feats carry. Unlike the racial version, which is folded in when scores are
+// composed, this applies the bump directly - feat bonuses land on the final
+// scores the same way an ability score improvement does.
+func stepFeatAbilityChoice(featId string) stepDef {
+	return stepDef{
+		id: featAbilityChoiceId(featId),
+		build: func(s *Session, rs *Ruleset) *Prompt {
+			ft := rs.Feat(featId)
+			if ft == nil || ft.AbilityChoice == nil {
+				return nil
+			}
+			ac := ft.AbilityChoice
+			from := ac.From
+			if len(from) == 0 {
+				from = AbilityOrder
+			}
+			opts := []Option{}
+			for _, a := range from {
+				o := Option{Id: a, Name: AbilityNames[a],
+					Summary: fmt.Sprintf("%s %s (currently %d)", AbilityShort[a],
+						Signed(ac.Amount), s.Char.Abilities[a])}
+				if s.Char.Abilities[a]+ac.Amount > 20 {
+					o.Disabled = true
+					o.Reason = "would go above the maximum of 20"
+				}
+				opts = append(opts, o)
+			}
+			q := fmt.Sprintf("%s: choose %d ability to increase by %d.", ft.Name,
+				maxInt(ac.Count, 1), ac.Amount)
+			if ac.GrantsSave {
+				q += " You also gain saving throw proficiency with it."
+			}
+			return &Prompt{
+				Kind: "multiselect", Title: ft.Name,
+				Question: q, Options: opts,
+				Min: maxInt(ac.Count, 1), Max: maxInt(ac.Count, 1), AllowRandom: true,
+			}
+		},
+		apply: func(s *Session, rs *Ruleset, a *Answer) error {
+			ft := rs.Feat(featId)
+			if ft == nil || ft.AbilityChoice == nil {
+				return nil
+			}
+			want := maxInt(ft.AbilityChoice.Count, 1)
+			if len(a.Values) != want {
+				return fmt.Errorf("choose exactly %d", want)
+			}
+			for _, ab := range a.Values {
+				if _, ok := AbilityNames[ab]; !ok {
+					return fmt.Errorf("unknown ability %q", ab)
+				}
+				if s.Char.Abilities[ab]+ft.AbilityChoice.Amount > 20 {
+					return fmt.Errorf("%s cannot go above 20", AbilityNames[ab])
+				}
+			}
+			for _, ab := range a.Values {
+				s.Char.Abilities[ab] += ft.AbilityChoice.Amount
+			}
+			s.Char.Choices[featAbilityChoiceId(featId)] = a.Values
+			return nil
+		},
+	}
+}
+
 func stepBackground() stepDef {
 	return stepDef{
 		id: "background",
@@ -1137,6 +1218,9 @@ func racialBonus(rs *Ruleset, c *Character, ability string) int {
 
 // stepASI is the "increase one score by 2 or two scores by 1" prompt that
 // every class gets at 4th level and beyond.
+// featOptionPrefix marks an ASI option that is a feat rather than an ability.
+const featOptionPrefix = "feat:"
+
 func stepASI(classId string, level int) stepDef {
 	id := fmt.Sprintf("asi-%s-%d", classId, level)
 	return stepDef{
@@ -1164,19 +1248,62 @@ func stepASI(classId string, level int) stepDef {
 			if cls := rs.Class(classId); cls != nil {
 				name = cls.Name
 			}
+			// Feats are an alternative to the ability bumps: pick exactly one
+			// and it is taken instead of the increase.
+			for i := range rs.Feats {
+				ft := &rs.Feats[i]
+				if containsStr(s.Char.Feats, ft.Id) {
+					continue
+				}
+				o := Option{Id: featOptionPrefix + ft.Id, Name: ft.Name,
+					Summary: firstSentence(ft.Text), Detail: ft.Text}
+				if ft.Prerequisite != "" {
+					o.Summary = "Requires " + ft.Prerequisite + ". " + o.Summary
+				}
+				opts = append(opts, o)
+			}
 			return &Prompt{
 				Kind: "multiselect", Title: "Ability Score Improvement",
-				Question: fmt.Sprintf("%s level %d: raise one ability by 2, or two abilities by 1.",
+				Question: fmt.Sprintf("%s level %d: raise one ability by 2, raise two abilities by 1, or take a feat.",
 					name, level),
-				Help: "Pick one ability for +2, or two different abilities for +1 each. " +
-					"No score can go above 20. If you would rather take a feat, skip this " +
-					"and add it to the DND_FEATS property.",
+				Help: "Pick one ability for +2, or two different abilities for +1 each, or a " +
+					"single feat instead. No score can go above 20. Prerequisites are shown but " +
+					"not enforced - your DM decides.",
 				Options: opts, Min: 1, Max: 2, AllowRandom: true, AllowSkip: true,
 			}
 		},
 		apply: func(s *Session, rs *Ruleset, a *Answer) error {
 			if len(a.Values) == 0 || len(a.Values) > 2 {
-				return fmt.Errorf("choose one ability (+2) or two abilities (+1 each)")
+				return fmt.Errorf("choose one ability (+2), two abilities (+1 each), or one feat")
+			}
+			if strings.HasPrefix(a.Values[0], featOptionPrefix) {
+				if len(a.Values) != 1 {
+					return fmt.Errorf("a feat takes the whole improvement, choose it on its own")
+				}
+				featId := strings.TrimPrefix(a.Values[0], featOptionPrefix)
+				ft := rs.Feat(featId)
+				if ft == nil {
+					return fmt.Errorf("unknown feat %q", featId)
+				}
+				// Half feats carry a fixed ability bonus. Applying it here is
+				// safe under replay because the character is rebuilt from
+				// scratch each time the answers are replayed.
+				for ab, v := range ft.AbilityBonuses {
+					if _, ok := AbilityNames[ab]; !ok {
+						return fmt.Errorf("feat %q has unknown ability %q", featId, ab)
+					}
+					if s.Char.Abilities[ab]+v > 20 {
+						return fmt.Errorf("%s cannot go above 20", AbilityNames[ab])
+					}
+				}
+				for ab, v := range ft.AbilityBonuses {
+					s.Char.Abilities[ab] += v
+				}
+				s.Char.Feats = addUnique(s.Char.Feats, featId)
+				// Skills, tools, armor, weapons and saves from the feat are
+				// derived in Compute, so nothing else is written here.
+				s.Char.Choices[id] = a.Values
+				return nil
 			}
 			bump := 2
 			if len(a.Values) == 2 {
@@ -1291,7 +1418,14 @@ func stepChoice(ch Choice) stepDef {
 			opts := []Option{}
 			switch ch.Kind {
 			case "options":
+				// An option may carry its own Level, which is the minimum
+				// class level needed to pick it. Fighting styles and
+				// invocations leave it unset, so they are always offered; the
+				// monk's elemental disciplines use it heavily.
 				for _, o := range ch.Options {
+					if o.Level > s.Char.TotalLevel() {
+						continue
+					}
 					opts = append(opts, Option{Id: orDefault(Slugify(o.Name), o.Name), Name: o.Name,
 						Summary: firstSentence(o.Text), Detail: o.Text})
 				}
@@ -1319,6 +1453,30 @@ func stepChoice(ch Choice) stepDef {
 			case "tools":
 				for _, t := range ch.From {
 					opts = append(opts, Option{Id: t, Name: Titleize(t)})
+				}
+			case "feat":
+				// A race or background that hands out a feat - variant human.
+				for i := range rs.Feats {
+					ft := &rs.Feats[i]
+					if containsStr(s.Char.Feats, ft.Id) {
+						continue
+					}
+					if len(ch.From) > 0 && !containsStr(ch.From, ft.Id) {
+						continue
+					}
+					o := Option{Id: ft.Id, Name: ft.Name,
+						Summary: firstSentence(ft.Text), Detail: ft.Text}
+					if ft.Prerequisite != "" {
+						o.Summary = "Requires " + ft.Prerequisite + ". " + o.Summary
+					}
+					opts = append(opts, o)
+				}
+			case "spellgroup":
+				// One of several alternative spell lists the subclass offers.
+				// The ids are the group names tagged onto its SubSpells.
+				for _, g := range ch.From {
+					opts = append(opts, Option{Id: g, Name: Titleize(g),
+						Summary: spellGroupSummary(s, rs, ch.Id, g)})
 				}
 			case "languages":
 				for _, l := range rs.AllLanguages() {
@@ -1382,6 +1540,27 @@ func stepChoice(ch Choice) stepDef {
 				for _, v := range a.Values {
 					s.Char.Spells = appendSpell(s.Char.Spells, rs, v, ch.Name)
 				}
+			case "feat":
+				for _, v := range a.Values {
+					ft := rs.Feat(v)
+					if ft == nil {
+						return fmt.Errorf("unknown feat %q", v)
+					}
+					for ab, n := range ft.AbilityBonuses {
+						if s.Char.Abilities[ab]+n > 20 {
+							return fmt.Errorf("%s cannot go above 20", AbilityNames[ab])
+						}
+					}
+					for ab, n := range ft.AbilityBonuses {
+						s.Char.Abilities[ab] += n
+					}
+					s.Char.Feats = addUnique(s.Char.Feats, v)
+				}
+			case "spellgroup":
+				// Recorded in Char.Choices above. The spells themselves are
+				// handed out by GrantSubclassSpells so that the grant stays a
+				// pure function of the stored answers under replay.
+				GrantSubclassSpells(s.Char, rs)
 			}
 			return nil
 		},
@@ -1514,6 +1693,20 @@ func stepSpells(level, count int, kind string) stepDef {
 				}
 				opts = append(opts, spellOption(sp))
 			}
+			// A subclass can widen the list you choose from without giving
+			// the spells away - a warlock patron's Expanded Spell List.
+			for _, sp := range expandedSpellsFor(rs, s.Char) {
+				if level == 0 && sp.Level != 0 {
+					continue
+				}
+				if level != 0 && (sp.Level == 0 || sp.Level > maxLvl) {
+					continue
+				}
+				if hasSpell(s.Char.Spells, sp.Id) || hasOption(opts, sp.Id) {
+					continue
+				}
+				opts = append(opts, spellOption(sp))
+			}
 			if len(opts) == 0 {
 				return nil
 			}
@@ -1629,9 +1822,9 @@ func stepPersonality(field, label string) stepDef {
 			}
 			return &Prompt{
 				Kind: "text", Title: label,
-				Question:    fmt.Sprintf("Pick or write %s %s.", article, strings.ToLower(label)),
-				Help:        "Suggestions come from your background, you can type your own.",
-				Options:     opts, AllowCustom: true, AllowRandom: len(opts) > 0, AllowSkip: true,
+				Question: fmt.Sprintf("Pick or write %s %s.", article, strings.ToLower(label)),
+				Help:     "Suggestions come from your background, you can type your own.",
+				Options:  opts, AllowCustom: true, AllowRandom: len(opts) > 0, AllowSkip: true,
 			}
 		},
 		apply: func(s *Session, rs *Ruleset, a *Answer) error {
@@ -1659,39 +1852,58 @@ func stepDetails() stepDef {
 		id:       "details",
 		optional: true,
 		build: func(s *Session, rs *Ruleset) *Prompt {
-			race := activeRace(rs, s.Char)
-			help := ""
-			if race != nil && race.Age != "" {
-				help = race.Age
+			help := []string{}
+			// A subrace rarely repeats the lifespan blurb, so fall back to the
+			// race it came from.
+			for _, r := range []*Race{activeRace(rs, s.Char), rs.Race(s.Char.Race)} {
+				if r != nil && r.Age != "" {
+					help = append(help, r.Age)
+					break
+				}
+			}
+			if note := AppearanceFor(rs, s.Char).Note; note != "" {
+				help = append(help, note)
 			}
 			return &Prompt{
 				Kind: "fields", Title: "Appearance",
-				Question: "Physical details (all optional).",
-				Help:     help,
-				Fields: []Field{
-					{Id: "age", Name: "Age"},
-					{Id: "height", Name: "Height"},
-					{Id: "weight", Name: "Weight"},
-					{Id: "eyes", Name: "Eyes"},
-					{Id: "skin", Name: "Skin"},
-					{Id: "hair", Name: "Hair"},
-				},
-				AllowSkip: true,
+				Question:  "Physical details (all optional).",
+				Help:      strings.Join(help, " "),
+				Fields:    AppearanceFields(rs, s.Char),
+				AllowSkip: true, AllowRandom: true,
 			}
 		},
 		apply: func(s *Session, rs *Ruleset, a *Answer) error {
-			get := func(i int) string {
+			fields := AppearanceFields(rs, s.Char)
+			vals := make([]string, len(fields))
+			bad := []string{}
+			for i, f := range fields {
+				raw := ""
 				if i < len(a.Values) {
-					return strings.TrimSpace(a.Values[i])
+					raw = a.Values[i]
 				}
-				return ""
+				v, err := ValidateField(f, raw)
+				if err != nil {
+					bad = append(bad, err.Error())
+					continue
+				}
+				vals[i] = v
 			}
-			s.Char.Age = get(0)
-			s.Char.Height = get(1)
-			s.Char.Weight = get(2)
-			s.Char.Eyes = get(3)
-			s.Char.Skin = get(4)
-			s.Char.Hair = get(5)
+			if len(bad) > 0 {
+				return fmt.Errorf("%s", strings.Join(bad, "; "))
+			}
+			// Store the normalised values so a replay of this answer, and the
+			// org file it ends up in, both say the same thing.
+			a.Values = vals
+			into := map[string]*string{
+				FieldAge: &s.Char.Age, FieldHeight: &s.Char.Height,
+				FieldWeight: &s.Char.Weight, FieldEyes: &s.Char.Eyes,
+				FieldSkin: &s.Char.Skin, FieldHair: &s.Char.Hair,
+			}
+			for i, f := range fields {
+				if dst, ok := into[f.Id]; ok {
+					*dst = vals[i]
+				}
+			}
 			return nil
 		},
 	}
@@ -1759,6 +1971,76 @@ func firstSentence(text string) string {
 		return text[:137] + "..."
 	}
 	return text
+}
+
+// spellGroupSummary lists the spells a subclass spell group would grant, so
+// the prompt can show "hold person, spike growth, ..." rather than a bare
+// terrain name.
+func spellGroupSummary(s *Session, rs *Ruleset, choiceId, group string) string {
+	names := []string{}
+	for _, cl := range s.Char.Classes {
+		sc := rs.Subclass(cl.Class, cl.Subclass)
+		if sc == nil {
+			continue
+		}
+		// Both lists can be grouped: a granted list like the Circle of the
+		// Land's, or an expanded one like the Genie warlock's.
+		grouped := append(append([]SubSpell{}, sc.Spells...), sc.ExpandedSpells...)
+		for _, sp := range grouped {
+			if sp.Group != group {
+				continue
+			}
+			name := Titleize(sp.Id)
+			if full := rs.Spell(sp.Id); full != nil {
+				name = full.Name
+			}
+			if sp.Level > cl.Level {
+				name += fmt.Sprintf(" (level %d)", sp.Level)
+			}
+			names = append(names, name)
+		}
+	}
+	return strings.Join(names, ", ")
+}
+
+// expandedSpellsFor returns the spells a character's subclasses have added to
+// their class list, filtered to those their class level has reached.
+//
+// Groups are honoured the same way GrantSubclassSpells honours them: a
+// subclass that offers alternative lists tags each spell with a Group and
+// carries a Choice of kind "spellgroup", and only the groups the character
+// picked are added. A warlock of the Genie whose patron is a djinni gets the
+// djinni list and nothing else.
+func expandedSpellsFor(rs *Ruleset, c *Character) []*Spell {
+	out := []*Spell{}
+	for _, cl := range c.Classes {
+		sc := rs.Subclass(cl.Class, cl.Subclass)
+		if sc == nil {
+			continue
+		}
+		picked := pickedSpellGroups(c, sc)
+		for _, es := range sc.ExpandedSpells {
+			if es.Level > cl.Level {
+				continue
+			}
+			if es.Group != "" && !containsStr(picked, es.Group) {
+				continue
+			}
+			if sp := rs.Spell(es.Id); sp != nil {
+				out = append(out, sp)
+			}
+		}
+	}
+	return out
+}
+
+func hasOption(list []Option, id string) bool {
+	for _, o := range list {
+		if o.Id == id {
+			return true
+		}
+	}
+	return false
 }
 
 func hasSpell(list []KnownSpell, id string) bool {
@@ -1876,7 +2158,17 @@ func (s *Session) randomize(rs *Ruleset, st *stepDef, a *Answer) {
 		}
 		a.Numbers = nums
 	case "fields":
-		a.Skip = true
+		// The appearance step: roll each line off its own suggestions. The
+		// values are stored on the answer so a replay does not reroll them.
+		if len(p.Fields) == 0 {
+			a.Skip = true
+			return
+		}
+		vals := []string{}
+		for _, f := range p.Fields {
+			vals = append(vals, RandomAppearanceValue(f))
+		}
+		a.Values = vals
 	case "longtext":
 		a.Skip = true
 	}

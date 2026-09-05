@@ -168,13 +168,88 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 		s.Background = Titleize(c.Background)
 	}
 
-	// ---- abilities and saves ---------------------------------------------
+	// ---- proficiencies and languages -------------------------------------
+	//
+	// This runs before abilities and skills below, because a race, subclass,
+	// background or feat can grant saving throw and skill proficiency as
+	// readily as it grants armour, weapons or tools, and both of those
+	// sections need the answer. Everything a source hands out goes through
+	// collect, so there is one place to look and one place to extend.
+	armorProf := []string{}
+	weaponProf := []string{}
+	toolProf := append([]string{}, c.Tools...)
+	langs := append([]string{}, c.Languages...)
+	// Skills and saves granted by a source are derived here rather than
+	// written onto the character, so that reading a sheet back in cannot
+	// double count them. The character's own picks stay in c.Skills.
+	grantedSkills := map[string]bool{}
 	saveProf := map[string]bool{}
+	collect := func(p Proficiencies) {
+		armorProf = addUnique(armorProf, p.Armor...)
+		weaponProf = addUnique(weaponProf, p.Weapons...)
+		toolProf = addUnique(toolProf, p.Tools...)
+		for _, sk := range p.Skills {
+			grantedSkills[sk] = true
+		}
+		for _, sv := range p.Saves {
+			saveProf[sv] = true
+		}
+	}
 	if primaryClass != nil {
 		for _, sv := range primaryClass.SavingThrows {
 			saveProf[sv] = true
 		}
 	}
+	if race != nil {
+		collect(race.Proficiencies)
+		langs = addUnique(langs, race.Languages...)
+	}
+	if sub != nil {
+		collect(sub.Proficiencies)
+		langs = addUnique(langs, sub.Languages...)
+	}
+	for _, cl := range c.Classes {
+		if cls := rs.Class(cl.Class); cls != nil {
+			collect(cls.Proficiencies)
+		}
+		// A subclass may hold several blocks, each with the class level it
+		// arrives at, so that a grant like the Gloom Stalker's Wisdom save
+		// lands at 7th rather than when the subclass is chosen at 3rd.
+		if sc := rs.Subclass(cl.Class, cl.Subclass); sc != nil {
+			for _, p := range sc.Proficiency.At(cl.Level) {
+				collect(p)
+			}
+		}
+	}
+	if bg != nil {
+		collect(bg.Proficiencies)
+	}
+	// Feats such as Heavily Armored, Weapon Master, Skilled and Resilient.
+	for _, id := range c.Feats {
+		ft := rs.Feat(id)
+		if ft == nil {
+			continue
+		}
+		collect(ft.Proficiencies)
+		// Resilient makes you proficient in whichever save its abilityChoice
+		// landed on, which is not something Proficiencies can express.
+		if ft.AbilityChoice != nil && ft.AbilityChoice.GrantsSave {
+			for _, ab := range c.Choices[featAbilityChoiceId(id)] {
+				saveProf[ab] = true
+			}
+		}
+	}
+	s.ArmorProficiencies = prettyProficiencies(rs, armorProf, "armor")
+	s.WeaponProficiencies = prettyProficiencies(rs, weaponProf, "weapon")
+	s.ToolProficiencies = prettyProficiencies(rs, toolProf, "tool")
+	s.Languages = langs
+
+	// ---- magic items ------------------------------------------------------
+	// Worked out here because a ring or cloak of protection raises every
+	// saving throw, and the saves are computed immediately below.
+	magic := magicItems(c, rs, s)
+
+	// ---- abilities and saves ---------------------------------------------
 	s.AbilityMap = map[string]AbilityView{}
 	for _, a := range AbilityOrder {
 		score := 10
@@ -184,7 +259,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 			}
 		}
 		mod := AbilityMod(score)
-		save := mod
+		save := mod + magic.save
 		if saveProf[a] {
 			save += s.Proficiency
 		}
@@ -206,7 +281,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	}
 	for _, sk := range skills {
 		m := mod(sk.Ability)
-		prof := c.HasSkill(sk.Id)
+		prof := c.HasSkill(sk.Id) || grantedSkills[sk.Id]
 		exp := c.HasExpertise(sk.Id)
 		if prof {
 			m += s.Proficiency
@@ -231,40 +306,6 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 			s.PassiveInvestigation = 10 + m
 		}
 	}
-
-	// ---- proficiencies and languages -------------------------------------
-	armorProf := []string{}
-	weaponProf := []string{}
-	toolProf := append([]string{}, c.Tools...)
-	langs := append([]string{}, c.Languages...)
-	collect := func(p Proficiencies) {
-		armorProf = addUnique(armorProf, p.Armor...)
-		weaponProf = addUnique(weaponProf, p.Weapons...)
-		toolProf = addUnique(toolProf, p.Tools...)
-	}
-	if race != nil {
-		collect(race.Proficiencies)
-		langs = addUnique(langs, race.Languages...)
-	}
-	if sub != nil {
-		collect(sub.Proficiencies)
-		langs = addUnique(langs, sub.Languages...)
-	}
-	for _, cl := range c.Classes {
-		if cls := rs.Class(cl.Class); cls != nil {
-			collect(cls.Proficiencies)
-		}
-		if sc := rs.Subclass(cl.Class, cl.Subclass); sc != nil {
-			collect(sc.Proficiency)
-		}
-	}
-	if bg != nil {
-		collect(bg.Proficiencies)
-	}
-	s.ArmorProficiencies = prettyProficiencies(rs, armorProf, "armor")
-	s.WeaponProficiencies = prettyProficiencies(rs, weaponProf, "weapon")
-	s.ToolProficiencies = prettyProficiencies(rs, toolProf, "tool")
-	s.Languages = langs
 
 	// ---- features ---------------------------------------------------------
 	s.Traits = collectTraits(rs, c, race, sub)
@@ -292,7 +333,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	}
 
 	// ---- armour class, initiative, movement -------------------------------
-	s.AC, s.ACSource = computeAC(c, rs, s)
+	s.AC, s.ACSource = computeAC(c, rs, s, magic)
 	s.Initiative = mod(DEX)
 	s.InitiativeStr = Signed(s.Initiative)
 	str := s.AbilityMap[STR].Score
@@ -332,7 +373,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	}
 
 	// ---- attacks ----------------------------------------------------------
-	s.Attacks = computeAttacks(c, rs, s)
+	s.Attacks = computeAttacks(c, rs, s, magic)
 
 	// ---- spellcasting -----------------------------------------------------
 	computeSpellcasting(c, rs, s)
@@ -548,7 +589,13 @@ func equippedArmor(c *Character, rs *Ruleset) *Item {
 		if !g.Equipped {
 			continue
 		}
-		if it := rs.Item(gearKey(g)); it != nil && it.Kind == "armor" && it.ArmorType != "shield" {
+		// AC 0 means the entry is a template rather than a wearable suit -
+		// the SRD writes "Armor of Resistance" as "Armor (light, medium, or
+		// heavy)" without saying which. Wearing one of those would otherwise
+		// drop the character to AC 0; the way to use it is to declare a
+		// variant with base: set to the armour you actually wear.
+		if it := rs.Item(gearKey(g)); it != nil && it.Kind == "armor" &&
+			it.ArmorType != "shield" && it.AC > 0 {
 			return it
 		}
 	}
@@ -567,7 +614,118 @@ func equippedShield(c *Character, rs *Ruleset) *Item {
 	return nil
 }
 
-func computeAC(c *Character, rs *Ruleset, s *Sheet) (int, string) {
+// AttunementSlots is how many items a character can be attuned to at once.
+const AttunementSlots = 3
+
+// itemBonuses is what the equipped magic items add up to.
+type itemBonuses struct {
+	ac     int
+	save   int
+	attack map[string]int // item id -> attack bonus
+	damage map[string]int // item id -> damage bonus
+	// active reports whether a given equipment line's bonuses count. An item
+	// that requires attunement and has not got it contributes nothing.
+	active map[string]bool
+}
+
+// magicItems walks the character's equipment and works out what the magic
+// among it actually does: the flat AC and saving throw bonuses that apply
+// while it is worn, the per weapon attack and damage bonuses, the attunement
+// slots in use, and the display rows for the sheet.
+//
+// The rules it enforces are the two general ones. An item that requires
+// attunement does nothing until it is attuned, and a character has only
+// AttunementSlots of those to give. Attuning to more is not silently allowed:
+// the items past the limit stay inert and the sheet carries a warning.
+func magicItems(c *Character, rs *Ruleset, s *Sheet) itemBonuses {
+	b := itemBonuses{
+		attack: map[string]int{},
+		damage: map[string]int{},
+		active: map[string]bool{},
+	}
+	s.AttunementSlots = AttunementSlots
+	used := 0
+	for _, g := range c.Equipment {
+		it := rs.Item(gearKey(g))
+		if !it.IsMagic() {
+			continue
+		}
+		state := ""
+		live := g.Equipped
+		if it.Attunement {
+			switch {
+			case !g.Attuned:
+				state = "required"
+				live = false
+			case used >= AttunementSlots:
+				state = "required"
+				live = false
+				s.Warnings = append(s.Warnings, fmt.Sprintf(
+					"%s is marked attuned but you are already attuned to %d items, the maximum",
+					it.Name, AttunementSlots))
+			default:
+				state = "attuned"
+				used++
+				s.Attuned = append(s.Attuned, it.Name)
+			}
+		}
+		effect := magicItemEffect(it)
+		s.MagicItems = append(s.MagicItems, MagicItemView{
+			Id: it.Id, Name: it.Name, Rarity: it.RarityName(),
+			Equipped: g.Equipped, Attunement: state,
+			Note: it.AttunementNote, Effect: effect,
+		})
+		if !live {
+			continue
+		}
+		b.active[it.Id] = true
+		// Armour and shields fold their bonus into the armour calculation in
+		// computeAC, so only the free floating ones are summed here.
+		if it.Kind != "armor" && it.Kind != "shield" {
+			b.ac += it.ACBonus
+		}
+		b.save += it.SaveBonus
+		if it.AttackBonus != 0 {
+			b.attack[it.Id] = it.AttackBonus
+		}
+		if it.DamageBonus != 0 {
+			b.damage[it.Id] = it.DamageBonus
+		}
+	}
+	s.AttunementUsed = used
+	return b
+}
+
+// magicItemEffect is the short "what does it do" line on the sheet, built from
+// whatever bonuses the item declares. Items whose effect is prose only get an
+// empty string and are shown by name alone.
+func magicItemEffect(it *Item) string {
+	parts := []string{}
+	if it.AttackBonus != 0 || it.DamageBonus != 0 {
+		if it.AttackBonus == it.DamageBonus {
+			parts = append(parts, Signed(it.AttackBonus)+" attack and damage")
+		} else {
+			if it.AttackBonus != 0 {
+				parts = append(parts, Signed(it.AttackBonus)+" attack")
+			}
+			if it.DamageBonus != 0 {
+				parts = append(parts, Signed(it.DamageBonus)+" damage")
+			}
+		}
+	}
+	if it.ACBonus != 0 {
+		parts = append(parts, Signed(it.ACBonus)+" AC")
+	}
+	if it.SaveBonus != 0 {
+		parts = append(parts, Signed(it.SaveBonus)+" saving throws")
+	}
+	if it.Charges > 0 {
+		parts = append(parts, fmt.Sprintf("%d charges", it.Charges))
+	}
+	return strings.Join(parts, ", ")
+}
+
+func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, string) {
 	dex := s.AbilityMap[DEX].Modifier
 	ac := 10 + dex
 	source := "Unarmored"
@@ -592,6 +750,9 @@ func computeAC(c *Character, rs *Ruleset, s *Sheet) (int, string) {
 			if !armor.NoDex {
 				base += dex
 			}
+		}
+		if magic.active[armor.Id] {
+			base += armor.ACBonus
 		}
 		ac = base
 		source = armor.Name
@@ -627,8 +788,17 @@ func computeAC(c *Character, rs *Ruleset, s *Sheet) (int, string) {
 		if bonus == 0 {
 			bonus = 2
 		}
+		if magic.active[shield.Id] {
+			bonus += shield.ACBonus
+		}
 		ac += bonus
 		source += " + " + shield.Name
+	}
+	// Rings, cloaks and anything else that raises AC without being worn as
+	// armour. Armour and shields are already counted above.
+	if magic.ac != 0 {
+		ac += magic.ac
+		source += fmt.Sprintf(" %s magic", Signed(magic.ac))
 	}
 	return ac, source
 }
@@ -657,12 +827,18 @@ func IsProficientWith(profs []string, it *Item) bool {
 			p == "heavy armor" && it.ArmorType == "heavy",
 			p == "shields" && it.ArmorType == "shield":
 			return true
+		// The sheet holds display names, not raw ids - prettyProficiencies
+		// turns "martial" into "martial weapons" - so the pluralised forms
+		// have to match too, the same way the armour ones above do.
+		case p == "simple weapons" && strings.HasPrefix(strings.ToLower(it.Category), "simple"),
+			p == "martial weapons" && strings.HasPrefix(strings.ToLower(it.Category), "martial"):
+			return true
 		}
 	}
 	return false
 }
 
-func computeAttacks(c *Character, rs *Ruleset, s *Sheet) []AttackView {
+func computeAttacks(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) []AttackView {
 	out := []AttackView{}
 	strMod := s.AbilityMap[STR].Modifier
 	dexMod := s.AbilityMap[DEX].Modifier
@@ -672,6 +848,12 @@ func computeAttacks(c *Character, rs *Ruleset, s *Sheet) []AttackView {
 		}
 		it := rs.Item(gearKey(g))
 		if it == nil || !it.IsWeapon() {
+			continue
+		}
+		// A weapon with no damage is a template, not something you can swing:
+		// the SRD types a flame tongue as "Weapon (any sword)" and leaves the
+		// choice to the player. Give it a base: and it becomes a real weapon.
+		if it.Damage == "" {
 			continue
 		}
 		abilityMod := strMod
@@ -686,13 +868,16 @@ func computeAttacks(c *Character, rs *Ruleset, s *Sheet) []AttackView {
 			ability = "DEX"
 		}
 		prof := IsProficientWith(s.WeaponProficiencies, it)
-		bonus := abilityMod
+		bonus := abilityMod + magic.attack[it.Id]
 		if prof {
 			bonus += s.Proficiency
 		}
+		// A magic weapon's damage bonus rides along with the ability modifier
+		// rather than being printed separately, so "1d8+5" stays readable.
+		dmgMod := abilityMod + magic.damage[it.Id]
 		dmg := it.Damage
-		if dmg != "" && abilityMod != 0 {
-			dmg = fmt.Sprintf("%s%s", dmg, Signed(abilityMod))
+		if dmg != "" && dmgMod != 0 {
+			dmg = fmt.Sprintf("%s%s", dmg, Signed(dmgMod))
 		}
 		notes := strings.ToLower(ability) + " based"
 		if len(it.Properties) > 0 {
@@ -700,13 +885,19 @@ func computeAttacks(c *Character, rs *Ruleset, s *Sheet) []AttackView {
 		}
 		if it.Versatile != "" {
 			v := it.Versatile
-			if abilityMod != 0 {
-				v = fmt.Sprintf("%s%s", v, Signed(abilityMod))
+			if dmgMod != 0 {
+				v = fmt.Sprintf("%s%s", v, Signed(dmgMod))
 			}
 			notes = strings.TrimSpace(notes + " (" + v + " two handed)")
 		}
 		if !prof {
 			notes = strings.TrimSpace(notes + ", not proficient")
+		}
+		if it.IsMagic() {
+			notes = strings.TrimSpace(notes + ", magical")
+			if it.Attunement && !magic.active[it.Id] {
+				notes = strings.TrimSpace(notes + " (not attuned)")
+			}
 		}
 		rng := it.Range
 		if rng == "" {
@@ -879,11 +1070,64 @@ func computeSpellcasting(c *Character, rs *Ruleset, s *Sheet) {
 	s.SpellLevels = groupSpells(c, rs, s.Slots)
 }
 
+// GrantSubclassSpells adds the spells a subclass hands out for free - cleric
+// domain spells, paladin oath spells, the druid's circle spells - to the
+// character's known spell list.
+//
+// A subclass entry with no Group is granted as soon as the class level reaches
+// its Level. A subclass that offers alternative lists tags each spell with a
+// Group and carries a Choice of kind "spellgroup"; only the groups the
+// character actually picked are granted. A druid of the Circle of the Land
+// initiated on the coast gets the coast list and nothing else.
+//
+// Granted spells are marked with the subclass name as their Source, which is
+// what makes MarkPrepared treat them as always prepared and keeps them out of
+// the character's prepared spell allowance.
+//
+// The function is idempotent: appendSpell skips ids the character already
+// knows, so calling it twice, or after a level up, adds only what is new. That
+// matters because the builder replays every answer onto a fresh character.
+func GrantSubclassSpells(c *Character, rs *Ruleset) {
+	if c == nil || rs == nil {
+		return
+	}
+	for _, cl := range c.Classes {
+		sc := rs.Subclass(cl.Class, cl.Subclass)
+		if sc == nil || len(sc.Spells) == 0 {
+			continue
+		}
+		picked := pickedSpellGroups(c, sc)
+		for _, sp := range sc.Spells {
+			if sp.Level > cl.Level {
+				continue
+			}
+			if sp.Group != "" && !containsStr(picked, sp.Group) {
+				continue
+			}
+			c.Spells = appendSpell(c.Spells, rs, sp.Id, sc.Name)
+		}
+	}
+}
+
+// pickedSpellGroups returns the spell groups the character chose, reading the
+// answers stored against every "spellgroup" choice the subclass declares.
+func pickedSpellGroups(c *Character, sc *Subclass) []string {
+	out := []string{}
+	for _, ch := range sc.Choices {
+		if ch.Kind != "spellgroup" {
+			continue
+		}
+		out = append(out, c.Choices[ch.Id]...)
+	}
+	return out
+}
+
 // MarkPrepared sets the prepared flag on known spells. Classes that know a
 // fixed list (bard, sorcerer, ranger, warlock) always have their spells
 // available, classes that prepare from a list or spellbook get the first
 // N marked, where N is their prepared spell allowance.
 func MarkPrepared(c *Character, rs *Ruleset) {
+	GrantSubclassSpells(c, rs)
 	sheet := Compute(c, rs)
 	prepares := sheet.PreparedMax > 0
 	used := 0

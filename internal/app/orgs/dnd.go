@@ -326,6 +326,14 @@ func RequestDndCatalog(w http.ResponseWriter, r *http.Request) {
 
 	The =kind= field tells the client what widget to use: =select=, =multiselect=, =text=,
 	=longtext=, =number=, =abilities=, =fields= or =done=.
+
+	A =fields= prompt carries one =Field= per line of the answer, and the answer
+	posts one entry in =values= per field, in the same order. Each field names
+	the =kind= of value it holds, may carry =options= to suggest and =min= /
+	=max= to bound it, and =allowCustom= says whether anything outside the
+	suggestions is accepted. The bounds are checked again on the way in, so a
+	client that skips the check gets a =400= with the reason rather than a
+	character with =44= for an eye colour.
 	EDOC */
 func PostDndSession(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)

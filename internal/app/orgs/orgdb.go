@@ -17,7 +17,7 @@ import (
 	"time"
 
 	//"github.com/fsnotify/fsnotify"
-	"github.com/dietsche/rfsnotify"
+	"github.com/ihdavids/orgs/internal/common/rfsnotify"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )

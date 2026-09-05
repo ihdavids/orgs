@@ -147,6 +147,18 @@ def parse_traits(text):
     return traits
 
 
+def spell_group_name(caption):
+    """Turn a spell table caption into a group id.
+
+    "Arctic Circle Spells" -> "arctic", "Life Domain Spells" -> "life".
+    Returns "" when nothing is left, which means the table is the subclass's
+    only list and its spells are granted unconditionally.
+    """
+    words = re.sub(r"\b(circle|domain|oath|patron|expanded|spells?|list)\b", " ",
+                   caption or "", flags=re.I)
+    return slug(words.strip())
+
+
 def tables(text):
     """Return a list of (caption, headers, rows) for every markdown table."""
     out = []
@@ -1239,12 +1251,18 @@ def parse_classes(src, items, spell_ids):
                         "text": clean_feature_text(f_body),
                     })
                 sub["features"] = feats
-                spells = []
+                # A subclass usually has one spell table (cleric domain spells,
+                # paladin oath spells). Circle of the Land has one per terrain
+                # and the druid only ever gets one of them, so when there is
+                # more than one table each spell is tagged with the group its
+                # table was captioned with and a "spellgroup" choice is added.
+                tabs = []
                 for cap, headers, rows in tables(sub_body):
                     if not headers or "spell" not in " ".join(headers).lower():
                         continue
                     if not headers[0].lower().endswith("level"):
                         continue
+                    picked = []
                     for row in rows:
                         lvl = ordinal_to_int(row[0])
                         if not lvl or len(row) < 2:
@@ -1252,9 +1270,41 @@ def parse_classes(src, items, spell_ids):
                         for sp in row[1].split(","):
                             sid = slug(sp.strip())
                             if sid in spell_ids:
-                                spells.append({"id": sid, "level": lvl})
+                                picked.append({"id": sid, "level": lvl})
+                    if picked:
+                        # An "Expanded Spells" table widens the spell list you
+                        # may choose from; it is not a grant. Warlock patrons
+                        # work this way, cleric domains and paladin oaths do
+                        # not - they hand the spells over always prepared.
+                        expanded = "expanded" in (cap or "").lower()
+                        tabs.append((spell_group_name(cap), picked, expanded))
+                spells = []
+                expanded_spells = []
+                groups = []
+                for gname, picked, is_expanded in tabs:
+                    if len(tabs) > 1 and gname:
+                        for e in picked:
+                            e["group"] = gname
+                        if gname not in groups:
+                            groups.append(gname)
+                    if is_expanded:
+                        expanded_spells.extend(picked)
+                    else:
+                        spells.extend(picked)
                 if spells:
                     sub["spells"] = spells
+                if expanded_spells:
+                    sub["expandedSpells"] = expanded_spells
+                if groups:
+                    sub.setdefault("choices", []).append({
+                        "id": "%s-spell-group" % sub["id"],
+                        "name": "%s Spells" % sub_name,
+                        "prompt": "Choose the list your %s spells are drawn from." % sub_name.lower(),
+                        "level": subclass_level or 1,
+                        "count": 1,
+                        "kind": "spellgroup",
+                        "from": groups,
+                    })
                 subclasses.append(sub)
         if subclasses:
             cls["subclasses"] = subclasses
@@ -1428,6 +1478,217 @@ def parse_feats(src):
     return out
 
 
+# ---------------------------------------------------------------------------
+# Magic items
+# ---------------------------------------------------------------------------
+
+RARITIES = ["very rare", "uncommon", "common", "rare", "legendary", "artifact"]
+
+# A type line like "Armor (plate)" or "Weapon (longsword)" names the mundane
+# item the magic one is built on, so the generated entry can carry base: and
+# inherit its damage, AC, weight and properties. Vaguer ones - "any sword",
+# "light, medium, or heavy" - have no single base and stay templates.
+MAGIC_BASES = {
+    "shield": "shield",
+    "plate": "plate",
+    "scale mail": "scale-mail",
+    "chain shirt": "chain-shirt",
+    "studded leather": "studded-leather",
+    "dagger": "dagger",
+    "longsword": "longsword",
+    "scimitar": "scimitar",
+    "warhammer": "warhammer",
+    "maul": "maul",
+    "mace": "mace",
+    "javelin": "javelin",
+    "trident": "trident",
+    "longbow": "longbow",
+}
+
+# Items whose bonus is real but conditional or variable, and so must not be
+# applied flat. A defender splits its +3 between attack and AC anew each turn;
+# bracers of defense only work with no armour and no shield; an arrow-catching
+# shield helps against ranged attacks only; an Ioun stone's bonus depends on
+# which stone it is; a rod of alertness buffs allies around it rather than the
+# bearer; oil of sharpness improves whatever weapon it is painted onto. The
+# schema cannot express any of those, so they keep their rules text and no
+# numbers, which is better than being wrong in the character's favour.
+MAGIC_BONUS_SKIP = {
+    "defender", "bracers-of-defense", "arrow-catching-shield", "ioun-stone",
+    "rod-of-alertness", "oil-of-sharpness", "shield-of-missile-attraction",
+    # the generic "+1, +2, or +3" entries, which say "a bonus" not "+1"
+    "armor", "weapon", "shield", "ammunition",
+}
+
+# Flat bonuses are read straight out of the rules text, which the SRD phrases
+# very regularly. Anything matched here is unconditional while the item is
+# worn or wielded.
+RE_WEAPON_BONUS = re.compile(
+    r"\+(\d) bonus to attack and damage rolls made with "
+    r"(?:this magic weapon|this weapon|it)\b", re.I)
+RE_AC_BONUS = re.compile(
+    r"(?:gain|have) a \+(\d) bonus to AC(?P<saves> and saving throws)?"
+    r"(?P<cond>[^.]*)", re.I)
+# "can be wielded as a magic quarterstaff" tells us the mundane weapon a staff
+# or rod is really built on, when the type line did not.
+RE_AS_MAGIC = re.compile(r"as a magic ([a-z]+)", re.I)
+
+
+def derive_magic_bonuses(entry, body):
+    """Read the flat, unconditional bonuses out of an item's rules text."""
+    if entry["id"] in MAGIC_BONUS_SKIP:
+        return {}
+    out = {}
+    m = RE_WEAPON_BONUS.search(body)
+    if m:
+        out["attackBonus"] = out["damageBonus"] = int(m.group(1))
+    m = RE_AC_BONUS.search(body)
+    if m and " if " not in m.group("cond") and not m.group("cond").lstrip().startswith("against"):
+        out["acBonus"] = int(m.group(1))
+        if m.group("saves"):
+            out["saveBonus"] = int(m.group(1))
+    return out
+
+# Rarity of the +1/+2/+3 variants, straight off the generic SRD entries.
+PLUS_RARITY = {
+    "weapon": {1: "uncommon", 2: "rare", 3: "very rare"},
+    "armor": {1: "rare", 2: "very rare", 3: "legendary"},
+    "shield": {1: "uncommon", 2: "rare", 3: "very rare"},
+}
+
+
+def split_type_line(line):
+    """Split "Armor (plate), rare (requires attunement by a dwarf)" into its
+    kind, its parenthetical, its rarity and its attunement note."""
+    depth, cut = 0, len(line)
+    for i, ch in enumerate(line):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            cut = i
+            break
+    head, tail = line[:cut].strip(), line[cut + 1:].strip()
+
+    attune, note = False, ""
+    m = re.search(r"\(requires attunement([^)]*)\)", tail, re.I)
+    if m:
+        attune = True
+        note = clean(m.group(1)).strip()
+        if note.startswith("by "):
+            note = note
+        tail = (tail[:m.start()] + tail[m.end():]).strip(" ,")
+
+    rarity = ""
+    low = tail.lower()
+    if "varies" in low:
+        rarity = "varies"
+    else:
+        for r in RARITIES:
+            if re.search(r"\b" + r.replace(" ", r"\s+") + r"\b", low):
+                rarity = r
+                break
+    kind, paren = head, ""
+    pm = re.match(r"^([^(]+)\((.*)\)\s*$", head)
+    if pm:
+        kind, paren = pm.group(1).strip(), pm.group(2).strip()
+    return kind.lower(), paren.lower(), rarity, note
+
+
+def parse_magic_items(src, items):
+    """Read 09_Magic_Items/Magic_Items_Each and return one entry per file."""
+    d = os.path.join(src, "09_Magic_Items", "Magic_Items_Each")
+    if not os.path.isdir(d):
+        return []
+    out = []
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".md"):
+            continue
+        text = open(os.path.join(d, fn), encoding="utf-8").read()
+        nm = re.search(r"^#+\s+(.+?)\s*$", text, re.M)
+        tm = re.search(r"^\*(.+?)\*\s*$", text, re.M)
+        if not nm or not tm:
+            continue
+        name = clean(nm.group(1))
+        kind, paren, rarity, note = split_type_line(tm.group(1))
+        body = text[tm.end():].strip()
+        entry = {
+            "id": slug(name),
+            "name": name,
+            "kind": {"armor": "armor", "weapon": "weapon", "wondrous item": "wondrous"}.get(
+                kind, kind or "wondrous"),
+            "category": slug(kind) or "wondrous",
+            "rarity": rarity,
+            "text": "\n\n".join(p for p in (clean(x) for x in paragraphs(body)) if p),
+        }
+        if paren in MAGIC_BASES:
+            entry["base"] = MAGIC_BASES[paren]
+            if paren == "shield":
+                entry["kind"] = "shield"
+        elif paren:
+            entry["text"] = ("Applies to: %s.\n\n%s" % (paren, entry["text"])).strip()
+        if "base" not in entry:
+            # A staff or rod that says it can be wielded as a magic
+            # quarterstaff or mace is really that weapon with extras.
+            wm = RE_AS_MAGIC.search(body)
+            if wm:
+                cand = next((i for i in items.items if i["id"] == slug(wm.group(1))), None)
+                if cand and cand.get("kind") == "weapon" and cand.get("damage"):
+                    entry["base"] = cand["id"]
+        if note:
+            entry["attunement"] = True
+            entry["attunementNote"] = note
+        elif re.search(r"requires attunement", tm.group(1), re.I):
+            entry["attunement"] = True
+        ch = re.search(r"has (\d+) charges", body, re.I)
+        if ch:
+            entry["charges"] = int(ch.group(1))
+        entry.update(derive_magic_bonuses(entry, body))
+        out.append(entry)
+    return out
+
+
+def magic_plus_variants(items):
+    """Expand the generic "+1, +2, or +3" entries into concrete items.
+
+    The SRD writes one entry covering every weapon and every suit of armour.
+    That is unusable as a sheet entry, so each mundane weapon, armour and the
+    shield gets three real variants built on it with base:, which is what
+    makes a +1 longsword compute an attack bonus and a +2 breastplate an AC.
+    """
+    out = []
+    for it in items.items:
+        kind = it.get("kind")
+        if kind == "weapon":
+            table, fields = PLUS_RARITY["weapon"], ("attackBonus", "damageBonus")
+        elif kind == "armor" and it.get("armorType") in ("light", "medium", "heavy"):
+            table, fields = PLUS_RARITY["armor"], ("acBonus",)
+        elif kind == "shield" or it.get("armorType") == "shield":
+            table, fields = PLUS_RARITY["shield"], ("acBonus",)
+        else:
+            continue
+        if it.get("kind") == "weapon" and not it.get("damage"):
+            continue
+        for n in (1, 2, 3):
+            entry = {
+                "id": "%s-plus-%d" % (it["id"], n),
+                "name": "+%d %s" % (n, it["name"]),
+                "base": it["id"],
+                "rarity": table[n],
+                "text": ("You have a %s bonus to attack and damage rolls made with this "
+                         "magic weapon." % ("+%d" % n)) if fields[0] == "attackBonus" else
+                        ("You have a +%d bonus to AC while wearing this armor." % n
+                         if kind == "armor" else
+                         "While holding this shield, you have a +%d bonus to AC. This bonus "
+                         "is in addition to the shield's normal bonus to AC." % n),
+            }
+            for f in fields:
+                entry[f] = n
+            out.append(entry)
+    return out
+
+
 def parse_languages(src):
     text = open(os.path.join(src, "03_Characterization", "Languages.md"), encoding="utf-8").read()
     langs = []
@@ -1537,8 +1798,16 @@ def main():
     sp["spells"] = spells
     write(os.path.join(out, "srd-spells.yaml"), "SRD 5.1: spells", sp)
 
+    magic = parse_magic_items(src, items)
+    variants = magic_plus_variants(items)
+    mi = dict(base)
+    mi["items"] = magic + variants
+    write(os.path.join(out, "srd-magic-items.yaml"), "SRD 5.1: magic items", mi)
+
     print("\nsummary: %d races, %d classes, %d backgrounds, %d items, %d spells, %d feats" % (
         len(races), len(classes), len(backgrounds), len(items.items), len(spells), len(feats)))
+    print("         %d magic items (%d from the SRD, %d generated +1/+2/+3 variants)" % (
+        len(magic) + len(variants), len(magic), len(variants)))
     unlisted = [s["id"] for s in spells if not s["classes"]]
     if unlisted:
         print("note: %d spells are not on any class list (%s...)" % (

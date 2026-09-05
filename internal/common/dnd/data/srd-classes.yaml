@@ -1266,116 +1266,180 @@ classes:
         spells:
           - id: "hold-person"
             level: 3
+            group: "arctic"
           - id: "spike-growth"
             level: 3
+            group: "arctic"
           - id: "sleet-storm"
             level: 5
+            group: "arctic"
           - id: "slow"
             level: 5
+            group: "arctic"
           - id: "freedom-of-movement"
             level: 7
+            group: "arctic"
           - id: "ice-storm"
             level: 7
+            group: "arctic"
           - id: "commune-with-nature"
             level: 9
+            group: "arctic"
           - id: "cone-of-cold"
             level: 9
+            group: "arctic"
           - id: "mirror-image"
             level: 3
+            group: "coast"
           - id: "misty-step"
             level: 3
+            group: "coast"
           - id: "water-breathing"
             level: 5
+            group: "coast"
           - id: "water-walk"
             level: 5
+            group: "coast"
           - id: "control-water"
             level: 7
+            group: "coast"
           - id: "freedom-of-movement"
             level: 7
+            group: "coast"
           - id: "conjure-elemental"
             level: 9
+            group: "coast"
           - id: "scrying"
             level: 9
+            group: "coast"
           - id: "blur"
             level: 3
+            group: "desert"
           - id: "silence"
             level: 3
+            group: "desert"
           - id: "create-food-and-water"
             level: 5
+            group: "desert"
           - id: "protection-from-energy"
             level: 5
+            group: "desert"
           - id: "blight"
             level: 7
+            group: "desert"
           - id: "hallucinatory-terrain"
             level: 7
+            group: "desert"
           - id: "insect-plague"
             level: 9
+            group: "desert"
           - id: "wall-of-stone"
             level: 9
+            group: "desert"
           - id: "barkskin"
             level: 3
+            group: "forest"
           - id: "spider-climb"
             level: 3
+            group: "forest"
           - id: "call-lightning"
             level: 5
+            group: "forest"
           - id: "plant-growth"
             level: 5
+            group: "forest"
           - id: "divination"
             level: 7
+            group: "forest"
           - id: "freedom-of-movement"
             level: 7
+            group: "forest"
           - id: "commune-with-nature"
             level: 9
+            group: "forest"
           - id: "tree-stride"
             level: 9
+            group: "forest"
           - id: "invisibility"
             level: 3
+            group: "grassland"
           - id: "pass-without-trace"
             level: 3
+            group: "grassland"
           - id: "daylight"
             level: 5
+            group: "grassland"
           - id: "haste"
             level: 5
+            group: "grassland"
           - id: "divination"
             level: 7
+            group: "grassland"
           - id: "freedom-of-movement"
             level: 7
+            group: "grassland"
           - id: "dream"
             level: 9
+            group: "grassland"
           - id: "insect-plague"
             level: 9
+            group: "grassland"
           - id: "spider-climb"
             level: 3
+            group: "mountain"
           - id: "spike-growth"
             level: 3
+            group: "mountain"
           - id: "lightning-bolt"
             level: 5
+            group: "mountain"
           - id: "meld-into-stone"
             level: 5
+            group: "mountain"
           - id: "stone-shape"
             level: 7
+            group: "mountain"
           - id: "stoneskin"
             level: 7
+            group: "mountain"
           - id: "passwall"
             level: 9
+            group: "mountain"
           - id: "wall-of-stone"
             level: 9
+            group: "mountain"
           - id: "acid-arrow"
             level: 3
+            group: "swamp"
           - id: "darkness"
             level: 3
+            group: "swamp"
           - id: "water-walk"
             level: 5
+            group: "swamp"
           - id: "stinking-cloud"
             level: 5
+            group: "swamp"
           - id: "freedom-of-movement"
             level: 7
+            group: "swamp"
           - id: "locate-creature"
             level: 7
+            group: "swamp"
           - id: "insect-plague"
             level: 9
+            group: "swamp"
           - id: "scrying"
             level: 9
+            group: "swamp"
+        choices:
+          - id: "circle-of-the-land-spell-group"
+            name: "Circle of the Land Spells"
+            prompt: "Choose the list your circle of the land spells are drawn from."
+            level: 2
+            count: 1
+            kind: "spellgroup"
+            from: ["arctic", "coast", "desert", "forest", "grassland", "mountain", "swamp"]
     summary: "A priest of the Old Faith, wielding the powers of nature and adopting animal forms. (d8 hit die, WIS based, full caster)"
     primaryAbility: ["wis"]
     text: "A priest of the Old Faith, wielding the powers of nature and adopting animal forms."
@@ -4070,7 +4134,7 @@ classes:
               At the end of your next turn, the target returns to the space it previously occupied, or the nearest unoccupied space. If the target is not a fiend, it takes 10d10 psychic damage as it reels from its horrific experience.
 
               Once you use this feature, you can't use it again until you finish a long rest.
-        spells:
+        expandedSpells:
           - id: "burning-hands"
             level: 1
           - id: "command"

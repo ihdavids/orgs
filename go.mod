@@ -8,9 +8,9 @@ require (
 	github.com/apognu/gocal v0.9.0
 	github.com/bzick/tokenizer v1.4.0
 	github.com/coryb/oreo v0.0.0-20180804211640-3e1b88fc08f1
-	github.com/dietsche/rfsnotify v0.0.0-20200716145600-b37be6e4177f
 	github.com/ekalinin/go-textwrap v0.0.2
 	github.com/flosch/pongo2/v5 v5.0.0
+	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gdamore/tcell/v2 v2.8.1
 	github.com/gen2brain/beeep v0.0.0-20220909211152-5a9ec94374f6
 	github.com/go-jira/jira v1.0.28
@@ -38,7 +38,6 @@ require (
 require (
 	cloud.google.com/go/compute v1.10.0 // indirect
 	github.com/ChannelMeter/iso8601duration v0.0.0-20150204201828-8da3af7a2a61 // indirect
-	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charlievieth/fastwalk v1.0.12 // indirect
@@ -47,8 +46,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.7.1 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect
-	github.com/dlclark/regexp2 v1.4.0 // indirect
-	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
@@ -74,7 +71,6 @@ require (
 	google.golang.org/genproto v0.0.0-20221010155953-15ba04fc1c0e // indirect
 	google.golang.org/grpc v1.50.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
-	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 )
 
 require (

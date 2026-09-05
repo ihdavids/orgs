@@ -477,7 +477,8 @@ func mergeClass(dst, src *Class) {
 			d.Features = mergeTraits(d.Features, sc.Features)
 			d.Choices = mergeChoices(d.Choices, sc.Choices)
 			d.Spells = append(d.Spells, sc.Spells...)
-			d.Proficiency = mergeProficiencies(d.Proficiency, sc.Proficiency)
+			d.ExpandedSpells = append(d.ExpandedSpells, sc.ExpandedSpells...)
+			d.Proficiency = mergeProficiencySets(d.Proficiency, sc.Proficiency)
 		} else {
 			dst.Subclasses = append(dst.Subclasses, sc)
 		}
@@ -506,7 +507,7 @@ func mergeChoices(dst, src []Choice) []Choice {
 		found := false
 		for i := range dst {
 			if dst[i].Id == c.Id {
-				dst[i] = c
+				mergeChoice(&dst[i], &c)
 				found = true
 				break
 			}
@@ -518,12 +519,81 @@ func mergeChoices(dst, src []Choice) []Choice {
 	return dst
 }
 
+// mergeChoice extends an existing choice rather than replacing it, which is
+// what lets a module add two metamagic options or five fighting styles
+// without restating the ones already there. Scalars overwrite when the
+// incoming value is set, Options merge by name and From merges by value.
+func mergeChoice(dst, src *Choice) {
+	if src.Name != "" {
+		dst.Name = src.Name
+	}
+	if src.Prompt != "" {
+		dst.Prompt = src.Prompt
+	}
+	if src.Help != "" {
+		dst.Help = src.Help
+	}
+	if src.Kind != "" {
+		dst.Kind = src.Kind
+	}
+	if src.Grants != "" {
+		dst.Grants = src.Grants
+	}
+	if src.Level != 0 {
+		dst.Level = src.Level
+	}
+	if src.Count != 0 {
+		dst.Count = src.Count
+	}
+	if len(src.CountByLevel) > 0 {
+		dst.CountByLevel = src.CountByLevel
+	}
+	if len(src.SpellLevels) > 0 {
+		dst.SpellLevels = src.SpellLevels
+	}
+	dst.From = addUnique(dst.From, src.From...)
+	for _, o := range src.Options {
+		replaced := false
+		for i := range dst.Options {
+			if dst.Options[i].Name == o.Name {
+				dst.Options[i] = o
+				replaced = true
+				break
+			}
+		}
+		if !replaced {
+			dst.Options = append(dst.Options, o)
+		}
+	}
+}
+
 func mergeProficiencies(dst, src Proficiencies) Proficiencies {
 	dst.Armor = addUnique(dst.Armor, src.Armor...)
 	dst.Weapons = addUnique(dst.Weapons, src.Weapons...)
 	dst.Tools = addUnique(dst.Tools, src.Tools...)
 	dst.Skills = addUnique(dst.Skills, src.Skills...)
 	dst.Saves = addUnique(dst.Saves, src.Saves...)
+	return dst
+}
+
+// mergeProficiencySets merges two sets block by block. Blocks that arrive at
+// the same level are merged into one; a level the destination does not have
+// yet is appended. That keeps "extend the subclass" modules additive without
+// letting a 7th level grant collapse into a 3rd level one.
+func mergeProficiencySets(dst, src ProficiencySet) ProficiencySet {
+	for _, sp := range src {
+		merged := false
+		for i := range dst {
+			if dst[i].Level == sp.Level {
+				dst[i] = mergeProficiencies(dst[i], sp)
+				merged = true
+				break
+			}
+		}
+		if !merged {
+			dst = append(dst, sp)
+		}
+	}
 	return dst
 }
 
@@ -642,6 +712,78 @@ func (r *Ruleset) Index() {
 	}
 	for i := range r.Feats {
 		r.featIdx[r.Feats[i].Id] = &r.Feats[i]
+	}
+	r.resolveItemBases()
+}
+
+// resolveItemBases fills in the fields a magic item inherits from the mundane
+// item it is built on. A "+1 longsword" only has to say base: longsword and
+// what it changes; everything it leaves blank - damage, properties, armour
+// class, weight, category - comes from the base.
+//
+// Chains are followed, so a variant may be built on another variant, and a
+// cycle or a missing base is simply left alone rather than looping forever.
+func (r *Ruleset) resolveItemBases() {
+	var fill func(it *Item, depth int)
+	fill = func(it *Item, depth int) {
+		if it == nil || it.Base == "" || depth > 8 {
+			return
+		}
+		base := r.itemIdx[it.Base]
+		if base == nil || base == it {
+			return
+		}
+		fill(base, depth+1)
+		cleared := map[string]bool{}
+		for _, f := range it.Clears {
+			cleared[f] = true
+		}
+		keep := func(field string, empty bool) bool { return empty && !cleared[field] }
+		if keep("kind", it.Kind == "") {
+			it.Kind = base.Kind
+		}
+		if keep("category", it.Category == "") {
+			it.Category = base.Category
+		}
+		if keep("weight", it.Weight == 0) {
+			it.Weight = base.Weight
+		}
+		if keep("damage", it.Damage == "") {
+			it.Damage = base.Damage
+		}
+		if keep("damageType", it.DamageType == "") {
+			it.DamageType = base.DamageType
+		}
+		if keep("versatile", it.Versatile == "") {
+			it.Versatile = base.Versatile
+		}
+		if keep("properties", len(it.Properties) == 0) {
+			it.Properties = base.Properties
+		}
+		if keep("range", it.Range == "") {
+			it.Range = base.Range
+		}
+		if keep("ac", it.AC == 0) {
+			it.AC = base.AC
+		}
+		if keep("armorType", it.ArmorType == "") {
+			it.ArmorType = base.ArmorType
+		}
+		if keep("dexMax", it.DexMax == 0) {
+			it.DexMax = base.DexMax
+		}
+		if keep("noDex", !it.NoDex) {
+			it.NoDex = base.NoDex
+		}
+		if keep("strengthReq", it.StrengthReq == 0) {
+			it.StrengthReq = base.StrengthReq
+		}
+		if keep("stealthDisadvantage", !it.StealthDisadvantage) {
+			it.StealthDisadvantage = base.StealthDisadvantage
+		}
+	}
+	for i := range r.Items {
+		fill(&r.Items[i], 0)
 	}
 }
 

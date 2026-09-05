@@ -13,7 +13,11 @@
 //	orgfile.go - org mode character sheet reader / writer
 package dnd
 
-import "fmt"
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v3"
+)
 
 // ----------------------------------------------------------------------------
 // Abilities and skills
@@ -77,23 +81,87 @@ type Proficiencies struct {
 	Tools   []string `yaml:"tools" json:"tools"`
 	Skills  []string `yaml:"skills" json:"skills"`
 	Saves   []string `yaml:"saves" json:"saves"`
+	// Level is the class level at which this block is granted. Zero, the
+	// usual case, means it arrives as soon as its source applies - which for
+	// a race, background or feat is always, and for a subclass is the level
+	// the subclass itself is chosen at. It is only meaningful on a source
+	// that is read through a ProficiencySet.
+	Level int `yaml:"level" json:"level"`
+}
+
+// ProficiencySet is what one source grants. It accepts either a single block,
+// which is what almost everything wants:
+//
+//	proficiencies:
+//	  skills: ["insight", "medicine"]
+//	  tools: ["herbalism-kit"]
+//
+// or a list of blocks, when some of them arrive later than the source itself.
+// A monk of the Way of Mercy gets its skills at 3rd level with the tradition,
+// but a Gloom Stalker's Wisdom save comes at 7th:
+//
+//	proficiencies:
+//	  - skills: ["deception"]
+//	  - level: 7
+//	    saves: ["wis"]
+//
+// The two forms are interchangeable, so existing modules that write a single
+// block keep working untouched.
+type ProficiencySet []Proficiencies
+
+// UnmarshalYAML accepts either shape described above. A null is an empty set.
+func (p *ProficiencySet) UnmarshalYAML(value *yaml.Node) error {
+	switch value.Kind {
+	case yaml.SequenceNode:
+		var many []Proficiencies
+		if err := value.Decode(&many); err != nil {
+			return err
+		}
+		*p = ProficiencySet(many)
+		return nil
+	case yaml.MappingNode:
+		var one Proficiencies
+		if err := value.Decode(&one); err != nil {
+			return err
+		}
+		*p = ProficiencySet{one}
+		return nil
+	case yaml.ScalarNode:
+		if value.Tag == "!!null" {
+			*p = nil
+			return nil
+		}
+	}
+	return fmt.Errorf("line %d: proficiencies must be a block or a list of blocks",
+		value.Line)
+}
+
+// At returns the blocks a character of the given class level has reached.
+func (p ProficiencySet) At(level int) []Proficiencies {
+	out := make([]Proficiencies, 0, len(p))
+	for _, one := range p {
+		if one.Level <= level {
+			out = append(out, one)
+		}
+	}
+	return out
 }
 
 // Choice is a generic "pick N of these" definition. It powers class skill
 // picks, fighting styles, expertise, extra languages, favoured enemies and
 // anything a module author dreams up, without needing new code.
 type Choice struct {
-	Id     string   `yaml:"id" json:"id"`
-	Name   string   `yaml:"name" json:"name"`
-	Prompt string   `yaml:"prompt" json:"prompt"`
-	Help   string   `yaml:"help" json:"help"`
-	Level  int      `yaml:"level" json:"level"`
-	Count  int      `yaml:"count" json:"count"`
+	Id     string `yaml:"id" json:"id"`
+	Name   string `yaml:"name" json:"name"`
+	Prompt string `yaml:"prompt" json:"prompt"`
+	Help   string `yaml:"help" json:"help"`
+	Level  int    `yaml:"level" json:"level"`
+	Count  int    `yaml:"count" json:"count"`
 	// CountByLevel, when set, overrides Count using the class level as index
 	// (warlock invocations and sorcerer metamagic both grow with level).
-	CountByLevel []int `yaml:"countByLevel" json:"countByLevel"`
-	Kind   string   `yaml:"kind" json:"kind"` // skills|languages|tools|options|spells|expertise
-	From   []string `yaml:"from" json:"from"`
+	CountByLevel []int    `yaml:"countByLevel" json:"countByLevel"`
+	Kind         string   `yaml:"kind" json:"kind"` // skills|languages|tools|options|spells|expertise
+	From         []string `yaml:"from" json:"from"`
 	// SpellLevels restricts a spell choice to certain levels ([0] = cantrips).
 	SpellLevels []int `yaml:"spellLevels" json:"spellLevels"`
 	// Options are used when Kind is "options" (fighting styles, invocations...)
@@ -148,7 +216,10 @@ type Race struct {
 	Choices        []Choice       `yaml:"choices" json:"choices"`
 	Spells         []RaceSpell    `yaml:"spells" json:"spells"`
 	Names          []string       `yaml:"names" json:"names"`
-	Subraces       []Race         `yaml:"subraces" json:"subraces"`
+	// Appearance replaces the built in colour and size table for this race.
+	// A subrace extends its parent rather than replacing it.
+	Appearance *Appearance `yaml:"appearance" json:"appearance,omitempty"`
+	Subraces   []Race      `yaml:"subraces" json:"subraces"`
 	// Parent is filled in by the loader for subraces.
 	Parent string `yaml:"-" json:"parent"`
 }
@@ -158,6 +229,9 @@ type AbilityChoice struct {
 	Count  int      `yaml:"count" json:"count"`
 	Amount int      `yaml:"amount" json:"amount"`
 	From   []string `yaml:"from" json:"from"`
+	// GrantsSave makes the chosen ability a saving throw proficiency as well,
+	// which is what the Resilient feat does.
+	GrantsSave bool `yaml:"grantsSave" json:"grantsSave"`
 }
 
 // RaceSpell is an innate spell granted by a race at a given level.
@@ -193,22 +267,37 @@ type Spellcasting struct {
 
 // Subclass is an archetype/domain/circle/oath etc.
 type Subclass struct {
-	Id           string        `yaml:"id" json:"id"`
-	Name         string        `yaml:"name" json:"name"`
-	Source       string        `yaml:"source" json:"source"`
-	Summary      string        `yaml:"summary" json:"summary"`
-	Text         string        `yaml:"text" json:"text"`
-	Features     []Trait       `yaml:"features" json:"features"`
-	Choices      []Choice      `yaml:"choices" json:"choices"`
-	Spells       []SubSpell    `yaml:"spells" json:"spells"`
-	Proficiency  Proficiencies `yaml:"proficiencies" json:"proficiencies"`
-	Spellcasting *Spellcasting `yaml:"spellcasting" json:"spellcasting"`
+	Id       string   `yaml:"id" json:"id"`
+	Name     string   `yaml:"name" json:"name"`
+	Source   string   `yaml:"source" json:"source"`
+	Summary  string   `yaml:"summary" json:"summary"`
+	Text     string   `yaml:"text" json:"text"`
+	Features []Trait  `yaml:"features" json:"features"`
+	Choices  []Choice `yaml:"choices" json:"choices"`
+	// Spells are granted outright and are always prepared - cleric domain
+	// spells, paladin oath spells, druid circle spells.
+	Spells []SubSpell `yaml:"spells" json:"spells"`
+	// ExpandedSpells are added to the class's spell list to choose from, but
+	// are not handed to you. This is what a warlock patron's Expanded Spell
+	// List does, and it is a different thing from Spells above: the warlock
+	// still has to spend one of their few spells known on it.
+	ExpandedSpells []SubSpell     `yaml:"expandedSpells" json:"expandedSpells"`
+	Proficiency    ProficiencySet `yaml:"proficiencies" json:"proficiencies"`
+	Spellcasting   *Spellcasting  `yaml:"spellcasting" json:"spellcasting"`
 }
 
 // SubSpell is an always prepared subclass spell (domain spells, oath spells...)
+//
+// Group is optional. When it is empty the spell is granted as soon as the
+// character reaches Level. When it is set the subclass offers several
+// alternative lists and the spell is only granted if the character picked that
+// group - the druid's Circle of the Land, where the circle spells depend on
+// the terrain you were initiated in, is the case this exists for. The pick
+// itself is an ordinary Choice of kind "spellgroup" on the subclass.
 type SubSpell struct {
 	Id    string `yaml:"id" json:"id"`
 	Level int    `yaml:"level" json:"level"`
+	Group string `yaml:"group" json:"group"`
 }
 
 // Class is a playable class.
@@ -262,13 +351,13 @@ type Background struct {
 // Item covers weapons, armor, gear and packs. A single struct keeps the yaml
 // simple and lets homebrew modules add anything they like.
 type Item struct {
-	Id       string `yaml:"id" json:"id"`
-	Name     string `yaml:"name" json:"name"`
-	Kind     string `yaml:"kind" json:"kind"` // weapon|armor|shield|gear|pack|tool
-	Category string `yaml:"category" json:"category"`
-	Cost     string `yaml:"cost" json:"cost"`
+	Id       string  `yaml:"id" json:"id"`
+	Name     string  `yaml:"name" json:"name"`
+	Kind     string  `yaml:"kind" json:"kind"` // weapon|armor|shield|gear|pack|tool
+	Category string  `yaml:"category" json:"category"`
+	Cost     string  `yaml:"cost" json:"cost"`
 	Weight   float64 `yaml:"weight" json:"weight"`
-	Text     string `yaml:"text" json:"text"`
+	Text     string  `yaml:"text" json:"text"`
 
 	// Weapon fields
 	Damage     string   `yaml:"damage" json:"damage"`
@@ -287,6 +376,59 @@ type Item struct {
 
 	// Pack contents
 	Contents []ItemRef `yaml:"contents" json:"contents"`
+
+	// ---- magic item fields ------------------------------------------------
+	//
+	// Rarity is what makes an item magical as far as the engine is concerned:
+	// anything with a rarity set answers true to IsMagic. The SRD's own
+	// vocabulary is used - common, uncommon, rare, very rare, legendary,
+	// artifact - plus "varies" for the handful of items whose rarity depends
+	// on a variant, such as a belt of giant strength.
+	Rarity string `yaml:"rarity" json:"rarity"`
+	// Attunement is set when the item requires attunement, and
+	// AttunementNote carries the restriction when there is one, e.g.
+	// "by a spellcaster" or "by a creature of good alignment".
+	Attunement     bool   `yaml:"attunement" json:"attunement"`
+	AttunementNote string `yaml:"attunementNote" json:"attunementNote"`
+	// Base is the id of the mundane item this one is built on. A +1 longsword
+	// sets base: longsword and inherits its damage, properties and weight, so
+	// that a variant only has to state what it changes. Resolved once at load
+	// time by resolveItemBases.
+	Base string `yaml:"base" json:"base"`
+	// The mechanical bonuses the engine can actually apply. AttackBonus and
+	// DamageBonus land on the item's own attack; ACBonus and SaveBonus apply
+	// while the item is equipped, whether it is armour, a shield, or a ring
+	// or cloak of protection. An item that requires attunement contributes
+	// none of them until it is attuned.
+	AttackBonus int `yaml:"attackBonus" json:"attackBonus"`
+	DamageBonus int `yaml:"damageBonus" json:"damageBonus"`
+	ACBonus     int `yaml:"acBonus" json:"acBonus"`
+	SaveBonus   int `yaml:"saveBonus" json:"saveBonus"`
+	// Charges is the item's maximum charges, 0 for items that have none.
+	Charges int `yaml:"charges" json:"charges"`
+	// Clears names base fields the variant drops rather than inherits, for
+	// the cases where the value it wants is the zero value and so cannot be
+	// told apart from saying nothing. Mithral plate is the example: it is
+	// plate with no Strength requirement and no stealth penalty, and
+	// "strengthReq: 0" on its own would simply be overwritten from the base.
+	//
+	//	base: "plate"
+	//	clears: ["strengthReq", "stealthDisadvantage"]
+	//
+	// The names are the yaml field names of Item.
+	Clears []string `yaml:"clears" json:"clears"`
+}
+
+// IsMagic reports whether the item is a magic item. Rarity is the marker: an
+// ordinary longsword has none, every magic item has one.
+func (i *Item) IsMagic() bool { return i != nil && i.Rarity != "" }
+
+// RarityName is the rarity capitalised for display, empty for mundane items.
+func (i *Item) RarityName() string {
+	if i == nil || i.Rarity == "" {
+		return ""
+	}
+	return Titleize(i.Rarity)
 }
 
 // IsWeapon is true for anything that can be attacked with.
@@ -344,6 +486,11 @@ type Feat struct {
 	AbilityBonuses map[string]int `yaml:"abilityBonuses" json:"abilityBonuses"`
 	AbilityChoice  *AbilityChoice `yaml:"abilityChoice" json:"abilityChoice"`
 	Proficiencies  Proficiencies  `yaml:"proficiencies" json:"proficiencies"`
+	// Choices are the picks a feat asks you to make - the three proficiencies
+	// from Skilled, the ability Resilient makes you proficient in. They are
+	// collected alongside race, class and subclass choices, so a feat can ask
+	// anything those can ask without new code.
+	Choices []Choice `yaml:"choices" json:"choices"`
 }
 
 // Ruleset is a complete (possibly merged) set of rules data.
@@ -390,12 +537,15 @@ type ClassLevel struct {
 
 // Gear is one line of the equipment table.
 type Gear struct {
-	Id       string  `yaml:"id" json:"id"`
-	Name     string  `yaml:"name" json:"name"`
-	Qty      int     `yaml:"qty" json:"qty"`
-	Equipped bool    `yaml:"equipped" json:"equipped"`
-	Weight   float64 `yaml:"weight" json:"weight"`
-	Notes    string  `yaml:"notes" json:"notes"`
+	Id       string `yaml:"id" json:"id"`
+	Name     string `yaml:"name" json:"name"`
+	Qty      int    `yaml:"qty" json:"qty"`
+	Equipped bool   `yaml:"equipped" json:"equipped"`
+	// Attuned marks one of the three items a character has attuned to. An
+	// item that requires attunement gives no bonuses until this is set.
+	Attuned bool    `yaml:"attuned" json:"attuned"`
+	Weight  float64 `yaml:"weight" json:"weight"`
+	Notes   string  `yaml:"notes" json:"notes"`
 }
 
 // KnownSpell is a spell the character knows, and whether it is prepared.
@@ -545,13 +695,26 @@ type AttackView struct {
 	Proficent bool   `json:"proficient"`
 }
 
+// MagicItemView is one magic item as displayed on the sheet.
+type MagicItemView struct {
+	Id       string `json:"id"`
+	Name     string `json:"name"`
+	Rarity   string `json:"rarity"`
+	Equipped bool   `json:"equipped"`
+	// Attunement is "" when none is needed, "required" when the item wants it
+	// and has not got it, or "attuned" when it has.
+	Attunement string `json:"attunement"`
+	Note       string `json:"note"`
+	Effect     string `json:"effect"`
+}
+
 // SpellSlotView is the slot line for one spell level.
 type SpellSlotView struct {
 	Level int    `json:"level"`
 	Label string `json:"label"`
-	Total int `json:"total"`
-	Used  int `json:"used"`
-	Left  int `json:"left"`
+	Total int    `json:"total"`
+	Used  int    `json:"used"`
+	Left  int    `json:"left"`
 	// Pips is 1..Total, so a template can draw one box per slot.
 	Pips []int `json:"pips"`
 }
@@ -589,37 +752,37 @@ type SpellEntry struct {
 type Sheet struct {
 	Character *Character `json:"character"`
 
-	Name        string `json:"name"`
-	Player      string `json:"player"`
-	RaceName    string `json:"raceName"`
-	ClassLine   string `json:"classLine"`
-	ClassName   string `json:"className"`
+	Name         string `json:"name"`
+	Player       string `json:"player"`
+	RaceName     string `json:"raceName"`
+	ClassLine    string `json:"classLine"`
+	ClassName    string `json:"className"`
 	SubclassName string `json:"subclassName"`
-	Background  string `json:"background"`
-	Alignment   string `json:"alignment"`
-	Level       int    `json:"level"`
-	XP          int    `json:"xp"`
-	NextLevelXP int    `json:"nextLevelXp"`
-	RulesetName string `json:"rulesetName"`
+	Background   string `json:"background"`
+	Alignment    string `json:"alignment"`
+	Level        int    `json:"level"`
+	XP           int    `json:"xp"`
+	NextLevelXP  int    `json:"nextLevelXp"`
+	RulesetName  string `json:"rulesetName"`
 
-	Abilities  []AbilityView `json:"abilities"`
-	AbilityMap map[string]AbilityView `json:"abilityMap"`
-	Proficiency int          `json:"proficiency"`
-	ProficiencyStr string    `json:"proficiencyStr"`
+	Abilities      []AbilityView          `json:"abilities"`
+	AbilityMap     map[string]AbilityView `json:"abilityMap"`
+	Proficiency    int                    `json:"proficiency"`
+	ProficiencyStr string                 `json:"proficiencyStr"`
 
-	Saves     []AbilityView `json:"saves"`
-	Skills    []SkillView   `json:"skills"`
-	PassivePerception int   `json:"passivePerception"`
-	PassiveInsight    int   `json:"passiveInsight"`
-	PassiveInvestigation int `json:"passiveInvestigation"`
+	Saves                []AbilityView `json:"saves"`
+	Skills               []SkillView   `json:"skills"`
+	PassivePerception    int           `json:"passivePerception"`
+	PassiveInsight       int           `json:"passiveInsight"`
+	PassiveInvestigation int           `json:"passiveInvestigation"`
 
-	AC           int    `json:"ac"`
-	ACSource     string `json:"acSource"`
-	Initiative   int    `json:"initiative"`
+	AC            int    `json:"ac"`
+	ACSource      string `json:"acSource"`
+	Initiative    int    `json:"initiative"`
 	InitiativeStr string `json:"initiativeStr"`
-	Speed        int    `json:"speed"`
-	Size         string `json:"size"`
-	Darkvision   int    `json:"darkvision"`
+	Speed         int    `json:"speed"`
+	Size          string `json:"size"`
+	Darkvision    int    `json:"darkvision"`
 
 	HPMax       int    `json:"hpMax"`
 	HPCurrent   int    `json:"hpCurrent"`
@@ -630,12 +793,20 @@ type Sheet struct {
 	DeathSaves  string `json:"deathSaves"`
 	Inspiration bool   `json:"inspiration"`
 
-	Attacks   []AttackView `json:"attacks"`
-	Equipment []Gear       `json:"equipment"`
-	Money     Money        `json:"money"`
-	Weight    float64      `json:"weight"`
-	CarryCapacity int      `json:"carryCapacity"`
-	PushDragLift  int      `json:"pushDragLift"`
+	Attacks       []AttackView `json:"attacks"`
+	Equipment     []Gear       `json:"equipment"`
+	Money         Money        `json:"money"`
+	Weight        float64      `json:"weight"`
+	CarryCapacity int          `json:"carryCapacity"`
+	PushDragLift  int          `json:"pushDragLift"`
+
+	// Magic items carried, and the attunement slots they take up. Attuned
+	// lists the items actually attuned to; AttunementSlots is the limit,
+	// which is three for everyone.
+	MagicItems      []MagicItemView `json:"magicItems"`
+	Attuned         []string        `json:"attuned"`
+	AttunementUsed  int             `json:"attunementUsed"`
+	AttunementSlots int             `json:"attunementSlots"`
 
 	ArmorProficiencies  []string `json:"armorProficiencies"`
 	WeaponProficiencies []string `json:"weaponProficiencies"`
@@ -645,32 +816,32 @@ type Sheet struct {
 	Features []Trait `json:"features"`
 	Traits   []Trait `json:"traits"`
 
-	IsCaster        bool             `json:"isCaster"`
-	CastingAbility  string           `json:"castingAbility"`
-	CastingAbilityName string        `json:"castingAbilityName"`
-	SpellSaveDC     int              `json:"spellSaveDc"`
-	SpellAttack     int              `json:"spellAttack"`
-	SpellAttackStr  string           `json:"spellAttackStr"`
-	CantripsKnown   int              `json:"cantripsKnown"`
-	SpellsKnown     int              `json:"spellsKnown"`
-	SpellsPrepared  int              `json:"spellsPrepared"`
-	PreparedMax     int              `json:"preparedMax"`
-	Slots           []SpellSlotView  `json:"slots"`
-	SpellLevels     []SpellLevelView `json:"spellLevels"`
-	SpellNotes      string           `json:"spellNotes"`
-	PactMagic       bool             `json:"pactMagic"`
+	IsCaster           bool             `json:"isCaster"`
+	CastingAbility     string           `json:"castingAbility"`
+	CastingAbilityName string           `json:"castingAbilityName"`
+	SpellSaveDC        int              `json:"spellSaveDc"`
+	SpellAttack        int              `json:"spellAttack"`
+	SpellAttackStr     string           `json:"spellAttackStr"`
+	CantripsKnown      int              `json:"cantripsKnown"`
+	SpellsKnown        int              `json:"spellsKnown"`
+	SpellsPrepared     int              `json:"spellsPrepared"`
+	PreparedMax        int              `json:"preparedMax"`
+	Slots              []SpellSlotView  `json:"slots"`
+	SpellLevels        []SpellLevelView `json:"spellLevels"`
+	SpellNotes         string           `json:"spellNotes"`
+	PactMagic          bool             `json:"pactMagic"`
 
 	Personality string `json:"personality"`
 	Ideals      string `json:"ideals"`
 	Bonds       string `json:"bonds"`
 	Flaws       string `json:"flaws"`
 
-	Age    string `json:"age"`
-	Height string `json:"height"`
+	Age     string `json:"age"`
+	Height  string `json:"height"`
 	Weight_ string `json:"weightStr"`
-	Eyes   string `json:"eyes"`
-	Skin   string `json:"skin"`
-	Hair   string `json:"hair"`
+	Eyes    string `json:"eyes"`
+	Skin    string `json:"skin"`
+	Hair    string `json:"hair"`
 
 	Appearance string `json:"appearance"`
 	Backstory  string `json:"backstory"`
@@ -702,11 +873,11 @@ type Option struct {
 
 // Prompt is one question in the character creation flow.
 type Prompt struct {
-	Session  string   `json:"session"`
-	Step     string   `json:"step"`
-	Title    string   `json:"title"`
-	Question string   `json:"question"`
-	Help     string   `json:"help"`
+	Session  string `json:"session"`
+	Step     string `json:"step"`
+	Title    string `json:"title"`
+	Question string `json:"question"`
+	Help     string `json:"help"`
 	// Kind is one of: select, multiselect, text, longtext, number, abilities, confirm, done
 	Kind        string   `json:"kind"`
 	Options     []Option `json:"options"`
@@ -726,22 +897,34 @@ type Prompt struct {
 	Done     bool     `json:"done"`
 	Error    string   `json:"error"`
 	// Summary is a running description of the character so far.
-	Summary  string     `json:"summary"`
-	Sheet    *Sheet     `json:"sheet,omitempty"`
-	Org      string     `json:"org,omitempty"`
-	Filename string     `json:"filename,omitempty"`
+	Summary  string `json:"summary"`
+	Sheet    *Sheet `json:"sheet,omitempty"`
+	Org      string `json:"org,omitempty"`
+	Filename string `json:"filename,omitempty"`
 }
 
-// Field is one input of a multi field prompt (ability score assignment).
+// Field is one input of a multi field prompt: an ability score to assign, or
+// one line of the appearance step.
 type Field struct {
-	Id      string `json:"id"`
-	Name    string `json:"name"`
-	Hint    string `json:"hint"`
-	Value   int    `json:"value"`
-	Min     int    `json:"min"`
-	Max     int    `json:"max"`
-	Bonus   int    `json:"bonus"`
-	Cost    int    `json:"cost"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Hint string `json:"hint"`
+	// Kind names what the field holds, which is what ValidateField checks
+	// against. Empty means free text with no rules.
+	Kind  string `json:"kind,omitempty"`
+	Value int    `json:"value"`
+	// Min and Max bound the answer. For the appearance fields they are in
+	// years, inches and pounds.
+	Min   int `json:"min"`
+	Max   int `json:"max"`
+	Bonus int `json:"bonus"`
+	Cost  int `json:"cost"`
+	// Text is the value the field starts with.
+	Text string `json:"text,omitempty"`
+	// Options are suggested values. AllowCustom says whether the player may
+	// type something that is not on the list.
+	Options     []Option `json:"options,omitempty"`
+	AllowCustom bool     `json:"allowCustom,omitempty"`
 }
 
 // Progress tells the client how far through creation we are.
