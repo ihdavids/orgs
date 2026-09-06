@@ -260,6 +260,26 @@ func XPForLevel(level int) int {
 	return XPThresholds[level]
 }
 
+// xpProgress is how far through a level a character is, as a percentage. It
+// is 0 at the experience that bought the level they are on and 100 at the
+// experience that buys the next one, so the sheet can draw the climb toward
+// levelling as a ring.
+func xpProgress(xp int, level int) int {
+	here, next := XPForLevel(level), XPForLevel(level+1)
+	if next <= here {
+		// Level 20, where there is nothing left to climb toward.
+		return 100
+	}
+	pct := (xp - here) * 100 / (next - here)
+	if pct < 0 {
+		return 0
+	}
+	if pct > 100 {
+		return 100
+	}
+	return pct
+}
+
 // StandardArray is the default point spread offered during creation.
 var StandardArray = []int{15, 14, 13, 12, 10, 8}
 

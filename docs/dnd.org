@@ -68,8 +68,9 @@
 * The character file
 
   A character is a normal org file. The property drawer of the top heading
-  holds the state, and two tables (equipment and spells) are read back in.
-  Everything else is regenerated whenever the sheet is written.
+  holds the state, and four sections are read back in: the equipment table,
+  the spell tables, the inventory history and the coin history. Everything
+  else is regenerated whenever the sheet is written.
 
   #+BEGIN_SRC org
   ,#+TITLE: Lyra Silverleaf
@@ -116,6 +117,58 @@
   =DND_HP_MAX= to 0 first if you want the average hit point rule applied
   rather than keeping your rolled total.
 
+* The character portrait
+
+  A sheet can carry a picture of the character. It is three more properties
+  in the drawer:
+
+  #+BEGIN_SRC org
+  ,:DND_IMAGE:       [[file:art/lyra.png]]
+  ,:DND_IMAGE_FOCUS: 57% 29%
+  ,:DND_IMAGE_ZOOM:  3.2
+  #+END_SRC
+
+  =DND_IMAGE= takes anything that names an image, so whichever form your
+  editor produced works:
+
+  | =[[file:art/lyra.png][Lyra]]=   | a full org link, description and all |
+  | =[[./art/lyra.webp]]=           | a bracket link with no link type     |
+  | =<file:~/pics/lyra.gif>=        | an angle link                        |
+  | =file:art/lyra.png=             | a plain link                         |
+  | =art/lyra.apng=                 | a bare relative path                 |
+  | =https://example.com/lyra.avif= | a url                                |
+  | =data:image/png;base64,iVBO...= | an inline data uri                   |
+
+  A relative path is resolved next to the org file, the way emacs would
+  resolve it. Any format a browser can show works, animated gif, webp and
+  apng included. A local file is inlined into the exported html, so the sheet
+  stays one self contained document you can mail to somebody.
+
+  The html sheet frames the picture in a round medallion and moves the
+  character's name and experience onto the frame itself: the name curves
+  around the top, the experience around the bottom, and the outer ring fills
+  up as they climb toward the next level. The header beside it drops both, so
+  nothing is said twice.
+
+** Cropping to a face
+
+   Portrait art is rarely framed for a circular medallion, so two properties
+   choose the part of it to show:
+
+   - =DND_IMAGE_FOCUS= is the point of the picture that lands in the middle
+     of the medallion, written as =x% y%= from the top left corner. It
+     defaults to =50% 50%=.
+   - =DND_IMAGE_ZOOM= is how far to magnify, so =3.2= shows a bit under a
+     third of the picture. It defaults to =1=, which fits the whole picture
+     to the medallion.
+
+   Together they crop a full body illustration down to a head: point the
+   focus at the face and raise the zoom until the shoulders reach the rim.
+
+   The printed sheet honours both, but pdflatex is stricter than a browser -
+   it only reads png, jpeg and pdf files from the local disk. A url or an
+   animated gif is left out of the pdf and noted in the sheet warnings.
+
 * Rendering a sheet
 
   #+BEGIN_SRC bash
@@ -132,6 +185,269 @@
   {% for s in sheet.skills %}{% if s.proficient %}*{% endif %} {{ s.name }} {{ s.mod }}
   {% endfor %}
   #+END_SRC
+
+* Your armour class
+
+  The sheet works out every armour class the character has available and shows
+  the best of them, which is what D&D Beyond does and what players expect to
+  see:
+
+  - the armour actually worn, plus dexterity as that armour allows it - all of
+    it for light, at most +2 for medium, none for heavy,
+  - wearing nothing, which is 10 plus dexterity,
+  - and any unarmored defence their classes grant: a barbarian's
+    =10 + dex + con=, a monk's =10 + dex + wis=.
+
+  A shield is counted into each of those before they are compared, not added
+  to whichever won, because not every calculation allows one: a barbarian may
+  carry a shield with their unarmored defence and a monk may not. So a monk in
+  scale mail with a shield is compared as scale mail and shield against their
+  own bare defence, and gets whichever is actually higher.
+
+  This is deliberately more generous than the letter of the rules, where an
+  unarmored defence applies only while you wear no armour at all. A barbarian
+  who keeps a leather jerkin in their pack is not made worse off by owning it;
+  the sheet shows what they could have with a moment's undressing, which is
+  the number on their D&D Beyond sheet.
+
+  Anything that raises AC without being worn as armour - a ring of protection,
+  a cloak of protection - is added on top of whichever calculation won, and
+  the sheet names what it used: =Leather + Shield +1 magic=, or
+  =Barbarian unarmored defense=.
+
+  A class in an add on module declares its own defence with =unarmoredAc=, and
+  =unarmoredShield: true= if a shield may be carried with it:
+
+  #+BEGIN_SRC yaml
+  classes:
+    - id: "stone-warden"
+      name: "Stone Warden"
+      unarmoredAc: "10+dex+str"
+      unarmoredShield: true
+  #+END_SRC
+
+* Your inventory
+
+  The equipment box on the html sheet is live. It stacks identical things
+  into one line with a count, splits them between the containers you are
+  carrying, weighs the lot and tells you whether you are encumbered - and
+  every change is written straight back into the org character sheet.
+
+  - *Add item* opens a search across every item in your ruleset. The match is
+    fuzzy, the way the character builder's lists are: =pot heal= finds a
+    Potion of Healing and =bkpk= finds a Backpack, and a hit says how many
+    you already own. Anything the rules have never heard of is added under
+    the name you type, so loot and homebrew need no module.
+  - *Use* takes one off the stack, which is what a potion or a ration is for.
+  - *Drop* gets rid of some or all of a stack. Emptying out a container hands
+    its contents back to you rather than losing them with the bag.
+  - *Move* puts things into a container - as long as you actually carry it.
+
+  Each container you own gets a tab of its own, beside =On Person= for what
+  you carry loose. Which items count as containers comes from the ruleset:
+  any item with =container: true= is one, and =capacity= is what it holds in
+  pounds. The standard containers of the SRD - backpack, pouch, sack, chest,
+  barrel, basket, bucket, quiver, and the bag of holding and handy haversack -
+  are known without any annotation.
+
+  A container marked =extradimensional= holds its contents somewhere else, so
+  what is inside it is not part of what you are carrying: a bag of holding
+  weighs fifteen pounds whether it is full or empty.
+
+  The line at the top of the box is the weight you carry against your
+  carrying capacity, and where that lands on the encumbrance scale: encumbered
+  over five times your Strength, heavily encumbered over ten times, and past
+  carrying it altogether over fifteen.
+
+** How it is stored
+
+  Storage is one column on the equipment table, holding the container a line
+  is kept in. Blank means you are carrying it yourself.
+
+  #+BEGIN_SRC org
+  ,** Equipment
+  | Item              | Qty | Equipped | Attuned | Weight | Container | Notes |
+  |-------------------+-----+----------+---------+--------+-----------+-------|
+  | Backpack          |   1 | no       | no      |      5 |           |       |
+  | Potion of Healing |   3 | no       | no      |    0.5 | backpack  |       |
+  #+END_SRC
+
+  It is deliberately flat: a pouch inside a backpack is a line stored in the
+  backpack, and the pouch's own contents stay listed under the pouch.
+
+** Inventory history
+
+  Everything that comes and goes is written into an =Inventory History=
+  section of the character file, and shown on the *Inventory* tab of the
+  session drawer - it is part of your character sheet rather than of any one
+  night's session log, so it is there whether or not you are recording.
+
+  #+BEGIN_SRC org
+  ,** Inventory History
+  | Date       | Time  | Action  | Item              | Qty | From     | To       | Notes |
+  |------------+-------+---------+-------------------+-----+----------+----------+-------|
+  | 2025-09-05 | 19:32 | added   | Potion of Healing |   3 |          | Backpack |       |
+  | 2025-09-05 | 20:11 | used    | Potion of Healing |   1 | Backpack |          |       |
+  | 2025-09-05 | 21:44 | moved   | Potion of Healing |   1 | Backpack | Pouch    |       |
+  #+END_SRC
+
+  Nothing is derived from the log, it is only read and written, so a line you
+  correct by hand stays corrected.
+
+* Your money
+
+  The purse has a tab of its own beside the inventory. It shows every
+  denomination you hold, what the lot is worth, and what it weighs - fifty
+  coins of any kind weigh a pound - and every change is written straight back
+  into the org character sheet, the same way the inventory is.
+
+  - *Spend* pays for something. Say the amount however you like: =15 gp=,
+    =3 gp 4 sp=, or a bare number, which is gold. What goes in the box beside
+    it is what the money was for, and it is kept in the history.
+  - *Gain* is the other direction, for a reward, a sold sword or a purse
+    picked up off the floor.
+  - *Change up* rolls small coin into the largest denominations that hold the
+    same value, which is what you do when the pouch gets heavy. Electrum is
+    left alone: a purse that keeps turning gold into electrum is a nuisance.
+  - *Exchange* trades one coin for another at the standard rate, refusing a
+    swap that will not come out even - three silver is not two electrum and
+    change.
+  - *Count purse* says outright what is in it, for when the sheet has drifted
+    from what is on the table.
+
+  The exchange is D&D's: a gold piece is 100 copper, 10 silver, 2 electrum, or
+  a tenth of a platinum piece.
+
+  | Coin         | In copper | In gold |
+  |--------------+-----------+---------|
+  | Copper (cp)  |         1 |    0.01 |
+  | Silver (sp)  |        10 |     0.1 |
+  | Electrum (ep)|        50 |     0.5 |
+  | Gold (gp)    |       100 |       1 |
+  | Platinum (pp)|      1000 |      10 |
+
+  Paying makes change, so what you can afford is what your purse is *worth*,
+  not what denominations happen to be in it. A two copper candle bought out of
+  a purse holding a single gold piece hands over the gold and takes back nine
+  silver and eight copper; only a price your whole purse cannot cover is
+  refused, and a refused payment leaves the purse exactly as it was.
+
+** Coin history
+
+  What has been spent and earned is written into a =Coin History= section of
+  the character file, beside the inventory history and read back the same way.
+
+  #+BEGIN_SRC org
+  ,** Coin History
+  | Date       | Time  | Action | Amount | Change    | Balance         | Notes             |
+  |------------+-------+--------+--------+-----------+-----------------+-------------------|
+  | 2025-09-05 | 19:32 | spent  | 50 gp  |           | 42 gp 5 cp      | potion of healing |
+  | 2025-09-05 | 20:11 | spent  | 2 cp   | 9 sp 8 cp | 41 gp 9 sp 8 cp | a candle          |
+  | 2025-09-05 | 21:44 | gained | 3 gp   |           | 44 gp 9 sp 8 cp | reward            |
+  #+END_SRC
+
+  =Change= is what came back when a coin too large had to be broken, and
+  =Balance= is what the purse held afterwards. Nothing is derived from the
+  log, so a line you correct by hand stays corrected.
+
+  The coins themselves live in the property drawer, as =DND_CP= through
+  =DND_PP=, which is where the sheet reads them from.
+
+* Casting a spell
+
+  Every spell on the html sheet has a =Cast= button, which does the whole
+  thing in one click:
+
+  - a spell that needs an attack roll rolls it, reporting the normal, the
+    advantage and the disadvantage outcome from the same pair of d20s,
+  - a spell that does damage or healing rolls that too, with the critical
+    total beside it when there was an attack to crit,
+  - a cantrip's damage is whatever it has grown to at your level - fire bolt
+    rolls 2d10 from 5th, 3d10 from 11th,
+  - and a spell the target saves against says so in words ready to read out:
+    "Dexterity saving throw against DC 15, half as much damage on a success".
+
+  A spell that rolls nothing at all - mage armor, say - still lands in the
+  history saying what it costs and how long it lasts, so the tray is a record
+  of what was cast, not only of what was rolled.
+
+  Casts are marked with a star in the roll tray so a spell is told apart from
+  a die roll at a glance. The mark is the panel's; a cast written into a
+  session log is plain text like every other row, with the spell's name, what
+  it rolled, and the salient details - what it hit on, what it would have
+  done on a critical, and what the target still has to roll - in the notes.
+
+  What a spell does when it is cast comes from the ruleset where it says so
+  (=attack=, =save= and =damage= are fields on a spell) and from the spell's
+  own text where it does not, so homebrew spells that read like the SRD's
+  cast correctly without being annotated.
+
+* Resting
+
+  The menu behind the stack of lines in the bottom corner of the html sheet
+  has a *Short rest* and a *Long rest* button. Either one walks you through
+  the rest a page at a time - what it asks of you, what it gives back - and
+  when you take it, it writes the whole thing to the character file and, if a
+  session is recording, to that night's notes.
+
+  A short rest asks the one question a short rest has: how many hit dice you
+  want to spend. Each die is thrown on the table like any other roll, lands in
+  the roll tray, and adds what it rolled plus your constitution modifier to
+  your hit points, and you decide after each one whether to spend another.
+  Then it hands back every feature that recharges on a short rest, and a
+  warlock's pact magic slots.
+
+  A long rest gives back every hit point, half your hit dice rounded down (at
+  least one), every spell slot, and the uses of every limited feature. It also
+  clears temporary hit points and any death saves you were carrying.
+
+  The rest is written into the session log as one note:
+
+  #+BEGIN_SRC org
+  ,** 22:14
+     *Short Rest.* Hit points 23 of 27, 9 regained.
+     - Spent 2 hit dice.
+     - Recovered Second Wind (1 of 1).
+  #+END_SRC
+
+** Uses per rest
+
+   A feature that the rules ration - "you can use this feature twice, and you
+   regain both uses when you finish a short rest" - wears a row of slots on
+   the *Features & Traits* tab. Clicking an empty slot spends a use, clicking
+   a filled one hands it back, and either way the count is written to the
+   character file, in the =DND_USES_SPENT= property:
+
+   #+BEGIN_SRC org
+   ,   :DND_USES_SPENT: channel-divinity=2; second-wind=1
+   #+END_SRC
+
+   The limits are read out of each feature's own rules text, so nothing needs
+   annotating for the SRD to work: Second Wind is once per short rest, Wild
+   Shape twice, Divine Sense is 1 + your charisma modifier, and features that
+   grow - Channel Divinity at 6th and 18th level, Indomitable at 13th and
+   17th - grow with you. Where the srd names the same resource more than once
+   as it improves ("Bardic Inspiration (d6)" and "(d10)") the entries share
+   one pool.
+
+   The reader is deliberately careful: a resource whose size lives in a class
+   table rather than in its prose - a barbarian's rages, a monk's ki points, a
+   sorcerer's sorcery points - is left with no slots at all rather than given
+   an invented number. If you want one tracked anyway, or your own module has
+   a limit worded too strangely to read, write it down and it is believed over
+   the text:
+
+   #+BEGIN_SRC yaml
+   classes:
+     - id: "barbarian"
+       features:
+         - name: "Rage"
+           uses: "3"
+           recharge: "long"
+   #+END_SRC
+
+   =uses= is a bonus formula, so =cha=, =1 + cha= and =prof= all work, and
+   =recharge= is =short= or =long=.
 
 * Recording a session
 
@@ -327,6 +643,16 @@
   | =/dnd/refresh=       | POST   | Recompute a sheet after hand editing        |
   | =/dnd/sheet=         | GET    | The fully computed sheet as JSON            |
   | =/dnd/characters=    | GET    | Every character sheet the server knows      |
+
+  The inventory:
+
+  | Endpoint          | Method | Purpose                                        |
+  |-------------------+--------+------------------------------------------------|
+  | =/dnd/inventory=  | GET    | What a character carries, and its history      |
+  | =/dnd/inventory=  | POST   | Add, use, drop or move something               |
+  | =/dnd/money=      | GET    | The purse, what it is worth, and its history   |
+  | =/dnd/money=      | POST   | Spend, gain, set, change up or exchange coin   |
+  | =/dnd/items=      | GET    | Fuzzy item search, as the add item box asks it |
 
   And the play session log:
 

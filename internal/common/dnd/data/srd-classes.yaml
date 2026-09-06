@@ -262,6 +262,7 @@ classes:
     subclassLevel: 3
     subclassLabel: "Primal Path"
     unarmoredAc: "10+dex+con"
+    unarmoredShield: true
     multiclassReq:
       str: 13
     subclasses:

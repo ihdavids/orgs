@@ -20,6 +20,7 @@ package dnd
   orgs dnd sheet -file lyra.org -format pdf -out lyra.pdf
   orgs dnd refresh -file lyra.org       # recompute after hand editing
   orgs dnd rulesets                     # what content is loaded
+  orgs dnd import -ddb 12345678         # bring a character over from d&d beyond
   #+END_SRC
 
   =orgs dnd new= walks you through creation the way a character builder does:
@@ -41,6 +42,35 @@ package dnd
   filter is editable: backspace takes a character off and the list widens
   again, =ctrl+w= takes a word, and escape clears it. The count beside the
   question says how much of the list you are looking at.
+
+** Importing from D&D Beyond
+
+  =orgs dnd import= converts a character you already have on D&D Beyond into an
+  org character sheet, the same sheet =orgs dnd new= writes.
+
+  #+BEGIN_SRC bash
+  orgs dnd import -ddb https://www.dndbeyond.com/characters/12345678
+  orgs dnd import -ddb 12345678 -out characters/lyra.org -force
+  orgs dnd import -ddb 12345678 -preview      # convert and print, write nothing
+  orgs dnd import -json saved.json            # from a payload you saved yourself
+  orgs dnd import -forget                     # clear the saved session cookie
+  #+END_SRC
+
+  D&D Beyond has no login api, so a character whose privacy is set to public
+  imports with no credential at all, and a private one asks for the
+  =CobaltSession= cookie your browser is already holding - the prompt says where
+  to find it. The cookie is traded for a short lived token by D&D Beyond's own
+  auth service and can be kept in your system keyring so you are only asked
+  once; it is never sent to your orgs server, which only ever sees the
+  character json. =-cookie= and the =ORGS_DDB_COBALT= environment variable pass
+  it in without a prompt for scripting.
+
+  Everything is matched onto your ruleset by name, and anything that does not
+  match - a subclass from a book the srd does not carry, a homebrew item - is
+  still written onto the sheet under its own name and listed afterwards as
+  something to check, so nothing is quietly dropped. Importing over a sheet
+  that is already there keeps that sheet's identity and its inventory history,
+  which D&D Beyond has no equivalent of.
 
   The appearance questions - age, height, weight, eyes, skin and hair - come
   with suggestions drawn from your race and your class, so a hill dwarf druid
@@ -110,6 +140,14 @@ type Dnd struct {
 	Force   bool
 	Open    bool
 	Local   bool
+
+	// D&D Beyond import
+	Ddb     string
+	Json    string
+	Cookie  string
+	Dump    string
+	Preview bool
+	Forget  bool
 }
 
 func (self *Dnd) Unmarshal(unmarshal func(interface{}) error) error {
@@ -133,20 +171,38 @@ func (self *Dnd) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Force, "force", false, "overwrite an existing character sheet")
 	fset.BoolVar(&self.Open, "open", false, "open the sheet in your editor when done")
 	fset.BoolVar(&self.Local, "local", true, "write exported sheets on the server")
+	fset.StringVar(&self.Ddb, "ddb", "", "d&d beyond character url or id to import")
+	fset.StringVar(&self.Json, "json", "", "import from a saved d&d beyond json file")
+	fset.StringVar(&self.Cookie, "cookie", "", "d&d beyond CobaltSession cookie (asked for if needed)")
+	fset.StringVar(&self.Dump, "dump", "", "save the d&d beyond payload to this file as well")
+	fset.BoolVar(&self.Preview, "preview", false, "convert and print without writing a sheet")
+	fset.BoolVar(&self.Forget, "forget", false, "clear the saved d&d beyond session cookie")
 }
 
 func (self *Dnd) Exec(core *commands.Core) {
 	sub := "new"
 	if self.fset != nil {
-		rest := self.fset.Args()
-		if len(rest) > 0 {
-			sub = rest[0]
-			// flags may follow the subcommand: orgs dnd sheet -file x.org
-			self.fset.Parse(rest[1:])
-			rest = self.fset.Args()
+		args := self.fset.Args()
+		if len(args) > 0 {
+			sub = args[0]
+			args = args[1:]
 		}
-		if len(rest) > 0 && self.Kind == "" {
-			self.Kind = rest[0]
+		// Flags may follow the subcommand and they may follow a word after it,
+		// so keep alternating between the two rather than stopping at the
+		// first thing that is not a flag - "orgs dnd list spells -filter fire"
+		// means the same as "orgs dnd list -filter fire spells".
+		words := []string{}
+		for {
+			self.fset.Parse(args)
+			args = self.fset.Args()
+			if len(args) == 0 {
+				break
+			}
+			words = append(words, args[0])
+			args = args[1:]
+		}
+		if len(words) > 0 && self.Kind == "" {
+			self.Kind = words[0]
 		}
 	}
 	switch sub {
@@ -166,6 +222,12 @@ func (self *Dnd) Exec(core *commands.Core) {
 		self.runSheet(core)
 	case "refresh", "recompute":
 		self.runRefresh(core)
+	case "import", "ddb", "dndbeyond":
+		if self.Forget {
+			ddbForget()
+			return
+		}
+		self.runImport(core)
 	case "rulesets", "modules":
 		self.runRulesets(core)
 	case "reload":
@@ -198,6 +260,11 @@ func (self *Dnd) usage() {
 
   orgs dnd show -file lyra.org
       Print a computed character sheet in the terminal.
+
+  orgs dnd import -ddb <url or id> [-out lyra.org] [-preview] [-force]
+      Bring a character over from D&D Beyond. Public characters need nothing;
+      a private one asks for your browser's CobaltSession cookie.
+      -dump <file> keeps the raw payload, -json <file> imports one back.
 
   orgs dnd sheet -file lyra.org [-format html|latex|pdf] [-out lyra.pdf]
       Render a character sheet.

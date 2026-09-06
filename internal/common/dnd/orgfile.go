@@ -40,6 +40,14 @@ import (
 	"strings"
 )
 
+// InventoryHistoryHeading is the section of the sheet the inventory log is
+// written to and read back from.
+const InventoryHistoryHeading = "Inventory History"
+
+// CoinHistoryHeading is the same for the coin log: what has been spent,
+// earned or changed up.
+const CoinHistoryHeading = "Coin History"
+
 // Property names used in the character property drawer.
 const (
 	PropId         = "DND_ID"
@@ -57,6 +65,7 @@ const (
 	PropExpertise  = "DND_EXPERTISE"
 	PropLanguages  = "DND_LANGUAGES"
 	PropTools      = "DND_TOOLS"
+	PropToolExpert = "DND_TOOL_EXPERTISE"
 	PropFeats      = "DND_FEATS"
 	PropChoices    = "DND_CHOICES"
 	PropHPMax      = "DND_HP_MAX"
@@ -66,6 +75,10 @@ const (
 	PropDeath      = "DND_DEATH_SAVES"
 	PropInspire    = "DND_INSPIRATION"
 	PropSlotsUsed  = "DND_SLOTS_USED"
+	PropUsesSpent  = "DND_USES_SPENT"
+	PropImage      = "DND_IMAGE"
+	PropImageFocus = "DND_IMAGE_FOCUS"
+	PropImageZoom  = "DND_IMAGE_ZOOM"
 )
 
 // RenderOrg writes a complete org mode character sheet.
@@ -120,6 +133,7 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{PropExpertise, joinList(c.Expertise)},
 		[2]string{PropLanguages, joinList(c.Languages)},
 		[2]string{PropTools, joinList(c.Tools)},
+		[2]string{PropToolExpert, joinList(c.ToolExpertise)},
 		[2]string{PropFeats, joinList(c.Feats)},
 		[2]string{PropChoices, encodeChoices(c.Choices)},
 		[2]string{PropHPMax, itoa(s.HPMax)},
@@ -129,6 +143,7 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{PropDeath, c.DeathSaves},
 		[2]string{PropInspire, boolStr(c.Inspiration)},
 		[2]string{PropSlotsUsed, encodeInts(c.SlotsUsed)},
+		[2]string{PropUsesSpent, encodeUses(c.UsesSpent)},
 		[2]string{"DND_CP", itoa(c.Money.CP)},
 		[2]string{"DND_SP", itoa(c.Money.SP)},
 		[2]string{"DND_EP", itoa(c.Money.EP)},
@@ -140,6 +155,9 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{"DND_EYES", c.Eyes},
 		[2]string{"DND_SKIN", c.Skin},
 		[2]string{"DND_HAIR", c.Hair},
+		[2]string{PropImage, c.Image},
+		[2]string{PropImageFocus, c.ImageFocus},
+		[2]string{PropImageZoom, FormatZoom(c.ImageZoom)},
 	)
 	width := 0
 	for _, p := range props {
@@ -209,16 +227,56 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	// ---- equipment (parsed back) -----------------------------------------
 	w("** Equipment\n")
 	w("Edit this table freely, it is read back in when the sheet is loaded.\n")
-	rows = [][]string{{"Item", "Qty", "Equipped", "Attuned", "Weight", "Notes"}}
+	w("Container is where a line is kept: blank for on your person, otherwise a\n")
+	w("container you own, such as backpack or pouch.\n")
+	rows = [][]string{{"Item", "Qty", "Equipped", "Attuned", "Weight", "Container", "Notes"}}
 	for _, g := range s.Equipment {
 		rows = append(rows, []string{g.Name, itoa(g.Qty), yesNo(g.Equipped),
-			yesNo(g.Attuned), trimFloat(g.Weight), g.Notes})
+			yesNo(g.Attuned), trimFloat(g.Weight), g.Container, g.Notes})
 	}
 	w("%s\n", orgTable(rows, 1))
-	w("Carrying %.1f lb of %d lb capacity (push/drag/lift %d lb).\n",
-		s.Weight, s.CarryCapacity, s.PushDragLift)
-	w("Coins: %d cp, %d sp, %d ep, %d gp, %d pp.\n\n",
-		s.Money.CP, s.Money.SP, s.Money.EP, s.Money.GP, s.Money.PP)
+	w("Carrying %.1f lb of %d lb capacity (push/drag/lift %d lb). %s.\n",
+		s.Weight, s.CarryCapacity, s.PushDragLift, s.Inventory.Label)
+	if s.Inventory.Stored > 0 {
+		w("Another %.1f lb is stowed in extradimensional space and is not carried.\n",
+			s.Inventory.Stored)
+	}
+	w("Coins: %d cp, %d sp, %d ep, %d gp, %d pp - %s in all, weighing %s lb.\n\n",
+		s.Money.CP, s.Money.SP, s.Money.EP, s.Money.GP, s.Money.PP,
+		ValueString(s.Money.Copper()), trimFloat(s.Money.Weight()))
+
+	// ---- inventory history (parsed back) ----------------------------------
+	//
+	// Written by the character sheet every time something is picked up, used,
+	// dropped or packed away. It is the file's own record: nothing is derived
+	// from it, so an entry corrected by hand stays corrected.
+	if len(c.InventoryLog) > 0 {
+		w("** %s\n", InventoryHistoryHeading)
+		w("What has come and gone, newest last.\n")
+		rows = [][]string{{"Date", "Time", "Action", "Item", "Qty", "From", "To", "Notes"}}
+		for _, e := range c.InventoryLog {
+			rows = append(rows, []string{e.Date, e.Time, e.Action, e.Item,
+				itoa(e.Qty), e.From, e.To, e.Notes})
+		}
+		w("%s\n\n", orgTable(rows, 1))
+	}
+
+	// ---- coin history (parsed back) ---------------------------------------
+	//
+	// The purse's own record, written every time coin is spent, earned,
+	// changed up or set by hand. Like the inventory history it is read
+	// straight back rather than derived from anything, so a line corrected by
+	// hand stays corrected.
+	if len(c.MoneyLog) > 0 {
+		w("** %s\n", CoinHistoryHeading)
+		w("What has been spent and earned, newest last.\n")
+		rows = [][]string{{"Date", "Time", "Action", "Amount", "Change", "Balance", "Notes"}}
+		for _, e := range c.MoneyLog {
+			rows = append(rows, []string{e.Date, e.Time, e.Action, e.Amount.String(),
+				moneyCell(e.Change), e.Balance.String(), e.Notes})
+		}
+		w("%s\n\n", orgTable(rows, 1))
+	}
 
 	// ---- magic items (derived from the equipment table above) -------------
 	if len(s.MagicItems) > 0 {
@@ -260,6 +318,13 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 			src = fmt.Sprintf(" (%s)", t.Source)
 		}
 		w("*** %s%s\n", t.Name, src)
+		// A feature with a use limit says so, and says how many are gone. The
+		// count itself lives in the property drawer - this line is derived
+		// and is rewritten every time the sheet is.
+		if t.UsesMax > 0 {
+			w("Uses: %d of %d spent (%s).\n", t.UsesSpent, t.UsesMax,
+				orDefault(t.UsesNote, restWords(t.Recharge)))
+		}
 		if t.Text != "" {
 			w("%s\n", wrapText(t.Text, 78))
 		}
@@ -583,7 +648,88 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 			}
 		}
 		g.Notes = cell(row, "notes")
+		g.Container = ContainerKey(cell(row, "container"))
 		c.Equipment = append(c.Equipment, g)
+	}
+
+	// inventory history
+	//
+	// Read straight back the way it was written so that the log lives in the
+	// file rather than anywhere else. Columns are located by header here too,
+	// so a sheet written before a column existed still reads.
+	hcol := map[string]int{}
+	hrows := tables[normalizeHeading(InventoryHistoryHeading)]
+	for _, row := range hrows {
+		if len(row) == 0 || !strings.EqualFold(strings.TrimSpace(row[0]), "Date") {
+			continue
+		}
+		for i, h := range row {
+			hcol[strings.ToLower(strings.TrimSpace(h))] = i
+		}
+		break
+	}
+	hcell := func(row []string, name string) string {
+		i, ok := hcol[name]
+		if !ok || i >= len(row) {
+			return ""
+		}
+		return strings.TrimSpace(row[i])
+	}
+	for _, row := range hrows {
+		if len(row) == 0 || strings.EqualFold(strings.TrimSpace(row[0]), "Date") {
+			continue
+		}
+		e := InventoryEvent{
+			Date: hcell(row, "date"), Time: hcell(row, "time"),
+			Action: hcell(row, "action"), Item: hcell(row, "item"),
+			Qty: atoi(hcell(row, "qty")), From: hcell(row, "from"),
+			To: hcell(row, "to"), Notes: hcell(row, "notes"),
+		}
+		if e.Item == "" && e.Action == "" {
+			continue
+		}
+		if e.Qty <= 0 {
+			e.Qty = 1
+		}
+		c.InventoryLog = append(c.InventoryLog, e)
+	}
+
+	// coin history, read back the same way the inventory history is
+	ccol := map[string]int{}
+	crows := tables[normalizeHeading(CoinHistoryHeading)]
+	for _, row := range crows {
+		if len(row) == 0 || !strings.EqualFold(strings.TrimSpace(row[0]), "Date") {
+			continue
+		}
+		for i, h := range row {
+			ccol[strings.ToLower(strings.TrimSpace(h))] = i
+		}
+		break
+	}
+	ccell := func(row []string, name string) string {
+		i, ok := ccol[name]
+		if !ok || i >= len(row) {
+			return ""
+		}
+		return strings.TrimSpace(row[i])
+	}
+	for _, row := range crows {
+		if len(row) == 0 || strings.EqualFold(strings.TrimSpace(row[0]), "Date") {
+			continue
+		}
+		e := MoneyEvent{
+			Date: ccell(row, "date"), Time: ccell(row, "time"),
+			Action: ccell(row, "action"), Notes: ccell(row, "notes"),
+		}
+		if e.Action == "" {
+			continue
+		}
+		// An amount that has been mistyped by hand is worth keeping the line
+		// for: the action and the note still say what happened.
+		e.Amount, _ = ParseMoney(ccell(row, "amount"))
+		e.Change, _ = ParseMoney(ccell(row, "change"))
+		e.Balance, _ = ParseMoney(ccell(row, "balance"))
+		c.MoneyLog = append(c.MoneyLog, e)
 	}
 
 	// spell tables live under spellcasting/<level name>
@@ -712,6 +858,8 @@ func applyProperty(c *Character, key, val string) {
 		c.Languages = splitList(val)
 	case PropTools:
 		c.Tools = splitList(val)
+	case PropToolExpert:
+		c.ToolExpertise = splitList(val)
 	case PropFeats:
 		c.Feats = splitList(val)
 	case PropChoices:
@@ -730,6 +878,8 @@ func applyProperty(c *Character, key, val string) {
 		c.Inspiration = isYes(val)
 	case PropSlotsUsed:
 		c.SlotsUsed = decodeInts(val)
+	case PropUsesSpent:
+		c.UsesSpent = decodeUses(val)
 	case "DND_CP":
 		c.Money.CP = atoi(val)
 	case "DND_SP":
@@ -752,6 +902,12 @@ func applyProperty(c *Character, key, val string) {
 		c.Skin = val
 	case "DND_HAIR":
 		c.Hair = val
+	case PropImage:
+		c.Image = val
+	case PropImageFocus:
+		c.ImageFocus = val
+	case PropImageZoom:
+		c.ImageZoom = ParseZoom(val)
 	}
 }
 
@@ -823,6 +979,40 @@ func decodeChoices(val string) map[string][]string {
 			}
 		}
 		out[key] = vals
+	}
+	return out
+}
+
+// encodeUses writes the spent uses of limited features as "second-wind=1;
+// channel-divinity=2", keyed by the slug of the feature's name. Nothing is
+// written for a feature with nothing spent, so a character who has rested
+// carries no line at all.
+func encodeUses(m map[string]int) string {
+	if len(m) == 0 {
+		return ""
+	}
+	parts := []string{}
+	for _, k := range sortedKeys(m) {
+		if m[k] <= 0 {
+			continue
+		}
+		parts = append(parts, fmt.Sprintf("%s=%d", k, m[k]))
+	}
+	return strings.Join(parts, "; ")
+}
+
+func decodeUses(val string) map[string]int {
+	out := map[string]int{}
+	for _, part := range strings.Split(val, ";") {
+		part = strings.TrimSpace(part)
+		idx := strings.Index(part, "=")
+		if part == "" || idx < 0 {
+			continue
+		}
+		key := strings.TrimSpace(part[:idx])
+		if n := atoi(part[idx+1:]); key != "" && n > 0 {
+			out[key] = n
+		}
 	}
 	return out
 }

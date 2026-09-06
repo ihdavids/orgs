@@ -819,7 +819,9 @@ def parse_equipment_text(text, items):
 # ---------------------------------------------------------------------------
 
 CLASS_META = {
-    "barbarian": {"unarmoredAc": "10+dex+con", "multiclassReq": {"str": 13}},
+    # A barbarian may carry a shield with their unarmored defence, a monk may not.
+    "barbarian": {"unarmoredAc": "10+dex+con", "unarmoredShield": True,
+                  "multiclassReq": {"str": 13}},
     "bard": {"spellcasting": {"progression": "full", "ability": "cha", "ritual": True,
                               "focus": "musical instrument"}, "multiclassReq": {"cha": 13}},
     "cleric": {"spellcasting": {"progression": "full", "ability": "wis", "prepares": True,
@@ -1227,7 +1229,7 @@ def parse_classes(src, items, spell_ids):
                 sc["spellsKnown"] = [0] + [6 + 2 * (l - 1) for l in range(1, 21)]
             sc["spellList"] = cid
             cls["spellcasting"] = sc
-        for key in ("unarmoredAc", "multiclassReq"):
+        for key in ("unarmoredAc", "unarmoredShield", "multiclassReq"):
             if meta.get(key):
                 cls[key] = meta[key]
 

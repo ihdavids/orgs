@@ -109,6 +109,20 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/random", PostDndRandom).Methods("POST")
 	api.HandleFunc("/dnd/save", PostDndSave).Methods("POST")
 	api.HandleFunc("/dnd/refresh", PostDndRefresh).Methods("POST")
+	api.HandleFunc("/dnd/import", PostDndImport).Methods("POST")
+
+	// Dungeons & Dragons inventory and spells
+	api.HandleFunc("/dnd/items", RequestDndItems).Methods("GET")
+	api.HandleFunc("/dnd/inventory", RequestDndInventory).Methods("GET")
+	api.HandleFunc("/dnd/inventory", PostDndInventory).Methods("POST")
+	api.HandleFunc("/dnd/money", RequestDndMoney).Methods("GET")
+	api.HandleFunc("/dnd/money", PostDndMoney).Methods("POST")
+	api.HandleFunc("/dnd/spells", RequestDndSpells).Methods("GET")
+	api.HandleFunc("/dnd/spellbook", RequestDndSpellbook).Methods("GET")
+	api.HandleFunc("/dnd/spellbook", PostDndSpellbook).Methods("POST")
+	api.HandleFunc("/dnd/rest", RequestDndRest).Methods("GET")
+	api.HandleFunc("/dnd/rest", PostDndRest).Methods("POST")
+	api.HandleFunc("/dnd/uses", PostDndUses).Methods("POST")
 
 	// Dungeons & Dragons play session logs
 	api.HandleFunc("/dnd/play/sessions", RequestDndPlaySessions).Methods("GET")

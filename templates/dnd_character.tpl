@@ -21,6 +21,7 @@
 \usepackage{fancyhdr}
 \usepackage{needspace}
 \usetikzlibrary{calc}
+\usetikzlibrary{decorations.text}
 
 % Fonts: pretty ones when the distribution has them, graceful fallback if not.
 % (the flags are set first because macro parameters cannot appear inside the
@@ -37,9 +38,16 @@
 \ifdndcinzel
   \usepackage[type1]{cinzel}
   \newcommand{\dndhead}[1]{{\cinzel #1}}
+  \newcommand{\dndheadfont}{\cinzel}
 \else
   \newcommand{\dndhead}[1]{{\scshape #1}}
+  \newcommand{\dndheadfont}{\scshape}
 \fi
+
+% The portrait medallion. \dndmedal is its diameter, and the picture inside it
+% is drawn in hundredths of its radius so the numbers match the html sheet.
+\newlength{\dndmedal}
+\setlength{\dndmedal}{1.4in}
 
 \definecolor{dndink}{HTML}{1C1A17}
 \definecolor{dndaccent}{HTML}{7B1B1B}
@@ -180,6 +188,17 @@
   \vspace{1pt}{\small #3}\par\vspace{5pt}%
 }
 
+% One box per use of a rationed feature, filled for a use already spent, so a
+% printed sheet can be ticked off at the table the way the screen one is
+% clicked. Drawn rather than set from a symbol font, which keeps the sheet to
+% the packages it already loads.
+\newcommand{\dnduse}[1]{%
+  \tikz[baseline=-0.6ex]{\draw[dndmuted, line width=0.4pt, fill=#1]
+    (0,0) circle (1.5pt);}\hspace{1pt}%
+}
+\newcommand{\usespent}{\dnduse{dndaccent}}
+\newcommand{\useleft}{\dnduse{none}}
+
 \newlength{\colA}\newlength{\colB}\newlength{\colC}
 \newlength{\colAin}\newlength{\colBin}\newlength{\colCin}
 \setlength{\colA}{0.295\textwidth}
@@ -200,6 +219,65 @@
 %% Page 1 - the character sheet proper
 %% ===========================================================================
 
+{% if portrait %}
+%% ---------------------------------------------------------------------------
+%% The portrait medallion. The picture is clipped to a circle and the frame
+%% around it carries the character's name and experience, so neither is
+%% repeated in the header beside it.
+%% ---------------------------------------------------------------------------
+% (the spaces around the path are how the rest of this template keeps a
+%  double brace out of the file; graphicx trims them back off)
+\newcommand{\dndportraitfile}{ {{ portrait.file }} }
+\newcommand{\dndmedallion}{
+  \begin{tikzpicture}[x=0.007in, y=0.007in]   % 100 units = the medal radius
+    \begin{scope}
+      \clip (0,0) circle (71);
+      \fill[dndink] (-110,-110) rectangle (110,110);
+      \node[anchor=north west, inner sep=0]
+        at ({{ portrait.x }}*200, {{ portrait.y }}*200)
+        {\includegraphics[width={{ portrait.width }}\dndmedal]{\dndportraitfile}};
+    \end{scope}
+    % the band the lettering sits in
+    \fill[even odd rule, dndpanel] (0,0) circle (94.5) (0,0) circle (72.5);
+    \draw[dndgold, line width=.7] (0,0) circle (94.5);
+    \draw[dndgold, line width=.7] (0,0) circle (72.5);
+    \draw[dndline, line width=.4] (0,0) circle (91.6);
+    \draw[dndline, line width=.4] (0,0) circle (75.4);
+    % experience, as a ring climbing toward the next level
+    \draw[dndline, line width=1.5, opacity=.55] (0,0) circle (100);
+    \pgfmathsetmacro{\dndxpend}{90 - 3.6 * {{ sheet.xpPercent }}}
+    {% if sheet.xpPercent %}\draw[dndgold, line width=1.5] (90:100) arc (90:\dndxpend:100);{% endif %}
+    % the gems where the two arcs of lettering meet
+    \foreach \gx in {-83.5, 83.5} {
+      \fill[dndgold, rotate around={45:(\gx,0)}] (\gx-3.9,-3.9) rectangle ++(7.8,7.8);
+      \fill[dndaccent] (\gx,0) circle (1.3);
+    }
+    % The name has to fit the top half of the band, so long names are set
+    % smaller. 88pt is about what that arc holds at one point of size a letter.
+    \pgfmathsetmacro{\dndnamesize}{min(6.6, 88/{{ sheet.name|length }})}
+    \path[decorate, decoration={text along path, text align={align=center},
+      text={|\dndheadfont\fontsize{\dndnamesize}{\dndnamesize}\selectfont\color{dndaccent}|{{ sheet.name }}}}]
+      (-78,0) arc (180:0:78);
+    \path[decorate, decoration={text along path, text align={align=center},
+      text={|\dndheadfont\fontsize{4.7}{5}\selectfont\color{dndgold}|{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %} XP}}]
+      (-90,0) arc (-180:0:90);
+  \end{tikzpicture}}
+
+%% The medallion hangs down the left margin of the header and the stat tiles
+%% beside it, which are indented to make room. It is an overlay node so that
+%% it takes no vertical space of its own - the sheet has none to spare.
+\noindent\hspace*{1.54in}%
+\begin{tikzpicture}
+  \node[panel, minimum width=\dimexpr\textwidth-1.54in\relax, minimum height=0.86in,
+        inner sep=7pt] (hdr) %
+    {\begin{minipage}{\dimexpr\textwidth-1.54in-20pt\relax}
+      {\fontsize{19}{22}\selectfont\bfseries\color{dndaccent}\dndhead{ {{ sheet.classLine }} }}\\[3pt]
+      {\small\color{dndmuted} {% if sheet.raceName %}{{ sheet.raceName }}{% endif %}{% if sheet.background %} \textbullet\ {{ sheet.background }}{% endif %}{% if sheet.alignment %} \textbullet\ {{ sheet.alignment }}{% endif %}{% if sheet.player %} \textbullet\ played by {{ sheet.player }}{% endif %} }
+    \end{minipage}};
+  \node[overlay, anchor=north east, inner sep=0] at ($(hdr.north west)+(-0.07in,0.06in)$)
+    {\dndmedallion};
+\end{tikzpicture}\par\vspace{4pt}
+{% else %}
 \begin{tikzpicture}
   \node[panel, minimum width=\textwidth, inner sep=7pt] (hdr) %
     {\begin{minipage}{\dimexpr\textwidth-20pt\relax}
@@ -207,12 +285,13 @@
       {\small\color{dndmuted} {{ sheet.classLine }}{% if sheet.raceName %} \textbullet\ {{ sheet.raceName }}{% endif %}{% if sheet.background %} \textbullet\ {{ sheet.background }}{% endif %}{% if sheet.alignment %} \textbullet\ {{ sheet.alignment }}{% endif %} }
     \end{minipage}};
 \end{tikzpicture}\par\vspace{4pt}
+{% endif %}
 
-\noindent
+\noindent{% if portrait %}\hspace*{1.54in}{% endif %}
 \stattile{0.155\textwidth}{Level}{ {{ sheet.level }} }{ {{ sheet.proficiencyStr }} proficiency }\hfill
 \stattile{0.155\textwidth}{Hit Dice}{ {{ sheet.hitDice }} }{ {{ sheet.hitDiceUsed }} spent }\hfill
-\stattile{0.155\textwidth}{Experience}{ {{ sheet.xp }} }{ next {{ sheet.nextLevelXp }} }\hfill
-\stattile{0.155\textwidth}{Inspiration}{ {% if sheet.inspiration %}Yes{% else %}--{% endif %} }{ }\hfill
+{% if not portrait %}\stattile{0.155\textwidth}{Experience}{ {{ sheet.xp }} }{ next {{ sheet.nextLevelXp }} }\hfill
+{% endif %}\stattile{0.155\textwidth}{Inspiration}{ {% if sheet.inspiration %}Yes{% else %}--{% endif %} }{ }\hfill
 \stattile{0.155\textwidth}{Player}{ {\small {% if sheet.player %}{{ sheet.player }}{% else %}--{% endif %} } }{ }\hfill
 \stattile{0.155\textwidth}{Size}{ {\small {{ sheet.size }} } }{ {% if sheet.darkvision %}darkvision {{ sheet.darkvision }} ft{% else %}no darkvision{% endif %} }
 \par\vspace{7pt}
@@ -331,8 +410,8 @@
 \end{tikzpicture}\par\vspace{7pt}
 
 \begin{multicols}{2}
-{% for t in sheet.traits %}\featureentry{ {{ t.name }} }{ {{ t.source }} }{ {{ t.text }} }
-{% endfor %}{% for f in sheet.features %}\featureentry{ {{ f.name }} }{ {{ f.source }} }{ {{ f.text }} }
+{% for t in sheet.traits %}\featureentry{ {{ t.name }} }{ {{ t.source }} }{ {% if t.usesMax %}{\footnotesize\color{dndmuted}{% for i in t.usesPips %}{% if i <= t.usesSpent %}\usespent{% else %}\useleft{% endif %}{% endfor %} {{ t.usesNote }}}\par\vspace{1pt}{% endif %}{{ t.text }} }
+{% endfor %}{% for f in sheet.features %}\featureentry{ {{ f.name }} }{ {{ f.source }} }{ {% if f.usesMax %}{\footnotesize\color{dndmuted}{% for i in f.usesPips %}{% if i <= f.usesSpent %}\usespent{% else %}\useleft{% endif %}{% endfor %} {{ f.usesNote }}}\par\vspace{1pt}{% endif %}{{ f.text }} }
 {% endfor %}\end{multicols}
 
 {% if sheet.equipment|length > 20 %}

@@ -314,6 +314,45 @@ backgrounds:
       - "I remember every insult and nurse a silent resentment."
       - "I am slow to trust members of other tribes and societies."
 
+  - id: phantasmic-circus-trouper
+    name: Phantasmic Circus Trouper
+    source: orgs
+    summary: "Deception, Performance - a travelling show and the tricks that keep it running."
+    text: "Whether you performed under the lights or kept the show on the road behind them, you found a home among the Phantasmic Circus. Years of carrying wonder from town to town taught you a little real illusion magic and a great deal about misdirection."
+    proficiencies:
+      skills: [deception, performance]
+      tools: ["disguise kit"]
+    gold: 12
+    equipment:
+      - {id: disguise-kit, qty: 1}
+      - {id: gaming-set, qty: 1}
+      - {id: clothes-costume, qty: 1}
+      - {id: mirror-steel, qty: 1}
+      - {id: clothes-travelers, qty: 1}
+    feature:
+      name: Arcane Artist
+      text: "This background grants the arcane artist feat, which teaches you minor illusion and lets one ally a day take heart from your illusion magic. Add it to your feats; the sheet carries its full text there. Newer books hand a feat out with the background this way rather than waiting for an ability score improvement."
+    traits:
+      - "I can read a crowd in seconds and I play to whoever is watching."
+      - "I would rather be laughed at than ignored."
+      - "I keep three things in my hands at all times, and one of them is not really there."
+      - "I remember every town by what the audience there was like."
+    ideals:
+      - "Wonder. People carry a good show around with them for years. That is worth doing."
+      - "Family. The company looks after its own, and I am company."
+      - "Freedom. I have never slept in the same town twice if I could help it."
+      - "Craft. Anyone can startle a crowd. Delighting one takes work."
+    bonds:
+      - "The circus took me in when nobody else would, and I owe it everything."
+      - "A rival company stole an act of mine and I want it back."
+      - "Someone in the audience recognised me once, and I have been moving ever since."
+      - "I am keeping something that belongs to the ringmaster, and I have not decided why."
+    flaws:
+      - "I cannot resist an audience, even a dangerous one."
+      - "I lie for practice, and sometimes I forget to stop."
+      - "I take any criticism of the show as a personal wound."
+      - "I always have an exit picked out, and I have used it on people who trusted me."
+
   - id: sage
     name: Sage
     source: orgs

@@ -142,8 +142,17 @@ func CreateDndSession(name, summary string, dt time.Time, ch dnd.SessionCharacte
 	return &info, nil
 }
 
-// ListDndSessions returns every session file, newest first.
-func ListDndSessions() ([]dnd.SessionInfo, error) {
+// ListDndSessions returns session files, newest first.
+//
+// A character id (or, for session files written before ids were recorded, a
+// character name) narrows the list to the sessions that character played in,
+// which is what a character sheet asks for: one player's sheet has no business
+// listing the rest of the table's games. Both empty returns everything, which
+// is what the search and the CLI want.
+//
+// A session that records no cast at all is kept either way. It names nobody,
+// so it belongs to nobody in particular and excludes nobody either.
+func ListDndSessions(character, name string) ([]dnd.SessionInfo, error) {
 	dir, err := dndSessionDir()
 	if err != nil {
 		return nil, err
@@ -162,7 +171,11 @@ func ListDndSessions() ([]dnd.SessionInfo, error) {
 		if err != nil {
 			continue
 		}
-		out = append(out, dnd.SessionInfoFromText(dndSessionId(file), file, string(data)))
+		info := dnd.SessionInfoFromText(dndSessionId(file), file, string(data))
+		if !dndSessionWanted(&info, character, name) {
+			continue
+		}
+		out = append(out, info)
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Date != out[j].Date {
@@ -171,6 +184,17 @@ func ListDndSessions() ([]dnd.SessionInfo, error) {
 		return out[i].Id > out[j].Id
 	})
 	return out, nil
+}
+
+// dndSessionWanted applies the character filter for ListDndSessions.
+func dndSessionWanted(info *dnd.SessionInfo, character, name string) bool {
+	if strings.TrimSpace(character) == "" && strings.TrimSpace(name) == "" {
+		return true
+	}
+	if len(info.Characters) == 0 {
+		return true
+	}
+	return info.PlayedBy(character, name)
 }
 
 // GetDndSession reads one whole session back.
@@ -232,7 +256,7 @@ func AppendDndNotes(id string, notes []dnd.SessionNote, ch dnd.SessionCharacter)
 
 // SearchDndSessions greps every session file for a term.
 func SearchDndSessions(term string, limit int) ([]dnd.SessionMatch, error) {
-	sessions, err := ListDndSessions()
+	sessions, err := ListDndSessions("", "")
 	if err != nil {
 		return nil, err
 	}
@@ -339,17 +363,27 @@ func PostDndPlaySession(w http.ResponseWriter, r *http.Request) {
 		SDOC: API
 
 	  - GET /dnd/play/sessions — List Play Sessions
-	    Lists every play session log, newest first, each with the one line summary shown
+	    Lists play session logs, newest first, each with the one line summary shown
 	    beside it in the session picker on a character sheet.
 
 	    *Method:* =GET=
+
+	    *Query Parameters:*
+	    | Parameter    | Type   | Description                                                   |
+	    |--------------+--------+---------------------------------------------------------------|
+	    | =character=  | string | Only sessions this character id played in. Omit for all.       |
+	    | =name=       | string | Character name, used for sessions logged before ids existed.   |
+
+	    A character sheet passes its own =DND_ID= so that it lists its own games
+	    rather than the whole table's. Sessions that record no cast are always listed.
 
 	    *Response:* An array of session records, exactly like =POST /dnd/play/session= returns.
 	    EDOC
 */
 func RequestDndPlaySessions(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
-	list, err := ListDndSessions()
+	q := r.URL.Query()
+	list, err := ListDndSessions(q.Get("character"), q.Get("name"))
 	if err != nil {
 		dndError(w, http.StatusInternalServerError, "%s", err)
 		return

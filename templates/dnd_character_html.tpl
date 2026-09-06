@@ -29,6 +29,12 @@ body {
   font-size: 15px;
   line-height: 1.45;
 }
+/* The sheet is one page tall: the header, the columns and the footer stack
+   down a flex column that is at least the height of the window, and the
+   columns take whatever the header and footer leave. That is what lets the
+   two long boxes - attacks and inventory on one side, spells and features on
+   the other - grow into the empty space at the bottom rather than leaving it
+   blank. */
 .page {
   max-width: 1180px;
   margin: 0 auto;
@@ -39,6 +45,8 @@ body {
     radial-gradient(circle at 85% 70%, rgba(123,27,27,.05), transparent 40%);
   box-shadow: 0 0 40px rgba(0,0,0,.55);
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 h1, h2, h3, .label, .tile-label, th {
   font-family: Cinzel, "Trajan Pro", Georgia, serif;
@@ -63,7 +71,8 @@ header.sheet-head {
   color: var(--accent);
   text-shadow: 0 1px 0 rgba(255,255,255,.6);
 }
-.char-sub { color: var(--muted); font-size: 1.05rem; margin-top: 4px; }
+.char-title { color: var(--muted); font-size: 1.05rem; margin-top: 4px; }
+.char-sub { color: var(--muted); font-size: .95rem; margin-top: 2px; }
 .head-facts { display: flex; flex-wrap: wrap; gap: 10px; }
 .fact {
   background: var(--paper-2);
@@ -76,16 +85,132 @@ header.sheet-head {
 .fact .label { display: block; font-size: .62rem; text-transform: uppercase; color: var(--muted); }
 .fact .value { font-size: 1.05rem; font-weight: 600; }
 
+/* ---------------- portrait medallion ----------------
+   The portrait is an ordinary <img> in a round window with the frame drawn
+   over it in svg, rather than an svg <image>: that way an animated gif or
+   webp keeps animating, and object-fit does the cropping.
+
+   --fx/--fy are the point of the picture that belongs in the middle of the
+   medallion and --zoom is how far in to push. object-position lines that
+   point up with the same point of the window, the scale keeps it pinned
+   there, and the translate slides it into the centre. */
+.portrait {
+  --fx: 50%; --fy: 50%; --zoom: 1;
+  position: relative;
+  flex: 0 0 auto;
+  width: 196px; height: 196px;
+  margin: 0;
+  filter: drop-shadow(0 3px 7px rgba(28,26,23,.34));
+}
+.portrait-well {
+  position: absolute;
+  inset: 16.19%;            /* the clear window inside the frame */
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2b2723;
+}
+.portrait-well img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: var(--fx) var(--fy);
+  transform-origin: var(--fx) var(--fy);
+  transform: translate(calc(50% - var(--fx)), calc(50% - var(--fy))) scale(var(--zoom));
+}
+/* a little inward shading so the picture sits under the frame rather than
+   on top of it */
+.portrait-well::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, rgba(244,239,228,0) 54%, rgba(43,39,35,.3) 100%);
+  box-shadow: inset 0 0 15px rgba(28,26,23,.5), inset 0 0 2px rgba(28,26,23,.8);
+  pointer-events: none;
+}
+.portrait-ring {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.ring-band { fill: none; stroke: url(#ringBand); stroke-width: 22; }
+.ring-edge { fill: none; stroke: var(--accent-2); stroke-width: 1.1; opacity: .9; }
+.ring-hair { fill: none; stroke: var(--edge); stroke-width: .7; opacity: .55; }
+.xp-track { fill: none; stroke: rgba(28,26,23,.15); stroke-width: 2.4; }
+.xp-fill {
+  fill: none; stroke: var(--accent-2); stroke-width: 2.4; stroke-linecap: round;
+}
+.ring-name {
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-weight: 700; font-size: 13px; letter-spacing: .1em;
+  fill: var(--accent);
+}
+.ring-xp {
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-weight: 500; font-size: 9.5px; letter-spacing: .14em;
+  fill: #7a5c12;
+}
+.ring-gem { fill: var(--accent-2); }
+.ring-gem-core { fill: var(--accent); }
+
+.sheet-head.has-portrait { align-items: center; }
+.has-portrait .char-title {
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-size: 1.55rem; line-height: 1.15; margin-top: 0;
+  color: var(--accent);
+  text-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+@media (max-width: 700px) {
+  .portrait { width: 158px; height: 158px; }
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
 /* ---------------- layout ---------------- */
 .columns {
   display: grid;
   grid-template-columns: 250px 1fr 1fr;
   gap: 18px;
-  align-items: start;
+  /* stretch, not start: every column runs the full height of the row, so the
+     boxes marked .grow inside them have somewhere to grow into. */
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 @media (max-width: 1000px) { .columns { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 700px)  { .columns { grid-template-columns: 1fr; } }
-.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; min-height: 0; }
+
+/* A box that takes the rest of its column. Both of them do, so the two end
+   on the same line and the page reads as one sheet rather than two ragged
+   ones. What overflows scrolls inside the box; the page itself does not
+   grow past the window because of it. */
+.box.grow {
+  flex: 1 1 0;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.box.grow > .tabpane { min-height: 0; }
+.box.grow.has-tabs > .tabpane.on {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+/* Without the script there are no tabs, so the sections simply stack and the
+   whole box scrolls instead. */
+.box.grow:not(.has-tabs) { overflow-y: auto; }
+/* On one column there is no empty space beside anything to fill, and a short
+   scrolling box inside an already long page is worse than no box at all. */
+@media (max-width: 700px) {
+  .box.grow, .box.grow.has-tabs > .tabpane.on {
+    display: block; flex: 0 0 auto; min-height: 0; overflow: visible;
+  }
+}
 
 .box {
   background: var(--paper-2);
@@ -102,6 +227,44 @@ header.sheet-head {
   border-bottom: 1px solid var(--line);
   color: var(--accent);
 }
+
+/* ---------------- tabbed sections ----------------
+   Several sections share one box and are shown a tab at a time. Until the
+   script has built the bar the panes are simply stacked, each under its own
+   heading, which is what a sheet with no script keeps. */
+.box.tabbed > .tabpane > h2 {
+  font-size: .74rem;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+  color: var(--accent);
+}
+.box.tabbed > .tabpane + .tabpane { margin-top: 14px; }
+.box.has-tabs > .tabpane { display: none; }
+.box.has-tabs > .tabpane.on { display: block; }
+.box.has-tabs > .tabpane + .tabpane { margin-top: 0; }
+/* the tab bar carries the section name, so the headings stand down */
+.box.has-tabs > .tabpane > h2 { display: none; }
+.tabbar {
+  display: flex; flex-wrap: wrap; gap: 3px;
+  margin: -2px 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+.tabbtn {
+  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid transparent; border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: none; color: var(--muted);
+  padding: 4px 10px 5px; margin-bottom: -1px; cursor: pointer;
+}
+.tabbtn:hover { color: var(--accent); }
+.tabbtn.on {
+  background: var(--paper); border-color: var(--line);
+  color: var(--accent); font-weight: 700;
+}
+.tabbtn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: -2px; }
 
 /* ---------------- abilities ---------------- */
 .abilities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -152,6 +315,28 @@ header.sheet-head {
 .row .abbr { color: var(--muted); font-size: .72rem; width: 2.6em; }
 .row .nm { flex: 1; }
 
+/* A .rows.facts list holds words where an ordinary row holds a modifier, so
+   the value column sizes to what is in it and wraps rather than being clipped
+   to the 2.4em a "+5" needs. "Magenta" and "Chestnut brown" are eye and hair
+   colours, and both are longer than any number the sheet ever puts here. */
+.rows.facts .row { align-items: flex-start; }
+.rows.facts .row .nm { flex: 0 0 auto; }
+.rows.facts .row .val {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 2.4em;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* A subheading inside a section, for a block that used to be a tab of its
+   own and now sits at the foot of another one. */
+h3.subhead {
+  font-size: .74rem; text-transform: uppercase; color: var(--accent);
+  border-bottom: 1px solid var(--line);
+  margin: 14px 0 5px; padding-bottom: 2px;
+}
+
 /* ---------------- combat tiles ---------------- */
 .combat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .tile {
@@ -186,6 +371,324 @@ tr:last-child td { border-bottom: 0; }
 td.num, th.num { text-align: right; white-space: nowrap; }
 .table-wrap { overflow-x: auto; }
 
+/* ---------------- inventory ----------------
+   The equipment box is live: things are added, used, dropped and packed away
+   from here and the org file behind the sheet is rewritten. Everything is
+   drawn from the same inventory the server computed, so the printed page and
+   the page you are clicking on agree. */
+.enc { margin-bottom: 8px; }
+.enc-line {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: .84rem;
+}
+.enc-line .wt { font-weight: 700; font-size: 1.05rem; }
+.enc-line .cap { color: var(--muted); }
+.enc-badge {
+  margin-left: auto;
+  font-family: Cinzel, Georgia, serif;
+  font-size: .58rem; text-transform: uppercase; letter-spacing: .08em;
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 1px 8px; background: var(--paper); color: var(--muted);
+  white-space: nowrap;
+}
+.enc-badge.encumbered { border-color: var(--accent-2); color: #7a5a08; background: #f6ecd2; }
+.enc-badge.heavy { border-color: var(--accent); color: var(--accent); background: #f6e4e1; }
+.enc-badge.over { border-color: var(--accent); color: var(--paper); background: var(--accent); }
+.enc-bar {
+  height: 7px; margin-top: 5px; border-radius: 4px;
+  background: #d8cbb2; border: 1px solid var(--line); overflow: hidden;
+  position: relative;
+}
+.enc-fill { height: 100%; background: linear-gradient(90deg, #6f7b4b, #98a05a); }
+.enc-fill.encumbered { background: linear-gradient(90deg, #b8860b, #d0a12a); }
+.enc-fill.heavy, .enc-fill.over { background: linear-gradient(90deg, #7b1b1b, #a33); }
+/* the two variant thresholds, drawn as nicks in the bar */
+.enc-mark { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(28,26,23,.4); }
+.enc-note { font-size: .68rem; color: var(--muted); margin-top: 3px; }
+
+.inv-tabs {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  border-bottom: 1px solid var(--line); margin-bottom: 6px;
+}
+.inv-tab {
+  font-family: Cinzel, Georgia, serif;
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .05em;
+  border: 1px solid var(--line); border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--paper); color: var(--muted);
+  padding: 3px 8px; cursor: pointer; margin-bottom: -1px;
+}
+.inv-tab:hover { color: var(--ink); }
+.inv-tab.on { background: var(--paper-2); color: var(--accent); border-color: var(--edge); }
+.inv-tab .n { color: var(--muted); font-weight: 400; margin-left: 4px; }
+.inv-tab.over .n { color: var(--accent); font-weight: 700; }
+.inv-pane { display: none; }
+.inv-pane.on { display: block; }
+.inv-pane-name { display: none; }
+.inv-cap { font-size: .68rem; color: var(--muted); margin: 0 0 4px; }
+.inv-cap b { color: var(--ink); font-weight: 600; }
+.inv-cap.over b { color: var(--accent); }
+.inv-empty { font-size: .8rem; color: var(--muted); font-style: italic; padding: 4px 2px 6px; }
+
+.inv-table td { vertical-align: middle; }
+.inv-table .qty { font-weight: 700; }
+.inv-name .worn { color: var(--accent-2); }
+/* The Worn column is a toggle: a click puts something on or takes it off.
+   Only what can actually be worn or wielded gets a button, so a coil of rope
+   is a blank cell rather than a control that does nothing. Off is drawn as an
+   empty ring - faint enough to stay out of the way of the ticks beside it,
+   solid enough to look like somewhere to click. */
+.inv-worn { width: 1%; white-space: nowrap; }
+.wearbtn {
+  font: inherit; font-size: .8rem; line-height: 1;
+  border: 1px solid transparent; border-radius: 4px;
+  background: none; color: var(--line);
+  padding: 1px 5px; cursor: pointer;
+}
+.wearbtn:hover { color: var(--muted); border-color: var(--line); background: #fbf7ee; }
+.wearbtn.on { color: var(--accent-2); }
+.wearbtn.on:hover { color: var(--accent); }
+.wearbtn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: -1px; }
+.inv-actions { text-align: right; white-space: nowrap; width: 1%; }
+.ib {
+  font-family: inherit; font-size: .72rem;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: var(--paper); color: var(--muted);
+  padding: 0 6px; margin-left: 3px; cursor: pointer; line-height: 1.5;
+}
+.ib:hover { color: var(--ink); border-color: var(--edge); background: #fbf7ee; }
+.ib.use:hover { color: #5a6b2a; }
+.ib.drop:hover { color: var(--accent); }
+.inv-foot {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+}
+.inv-add {
+  font-family: Cinzel, Georgia, serif; font-size: .62rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--edge); border-radius: 4px;
+  background: var(--paper); color: var(--accent);
+  padding: 3px 10px; cursor: pointer;
+}
+.inv-add:hover { background: #fbf7ee; }
+.inv-msg { font-size: .7rem; color: var(--muted); }
+.inv-err { font-size: .72rem; color: var(--accent); }
+
+/* the coin panel. Money is the same kind of live section the inventory is,
+   so it borrows the inventory's buttons and message line and only adds what
+   coin needs: the purse total, the five denominations, and the spend box. */
+.coin-head {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.coin-total { font-weight: 700; font-size: 1.15rem; }
+.coin-sub { color: var(--muted); font-size: .78rem; }
+.coin-table td { vertical-align: middle; }
+.coin-table .num { font-weight: 700; }
+.coin-table td.num.dim { font-weight: 400; color: var(--muted); }
+.coin-table tr.empty td { color: var(--muted); }
+.coin-table tr.empty .num { font-weight: 400; }
+/* a little disc of the right metal in front of each denomination */
+.coin-pip {
+  display: inline-block; width: 9px; height: 9px; margin-right: 6px;
+  border-radius: 50%; border: 1px solid rgba(28,26,23,.35);
+  vertical-align: baseline;
+}
+.coin-pip.cp { background: linear-gradient(140deg, #c9763c, #8a4a22); }
+.coin-pip.sp { background: linear-gradient(140deg, #dcdcd6, #9d9d96); }
+.coin-pip.ep { background: linear-gradient(140deg, #d8e2d2, #8fa38c); }
+.coin-pip.gp { background: linear-gradient(140deg, #e8c34a, #a9801a); }
+.coin-pip.pp { background: linear-gradient(140deg, #eef1f4, #a8b3bd); }
+.coin-spend {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+}
+.coin-spend .amount { width: 8.5rem; }
+.coin-spend .why { flex: 1 1 8rem; min-width: 6rem; }
+.coin-hint { font-size: .68rem; color: var(--muted); margin-top: 4px; }
+.coin-log { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+.coin-log h4 {
+  font-family: Cinzel, Georgia, serif; font-size: .6rem; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); margin: 0 0 4px;
+}
+.coin-log ul { list-style: none; margin: 0; padding: 0; }
+.coin-log li {
+  display: flex; gap: 6px; align-items: baseline;
+  font-size: .74rem; padding: 1px 0;
+}
+.coin-log li .when { color: var(--muted); font-size: .66rem; white-space: nowrap; }
+.coin-log li .what { flex: 1; }
+.coin-log li .amt { font-weight: 700; white-space: nowrap; }
+.coin-log li.spent .amt { color: var(--accent); }
+.coin-log li.gained .amt { color: #5a6b2a; }
+.coin-set-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 4px 0 8px;
+}
+.coin-set-grid label {
+  display: flex; flex-direction: column; gap: 2px;
+  font-size: .62rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted);
+}
+
+/* the add, move and manage spells boxes, over the sheet. The shell is
+   shared: only what goes inside them differs. */
+.inv-modal, .sb-modal {
+  position: fixed; inset: 0; z-index: 120;
+  display: none; align-items: flex-start; justify-content: center;
+  padding: 8vh 16px 16px;
+  background: rgba(28,26,23,.45);
+}
+.inv-modal.open, .sb-modal.open { display: flex; }
+.inv-card, .sb-card {
+  width: min(520px, 100%);
+  max-height: 76vh; display: flex; flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--edge); border-radius: 6px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.5);
+  padding: 12px 14px 14px;
+}
+.inv-card h3, .sb-card h3 {
+  font-family: Cinzel, Georgia, serif; font-size: .78rem; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 8px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 8px;
+}
+.inv-card h3 .x, .sb-card h3 .x {
+  margin-left: auto; border: 0; background: none; cursor: pointer;
+  color: var(--muted); font-size: 1.1rem; line-height: 1; padding: 0 2px;
+}
+.inv-field, .sb-field {
+  width: 100%; font-family: inherit; font-size: .95rem;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: #fbf7ee; color: var(--ink); padding: 5px 8px;
+}
+.inv-field:focus, .sb-field:focus { outline: none; border-color: var(--accent-2); }
+/* the groups the add box searches in, a wrapped row of chips under the
+   search field */
+.inv-filters { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.inv-filter {
+  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--paper); color: var(--muted);
+  padding: 2px 9px; cursor: pointer;
+}
+.inv-filter:hover { border-color: var(--edge); color: var(--ink); }
+.inv-filter.on {
+  background: var(--accent); border-color: var(--accent); color: var(--paper);
+}
+.inv-results { overflow-y: auto; margin: 8px 0 0; flex: 1; min-height: 60px; }
+.inv-hit {
+  display: block; width: 100%; text-align: left;
+  border: 1px solid transparent; border-radius: 4px;
+  background: none; font-family: inherit; color: inherit;
+  padding: 4px 6px; cursor: pointer;
+}
+.inv-hit:hover, .inv-hit.on { background: var(--paper-2); border-color: var(--line); }
+.inv-hit .nm { font-size: .92rem; }
+.inv-hit .meta { font-size: .68rem; color: var(--muted); }
+.inv-hit .own { color: var(--accent-2); }
+.inv-hit .box-tag {
+  font-size: .58rem; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--line); border-radius: 8px; padding: 0 5px;
+  color: var(--muted); margin-left: 5px;
+}
+/* ---------------- rarity ----------------
+   How rare a thing is, in the colours the ladder is usually drawn in, picked
+   dark enough to read as text on parchment. Anything mundane has no rarity
+   and keeps the ink colour, so only the notable lines are coloured. */
+.rar { font-weight: 600; }
+.rar-common { color: #4f5a4a; }
+.rar-uncommon { color: #1f7a3d; }
+.rar-rare { color: #1b4f9c; }
+.rar-very-rare { color: #6b2d9e; }
+.rar-legendary { color: #b3600a; }
+.rar-artifact { color: #9c1b1b; }
+.rar-mythic { color: #a4157a; }
+.rar-varies { color: var(--accent-2); }
+.rar-tag {
+  font-size: .58rem; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid currentColor; border-radius: 8px; padding: 0 5px;
+  margin-left: 5px; white-space: nowrap; font-weight: 600;
+}
+
+.inv-row { display: flex; align-items: center; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
+.inv-row label { font-size: .66rem; text-transform: uppercase; color: var(--muted); }
+.inv-row .inv-field { width: auto; flex: 1; min-width: 120px; }
+.inv-row .qty-field { width: 68px; flex: 0 0 auto; }
+.inv-go, .sb-go {
+  font-family: Cinzel, Georgia, serif; font-size: .66rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--accent); border-radius: 4px;
+  background: var(--accent); color: var(--paper);
+  padding: 5px 14px; cursor: pointer;
+}
+.inv-go:hover, .sb-go:hover { background: #8f2222; }
+.inv-go.plain { background: var(--paper); color: var(--accent); }
+.inv-hint, .sb-hint { font-size: .68rem; color: var(--muted); margin-top: 6px; }
+
+/* ---------------- resting ----------------
+   The rest walkthrough uses the same card shell as the add item and manage
+   spells boxes, one step at a time with a footer that moves through them. */
+.rest-modal { position: fixed; inset: 0; z-index: 130;
+  display: none; align-items: flex-start; justify-content: center;
+  padding: 8vh 16px 16px; background: rgba(28,26,23,.5); }
+.rest-modal.open { display: flex; }
+.rest-card {
+  width: min(560px, 100%); max-height: 80vh; display: flex; flex-direction: column;
+  background: var(--paper); border: 1px solid var(--edge); border-radius: 6px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.5); padding: 12px 14px 14px;
+}
+.rest-card h3 {
+  font-family: Cinzel, Georgia, serif; font-size: .78rem; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 8px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px;
+}
+.rest-card h3 .x {
+  margin-left: auto; border: 0; background: none; cursor: pointer;
+  color: var(--muted); font-size: 1.1rem; line-height: 1; padding: 0 2px;
+}
+/* one dot per step, filled up to the one being read */
+.rest-dots { display: flex; gap: 5px; margin-bottom: 9px; }
+.rest-dots i {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--line);
+}
+.rest-dots i.on { background: var(--accent); }
+.rest-body { overflow-y: auto; flex: 1; min-height: 60px; }
+.rest-body h4 {
+  font-family: Cinzel, Georgia, serif; font-size: .72rem; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--accent); margin: 0 0 5px;
+}
+.rest-body p { margin: 0 0 8px; font-size: .88rem; }
+.rest-hp {
+  display: flex; align-items: baseline; gap: 8px; margin: 8px 0;
+  font-family: Cinzel, Georgia, serif; font-size: .74rem; color: var(--muted);
+}
+.rest-hp b { font-family: inherit; font-size: 1.3rem; color: var(--ink); }
+/* the hit dice spender: one pip per die, spent ones filled */
+.rest-dice { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; }
+.rest-die {
+  width: 15px; height: 15px; border: 1px solid var(--muted); border-radius: 3px;
+  background: var(--paper); padding: 0; cursor: default;
+}
+.rest-die.spent { background: var(--accent); border-color: var(--accent); }
+.rest-roll {
+  font-family: Cinzel, Georgia, serif; font-size: .66rem; text-transform: uppercase;
+  letter-spacing: .06em; border: 1px solid var(--accent); border-radius: 4px;
+  background: var(--accent); color: var(--paper); padding: 4px 12px; cursor: pointer;
+}
+.rest-roll:hover { background: #8f2222; }
+.rest-roll[disabled] { opacity: .45; cursor: default; }
+.rest-log { font-size: .74rem; color: var(--muted); margin: 6px 0 0; }
+.rest-log li { margin: 1px 0; }
+.rest-back-list { margin: 4px 0 0; padding-left: 18px; font-size: .82rem; }
+.rest-note { width: 100%; font-family: inherit; font-size: .9rem; margin-top: 6px;
+  border: 1px solid var(--line); border-radius: 4px; background: #fbf7ee;
+  color: var(--ink); padding: 5px 8px; }
+.rest-foot { display: flex; align-items: center; gap: 8px; margin-top: 10px;
+  padding-top: 9px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.rest-foot .grow { flex: 1; }
+.rest-err { font-size: .74rem; color: var(--accent); }
+.rest-msg { font-size: .74rem; color: var(--muted); }
+
 /* ---------------- features & text ---------------- */
 .feature { margin-bottom: 9px; }
 .feature h3 {
@@ -193,7 +696,23 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 }
 .feature .src { font-size: .62rem; color: var(--muted); text-transform: uppercase; }
 .feature p { margin: 2px 0; font-size: .86rem; white-space: pre-wrap; }
-.scroller { max-height: 900px; overflow-y: auto; padding-right: 6px; }
+/* The uses a rationed feature has left, drawn like spell slots. A filled pip
+   is a use that is gone. */
+.uses { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 3px 0 1px; }
+.use-pip {
+  width: 12px; height: 12px; border: 1px solid var(--muted); border-radius: 50%;
+  background: var(--paper); flex: 0 0 auto;
+}
+.use-pip.used { background: var(--accent); border-color: var(--accent); }
+.uses-note { font-size: .62rem; color: var(--muted); }
+.uses.live .use-pip { cursor: pointer; }
+.uses.live .use-pip:hover { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(184,134,11,.25); }
+.uses.busy { opacity: .55; pointer-events: none; }
+.uses .uses-err { font-size: .62rem; color: var(--accent); }
+/* The box that holds it does the scrolling now, so the scroller is
+   just a block. It keeps its name because a sheet printed or read with no
+   script still finds it. */
+.scroller { padding-right: 2px; }
 .quote { font-style: italic; white-space: pre-wrap; margin: 0 0 8px; }
 .quote .label { display: block; font-style: normal; font-size: .6rem; text-transform: uppercase; color: var(--muted); }
 
@@ -213,9 +732,106 @@ details.spell summary {
   cursor: pointer; font-size: .88rem; padding: 1px 0;
   border-bottom: 1px dotted rgba(139,126,102,.4);
 }
+.cast-btn {
+  float: right;
+  font-family: Cinzel, Georgia, serif; font-size: .56rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--line); border-radius: 3px;
+  background: var(--paper); color: var(--accent);
+  padding: 0 6px; margin-left: 6px; cursor: pointer; line-height: 1.6;
+}
+.cast-btn:hover { background: #fbf7ee; border-color: var(--accent); }
 details.spell summary::marker { color: var(--muted); }
 details.spell p { font-size: .82rem; margin: 4px 0 8px 12px; white-space: pre-wrap; }
 .tagline { font-size: .68rem; color: var(--muted); }
+
+/* ---------------- managing spells ----------------
+   The spell page is live in the same way the inventory is: spells are learned,
+   given back and prepared from the manage box and the org file behind the
+   sheet is rewritten. What may be taken is the rules engine's answer, so the
+   box only ever offers spells the character is actually entitled to. */
+.spell-foot {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--line);
+}
+.spell-manage {
+  font-family: Cinzel, Georgia, serif; font-size: .62rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px dashed var(--line); border-radius: 4px;
+  background: var(--paper); color: var(--accent);
+  padding: 4px 12px; cursor: pointer;
+}
+.spell-manage:hover { background: #fbf7ee; border-style: solid; border-color: var(--accent); }
+.sb-msg { font-size: .7rem; color: var(--muted); }
+.sb-err { font-size: .72rem; color: var(--accent); }
+
+/* the budgets, on the sheet and again at the top of the manage box */
+.sb-budgets { display: flex; gap: 6px; flex-wrap: wrap; }
+.sb-budget {
+  font-size: .66rem; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 1px 9px; background: var(--paper); white-space: nowrap;
+}
+.sb-budget b { color: var(--ink); font-weight: 700; }
+.sb-budget.full { border-color: var(--accent-2); background: #f6ecd2; }
+.sb-budget.full b { color: #7a5a08; }
+
+.sb-card { width: min(680px, 100%); max-height: 84vh; }
+.sb-tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 8px 0 2px; }
+.sb-tools .lbl {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); margin-left: 4px;
+}
+.sb-chip {
+  font-size: .68rem; font-family: inherit; color: var(--muted);
+  border: 1px solid transparent; border-radius: 10px;
+  background: none; padding: 1px 9px; cursor: pointer;
+}
+.sb-chip:hover { color: var(--ink); }
+.sb-chip.on { background: var(--paper-2); color: var(--accent); border-color: var(--edge); }
+.sb-list { overflow-y: auto; margin: 8px 0 0; flex: 1; min-height: 120px; }
+.sb-group {
+  font-family: Cinzel, Georgia, serif;
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--accent); border-bottom: 1px solid var(--line);
+  margin: 10px 0 3px; padding-bottom: 2px;
+}
+.sb-group:first-child { margin-top: 0; }
+.sb-group .n { color: var(--muted); font-weight: 400; letter-spacing: 0; }
+.sb-item {
+  display: flex; align-items: baseline; gap: 8px;
+  border-bottom: 1px dotted rgba(139,126,102,.4);
+  padding: 3px 2px;
+}
+.sb-item.mine { background: rgba(196,154,44,.08); }
+.sb-item.blocked .sb-name { color: var(--muted); }
+.sb-what { flex: 1; min-width: 0; cursor: pointer; }
+.sb-name { font-size: .88rem; }
+.sb-name .mark { color: var(--accent-2); font-weight: 700; margin-right: 3px; }
+.sb-meta { font-size: .66rem; color: var(--muted); }
+.sb-meta .why { color: var(--accent); }
+.sb-tag {
+  font-size: .56rem; text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--line); border-radius: 8px; padding: 0 5px;
+  color: var(--muted); margin-left: 5px; white-space: nowrap;
+}
+.sb-tag.held { border-color: var(--accent-2); color: #7a5a08; }
+.sb-acts { white-space: nowrap; flex: 0 0 auto; }
+.sb-b {
+  font-family: Cinzel, Georgia, serif; font-size: .56rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--line); border-radius: 3px;
+  background: var(--paper); color: var(--accent);
+  padding: 1px 7px; margin-left: 4px; cursor: pointer; line-height: 1.6;
+}
+.sb-b:hover { background: #fbf7ee; border-color: var(--accent); }
+.sb-b.give { color: var(--muted); }
+.sb-b.give:hover { color: var(--accent); }
+.sb-text {
+  font-size: .78rem; margin: 2px 0 6px 12px; white-space: pre-wrap;
+  color: var(--ink);
+}
+.sb-empty { font-size: .8rem; color: var(--muted); font-style: italic; padding: 8px 2px; }
 footer.sheet-foot {
   margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--line);
   font-size: .68rem; color: var(--muted); display: flex; justify-content: space-between; gap: 12px;
@@ -386,6 +1002,25 @@ footer.sheet-foot {
 .rc-cell.fumble b { color: #e5837a; }
 .rc-dice { margin-top: 9px; font-size: .7rem; color: #9d9078; }
 .rc-dice b { color: #dccca0; font-weight: 600; }
+/* a cast reports two rolls and what the target has to do about them, so the
+   card grows a heading per roll and a line for the save */
+.rc-sub {
+  margin-top: 9px;
+  font: 700 .55rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  letter-spacing: .16em; text-transform: uppercase; color: #8d8168;
+}
+.rc-line {
+  margin-top: 9px; padding: 6px 8px;
+  border: 1px dashed rgba(184,134,11,.45); border-radius: 6px;
+  font-size: .76rem; color: #e8d7ae;
+}
+/* the mark that says a line of history is a spell rather than a die */
+.spell-mark {
+  display: inline-block; width: 12px; height: 12px;
+  margin-right: 5px; vertical-align: -1px; color: var(--accent-2);
+}
+.spell-mark svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.rc-label .spell-mark { width: 14px; height: 14px; vertical-align: -2px; }
 
 .dt-hist-head {
   font: 700 .6rem/1 Cinzel, "Trajan Pro", Georgia, serif;
@@ -449,9 +1084,9 @@ footer.sheet-foot {
 #dice-fab:hover { background: radial-gradient(circle at 34% 26%, #4c4231, #221c15); }
 #dice-fab:focus-visible { outline: 2px solid rgba(184,134,11,.8); outline-offset: 3px; }
 #dice-fab svg {
-  width: 27px; height: 27px;
+  width: 26px; height: 26px;
   fill: none; stroke: currentColor;
-  stroke-width: 1.35; stroke-linejoin: round; stroke-linecap: round;
+  stroke-width: 1.9; stroke-linejoin: round; stroke-linecap: round;
 }
 
 #dice-custom {
@@ -546,6 +1181,9 @@ footer.sheet-foot {
 .dc-hint { margin: 9px 0 10px; font-size: .64rem; line-height: 1.5; color: #7e735d; }
 .dc-actions { display: flex; align-items: center; gap: 6px; }
 .dc-actions .dt-btn { flex: 0 0 auto; }
+.dc-actions + .dc-actions { margin-top: 7px; }
+/* the two rests get a row to themselves, split evenly */
+.dc-rest .dt-btn { flex: 1; }
 .dc-roll {
   flex: 1; min-width: 5.4em;
   padding: 8px 0;
@@ -889,9 +1527,34 @@ footer.sheet-foot {
     box-shadow: none !important;
     background: none !important;
   }
-  .page { box-shadow: none; max-width: none; padding: 0; }
+  .page { box-shadow: none; max-width: none; padding: 0; display: block; }
   .scroller { max-height: none; overflow: visible; }
   .box { break-inside: avoid; }
+  /* Paper has no empty bottom half to fill and nothing to scroll, so the
+     boxes that grow on screen go back to being as tall as their contents. */
+  .columns { display: grid; align-items: start; }
+  .box.grow, .box.grow.has-tabs > .tabpane.on {
+    display: block; min-height: 0; overflow: visible;
+  }
+  /* the inventory prints as every container in turn rather than whichever
+     tab happened to be open */
+  .coin-spend, .coin-hint, .coin-log,
+  .inv-tabs, .inv-actions, .inv-foot, .inv-modal, .cast-btn, .rest-modal,
+  .sb-modal, .spell-foot, .tabbar { display: none !important; }
+  /* on paper there is nothing to click, so every tab is printed as the
+     section it was, heading and all */
+  .box.has-tabs > .tabpane { display: block !important; }
+  .box.has-tabs > .tabpane > h2 { display: block !important; }
+  .box.has-tabs > .tabpane + .tabpane { margin-top: 14px; }
+  .inv-pane { display: block !important; }
+  /* on paper the toggle is just the tick it was showing */
+  .wearbtn { border: 0 !important; padding: 0 !important; }
+  .wearbtn:not(.on) { visibility: hidden; }
+  .inv-pane-name {
+    display: block; font-family: Cinzel, Georgia, serif;
+    font-size: .68rem; text-transform: uppercase; color: var(--accent);
+    margin: 8px 0 2px;
+  }
   details.spell { break-inside: avoid; }
   details.spell[open] summary ~ * { display: block; }
 }
@@ -900,16 +1563,58 @@ footer.sheet-foot {
 <body>
 <div class="page">
 
-  <header class="sheet-head">
+  <header class="sheet-head{% if sheet.imageSrc %} has-portrait{% endif %}">
+    {% if sheet.imageSrc %}
+    <!-- The portrait wears the character's name and experience as its frame,
+         so neither is repeated in the header beside it. -->
+    <figure class="portrait" style="--fx: {{ sheet.imageFocusX }}%; --fy: {{ sheet.imageFocusY }}%; --zoom: {{ sheet.imageZoom }};">
+      <div class="portrait-well"><img src="{{ sheet.imageSrc }}" alt="{{ sheet.name }}"></div>
+      <svg class="portrait-ring" viewBox="0 0 210 210" aria-hidden="true">
+        <defs>
+          <linearGradient id="ringBand" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f8f3e6"/>
+            <stop offset=".47" stop-color="#e8ddc4"/>
+            <stop offset="1" stop-color="#d2c29f"/>
+          </linearGradient>
+          <path id="ringTop" d="M 105,105 m -78,0 a 78,78 0 1,1 156,0"/>
+          <path id="ringBot" d="M 105,105 m -90,0 a 90,90 0 1,0 180,0"/>
+        </defs>
+        <circle class="xp-track" cx="105" cy="105" r="100"/>
+        {% if sheet.xpPercent %}<circle class="xp-fill" cx="105" cy="105" r="100"
+                pathLength="100" stroke-dasharray="{{ sheet.xpPercent }} 100"
+                transform="rotate(-90 105 105)"/>{% endif %}
+        <circle class="ring-band" cx="105" cy="105" r="83.5"/>
+        <circle class="ring-edge" cx="105" cy="105" r="94.5"/>
+        <circle class="ring-edge" cx="105" cy="105" r="72.5"/>
+        <circle class="ring-hair" cx="105" cy="105" r="91.6"/>
+        <circle class="ring-hair" cx="105" cy="105" r="75.4"/>
+        <text class="ring-name" style="font-size: {% if sheet.name|length > 30 %}7.5{% elif sheet.name|length > 24 %}9{% elif sheet.name|length > 18 %}10.5{% elif sheet.name|length > 13 %}12{% else %}13.5{% endif %}px">
+          <textPath href="#ringTop" startOffset="50%" text-anchor="middle">{{ sheet.name }}</textPath>
+        </text>
+        <text class="ring-xp">
+          <textPath href="#ringBot" startOffset="50%" text-anchor="middle">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %} XP</textPath>
+        </text>
+        <g class="ring-gem">
+          <path d="M 21.5,98.2 26.8,105 21.5,111.8 16.2,105 Z"/>
+          <path d="M 188.5,98.2 193.8,105 188.5,111.8 183.2,105 Z"/>
+        </g>
+        <g class="ring-gem-core">
+          <circle cx="21.5" cy="105" r="1.3"/>
+          <circle cx="188.5" cy="105" r="1.3"/>
+        </g>
+      </svg>
+    </figure>
+    {% endif %}
     <div class="name-block">
-      <h1 class="char-name">{{ sheet.name }}</h1>
-      <div class="char-sub">{{ sheet.classLine }} &middot; {{ sheet.raceName }}{% if sheet.background %} &middot; {{ sheet.background }}{% endif %}</div>
+      <h1 class="char-name{% if sheet.imageSrc %} sr-only{% endif %}">{{ sheet.name }}</h1>
+      <div class="char-title">{{ sheet.classLine }}</div>
+      <div class="char-sub">{{ sheet.raceName }}{% if sheet.background %} &middot; {{ sheet.background }}{% endif %}</div>
     </div>
     <div class="head-facts">
       <div class="fact"><span class="label">Level</span><span class="value">{{ sheet.level }}</span></div>
       <div class="fact"><span class="label">Proficiency</span><span class="value">{{ sheet.proficiencyStr }}</span></div>
       {% if sheet.alignment %}<div class="fact"><span class="label">Alignment</span><span class="value">{{ sheet.alignment }}</span></div>{% endif %}
-      <div class="fact"><span class="label">Experience</span><span class="value">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span></div>
+      {% if not sheet.imageSrc %}<div class="fact"><span class="label">Experience</span><span class="value">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span></div>{% endif %}
       {% if sheet.player %}<div class="fact"><span class="label">Player</span><span class="value">{{ sheet.player }}</span></div>{% endif %}
       <div class="fact"><span class="label">Inspiration</span><span class="value">{% if sheet.inspiration %}Yes{% else %}&mdash;{% endif %}</span></div>
     </div>
@@ -1006,16 +1711,19 @@ footer.sheet-foot {
             <span class="sub">feet &middot; {{ sheet.size }}</span>
           </div>
         </div>
+        <!-- Hit points, the bar under them and the hit dice line are the
+             three things a rest moves, so each is named: the rest walkthrough
+             rewrites them in place rather than asking for the page again. -->
         <div style="margin-top:10px">
           <div class="row" style="border:0">
-            <span class="nm"><strong>Hit Points</strong> {{ sheet.hpCurrent }} / {{ sheet.hpMax }}{% if sheet.hpTemp %} (+{{ sheet.hpTemp }} temp){% endif %}</span>
+            <span class="nm" id="hp-line"><strong>Hit Points</strong> {{ sheet.hpCurrent }} / {{ sheet.hpMax }}{% if sheet.hpTemp %} (+{{ sheet.hpTemp }} temp){% endif %}</span>
             {% if sheet.hitDice %}<span class="val rollable" data-kind="hitdie"
                   data-pool="{{ sheet.hitDice }}" data-mod="{{ sheet.abilityMap.con.mod }}"
                   data-label="Hit Die">{{ sheet.hitDice }}</span>{% endif %}
           </div>
-          <div class="hp-bar"><div class="hp-fill" style="width:{{ sheet.hpPercent }}%"></div></div>
+          <div class="hp-bar"><div class="hp-fill" id="hp-fill" style="width:{{ sheet.hpPercent }}%"></div></div>
           <div class="tagline" style="margin-top:4px">
-            Hit dice {{ sheet.hitDice }}{% if sheet.hitDiceUsed %}, {{ sheet.hitDiceUsed }} spent{% endif %} &middot;
+            <span id="hitdice-line">Hit dice {{ sheet.hitDice }}{% if sheet.hitDiceUsed %}, {{ sheet.hitDiceUsed }} spent{% endif %}</span> &middot;
             <span class="rollable" data-kind="check" data-mod="{{ sheet.deathSaveStr }}"
                   data-label="Death Saving Throw">death saves {{ sheet.deathSaves }}{% if sheet.deathSaveBonus %}
                   ({{ sheet.deathSaveStr }}){% endif %}</span> &middot;
@@ -1024,142 +1732,266 @@ footer.sheet-foot {
         </div>
       </div>
 
-      <div class="box">
-        <h2>Attacks</h2>
-        <div class="table-wrap">
-        <table>
-          <thead><tr><th>Attack</th><th class="num">Bonus</th><th>Damage</th><th>Range</th></tr></thead>
-          <tbody>
-          {% for a in sheet.attacks %}
-            <tr>
-              <td class="rollable" data-kind="check" data-mod="{{ a.bonus }}"
-                  data-label="{{ a.name }} Attack">{{ a.name }}{% if a.notes %}<div class="tagline">{{ a.notes }}</div>{% endif %}</td>
-              <td class="num rollable" data-kind="check" data-mod="{{ a.bonus }}"
-                  data-label="{{ a.name }} Attack">{{ a.bonus }}</td>
-              {% if a.damage %}<td class="rollable" data-kind="damage" data-roll="{{ a.damage }}"
-                  data-label="{{ a.name }} Damage">{{ a.damage }} {{ a.type }}{% if a.versatile %}<div
-                  class="tagline"><span class="rollable" data-kind="damage" data-roll="{{ a.versatile }}"
-                  data-label="{{ a.name }} Damage (two handed)">{{ a.versatile }}</span> two handed</div>{% endif %}</td>
-              {% else %}<td>{{ a.damage }} {{ a.type }}</td>{% endif %}
-              <td>{{ a.range }}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
+      <!-- What the character does and who they are share one box, shown a
+           tab at a time. The markup is only the sections stacked as they
+           always were - a sheet with no script shows every one of them, one
+           under the other - and the bar of tabs is built from the heading
+           each section already carries. -->
+      <div class="box tabbed grow" data-tabs="play">
+        <div class="tabpane">
+          <h2>Attacks</h2>
+          <div class="table-wrap">
+          <table>
+            <thead><tr><th>Attack</th><th class="num">Bonus</th><th>Damage</th><th>Range</th></tr></thead>
+            <tbody>
+            {% for a in sheet.attacks %}
+              <tr>
+                <td class="rollable" data-kind="check" data-mod="{{ a.bonus }}"
+                    data-label="{{ a.name }} Attack">{{ a.name }}{% if a.notes %}<div class="tagline">{{ a.notes }}</div>{% endif %}</td>
+                <td class="num rollable" data-kind="check" data-mod="{{ a.bonus }}"
+                    data-label="{{ a.name }} Attack">{{ a.bonus }}</td>
+                {% if a.damage %}<td class="rollable" data-kind="damage" data-roll="{{ a.damage }}"
+                    data-label="{{ a.name }} Damage">{{ a.damage }} {{ a.type }}{% if a.versatile %}<div
+                    class="tagline"><span class="rollable" data-kind="damage" data-roll="{{ a.versatile }}"
+                    data-label="{{ a.name }} Damage (two handed)">{{ a.versatile }}</span> two handed</div>{% endif %}</td>
+                {% else %}<td>{{ a.damage }} {{ a.type }}</td>{% endif %}
+                <td>{{ a.range }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+          </div>
         </div>
-      </div>
 
-      <div class="box">
-        <h2>Equipment</h2>
-        <div class="table-wrap">
-        <table>
-          <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Wt</th><th>Worn</th></tr></thead>
-          <tbody>
-          {% for g in sheet.equipment %}
-            <tr>
-              <td>{{ g.name }}{% if g.notes %} <span class="tagline">({{ g.notes }})</span>{% endif %}</td>
-              <td class="num">{{ g.qty }}</td>
-              <td class="num">{% if g.weight %}{{ g.weight }}{% endif %}</td>
-              <td>{% if g.equipped %}&#10003;{% endif %}</td>
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
+        <!-- The inventory is live: the panel below is redrawn by the page from
+             the same inventory the server computed, and every change is written
+             back to the org character sheet. What is rendered here is what a
+             sheet with no script - or no server - still shows. -->
+        <div class="tabpane" id="inventory">
+          <h2>Inventory</h2>
+          <div class="enc" id="inv-enc">
+            <div class="enc-line">
+              <span class="wt">{{ sheet.inventory.weight }} lb</span>
+              <span class="cap">of {{ sheet.inventory.carryCapacity }} lb carried</span>
+              <span class="enc-badge {{ sheet.inventory.level }}">{{ sheet.inventory.label }}</span>
+            </div>
+            <div class="enc-bar">
+              <div class="enc-fill {{ sheet.inventory.level }}" style="width:{{ sheet.inventory.percent }}%"></div>
+            </div>
+            <div class="enc-note">
+              Encumbered over {{ sheet.inventory.encumberedAt }} lb, heavily over
+              {{ sheet.inventory.heavilyEncumberedAt }} lb, push, drag or lift
+              {{ sheet.inventory.pushDragLift }} lb.
+              {% if sheet.inventory.stored %}Another {{ sheet.inventory.stored }} lb is stowed
+              in extradimensional space and is not carried.{% endif %}
+            </div>
+          </div>
+          <div id="inv-live">
+            {% for box in sheet.inventory.containers %}
+            <div class="inv-pane on">
+              <h3 class="inv-pane-name">{{ box.name }}</h3>
+              {% if box.capacity %}<p class="inv-cap{% if box.over %} over{% endif %}">
+                <b>{{ box.weight }} lb</b> of {{ box.capacity }} lb</p>{% endif %}
+              {% if box.entries %}
+              <div class="table-wrap">
+              <table class="inv-table">
+                <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Wt</th><th>Worn</th></tr></thead>
+                <tbody>
+                {% for e in box.entries %}
+                  <tr>
+                    <td>{{ e.name }}{% if e.notes %} <span class="tagline">({{ e.notes }})</span>{% endif %}</td>
+                    <td class="num">{{ e.qty }}</td>
+                    <td class="num">{% if e.total %}{{ e.total }}{% endif %}</td>
+                    <td>{% if e.equipped %}&#10003;{% endif %}</td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              </div>
+              {% else %}<div class="inv-empty">Empty.</div>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+          <div class="tagline" style="margin-top:6px">
+            {{ sheet.purse.total }} in coin &middot; see the Coins tab
+          </div>
         </div>
-        <div class="tagline" style="margin-top:6px">
-          {{ sheet.money.cp }} cp &middot; {{ sheet.money.sp }} sp &middot; {{ sheet.money.ep }} ep &middot;
-          {{ sheet.money.gp }} gp &middot; {{ sheet.money.pp }} pp
-        </div>
-      </div>
 
-      {% if sheet.personality or sheet.ideals or sheet.bonds or sheet.flaws %}
-      <div class="box">
-        <h2>Personality</h2>
-        {% if sheet.personality %}<p class="quote"><span class="label">Traits</span>{{ sheet.personality }}</p>{% endif %}
-        {% if sheet.ideals %}<p class="quote"><span class="label">Ideals</span>{{ sheet.ideals }}</p>{% endif %}
-        {% if sheet.bonds %}<p class="quote"><span class="label">Bonds</span>{{ sheet.bonds }}</p>{% endif %}
-        {% if sheet.flaws %}<p class="quote"><span class="label">Flaws</span>{{ sheet.flaws }}</p>{% endif %}
-      </div>
-      {% endif %}
-
-      {% if sheet.age or sheet.height or sheet.weightStr or sheet.eyes or sheet.skin or sheet.hair or sheet.appearance %}
-      <div class="box">
-        <h2>Appearance</h2>
-        <div class="rows">
-          {% if sheet.age %}<div class="row"><span class="nm">Age</span><span class="val">{{ sheet.age }}</span></div>{% endif %}
-          {% if sheet.height %}<div class="row"><span class="nm">Height</span><span class="val">{{ sheet.height }}</span></div>{% endif %}
-          {% if sheet.weightStr %}<div class="row"><span class="nm">Weight</span><span class="val">{{ sheet.weightStr }}</span></div>{% endif %}
-          {% if sheet.eyes %}<div class="row"><span class="nm">Eyes</span><span class="val">{{ sheet.eyes }}</span></div>{% endif %}
-          {% if sheet.skin %}<div class="row"><span class="nm">Skin</span><span class="val">{{ sheet.skin }}</span></div>{% endif %}
-          {% if sheet.hair %}<div class="row"><span class="nm">Hair</span><span class="val">{{ sheet.hair }}</span></div>{% endif %}
+        <!-- The purse is live the same way the inventory is: the panel below is
+             redrawn from what the server computed, and spending, earning or
+             changing coin up is written back to the org character sheet. What
+             is rendered here is what a sheet with no script - or no server -
+             still shows. -->
+        <div class="tabpane" id="coins" data-tab="$">
+          <h2>Coins</h2>
+          <div id="coin-live">
+            <div class="coin-head">
+              <span class="coin-total">{{ sheet.purse.total }}</span>
+              <span class="coin-sub">{{ sheet.purse.count }} coins &middot; {{ sheet.purse.weight }} lb</span>
+            </div>
+            <div class="table-wrap">
+            <table class="coin-table">
+              <thead><tr><th>Coin</th><th class="num">Held</th><th class="num">Worth</th></tr></thead>
+              <tbody>
+              {% for c in sheet.purse.coins %}
+                <tr class="coin-{{ c.id }}">
+                  <td><span class="coin-pip {{ c.id }}"></span>{{ c.name }}
+                      <span class="tagline">{{ c.abbr }}</span></td>
+                  <td class="num">{{ c.qty }}</td>
+                  <td class="num">{{ c.gold }} gp</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+            </div>
+          </div>
+          <p class="enc-note">
+            A gold piece is 100 cp, 10 sp, 2 ep, or a tenth of a platinum piece.
+            Fifty coins of any kind weigh a pound.
+          </p>
         </div>
-        {% if sheet.appearance %}<p class="quote" style="margin-top:6px">{{ sheet.appearance }}</p>{% endif %}
+
+        <!-- Personality and appearance are one section, not two. They are the
+             same question asked twice - who is this - and splitting them cost
+             a tab to show six short lines. Appearance sits at the bottom under
+             its own subheading, so it is still findable and still prints as
+             its own block. The heading only says Personality when there is
+             personality to show; a character with nothing but a description
+             gets a section called Appearance rather than a misnamed one. -->
+        {% if sheet.personality or sheet.ideals or sheet.bonds or sheet.flaws or sheet.age or sheet.height or sheet.weightStr or sheet.eyes or sheet.skin or sheet.hair or sheet.appearance %}
+        <div class="tabpane">
+          {% if sheet.personality or sheet.ideals or sheet.bonds or sheet.flaws %}
+          <h2>Personality</h2>
+          {% if sheet.personality %}<p class="quote"><span class="label">Traits</span>{{ sheet.personality }}</p>{% endif %}
+          {% if sheet.ideals %}<p class="quote"><span class="label">Ideals</span>{{ sheet.ideals }}</p>{% endif %}
+          {% if sheet.bonds %}<p class="quote"><span class="label">Bonds</span>{{ sheet.bonds }}</p>{% endif %}
+          {% if sheet.flaws %}<p class="quote"><span class="label">Flaws</span>{{ sheet.flaws }}</p>{% endif %}
+          {% if sheet.age or sheet.height or sheet.weightStr or sheet.eyes or sheet.skin or sheet.hair or sheet.appearance %}
+          <h3 class="subhead">Appearance</h3>
+          {% endif %}
+          {% else %}
+          <h2>Appearance</h2>
+          {% endif %}
+          {% if sheet.age or sheet.height or sheet.weightStr or sheet.eyes or sheet.skin or sheet.hair %}
+          <div class="rows facts">
+            {% if sheet.age %}<div class="row"><span class="nm">Age</span><span class="val">{{ sheet.age }}</span></div>{% endif %}
+            {% if sheet.height %}<div class="row"><span class="nm">Height</span><span class="val">{{ sheet.height }}</span></div>{% endif %}
+            {% if sheet.weightStr %}<div class="row"><span class="nm">Weight</span><span class="val">{{ sheet.weightStr }}</span></div>{% endif %}
+            {% if sheet.eyes %}<div class="row"><span class="nm">Eyes</span><span class="val">{{ sheet.eyes }}</span></div>{% endif %}
+            {% if sheet.skin %}<div class="row"><span class="nm">Skin</span><span class="val">{{ sheet.skin }}</span></div>{% endif %}
+            {% if sheet.hair %}<div class="row"><span class="nm">Hair</span><span class="val">{{ sheet.hair }}</span></div>{% endif %}
+          </div>
+          {% endif %}
+          {% if sheet.appearance %}<p class="quote" style="margin-top:6px">{{ sheet.appearance }}</p>{% endif %}
+        </div>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
 
     <!-- =============== right column =============== -->
     <div class="col">
-      {% if sheet.isCaster %}
-      <div class="box">
-        <h2>Spellcasting</h2>
-        <div class="spell-head">
-          <div class="tile"><span class="tile-label">Ability</span><div class="big" style="font-size:1rem">{{ sheet.castingAbility }}</div></div>
-          <div class="tile"><span class="tile-label">Save DC</span><div class="big">{{ sheet.spellSaveDc }}</div></div>
-          <div class="tile rollable" data-kind="check" data-mod="{{ sheet.spellAttackStr }}"
-               data-label="Spell Attack"><span class="tile-label">Attack</span><div class="big">{{ sheet.spellAttackStr }}</div></div>
-        </div>
-        <div class="tagline">
-          {% if sheet.cantripsKnown %}{{ sheet.cantripsKnown }} cantrips{% endif %}
-          {% if sheet.spellsKnown %} &middot; {{ sheet.spellsKnown }} spells known{% endif %}
-          {% if sheet.preparedMax %} &middot; {{ sheet.spellsPrepared }}/{{ sheet.preparedMax }} prepared{% endif %}
-          {% if sheet.spellNotes %} &middot; {{ sheet.spellNotes }}{% endif %}
-        </div>
-        {% for s in sheet.slots %}
-        <div class="slot-row">
-          <span class="lvl">{{ s.level }}{% if s.level == 1 %}st{% elif s.level == 2 %}nd{% elif s.level == 3 %}rd{% else %}th{% endif %}</span>
-          {% for i in s.pips %}<span class="slot{% if i <= s.used %} used{% endif %}"></span>{% endfor %}
-          <span class="tagline">{{ s.total }} slot{% if s.total > 1 %}s{% endif %}</span>
-        </div>
-        {% endfor %}
-
-        {% for lvl in sheet.spellLevels %}
-        <div class="spell-level">
-          <h3>{{ lvl.name }}{% if lvl.slots %} ({{ lvl.slots }} slot{% if lvl.slots > 1 %}s{% endif %}){% endif %}</h3>
-          {% for sp in lvl.spells %}
-          <details class="spell">
-            <summary>
-              {% if sp.prepared and lvl.level > 0 %}<span class="prep">&#9679;</span> {% endif %}{{ sp.name }}
-              <span class="tagline">&mdash; {{ sp.castingTime }}, {{ sp.range }}{% if sp.concentration %}, concentration{% endif %}{% if sp.ritual %}, ritual{% endif %}</span>
-            </summary>
-            <p><em>{{ sp.school }}{% if sp.components %} &middot; {{ sp.components }}{% endif %}{% if sp.duration %} &middot; {{ sp.duration }}{% endif %}</em>
-{{ sp.text }}{% if sp.higherLevel %}
-
-<strong>At higher levels.</strong> {{ sp.higherLevel }}{% endif %}</p>
-          </details>
-          {% endfor %}
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %}
-
-      <div class="box">
-        <h2>Features &amp; Traits</h2>
-        <div class="scroller">
-          {% for t in sheet.traits %}
-          <div class="feature">
-            <h3>{{ t.name }}</h3>
-            {% if t.source %}<span class="src">{{ t.source }}</span>{% endif %}
-            <p>{{ t.text }}</p>
+      <!-- The spell page and the features share a box the same way the
+           sections in the middle column do; see the note there. -->
+      <div class="box tabbed grow" data-tabs="lore">
+        {% if sheet.isCaster %}
+        <!-- The spell page is live: everything inside spell-live is redrawn by
+             the page from what the server computed, and learning, giving back
+             or preparing a spell is written into the org character sheet. What
+             is rendered here is what a sheet with no script - or no server -
+             still shows. -->
+        <div class="tabpane" id="spellcasting">
+          <h2>Spellcasting</h2>
+          <div class="spell-head">
+            <div class="tile"><span class="tile-label">Ability</span><div class="big" style="font-size:1rem">{{ sheet.castingAbility }}</div></div>
+            <div class="tile"><span class="tile-label">Save DC</span><div class="big">{{ sheet.spellSaveDc }}</div></div>
+            <div class="tile rollable" data-kind="check" data-mod="{{ sheet.spellAttackStr }}"
+                 data-label="Spell Attack"><span class="tile-label">Attack</span><div class="big">{{ sheet.spellAttackStr }}</div></div>
+          </div>
+          <div id="spell-live">
+          <div class="tagline">
+            {% if sheet.cantripsKnown %}{{ sheet.cantripsKnown }} cantrips{% endif %}
+            {% if sheet.spellsKnown %} &middot; {{ sheet.spellsKnown }} spells known{% endif %}
+            {% if sheet.preparedMax %} &middot; {{ sheet.spellsPrepared }}/{{ sheet.preparedMax }} prepared{% endif %}
+            {% if sheet.spellNotes %} &middot; {{ sheet.spellNotes }}{% endif %}
+          </div>
+          {% for s in sheet.slots %}
+          <div class="slot-row">
+            <span class="lvl">{{ s.level }}{% if s.level == 1 %}st{% elif s.level == 2 %}nd{% elif s.level == 3 %}rd{% else %}th{% endif %}</span>
+            {% for i in s.pips %}<span class="slot{% if i <= s.used %} used{% endif %}"></span>{% endfor %}
+            <span class="tagline">{{ s.total }} slot{% if s.total > 1 %}s{% endif %}</span>
           </div>
           {% endfor %}
-          {% for f in sheet.features %}
-          <div class="feature">
-            <h3>{{ f.name }}</h3>
-            {% if f.source %}<span class="src">{{ f.source }}</span>{% endif %}
-            <p>{{ f.text }}</p>
+
+          {% for lvl in sheet.spellLevels %}
+          <div class="spell-level">
+            <h3>{{ lvl.name }}{% if lvl.slots %} ({{ lvl.slots }} slot{% if lvl.slots > 1 %}s{% endif %}){% endif %}</h3>
+            {% for sp in lvl.spells %}
+            <details class="spell">
+              <summary>
+                {% if sp.prepared and lvl.level > 0 %}<span class="prep">&#9679;</span> {% endif %}{{ sp.name }}
+                <span class="tagline">&mdash; {{ sp.castingTime }}, {{ sp.range }}{% if sp.concentration %}, concentration{% endif %}{% if sp.ritual %}, ritual{% endif %}</span>
+                <!-- Casting rolls the attack and the damage in one go, and says
+                     what the target has to roll back. Everything it needs was
+                     worked out by the rules engine. -->
+                <button type="button" class="cast-btn" data-spell="{{ sp.name }}"
+                        data-detail="{{ sp.cast.detail }}" data-line="{{ sp.cast.line }}"
+                        data-short="{{ sp.cast.short }}"
+                        {% if sp.cast.attack %}data-attack="{{ sp.cast.attackBonus }}"{% endif %}
+                        {% if sp.cast.damage %}data-damage="{{ sp.cast.damage }}"
+                        data-damage-type="{{ sp.cast.damageType }}"{% endif %}
+                        {% if sp.cast.heal %}data-heal="{{ sp.cast.heal }}"{% endif %}
+                        {% if sp.cast.save %}data-save="{{ sp.cast.saveName }}"
+                        data-dc="{{ sp.cast.saveDc }}"{% endif %}
+                        title="Cast {{ sp.name }}">Cast</button>
+              </summary>
+              <p><em>{{ sp.school }}{% if sp.components %} &middot; {{ sp.components }}{% endif %}{% if sp.duration %} &middot; {{ sp.duration }}{% endif %}</em>
+  {{ sp.text }}{% if sp.higherLevel %}
+
+  <strong>At higher levels.</strong> {{ sp.higherLevel }}{% endif %}</p>
+            </details>
+            {% endfor %}
           </div>
           {% endfor %}
+          </div>
+          <div class="spell-foot">
+            <button type="button" class="spell-manage" id="spell-manage-btn">Manage spells</button>
+            <span id="spell-budgets"></span>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- A feature the rules ration - "twice, and you regain both on a
+             short rest" - wears a row of slots for those uses, the same way
+             spell slots are drawn. Clicking one spends a use and writes it to
+             the org character sheet; a rest gives them all back. Which
+             features have a limit, and how many, the rules engine worked out
+             from each feature's own text. -->
+        <div class="tabpane">
+          <h2>Features &amp; Traits</h2>
+          <div class="scroller" id="feature-live">
+            {% for t in sheet.traits %}
+            <div class="feature{% if t.usesMax %} limited{% endif %}"{% if t.usesMax %} data-uses="{{ t.usesId }}" data-uses-name="{{ t.name }}" data-recharge="{{ t.recharge }}"{% endif %}>
+              <h3>{{ t.name }}</h3>
+              {% if t.source %}<span class="src">{{ t.source }}</span>{% endif %}
+              {% if t.usesMax %}<div class="uses" data-max="{{ t.usesMax }}" data-spent="{{ t.usesSpent }}">
+                {% for i in t.usesPips %}<span class="use-pip{% if i <= t.usesSpent %} used{% endif %}"></span>{% endfor %}
+                <span class="uses-note">{{ t.usesNote }}</span>
+              </div>{% endif %}
+              <p>{{ t.text }}</p>
+            </div>
+            {% endfor %}
+            {% for f in sheet.features %}
+            <div class="feature{% if f.usesMax %} limited{% endif %}"{% if f.usesMax %} data-uses="{{ f.usesId }}" data-uses-name="{{ f.name }}" data-recharge="{{ f.recharge }}"{% endif %}>
+              <h3>{{ f.name }}</h3>
+              {% if f.source %}<span class="src">{{ f.source }}</span>{% endif %}
+              {% if f.usesMax %}<div class="uses" data-max="{{ f.usesMax }}" data-spent="{{ f.usesSpent }}">
+                {% for i in f.usesPips %}<span class="use-pip{% if i <= f.usesSpent %} used{% endif %}"></span>{% endfor %}
+                <span class="uses-note">{{ f.usesNote }}</span>
+              </div>{% endif %}
+              <p>{{ f.text }}</p>
+            </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
 
@@ -1190,7 +2022,9 @@ footer.sheet-foot {
 
 <div id="dnd-log-config" hidden
      data-server="{{ serverUrl }}" data-character="{{ sheet.name }}"
-     data-character-id="{{ sheet.id }}"></div>
+     data-character-id="{{ sheet.id }}" data-file="{{ sheetFile }}"></div>
+<script type="application/json" id="dnd-inventory-data">{{ inventoryJson|safe }}</script>
+<script type="application/json" id="dnd-money-data">{{ moneyJson|safe }}</script>
 <noscript><style>.rollable { cursor: auto; text-decoration: none; }</style></noscript>
 <script>
 /* ---------------------------------------------------------------------------
@@ -2226,7 +3060,34 @@ footer.sheet-foot {
       '<span>' + name + '</span><b>' + value + '</b></div>';
   }
 
+  // castCard lays out one cast: the attack it rolled, the damage or healing
+  // that followed, and the saving throw the target still owes.
+  function castCard(r) {
+    var out = '<div class="rc"><div class="rc-label">' + SPELL_MARK + esc(r.label) + '</div>' +
+      '<div class="rc-formula">' + esc(r.detail) + '</div>';
+    if (r.attack) {
+      out += '<div class="rc-sub">To hit ' + esc(r.attack.formula) + '</div>' +
+        '<div class="rc-grid three">' +
+          cell('Disadv', r.attack.dis, '', r.attack.disNat) +
+          cell('Normal', r.attack.normal, ' main', r.attack.normalNat) +
+          cell('Advant', r.attack.adv, '', r.attack.advNat) +
+        '</div>';
+    }
+    if (r.damage) {
+      var crit = r.damage.crit !== null && r.damage.crit !== undefined;
+      out += '<div class="rc-sub">' + esc(r.damage.name) + ' ' + esc(r.damage.formula) + '</div>' +
+        '<div class="rc-grid ' + (crit ? 'two' : 'one') + '">' +
+          cell('Total', r.damage.total, ' main') +
+          (crit ? cell('If critical', r.damage.crit, '') : '') +
+        '</div>';
+    }
+    if (r.line) { out += '<div class="rc-line">' + esc(r.line) + '</div>'; }
+    if (r.dice) { out += '<div class="rc-dice">' + esc(r.dice) + '</div>'; }
+    return out + '</div>';
+  }
+
   function latestCard(r) {
+    if (r.kind === 'cast') { return castCard(r); }
     var head = '<div class="rc-label">' + esc(r.label) + '</div>' +
                '<div class="rc-formula">' + esc(r.formula) + '</div>';
     if (r.kind === 'check') {
@@ -2254,6 +3115,7 @@ footer.sheet-foot {
       return;
     }
     historyEl.innerHTML = history.map(function (r) {
+      if (r.kind === 'cast') { return castRow(r); }
       var main = r.kind === 'check' ? r.normal : r.total;
       var extra = r.kind === 'check'
         ? '<span class="hx">' + r.dis + ' / ' + r.adv + '</span>'
@@ -2265,6 +3127,27 @@ footer.sheet-foot {
         '<span class="hv' + natClass(r.kind === 'check' ? r.normalNat : 0) + '">' + main + '</span>' +
         '</button>';
     }).join('');
+  }
+
+  // One line of history for a cast: the mark, the spell, and the number that
+  // matters most - the damage it did, or what it hit on.
+  function castRow(r) {
+    var main = '&middot;', natural = 0;
+    if (r.damage) {
+      main = r.damage.total;
+    } else if (r.attack) {
+      main = r.attack.normal;
+      natural = r.attack.normalNat;
+    }
+    var extra = r.attack && r.damage
+      ? '<span class="hx">hit ' + r.attack.normal + '</span>'
+      : '<span class="hx">' + esc(r.short) + '</span>';
+    return '<button type="button" class="hr" data-roll-id="' + r.id + '" ' +
+      'title="Cast ' + esc(r.label) + ' again">' +
+      '<span class="ht">' + r.time + '</span>' +
+      '<span class="hl">' + SPELL_MARK + esc(r.label) + '</span>' + extra +
+      '<span class="hv' + natClass(natural) + '">' + main + '</span>' +
+      '</button>';
   }
 
   function historyClick(e) {
@@ -2284,11 +3167,18 @@ footer.sheet-foot {
   // from the sheet, so it animates and lands in the history the same way.
   var dock, fab, panel, exprInput, modLabel;
 
-  var D20_PLUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-    '<g transform="scale(.72)">' +
-    '<path d="M12 1.6 22 7.4v9.2L12 22.4 2 16.6V7.4z"/>' +
-    '<path d="M12 1.6 12 22.4M2 7.4l10 3.2 10-3.2M2 16.6l10-6 10 6"/></g>' +
-    '<path d="M19.4 15.6v6.5M16.2 18.8h6.5"/></svg>';
+  // The fab opens dice, session and history, so it wears a plain menu stack
+  // rather than a die that would promise only rolls.
+  var MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+    '<path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+
+  // A cast is marked in the tray so a spell is told apart from a die roll at
+  // a glance. It is drawn into the panel only - the session log is text, and
+  // the mark has no business in an org file.
+  var SPELL_MARK = '<span class="spell-mark" aria-hidden="true">' +
+    '<svg viewBox="0 0 24 24" focusable="false">' +
+    '<path d="M12 2.6 14 9l6.4 2-6.4 2-2 6.4-2-6.4L3.6 11 10 9z"/>' +
+    '<path d="M18.4 3.2 19 5l1.8.6-1.8.6-.6 1.8-.6-1.8L16 5.6 17.8 5z"/></svg></span>';
 
   var QUICK_DICE = [4, 6, 8, 10, 12, 20];
 
@@ -2406,6 +3296,14 @@ footer.sheet-foot {
         '<button type="button" data-mod="1" aria-label="Raise modifier">+</button>' +
       '</div>' +
       '<div class="dc-hint"></div>' +
+      '<div class="dc-actions dc-rest">' +
+        '<button type="button" class="dt-btn" id="rest-short" ' +
+          'title="Take a short rest: spend hit dice and recover what an ' +
+          'hour gives back">Short rest</button>' +
+        '<button type="button" class="dt-btn" id="rest-long" ' +
+          'title="Take a long rest: hit points, hit dice, spell slots and ' +
+          'every feature">Long rest</button>' +
+      '</div>' +
       '<div class="dc-actions">' +
         '<button type="button" class="dt-btn" id="dice-custom-clear">Clear</button>' +
         '<button type="button" class="dt-btn" id="sess-open" ' +
@@ -2419,10 +3317,10 @@ footer.sheet-foot {
     fab = document.createElement('button');
     fab.id = 'dice-fab';
     fab.type = 'button';
-    fab.title = 'Custom roll';
-    fab.setAttribute('aria-label', 'Custom roll');
+    fab.title = 'Dice and session menu';
+    fab.setAttribute('aria-label', 'Dice and session menu');
     fab.setAttribute('aria-expanded', 'false');
-    fab.innerHTML = D20_PLUS_ICON;
+    fab.innerHTML = MENU_ICON;
     dock.appendChild(fab);
     document.body.appendChild(dock);
 
@@ -2450,6 +3348,14 @@ footer.sheet-foot {
       setDrawer(true);
       setView('sessions');
       loadSessions();
+    });
+    panel.querySelector('#rest-short').addEventListener('click', function () {
+      setPanel(false);
+      openRest('short');
+    });
+    panel.querySelector('#rest-long').addEventListener('click', function () {
+      setPanel(false);
+      openRest('long');
     });
     panel.addEventListener('click', function (e) {
       var b = e.target.closest('[data-die]');
@@ -2493,7 +3399,112 @@ footer.sheet-foot {
              formula: text, noCrit: el.getAttribute('data-nocrit') === '1' };
   }
 
-  function roll(spec, origin) {
+  // ------------------------------------------------------------- casting
+  //
+  // A cast is one click that does everything the spell asks for: the attack
+  // roll if it needs one, the damage or healing that follows, and - for a
+  // spell that rolls nothing itself - the saving throw the target owes,
+  // written out ready to read across the table.
+  function castSpecFor(el) {
+    var spec = {
+      kind: 'cast',
+      label: el.getAttribute('data-spell') || 'Spell',
+      detail: el.getAttribute('data-detail') || '',
+      line: el.getAttribute('data-line') || '',
+      save: el.getAttribute('data-save') || '',
+      dc: el.getAttribute('data-dc') || ''
+    };
+    var atk = el.getAttribute('data-attack');
+    if (atk !== null && atk !== '') {
+      var mod = parseInt(atk, 10) || 0;
+      spec.attack = { flat: mod, formula: 'd20 ' + signed(mod) };
+    }
+    var dmg = el.getAttribute('data-damage');
+    if (dmg) {
+      var parsed = parseDice(dmg);
+      if (parsed && parsed.terms.length) {
+        spec.damage = { name: 'Damage', terms: parsed.terms, flat: parsed.flat,
+                        formula: dmg + ' ' + (el.getAttribute('data-damage-type') || '') };
+      }
+    }
+    var heal = el.getAttribute('data-heal');
+    if (heal && !spec.damage) {
+      var h = parseDice(heal);
+      if (h && h.terms.length) {
+        spec.damage = { name: 'Healing', terms: h.terms, flat: h.flat,
+                        formula: heal, noCrit: true };
+      }
+    }
+    // The few words a history row shows when there is no second roll to put
+    // there. The full line only fits on the card.
+    spec.short = el.getAttribute('data-short') || '';
+    return spec;
+  }
+
+  function castRoll(spec, origin) {
+    var result = { kind: 'cast', label: spec.label, detail: spec.detail,
+                   line: spec.line, short: spec.short, spec: spec,
+                   formula: spec.detail };
+    var shown = [], bits = [];
+
+    if (spec.attack) {
+      var a = rollDie(20), b = rollDie(20);
+      var hi = Math.max(a, b), lo = Math.min(a, b);
+      result.attack = {
+        formula: spec.attack.formula, mod: spec.attack.flat,
+        pair: [a, b],
+        normal: a + spec.attack.flat, adv: hi + spec.attack.flat, dis: lo + spec.attack.flat,
+        normalNat: a, advNat: hi, disNat: lo
+      };
+      shown.push({ sides: 20, value: a }, { sides: 20, value: b });
+      bits.push('to hit d20 ' + a + ', d20 ' + b +
+        (spec.attack.flat ? '  \u00b7  modifier ' + signed(spec.attack.flat) : ''));
+    }
+    if (spec.damage) {
+      var rolls = rollTerms(spec.damage.terms);
+      var total = sumRolls(rolls) + spec.damage.flat;
+      var crit = null;
+      // A spell attack crits like any other; a saving throw does not, and
+      // neither does healing.
+      if (spec.attack && !spec.damage.noCrit) {
+        crit = total + sumRolls(rollTerms(spec.damage.terms));
+      }
+      result.damage = { name: spec.damage.name, formula: spec.damage.formula.trim(),
+                        total: total, crit: crit };
+      rolls.forEach(function (r) { shown.push({ sides: r.sides, value: r.value }); });
+      bits.push(spec.damage.name.toLowerCase() + ' ' + rolls.map(function (r) {
+        return (r.sign < 0 ? '-' : '') + 'd' + r.sides + ' ' + r.value;
+      }).join(', ') + (spec.damage.flat ? '  \u00b7  modifier ' + signed(spec.damage.flat) : ''));
+    }
+    result.dice = bits.join('  \u00b7  ');
+
+    result.id = ++seq;
+    result.time = clockNow();
+    history.unshift(result);
+    if (history.length > 60) { history.length = 60; }
+    latestEl.innerHTML = latestCard(result);
+    renderHistory();
+    logRoll(result);
+    if (autoBox.checked) { setTray(true); }
+    tab.classList.remove('pulse');
+    void tab.offsetWidth;
+    tab.classList.add('pulse');
+
+    var throwable = shown.filter(function (s) { return SOLID_SIDES[s.sides]; });
+    if (throwable.length && board) {
+      var radius = 52 + throwable.length * 6;
+      board.throwDice(throwable.slice(0, 12), origin, pickLanding(origin, radius));
+    } else if (board) {
+      // A spell that rolls nothing still clears the table.
+      board.stop();
+    }
+  }
+
+  // done, when given, is handed the result once the roll is in the history.
+  // It is how the rest walkthrough spends a hit die: the die is thrown on the
+  // table like any other, and the walkthrough reads what it landed on.
+  function roll(spec, origin, done) {
+    if (spec.kind === 'cast') { castRoll(spec, origin); return; }
     var now = new Date();
     var time = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
     var result, shown;
@@ -2547,6 +3558,7 @@ footer.sheet-foot {
       // roll's dice are not left sitting there looking like this result.
       board.stop();
     }
+    if (done) { done(result); }
   }
 
   function originOf(el, ev) {
@@ -2642,6 +3654,9 @@ footer.sheet-foot {
 
   var LOG = {
     url: '', token: '', expires: 0, session: null,
+    // file is the org character sheet this page was exported from, which is
+    // what inventory changes are written back to.
+    file: '',
     rolls: [], notes: [], stream: [],
     busy: false, error: '', needLogin: false
   };
@@ -2686,7 +3701,7 @@ footer.sheet-foot {
 
   function loginNeeded() {
     LOG.needLogin = true;
-    var e = new Error('sign in to the orgs server to record this session');
+    var e = new Error('sign in to the orgs server');
     e.status = 401;
     return e;
   }
@@ -2713,13 +3728,16 @@ footer.sheet-foot {
     });
   }
 
-  // The api returns either a plain string or a {ok, msg} envelope on failure.
+  // The api returns either a plain string or an {Ok, Msg} envelope on failure.
+  // Go marshals that envelope with capitals and some handlers answer in lower
+  // case, so both spellings are read - otherwise a refused change shows the
+  // reader the raw json instead of the sentence inside it.
   function serverError(text) {
     if (!text) { return ''; }
     try {
       var v = JSON.parse(text);
       if (typeof v === 'string') { return v; }
-      if (v && v.msg) { return v.msg; }
+      if (v && (v.Msg || v.msg)) { return v.Msg || v.msg; }
     } catch (e) { /* not json, use it as it came */ }
     return String(text).slice(0, 200);
   }
@@ -2813,10 +3831,35 @@ footer.sheet-foot {
     return ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
   }
 
-  // logRoll turns a result from the tray into a row of the session table.
+  // logRoll turns a result from the tray into a row of the session table. The
+  // table is org text, so a cast is written out in words - the spell mark the
+  // tray draws stays in the tray.
   function logRoll(r) {
     if (!LOG.session) { return; }
     var row = { time: r.time, character: CHARACTER, label: r.label, formula: r.formula };
+    if (r.kind === 'cast') {
+      var notes = [];
+      row.formula = [r.attack ? 'attack ' + r.attack.formula : '',
+                     r.damage ? r.damage.formula : ''].filter(Boolean).join(', ') || 'cast';
+      row.result = r.damage ? String(r.damage.total)
+                            : (r.attack ? String(r.attack.normal) : '');
+      row.dice = r.dice || '';
+      if (r.attack) {
+        notes.push('hit ' + r.attack.normal + ' (adv ' + r.attack.adv +
+          ', dis ' + r.attack.dis + ')');
+      }
+      if (r.damage && r.damage.crit !== null && r.damage.crit !== undefined) {
+        notes.push('crit ' + r.damage.crit);
+      }
+      if (r.line) { notes.push(r.line); }
+      if (r.detail) { notes.push(r.detail); }
+      row.notes = notes.join('; ');
+      LOG.rolls.push(row);
+      saveLog();
+      flush();
+      renderSession();
+      return;
+    }
     if (r.kind === 'check') {
       row.result = String(r.normal);
       row.dice = 'd20 ' + r.pair[0] + ', d20 ' + r.pair[1];
@@ -3051,7 +4094,10 @@ footer.sheet-foot {
     var el = document.getElementById('sessions-list');
     if (!el) { return; }
     if (!list.length) {
-      el.innerHTML = '<div class="dt-empty">No sessions yet.</div>';
+      el.innerHTML = '<div class="dt-empty">' +
+        ((CHARACTER_ID || CHARACTER)
+          ? 'No sessions recorded for ' + esc(CHARACTER || 'this character') + ' yet.'
+          : 'No sessions yet.') + '</div>';
       return;
     }
     el.innerHTML = list.map(function (s) {
@@ -3067,10 +4113,20 @@ footer.sheet-foot {
     }).join('');
   }
 
+  // The sessions list is this character's, not the table's. The server filters
+  // on the id embedded in each session file's Characters section, and the name
+  // goes along for sessions logged before that id existed.
+  function sessionsQuery() {
+    var q = [];
+    if (CHARACTER_ID) { q.push('character=' + encodeURIComponent(CHARACTER_ID)); }
+    if (CHARACTER) { q.push('name=' + encodeURIComponent(CHARACTER)); }
+    return q.length ? '?' + q.join('&') : '';
+  }
+
   function loadSessions() {
     var el = document.getElementById('sessions-list');
     if (el) { el.innerHTML = '<div class="dt-empty">Loading&hellip;</div>'; }
-    api('GET', '/dnd/play/sessions').then(function (list) {
+    api('GET', '/dnd/play/sessions' + sessionsQuery()).then(function (list) {
       renderSessionList(list || []);
     }, function (err) {
       if (el) { el.innerHTML = '<div class="nd-err">' + esc(err.message || String(err)) + '</div>'; }
@@ -3260,6 +4316,8 @@ footer.sheet-foot {
       signIn(user, pass).then(function () {
         renderSession();
         flush();
+        // The inventory could not be read while we were signed out.
+        invLoad();
       }, function (err) {
         LOG.error = err.message || String(err);
         renderSession();
@@ -3319,6 +4377,7 @@ footer.sheet-foot {
         '<div class="nd-tabs">' +
           '<button type="button" class="nd-tab on" data-view="notes">Notes</button>' +
           '<button type="button" class="nd-tab" data-view="sessions">Sessions</button>' +
+          '<button type="button" class="nd-tab" data-view="inventory">Inventory</button>' +
           '<button type="button" class="nd-tab" data-view="search">Search</button>' +
         '</div>' +
         '<span class="nd-status" id="nd-status"></span>' +
@@ -3348,6 +4407,14 @@ footer.sheet-foot {
           '</div>' +
           '<div id="sessions-list"></div>' +
         '</div>' +
+        '<div class="nd-view" id="view-inventory">' +
+          '<div class="nd-toolbar">' +
+            '<button type="button" class="dt-btn" id="inv-history-refresh">Refresh</button>' +
+            '<span class="nd-meta">Everything you have picked up, used, dropped ' +
+              'or stowed, newest first. This one lives on your character sheet.</span>' +
+          '</div>' +
+          '<div id="inv-history"></div>' +
+        '</div>' +
         '<div class="nd-view" id="view-search">' +
           '<div class="nd-toolbar">' +
             '<input type="search" id="search-q" class="nd-input" ' +
@@ -3372,6 +4439,7 @@ footer.sheet-foot {
       var name = b.getAttribute('data-view');
       setView(name);
       if (name === 'sessions') { loadSessions(); }
+      if (name === 'inventory') { renderInvHistory(); invLoad(); }
     });
 
     var box = drawer.querySelector('#note-text');
@@ -3401,6 +4469,9 @@ footer.sheet-foot {
     });
 
     drawer.querySelector('#sessions-refresh').addEventListener('click', loadSessions);
+    drawer.querySelector('#inv-history-refresh').addEventListener('click', function () {
+      invLoad();
+    });
     drawer.querySelector('#view-sessions').addEventListener('click', function (e) {
       var row = e.target.closest('[data-session]');
       if (row) { openSession(row.getAttribute('data-session')); }
@@ -3423,6 +4494,7 @@ footer.sheet-foot {
       LOG.url = cfg.getAttribute('data-server') || '';
       CHARACTER = cfg.getAttribute('data-character') || '';
       CHARACTER_ID = cfg.getAttribute('data-character-id') || '';
+      LOG.file = cfg.getAttribute('data-file') || '';
     }
     if (!LOG.url && location.protocol.indexOf('http') === 0) { LOG.url = location.origin; }
     loadLog();
@@ -3439,6 +4511,1768 @@ footer.sheet-foot {
     setInterval(function () { if (pending()) { flush(); } }, 20000);
   }
 
+  // ------------------------------------------------------------- inventory
+  //
+  // The equipment box is the character's bag: things stack, they live either
+  // on the character or in one of the containers they own, and every change
+  // is written straight back into the org character sheet along with a line
+  // in its Inventory History. The panel is drawn from the inventory the
+  // server computed, so weight and encumbrance are the rules engine's answer
+  // rather than something worked out twice in two places.
+  var INV = { state: null, where: '', busy: false, error: '', msg: '' };
+  var invBox, invLive, invEnc, invAdd, invMove, invHits = [], invHit = -1;
+  var invSearchTimer = null, invMoveWhat = null, invMode = 'move';
+  var invFilter = 'all';
+
+  // The groups the add box searches in. The ids are the ones the server knows
+  // in dnd.ItemFilters - a name it does not know comes back as an error, not
+  // as everything - so the two lists have to say the same thing.
+  var INV_FILTERS = [
+    { id: 'all', label: 'All' },
+    { id: 'weapon', label: 'Weapons' },
+    { id: 'armor', label: 'Armor' },
+    { id: 'potion', label: 'Potions' },
+    { id: 'focus', label: 'Components' },
+    { id: 'gear', label: 'Gear' },
+    { id: 'tool', label: 'Tools' },
+    { id: 'pack', label: 'Packs' },
+    { id: 'container', label: 'Containers' },
+    { id: 'magic', label: 'Magic' }
+  ];
+
+  function invFilterLabel(id) {
+    var out = '';
+    INV_FILTERS.forEach(function (f) { if (f.id === id) { out = f.label; } });
+    return out;
+  }
+
+  // How rare a thing is, as a class the stylesheet colours. Mundane gear has
+  // no rarity and keeps the ink colour it would have had.
+  function rarityClass(rarity) {
+    var r = String(rarity || '').toLowerCase().trim();
+    if (!r) { return ''; }
+    return 'rar rar-' + r.replace(/[^a-z0-9]+/g, '-');
+  }
+
+  function invConfigured() { return !!(LOG.file || CHARACTER_ID); }
+
+  // who the request is about: the file it came from, and the id as a fallback
+  // for a sheet that has been moved somewhere else.
+  function invWho(body) {
+    body = body || {};
+    body.filename = LOG.file || '';
+    body.id = CHARACTER_ID || '';
+    return body;
+  }
+
+  function invLoad(quiet) {
+    if (!invConfigured()) { return Promise.resolve(); }
+    var q = '/dnd/inventory?filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    return api('GET', q).then(function (state) {
+      INV.state = state;
+      INV.error = '';
+      renderInventory();
+      renderInvHistory();
+    }, function (err) {
+      if (!quiet) { INV.error = err.message || String(err); renderInventory(); }
+    });
+  }
+
+  // invChange posts one change and redraws from what comes back, so the panel
+  // always shows what is actually written in the file.
+  function invChange(body) {
+    if (!invConfigured()) {
+      INV.error = 'this sheet does not know which org file it came from';
+      renderInventory();
+      return Promise.reject(new Error(INV.error));
+    }
+    INV.busy = true;
+    INV.error = '';
+    renderInventory();
+    return api('POST', '/dnd/inventory', invWho(body)).then(function (state) {
+      INV.busy = false;
+      INV.state = state;
+      INV.msg = state.msg || '';
+      if (state.inventory && !containerOf(state.inventory, INV.where)) { INV.where = ''; }
+      renderInventory();
+      renderInvHistory();
+      return state;
+    }, function (err) {
+      INV.busy = false;
+      INV.error = err.message || String(err);
+      renderInventory();
+      throw err;
+    });
+  }
+
+  function containerOf(inv, key) {
+    var found = null;
+    (inv.containers || []).forEach(function (b) { if (b.key === key) { found = b; } });
+    return found;
+  }
+
+  function invContainers() {
+    return (INV.state && INV.state.inventory && INV.state.inventory.containers) || [];
+  }
+
+  // Every container something can be put into: the person, plus the
+  // containers actually owned. A container that has gone missing is not
+  // offered, only shown.
+  function invDestinations() {
+    return invContainers().filter(function (b) { return !b.missing; });
+  }
+
+  function weightStr(n) {
+    n = Math.round((Number(n) || 0) * 100) / 100;
+    return String(n);
+  }
+
+  function renderEncumbrance(inv) {
+    if (!invEnc) { return; }
+    var pct = inv.carryCapacity ? Math.min(100, inv.weight / inv.carryCapacity * 100) : 0;
+    var mark = function (at) {
+      if (!inv.carryCapacity || !at) { return ''; }
+      return '<span class="enc-mark" style="left:' +
+        Math.min(100, at / inv.carryCapacity * 100) + '%"></span>';
+    };
+    invEnc.innerHTML =
+      '<div class="enc-line">' +
+        '<span class="wt">' + weightStr(inv.weight) + ' lb</span>' +
+        '<span class="cap">of ' + inv.carryCapacity + ' lb carried</span>' +
+        '<span class="enc-badge ' + esc(inv.level || '') + '">' + esc(inv.label || '') + '</span>' +
+      '</div>' +
+      '<div class="enc-bar"><div class="enc-fill ' + esc(inv.level || '') +
+        '" style="width:' + pct + '%"></div>' + mark(inv.encumberedAt) +
+        mark(inv.heavilyEncumberedAt) + '</div>' +
+      '<div class="enc-note">' +
+        (inv.effect ? '<b>' + esc(inv.effect) + '</b> ' : '') +
+        'Encumbered over ' + inv.encumberedAt + ' lb, heavily over ' +
+        inv.heavilyEncumberedAt + ' lb, push, drag or lift ' + inv.pushDragLift + ' lb.' +
+        (inv.stored ? ' Another ' + weightStr(inv.stored) +
+          ' lb is stowed in extradimensional space and is not carried.' : '') +
+      '</div>';
+  }
+
+  // The Worn cell. Anything that can be worn or wielded gets a button that
+  // toggles it; everything else keeps the plain tick it always had. So does
+  // anything stowed in a container - something in a backpack is not being
+  // worn, which is the same rule that takes gear off when it is packed away,
+  // so it has to come out before it can go on.
+  function invWorn(e) {
+    var star = e.attuned ? ' <span class="worn" title="Attuned">&#9733;</span>' : '';
+    if (!e.wearable || e.container) {
+      var tick = e.equipped
+        ? '<span class="worn" title="Worn or wielded">&#10003;</span>' : '';
+      return tick + star;
+    }
+    var on = !!e.equipped;
+    return '<button type="button" class="wearbtn' + (on ? ' on' : '') +
+      '" data-wear="' + (on ? '0' : '1') +
+      '" aria-pressed="' + (on ? 'true' : 'false') +
+      '" aria-label="' + (on ? 'Worn, take off ' : 'Wear or wield ') + esc(e.name) +
+      '" title="' + (on ? 'Worn or wielded &mdash; click to take it off'
+                        : 'Click to wear or wield this') + '">' +
+      (on ? '&#10003;' : '&#9675;') + '</button>' + star;
+  }
+
+  function invRow(e) {
+    var notes = e.notes ? ' <span class="tagline">(' + esc(e.notes) + ')</span>' : '';
+    var tag = e.isContainer ? ' <span class="tagline">holds things</span>' : '';
+    var rare = e.rarity
+      ? ' <span class="rar-tag ' + rarityClass(e.rarity) + '">' + esc(e.rarity) + '</span>'
+      : '';
+    return '<tr data-item="' + esc(e.key) + '" data-name="' + esc(e.name) + '">' +
+      '<td class="inv-name"><span class="' + rarityClass(e.rarity) + '">' +
+        esc(e.name) + '</span>' + rare + tag + notes + '</td>' +
+      '<td class="num qty">' + e.qty + '</td>' +
+      '<td class="num">' + (e.total ? weightStr(e.total) : '') + '</td>' +
+      '<td class="inv-worn">' + invWorn(e) + '</td>' +
+      '<td class="inv-actions">' +
+        '<button type="button" class="ib use" data-act="use" title="Use one, ' +
+          'recorded in your inventory history">Use</button>' +
+        '<button type="button" class="ib" data-act="move" title="Move into another container">Move</button>' +
+        '<button type="button" class="ib drop" data-act="drop" title="Drop or give away">Drop</button>' +
+      '</td></tr>';
+  }
+
+  function invPane(box) {
+    var cap = '';
+    if (box.capacity) {
+      cap = '<p class="inv-cap' + (box.over ? ' over' : '') + '"><b>' +
+        weightStr(box.weight) + ' lb</b> of ' + box.capacity + ' lb' +
+        (box.over ? ' &mdash; overfull' : '') + '</p>';
+    } else if (box.key) {
+      cap = '<p class="inv-cap"><b>' + weightStr(box.weight) + ' lb</b> inside</p>';
+    }
+    if (box.extradimensional) {
+      cap += '<p class="inv-cap">Extradimensional, its contents are not carried.</p>';
+    }
+    if (box.missing) {
+      cap += '<p class="inv-cap over">You no longer carry this container. ' +
+        'Move what is left somewhere else.</p>';
+    }
+    var body = box.entries && box.entries.length
+      ? '<div class="table-wrap"><table class="inv-table">' +
+          '<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Wt</th>' +
+          '<th class="inv-worn">Worn</th><th class="inv-actions"></th></tr></thead><tbody>' +
+          box.entries.map(invRow).join('') +
+        '</tbody></table></div>'
+      : '<div class="inv-empty">Nothing here yet.</div>';
+    return '<div class="inv-pane' + (box.key === INV.where ? ' on' : '') +
+      '" data-pane="' + esc(box.key) + '">' +
+      '<h3 class="inv-pane-name">' + esc(box.name) + '</h3>' + cap + body + '</div>';
+  }
+
+  function renderInventory() {
+    if (!invLive) { return; }
+    var inv = INV.state && INV.state.inventory;
+    if (!inv) { return; }
+    renderEncumbrance(inv);
+    var boxes = inv.containers || [];
+    if (!containerOf(inv, INV.where)) { INV.where = ''; }
+    var tabs = boxes.map(function (b) {
+      return '<button type="button" class="inv-tab' + (b.key === INV.where ? ' on' : '') +
+        (b.over ? ' over' : '') + '" data-tab="' + esc(b.key) + '">' + esc(b.name) +
+        '<span class="n">' + b.items + '</span></button>';
+    }).join('');
+    invLive.innerHTML =
+      '<div class="inv-tabs">' + tabs + '</div>' +
+      boxes.map(invPane).join('') +
+      '<div class="inv-foot">' +
+        '<button type="button" class="inv-add" id="inv-add-btn">+ Add item</button>' +
+        (INV.busy ? '<span class="inv-msg">saving&hellip;</span>'
+                  : (INV.msg ? '<span class="inv-msg">' + esc(INV.msg) + '</span>' : '')) +
+        (INV.error ? '<span class="inv-err">' + esc(INV.error) + '</span>' : '') +
+      '</div>';
+  }
+
+  // ------------------------------------------------------- the add item box
+  // Searches are answered out of order when one request is slower than the
+  // next - a token renewal in the middle of typing is enough - so anything
+  // but the newest answer is dropped rather than drawn over the newer one.
+  var invSearchSeq = 0;
+
+  function invSearch(q) {
+    var list = invAdd.querySelector('#inv-results');
+    var mine = ++invSearchSeq;
+    var path = '/dnd/items?limit=40&q=' + encodeURIComponent(q) +
+      '&filter=' + encodeURIComponent(invFilter) +
+      '&filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    api('GET', path).then(function (hits) {
+      if (mine !== invSearchSeq) { return; }
+      invHits = hits || [];
+      invHit = invHits.length ? 0 : -1;
+      invShowPick();
+      if (!invHits.length) {
+        list.innerHTML = '<div class="inv-empty">Nothing ' +
+          (invFilter === 'all' ? '' : 'in ' + esc(invFilterLabel(invFilter)) + ' ') +
+          'matches. Anything you type is added as it stands' +
+          (invFilter === 'all' ? '.' : ', or look in All.') + '</div>';
+        return;
+      }
+      list.innerHTML = invHits.map(function (h, i) {
+        var meta = [h.category || h.kind, h.cost, h.weight ? h.weight + ' lb' : '',
+          h.damage].filter(Boolean).join(' · ');
+        var rar = h.rarity
+          ? '<span class="rar-tag ' + rarityClass(h.rarity) + '">' + esc(h.rarity) + '</span>'
+          : '';
+        return '<button type="button" class="inv-hit' + (i === invHit ? ' on' : '') +
+          '" data-hit="' + i + '"><span class="nm ' + rarityClass(h.rarity) + '">' +
+          esc(h.name) + '</span>' + rar +
+          (h.isContainer ? '<span class="box-tag">container</span>' : '') +
+          (h.owned ? ' <span class="own">you have ' + h.owned + '</span>' : '') +
+          '<div class="meta">' + esc(meta) + '</div></button>';
+      }).join('');
+    }, function (err) {
+      if (mine !== invSearchSeq) { return; }
+      list.innerHTML = '<div class="inv-err">' + esc(err.message || String(err)) + '</div>';
+    });
+  }
+
+  function renderInvFilters() {
+    var el = invAdd && invAdd.querySelector('#inv-filters');
+    if (!el) { return; }
+    el.innerHTML = INV_FILTERS.map(function (f) {
+      return '<button type="button" class="inv-filter' +
+        (f.id === invFilter ? ' on' : '') + '" data-filter="' + esc(f.id) + '">' +
+        esc(f.label) + '</button>';
+    }).join('');
+  }
+
+  function invPickHit(i) {
+    if (i < 0 || i >= invHits.length) { return; }
+    invHit = i;
+    Array.prototype.forEach.call(invAdd.querySelectorAll('.inv-hit'), function (el, n) {
+      el.classList.toggle('on', n === i);
+    });
+    var el = invAdd.querySelectorAll('.inv-hit')[i];
+    if (el && el.scrollIntoView) { el.scrollIntoView({ block: 'nearest' }); }
+    invShowPick();
+  }
+
+  // The name of whatever the Add button would add right now.
+  function invShowPick() {
+    var el = invAdd.querySelector('#inv-picked');
+    if (!el) { return; }
+    var typed = invAdd.querySelector('#inv-q').value.trim();
+    if (invHit >= 0 && invHits[invHit]) {
+      el.innerHTML = 'Adding <b>' + esc(invHits[invHit].name) + '</b>';
+    } else if (typed) {
+      el.innerHTML = 'Adding <b>' + esc(typed) + '</b>, which the rules do not know';
+    } else {
+      el.textContent = '';
+    }
+  }
+
+  function invWhereOptions(selected, skip) {
+    return invDestinations().filter(function (b) { return b.key !== skip; })
+      .map(function (b) {
+        return '<option value="' + esc(b.key) + '"' +
+          (b.key === selected ? ' selected' : '') + '>' + esc(b.name) + '</option>';
+      }).join('');
+  }
+
+  function openAdd() {
+    if (!invAdd) { return; }
+    invAdd.querySelector('#inv-where').innerHTML = invWhereOptions(INV.where, null);
+    invAdd.querySelector('#inv-qty').value = '1';
+    invAdd.querySelector('#inv-err').textContent = '';
+    invAdd.classList.add('open');
+    invHits = [];
+    invHit = -1;
+    invFilter = 'all';
+    renderInvFilters();
+    var q = invAdd.querySelector('#inv-q');
+    q.value = '';
+    q.focus();
+    invShowPick();
+    invSearch('');
+  }
+
+  function closeAdd() { if (invAdd) { invAdd.classList.remove('open'); } }
+
+  function doAdd() {
+    var q = invAdd.querySelector('#inv-q').value.trim();
+    var qty = parseInt(invAdd.querySelector('#inv-qty').value, 10) || 1;
+    var where = invAdd.querySelector('#inv-where').value;
+    var hit = invHit >= 0 ? invHits[invHit] : null;
+    // A search that matched nothing is still a thing you picked up: homebrew
+    // and loot with no entry in the rules go in under the name as typed.
+    var body = hit
+      ? { action: 'add', item: hit.id, name: hit.name, qty: qty, container: where }
+      : { action: 'add', item: '', name: q, qty: qty, container: where };
+    if (!hit && !q) {
+      invAdd.querySelector('#inv-err').textContent = 'what are you adding?';
+      return;
+    }
+    invChange(body).then(function () {
+      INV.where = where;
+      renderInventory();
+      closeAdd();
+    }, function (err) {
+      invAdd.querySelector('#inv-err').textContent = err.message || String(err);
+    });
+  }
+
+  // -------------------------------------------------- the move and drop box
+  function openMove(mode, entry, from) {
+    invMode = mode;
+    invMoveWhat = { key: entry.key, name: entry.name, qty: entry.qty, from: from };
+    var title = (mode === 'move' ? 'Move ' : 'Drop ') + entry.name;
+    invMove.querySelector('#inv-move-title').textContent = title;
+    invMove.querySelector('#inv-move-qty').value = mode === 'move' ? entry.qty : 1;
+    invMove.querySelector('#inv-move-qty').max = entry.qty;
+    invMove.querySelector('#inv-move-max').textContent = 'of ' + entry.qty;
+    invMove.querySelector('#inv-move-err').textContent = '';
+    var dest = invMove.querySelector('#inv-move-where');
+    var destRow = invMove.querySelector('#inv-move-dest');
+    if (mode === 'move') {
+      dest.innerHTML = invWhereOptions(null, from);
+      destRow.hidden = false;
+      if (!dest.options.length) {
+        invMove.querySelector('#inv-move-err').textContent =
+          'you have nothing else to put it in - add a backpack or a pouch first';
+      }
+    } else {
+      destRow.hidden = true;
+    }
+    invMove.querySelector('#inv-move-go').textContent = mode === 'move' ? 'Move' : 'Drop';
+    invMove.classList.add('open');
+    invMove.querySelector('#inv-move-qty').focus();
+  }
+
+  function closeMove() { if (invMove) { invMove.classList.remove('open'); } }
+
+  function doMove() {
+    if (!invMoveWhat) { return; }
+    var qty = parseInt(invMove.querySelector('#inv-move-qty').value, 10) || 1;
+    var body = { item: invMoveWhat.key, name: invMoveWhat.name, qty: qty,
+                 container: invMoveWhat.from };
+    if (invMode === 'move') {
+      body.action = 'move';
+      body.to = invMove.querySelector('#inv-move-where').value;
+      if (!body.to && body.to !== '') { return; }
+    } else {
+      body.action = 'drop';
+    }
+    invChange(body).then(closeMove, function (err) {
+      invMove.querySelector('#inv-move-err').textContent = err.message || String(err);
+    });
+  }
+
+  // ---------------------------------------------------------- the history
+  function invHistoryRows(list) {
+    if (!list || !list.length) {
+      return '<div class="dt-empty">Nothing has come or gone yet. Add, use, ' +
+        'drop or stow something on the sheet and it is written here and into ' +
+        'your character file.</div>';
+    }
+    return '<table class="log-table"><thead><tr>' +
+      '<th>Date</th><th>Time</th><th>What</th><th>Item</th><th>Qty</th><th>Where</th>' +
+      '</tr></thead><tbody>' +
+      list.slice().reverse().map(function (e) {
+        var where = e.action === 'moved'
+          ? esc(e.from || '') + ' &rarr; ' + esc(e.to || '')
+          : esc(e.to || e.from || '');
+        return '<tr><td>' + esc(e.date || '') + '</td><td>' + esc(e.time || '') +
+          '</td><td>' + esc(e.action || '') + '</td><td>' + esc(e.item || '') +
+          '</td><td class="num">' + (e.qty || 1) + '</td><td class="dim">' + where +
+          (e.notes ? ' <span class="dim">' + esc(e.notes) + '</span>' : '') +
+          '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  function renderInvHistory() {
+    var el = document.getElementById('inv-history');
+    if (!el) { return; }
+    if (!INV.state) {
+      el.innerHTML = '<div class="dt-empty">' +
+        (INV.error ? esc(INV.error) : 'Loading&hellip;') + '</div>';
+      return;
+    }
+    el.innerHTML =
+      '<div class="nd-meta" style="margin-bottom:6px">Kept in the ' +
+        '<b>Inventory History</b> section of ' + esc(INV.state.name || 'your character sheet') +
+        ', not in the session log.</div>' +
+      invHistoryRows(INV.state.history);
+  }
+
+  // ------------------------------------------------------------- building
+  function buildInventoryUi() {
+    invBox = document.getElementById('inventory');
+    if (!invBox) { return; }
+    invLive = invBox.querySelector('#inv-live');
+    invEnc = invBox.querySelector('#inv-enc');
+
+    // The sheet was exported with the bag it had at the time, so the panel is
+    // live before the server has said anything - and stays usable if the
+    // server never answers.
+    var seed = document.getElementById('dnd-inventory-data');
+    if (seed) {
+      try {
+        var inv = JSON.parse(seed.textContent || 'null');
+        if (inv) { INV.state = { inventory: inv, history: null }; }
+      } catch (e) { /* an unreadable blob just means we wait for the server */ }
+    }
+
+    invAdd = document.createElement('div');
+    invAdd.className = 'inv-modal';
+    invAdd.id = 'inv-add';
+    invAdd.innerHTML =
+      '<div class="inv-card" role="dialog" aria-label="Add an item">' +
+        '<h3>Add to your inventory' +
+          '<button type="button" class="x" id="inv-add-close" aria-label="Close">&times;</button></h3>' +
+        '<input type="search" class="inv-field" id="inv-q" autocomplete="off" ' +
+          'placeholder="Search the rules: healing potion, rope, bkpk...">' +
+        '<div class="inv-filters" id="inv-filters"></div>' +
+        '<div class="inv-results" id="inv-results"></div>' +
+        '<div class="inv-row">' +
+          '<label for="inv-qty">How many</label>' +
+          '<input type="number" class="inv-field qty-field" id="inv-qty" min="1" value="1">' +
+          '<label for="inv-where">Into</label>' +
+          '<select class="inv-field" id="inv-where"></select>' +
+          '<button type="button" class="inv-go" id="inv-add-go">Add</button>' +
+        '</div>' +
+        '<div class="inv-hint" id="inv-picked"></div>' +
+        '<div class="inv-hint">Click or use up and down to pick a match, enter or ' +
+          'Add to take it. Anything the rules do not know is added under the ' +
+          'name you type.</div>' +
+        '<div class="inv-err" id="inv-err"></div>' +
+      '</div>';
+    document.body.appendChild(invAdd);
+
+    invMove = document.createElement('div');
+    invMove.className = 'inv-modal';
+    invMove.id = 'inv-move';
+    invMove.innerHTML =
+      '<div class="inv-card" role="dialog" aria-label="Move or drop an item">' +
+        '<h3 id="inv-move-title">Move' +
+          '<button type="button" class="x" id="inv-move-close" aria-label="Close">&times;</button></h3>' +
+        '<div class="inv-row">' +
+          '<label for="inv-move-qty">How many</label>' +
+          '<input type="number" class="inv-field qty-field" id="inv-move-qty" min="1" value="1">' +
+          '<span class="inv-msg" id="inv-move-max"></span>' +
+        '</div>' +
+        '<div class="inv-row" id="inv-move-dest">' +
+          '<label for="inv-move-where">Into</label>' +
+          '<select class="inv-field" id="inv-move-where"></select>' +
+        '</div>' +
+        '<div class="inv-row">' +
+          '<button type="button" class="inv-go" id="inv-move-go">Move</button>' +
+        '</div>' +
+        '<div class="inv-err" id="inv-move-err"></div>' +
+      '</div>';
+    document.body.appendChild(invMove);
+
+    // ---- events
+    invBox.addEventListener('click', function (e) {
+      var tab = e.target.closest('.inv-tab');
+      if (tab) {
+        INV.where = tab.getAttribute('data-tab') || '';
+        INV.msg = '';
+        renderInventory();
+        return;
+      }
+      if (e.target.closest('#inv-add-btn')) { openAdd(); return; }
+      var btn = e.target.closest('.ib, .wearbtn');
+      if (!btn) { return; }
+      var row = btn.closest('tr');
+      var pane = btn.closest('.inv-pane');
+      if (!row || !pane) { return; }
+      var where = pane.getAttribute('data-pane') || '';
+      var box = containerOf(INV.state.inventory, where);
+      var key = row.getAttribute('data-item');
+      var entry = null;
+      (box ? box.entries : []).forEach(function (x) { if (x.key === key) { entry = x; } });
+      if (!entry) { return; }
+      // The button says which way it goes rather than the sheet flipping what
+      // it thinks it knows, so a stale row cannot toggle the wrong way.
+      if (btn.classList.contains('wearbtn')) {
+        invChange({ action: 'equip', item: entry.key, name: entry.name,
+                    container: where,
+                    equipped: btn.getAttribute('data-wear') === '1' });
+        return;
+      }
+      var act = btn.getAttribute('data-act');
+      if (act === 'use') {
+        invChange({ action: 'use', item: entry.key, name: entry.name, qty: 1,
+                    container: where });
+        return;
+      }
+      openMove(act === 'move' ? 'move' : 'drop', entry, where);
+    });
+
+    // A click picks a match rather than adding it outright: an item added by
+    // a stray click has to be found and dropped again, which is a worse
+    // mistake than one more click. Enter, Add, or a double click adds it.
+    invAdd.addEventListener('click', function (e) {
+      if (e.target === invAdd || e.target.closest('#inv-add-close')) { closeAdd(); return; }
+      if (e.target.closest('#inv-add-go')) { doAdd(); return; }
+      var chip = e.target.closest('.inv-filter');
+      if (chip) {
+        invFilter = chip.getAttribute('data-filter') || 'all';
+        renderInvFilters();
+        invSearch(invAdd.querySelector('#inv-q').value);
+        return;
+      }
+      var hit = e.target.closest('.inv-hit');
+      if (hit) { invPickHit(parseInt(hit.getAttribute('data-hit'), 10)); }
+    });
+    invAdd.addEventListener('dblclick', function (e) {
+      var hit = e.target.closest('.inv-hit');
+      if (hit) {
+        invPickHit(parseInt(hit.getAttribute('data-hit'), 10));
+        doAdd();
+      }
+    });
+    invAdd.querySelector('#inv-q').addEventListener('input', function (e) {
+      var q = e.target.value;
+      invHit = -1;
+      invShowPick();
+      if (invSearchTimer) { clearTimeout(invSearchTimer); }
+      invSearchTimer = setTimeout(function () { invSearch(q); }, 140);
+    });
+    invAdd.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeAdd(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); invPickHit(invHit + 1); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); invPickHit(invHit - 1); return; }
+      if (e.key === 'Enter') { e.preventDefault(); doAdd(); }
+    });
+
+    invMove.addEventListener('click', function (e) {
+      if (e.target === invMove || e.target.closest('#inv-move-close')) { closeMove(); return; }
+      if (e.target.closest('#inv-move-go')) { doMove(); }
+    });
+    invMove.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeMove(); return; }
+      if (e.key === 'Enter') { e.preventDefault(); doMove(); }
+    });
+
+    renderInventory();
+    // The file on disk is the truth; the page catches up with it on load.
+    invLoad(true);
+  }
+
+  // --------------------------------------------------------------- coin
+  //
+  // The purse. Coin is spent, earned and changed on the server against the org
+  // character sheet, exactly the way the inventory is, so the file stays the
+  // one account of what a character can actually afford and two people looking
+  // at the same character see the same gold.
+  //
+  // Making change is the server's business, not the page's: a two copper
+  // candle paid for out of a single gold piece comes back as nine silver and
+  // eight copper, and all this does is draw the answer.
+  var COIN = { state: null, busy: false, error: '', msg: '', amount: '', why: '' };
+  var coinBox, coinLive, coinSetBox, coinSwapBox;
+
+  // The denominations largest first, which is how a purse is read out.
+  var COIN_ORDER = ['pp', 'gp', 'ep', 'sp', 'cp'];
+
+  function coinConfigured() { return !!(LOG.file || CHARACTER_ID); }
+
+  function coinWho(body) {
+    body = body || {};
+    body.filename = LOG.file || '';
+    body.id = CHARACTER_ID || '';
+    return body;
+  }
+
+  function coinPurse() { return (COIN.state && COIN.state.purse) || null; }
+
+  function coinLoad(quiet) {
+    if (!coinConfigured()) { return Promise.resolve(); }
+    var q = '/dnd/money?filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    return api('GET', q).then(function (state) {
+      COIN.state = state;
+      COIN.error = '';
+      renderCoins();
+    }, function (err) {
+      if (!quiet) { COIN.error = err.message || String(err); renderCoins(); }
+    });
+  }
+
+  // coinChange posts one change and redraws from what comes back, so the panel
+  // always shows what is actually written in the file. A refused payment
+  // leaves the purse alone, so nothing needs undoing here.
+  function coinChange(body) {
+    if (!coinConfigured()) {
+      COIN.error = 'this sheet does not know which org file it came from';
+      renderCoins();
+      return Promise.reject(new Error(COIN.error));
+    }
+    COIN.busy = true;
+    COIN.error = '';
+    renderCoins();
+    return api('POST', '/dnd/money', coinWho(body)).then(function (state) {
+      COIN.busy = false;
+      COIN.state = state;
+      COIN.msg = state.msg || '';
+      COIN.amount = '';
+      COIN.why = '';
+      renderCoins();
+      return state;
+    }, function (err) {
+      COIN.busy = false;
+      COIN.error = err.message || String(err);
+      renderCoins();
+      throw err;
+    });
+  }
+
+  // moneyStr says an amount the way the sheet writes it, largest coin first.
+  function moneyStr(m) {
+    if (!m) { return '0 gp'; }
+    var parts = [];
+    COIN_ORDER.forEach(function (id) {
+      var n = m[id] || 0;
+      if (n) { parts.push(n + ' ' + id); }
+    });
+    return parts.length ? parts.join(' ') : '0 gp';
+  }
+
+  function coinRow(c) {
+    return '<tr class="' + (c.qty ? '' : 'empty') + '">' +
+      '<td><span class="coin-pip ' + esc(c.id) + '"></span>' + esc(c.name) +
+        ' <span class="tagline">' + esc(c.abbr) + '</span></td>' +
+      '<td class="num">' + (c.qty || 0) + '</td>' +
+      '<td class="num dim">' + (c.qty ? weightStr(c.gold) + ' gp' : '&mdash;') + '</td>' +
+      '</tr>';
+  }
+
+  function coinWhat(e) {
+    if (e.notes) { return e.notes; }
+    switch (e.action) {
+      case 'spent': return 'spent';
+      case 'gained': return 'picked up';
+      case 'consolidated': return 'changed up';
+      case 'exchanged': return 'exchanged';
+      case 'set': return 'purse counted';
+    }
+    return e.action || 'changed';
+  }
+
+  function coinSign(e) {
+    if (e.action === 'spent') { return '−'; }
+    if (e.action === 'gained') { return '+'; }
+    return '';
+  }
+
+  // The last few lines of the character file's Coin History, newest first.
+  function coinLogHtml() {
+    var list = (COIN.state && COIN.state.history) || [];
+    if (!list.length) { return ''; }
+    var rows = list.slice(-6).reverse().map(function (e) {
+      return '<li class="' + esc(e.action || '') + '">' +
+        '<span class="when">' + esc(e.date || '') + '</span>' +
+        '<span class="what">' + esc(coinWhat(e)) + '</span>' +
+        '<span class="amt">' + esc(coinSign(e) + moneyStr(e.amount)) + '</span>' +
+        '</li>';
+    }).join('');
+    return '<div class="coin-log"><h4>Lately</h4><ul>' + rows + '</ul>' +
+      '<div class="coin-hint">All of it is kept in the <b>Coin History</b> ' +
+      'section of your character file.</div></div>';
+  }
+
+  function renderCoins() {
+    if (!coinLive) { return; }
+    var p = coinPurse();
+    if (!p) {
+      coinLive.innerHTML = '<div class="inv-empty">' +
+        (COIN.error ? esc(COIN.error) : 'Counting your coin…') + '</div>';
+      return;
+    }
+    coinLive.innerHTML =
+      '<div class="coin-head">' +
+        '<span class="coin-total">' + esc(p.total || '0 gp') + '</span>' +
+        '<span class="coin-sub">' + (p.count || 0) + ' coin' +
+          (p.count === 1 ? '' : 's') + ' &middot; ' + weightStr(p.weight) + ' lb</span>' +
+      '</div>' +
+      '<div class="table-wrap"><table class="coin-table">' +
+        '<thead><tr><th>Coin</th><th class="num">Held</th><th class="num">Worth</th></tr></thead>' +
+        '<tbody>' + (p.coins || []).map(coinRow).join('') + '</tbody>' +
+      '</table></div>' +
+      '<div class="coin-spend">' +
+        '<input type="text" class="inv-field amount" id="coin-amount" autocomplete="off" ' +
+          'placeholder="15 gp 3 sp" aria-label="How much" value="' + esc(COIN.amount) + '">' +
+        '<input type="text" class="inv-field why" id="coin-why" autocomplete="off" ' +
+          'placeholder="what for" aria-label="What for" value="' + esc(COIN.why) + '">' +
+        '<button type="button" class="ib drop" data-coin="spend">Spend</button>' +
+        '<button type="button" class="ib use" data-coin="gain">Gain</button>' +
+      '</div>' +
+      '<div class="coin-spend">' +
+        '<button type="button" class="ib" data-coin="consolidate" ' +
+          'title="Change small coin up into the largest that hold the same value">Change up</button>' +
+        '<button type="button" class="ib" data-coin="swap">Exchange&hellip;</button>' +
+        '<button type="button" class="ib" data-coin="set">Count purse&hellip;</button>' +
+        (COIN.busy ? '<span class="inv-msg">saving&hellip;</span>'
+                   : (COIN.msg ? '<span class="inv-msg">' + esc(COIN.msg) + '</span>' : '')) +
+        (COIN.error ? '<span class="inv-err">' + esc(COIN.error) + '</span>' : '') +
+      '</div>' +
+      '<div class="coin-hint">Say an amount however you like: <b>15 gp</b>, ' +
+        '<b>3 gp 4 sp</b>, or a bare number for gold. Paying with a coin that is ' +
+        'too big is fine - the change comes back.</div>' +
+      coinLogHtml();
+  }
+
+  function coinFocusAmount() {
+    var el = coinBox && coinBox.querySelector('#coin-amount');
+    if (el) { el.focus(); }
+  }
+
+  // ------------------------------------------------------- counting the purse
+  function coinSetOptions() {
+    var p = coinPurse();
+    var held = (p && p.money) || {};
+    return COIN_ORDER.map(function (id) {
+      return '<label for="coin-set-' + id + '">' + id +
+        '<input type="number" class="inv-field" id="coin-set-' + id + '" ' +
+        'data-coin-field="' + id + '" min="0" value="' + (held[id] || 0) + '"></label>';
+    }).join('');
+  }
+
+  function openCoinSet() {
+    if (!coinSetBox) { return; }
+    coinSetBox.querySelector('#coin-set-grid').innerHTML = coinSetOptions();
+    coinSetBox.querySelector('#coin-set-err').textContent = '';
+    coinSetBox.classList.add('open');
+    var first = coinSetBox.querySelector('input');
+    if (first) { first.focus(); first.select(); }
+  }
+
+  function doCoinSet() {
+    var money = {};
+    Array.prototype.forEach.call(
+      coinSetBox.querySelectorAll('[data-coin-field]'), function (el) {
+        money[el.getAttribute('data-coin-field')] = Math.max(0, parseInt(el.value, 10) || 0);
+      });
+    coinChange({ action: 'set', money: money, notes: 'counted' }).then(function () {
+      coinSetBox.classList.remove('open');
+    }, function (err) {
+      coinSetBox.querySelector('#coin-set-err').textContent = err.message || String(err);
+    });
+  }
+
+  // ------------------------------------------------------------- exchanging
+  function coinSwapOptions(selected) {
+    var p = coinPurse();
+    var held = (p && p.money) || {};
+    return COIN_ORDER.map(function (id) {
+      return '<option value="' + id + '"' + (id === selected ? ' selected' : '') + '>' +
+        id + (held[id] ? ' (' + held[id] + ')' : '') + '</option>';
+    }).join('');
+  }
+
+  function openCoinSwap() {
+    if (!coinSwapBox) { return; }
+    coinSwapBox.querySelector('#coin-swap-from').innerHTML = coinSwapOptions('sp');
+    coinSwapBox.querySelector('#coin-swap-to').innerHTML = coinSwapOptions('gp');
+    coinSwapBox.querySelector('#coin-swap-err').textContent = '';
+    coinSwapBox.classList.add('open');
+    coinSwapBox.querySelector('#coin-swap-qty').focus();
+  }
+
+  function doCoinSwap() {
+    var qty = parseInt(coinSwapBox.querySelector('#coin-swap-qty').value, 10) || 0;
+    coinChange({
+      action: 'exchange',
+      from: coinSwapBox.querySelector('#coin-swap-from').value,
+      to: coinSwapBox.querySelector('#coin-swap-to').value,
+      qty: qty
+    }).then(function () {
+      coinSwapBox.classList.remove('open');
+    }, function (err) {
+      coinSwapBox.querySelector('#coin-swap-err').textContent = err.message || String(err);
+    });
+  }
+
+  // --------------------------------------------------------------- building
+  function buildCoinUi() {
+    coinBox = document.getElementById('coins');
+    if (!coinBox) { return; }
+    coinLive = coinBox.querySelector('#coin-live');
+
+    // The sheet was exported with the purse it had at the time, so the panel
+    // is live before the server has said anything - and stays readable if the
+    // server never answers.
+    var seed = document.getElementById('dnd-money-data');
+    if (seed) {
+      try {
+        var money = JSON.parse(seed.textContent || 'null');
+        if (money && money.purse) {
+          COIN.state = { purse: money.purse, history: money.history || [] };
+        }
+      } catch (e) { /* an unreadable blob just means we wait for the server */ }
+    }
+
+    coinSetBox = document.createElement('div');
+    coinSetBox.className = 'inv-modal';
+    coinSetBox.id = 'coin-set';
+    coinSetBox.innerHTML =
+      '<div class="inv-card" role="dialog" aria-label="Count your purse">' +
+        '<h3>Count your purse' +
+          '<button type="button" class="x" data-coin-close="1" aria-label="Close">&times;</button></h3>' +
+        '<div class="coin-set-grid" id="coin-set-grid"></div>' +
+        '<div class="inv-row">' +
+          '<button type="button" class="inv-go" id="coin-set-go">Set</button>' +
+        '</div>' +
+        '<div class="inv-hint">Says outright what is in the purse, for when it has ' +
+          'drifted from what is on the table. It is written into your character ' +
+          'file like any other change.</div>' +
+        '<div class="inv-err" id="coin-set-err"></div>' +
+      '</div>';
+    document.body.appendChild(coinSetBox);
+
+    coinSwapBox = document.createElement('div');
+    coinSwapBox.className = 'inv-modal';
+    coinSwapBox.id = 'coin-swap';
+    coinSwapBox.innerHTML =
+      '<div class="inv-card" role="dialog" aria-label="Exchange coin">' +
+        '<h3>Exchange coin' +
+          '<button type="button" class="x" data-coin-close="1" aria-label="Close">&times;</button></h3>' +
+        '<div class="inv-row">' +
+          '<label for="coin-swap-qty">Change</label>' +
+          '<input type="number" class="inv-field qty-field" id="coin-swap-qty" min="1" value="10">' +
+          '<select class="inv-field" id="coin-swap-from" aria-label="Coin to change"></select>' +
+          '<label for="coin-swap-to">for</label>' +
+          '<select class="inv-field" id="coin-swap-to" aria-label="Coin wanted back"></select>' +
+          '<button type="button" class="inv-go" id="coin-swap-go">Exchange</button>' +
+        '</div>' +
+        '<div class="inv-hint">At the usual rate: 10 cp to the silver, 10 sp or 2 ep ' +
+          'to the gold, 10 gp to the platinum. A swap that will not come out even is ' +
+          'refused rather than rounded.</div>' +
+        '<div class="inv-err" id="coin-swap-err"></div>' +
+      '</div>';
+    document.body.appendChild(coinSwapBox);
+
+    // ---- events
+    coinBox.addEventListener('input', function (e) {
+      if (e.target.id === 'coin-amount') { COIN.amount = e.target.value; }
+      if (e.target.id === 'coin-why') { COIN.why = e.target.value; }
+    });
+    coinBox.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') { return; }
+      if (e.target.id !== 'coin-amount' && e.target.id !== 'coin-why') { return; }
+      e.preventDefault();
+      coinSpend('spend');
+    });
+    coinBox.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-coin]');
+      if (!btn) { return; }
+      var act = btn.getAttribute('data-coin');
+      if (act === 'set') { openCoinSet(); return; }
+      if (act === 'swap') { openCoinSwap(); return; }
+      if (act === 'consolidate') {
+        coinChange({ action: 'consolidate' }).catch(function () {});
+        return;
+      }
+      coinSpend(act);
+    });
+
+    [coinSetBox, coinSwapBox].forEach(function (box) {
+      box.addEventListener('click', function (e) {
+        if (e.target === box || e.target.closest('[data-coin-close]')) {
+          box.classList.remove('open');
+          return;
+        }
+        if (e.target.closest('#coin-set-go')) { doCoinSet(); }
+        if (e.target.closest('#coin-swap-go')) { doCoinSwap(); }
+      });
+      box.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { box.classList.remove('open'); return; }
+        if (e.key !== 'Enter') { return; }
+        e.preventDefault();
+        if (box === coinSetBox) { doCoinSet(); } else { doCoinSwap(); }
+      });
+    });
+
+    renderCoins();
+    // The file on disk is the truth; the page catches up with it on load.
+    coinLoad(true);
+  }
+
+  // coinSpend is Spend and Gain, which differ only in which way the coin goes.
+  function coinSpend(action) {
+    var amount = (COIN.amount || '').trim();
+    if (!amount) {
+      COIN.error = 'how much?';
+      COIN.msg = '';
+      renderCoins();
+      coinFocusAmount();
+      return;
+    }
+    coinChange({ action: action, amount: amount, notes: (COIN.why || '').trim() })
+      .then(coinFocusAmount, coinFocusAmount);
+  }
+
+  // ------------------------------------------------------------- spells
+  //
+  // The spell page is the character's book: what they know, what of it is
+  // ready to cast, and how much room is left in the allowances their class
+  // gets at this level. Every change is written straight back into the spell
+  // tables of the org character sheet.
+  //
+  // What may be taken is never decided here. The server answers with what the
+  // rules engine allows - a spell has to be on a list the character can draw
+  // from, of a level they have slots for, with room left in the budget it
+  // comes out of - and this only draws that answer and posts the change back.
+  var SB = { state: null, hits: [], busy: false, error: '', msg: '',
+             group: 'level', show: 'all', q: '', open: '' };
+  var sbBox, sbLive, sbBudgets, sbModal, sbSearchTimer = null;
+
+  function sbConfigured() { return !!(LOG.file || CHARACTER_ID); }
+
+  function sbWho(body) {
+    body = body || {};
+    body.filename = LOG.file || '';
+    body.id = CHARACTER_ID || '';
+    return body;
+  }
+
+  function sbBook() { return (SB.state && SB.state.book) || null; }
+
+  function sbLoad(quiet) {
+    if (!sbConfigured()) { return Promise.resolve(); }
+    var q = '/dnd/spellbook?filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    return api('GET', q).then(function (state) {
+      SB.state = state;
+      SB.error = '';
+      renderSpells();
+    }, function (err) {
+      if (!quiet) { SB.error = err.message || String(err); renderSpells(); }
+    });
+  }
+
+  // sbChange posts one change and redraws from what comes back, so the sheet
+  // always shows what is actually written in the file.
+  function sbChange(action, spell) {
+    if (!sbConfigured()) {
+      SB.error = 'this sheet does not know which org file it came from';
+      renderSpells();
+      return Promise.reject(new Error(SB.error));
+    }
+    SB.busy = true;
+    SB.error = '';
+    renderSpells();
+    return api('POST', '/dnd/spellbook',
+               sbWho({ action: action, spell: spell })).then(function (state) {
+      SB.busy = false;
+      SB.state = state;
+      SB.msg = state.msg || '';
+      renderSpells();
+      // The budgets moved, so what the picker may offer has moved with them.
+      return sbSearch(SB.q, true).then(function () { return state; });
+    }, function (err) {
+      SB.busy = false;
+      SB.error = err.message || String(err);
+      renderSpells();
+      throw err;
+    });
+  }
+
+  // ------------------------------------------------------- drawing the page
+  function sbBudgetHtml(list) {
+    if (!list || !list.length) { return ''; }
+    return '<span class="sb-budgets">' + list.map(function (a) {
+      return '<span class="sb-budget' + (a.full ? ' full' : '') + '" title="' +
+        esc(a.note || '') + '">' + esc(a.name) + ' <b>' + a.used + '/' + a.max +
+        '</b></span>';
+    }).join('') + '</span>';
+  }
+
+  function sbSlotsHtml(slots) {
+    return (slots || []).map(function (s) {
+      var pips = '';
+      for (var i = 1; i <= s.total; i++) {
+        pips += '<span class="slot' + (i <= s.used ? ' used' : '') + '"></span>';
+      }
+      return '<div class="slot-row"><span class="lvl">' + esc(s.label) + '</span>' +
+        pips + '<span class="tagline">' + s.total + ' slot' +
+        (s.total > 1 ? 's' : '') + '</span></div>';
+    }).join('');
+  }
+
+  // One spell as the sheet shows it. The cast button carries everything the
+  // dice need, which the rules engine worked out when it computed the sheet.
+  function sbSpellHtml(sp, level) {
+    var c = sp.cast || {};
+    var attrs = ' data-spell="' + esc(sp.name) + '"' +
+      ' data-detail="' + esc(c.detail || '') + '"' +
+      ' data-line="' + esc(c.line || '') + '"' +
+      ' data-short="' + esc(c.short || '') + '"';
+    if (c.attack) { attrs += ' data-attack="' + c.attackBonus + '"'; }
+    if (c.damage) {
+      attrs += ' data-damage="' + esc(c.damage) + '"' +
+        ' data-damage-type="' + esc(c.damageType || '') + '"';
+    }
+    if (c.heal) { attrs += ' data-heal="' + esc(c.heal) + '"'; }
+    if (c.save) {
+      attrs += ' data-save="' + esc(c.saveName || '') + '" data-dc="' + c.saveDc + '"';
+    }
+    var tags = [sp.castingTime, sp.range].filter(Boolean).join(', ');
+    if (sp.concentration) { tags += ', concentration'; }
+    if (sp.ritual) { tags += ', ritual'; }
+    var body = '<em>' + esc(sp.school || '') +
+      (sp.components ? ' &middot; ' + esc(sp.components) : '') +
+      (sp.duration ? ' &middot; ' + esc(sp.duration) : '') + '</em>\n' + esc(sp.text || '');
+    if (sp.higherLevel) {
+      body += '\n\n<strong>At higher levels.</strong> ' + esc(sp.higherLevel);
+    }
+    return '<details class="spell"><summary>' +
+      (sp.prepared && level > 0 ? '<span class="prep">&#9679;</span> ' : '') +
+      esc(sp.name) + ' <span class="tagline">&mdash; ' + esc(tags) + '</span>' +
+      '<button type="button" class="cast-btn"' + attrs + ' title="Cast ' +
+        esc(sp.name) + '">Cast</button>' +
+      '</summary><p>' + body + '</p></details>';
+  }
+
+  function renderSpells() {
+    if (!sbLive) { return; }
+    var book = sbBook();
+    if (sbBudgets) {
+      sbBudgets.innerHTML = sbBudgetHtml(book && book.allotments) +
+        (SB.busy ? ' <span class="sb-msg">saving&hellip;</span>'
+                 : (SB.msg ? ' <span class="sb-msg">' + esc(SB.msg) + '</span>' : '')) +
+        (SB.error ? ' <span class="sb-err">' + esc(SB.error) + '</span>' : '');
+    }
+    if (!book) { return; }
+    var counts = [];
+    (book.allotments || []).forEach(function (a) {
+      counts.push(a.used + '/' + a.max + ' ' + a.name.toLowerCase());
+    });
+    if (book.notes) { counts.push(book.notes); }
+    var levels = (book.levels || []).map(function (lvl) {
+      if (!lvl.spells || !lvl.spells.length) { return ''; }
+      return '<div class="spell-level"><h3>' + esc(lvl.name) +
+        (lvl.slots ? ' (' + lvl.slots + ' slot' + (lvl.slots > 1 ? 's' : '') + ')' : '') +
+        '</h3>' + lvl.spells.map(function (sp) {
+          return sbSpellHtml(sp, lvl.level);
+        }).join('') + '</div>';
+    }).join('');
+    sbLive.innerHTML =
+      '<div class="tagline">' + esc(counts.join(' · ')) + '</div>' +
+      sbSlotsHtml(book.slots) +
+      (levels || '<div class="sb-empty">No spells yet. Manage spells to take some.</div>');
+    // Dice written into a spell's text are clickable, the same as they are
+    // in the markup this replaced.
+    Array.prototype.forEach.call(sbLive.querySelectorAll('details.spell p'), linkifyProse);
+  }
+
+  // ------------------------------------------------------- the manage box
+  // The whole list the character may draw from is fetched at once, because
+  // the box regroups and filters it locally: asking the server again every
+  // time somebody switches from level to school would be a round trip for an
+  // answer we already have.
+  var sbSearchSeq = 0;
+
+  function sbSearch(q, quiet) {
+    SB.q = q;
+    var mine = ++sbSearchSeq;
+    var path = '/dnd/spells?q=' + encodeURIComponent(q || '') +
+      '&filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    if (!quiet) { sbListEl().innerHTML = '<div class="sb-empty">Looking&hellip;</div>'; }
+    return api('GET', path).then(function (hits) {
+      if (mine !== sbSearchSeq) { return; }
+      SB.hits = hits || [];
+      renderSbList();
+    }, function (err) {
+      if (mine !== sbSearchSeq) { return; }
+      sbListEl().innerHTML = '<div class="sb-err">' + esc(err.message || String(err)) + '</div>';
+    });
+  }
+
+  function sbListEl() { return sbModal.querySelector('#sb-list'); }
+
+  // The heading a spell falls under, for each way of grouping the list.
+  function sbGroupOf(h) {
+    switch (SB.group) {
+      case 'school': return h.school ? titleCase(h.school) : 'Unschooled';
+      case 'time':
+        return (h.castingTime || 'Unknown casting time').split(',')[0].trim();
+      case 'status':
+        if (h.granted) { return 'Granted by your subclass'; }
+        if (h.known && h.prepared) { return 'Ready to cast'; }
+        if (h.known) { return 'In your book, not prepared'; }
+        if (h.canLearn) { return 'You could take these'; }
+        return 'Out of reach for now';
+      default: return h.levelName || 'Cantrips';
+    }
+  }
+
+  function titleCase(s) {
+    return String(s).replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); });
+  }
+
+  function sbRankOf(h) {
+    if (SB.group === 'level') { return h.level; }
+    if (SB.group === 'status') {
+      if (h.known && h.prepared) { return 0; }
+      if (h.known) { return 1; }
+      if (h.granted) { return 2; }
+      if (h.canLearn) { return 3; }
+      return 4;
+    }
+    return null;   // school and casting time keep the order they arrived in
+  }
+
+  function sbKeep(h) {
+    if (SB.show === 'mine') { return h.known; }
+    if (SB.show === 'open') { return h.canLearn; }
+    return true;
+  }
+
+  function sbItemHtml(h) {
+    var meta = [h.levelName, h.school ? titleCase(h.school) : '', h.castingTime,
+                h.range, h.duration].filter(Boolean).join(' · ');
+    var tags = '';
+    if (h.concentration) { tags += '<span class="sb-tag">concentration</span>'; }
+    if (h.ritual) { tags += '<span class="sb-tag">ritual</span>'; }
+    if (h.expanded) { tags += '<span class="sb-tag">expanded list</span>'; }
+    if (h.granted) { tags += '<span class="sb-tag held">' + esc(h.source) + '</span>'; }
+    var acts = '';
+    if (h.canLearn) {
+      acts += '<button type="button" class="sb-b" data-act="learn" data-spell="' +
+        esc(h.id) + '">' + (sbBook() && sbBook().mode === 'list' ? 'Prepare' : 'Learn') +
+        '</button>';
+    }
+    // Preparing is only a step of its own for a class that prepares out of a
+    // spellbook; everywhere else having the spell is having it ready.
+    if (h.canPrepare) {
+      acts += '<button type="button" class="sb-b" data-act="' +
+        (h.prepared ? 'unprepare' : 'prepare') + '" data-spell="' + esc(h.id) + '">' +
+        (h.prepared ? 'Unprepare' : 'Prepare') + '</button>';
+    }
+    if (h.canForget) {
+      acts += '<button type="button" class="sb-b give" data-act="forget" data-spell="' +
+        esc(h.id) + '" title="Take it off your sheet">Give back</button>';
+    }
+    var mark = '';
+    if (h.known) { mark = '<span class="mark">' + (h.prepared ? '&#9679;' : '&#9675;') + '</span>'; }
+    var why = h.why && !h.known ? ' <span class="why">' + esc(h.why) + '</span>' : '';
+    var open = SB.open === h.id;
+    return '<div class="sb-item' + (h.known ? ' mine' : '') +
+      (!h.known && !h.canLearn ? ' blocked' : '') + '" data-id="' + esc(h.id) + '">' +
+      '<div class="sb-what" data-what="' + esc(h.id) + '">' +
+        '<div class="sb-name">' + mark + esc(h.name) + tags + '</div>' +
+        '<div class="sb-meta">' + esc(meta) + why + '</div>' +
+        (open ? '<div class="sb-text">' + esc(h.text || '') + '</div>' : '') +
+      '</div>' +
+      '<div class="sb-acts">' + acts + '</div></div>';
+  }
+
+  function renderSbList() {
+    var el = sbListEl();
+    if (!el) { return; }
+    var kept = SB.hits.filter(sbKeep);
+    if (!kept.length) {
+      el.innerHTML = '<div class="sb-empty">Nothing here. ' +
+        (SB.show === 'open'
+          ? 'Every spell you can reach is already on your sheet.'
+          : 'Try another search or another filter.') + '</div>';
+      return;
+    }
+    // The server hands the list back in level order; grouping walks it in
+    // that order so a group's spells stay in it.
+    var order = [], groups = {}, rank = {};
+    kept.forEach(function (h) {
+      var key = sbGroupOf(h);
+      if (!groups[key]) { groups[key] = []; order.push(key); rank[key] = sbRankOf(h); }
+      groups[key].push(h);
+    });
+    if (order.length && rank[order[0]] !== null) {
+      order.sort(function (a, b) { return rank[a] - rank[b]; });
+    }
+    el.innerHTML = order.map(function (key) {
+      return '<div class="sb-group">' + esc(key) + ' <span class="n">' +
+        groups[key].length + '</span></div>' +
+        groups[key].map(sbItemHtml).join('');
+    }).join('');
+  }
+
+  function sbHeader() {
+    var book = sbBook();
+    if (!book) { return ''; }
+    var how = {
+      known: 'Your spells are always ready to cast - taking one is all there is to it.',
+      list: 'You prepare from the whole ' + esc(book.className || 'class') +
+        ' list, so a spell on your sheet is a spell prepared today.',
+      spellbook: 'Spells you take are written into your spellbook. Preparing them ' +
+        'out of it is a second, smaller allowance.'
+    }[book.mode] || '';
+    return '<div class="sb-hint" style="margin:0 0 6px">' +
+      sbBudgetHtml(book.allotments) +
+      (how ? '<div style="margin-top:4px">' + how +
+        (book.maxLevel ? ' You can cast up to level ' + book.maxLevel + '.' : '') +
+        '</div>' : '') + '</div>';
+  }
+
+  function openSpellManager() {
+    if (!sbModal) { return; }
+    sbModal.querySelector('#sb-head').innerHTML = sbHeader();
+    sbModal.querySelector('#sb-err').textContent = '';
+    sbModal.classList.add('open');
+    var q = sbModal.querySelector('#sb-q');
+    q.value = SB.q || '';
+    q.focus();
+    sbSearch(q.value);
+  }
+
+  function closeSpellManager() { if (sbModal) { sbModal.classList.remove('open'); } }
+
+  function sbChips(name, value, opts) {
+    return opts.map(function (o) {
+      return '<button type="button" class="sb-chip' + (o[0] === value ? ' on' : '') +
+        '" data-' + name + '="' + o[0] + '">' + o[1] + '</button>';
+    }).join('');
+  }
+
+  function sbRenderTools() {
+    sbModal.querySelector('#sb-tools').innerHTML =
+      '<span class="lbl">Group by</span>' +
+      sbChips('group', SB.group, [['level', 'Level'], ['school', 'School'],
+                                  ['time', 'Casting time'], ['status', 'Status']]) +
+      '<span class="lbl">Show</span>' +
+      sbChips('show', SB.show, [['all', 'All'], ['mine', 'On my sheet'],
+                                ['open', 'I can take']]);
+  }
+
+  // ------------------------------------------------------------- building
+  function buildSpellUi() {
+    sbBox = document.getElementById('spellcasting');
+    if (!sbBox) { return; }
+    sbLive = sbBox.querySelector('#spell-live');
+    sbBudgets = sbBox.querySelector('#spell-budgets');
+
+    sbModal = document.createElement('div');
+    sbModal.className = 'sb-modal';
+    sbModal.id = 'sb-manage';
+    sbModal.innerHTML =
+      '<div class="sb-card" role="dialog" aria-label="Manage your spells">' +
+        '<h3>Manage spells' +
+          '<button type="button" class="x" id="sb-close" aria-label="Close">&times;</button></h3>' +
+        '<div id="sb-head"></div>' +
+        '<input type="search" class="sb-field" id="sb-q" autocomplete="off" ' +
+          'placeholder="Search your lists: mag mis, ritual, healing...">' +
+        '<div class="sb-tools" id="sb-tools"></div>' +
+        '<div class="sb-list" id="sb-list"></div>' +
+        '<div class="sb-hint">A filled dot is ready to cast, an open one is ' +
+          'written down but not prepared. Click a spell to read it.</div>' +
+        '<div class="sb-err" id="sb-err"></div>' +
+      '</div>';
+    document.body.appendChild(sbModal);
+    sbRenderTools();
+
+    sbBox.addEventListener('click', function (e) {
+      if (e.target.closest('#spell-manage-btn')) { openSpellManager(); }
+    });
+
+    sbModal.addEventListener('click', function (e) {
+      if (e.target === sbModal || e.target.closest('#sb-close')) {
+        closeSpellManager();
+        return;
+      }
+      var chip = e.target.closest('[data-group]');
+      if (chip) {
+        SB.group = chip.getAttribute('data-group');
+        sbRenderTools();
+        renderSbList();
+        return;
+      }
+      chip = e.target.closest('[data-show]');
+      if (chip) {
+        SB.show = chip.getAttribute('data-show');
+        sbRenderTools();
+        renderSbList();
+        return;
+      }
+      var act = e.target.closest('.sb-b');
+      if (act) {
+        sbModal.querySelector('#sb-err').textContent = '';
+        sbChange(act.getAttribute('data-act'), act.getAttribute('data-spell')).then(
+          function () { sbModal.querySelector('#sb-head').innerHTML = sbHeader(); },
+          function (err) {
+            sbModal.querySelector('#sb-err').textContent = err.message || String(err);
+          });
+        return;
+      }
+      // Anywhere else on a spell opens it up to read, and shuts it again.
+      var what = e.target.closest('.sb-what');
+      if (what) {
+        var id = what.getAttribute('data-what');
+        SB.open = SB.open === id ? '' : id;
+        renderSbList();
+      }
+    });
+
+    sbModal.querySelector('#sb-q').addEventListener('input', function (e) {
+      var q = e.target.value;
+      if (sbSearchTimer) { clearTimeout(sbSearchTimer); }
+      sbSearchTimer = setTimeout(function () { sbSearch(q); }, 140);
+    });
+    sbModal.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeSpellManager(); }
+    });
+
+    // The file on disk is the truth; the page catches up with it on load.
+    sbLoad(true);
+  }
+
+  // ------------------------------------------------- feature uses and rests
+  //
+  // Some features are rationed - "twice, and you regain both when you finish
+  // a short rest" - and the rules engine reads that limit out of the
+  // feature's own text. Here those limits become a row of slots you can click
+  // through, and the two rests become a walkthrough that says what to do,
+  // rolls the hit dice on the table, and writes the result to the org
+  // character sheet and to the session log in one go.
+  //
+  // As everywhere else on this sheet, the file is the state: nothing here is
+  // remembered in the page, and every change is a round trip.
+
+  var REST = {
+    plans: null,      // both plans, as the server last computed them
+    kind: '',         // the rest being taken
+    plan: null,
+    step: 0,
+    spent: 0,         // hit dice spent so far in this rest
+    healed: 0,        // what those dice came to
+    rolls: [],        // what each of them landed on
+    note: '',
+    done: null,       // the result, once the rest has been taken
+    busy: false, error: ''
+  };
+  var restModal, restBody, restFoot, restDots, featureLive;
+
+  function restConfigured() { return !!(LOG.url && (LOG.file || CHARACTER_ID)); }
+
+  function restWho(body) {
+    body.filename = LOG.file || '';
+    body.id = CHARACTER_ID || '';
+    return body;
+  }
+
+  // ------------------------------------------------------ the uses on a feature
+  // A pip is one use. Clicking an empty one spends it, clicking a filled one
+  // hands it back. The page moves first and puts itself right again if the
+  // server refuses, so a click feels immediate on a slow link.
+  function usesPips(box, spent) {
+    var pips = box.querySelectorAll('.use-pip');
+    Array.prototype.forEach.call(pips, function (pip, i) {
+      pip.classList.toggle('used', i < spent);
+    });
+    box.setAttribute('data-spent', spent);
+  }
+
+  function useChange(feature, box, action, was) {
+    var spent = was + (action === 'spend' ? 1 : -1);
+    usesPips(box, spent);
+    box.classList.add('busy');
+    api('POST', '/dnd/uses', restWho({ action: action, feature: feature }))
+      .then(function (state) {
+        REST.plans = state;
+        box.classList.remove('busy');
+        restNote(box, state.msg || '');
+        // The rest menu now offers something different, and so may the
+        // walkthrough if it happens to be open on its first page.
+        if (restModal && restModal.classList.contains('open') && !REST.done) {
+          REST.plan = state[REST.kind] || REST.plan;
+          renderRest();
+        }
+      }, function (err) {
+        usesPips(box, was);
+        box.classList.remove('busy');
+        restNote(box, err.message || String(err), true);
+      });
+  }
+
+  // What the server said about the last change, shown in place of the limit
+  // for a moment and then put back.
+  function restNote(box, msg, bad) {
+    var note = box.querySelector('.uses-note');
+    if (!note) { return; }
+    if (note.plainText === undefined) { note.plainText = note.textContent; }
+    note.textContent = msg || note.plainText;
+    note.classList.toggle('uses-err', !!bad);
+    if (note.noteTimer) { clearTimeout(note.noteTimer); note.noteTimer = null; }
+    if (!msg) { return; }
+    note.noteTimer = setTimeout(function () {
+      note.textContent = note.plainText;
+      note.classList.remove('uses-err');
+    }, 4000);
+  }
+
+  function buildFeatureUses() {
+    featureLive = document.getElementById('feature-live');
+    if (!featureLive) { return; }
+    // Without a server there is nothing to write a spent use to, so the pips
+    // stay as they are: a record of what the file said, not a control.
+    if (!restConfigured()) { return; }
+    Array.prototype.forEach.call(featureLive.querySelectorAll('.uses'), function (box) {
+      box.classList.add('live');
+    });
+    featureLive.addEventListener('click', function (e) {
+      var pip = e.target.closest('.use-pip');
+      if (!pip) { return; }
+      var box = pip.closest('.uses'), host = pip.closest('.feature');
+      if (!box || !host || box.classList.contains('busy')) { return; }
+      var pips = Array.prototype.slice.call(box.querySelectorAll('.use-pip'));
+      var at = pips.indexOf(pip) + 1;
+      var was = parseInt(box.getAttribute('data-spent'), 10) || 0;
+      useChange(host.getAttribute('data-uses'), box,
+                at > was ? 'spend' : 'recover', was);
+    });
+  }
+
+  // resetFeatureUses hands back on screen exactly what the rest handed back
+  // on the file: a short rest clears the features that recharge on one, a
+  // long rest clears them all.
+  function resetFeatureUses(kind) {
+    if (!featureLive) { return; }
+    Array.prototype.forEach.call(featureLive.querySelectorAll('.feature[data-uses]'),
+      function (host) {
+        if (kind === 'short' && host.getAttribute('data-recharge') !== 'short') { return; }
+        var box = host.querySelector('.uses');
+        if (box) { usesPips(box, 0); }
+      });
+  }
+
+  // ------------------------------------------------------------ the sheet moves
+  // What a rest changed, written back into the boxes that show it, so the
+  // sheet agrees with the file without being exported again.
+  function applyRestToSheet(result, plan) {
+    var line = document.getElementById('hp-line');
+    if (line) {
+      line.innerHTML = '<strong>Hit Points</strong> ' + result.hpAfter + ' / ' + result.hpMax;
+    }
+    var fill = document.getElementById('hp-fill');
+    if (fill && result.hpMax > 0) {
+      fill.style.width = Math.round(result.hpAfter * 100 / result.hpMax) + '%';
+    }
+    var dice = document.getElementById('hitdice-line');
+    if (dice && plan) {
+      var used = plan.hitDiceMax - plan.hitDiceLeft;
+      dice.textContent = 'Hit dice ' + (plan.hitDice || '') +
+        (used ? ', ' + used + ' spent' : '');
+    }
+    resetFeatureUses(result.kind);
+    // The slots came back too, and the spell page draws itself from the file.
+    if (result.slotsBack > 0) { sbLoad(true); }
+  }
+
+  // ------------------------------------------------------------- the walkthrough
+  function openRest(kind) {
+    REST.kind = kind;
+    REST.step = 0;
+    REST.spent = 0;
+    REST.healed = 0;
+    REST.rolls = [];
+    REST.note = '';
+    REST.done = null;
+    REST.error = '';
+    REST.plan = REST.plans ? REST.plans[kind] : null;
+    restModal.classList.add('open');
+    renderRest();
+    restLoad();
+  }
+
+  function closeRest() {
+    restModal.classList.remove('open');
+  }
+
+  function restLoad() {
+    if (!restConfigured()) {
+      REST.error = LOG.url
+        ? 'this sheet does not know which org file it came from'
+        : 'set your orgs server address in the session panel first';
+      renderRest();
+      return Promise.resolve();
+    }
+    REST.busy = !REST.plan;
+    renderRest();
+    var q = '/dnd/rest?filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    return api('GET', q).then(function (state) {
+      REST.plans = state;
+      REST.busy = false;
+      REST.error = '';
+      if (!REST.done) { REST.plan = state[REST.kind] || null; }
+      renderRest();
+    }, function (err) {
+      REST.busy = false;
+      REST.error = err.message || String(err);
+      renderRest();
+    });
+  }
+
+  function restSteps() { return (REST.plan && REST.plan.steps) || []; }
+
+  // One hit die, thrown on the table like every other roll this sheet makes,
+  // so it lands in the tray and in the session log as itself.
+  function rollHitDie(btn) {
+    var step = restSteps()[REST.step];
+    if (!step || REST.spent >= step.max) { return; }
+    var faces = parseInt(String(step.die).replace(/^d/, ''), 10) || 8;
+    var mod = step.mod || 0;
+    var box = btn.getBoundingClientRect();
+    roll({ kind: 'damage', label: 'Hit Die', noCrit: true,
+           terms: [{ count: 1, sides: faces, sign: 1 }], flat: mod,
+           formula: '1d' + faces + (mod ? ' ' + signed(mod) : '') },
+         { x: box.left + box.width / 2, y: box.top + box.height / 2 },
+         function (result) {
+      // A hit die never gives back less than nothing, however bad the
+      // constitution behind it.
+      var got = Math.max(0, result.total);
+      REST.spent += 1;
+      REST.healed += got;
+      REST.rolls.push(got);
+      renderRest();
+    });
+  }
+
+  function takeRest() {
+    if (!restConfigured()) { return; }
+    REST.busy = true;
+    REST.error = '';
+    renderRest();
+    api('POST', '/dnd/rest', restWho({
+      kind: REST.kind, hitDiceSpent: REST.spent,
+      hitPointsHealed: REST.healed, note: REST.note
+    })).then(function (state) {
+      REST.busy = false;
+      REST.plans = state;
+      REST.done = state.result;
+      REST.plan = state[REST.kind] || REST.plan;
+      applyRestToSheet(state.result, REST.plan);
+      // The night's log gets the rest written into it as one note, which is
+      // what a rest is at the table: one thing that happened.
+      logNote((state.result.lines || []).join('\n'));
+      renderRest();
+    }, function (err) {
+      REST.busy = false;
+      REST.error = err.message || String(err);
+      renderRest();
+    });
+  }
+
+  // ------------------------------------------------------------- drawing it
+  function restStepHtml(step) {
+    var html = '<h4>' + esc(step.title || '') + '</h4>' +
+      '<p>' + esc(step.text || '') + '</p>';
+    if (step.kind !== 'hitdice') { return html; }
+    if (!step.max) {
+      return html + '<p class="rest-msg">You have no hit dice left to spend.</p>';
+    }
+    var pips = '';
+    for (var i = 1; i <= step.max; i++) {
+      pips += '<span class="rest-die' + (i <= REST.spent ? ' spent' : '') + '"></span>';
+    }
+    var plan = REST.plan || {};
+    var hp = Math.min(plan.hpMax || 0, (plan.hpCurrent || 0) + REST.healed);
+    return html +
+      '<div class="rest-hp"><b>' + hp + '</b> of ' + (plan.hpMax || 0) + ' hit points' +
+        (REST.healed ? ' &middot; ' + REST.healed + ' regained' : '') + '</div>' +
+      '<div class="rest-dice">' + pips +
+        '<button type="button" class="rest-roll" id="rest-roll"' +
+          (REST.spent >= step.max ? ' disabled' : '') + '>Roll ' + esc(step.die) +
+          (step.mod ? ' ' + signed(step.mod) : '') + '</button>' +
+      '</div>' +
+      (REST.rolls.length
+        ? '<p class="rest-log">Rolled ' + REST.rolls.join(', ') + '.</p>'
+        : '');
+  }
+
+  function restDoneHtml() {
+    var r = REST.done, back = [];
+    (r.featuresBack || []).forEach(function (f) { back.push(esc(f)); });
+    if (r.diceBack) { back.push(r.diceBack + ' hit dice'); }
+    if (r.slotsBack) { back.push(r.slotsBack + ' spell slots'); }
+    return '<h4>' + esc(r.name) + ' taken</h4>' +
+      '<div class="rest-hp"><b>' + r.hpAfter + '</b> of ' + r.hpMax + ' hit points' +
+        (r.healed ? ' &middot; ' + r.healed + ' regained' : '') + '</div>' +
+      (r.diceSpent ? '<p class="rest-log">Spent ' + r.diceSpent + ' hit di' +
+        (r.diceSpent === 1 ? 'e' : 'ce') + '.</p>' : '') +
+      (back.length
+        ? '<p class="rest-msg">Recovered:</p><ul class="rest-back-list"><li>' +
+            back.join('</li><li>') + '</li></ul>'
+        : '<p class="rest-msg">Nothing was spent that this rest gives back.</p>') +
+      (LOG.session
+        ? '<p class="rest-msg">Written to ' + esc(LOG.session.name) + '.</p>'
+        : '<p class="rest-msg">No session is recording, so this went to the ' +
+          'character sheet only.</p>');
+  }
+
+  function renderRest() {
+    if (!restModal) { return; }
+    var title = restModal.querySelector('.rest-title');
+    title.textContent = REST.kind === 'short' ? 'Short Rest' : 'Long Rest';
+
+    if (REST.error && !REST.plan) {
+      restDots.innerHTML = '';
+      restBody.innerHTML = '<p class="rest-err">' + esc(REST.error) + '</p>';
+      restFoot.innerHTML = '<span class="grow"></span>' +
+        '<button type="button" class="rest-roll" id="rest-cancel">Close</button>';
+      return;
+    }
+    if (!REST.plan) {
+      restDots.innerHTML = '';
+      restBody.innerHTML = '<p class="rest-msg">Working out what this rest ' +
+        'would give you&hellip;</p>';
+      restFoot.innerHTML = '';
+      return;
+    }
+
+    var steps = restSteps();
+    if (REST.done) {
+      restDots.innerHTML = '';
+      restBody.innerHTML = restDoneHtml();
+      restFoot.innerHTML = '<span class="grow"></span>' +
+        '<button type="button" class="rest-roll" id="rest-cancel">Done</button>';
+      return;
+    }
+
+    var dots = '';
+    for (var i = 0; i < steps.length; i++) {
+      dots += '<i class="' + (i <= REST.step ? 'on' : '') + '"></i>';
+    }
+    restDots.innerHTML = dots;
+
+    var step = steps[REST.step] || {};
+    var last = REST.step >= steps.length - 1;
+    restBody.innerHTML = restStepHtml(step) +
+      (last
+        ? '<label class="rest-msg" for="rest-note">A line for the session log, ' +
+            'if you want one</label>' +
+          '<input type="text" class="rest-note" id="rest-note" ' +
+            'placeholder="Camped in the ruins" value="' + esc(REST.note) + '">'
+        : '');
+
+    restFoot.innerHTML =
+      (REST.step > 0
+        ? '<button type="button" class="rest-roll" id="rest-back">Back</button>'
+        : '') +
+      '<span class="grow">' +
+        (REST.error ? '<span class="rest-err">' + esc(REST.error) + '</span>' :
+         REST.busy ? '<span class="rest-msg">saving&hellip;</span>' : '') +
+      '</span>' +
+      '<button type="button" class="rest-roll" id="rest-next"' +
+        (REST.busy ? ' disabled' : '') + '>' +
+        (last ? 'Take the ' + (REST.kind === 'short' ? 'short' : 'long') + ' rest'
+              : 'Next') +
+      '</button>';
+  }
+
+  function buildRestUi() {
+    buildFeatureUses();
+
+    restModal = document.createElement('div');
+    restModal.className = 'rest-modal';
+    restModal.id = 'dnd-rest';
+    restModal.innerHTML =
+      '<div class="rest-card" role="dialog" aria-label="Take a rest">' +
+        '<h3><span class="rest-title">Rest</span>' +
+          '<button type="button" class="x" id="rest-close" aria-label="Close">' +
+          '&times;</button></h3>' +
+        '<div class="rest-dots"></div>' +
+        '<div class="rest-body"></div>' +
+        '<div class="rest-foot"></div>' +
+      '</div>';
+    document.body.appendChild(restModal);
+    restDots = restModal.querySelector('.rest-dots');
+    restBody = restModal.querySelector('.rest-body');
+    restFoot = restModal.querySelector('.rest-foot');
+
+    restModal.addEventListener('click', function (e) {
+      if (e.target === restModal || e.target.closest('#rest-close') ||
+          e.target.closest('#rest-cancel')) {
+        closeRest();
+        return;
+      }
+      if (e.target.closest('#rest-roll')) {
+        rollHitDie(e.target.closest('#rest-roll'));
+        return;
+      }
+      if (e.target.closest('#rest-back')) {
+        REST.step = Math.max(0, REST.step - 1);
+        renderRest();
+        return;
+      }
+      if (e.target.closest('#rest-next')) {
+        var note = restModal.querySelector('#rest-note');
+        if (note) { REST.note = note.value; }
+        if (REST.step >= restSteps().length - 1) { takeRest(); }
+        else { REST.step += 1; renderRest(); }
+      }
+    });
+    restModal.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeRest(); }
+    });
+  }
+
   function init() {
     var canvas = document.createElement('canvas');
     canvas.id = 'dice-canvas';
@@ -3447,6 +6281,12 @@ footer.sheet-foot {
     buildTray();
     buildCustomDock();
     buildSessionLog();
+    buildInventoryUi();
+    buildCoinUi();
+    buildSpellUi();
+    buildRestUi();
+    buildSectionTabs();
+    fitRingText();
 
     Array.prototype.forEach.call(document.querySelectorAll('[data-kind]'), prepare);
     Array.prototype.forEach.call(
@@ -3455,6 +6295,15 @@ footer.sheet-foot {
 
     document.addEventListener('click', function (e) {
       if (e.target.closest('#dice-tray')) { historyClick(e); return; }
+      var spell = e.target.closest('.cast-btn');
+      if (spell) {
+        // The button sits inside the spell's <summary>; casting should not
+        // also fold the spell open or shut.
+        e.preventDefault();
+        e.stopPropagation();
+        castRoll(castSpecFor(spell), originOf(spell, e));
+        return;
+      }
       var el = e.target.closest('.rollable');
       if (!el) { return; }
       e.preventDefault();
@@ -3467,6 +6316,123 @@ footer.sheet-foot {
       e.preventDefault();
       activate(el, null);
     });
+  }
+
+  // ------------------------------------------------------------------ tabs
+  //
+  // A box marked .tabbed holds several sections of the sheet stacked one
+  // under the other, each under its own heading. That stack is what the
+  // exported markup says and what a sheet with no script - or a printed one -
+  // shows. Here the headings are read off and turned into a bar of tabs, and
+  // the box shows one section at a time.
+  //
+  // Nothing is written into the markup about which tabs a box has, so a
+  // section the template left out for this character - no spells to cast, no
+  // appearance filled in - simply has no tab, and a box left with one section
+  // keeps its heading and gets no bar at all.
+  //
+  // A pane may carry data-tab to put something shorter on its button than its
+  // heading says. The heading is still what the section is called - it is what
+  // the printed sheet and the screen reader get - so only the button changes.
+  var TAB_KEY = 'orgs.dnd.tabs';
+
+  function loadTabs() {
+    try { return JSON.parse(localStorage.getItem(TAB_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+
+  function saveTab(group, name) {
+    if (!group) { return; }
+    var all = loadTabs();
+    all[group] = name;
+    try { localStorage.setItem(TAB_KEY, JSON.stringify(all)); }
+    catch (e) { /* private browsing, nothing worth doing about it */ }
+  }
+
+  function buildSectionTabs() {
+    var saved = loadTabs();
+    Array.prototype.forEach.call(document.querySelectorAll('.box.tabbed'), function (box) {
+      var group = box.getAttribute('data-tabs') || '';
+      var panes = [];
+      Array.prototype.forEach.call(box.children, function (el) {
+        if (el.classList && el.classList.contains('tabpane')) { panes.push(el); }
+      });
+      if (panes.length < 2) { return; }
+
+      var bar = document.createElement('div');
+      bar.className = 'tabbar';
+      bar.setAttribute('role', 'tablist');
+
+      var labels = [];
+      var names = panes.map(function (pane, i) {
+        var h2 = pane.querySelector('h2');
+        var name = h2 ? h2.textContent.trim() : 'Section ' + (i + 1);
+        if (!pane.id) { pane.id = 'tabpane-' + group + '-' + i; }
+        pane.setAttribute('role', 'tabpanel');
+        pane.setAttribute('aria-label', name);
+        labels.push((pane.getAttribute('data-tab') || '').trim() || name);
+        return name;
+      });
+
+      // The tab last left open is the one reopened, as long as that section
+      // is still on the sheet.
+      var open = names.indexOf(saved[group]);
+      if (open < 0) { open = 0; }
+
+      function show(i) {
+        panes.forEach(function (pane, n) { pane.classList.toggle('on', n === i); });
+        Array.prototype.forEach.call(bar.children, function (btn, n) {
+          btn.classList.toggle('on', n === i);
+          btn.setAttribute('aria-selected', n === i ? 'true' : 'false');
+          btn.tabIndex = n === i ? 0 : -1;
+        });
+        saveTab(group, names[i]);
+      }
+
+      names.forEach(function (name, i) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tabbtn';
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-controls', panes[i].id);
+        btn.textContent = labels[i];
+        if (labels[i] !== name) { btn.setAttribute('aria-label', name); }
+        btn.addEventListener('click', function () { show(i); });
+        bar.appendChild(btn);
+      });
+
+      // Left and right walk the bar the way a tablist is expected to.
+      bar.addEventListener('keydown', function (e) {
+        var step = e.key === 'ArrowRight' ? 1 : (e.key === 'ArrowLeft' ? -1 : 0);
+        if (!step) { return; }
+        e.preventDefault();
+        var at = Array.prototype.indexOf.call(bar.children, document.activeElement);
+        var next = (at + step + names.length) % names.length;
+        show(next);
+        bar.children[next].focus();
+      });
+
+      box.insertBefore(bar, box.firstChild);
+      box.classList.add('has-tabs');
+      show(open);
+    });
+  }
+
+  // The name curves around the top half of the portrait frame. The template
+  // picks a starting size from how long the name is; this trims it further
+  // until it actually fits between the two gems, so no adventurer runs off
+  // the end of their own medallion.
+  function fitRingText() {
+    var text = document.querySelector('.portrait-ring .ring-name');
+    var path = text && text.querySelector('textPath');
+    if (!path || !path.getComputedTextLength) { return; }
+    var room = Math.PI * 78 - 58;          // the top arc, less the gem ends
+    var size = parseFloat(window.getComputedStyle(text).fontSize) || 13;
+    for (var i = 0; i < 24 && size > 5.5; i++) {
+      if (path.getComputedTextLength() <= room) { break; }
+      size -= 0.5;
+      text.style.fontSize = size + 'px';
+    }
   }
 
   if (document.readyState === 'loading') {

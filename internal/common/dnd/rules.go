@@ -75,6 +75,13 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	s.Level = level
 	s.XP = c.XP
 	s.NextLevelXP = XPForLevel(level + 1)
+	s.XPPercent = xpProgress(c.XP, level)
+	s.Image = c.Image
+	s.ImageFocusX, s.ImageFocusY = ParseFocus(c.ImageFocus)
+	s.ImageZoom = c.ImageZoom
+	if s.ImageZoom <= 0 {
+		s.ImageZoom = 1
+	}
 	s.RulesetName = rs.Name
 	s.Proficiency = ProficiencyBonus(level)
 	s.ProficiencyStr = Signed(s.Proficiency)
@@ -94,6 +101,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	s.Treasure = c.Treasure
 	s.Notes = c.Notes
 	s.Money = c.Money
+	s.Purse = ComputeMoney(c.Money)
 	s.Inspiration = c.Inspiration
 	s.DeathSaves = c.DeathSaves
 
@@ -179,6 +187,10 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	armorProf := []string{}
 	weaponProf := []string{}
 	toolProf := append([]string{}, c.Tools...)
+	// Expertise in a tool implies proficiency with it, the same way skill
+	// expertise does, so a sheet that only records the doubling still lists
+	// the tool.
+	toolProf = addUnique(toolProf, c.ToolExpertise...)
 	langs := append([]string{}, c.Languages...)
 	// Skills and saves granted by a source are derived here rather than
 	// written onto the character, so that reading a sheet back in cannot
@@ -242,7 +254,9 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	}
 	s.ArmorProficiencies = prettyProficiencies(rs, armorProf, "armor")
 	s.WeaponProficiencies = prettyProficiencies(rs, weaponProf, "weapon")
-	s.ToolProficiencies = prettyProficiencies(rs, toolProf, "tool")
+	s.ToolProficiencies = markToolExpertise(
+		prettyProficiencies(rs, toolProf, "tool"),
+		prettyProficiencies(rs, c.ToolExpertise, "tool"))
 	s.Languages = langs
 
 	// ---- magic items ------------------------------------------------------
@@ -253,8 +267,9 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	// ---- traits, features and the bonuses they carry ----------------------
 	// Collected before the saves because a paladin's aura raises every one of
 	// them, and before initiative because a bard's Jack of All Trades does.
-	s.Traits = collectTraits(rs, c, race, sub)
-	s.Features = collectFeatures(rs, c, bg)
+	// The plain ability modifiers come first, because a feature's use limit
+	// is often a modifier - "a number of times equal to your Charisma
+	// modifier" - and the collectors work that out as they go.
 	scores := map[string]int{}
 	rawMods := map[string]int{}
 	for _, a := range AbilityOrder {
@@ -267,7 +282,9 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 		scores[a] = score
 		rawMods[a] = AbilityMod(score)
 	}
-	bonus := collectBonuses(rs, c, s.Traits, s.Features, rawMods, s.Proficiency)
+	s.Traits = collectTraits(rs, c, race, sub, rawMods, s.Proficiency)
+	s.Features = collectFeatures(rs, c, bg, rawMods, s.Proficiency)
+	bonus := collectBonuses(rs, c, s.Traits, s.Features, rawMods, s.Proficiency, armorWorn(c, rs))
 
 	// ---- abilities and saves ---------------------------------------------
 	s.AbilityMap = map[string]AbilityView{}
@@ -366,7 +383,6 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	s.PushDragLift = str * 30
 
 	// ---- equipment --------------------------------------------------------
-	total := 0.0
 	equip := []Gear{}
 	for _, g := range c.Equipment {
 		if g.Qty <= 0 {
@@ -384,17 +400,28 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 				g.Name = Titleize(g.Id)
 			}
 		}
-		total += g.Weight * float64(g.Qty)
+		g.Container = ContainerKey(g.Container)
 		equip = append(equip, g)
 	}
 	s.Equipment = equip
-	s.Weight = total
+	// The inventory stacks that same list into its containers and works out
+	// the encumbrance. What is inside an extradimensional container is not on
+	// the character's back, so the weight carried comes from there rather
+	// than from a plain sum of the table.
+	s.Inventory = ComputeInventory(equip, rs, str)
+	s.Weight = s.Inventory.Weight
+	// A barbarian's Fast Movement and a monk's Unarmored Movement move the
+	// walking speed. Both are conditional on what is worn, which
+	// collectBonuses has already tested, so by here the total is either in or
+	// out. It is applied before the encumbrance penalty so that a slowed
+	// character is slowed from the speed they actually have.
+	s.Speed += bonus.speed
 	// Heavy armour you are too weak for slows you down.
 	if armor := equippedArmor(c, rs); armor != nil && armor.StrengthReq > 0 && str < armor.StrengthReq {
 		s.Speed -= 10
-		if s.Speed < 0 {
-			s.Speed = 0
-		}
+	}
+	if s.Speed < 0 {
+		s.Speed = 0
 	}
 
 	// ---- attacks ----------------------------------------------------------
@@ -404,6 +431,34 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	computeSpellcasting(c, rs, s)
 
 	return s
+}
+
+// markToolExpertise notes which tools double the proficiency bonus.
+//
+// A skill's expertise gets a column of its own because a skill has one ability
+// behind it and so one number to print. A tool does not - picking a lock is a
+// Dexterity check and identifying a poison an Intelligence one, both with the
+// same kit - so there is no row to double. Saying it beside the tool's name is
+// what the sheet can honestly do, and it is enough: the player already knows
+// which ability the DM asked for.
+//
+// Both lists arrive already prettified, so the names are compared as the
+// reader sees them.
+func markToolExpertise(names, expert []string) []string {
+	if len(expert) == 0 {
+		return names
+	}
+	out := make([]string, 0, len(names))
+	for _, name := range names {
+		for _, e := range expert {
+			if strings.EqualFold(name, e) {
+				name += " (expertise)"
+				break
+			}
+		}
+		out = append(out, name)
+	}
+	return out
 }
 
 // prettyProficiencies turns stored proficiency ids into something a player
@@ -467,6 +522,44 @@ type bonusTotals struct {
 	initiative int
 	saves      int
 	deathSave  int
+	speed      int
+}
+
+// wornArmor is what a Bonuses block's Unless clause is tested against. It is
+// worked out from the equipment before the bonuses are collected, because a
+// barbarian's Fast Movement and a monk's Unarmored Movement both depend on it.
+type wornArmor struct {
+	any    bool
+	heavy  bool
+	shield bool
+}
+
+func armorWorn(c *Character, rs *Ruleset) wornArmor {
+	w := wornArmor{}
+	if a := equippedArmor(c, rs); a != nil {
+		w.any = true
+		w.heavy = a.ArmorType == "heavy"
+	}
+	if equippedShield(c, rs) != nil {
+		w.shield = true
+	}
+	return w
+}
+
+// blocks reports whether the named condition is currently true, and so whether
+// a Bonuses block naming it is switched off. An unrecognised name never
+// blocks: a module that invents one keeps its bonus rather than losing it to a
+// condition nothing here knows how to test.
+func (w wornArmor) blocks(unless string) bool {
+	switch strings.ToLower(strings.TrimSpace(unless)) {
+	case "":
+		return false
+	case "heavyarmor", "heavyarmour", "heavy-armor", "heavy armor":
+		return w.heavy
+	case "armor", "armour":
+		return w.any || w.shield
+	}
+	return false
 }
 
 // collectBonuses adds up the Bonuses blocks on everything the character has:
@@ -476,7 +569,7 @@ type bonusTotals struct {
 // The traits and features are passed in already collected and already level
 // gated, so a feature the character has not reached yet cannot pay out early.
 func collectBonuses(rs *Ruleset, c *Character, traits, features []Trait,
-	mods map[string]int, prof int) bonusTotals {
+	mods map[string]int, prof int, worn wornArmor) bonusTotals {
 	b := bonusTotals{checks: map[string]int{}}
 	eval := func(formula string, minimum int) int {
 		if formula == "" {
@@ -489,6 +582,9 @@ func collectBonuses(rs *Ruleset, c *Character, traits, features []Trait,
 		return v
 	}
 	apply := func(bs Bonuses) {
+		if worn.blocks(bs.Unless) {
+			return
+		}
 		if bs.Checks != "" {
 			v := eval(bs.Checks, bs.Minimum)
 			abilities := bs.Abilities
@@ -502,6 +598,7 @@ func collectBonuses(rs *Ruleset, c *Character, traits, features []Trait,
 		b.initiative += eval(bs.Initiative, bs.Minimum)
 		b.saves += eval(bs.Saves, bs.Minimum)
 		b.deathSave += eval(bs.DeathSave, bs.Minimum)
+		b.speed += eval(bs.Speed, bs.Minimum)
 	}
 	for _, t := range traits {
 		apply(t.Bonuses)
@@ -517,7 +614,7 @@ func collectBonuses(rs *Ruleset, c *Character, traits, features []Trait,
 	return b
 }
 
-func collectTraits(rs *Ruleset, c *Character, race, sub *Race) []Trait {
+func collectTraits(rs *Ruleset, c *Character, race, sub *Race, mods map[string]int, proficiency int) []Trait {
 	out := []Trait{}
 	add := func(list []Trait, source string) {
 		for _, t := range list {
@@ -534,16 +631,26 @@ func collectTraits(rs *Ruleset, c *Character, race, sub *Race) []Trait {
 	if sub != nil {
 		add(sub.Traits, sub.Name)
 	}
+	// A racial trait that scales - "twice starting at 11th level" - scales
+	// against the whole character, not against any one class.
+	AnnotateUses(c, out, c.TotalLevel(), mods, proficiency)
 	return out
 }
 
-func collectFeatures(rs *Ruleset, c *Character, bg *Background) []Trait {
+func collectFeatures(rs *Ruleset, c *Character, bg *Background, mods map[string]int, proficiency int) []Trait {
 	out := []Trait{}
+	// A class feature's limit scales against the level in the class that
+	// granted it, so each batch is annotated with that class's level before
+	// it joins the list.
+	annotate := func(from int, level int) {
+		AnnotateUses(c, out[from:], level, mods, proficiency)
+	}
 	for _, cl := range c.Classes {
 		cls := rs.Class(cl.Class)
 		if cls == nil {
 			continue
 		}
+		at := len(out)
 		for _, f := range cls.Features {
 			if f.Level > cl.Level {
 				continue
@@ -560,6 +667,7 @@ func collectFeatures(rs *Ruleset, c *Character, bg *Background) []Trait {
 				out = append(out, f)
 			}
 		}
+		annotate(at, cl.Level)
 	}
 	// Options the player picked (fighting styles, invocations, ...)
 	for _, cl := range c.Classes {
@@ -571,6 +679,7 @@ func collectFeatures(rs *Ruleset, c *Character, bg *Background) []Trait {
 		if sc := rs.Subclass(cl.Class, cl.Subclass); sc != nil {
 			choices = append(choices, sc.Choices...)
 		}
+		at := len(out)
 		for _, ch := range choices {
 			if ch.Kind != "options" {
 				continue
@@ -585,7 +694,9 @@ func collectFeatures(rs *Ruleset, c *Character, bg *Background) []Trait {
 				}
 			}
 		}
+		annotate(at, cl.Level)
 	}
+	at := len(out)
 	if bg != nil && bg.Feature.Name != "" {
 		f := bg.Feature
 		f.Source = bg.Name
@@ -596,6 +707,9 @@ func collectFeatures(rs *Ruleset, c *Character, bg *Background) []Trait {
 			out = append(out, Trait{Name: ft.Name, Text: ft.Text, Source: "Feat"})
 		}
 	}
+	// A background feature or a feat belongs to the character rather than to
+	// any one class, so both scale against the total level.
+	annotate(at, c.TotalLevel())
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Level < out[j].Level })
 	return out
 }
@@ -807,10 +921,30 @@ func magicItemEffect(it *Item) string {
 	return strings.Join(parts, ", ")
 }
 
+// acOption is one way a character's armour class could be worked out: what it
+// comes to, what to call it, and whether a shield may be carried with it.
+type acOption struct {
+	ac     int
+	source string
+	shield bool
+}
+
+// computeAC works the armour class out the way D&D Beyond does: every
+// calculation the character has available is worked out and the best one is
+// what the sheet shows. A barbarian who keeps a leather jerkin in their pack
+// is not made worse off by owning it, and a monk who picks up a breastplate
+// still gets their own defence if it is better.
+//
+// That is deliberately more generous than the letter of the rules, where an
+// unarmored defence applies only while wearing no armour. It is what the
+// character could have with a moment's undressing, and it is the number
+// players see on their D&D Beyond sheet, so it is the one to agree with.
 func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, string) {
 	dex := s.AbilityMap[DEX].Modifier
-	ac := 10 + dex
-	source := "Unarmored"
+	options := []acOption{}
+
+	// What is actually being worn, first, so it wins a tie: a character in
+	// armour should be told the armour's name.
 	if armor := equippedArmor(c, rs); armor != nil {
 		base := armor.AC
 		switch armor.ArmorType {
@@ -836,46 +970,66 @@ func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, str
 		if magic.active[armor.Id] {
 			base += armor.ACBonus
 		}
-		ac = base
-		source = armor.Name
-	} else {
-		// unarmored defence styles, take the best one available
-		for _, cl := range c.Classes {
-			cls := rs.Class(cl.Class)
-			if cls == nil || cls.UnarmoredAC == "" {
+		options = append(options, acOption{ac: base, source: armor.Name, shield: true})
+	}
+
+	// Wearing nothing at all, and then any unarmored defence style the
+	// character's classes grant.
+	options = append(options, acOption{ac: 10 + dex, source: "Unarmored", shield: true})
+	for _, cl := range c.Classes {
+		cls := rs.Class(cl.Class)
+		if cls == nil || cls.UnarmoredAC == "" {
+			continue
+		}
+		v := 10
+		for _, part := range strings.Split(cls.UnarmoredAC, "+") {
+			part = strings.TrimSpace(strings.ToLower(part))
+			if part == "" {
 				continue
 			}
-			v := 10
-			for _, part := range strings.Split(cls.UnarmoredAC, "+") {
-				part = strings.TrimSpace(strings.ToLower(part))
-				if part == "" {
-					continue
-				}
-				if n := atoi(part); n > 0 {
-					v = n
-					continue
-				}
-				if av, ok := s.AbilityMap[part]; ok {
-					v += av.Modifier
-				}
+			if n := atoi(part); n > 0 {
+				v = n
+				continue
 			}
-			if v > ac {
-				ac = v
-				source = cls.Name + " unarmored defense"
+			if av, ok := s.AbilityMap[part]; ok {
+				v += av.Modifier
 			}
 		}
+		options = append(options, acOption{
+			ac: v, source: cls.Name + " unarmored defense", shield: cls.UnarmoredShield})
 	}
+
+	// A shield is worth a couple of points to most of these but not to all of
+	// them, so it is counted before they are compared rather than after: a
+	// monk's defence has to beat armour and shield together to be the better
+	// choice.
+	shieldBonus, shieldName := 0, ""
 	if shield := equippedShield(c, rs); shield != nil {
-		bonus := shield.AC
-		if bonus == 0 {
-			bonus = 2
+		shieldBonus = shield.AC
+		if shieldBonus == 0 {
+			shieldBonus = 2
 		}
 		if magic.active[shield.Id] {
-			bonus += shield.ACBonus
+			shieldBonus += shield.ACBonus
 		}
-		ac += bonus
-		source += " + " + shield.Name
+		shieldName = shield.Name
 	}
+
+	ac, source, withShield := 0, "Unarmored", false
+	for i, o := range options {
+		total := o.ac
+		carries := shieldName != "" && o.shield
+		if carries {
+			total += shieldBonus
+		}
+		if i == 0 || total > ac {
+			ac, source, withShield = total, o.source, carries
+		}
+	}
+	if withShield {
+		source += " + " + shieldName
+	}
+
 	// Rings, cloaks and anything else that raises AC without being worn as
 	// armour. Armour and shields are already counted above.
 	if magic.ac != 0 {
@@ -1054,7 +1208,7 @@ func computeSpellcasting(c *Character, rs *Ruleset, s *Sheet) {
 		// still show any spells the character knows (racial spells etc)
 		if len(c.Spells) > 0 {
 			s.IsCaster = true
-			s.SpellLevels = groupSpells(c, rs, nil)
+			s.SpellLevels = groupSpells(c, rs, s, nil)
 		}
 		return
 	}
@@ -1147,12 +1301,12 @@ func computeSpellcasting(c *Character, rs *Ruleset, s *Sheet) {
 		}
 		s.SpellNotes = strings.Join(notes, ", ")
 	}
-	for _, sp := range c.Spells {
-		if sp.Prepared && sp.Level > 0 {
-			s.SpellsPrepared++
-		}
-	}
-	s.SpellLevels = groupSpells(c, rs, s.Slots)
+	// What is prepared out of the allowance. Spells a subclass granted - a
+	// cleric's domain spells, a paladin's oath spells - are always prepared
+	// and do not come out of it, so counting them would read as over budget
+	// on a sheet that is not.
+	s.SpellsPrepared = CountSpells(c, -1, true)
+	s.SpellLevels = groupSpells(c, rs, s, s.Slots)
 }
 
 // GrantSubclassSpells adds the spells a subclass hands out for free - cleric
@@ -1264,7 +1418,14 @@ func PreparedCount(sc *Spellcasting, level, abilityMod int) int {
 	return n
 }
 
-func groupSpells(c *Character, rs *Ruleset, slots []SpellSlotView) []SpellLevelView {
+// groupSpells collects the character's spells into the levels the sheet shows
+// them in. The sheet is passed in because a spell entry carries what casting
+// it does - the attack bonus, the save DC - which are the sheet's numbers.
+func groupSpells(c *Character, rs *Ruleset, s *Sheet, slots []SpellSlotView) []SpellLevelView {
+	abilityMod := 0
+	if s != nil && s.CastingAbility != "" {
+		abilityMod = s.AbilityMap[s.CastingAbility].Modifier
+	}
 	byLevel := map[int][]SpellEntry{}
 	for _, ks := range c.Spells {
 		sp := rs.Spell(ks.Id)
@@ -1282,6 +1443,9 @@ func groupSpells(c *Character, rs *Ruleset, slots []SpellSlotView) []SpellLevelV
 			e.Text = sp.Text
 			e.HigherLevel = sp.HigherLevel
 			e.Save = sp.Save
+			if s != nil {
+				e.Cast = ComputeCast(sp, s.Level, s.SpellAttack, s.SpellSaveDC, abilityMod)
+			}
 		} else {
 			e.Name = ks.Name
 			if e.Name == "" {

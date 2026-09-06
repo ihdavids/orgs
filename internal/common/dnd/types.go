@@ -15,6 +15,7 @@ package dnd
 
 import (
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -75,6 +76,28 @@ type Trait struct {
 	// Bonuses are the numbers this trait actually moves on the sheet. Most
 	// traits leave it empty and are pure prose.
 	Bonuses Bonuses `yaml:"bonuses" json:"bonuses"`
+
+	// Uses is how often the trait may be used before a rest gives it back,
+	// written as a bonus formula ("2", "cha", "1 + cha", "prof"), and
+	// Recharge is which rest gives them back - "short" or "long". Almost no
+	// trait declares either: the engine reads both out of the trait's own
+	// rules text instead (see uses.go), and a module only writes them down
+	// when the prose is too unusual to be read.
+	Uses     string `yaml:"uses" json:"uses"`
+	Recharge string `yaml:"recharge" json:"recharge"`
+
+	// UsesMax, UsesSpent and UsesNote are filled in by the engine: what the
+	// formula came to for this character, how many of them the sheet says
+	// are gone, and a short line saying what the limit is. UsesMax of zero
+	// means the trait has no limit worth tracking. UsesId is the pool the
+	// count is kept under, which several traits can share.
+	UsesId    string `yaml:"-" json:"usesId"`
+	UsesMax   int    `yaml:"-" json:"usesMax"`
+	UsesSpent int    `yaml:"-" json:"usesSpent"`
+	UsesNote  string `yaml:"-" json:"usesNote"`
+	// UsesPips is 1..UsesMax, so a template that cannot count to a number
+	// can still draw one slot per use.
+	UsesPips []int `yaml:"-" json:"usesPips"`
 }
 
 // Bonuses are the mechanical adjustments a trait, feature or feat hands out.
@@ -110,6 +133,22 @@ type Bonuses struct {
 	// Minimum floors each evaluated bonus. It exists for the "minimum bonus
 	// of +1" wording on a paladin's aura.
 	Minimum int `yaml:"minimum" json:"minimum"`
+	// Speed is added to the walking speed, in feet. A barbarian's Fast
+	// Movement and a monk's Unarmored Movement are both this.
+	Speed string `yaml:"speed" json:"speed"`
+	// Unless switches the whole block off while a condition holds. Every
+	// speed feature in the rules is qualified this way, and there are only
+	// two qualifications between them, so those two are what is understood:
+	//
+	//	unless: "heavyArmor"   off while wearing heavy armour (Fast Movement)
+	//	unless: "armor"        off while wearing any armour or carrying a
+	//	                       shield (Unarmored Movement, unarmored defense)
+	//
+	// An unrecognised value never fires, so a module that invents one gets
+	// the bonus rather than silently losing it. What the sheet cannot check
+	// - "while you are raging" - is left out of the data and stays in the
+	// rules text, the same way a conditional magic item bonus does.
+	Unless string `yaml:"unless" json:"unless"`
 }
 
 // Proficiencies is the set of things a race/class/background can make you good at.
@@ -365,6 +404,9 @@ type Class struct {
 	MulticlassReq map[string]int `yaml:"multiclassReq" json:"multiclassReq"`
 	// Unarmored describes an unarmored defence style AC (barbarian/monk).
 	UnarmoredAC string `yaml:"unarmoredAc" json:"unarmoredAc"`
+	// UnarmoredShield says whether a shield may be carried and the unarmored
+	// defence above still gained. A barbarian may, a monk may not.
+	UnarmoredShield bool `yaml:"unarmoredShield" json:"unarmoredShield"`
 }
 
 // Background is a character background.
@@ -414,6 +456,22 @@ type Item struct {
 
 	// Pack contents
 	Contents []ItemRef `yaml:"contents" json:"contents"`
+
+	// ---- containers -------------------------------------------------------
+	//
+	// Container marks an item things can be stored in - a backpack, a pouch,
+	// a chest - which is what gives the inventory a tab of its own for it.
+	// Capacity is what it holds in pounds, 0 when the rules do not say (a
+	// quiver counts arrows, not weight). Extradimensional containers carry
+	// their contents outside the world, so what is inside them does not count
+	// against what the character is carrying: a bag of holding weighs fifteen
+	// pounds whether it is full or empty.
+	//
+	// A ruleset that says nothing about an item falls back to the standard
+	// containers in inventory.go, so the generated SRD needs no annotation.
+	Container        bool    `yaml:"container" json:"container"`
+	Capacity         float64 `yaml:"capacity" json:"capacity"`
+	Extradimensional bool    `yaml:"extradimensional" json:"extradimensional"`
 
 	// ---- magic item fields ------------------------------------------------
 	//
@@ -586,6 +644,12 @@ type Gear struct {
 	Attuned bool    `yaml:"attuned" json:"attuned"`
 	Weight  float64 `yaml:"weight" json:"weight"`
 	Notes   string  `yaml:"notes" json:"notes"`
+	// Container is the key of the container this line is stored in, empty for
+	// anything carried loose on the character. The key is the slug of the
+	// container item's name, so "backpack" or "bag-of-holding". Storage is
+	// flat: putting a pouch inside a backpack does not move the pouch's
+	// contents, they stay listed under the pouch.
+	Container string `yaml:"container" json:"container"`
 }
 
 // KnownSpell is a spell the character knows, and whether it is prepared.
@@ -632,7 +696,12 @@ type Character struct {
 	Expertise []string `yaml:"expertise" json:"expertise"`
 	Languages []string `yaml:"languages" json:"languages"`
 	Tools     []string `yaml:"tools" json:"tools"`
-	Feats     []string `yaml:"feats" json:"feats"`
+	// ToolExpertise is the subset of Tools whose proficiency bonus is
+	// doubled. It is kept apart from Expertise because that one is indexed by
+	// skill id and feeds the skill table, and a tool is not a skill: there is
+	// no fixed ability behind it, so there is no one number to put in a row.
+	ToolExpertise []string `yaml:"toolExpertise" json:"toolExpertise"`
+	Feats         []string `yaml:"feats" json:"feats"`
 
 	// Choices records generic class/race choice answers keyed by choice id.
 	Choices map[string][]string `yaml:"choices" json:"choices"`
@@ -645,9 +714,24 @@ type Character struct {
 	Inspiration bool   `yaml:"inspiration" json:"inspiration"`
 	SlotsUsed   []int  `yaml:"slotsUsed" json:"slotsUsed"`
 
+	// UsesSpent counts the uses spent out of a limited feature or trait,
+	// keyed by the slug of its name. A rest zeroes the entries it recharges.
+	UsesSpent map[string]int `yaml:"usesSpent" json:"usesSpent"`
+
 	Equipment []Gear       `yaml:"equipment" json:"equipment"`
 	Spells    []KnownSpell `yaml:"spells" json:"spells"`
 	Money     Money        `yaml:"money" json:"money"`
+
+	// InventoryLog is what has come and gone from the equipment table, in the
+	// order it happened. It is written to the sheet as the Inventory History
+	// section and read straight back, so the log is the file's, not the
+	// server's, and survives being edited by hand.
+	InventoryLog []InventoryEvent `yaml:"inventoryLog" json:"inventoryLog"`
+
+	// MoneyLog is what has been spent, earned or changed up, in the order it
+	// happened, and lives in the file the same way the inventory log does as
+	// the Coin History section.
+	MoneyLog []MoneyEvent `yaml:"moneyLog" json:"moneyLog"`
 
 	Personality string `yaml:"personality" json:"personality"`
 	Ideals      string `yaml:"ideals" json:"ideals"`
@@ -660,6 +744,14 @@ type Character struct {
 	Eyes   string `yaml:"eyes" json:"eyes"`
 	Skin   string `yaml:"skin" json:"skin"`
 	Hair   string `yaml:"hair" json:"hair"`
+
+	// Image is the character portrait, written as anything org can point an
+	// image with - a url, a path, or a bracket link. ImageFocus ("57% 29%")
+	// and ImageZoom choose which part of it the round portrait frame shows,
+	// so a full body picture can be cropped down to a face.
+	Image      string  `yaml:"image" json:"image"`
+	ImageFocus string  `yaml:"imageFocus" json:"imageFocus"`
+	ImageZoom  float64 `yaml:"imageZoom" json:"imageZoom"`
 
 	Appearance string `yaml:"appearance" json:"appearance"`
 	Backstory  string `yaml:"backstory" json:"backstory"`
@@ -696,6 +788,17 @@ func (c *Character) HasSkill(id string) bool { return containsStr(c.Skills, id) 
 
 // HasExpertise reports skill expertise.
 func (c *Character) HasExpertise(id string) bool { return containsStr(c.Expertise, id) }
+
+// HasToolExpertise reports a doubled proficiency bonus with a tool. Tools are
+// stored by name rather than by id, so the comparison ignores case.
+func (c *Character) HasToolExpertise(name string) bool {
+	for _, t := range c.ToolExpertise {
+		if strings.EqualFold(strings.TrimSpace(t), strings.TrimSpace(name)) {
+			return true
+		}
+	}
+	return false
+}
 
 // ----------------------------------------------------------------------------
 // Computed sheet - everything derived from Character + Ruleset. This is what
@@ -798,6 +901,10 @@ type SpellEntry struct {
 	HigherLevel   string `json:"higherLevel"`
 	Source        string `json:"source"`
 	Save          string `json:"save"`
+	// Cast is what happens when the spell is cast: the attack roll, the save
+	// the target makes, the damage or healing, worked out for this character
+	// at this level. See spellcast.go.
+	Cast SpellCast `json:"cast"`
 }
 
 // Sheet is the fully computed character sheet.
@@ -816,7 +923,22 @@ type Sheet struct {
 	Level        int    `json:"level"`
 	XP           int    `json:"xp"`
 	NextLevelXP  int    `json:"nextLevelXp"`
-	RulesetName  string `json:"rulesetName"`
+	// XPPercent is how far along this level the character is, 0 at the level
+	// they just gained and 100 at the next one. The sheet draws it as a ring
+	// around the portrait.
+	XPPercent   int    `json:"xpPercent"`
+	RulesetName string `json:"rulesetName"`
+
+	// Image is the portrait reference as it was written in the org file.
+	// ImageSrc is that reference resolved into something an <img src> can
+	// use, which the html exporter fills in - a local file is inlined there
+	// as a data uri, so it is empty on a sheet that came straight from the
+	// rules engine.
+	Image       string  `json:"image"`
+	ImageSrc    string  `json:"imageSrc"`
+	ImageFocusX float64 `json:"imageFocusX"`
+	ImageFocusY float64 `json:"imageFocusY"`
+	ImageZoom   float64 `json:"imageZoom"`
 
 	Abilities      []AbilityView          `json:"abilities"`
 	AbilityMap     map[string]AbilityView `json:"abilityMap"`
@@ -851,12 +973,20 @@ type Sheet struct {
 	DeathSaveStr   string `json:"deathSaveStr"`
 	Inspiration    bool   `json:"inspiration"`
 
-	Attacks       []AttackView `json:"attacks"`
-	Equipment     []Gear       `json:"equipment"`
-	Money         Money        `json:"money"`
-	Weight        float64      `json:"weight"`
-	CarryCapacity int          `json:"carryCapacity"`
-	PushDragLift  int          `json:"pushDragLift"`
+	Attacks   []AttackView `json:"attacks"`
+	Equipment []Gear       `json:"equipment"`
+	Money     Money        `json:"money"`
+	// Purse is the same coin worked out: every denomination, what the lot is
+	// worth and what it weighs. The coin tab on the html sheet draws this.
+	Purse         MoneyView `json:"purse"`
+	Weight        float64   `json:"weight"`
+	CarryCapacity int       `json:"carryCapacity"`
+	PushDragLift  int       `json:"pushDragLift"`
+
+	// Inventory is the equipment table again, stacked and split up by the
+	// container each thing is stored in, with the weight and encumbrance
+	// worked out. The html sheet draws its inventory from this.
+	Inventory InventoryView `json:"inventory"`
 
 	// Magic items carried, and the attunement slots they take up. Attuned
 	// lists the items actually attuned to; AttunementSlots is the limit,

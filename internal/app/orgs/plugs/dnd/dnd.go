@@ -76,6 +76,64 @@ package dnd
   dependencies, so a sheet saved to disk keeps working, and printing hides
   the tray and the dice.
 
+** Sections share a box
+
+  The middle and right hand columns each hold one box that shows a section at
+  a time, picked from a row of tabs across the top of it: =Attacks=,
+  =Inventory=, =Personality= and =Appearance= in the middle, =Spellcasting=
+  and =Features & Traits= on the right. Which tab was last left open is
+  remembered, so a sheet reopens on whatever you were using.
+
+  A section the character has nothing for - no spells to cast, no appearance
+  filled in - is simply not there and gets no tab. The tabs are drawn by the
+  page from the sections the template wrote, so a sheet with no script, and a
+  sheet on paper, has every one of them in turn under its own heading exactly
+  as before.
+
+** The inventory is live
+
+  The equipment box is a working inventory. Identical things stack into one
+  line with a count, each container the character carries gets a tab of its
+  own beside what is carried on the person, and the top of the box weighs the
+  lot against the carrying capacity and says where that lands on the
+  encumbrance scale.
+
+  =Add item= searches every item in the ruleset with the same fuzzy match the
+  builder's lists use, and anything the rules do not know is added under the
+  name typed. A row of groups under the search box narrows it to weapons,
+  armor, potions, spellcasting components, gear, tools, packs, containers or
+  anything magical, so =+1= under Weapons is a list of magic weapons rather
+  than of everything in the rules with a plus in its name.
+
+  Magic items are coloured by rarity wherever they appear - in the search and
+  in the bag itself - on the usual ladder: common, uncommon in green, rare in
+  blue, very rare in purple, legendary in orange and artifact in red.
+  Ordinary gear has no rarity and is left in the ink colour, so what stands
+  out on a line is exactly what is worth noticing.
+
+  =Use= takes one off a stack, =Drop= gets rid of some or all of it, and
+  =Move= puts things into a container - one the character actually owns,
+  which is what the tabs inside the inventory are.
+
+  Every change is written back into the org character sheet: the =Container=
+  column of the equipment table says where a line is kept, and an
+  =Inventory History= section records what came and went. That history is
+  shown on the =Inventory= tab of the notes drawer, since it belongs to the
+  character rather than to one night's session.
+
+** Casting a spell
+
+  Every spell has a =Cast= button. Casting rolls the spell attack if the
+  spell needs one, then its damage or healing, and reports what the target
+  has to roll back - "Dexterity saving throw against DC 15, half as much
+  damage on a success" - for the spells that ask something of the other side
+  rather than rolling anything themselves. A cantrip rolls whatever its
+  damage has grown to at the character's level.
+
+  Casts are marked with a star in the tray so a spell is told apart from a
+  die roll at a glance. The mark stays in the tray: a cast written into a
+  session log is plain text like every other row.
+
 ** Recording a session
 
   The dice panel has a =Session= button beside =Roll= that starts a play
@@ -119,6 +177,7 @@ package dnd
 EDOC */
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -216,7 +275,13 @@ func LoadCharacter(db common.ODb, filename string) (*dnd.Character, *dnd.Ruleset
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not read character sheet %s: %s", filename, err)
 	}
-	return ParseCharacter(string(data))
+	c, rs, err := ParseCharacter(string(data))
+	if c != nil {
+		// Remembering the file the sheet came from is what lets a relative
+		// portrait link resolve next to it, the way emacs would.
+		c.Filename = path
+	}
+	return c, rs, err
 }
 
 // ParseCharacter parses sheet text and resolves the ruleset it names.
@@ -287,6 +352,15 @@ func (self *SheetExporter) Export(db common.ODb, query string, to string, opts s
 	return os.WriteFile(to, []byte(res), 0644)
 }
 
+// sheetDir is the folder holding the org file a sheet was read from, which
+// is what a relative portrait link is relative to.
+func sheetDir(sheet *dnd.Sheet) string {
+	if sheet == nil || sheet.Character == nil || sheet.Character.Filename == "" {
+		return ""
+	}
+	return filepath.Dir(sheet.Character.Filename)
+}
+
 func (self *SheetExporter) context(sheet *dnd.Sheet, props map[string]string) map[string]interface{} {
 	ctx := map[string]interface{}{}
 	for k, v := range self.Props {
@@ -317,7 +391,36 @@ func (self *SheetExporter) context(sheet *dnd.Sheet, props map[string]string) ma
 
 func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string) (error, string) {
 	ctx := self.context(sheet, props)
+	if src, err := dnd.ImageSrc(sheet.Image, sheetDir(sheet)); err != nil {
+		sheet.Warnings = append(sheet.Warnings, err.Error())
+	} else {
+		sheet.ImageSrc = src
+	}
 	ctx["sheet"] = dnd.SheetMap(sheet, nil)
+	// The inventory is handed over as json as well as through the sheet, so
+	// that the page's inventory panel starts from the same bag the sheet was
+	// printed with and can keep editing it without a round trip first.
+	if data, err := json.Marshal(sheet.Inventory); err == nil {
+		ctx["inventoryJson"] = string(data)
+	} else {
+		ctx["inventoryJson"] = "null"
+	}
+	// The purse goes over the same way, with the coin history behind it, so
+	// the coin tab is readable before the server has been asked anything.
+	money := map[string]interface{}{"purse": sheet.Purse, "history": []dnd.MoneyEvent{}}
+	if sheet.Character != nil && sheet.Character.MoneyLog != nil {
+		money["history"] = sheet.Character.MoneyLog
+	}
+	if data, err := json.Marshal(money); err == nil {
+		ctx["moneyJson"] = string(data)
+	} else {
+		ctx["moneyJson"] = "null"
+	}
+	// The sheet posts inventory changes back to the org file it came from.
+	ctx["sheetFile"] = ""
+	if sheet.Character != nil {
+		ctx["sheetFile"] = sheet.Character.Filename
+	}
 	template := self.TemplatePath
 	if template == "" {
 		template = "dnd_character_html.tpl"
@@ -331,7 +434,21 @@ func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string)
 
 func (self *SheetExporter) renderLatex(sheet *dnd.Sheet, props map[string]string) (error, string) {
 	ctx := self.context(sheet, props)
+	crop, warn := dnd.LatexPortrait(sheet.Image, sheetDir(sheet),
+		sheet.ImageFocusX, sheet.ImageFocusY, sheet.ImageZoom)
+	if warn != "" {
+		sheet.Warnings = append(sheet.Warnings, warn)
+	}
 	ctx["sheet"] = dnd.SheetMap(sheet, dnd.LatexEscape)
+	// The portrait geometry goes in beside the sheet rather than through it:
+	// the tex escaper would turn every underscore in the file name into an
+	// escape sequence and pdflatex would not find the picture.
+	if crop != nil {
+		ctx["portrait"] = map[string]interface{}{
+			"file": crop.File, "width": crop.Width, "height": crop.Height,
+			"x": crop.X, "y": crop.Y,
+		}
+	}
 	template := self.TemplatePath
 	if template == "" || strings.HasSuffix(template, "_html.tpl") {
 		template = "dnd_character.tpl"

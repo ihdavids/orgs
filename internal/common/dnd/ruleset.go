@@ -82,12 +82,28 @@ package dnd
   | initiative | initiative, on top of whatever =checks= gives it           |
   | saves      | every saving throw, death saving throws included           |
   | deathSave  | death saving throws only                                   |
+  | speed      | the walking speed, in feet                                 |
   | minimum    | floors the evaluated bonus                                 |
+  | unless     | switches the block off while a condition holds             |
 
   Each value is a formula: terms joined with "+", where a term is a number,
   an ability id whose modifier is added, or the proficiency bonus as =prof=,
   =prof/2= (rounded down) or =prof/2up= (rounded up). A feat takes the same
   block. See =templates/dnd/bonuses.yaml= for worked examples.
+
+  =unless= is the one field that is not a formula. Every feature in the rules
+  that moves a speed is qualified by what you are wearing, so those two
+  qualifications are what it understands:
+
+  | value        | the block is off while...                    |
+  |--------------+----------------------------------------------|
+  | =heavyArmor= | you are wearing heavy armour                 |
+  | =armor=      | you are wearing any armour or carrying a shield |
+
+  A barbarian's Fast Movement is =speed: "10"= with =unless: "heavyArmor"=.
+  An unrecognised value never fires, so a module that invents one keeps its
+  bonus rather than quietly losing it. Conditions the sheet cannot check -
+  "while you are raging" - are deliberately left in the rules text instead.
 EDOC */
 
 import (
@@ -492,7 +508,10 @@ func mergeClass(dst, src *Class) {
 		dst.MulticlassReq = src.MulticlassReq
 	}
 	if src.UnarmoredAC != "" {
+		// The two go together: whoever states the formula also states whether
+		// a shield may be carried with it.
 		dst.UnarmoredAC = src.UnarmoredAC
+		dst.UnarmoredShield = src.UnarmoredShield
 	}
 	dst.Proficiencies = mergeProficiencies(dst.Proficiencies, src.Proficiencies)
 	dst.Features = mergeTraits(dst.Features, src.Features)
@@ -532,6 +551,9 @@ func mergeClass(dst, src *Class) {
 //	        bonuses:
 //	          checks: "prof/2"
 //
+// A =uses= / =recharge= pair is attached the same way, for a feature whose use
+// limit the engine cannot read out of its prose.
+//
 // A module that does supply text still replaces the text, as before.
 func mergeTraits(dst, src []Trait) []Trait {
 	for _, t := range src {
@@ -543,6 +565,12 @@ func mergeTraits(dst, src []Trait) []Trait {
 				}
 				if t.Source != "" {
 					dst[i].Source = t.Source
+				}
+				if t.Uses != "" {
+					dst[i].Uses = t.Uses
+				}
+				if t.Recharge != "" {
+					dst[i].Recharge = t.Recharge
 				}
 				dst[i].Bonuses = mergeBonuses(dst[i].Bonuses, t.Bonuses)
 				found = true
@@ -576,6 +604,12 @@ func mergeBonuses(dst, src Bonuses) Bonuses {
 	}
 	if src.Minimum != 0 {
 		dst.Minimum = src.Minimum
+	}
+	if src.Speed != "" {
+		dst.Speed = src.Speed
+	}
+	if src.Unless != "" {
+		dst.Unless = src.Unless
 	}
 	return dst
 }

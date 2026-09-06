@@ -191,3 +191,34 @@ func TestCharacterIdIsStableAndDerivable(t *testing.T) {
 		t.Fatal("an explicit id was overwritten")
 	}
 }
+
+// A sheet lists its own games, not the whole table's, so the id embedded in a
+// session file has to be what decides.
+func TestSessionPlayedBy(t *testing.T) {
+	s := SessionInfo{Characters: []SessionCharacter{
+		{Id: "lyra-silverleaf-4f2a", Name: "Lyra Silverleaf"},
+		{Id: "gooey-mcfart-91bd", Name: "Gooey McFart"},
+	}}
+	if !s.PlayedBy("gooey-mcfart-91bd", "Gooey McFart") {
+		t.Error("a character who played was filtered out")
+	}
+	if s.PlayedBy("brand-new-7c11", "Someone Else") {
+		t.Error("a character who did not play was let through")
+	}
+	// A name that happens to match must not beat a mismatched id.
+	if s.PlayedBy("someone-else-0000", "Lyra Silverleaf") {
+		t.Error("a mismatched id fell back to the name")
+	}
+}
+
+// Session files written before ids were recorded carry a name and nothing
+// else. Those must stay visible on the sheet that played them.
+func TestSessionPlayedByFallsBackToName(t *testing.T) {
+	s := SessionInfo{Characters: []SessionCharacter{{Name: "Lyra Silverleaf"}}}
+	if !s.PlayedBy("lyra-silverleaf-4f2a", "lyra silverleaf") {
+		t.Error("an entry with no id was not matched by name")
+	}
+	if s.PlayedBy("gooey-mcfart-91bd", "Gooey McFart") {
+		t.Error("an entry with no id matched the wrong character")
+	}
+}

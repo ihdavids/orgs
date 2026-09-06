@@ -100,6 +100,33 @@ type SessionInfo struct {
 	Characters []SessionCharacter `json:"characters"`
 }
 
+// PlayedBy reports whether a character took part in the session, which is what
+// keeps one player's sheet from listing the whole table's sessions.
+//
+// The id is what ties a session file to a character sheet, so it decides
+// whenever both sides have one. The name is a fallback for entries written
+// before the id was recorded: those carry a name and nothing else, and hiding
+// them would lose a campaign's early sessions from the very sheet that played
+// them.
+//
+// A session that names nobody at all is left to the caller. It excludes no
+// one, so there is nothing here to decide.
+func (s *SessionInfo) PlayedBy(id, name string) bool {
+	id, name = strings.TrimSpace(id), strings.TrimSpace(name)
+	for _, c := range s.Characters {
+		if id != "" && c.Id != "" {
+			if strings.EqualFold(c.Id, id) {
+				return true
+			}
+			continue
+		}
+		if name != "" && strings.EqualFold(strings.TrimSpace(c.Name), name) {
+			return true
+		}
+	}
+	return false
+}
+
 // SessionDetail is everything recorded in one session.
 type SessionDetail struct {
 	SessionInfo
