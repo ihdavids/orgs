@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a halfling">
+<title>a halfling</title>
+<defs>
+<radialGradient id="bg-halfling" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#f5ecd2"/><stop offset="1" stop-color="#cbb583"/>
+</radialGradient>
+<linearGradient id="cloak-halfling" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#4a4230"/><stop offset="1" stop-color="#2a2419"/>
+</linearGradient>
+<radialGradient id="vig-halfling" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-halfling)"/>
+<circle cx="200" cy="176" r="128" fill="#f3ecd8" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-halfling)"/>
+<path d="M176 232 h48 v60 h-48 Z" fill="#7a5f43"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#7b5427" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#f3ecd8" opacity=".85"/>
+<ellipse cx="200" cy="178" rx="63" ry="66" fill="#c69a6d"/>
+<ellipse cx="226.46" cy="184" rx="36.54" ry="56.76" fill="#7a5f43" opacity=".16"/>
+<path d="M154 163 Q 174 149 194 153" fill="none" stroke="#433425" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M154 163 Q 174 149 194 153" fill="none" stroke="#433425" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="174" cy="188" rx="14" ry="10.5" fill="#f6efdd"/><circle cx="174" cy="188" r="7.6" fill="#6b4a24"/><circle cx="174" cy="188" r="5.2" fill="#433425"/><path d="M159 187 Q 174 174 189 187" fill="none" stroke="#433425" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="184.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="188" rx="14" ry="10.5" fill="#f6efdd"/><circle cx="174" cy="188" r="7.6" fill="#6b4a24"/><circle cx="174" cy="188" r="5.2" fill="#433425"/><path d="M159 187 Q 174 174 189 187" fill="none" stroke="#433425" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="184.8" r="2" fill="#ffffff" opacity=".85"/></g><circle cx="195.6" cy="214" r="2.2" fill="#433425" opacity=".55"/><g transform="translate(400,0) scale(-1,1)"><circle cx="195.6" cy="214" r="2.2" fill="#433425" opacity=".55"/></g><path d="M193.6 214.8 Q 200 219.6 206.4 214.8" fill="none" stroke="#433425" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M178 234 Q 200 244 222 234" fill="none" stroke="#433425" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/><circle cx="158" cy="214" r="15" fill="#c96a52" opacity=".3"/><g transform="translate(400,0) scale(-1,1)"><circle cx="158" cy="214" r="15" fill="#c96a52" opacity=".3"/></g>
+<path d="M138 184 C 138 114 164 98 200 98 C 236 98 262 114 262 184 C 256 138 234 126 200 126 C 166 126 144 138 138 184 Z" fill="#7b5427"/><circle cx="148" cy="134" r="23" fill="#7b5427"/><circle cx="176" cy="110" r="25" fill="#7b5427"/><circle cx="224" cy="110" r="25" fill="#7b5427"/><circle cx="252" cy="134" r="23" fill="#7b5427"/><circle cx="200" cy="98" r="23" fill="#7b5427"/><ellipse cx="137" cy="188" rx="11" ry="16" fill="#c69a6d"/><path d="M139 182 q -4 6 0 12" fill="none" stroke="#433425" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="137" cy="188" rx="11" ry="16" fill="#c69a6d"/><path d="M139 182 q -4 6 0 12" fill="none" stroke="#433425" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/></g>
+<rect width="400" height="400" fill="url(#vig-halfling)"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a firbolg">
+<title>a firbolg</title>
+<defs>
+<radialGradient id="bg-firbolg" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#e4ead6"/><stop offset="1" stop-color="#9cae85"/>
+</radialGradient>
+<linearGradient id="cloak-firbolg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#3b4634"/><stop offset="1" stop-color="#212a1d"/>
+</linearGradient>
+<radialGradient id="vig-firbolg" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-firbolg)"/>
+<circle cx="200" cy="176" r="128" fill="#eef2e2" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-firbolg)"/>
+<path d="M176 236 h48 v60 h-48 Z" fill="#6d5f44"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#8a6a3c" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#eef2e2" opacity=".85"/>
+<path d="M150 154 C 126 146 108 172 112 212 C 130 206 146 184 150 154 Z" fill="#b09a6e"/><path d="M146 162 C 130 162 118 178 117 200" fill="none" stroke="#3b3425" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M150 154 C 126 146 108 172 112 212 C 130 206 146 184 150 154 Z" fill="#b09a6e"/><path d="M146 162 C 130 162 118 178 117 200" fill="none" stroke="#3b3425" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g>
+<ellipse cx="200" cy="170" rx="60" ry="78" fill="#b09a6e"/>
+<ellipse cx="225.2" cy="176" rx="34.8" ry="67.08" fill="#6d5f44" opacity=".16"/>
+<path d="M151 151 Q 174 142 197 141" fill="none" stroke="#8a6a3c" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M151 151 Q 174 142 197 141" fill="none" stroke="#8a6a3c" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="173" cy="176" rx="12" ry="8.5" fill="#f6efdd"/><circle cx="173" cy="176" r="7.6" fill="#4a6b3a"/><circle cx="173" cy="176" r="4.6" fill="#3b3425"/><path d="M160 175 Q 173 164 186 175" fill="none" stroke="#3b3425" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170.4" cy="172.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="173" cy="176" rx="12" ry="8.5" fill="#f6efdd"/><circle cx="173" cy="176" r="7.6" fill="#4a6b3a"/><circle cx="173" cy="176" r="4.6" fill="#3b3425"/><path d="M160 175 Q 173 164 186 175" fill="none" stroke="#3b3425" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170.4" cy="172.8" r="2" fill="#ffffff" opacity=".85"/></g><ellipse cx="200" cy="206" rx="19" ry="17.16" fill="#3b3425" opacity=".35"/><circle cx="191" cy="210" r="2.4" fill="#3b3425" opacity=".5"/><g transform="translate(400,0) scale(-1,1)"><circle cx="191" cy="210" r="2.4" fill="#3b3425" opacity=".5"/></g>
+<path d="M138 150 C 138 104 164 88 200 88 C 236 88 262 104 262 150 C 256 124 234 112 200 112 C 166 112 144 124 138 150 Z" fill="#8a6a3c"/><path d="M142 214 C 142 250 158 326 200 326 C 242 326 258 250 258 214 C 258 214 242 226 200 226 C 158 226 142 214 142 214 Z" fill="#8a6a3c"/><circle cx="166" cy="152" r="4" fill="#6f7f4e" opacity=".3"/><circle cx="234" cy="154" r="4" fill="#6f7f4e" opacity=".3"/><circle cx="200" cy="138" r="4" fill="#6f7f4e" opacity=".3"/>
+<rect width="400" height="400" fill="url(#vig-firbolg)"/>
+</svg>

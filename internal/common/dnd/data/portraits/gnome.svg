@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a gnome">
+<title>a gnome</title>
+<defs>
+<radialGradient id="bg-gnome" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#f6e7c4"/><stop offset="1" stop-color="#cfa860"/>
+</radialGradient>
+<linearGradient id="cloak-gnome" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#4a3f2a"/><stop offset="1" stop-color="#2a2317"/>
+</linearGradient>
+<radialGradient id="vig-gnome" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-gnome)"/>
+<circle cx="200" cy="176" r="128" fill="#f5ead0" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-gnome)"/>
+<path d="M176 236 h48 v60 h-48 Z" fill="#775f45"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#b9b0a2" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#f5ead0" opacity=".85"/>
+<ellipse cx="200" cy="180" rx="61" ry="68" fill="#c19a70"/>
+<ellipse cx="225.62" cy="186" rx="35.38" ry="58.48" fill="#775f45" opacity=".16"/>
+<path d="M154 165 Q 175 152 196 155" fill="none" stroke="#b9b0a2" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M154 165 Q 175 152 196 155" fill="none" stroke="#b9b0a2" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="175" cy="182" rx="12" ry="9" fill="#f6efdd"/><circle cx="175" cy="182" r="7.6" fill="#4e7a4a"/><circle cx="175" cy="182" r="4.6" fill="#413426"/><path d="M162 181 Q 175 169.5 188 181" fill="none" stroke="#413426" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="172.4" cy="178.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="175" cy="182" rx="12" ry="9" fill="#f6efdd"/><circle cx="175" cy="182" r="7.6" fill="#4e7a4a"/><circle cx="175" cy="182" r="4.6" fill="#413426"/><path d="M162 181 Q 175 169.5 188 181" fill="none" stroke="#413426" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="172.4" cy="178.8" r="2" fill="#ffffff" opacity=".85"/></g><ellipse cx="200" cy="204" rx="17.1" ry="13.2" fill="#413426" opacity=".35"/><circle cx="191.9" cy="208" r="2.4" fill="#413426" opacity=".5"/><g transform="translate(400,0) scale(-1,1)"><circle cx="191.9" cy="208" r="2.4" fill="#413426" opacity=".5"/></g>
+<path d="M148 158 L 116 144 L 146 190 Z" fill="#c19a70"/><path d="M142 174 L 125 156" fill="none" stroke="#413426" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M148 158 L 116 144 L 146 190 Z" fill="#c19a70"/><path d="M142 174 L 125 156" fill="none" stroke="#413426" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g><path d="M124 120 C 144 56 178 18 216 6 C 222 56 246 96 282 120 Z" fill="#4a3f2a"/><path d="M114 124 C 158 100 246 100 290 124 C 246 144 158 144 114 124 Z" fill="#2a2317"/><path d="M142 210 C 142 250 158 312 200 312 C 242 312 258 250 258 210 C 258 214 242 226 200 226 C 158 226 142 214 142 210 Z" fill="#b9b0a2"/><path d="M200 224 C 188 218 166 222 162 238 C 174 236 188 234 200 232 Z" fill="#b9b0a2"/><g transform="translate(400,0) scale(-1,1)"><path d="M200 224 C 188 218 166 222 162 238 C 174 236 188 234 200 232 Z" fill="#b9b0a2"/></g>
+<rect width="400" height="400" fill="url(#vig-gnome)"/>
+</svg>

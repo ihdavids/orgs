@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of an aasimar">
+<title>an aasimar</title>
+<defs>
+<radialGradient id="bg-aasimar" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#f7eeda"/><stop offset="1" stop-color="#d8bd84"/>
+</radialGradient>
+<linearGradient id="cloak-aasimar" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#3f3c4c"/><stop offset="1" stop-color="#22212c"/>
+</linearGradient>
+<radialGradient id="vig-aasimar" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-aasimar)"/>
+<circle cx="200" cy="176" r="128" fill="#fff6dd" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-aasimar)"/>
+<path d="M176 233 h48 v60 h-48 Z" fill="#88735a"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#d3c193" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#fff6dd" opacity=".85"/>
+<path d="M142 176 C 142 104 168 88 200 88 C 232 88 258 104 258 176 C 272 210 274 270 266 300 L 214 300 C 226 256 232 202 232 150 C 232 122 212 112 200 112 C 188 112 168 122 168 150 C 168 202 174 256 186 300 L 134 300 C 126 270 128 210 142 176 Z" fill="#d3c193"/><path d="M144 76 a 56 19.04 0 1 1 .1 0" fill="none" stroke="#e8c96a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/><path d="M152 76 a 48 16.32 0 1 1 .1 0" fill="none" stroke="#e8c96a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>
+<ellipse cx="200" cy="172" rx="56" ry="73" fill="#dcbb92"/>
+<ellipse cx="223.52" cy="178" rx="32.48" ry="62.78" fill="#88735a" opacity=".16"/>
+<path d="M153 151 Q 174 139 195 141" fill="none" stroke="#a49672" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M153 151 Q 174 139 195 141" fill="none" stroke="#a49672" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="174" cy="178" rx="18" ry="14" fill="#f6dd94" opacity=".28"/><ellipse cx="174" cy="178" rx="13" ry="9" fill="#f6dd94"/><ellipse cx="174" cy="178" rx="6.5" ry="4.5" fill="#fffbe8" opacity=".8"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="178" rx="18" ry="14" fill="#f6dd94" opacity=".28"/><ellipse cx="174" cy="178" rx="13" ry="9" fill="#f6dd94"/><ellipse cx="174" cy="178" rx="6.5" ry="4.5" fill="#fffbe8" opacity=".8"/></g><path d="M198.5 190 L 195.2 207 Q 200 212 205.6 205" fill="none" stroke="#4a3f31" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M178 232 Q 200 235 222 232" fill="none" stroke="#4a3f31" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<ellipse cx="143" cy="184" rx="11" ry="16" fill="#dcbb92"/><path d="M145 178 q -4 6 0 12" fill="none" stroke="#4a3f31" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="143" cy="184" rx="11" ry="16" fill="#dcbb92"/><path d="M145 178 q -4 6 0 12" fill="none" stroke="#4a3f31" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/></g><path d="M143 156 C 143 108 169 92 200 92 C 231 92 257 108 257 156 C 251 128 229 116 200 116 C 171 116 149 128 143 156 Z" fill="#d3c193"/><path d="M156 208 q 8 10 0 20" fill="none" stroke="#e8c96a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M244 208 q -8 10 0 20" fill="none" stroke="#e8c96a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M200 142 l 0 -14" fill="none" stroke="#e8c96a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+<rect width="400" height="400" fill="url(#vig-aasimar)"/>
+</svg>

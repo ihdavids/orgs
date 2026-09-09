@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of an elf">
+<title>an elf</title>
+<defs>
+<radialGradient id="bg-elf" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#e6efdd"/><stop offset="1" stop-color="#a9bf9a"/>
+</radialGradient>
+<linearGradient id="cloak-elf" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#3e4a3c"/><stop offset="1" stop-color="#232b22"/>
+</linearGradient>
+<radialGradient id="vig-elf" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-elf)"/>
+<circle cx="200" cy="176" r="128" fill="#f0f3e6" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-elf)"/>
+<path d="M176 232 h48 v60 h-48 Z" fill="#7a6851"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#6b552f" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#f0f3e6" opacity=".85"/>
+<path d="M142 176 C 142 104 168 88 200 88 C 232 88 258 104 258 176 C 272 228 274 288 266 318 L 214 318 C 226 274 232 202 232 150 C 232 122 212 112 200 112 C 188 112 168 122 168 150 C 168 202 174 274 186 318 L 134 318 C 126 288 128 228 142 176 Z" fill="#6b552f"/>
+<ellipse cx="200" cy="168" rx="52" ry="76" fill="#c6a884"/>
+<ellipse cx="221.84" cy="174" rx="30.16" ry="65.36" fill="#7a6851" opacity=".16"/>
+<path d="M153 150 Q 175 138 197 134" fill="none" stroke="#43392c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M153 150 Q 175 138 197 134" fill="none" stroke="#43392c" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="175" cy="174" rx="14" ry="8.5" fill="#f6efdd"/><circle cx="175" cy="174" r="7.6" fill="#3f6f5e"/><circle cx="175" cy="174" r="4.6" fill="#43392c"/><path d="M160 173 Q 175 162 190 173" fill="none" stroke="#43392c" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="172.4" cy="170.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="175" cy="174" rx="14" ry="8.5" fill="#f6efdd"/><circle cx="175" cy="174" r="7.6" fill="#3f6f5e"/><circle cx="175" cy="174" r="4.6" fill="#43392c"/><path d="M160 173 Q 175 162 190 173" fill="none" stroke="#43392c" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="172.4" cy="170.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198.5 188 L 195.8 205 Q 200 210 204.9 203" fill="none" stroke="#43392c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M180 230 Q 200 233 220 230" fill="none" stroke="#43392c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M156 158 L 106 116 L 154 190 Z" fill="#c6a884"/><path d="M150 174 L 115 128" fill="none" stroke="#43392c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M156 158 L 106 116 L 154 190 Z" fill="#c6a884"/><path d="M150 174 L 115 128" fill="none" stroke="#43392c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g><path d="M144 150 C 144 106 170 90 200 90 C 230 90 256 106 256 150 C 250 124 228 112 200 112 C 172 112 150 124 144 150 Z" fill="#6b552f"/>
+<rect width="400" height="400" fill="url(#vig-elf)"/>
+</svg>

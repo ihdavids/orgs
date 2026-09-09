@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a dragonborn">
+<title>a dragonborn</title>
+<defs>
+<radialGradient id="bg-dragonborn" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#f0dfc0"/><stop offset="1" stop-color="#c08a4c"/>
+</radialGradient>
+<linearGradient id="cloak-dragonborn" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#4a3524"/><stop offset="1" stop-color="#2a1d13"/>
+</linearGradient>
+<radialGradient id="vig-dragonborn" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-dragonborn)"/>
+<circle cx="200" cy="176" r="128" fill="#f3e2c4" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-dragonborn)"/>
+<path d="M176 226 h48 v60 h-48 Z" fill="#72491d"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#5e3a1c" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#f3e2c4" opacity=".85"/>
+<path d="M158 132 C 128 126 96 108 80 70 C 104 72 136 92 152 110 C 160 118 164 126 168 130 Z" fill="#5e3a1c"/><path d="M158 132 C 128 126 96 108 80 70 C 104 72 136 92 152 110 C 160 118 164 126 168 130 " fill="none" stroke="#f3e2c4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M158 132 C 128 126 96 108 80 70 C 104 72 136 92 152 110 C 160 118 164 126 168 130 Z" fill="#5e3a1c"/><path d="M158 132 C 128 126 96 108 80 70 C 104 72 136 92 152 110 C 160 118 164 126 168 130 " fill="none" stroke="#f3e2c4" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g>
+<ellipse cx="200" cy="166" rx="57" ry="72" fill="#b8762f"/>
+<ellipse cx="223.94" cy="172" rx="33.06" ry="61.92" fill="#72491d" opacity=".16"/>
+<path d="M152 147 Q 174 150 196 157" fill="none" stroke="#72491d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/><g transform="translate(400,0) scale(-1,1)"><path d="M152 147 Q 174 150 196 157" fill="none" stroke="#72491d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/></g><ellipse cx="173" cy="180" rx="13" ry="8.5" fill="#f2d79a"/><circle cx="173" cy="180" r="7.6" fill="#b8541c"/><ellipse cx="173" cy="180" rx="2.3" ry="7.448" fill="#3e280f"/><path d="M159 179 Q 173 168 187 179" fill="none" stroke="#3e280f" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170.4" cy="176.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="173" cy="180" rx="13" ry="8.5" fill="#f2d79a"/><circle cx="173" cy="180" r="7.6" fill="#b8541c"/><ellipse cx="173" cy="180" rx="2.3" ry="7.448" fill="#3e280f"/><path d="M159 179 Q 173 168 187 179" fill="none" stroke="#3e280f" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170.4" cy="176.8" r="2" fill="#ffffff" opacity=".85"/></g>
+<path d="M163 124 q 11 -13 22 0" fill="none" stroke="#72491d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M189 114 q 11 -13 22 0" fill="none" stroke="#72491d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M215 124 q 11 -13 22 0" fill="none" stroke="#72491d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M147 152 q 11 -13 22 0" fill="none" stroke="#72491d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M231 152 q 11 -13 22 0" fill="none" stroke="#72491d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><ellipse cx="200" cy="222" rx="46" ry="36" fill="#b8762f"/><path d="M162 230 Q 200 244 238 230" fill="none" stroke="#3e280f" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><circle cx="187" cy="210" r="5" fill="#72491d" opacity=".75"/><g transform="translate(400,0) scale(-1,1)"><circle cx="187" cy="210" r="5" fill="#72491d" opacity=".75"/></g><path d="M160 220 q 10 -8 20 -2" fill="none" stroke="#72491d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/><g transform="translate(400,0) scale(-1,1)"><path d="M160 220 q 10 -8 20 -2" fill="none" stroke="#72491d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/></g><path d="M148 200 L 128 214 L 148 224 Z" fill="#b8762f"/><g transform="translate(400,0) scale(-1,1)"><path d="M148 200 L 128 214 L 148 224 Z" fill="#b8762f"/></g>
+<rect width="400" height="400" fill="url(#vig-dragonborn)"/>
+</svg>

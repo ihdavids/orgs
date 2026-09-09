@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a triton">
+<title>a triton</title>
+<defs>
+<radialGradient id="bg-triton" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#dceaea"/><stop offset="1" stop-color="#7fa8ab"/>
+</radialGradient>
+<linearGradient id="cloak-triton" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#274347"/><stop offset="1" stop-color="#152528"/>
+</linearGradient>
+<radialGradient id="vig-triton" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-triton)"/>
+<circle cx="200" cy="176" r="128" fill="#e6f4f2" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-triton)"/>
+<path d="M176 231 h48 v60 h-48 Z" fill="#446664"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#2f6d73" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#e6f4f2" opacity=".85"/>
+<path d="M154 160 C 128 142 108 150 104 172 C 118 182 134 194 154 192 Z" fill="#3f8489"/><path d="M150 168 L 114 158" fill="none" stroke="#253837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="M150 177 L 119 171" fill="none" stroke="#253837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="M150 186 L 124 184" fill="none" stroke="#253837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M154 160 C 128 142 108 150 104 172 C 118 182 134 194 154 192 Z" fill="#3f8489"/><path d="M150 168 L 114 158" fill="none" stroke="#253837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="M150 177 L 119 171" fill="none" stroke="#253837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="M150 186 L 124 184" fill="none" stroke="#253837" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g><path d="M200 88 C 214 106 218 130 214 150 L 186 150 C 182 130 186 106 200 88 Z" fill="#3f8489"/>
+<ellipse cx="200" cy="170" rx="55" ry="73" fill="#6fa5a2"/>
+<ellipse cx="223.1" cy="176" rx="31.9" ry="62.78" fill="#446664" opacity=".16"/>
+<path d="M153 144 Q 174 141 195 152" fill="none" stroke="#426361" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M153 144 Q 174 141 195 152" fill="none" stroke="#426361" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="174" cy="178" rx="13.5" ry="9" fill="#e6f4f2"/><circle cx="174" cy="178" r="7.6" fill="#1f4f7a"/><circle cx="174" cy="178" r="4.6" fill="#253837"/><path d="M159.5 177 Q 174 165.5 188.5 177" fill="none" stroke="#253837" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="174.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="178" rx="13.5" ry="9" fill="#e6f4f2"/><circle cx="174" cy="178" r="7.6" fill="#1f4f7a"/><circle cx="174" cy="178" r="4.6" fill="#253837"/><path d="M159.5 177 Q 174 165.5 188.5 177" fill="none" stroke="#253837" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="174.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198.5 190 L 195.8 207 Q 200 212 204.9 205" fill="none" stroke="#253837" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M178 232 Q 200 235 222 232" fill="none" stroke="#253837" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M164 268 q 8 5 0 10" fill="none" stroke="#253837" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M173 270 q 8 5 0 10" fill="none" stroke="#253837" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M182 272 q 8 5 0 10" fill="none" stroke="#253837" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><g transform="translate(400,0) scale(-1,1)"><path d="M164 268 q 8 5 0 10" fill="none" stroke="#253837" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M173 270 q 8 5 0 10" fill="none" stroke="#253837" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M182 272 q 8 5 0 10" fill="none" stroke="#253837" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></g><path d="M170 132 q 30 -14 60 0" fill="none" stroke="#2f6d73" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/>
+<rect width="400" height="400" fill="url(#vig-triton)"/>
+</svg>

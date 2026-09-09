@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a dwarf">
+<title>a dwarf</title>
+<defs>
+<radialGradient id="bg-dwarf" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#f0e0c6"/><stop offset="1" stop-color="#bf9f75"/>
+</radialGradient>
+<linearGradient id="cloak-dwarf" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#4a3a2c"/><stop offset="1" stop-color="#291f16"/>
+</linearGradient>
+<radialGradient id="vig-dwarf" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-dwarf)"/>
+<circle cx="200" cy="176" r="128" fill="#f2e6cf" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-dwarf)"/>
+<path d="M176 224 h48 v60 h-48 Z" fill="#775941"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#8a4f21" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#f2e6cf" opacity=".85"/>
+<ellipse cx="200" cy="166" rx="64" ry="70" fill="#c0906a"/>
+<ellipse cx="226.88" cy="172" rx="37.12" ry="60.2" fill="#775941" opacity=".16"/>
+<path d="M148 144 Q 173 139 198 140" fill="none" stroke="#8a4f21" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M148 144 Q 173 139 198 140" fill="none" stroke="#8a4f21" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="173" cy="176" rx="13" ry="8.5" fill="#f6efdd"/><circle cx="173" cy="176" r="7.6" fill="#4a6b8a"/><circle cx="173" cy="176" r="4.6" fill="#413024"/><path d="M159 175 Q 173 164 187 175" fill="none" stroke="#413024" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170.4" cy="172.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="173" cy="176" rx="13" ry="8.5" fill="#f6efdd"/><circle cx="173" cy="176" r="7.6" fill="#4a6b8a"/><circle cx="173" cy="176" r="4.6" fill="#413024"/><path d="M159 175 Q 173 164 187 175" fill="none" stroke="#413024" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170.4" cy="172.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198 182.8 L 190 204.8 Q 200 211.84 210 204.8" fill="none" stroke="#413024" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><circle cx="192.5" cy="203.7" r="2.6" fill="#413024" opacity=".55"/><g transform="translate(400,0) scale(-1,1)"><circle cx="192.5" cy="203.7" r="2.6" fill="#413024" opacity=".55"/></g>
+<path d="M134 164 C 134 102 160 86 200 86 C 240 86 266 102 266 164 C 260 122 238 110 200 110 C 162 110 140 122 134 164 Z" fill="#8a4f21"/><ellipse cx="136" cy="180" rx="11" ry="16" fill="#c0906a"/><path d="M138 174 q -4 6 0 12" fill="none" stroke="#413024" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="136" cy="180" rx="11" ry="16" fill="#c0906a"/><path d="M138 174 q -4 6 0 12" fill="none" stroke="#413024" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/></g><path d="M124 182 C 124 250 140 334 200 334 C 260 334 276 250 276 182 C 276 214 260 226 200 226 C 140 226 124 214 124 182 Z" fill="#8a4f21"/><g><ellipse cx="140" cy="254" rx="13" ry="17" fill="#8a4f21"/><ellipse cx="137" cy="283" rx="11" ry="15" fill="#8a4f21"/><ellipse cx="134" cy="312" rx="9" ry="13" fill="#8a4f21"/></g><g transform="translate(400,0) scale(-1,1)"><g><ellipse cx="140" cy="254" rx="13" ry="17" fill="#8a4f21"/><ellipse cx="137" cy="283" rx="11" ry="15" fill="#8a4f21"/><ellipse cx="134" cy="312" rx="9" ry="13" fill="#8a4f21"/></g></g><path d="M200 212 C 188 206 162 210 158 226 C 170 224 188 222 200 220 Z" fill="#76431c"/><g transform="translate(400,0) scale(-1,1)"><path d="M200 212 C 188 206 162 210 158 226 C 170 224 188 222 200 220 Z" fill="#76431c"/></g>
+<rect width="400" height="400" fill="url(#vig-dwarf)"/>
+</svg>

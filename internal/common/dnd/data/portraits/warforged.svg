@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a warforged">
+<title>a warforged</title>
+<defs>
+<radialGradient id="bg-warforged" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#e7e2d4"/><stop offset="1" stop-color="#9a9077"/>
+</radialGradient>
+<linearGradient id="cloak-warforged" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#413b31"/><stop offset="1" stop-color="#23201a"/>
+</linearGradient>
+<radialGradient id="vig-warforged" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-warforged)"/>
+<circle cx="200" cy="176" r="128" fill="#efe9da" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-warforged)"/>
+<path d="M176 230 h48 v60 h-48 Z" fill="#58544b"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#5d5749" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#efe9da" opacity=".85"/>
+<path d="M200 92 L 214 112 L 210 152 L 190 152 L 186 112 Z" fill="#6d6757"/>
+<ellipse cx="200" cy="170" rx="57" ry="72" fill="#8e8879"/>
+<ellipse cx="223.94" cy="176" rx="33.06" ry="61.92" fill="#58544b" opacity=".16"/>
+<path d="M150 168 L 250 168 L 246 190 L 154 190 Z" fill="#3a352c"/><ellipse cx="175" cy="179" rx="16" ry="11.5" fill="#5fc2c8" opacity=".28"/><ellipse cx="175" cy="179" rx="11" ry="6.5" fill="#5fc2c8"/><ellipse cx="175" cy="179" rx="5.5" ry="3.25" fill="#fffbe8" opacity=".8"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="175" cy="179" rx="16" ry="11.5" fill="#5fc2c8" opacity=".28"/><ellipse cx="175" cy="179" rx="11" ry="6.5" fill="#5fc2c8"/><ellipse cx="175" cy="179" rx="5.5" ry="3.25" fill="#fffbe8" opacity=".8"/></g><path d="M172 216 L 228 216" fill="none" stroke="#4a453a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M143 148 C 160 138 240 138 257 148" fill="none" stroke="#4a453a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><path d="M148 214 C 170 224 230 224 252 214" fill="none" stroke="#4a453a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><path d="M200 236 L 200 262" fill="none" stroke="#4a453a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><path d="M160 250 C 180 262 220 262 240 250" fill="none" stroke="#4a453a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".65"/><path d="M142 168 L 128 178 L 142 200 Z" fill="#6d6757"/><g transform="translate(400,0) scale(-1,1)"><path d="M142 168 L 128 178 L 142 200 Z" fill="#6d6757"/></g><path d="M176 240 L 224 240 L 220 258 L 180 258 Z" fill="#6d6757"/>
+<rect width="400" height="400" fill="url(#vig-warforged)"/>
+</svg>

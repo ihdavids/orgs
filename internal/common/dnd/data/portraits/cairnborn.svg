@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a cairnborn">
+<title>a cairnborn</title>
+<defs>
+<radialGradient id="bg-cairnborn" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#e3e2dd"/><stop offset="1" stop-color="#8f9089"/>
+</radialGradient>
+<linearGradient id="cloak-cairnborn" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#38393a"/><stop offset="1" stop-color="#1e1f20"/>
+</linearGradient>
+<radialGradient id="vig-cairnborn" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-cairnborn)"/>
+<circle cx="200" cy="176" r="128" fill="#e9eae3" opacity=".22"/>
+<path d="M74 344 C 68 186 126 58 200 58 C 274 58 332 186 326 344 Z" fill="#33342f"/><path d="M132 308 C 128 200 158 112 200 112 C 242 112 272 200 268 308 C 244 292 156 292 132 308 Z" fill="#42443c"/><path d="M132 304 C 128 200 158 112 200 112 C 242 112 272 200 268 304" fill="none" stroke="#6d6f62" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M98 320 C 92 188 134 82 200 82 C 266 82 308 188 302 320" fill="none" stroke="#6d6f62" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".28"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-cairnborn)"/>
+<path d="M176 238 h48 v60 h-48 Z" fill="#656860"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#4a4b45" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#e9eae3" opacity=".85"/>
+<ellipse cx="200" cy="182" rx="55" ry="68" fill="#a3a89c"/>
+<ellipse cx="223.1" cy="188" rx="31.9" ry="58.48" fill="#656860" opacity=".16"/>
+<path d="M151 156 Q 174 156 197 160" fill="none" stroke="#4a4b45" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M151 156 Q 174 156 197 160" fill="none" stroke="#4a4b45" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="174" cy="190" rx="18" ry="14" fill="#6a6f63" opacity=".4"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="190" rx="18" ry="14" fill="#6a6f63" opacity=".4"/></g><ellipse cx="174" cy="190" rx="12" ry="8" fill="#d9dbd2"/><circle cx="174" cy="190" r="7.6" fill="#7f8a6a"/><circle cx="174" cy="190" r="4.6" fill="#373935"/><path d="M161 189 Q 174 178.5 187 189" fill="none" stroke="#373935" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="186.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="190" rx="12" ry="8" fill="#d9dbd2"/><circle cx="174" cy="190" r="7.6" fill="#7f8a6a"/><circle cx="174" cy="190" r="4.6" fill="#373935"/><path d="M161 189 Q 174 178.5 187 189" fill="none" stroke="#373935" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="186.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198.5 202 L 195.2 219 Q 200 224 205.6 217" fill="none" stroke="#373935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M178 242 Q 200 245 222 242" fill="none" stroke="#373935" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M142 156 C 160 134 240 134 258 156 C 250 168 150 168 142 156 Z" fill="#373935" opacity=".28"/><circle cx="160" cy="214" r="6" fill="#6d7a58" opacity=".3"/><circle cx="240" cy="218" r="6" fill="#6d7a58" opacity=".3"/>
+<rect width="400" height="400" fill="url(#vig-cairnborn)"/>
+</svg>

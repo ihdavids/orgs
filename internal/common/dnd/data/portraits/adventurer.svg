@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of an adventurer">
+<title>an adventurer</title>
+<defs>
+<radialGradient id="bg-adventurer" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#ece3d2"/><stop offset="1" stop-color="#a3968a"/>
+</radialGradient>
+<linearGradient id="cloak-adventurer" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#443c33"/><stop offset="1" stop-color="#26211b"/>
+</linearGradient>
+<radialGradient id="vig-adventurer" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-adventurer)"/>
+<circle cx="200" cy="176" r="128" fill="#efe8db" opacity=".22"/>
+<path d="M74 344 C 68 186 126 58 200 58 C 274 58 332 186 326 344 Z" fill="#2f2820"/><path d="M132 308 C 128 200 158 112 200 112 C 242 112 272 200 268 308 C 244 292 156 292 132 308 Z" fill="#453a2d"/><path d="M132 304 C 128 200 158 112 200 112 C 242 112 272 200 268 304" fill="none" stroke="#7a6547" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M98 320 C 92 188 134 82 200 82 C 266 82 308 188 302 320" fill="none" stroke="#7a6547" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".28"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-adventurer)"/>
+<path d="M176 238 h48 v60 h-48 Z" fill="#5f4e3a"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#2f2820" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#efe8db" opacity=".85"/>
+<ellipse cx="200" cy="182" rx="54" ry="68" fill="#9a7f5f"/>
+<ellipse cx="222.68" cy="188" rx="31.32" ry="58.48" fill="#5f4e3a" opacity=".16"/>
+<path d="M155 165 Q 175 153 195 155" fill="none" stroke="#342b20" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M155 165 Q 175 153 195 155" fill="none" stroke="#342b20" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="175" cy="190" rx="12.5" ry="9" fill="#f6efdd"/><circle cx="175" cy="190" r="7.6" fill="#5a4a33"/><circle cx="175" cy="190" r="4.6" fill="#342b20"/><path d="M161.5 189 Q 175 177.5 188.5 189" fill="none" stroke="#342b20" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="172.4" cy="186.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="175" cy="190" rx="12.5" ry="9" fill="#f6efdd"/><circle cx="175" cy="190" r="7.6" fill="#5a4a33"/><circle cx="175" cy="190" r="4.6" fill="#342b20"/><path d="M161.5 189 Q 175 177.5 188.5 189" fill="none" stroke="#342b20" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="172.4" cy="186.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198.5 202 L 195.2 219 Q 200 224 205.6 217" fill="none" stroke="#342b20" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M179 240 Q 200 243 221 240" fill="none" stroke="#342b20" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M142 158 C 160 136 240 136 258 158 C 250 170 150 170 142 158 Z" fill="#342b20" opacity=".28"/>
+<rect width="400" height="400" fill="url(#vig-adventurer)"/>
+</svg>

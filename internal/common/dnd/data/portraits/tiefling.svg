@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a tiefling">
+<title>a tiefling</title>
+<defs>
+<radialGradient id="bg-tiefling" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#f0d9d3"/><stop offset="1" stop-color="#b8746a"/>
+</radialGradient>
+<linearGradient id="cloak-tiefling" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#43302c"/><stop offset="1" stop-color="#261916"/>
+</linearGradient>
+<radialGradient id="vig-tiefling" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-tiefling)"/>
+<circle cx="200" cy="176" r="128" fill="#f4e0da" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-tiefling)"/>
+<path d="M176 232 h48 v60 h-48 Z" fill="#6d3127"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#2e1a17" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#f4e0da" opacity=".85"/>
+<path d="M160 112 C 126 96 110 58 128 20 C 142 28 138 62 152 84 C 160 96 170 104 176 108 Z" fill="#2e1a17"/><path d="M160 112 C 126 96 110 58 128 20 C 142 28 138 62 152 84 C 160 96 170 104 176 108 " fill="none" stroke="#f4e0da" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M160 112 C 126 96 110 58 128 20 C 142 28 138 62 152 84 C 160 96 170 104 176 108 Z" fill="#2e1a17"/><path d="M160 112 C 126 96 110 58 128 20 C 142 28 138 62 152 84 C 160 96 170 104 176 108 " fill="none" stroke="#f4e0da" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g><path d="M142 176 C 142 104 168 88 200 88 C 232 88 258 104 258 176 C 272 212 274 272 266 302 L 214 302 C 226 258 232 202 232 150 C 232 122 212 112 200 112 C 188 112 168 122 168 150 C 168 202 174 258 186 302 L 134 302 C 126 272 128 212 142 176 Z" fill="#2e1a17"/>
+<ellipse cx="200" cy="170" rx="55" ry="74" fill="#b0503f"/>
+<ellipse cx="223.1" cy="176" rx="31.9" ry="63.64" fill="#6d3127" opacity=".16"/>
+<path d="M152 138 Q 174 141 196 150" fill="none" stroke="#2e1a17" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M152 138 Q 174 141 196 150" fill="none" stroke="#2e1a17" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="174" cy="176" rx="17.5" ry="13.5" fill="#e8a53c" opacity=".28"/><ellipse cx="174" cy="176" rx="12.5" ry="8.5" fill="#e8a53c"/><ellipse cx="174" cy="176" rx="6.25" ry="4.25" fill="#fffbe8" opacity=".8"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="176" rx="17.5" ry="13.5" fill="#e8a53c" opacity=".28"/><ellipse cx="174" cy="176" rx="12.5" ry="8.5" fill="#e8a53c"/><ellipse cx="174" cy="176" rx="6.25" ry="4.25" fill="#fffbe8" opacity=".8"/></g><path d="M198.5 190 L 195.8 207 Q 200 212 204.9 205" fill="none" stroke="#3b1b15" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M179 235 Q 200 228 221 235" fill="none" stroke="#3b1b15" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M153 158 L 119 136 L 151 190 Z" fill="#b0503f"/><path d="M147 174 L 128 148" fill="none" stroke="#3b1b15" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g transform="translate(400,0) scale(-1,1)"><path d="M153 158 L 119 136 L 151 190 Z" fill="#b0503f"/><path d="M147 174 L 128 148" fill="none" stroke="#3b1b15" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/></g><path d="M144 152 C 144 108 170 92 200 92 C 230 92 256 108 256 152 C 250 126 228 114 200 114 C 172 114 150 126 144 152 Z" fill="#2e1a17"/>
+<rect width="400" height="400" fill="url(#vig-tiefling)"/>
+</svg>

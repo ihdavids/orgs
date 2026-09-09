@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a half-orc">
+<title>a half-orc</title>
+<defs>
+<radialGradient id="bg-half-orc" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#e5e8cf"/><stop offset="1" stop-color="#9fae7e"/>
+</radialGradient>
+<linearGradient id="cloak-half-orc" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#3f4530"/><stop offset="1" stop-color="#232719"/>
+</linearGradient>
+<radialGradient id="vig-half-orc" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-half-orc)"/>
+<circle cx="200" cy="176" r="128" fill="#eaf0d8" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-half-orc)"/>
+<path d="M176 232 h48 v60 h-48 Z" fill="#4e5c3b"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#2f3320" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#eaf0d8" opacity=".85"/>
+<ellipse cx="200" cy="172" rx="66" ry="72" fill="#7f9560"/>
+<ellipse cx="227.72" cy="178" rx="38.28" ry="61.92" fill="#4e5c3b" opacity=".16"/>
+<path d="M147 142 Q 173 145 199 150" fill="none" stroke="#2f3320" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M147 142 Q 173 145 199 150" fill="none" stroke="#2f3320" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></g><ellipse cx="172" cy="180" rx="13" ry="8" fill="#f6efdd"/><circle cx="172" cy="180" r="7.6" fill="#8a5a1c"/><circle cx="172" cy="180" r="4.6" fill="#2b3220"/><path d="M158 179 Q 172 168.5 186 179" fill="none" stroke="#2b3220" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="169.4" cy="176.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="172" cy="180" rx="13" ry="8" fill="#f6efdd"/><circle cx="172" cy="180" r="7.6" fill="#8a5a1c"/><circle cx="172" cy="180" r="4.6" fill="#2b3220"/><path d="M158 179 Q 172 168.5 186 179" fill="none" stroke="#2b3220" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="169.4" cy="176.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198 188.8 L 189 210.8 Q 200 217.84 211 210.8" fill="none" stroke="#2b3220" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/><circle cx="191.75" cy="209.7" r="2.6" fill="#2b3220" opacity=".55"/><g transform="translate(400,0) scale(-1,1)"><circle cx="191.75" cy="209.7" r="2.6" fill="#2b3220" opacity=".55"/></g><path d="M173 229 Q 200 222 227 229" fill="none" stroke="#2b3220" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M132 156 C 132 108 158 92 200 92 C 242 92 268 108 268 156 C 262 130 240 118 200 118 C 160 118 138 130 132 156 Z" fill="#2f3320"/><path d="M186 98 C 180 62 190 36 208 22 C 206 54 216 78 228 94 Z" fill="#2f3320"/><ellipse cx="134" cy="182" rx="11" ry="16" fill="#7f9560"/><path d="M136 176 q -4 6 0 12" fill="none" stroke="#2b3220" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="134" cy="182" rx="11" ry="16" fill="#7f9560"/><path d="M136 176 q -4 6 0 12" fill="none" stroke="#2b3220" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".4"/></g><path d="M176 234 L 183 204 L 190 234 Z" fill="#eaf0d8"/><g transform="translate(400,0) scale(-1,1)"><path d="M176 234 L 183 204 L 190 234 Z" fill="#eaf0d8"/></g>
+<rect width="400" height="400" fill="url(#vig-half-orc)"/>
+</svg>
