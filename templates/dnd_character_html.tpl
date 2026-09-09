@@ -892,8 +892,12 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .spell-head { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
 .slot-row { display: flex; align-items: center; gap: 6px; margin: 4px 0 6px; }
 .slot-row .lvl { font-family: Cinzel, serif; font-size: .68rem; color: var(--muted); width: 3.2em; }
-.slot { width: 12px; height: 12px; border: 1px solid var(--muted); border-radius: 3px; background: var(--paper); }
+.slot { width: 12px; height: 12px; border: 1px solid var(--muted); border-radius: 3px; background: var(--paper); flex: 0 0 auto; }
 .slot.used { background: var(--muted); }
+/* With a server behind the sheet a slot is a control: click an empty one to
+   spend it, a spent one to give it back. */
+.slot-row.live .slot { cursor: pointer; }
+.slot-row.live .slot:hover { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(184,134,11,.25); }
 .spell-level { margin-bottom: 12px; }
 .spell-level h3 {
   font-size: .74rem; text-transform: uppercase; color: var(--accent);
@@ -1186,6 +1190,9 @@ footer.sheet-foot {
   border: 1px dashed rgba(184,134,11,.45); border-radius: 6px;
   font-size: .76rem; color: #e8d7ae;
 }
+/* what the cast cost, once the file has been told about it */
+.rc-slot { margin-top: 7px; font-size: .7rem; color: #9d9078; }
+.rc-slot.bad { color: #e5837a; }
 /* the mark that says a line of history is a spell rather than a die */
 .spell-mark {
   display: inline-block; width: 12px; height: 12px;
@@ -1356,6 +1363,8 @@ footer.sheet-foot {
 .dc-actions + .dc-actions { margin-top: 7px; }
 /* the two rests get a row to themselves, split evenly */
 .dc-rest .dt-btn { flex: 1; }
+/* so does printing, which is the width of the panel and nothing else */
+.dc-print .dt-btn { flex: 1; }
 .dc-roll {
   flex: 1; min-width: 5.4em;
   padding: 8px 0;
@@ -1691,7 +1700,16 @@ footer.sheet-foot {
 }
 
 @media print {
-  body { background: #fff; }
+  /* the margin an ordinary desktop printer can reach, whatever the paper */
+  @page { margin: 0.45in; }
+  /* Paper has no scrollbar to make up for a size that does not quite fit, so
+     the whole sheet is set one step down. Everything measured in rem follows
+     the root size, and the lines per page that buys back are the point. */
+  html { font-size: 14px; }
+  body { background: #fff; font-size: 12.6px; line-height: 1.38; }
+  /* The paper is already the colour the sheet paints on, so the wash and the
+     two gradients over it are a whole page of toner spent on nothing. */
+  .page { background: #fff; background-image: none; }
   #dice-canvas, #dice-tray, #dice-tab, #dice-dock,
   #notes-drawer, #notes-tab { display: none !important; }
   .rollable {
@@ -1699,15 +1717,80 @@ footer.sheet-foot {
     box-shadow: none !important;
     background: none !important;
   }
-  .page { box-shadow: none; max-width: none; padding: 0; display: block; }
+  .page {
+    box-shadow: none; max-width: none; padding: 0;
+    display: block; min-height: 0;
+  }
   .scroller { max-height: none; overflow: visible; }
-  .box { break-inside: avoid; }
+
+  /* ---- the header, one band instead of two ----
+     On screen the facts wrap under the name because there is width above
+     them going spare. On paper that wrap costs the better part of an inch at
+     the top of page one, so the medallion comes down a size and the facts
+     sit beside the name, where they now fit. */
+  header.sheet-head {
+    flex-wrap: nowrap; align-items: center;
+    gap: 12px; padding-bottom: 8px; margin-bottom: 12px;
+  }
+  .portrait { width: 130px; height: 130px; filter: none; }
+  .name-block { flex: 1 1 auto; }
+  .char-name { font-size: 2rem; }
+  .has-portrait .char-title { font-size: 1.3rem; }
+  .char-sub { font-size: .88rem; }
+  .head-facts { flex: 0 1 auto; gap: 6px; justify-content: flex-end; }
+  .fact { min-width: 0; padding: 3px 9px; box-shadow: none; }
+  .insp-btn { padding: 3px 9px; }
+  .fact .value { font-size: .95rem; }
+
+  /* ---- the columns, poured rather than laid out ----
+     On screen the three columns are a grid, and each column is one grid item.
+     Paper cannot break a single item without breaking the whole row it sits
+     in, so the grid printed as it stands empties the rest of every page the
+     moment one column runs out - which is why the sheet used to come off the
+     printer as a stack of half blank pages. Poured down a multi-column flow
+     instead, the boxes fill column one to the foot of the page, then column
+     two, then carry on to the next page, and a page is only short of content
+     when the sheet is.
+
+     Two columns, pinned rather than left to the screen breakpoints: the
+     printable width lands either side of the 700px one depending on the
+     paper, and a sheet that comes out in one column on A4 and two on letter
+     is no use. */
+  .columns { display: block; columns: 2; column-gap: 14px; }
+  /* The boxes are what flows now, so the columns they were sorted into stand
+     out of the way. Their flex gap goes with them, hence the box margin. */
+  .col { display: contents; }
+  .box {
+    margin: 0 0 9px; padding: 7px 9px 8px;
+    box-shadow: none; break-inside: avoid;
+  }
+  .box > h2, .box.tabbed > .tabpane > h2 {
+    margin-bottom: 6px; padding-bottom: 4px; break-after: avoid;
+  }
   /* Paper has no empty bottom half to fill and nothing to scroll, so the
      boxes that grow on screen go back to being as tall as their contents. */
-  .columns { display: grid; align-items: start; }
   .box.grow, .box.grow.has-tabs > .tabpane.on {
     display: block; min-height: 0; overflow: visible;
   }
+  /* These two are the long ones, and a panel that runs for three pages stops
+     being a panel: it is just a tinted page, and an expensive one. They give
+     up their frame and set on the paper instead, which leaves the tint to the
+     short blocks it still means something on. */
+  .box.grow {
+    background: none; border: 0; box-shadow: none; padding: 0; margin-bottom: 0;
+  }
+  .box.grow > .tabpane { margin-bottom: 11px; }
+  /* A box that fits in a column is kept whole. The long ones - spells,
+     features, the inventory - are taller than any page and have to break
+     somewhere, so they are let break at their own seams instead: between one
+     feature and the next, one spell and the next, one row and the next. */
+  .box.tabbed, .box.tabbed > .tabpane, .scroller, .inv-pane, .spell-level,
+  .rows, table { break-inside: auto; }
+  .feature, details.spell, .slot-row, .rows > .row, tr, .atk-row, .coin-row {
+    break-inside: avoid;
+  }
+  .feature h3, .spell-level h3, .inv-pane-name { break-after: avoid; }
+
   /* the inventory prints as every container in turn rather than whichever
      tab happened to be open */
   .coin-spend, .coin-hint, .coin-log,
@@ -1718,7 +1801,7 @@ footer.sheet-foot {
      section it was, heading and all */
   .box.has-tabs > .tabpane { display: block !important; }
   .box.has-tabs > .tabpane > h2 { display: block !important; }
-  .box.has-tabs > .tabpane + .tabpane { margin-top: 14px; }
+  .box.has-tabs > .tabpane + .tabpane { margin-top: 12px; }
   .inv-pane { display: block !important; }
   /* on paper the toggle is just the tick it was showing */
   .wearbtn { border: 0 !important; padding: 0 !important; }
@@ -1728,8 +1811,17 @@ footer.sheet-foot {
     font-size: .68rem; text-transform: uppercase; color: var(--accent);
     margin: 8px 0 2px;
   }
-  details.spell { break-inside: avoid; }
+  /* Browsers drop background colours unless "background graphics" is ticked,
+     and these fills are not decoration: an empty pip means not proficient, a
+     filled one means proficient, and a spent spell slot is a filled box. Ask
+     for them by name so the printed sheet says what the screen one says. */
+  .pip, .slot, .use-pip, .hp-bar, .hp-fill, .def-chip {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   details.spell[open] summary ~ * { display: block; }
+  /* a line left behind on its own at a column foot reads as a mistake */
+  p, .quote { orphans: 2; widows: 2; }
 }
 </style>
 </head>
@@ -2185,8 +2277,11 @@ footer.sheet-foot {
             {% if sheet.preparedMax %} &middot; {{ sheet.spellsPrepared }}/{{ sheet.preparedMax }} prepared{% endif %}
             {% if sheet.spellNotes %} &middot; {{ sheet.spellNotes }}{% endif %}
           </div>
+          <!-- One box per spell slot. Clicking an empty one spends it and
+               clicking a filled one hands it back, both written straight to
+               the org character sheet; casting a spell spends one by itself. -->
           {% for s in sheet.slots %}
-          <div class="slot-row">
+          <div class="slot-row" data-level="{{ s.level }}" data-used="{{ s.used }}">
             <span class="lvl">{{ s.level }}{% if s.level == 1 %}st{% elif s.level == 2 %}nd{% elif s.level == 3 %}rd{% else %}th{% endif %}</span>
             {% for i in s.pips %}<span class="slot{% if i <= s.used %} used{% endif %}"></span>{% endfor %}
             <span class="tagline">{{ s.total }} slot{% if s.total > 1 %}s{% endif %}</span>
@@ -2206,7 +2301,8 @@ footer.sheet-foot {
                      worked out by the rules engine. -->
                 <button type="button" class="cast-btn" data-spell="{{ sp.name }}"
                         data-detail="{{ sp.cast.detail }}" data-line="{{ sp.cast.line }}"
-                        data-short="{{ sp.cast.short }}"
+                        data-short="{{ sp.cast.short }}" data-level="{{ lvl.level }}"
+                        {% if sp.ritual %}data-ritual="1"{% endif %}
                         {% if sp.cast.attack %}data-attack="{{ sp.cast.attackBonus }}"{% endif %}
                         {% if sp.cast.damage %}data-damage="{{ sp.cast.damage }}"
                         data-damage-type="{{ sp.cast.damageType }}"{% endif %}
@@ -2236,7 +2332,9 @@ footer.sheet-foot {
              spell slots are drawn. Clicking one spends a use and writes it to
              the org character sheet; a rest gives them all back. Which
              features have a limit, and how many, the rules engine worked out
-             from each feature's own text. -->
+             from each feature's own text, or off the class level table for
+             the resources printed there rather than written out - rage, ki,
+             sorcery points. -->
         <div class="tabpane">
           <h2>Features &amp; Traits</h2>
           <div class="scroller" id="feature-live">
@@ -3356,6 +3454,12 @@ footer.sheet-foot {
     }
     if (r.line) { out += '<div class="rc-line">' + esc(r.line) + '</div>'; }
     if (r.dice) { out += '<div class="rc-dice">' + esc(r.dice) + '</div>'; }
+    // The slot this cost is struck off the character file while the dice are
+    // in the air, so the answer arrives after the card is first drawn.
+    if (r.slotNote) {
+      out += '<div class="rc-slot' + (r.slotBad ? ' bad' : '') + '">' +
+        esc(r.slotNote) + '</div>';
+    }
     return out + '</div>';
   }
 
@@ -3577,6 +3681,11 @@ footer.sheet-foot {
           'title="Take a long rest: hit points, hit dice, spell slots and ' +
           'every feature">Long rest</button>' +
       '</div>' +
+      '<div class="dc-actions dc-print">' +
+        '<button type="button" class="dt-btn" id="sheet-print" ' +
+          'title="Print this sheet: everything folded away is opened, the ' +
+          'screen furniture goes, and the paper keeps its ink">Print sheet</button>' +
+      '</div>' +
       '<div class="dc-actions">' +
         '<button type="button" class="dt-btn" id="dice-custom-clear">Clear</button>' +
         '<button type="button" class="dt-btn" id="sess-open" ' +
@@ -3622,6 +3731,10 @@ footer.sheet-foot {
       setView('sessions');
       loadSessions();
     });
+    panel.querySelector('#sheet-print').addEventListener('click', function () {
+      setPanel(false);
+      window.print();
+    });
     panel.querySelector('#rest-short').addEventListener('click', function () {
       setPanel(false);
       openRest('short');
@@ -3641,6 +3754,46 @@ footer.sheet-foot {
       if (e.key === 'Enter') { e.preventDefault(); customRoll(); }
     });
     syncPool();
+  }
+
+  // ------------------------------------------------------------- printing
+  // On screen a spell description is a fold you click open; paper has nothing
+  // to click, so every fold is opened for the length of the print and shut
+  // again afterwards. The layout itself is the sheet's own @media print rules
+  // - this only opens what they cannot reach, because a closed <details> has
+  // no printable content at all. It hangs off the print events rather than
+  // the button so that the browser's own print command gets it too, and it is
+  // guarded because a browser may give us both the event and the media query.
+  var printFolds = [];
+  var printing = false;
+
+  function openForPrint() {
+    if (printing) { return; }
+    printing = true;
+    printFolds = [];
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.page details'), function (d) {
+        if (!d.open) { printFolds.push(d); d.open = true; }
+      });
+  }
+
+  function closeAfterPrint() {
+    if (!printing) { return; }
+    printing = false;
+    printFolds.forEach(function (d) { d.open = false; });
+    printFolds = [];
+  }
+
+  function watchPrinting() {
+    window.addEventListener('beforeprint', openForPrint);
+    window.addEventListener('afterprint', closeAfterPrint);
+    if (!window.matchMedia) { return; }
+    var mq = window.matchMedia('print');
+    var onChange = function (e) {
+      if (e.matches) { openForPrint(); } else { closeAfterPrint(); }
+    };
+    if (mq.addEventListener) { mq.addEventListener('change', onChange); }
+    else if (mq.addListener) { mq.addListener(onChange); }
   }
 
   // ------------------------------------------------------------ rolling it
@@ -3770,6 +3923,18 @@ footer.sheet-foot {
     } else if (board) {
       // A spell that rolls nothing still clears the table.
       board.stop();
+    }
+    return result;
+  }
+
+  // The slot answer comes back after the dice have landed. While the cast is
+  // still the roll on the card, the card is drawn again to say what it cost.
+  function noteCastSlot(result, msg, bad) {
+    if (!result || !msg) { return; }
+    result.slotNote = msg;
+    result.slotBad = !!bad;
+    if (history[0] === result && latestEl) {
+      latestEl.innerHTML = latestCard(result);
     }
   }
 
@@ -6406,6 +6571,140 @@ footer.sheet-foot {
     });
   }
 
+  // ---------------------------------------------------------- spell slots
+  //
+  // Casting a spell of 1st level or higher costs a slot, and the slot is
+  // struck off the org character sheet as the dice are rolled. The server
+  // decides which one it comes out of: a spell may always be cast from a
+  // higher slot, so when its own level is empty the cast reaches upward and
+  // says where it landed.
+  //
+  // The pips are also a control in their own right. A spell cast from a
+  // scroll or a ring costs nothing, and a cast the table decides never
+  // happened can be given back, so clicking an empty pip spends a slot and
+  // clicking a spent one hands it back.
+  var sbMsgTimer = null;
+
+  // Writing needs a server to write to as well as a file to write into.
+  function sbCanWrite() { return !!(LOG.url && sbConfigured()); }
+
+  // sbSay puts a line beside the budgets and takes it away again, so the
+  // last cast is visible without the sheet keeping a running commentary.
+  function sbSay(msg, err) {
+    SB.msg = err ? '' : (msg || '');
+    SB.error = err ? msg : '';
+    sbPaintBudgets();
+    if (sbMsgTimer) { clearTimeout(sbMsgTimer); sbMsgTimer = null; }
+    if (!msg) { return; }
+    sbMsgTimer = setTimeout(function () {
+      SB.msg = '';
+      SB.error = '';
+      sbPaintBudgets();
+    }, 6000);
+  }
+
+  // Only the pips moved, so only the pips are repainted: a full redraw would
+  // fold shut whatever spell was open on the table at the time.
+  function sbPaintSlots() {
+    var book = sbBook();
+    if (!sbLive || !book) { return; }
+    var rows = sbLive.querySelectorAll('.slot-row');
+    if (!rows.length) { renderSpells(); return; }
+    (book.slots || []).forEach(function (s) {
+      var row = sbLive.querySelector('.slot-row[data-level="' + s.level + '"]');
+      if (!row) { return; }
+      var pips = row.querySelectorAll('.slot');
+      if (pips.length !== s.total) { renderSpells(); return; }
+      row.setAttribute('data-used', s.used);
+      Array.prototype.forEach.call(pips, function (pip, i) {
+        pip.classList.toggle('used', i < s.used);
+      });
+    });
+  }
+
+  // sbSlotPips moves the pips of one row before the server has answered, so a
+  // cast feels immediate on a slow link. What comes back puts it right.
+  function sbSlotPips(row, used) {
+    var pips = row.querySelectorAll('.slot');
+    Array.prototype.forEach.call(pips, function (pip, i) {
+      pip.classList.toggle('used', i < used);
+    });
+    row.setAttribute('data-used', used);
+  }
+
+  // note, when given, is told what the server said, so a cast can put it on
+  // the card the dice landed on as well as beside the budgets.
+  function sbSlotChange(action, level, spell, note) {
+    if (!sbCanWrite()) {
+      var why = LOG.url
+        ? 'this sheet does not know which org file it came from'
+        : 'set your orgs server address in the session panel first';
+      sbSay(why, true);
+      if (note) { note(why, true); }
+      return Promise.resolve(null);
+    }
+    return api('POST', '/dnd/slots',
+               sbWho({ action: action, level: level, spell: spell || '' }))
+      .then(function (state) {
+        SB.state = state;
+        sbPaintSlots();
+        sbSay(state.msg || '');
+        if (note) { note(sbSlotNote(state), false); }
+        return state;
+      }, function (err) {
+        // The file did not move, so neither should the pips.
+        sbPaintSlots();
+        var msg = err.message || String(err);
+        sbSay(msg, true);
+        if (note) { note(msg, true); }
+        return null;
+      });
+  }
+
+  // What the cast cost, in the few words the roll card has room for.
+  function sbSlotNote(state) {
+    var slot = state && state.slot;
+    if (!slot) { return ''; }
+    var lvl = slot.label || slot.level;
+    return (slot.up ? 'Cast at ' + lvl + ' level. ' : '') +
+      lvl + ' level slots: ' + slot.left + ' of ' + slot.total + ' left';
+  }
+
+  // castSlot is called once the dice are on the table. A cantrip costs
+  // nothing; everything else marks a slot off the file.
+  function castSlot(btn, result) {
+    var level = parseInt(btn.getAttribute('data-level'), 10) || 0;
+    if (level < 1 || !sbCanWrite()) { return; }
+    var ritual = btn.getAttribute('data-ritual') === '1';
+    sbSlotChange('cast', level, btn.getAttribute('data-spell') || '',
+      function (msg, bad) {
+        // A ritual can be cast the slow way for no slot at all, so being out
+        // of slots is not a refusal for one of those - it is the answer.
+        if (bad && ritual) {
+          noteCastSlot(result, 'No slot to spend, so cast as a ritual: ' +
+            '10 minutes longer, and nothing off the sheet.', false);
+          sbSay('cast as a ritual, no slot spent');
+          return;
+        }
+        noteCastSlot(result, msg, bad);
+      });
+  }
+
+  // A click on a pip: past what is spent it spends one, at or below it hands
+  // one back. Unlike a cast this means the level clicked and no other.
+  function sbSlotClick(pip) {
+    var row = pip.closest('.slot-row');
+    if (!row || !sbCanWrite()) { return; }
+    var level = parseInt(row.getAttribute('data-level'), 10) || 0;
+    var was = parseInt(row.getAttribute('data-used'), 10) || 0;
+    var pips = Array.prototype.slice.call(row.querySelectorAll('.slot'));
+    var at = pips.indexOf(pip) + 1;
+    if (!level || at < 1) { return; }
+    var action = at > was ? 'spend' : 'recover';
+    sbSlotPips(row, was + (action === 'spend' ? 1 : -1));
+    sbSlotChange(action, level, '');
+  }
+
   // ------------------------------------------------------- drawing the page
   function sbBudgetHtml(list) {
     if (!list || !list.length) { return ''; }
@@ -6417,12 +6716,16 @@ footer.sheet-foot {
   }
 
   function sbSlotsHtml(slots) {
+    var live = sbCanWrite();
     return (slots || []).map(function (s) {
       var pips = '';
       for (var i = 1; i <= s.total; i++) {
         pips += '<span class="slot' + (i <= s.used ? ' used' : '') + '"></span>';
       }
-      return '<div class="slot-row"><span class="lvl">' + esc(s.label) + '</span>' +
+      return '<div class="slot-row' + (live ? ' live' : '') + '" data-level="' +
+        s.level + '" data-used="' + s.used + '"' +
+        (live ? ' title="Click a slot to spend it, a spent one to give it back"' : '') +
+        '><span class="lvl">' + esc(s.label) + '</span>' +
         pips + '<span class="tagline">' + s.total + ' slot' +
         (s.total > 1 ? 's' : '') + '</span></div>';
     }).join('');
@@ -6442,6 +6745,8 @@ footer.sheet-foot {
         ' data-damage-type="' + esc(c.damageType || '') + '"';
     }
     if (c.heal) { attrs += ' data-heal="' + esc(c.heal) + '"'; }
+    attrs += ' data-level="' + (level || 0) + '"';
+    if (sp.ritual) { attrs += ' data-ritual="1"'; }
     if (c.save) {
       attrs += ' data-save="' + esc(c.saveName || '') + '" data-dc="' + c.saveDc + '"';
     }
@@ -6462,15 +6767,19 @@ footer.sheet-foot {
       '</summary><p>' + body + '</p></details>';
   }
 
+  function sbPaintBudgets() {
+    var book = sbBook();
+    if (!sbBudgets) { return; }
+    sbBudgets.innerHTML = sbBudgetHtml(book && book.allotments) +
+      (SB.busy ? ' <span class="sb-msg">saving&hellip;</span>'
+               : (SB.msg ? ' <span class="sb-msg">' + esc(SB.msg) + '</span>' : '')) +
+      (SB.error ? ' <span class="sb-err">' + esc(SB.error) + '</span>' : '');
+  }
+
   function renderSpells() {
     if (!sbLive) { return; }
     var book = sbBook();
-    if (sbBudgets) {
-      sbBudgets.innerHTML = sbBudgetHtml(book && book.allotments) +
-        (SB.busy ? ' <span class="sb-msg">saving&hellip;</span>'
-                 : (SB.msg ? ' <span class="sb-msg">' + esc(SB.msg) + '</span>' : '')) +
-        (SB.error ? ' <span class="sb-err">' + esc(SB.error) + '</span>' : '');
-    }
+    sbPaintBudgets();
     if (!book) { return; }
     var counts = [];
     (book.allotments || []).forEach(function (a) {
@@ -6700,7 +7009,9 @@ footer.sheet-foot {
     sbRenderTools();
 
     sbBox.addEventListener('click', function (e) {
-      if (e.target.closest('#spell-manage-btn')) { openSpellManager(); }
+      if (e.target.closest('#spell-manage-btn')) { openSpellManager(); return; }
+      var pip = e.target.closest('.slot');
+      if (pip) { sbSlotClick(pip); }
     });
 
     sbModal.addEventListener('click', function (e) {
@@ -7020,8 +7331,12 @@ footer.sheet-foot {
   function restDoneHtml() {
     var r = REST.done, back = [];
     (r.featuresBack || []).forEach(function (f) { back.push(esc(f)); });
-    if (r.diceBack) { back.push(r.diceBack + ' hit dice'); }
-    if (r.slotsBack) { back.push(r.slotsBack + ' spell slots'); }
+    if (r.diceBack) {
+      back.push(r.diceBack + ' hit di' + (r.diceBack === 1 ? 'e' : 'ce'));
+    }
+    if (r.slotsBack) {
+      back.push(r.slotsBack + ' spell slot' + (r.slotsBack === 1 ? '' : 's'));
+    }
     return '<h4>' + esc(r.name) + ' taken</h4>' +
       '<div class="rest-hp"><b>' + r.hpAfter + '</b> of ' + r.hpMax + ' hit points' +
         (r.healed ? ' &middot; ' + r.healed + ' regained' : '') + '</div>' +
@@ -7151,6 +7466,7 @@ footer.sheet-foot {
     board = new DiceBoard(canvas);
     buildTray();
     buildCustomDock();
+    watchPrinting();
     buildSessionLog();
     buildInventoryUi();
     buildCoinUi();
@@ -7175,7 +7491,10 @@ footer.sheet-foot {
         // also fold the spell open or shut.
         e.preventDefault();
         e.stopPropagation();
-        castRoll(castSpecFor(spell), originOf(spell, e));
+        // The dice are the sheet's business and the slot is the file's: the
+        // roll lands here and the slot is struck off over there, and what it
+        // cost is written onto the card once the file says so.
+        castSlot(spell, castRoll(castSpecFor(spell), originOf(spell, e)));
         return;
       }
       var el = e.target.closest('.rollable');

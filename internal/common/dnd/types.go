@@ -86,6 +86,16 @@ type Trait struct {
 	Uses     string `yaml:"uses" json:"uses"`
 	Recharge string `yaml:"recharge" json:"recharge"`
 
+	// UsesByLevel is the other way a limit is written down: a column of the
+	// class level table rather than a sentence. A barbarian's rages, a
+	// monk's ki and a sorcerer's sorcery points are all printed as a column
+	// and never said in the feature's own text, so there is nothing for the
+	// reader in uses.go to find. The slice is indexed by the level the limit
+	// scales against - entry 5 is what a 5th level character has - and a
+	// zero means no limit at that level, which covers both "not yet" and the
+	// 20th level barbarian's unlimited rages.
+	UsesByLevel []int `yaml:"usesByLevel" json:"usesByLevel,omitempty"`
+
 	// UsesMax, UsesSpent and UsesNote are filled in by the engine: what the
 	// formula came to for this character, how many of them the sheet says
 	// are gone, and a short line saying what the limit is. UsesMax of zero

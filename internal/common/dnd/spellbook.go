@@ -74,6 +74,9 @@ type SpellbookState struct {
 	Ruleset  string        `json:"ruleset"`
 	Book     SpellbookView `json:"book"`
 	Msg      string        `json:"msg"`
+	// Slot is filled in when the call spent or handed back a spell slot, so
+	// the sheet can say which level a cast actually came out of.
+	Slot *SlotChange `json:"slot,omitempty"`
 }
 
 // SpellbookView is everything the manage spells panel draws: the budgets, the

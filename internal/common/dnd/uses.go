@@ -10,18 +10,25 @@ package dnd
 // there is no field to read it out of - which is why this file reads it back
 // out of the sentence it was written in.
 //
-// The result is deliberately conservative. A feature whose limit lives in a
-// class table rather than in its text - a barbarian's rages, a monk's ki, a
-// sorcerer's sorcery points - is left with no limit at all rather than given
-// an invented one, and shows on the sheet as the prose it always was. A
-// homebrew module that wants a limit the parser cannot see writes it down:
+// The result is deliberately conservative: a limit the sentence does not
+// actually state is not guessed at. A feature whose limit lives in a class
+// table rather than in its text - a barbarian's rages, a monk's ki, a
+// sorcerer's sorcery points - has nothing here to find, so it says so in the
+// ruleset instead, as the table's own column:
+//
+//	features:
+//	  - name: "Rage"
+//	    usesByLevel: [0, 2, 2, 3, 3, 3, 4, ...]
+//	    recharge: "long"
+//
+// and a limit that is a formula rather than a table writes that:
 //
 //	features:
 //	  - name: "Starfall"
 //	    uses: "1 + cha"
 //	    recharge: "long"
 //
-// which is always believed over anything found in the text.
+// Either is always believed over anything found in the text.
 // ----------------------------------------------------------------------------
 
 import (
@@ -143,11 +150,23 @@ func restKind(clause string) string {
 // at 17th". mods and proficiency are what the formulas are worth for this
 // character.
 //
-// A trait that declares Uses or Recharge itself is taken at its word. A trait
-// that neither declares them nor says anything the parser recognises comes
-// back with a max of zero, which means "no limit worth a row of slots".
+// A trait that declares UsesByLevel, Uses or Recharge itself is taken at its
+// word - a level table in particular is the whole answer, so a level it gives
+// nothing at is nothing, not a cue to go reading the prose. A trait that
+// neither declares them nor says anything the parser recognises comes back
+// with a max of zero, which means "no limit worth a row of slots".
 func DetectUses(t Trait, level int, mods map[string]int, proficiency int) (int, string, string) {
 	max, recharge, note := 0, strings.ToLower(strings.TrimSpace(t.Recharge)), ""
+	// A level table is the whole answer where there is one: it is the count
+	// for every level, including the levels it says the feature has none, so
+	// the prose is not consulted for a number afterwards.
+	if len(t.UsesByLevel) > 0 {
+		max = usesAtLevel(t.UsesByLevel, level)
+		if max > 0 && recharge == "" {
+			_, recharge, _ = detectUsesFromText(t.Name+". "+t.Text, level, mods, proficiency)
+		}
+		return finishUses(max, recharge, "")
+	}
 	if strings.TrimSpace(t.Uses) != "" {
 		max = EvalBonus(t.Uses, mods, proficiency)
 		if max < 1 {
@@ -165,16 +184,39 @@ func DetectUses(t Trait, level int, mods map[string]int, proficiency int) (int, 
 			recharge = readRecharge
 		}
 	}
-	if recharge != RechargeShort && recharge != RechargeLong {
-		recharge = RechargeLong
-	}
+	return finishUses(max, recharge, note)
+}
+
+// finishUses settles the three answers DetectUses gives back: a limit of
+// nothing is no limit at all, an unrecognised recharge is a long rest, and a
+// limit with nothing said about it gets the plainest possible wording.
+func finishUses(max int, recharge, note string) (int, string, string) {
 	if max <= 0 {
 		return 0, "", ""
+	}
+	if recharge != RechargeShort && recharge != RechargeLong {
+		recharge = RechargeLong
 	}
 	if note == "" {
 		note = usesNote(max, recharge)
 	}
 	return max, recharge, note
+}
+
+// usesAtLevel reads a level table's entry for a character of this level. A
+// level past the end of the table gets the last row, which is what a table
+// written for twenty levels means for anyone who has gone further.
+func usesAtLevel(byLevel []int, level int) int {
+	if len(byLevel) == 0 {
+		return 0
+	}
+	if level < 0 {
+		level = 0
+	}
+	if level >= len(byLevel) {
+		level = len(byLevel) - 1
+	}
+	return byLevel[level]
 }
 
 func usesNote(max int, recharge string) string {

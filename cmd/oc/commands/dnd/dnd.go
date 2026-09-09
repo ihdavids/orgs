@@ -141,6 +141,8 @@ type Dnd struct {
 	Open    bool
 	Local   bool
 
+	Printable bool
+
 	// D&D Beyond import
 	Ddb     string
 	Json    string
@@ -171,6 +173,8 @@ func (self *Dnd) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Force, "force", false, "overwrite an existing character sheet")
 	fset.BoolVar(&self.Open, "open", false, "open the sheet in your editor when done")
 	fset.BoolVar(&self.Local, "local", true, "write exported sheets on the server")
+	fset.BoolVar(&self.Printable, "printable", false,
+		"render the sheet for a printer: no page wash, no panel fills")
 	fset.StringVar(&self.Ddb, "ddb", "", "d&d beyond character url or id to import")
 	fset.StringVar(&self.Json, "json", "", "import from a saved d&d beyond json file")
 	fset.StringVar(&self.Cookie, "cookie", "", "d&d beyond CobaltSession cookie (asked for if needed)")
@@ -266,8 +270,9 @@ func (self *Dnd) usage() {
       a private one asks for your browser's CobaltSession cookie.
       -dump <file> keeps the raw payload, -json <file> imports one back.
 
-  orgs dnd sheet -file lyra.org [-format html|latex|pdf] [-out lyra.pdf]
-      Render a character sheet.
+  orgs dnd sheet -file lyra.org [-format html|latex|pdf] [-out lyra.pdf] [-printable]
+      Render a character sheet. -printable renders the pdf for a printer
+      rather than for the screen: no page wash and no panel fills.
 
   orgs dnd refresh -file lyra.org
       Recompute the derived sections after hand editing the property drawer.
@@ -1155,9 +1160,11 @@ func (self *Dnd) runSheet(core *commands.Core) {
 	if !self.Local {
 		local = "f"
 	}
-	res := get[common.ResultMsg](core, fmt.Sprintf("file/%s", exporter), map[string]string{
-		"filename": out, "query": self.File, "local": local,
-	})
+	params := map[string]string{"filename": out, "query": self.File, "local": local}
+	if self.Printable {
+		params["printable"] = "t"
+	}
+	res := get[common.ResultMsg](core, fmt.Sprintf("file/%s", exporter), params)
 	if !res.Ok {
 		fmt.Printf("%sexport failed: %s%s\n", cRed, res.Msg, cReset)
 		// The server only reports "setup in the config file" when the exporter is

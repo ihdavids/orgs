@@ -862,6 +862,23 @@ CHOICE_FEATURES = {
 }
 
 
+# Resources the class table prints as a column and the feature text never
+# states: a barbarian's rages, a monk's ki, a sorcerer's sorcery points. The
+# engine's reader (uses.go) only sees what a sentence says, so without these
+# the three most used resources in the game would be the only ones on the
+# sheet with no slots to tick off. Keyed by class id, then by the feature the
+# column belongs to; "column" is the level table heading, lowercased.
+#
+# A column entry that is not a number - the 20th level barbarian's
+# "Unlimited" - becomes a zero, which is exactly what it means to a sheet
+# that draws one slot per use.
+USES_FEATURES = {
+    "barbarian": {"Rage": {"column": "rages", "recharge": "long"}},
+    "monk": {"Ki": {"column": "ki points", "recharge": "short"}},
+    "sorcerer": {"Font of Magic": {"column": "sorcery points", "recharge": "long"}},
+}
+
+
 def parse_choice_options(bodies):
     """Collect the option list of a choice feature from every section that
     shares its name (a class may describe the feature once and list the
@@ -1166,6 +1183,25 @@ def parse_classes(src, items, spell_ids):
                              "text": clean_feature_text(sec_body, sec_name in CHOICE_FEATURES)})
             seen.add(sec_name)
         features.sort(key=lambda f: (f["level"], f["name"]))
+        for feat_name, spec in USES_FEATURES.get(cid, {}).items():
+            by_level = [0] * 21
+            for l, row in per_level.items():
+                if l > 20:
+                    continue
+                v = row.get(spec["column"], "").strip()
+                if v and v not in ("-", ""):
+                    by_level[l] = int(re.sub(r"\D", "", v) or 0)
+            if not any(by_level):
+                print("note: %s has no %r column for %s" % (cid, spec["column"], feat_name))
+                continue
+            for f in features:
+                if f["name"] == feat_name:
+                    f["usesByLevel"] = by_level
+                    f["recharge"] = spec["recharge"]
+                    break
+            else:
+                print("note: %s has no feature named %s to put %r on" % (
+                    cid, feat_name, spec["column"]))
         cls["features"] = features
         if asi_levels:
             cls["asiLevels"] = sorted(set(asi_levels))

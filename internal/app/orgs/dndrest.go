@@ -105,10 +105,14 @@ func RequestDndRest(w http.ResponseWriter, r *http.Request) {
 
   - POST /dnd/rest — Take A Short Or A Long Rest
     Applies a rest to a character and writes the sheet back. A short rest spends
-    the hit dice the player chose to spend and heals what those dice rolled; a
+    the hit dice the player chose to spend, heals what those dice rolled, and
+    hands back one spell slot of every level the character has spent one at; a
     long rest returns every hit point, half the hit dice, every spell slot and
     the uses of every limited feature. Asking to spend more hit dice than the
     character has left is refused with a =400=.
+
+    The slot a short rest gives back is a house rule - by the book only a
+    warlock's slots come back on one, and a warlock still gets all of theirs.
 
     The dice are not rolled here. The sheet rolls them in the open, on the table,
     and sends the total, so what the player watched land is what the file records.

@@ -193,6 +193,29 @@ classes:
           Your rage lasts for 1 minute. It ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action.
 
           Once you have raged the number of times shown for your barbarian level in the Rages column of the Barbarian table, you must finish a long rest before you can rage again.
+        usesByLevel:
+          - 0
+          - 2
+          - 2
+          - 3
+          - 3
+          - 3
+          - 4
+          - 4
+          - 4
+          - 4
+          - 4
+          - 4
+          - 5
+          - 5
+          - 5
+          - 5
+          - 5
+          - 6
+          - 6
+          - 6
+          - 0
+        recharge: "long"
       - name: "Unarmored Defense"
         level: 1
         text: "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. You can use a shield and still gain this benefit."
@@ -1994,6 +2017,29 @@ classes:
           Step of the Wind:
 
           You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn, and your jump distance is doubled for the turn.
+        usesByLevel:
+          - 0
+          - 0
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+          - 15
+          - 16
+          - 17
+          - 18
+          - 19
+          - 20
+        recharge: "short"
       - name: "Unarmored Movement"
         level: 2
         text: |-
@@ -3255,6 +3301,29 @@ classes:
           Any spell slot you create with this feature vanishes when you finish a long rest.
 
           Converting a Spell Slot to Sorcery Points. As a bonus action on your turn, you can expend one spell slot and gain a number of sorcery points equal to the slot's level.
+        usesByLevel:
+          - 0
+          - 0
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+          - 7
+          - 8
+          - 9
+          - 10
+          - 11
+          - 12
+          - 13
+          - 14
+          - 15
+          - 16
+          - 17
+          - 18
+          - 19
+          - 20
+        recharge: "long"
       - name: "Metamagic"
         level: 3
         text: |-

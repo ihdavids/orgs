@@ -219,3 +219,73 @@ func RequestDndSpells(w http.ResponseWriter, r *http.Request) {
 	}
 	dndJson(w, dnd.SearchSpells(c, rs, q.Get("q"), limit))
 }
+
+/*
+	SDOC: API
+
+  - POST /dnd/slots — Spend Or Hand Back A Spell Slot
+    Marks one spell slot of a level as spent, or gives one back, and writes the
+    character file. This is what the html sheet posts when a spell is cast: the
+    slot the cast costs is struck off the sheet and off the org file in the same
+    breath.
+
+    *Method:* =POST=
+
+    *Body:* =SlotRequest=
+    | Field      | Type   | Required | Description                                                 |
+    |------------+--------+----------+-------------------------------------------------------------|
+    | =filename= | string | no       | The org character sheet. One of filename or id is required. |
+    | =id=       | string | no       | The character's =DND_ID=.                                   |
+    | =action=   | string | yes      | =cast=, =spend= or =recover=.                               |
+    | =level=    | number | yes      | The spell level of the slot, 1 to 9.                        |
+    | =spell=    | string | no       | What is being cast. It only appears in the message.         |
+
+    #+BEGIN_SRC json
+    {"id": "lyra-silverleaf-4c1f2a", "action": "cast", "level": 1,
+    "spell": "Magic Missile"}
+    #+END_SRC
+
+    =cast= reaches upward when the level asked for is empty - a spell may always
+    be cast from a higher slot - and says so in =slot=; =spend= means the level
+    named and no other, which is what clicking a slot on the sheet does. With
+    nothing left to spend at that level or above it, the call is refused with a
+    =400= and nothing is written.
+
+    *Response:* The =SpellbookState= after the change, with =slot= saying where it
+    landed:
+    #+BEGIN_SRC json
+    {"msg": "Magic Missile cast at 2nd level, 2 of 3 left",
+    "slot": {"level": 2, "asked": 1, "total": 3, "used": 1, "left": 2, "up": true}}
+    #+END_SRC
+    EDOC
+*/
+func PostDndSlots(w http.ResponseWriter, r *http.Request) {
+	AccessControl(&w)
+	var req dnd.SlotRequest
+	if !dndBody(w, r, &req) {
+		return
+	}
+	if strings.TrimSpace(req.Filename) == "" && strings.TrimSpace(req.Id) == "" {
+		dndError(w, http.StatusBadRequest, "pass a filename or a character id")
+		return
+	}
+	dndInvLock.Lock()
+	defer dndInvLock.Unlock()
+	c, rs, path, err := dndFindCharacter(req.Filename, req.Id)
+	if err != nil {
+		dndError(w, http.StatusNotFound, "%s", err)
+		return
+	}
+	change, err := dnd.ApplySlotChange(c, rs, req.Action, req.Level, req.Spell)
+	if err != nil {
+		dndError(w, http.StatusBadRequest, "%s", err)
+		return
+	}
+	if err := dndWriteCharacter(c, rs, path); err != nil {
+		dndError(w, http.StatusInternalServerError, "could not write %s: %s", path, err)
+		return
+	}
+	state := dndSpellState(c, rs, path, change.Msg)
+	state.Slot = change
+	dndJson(w, state)
+}

@@ -40,6 +40,37 @@ package dnd
   your template folder. Both are ordinary pongo2 templates and receive the
   fully computed sheet, so you can restyle them without touching any go code.
 
+** Printing the pdf
+
+  The pdf sheet is drawn for the screen: a cream wash over the whole page and
+  a fill behind every panel and tile. Through a printer that is three inks
+  laid over every square inch of the paper, for a colour the paper already
+  is, and it comes out ringed by the white margin the printer cannot reach.
+
+  =-printable= renders the same sheet for a printer instead. The wash goes,
+  the panel and tile fills go white, and the medallion loses the block of ink
+  behind the portrait. Nothing that carries meaning changes: a filled
+  proficiency pip still reads as proficient, spent spell slots and feature
+  uses are still filled in, and the rules, gold rings and coloured lettering
+  stay as they were, because they only ever cover glyphs and lines.
+
+  #+BEGIN_SRC bash
+  orgs dnd sheet -file lyra.org -format pdf -printable -out lyra.pdf
+  #+END_SRC
+
+  Over an SRD level 5 wizard that takes each page from full colour coverage
+  to about six percent of it.
+
+  It is a property like any other, so =printable: true= under the exporter in
+  your config makes it the default, and =printable=f= on the export call
+  turns that back off again:
+
+  #+BEGIN_SRC yaml
+      - name: "dndpdf"
+        props:
+          printable: true
+  #+END_SRC
+
 ** The html sheet rolls dice
 
   =dndsheet= is interactive. Everything with a number behind it is clickable:
@@ -381,6 +412,22 @@ func (self *SheetExporter) Export(db common.ODb, query string, to string, opts s
 	return os.WriteFile(to, []byte(res), 0644)
 }
 
+// truthy reads a flag that may have come from yaml as a bool or from a query
+// string as text. Anything that is not plainly a yes is a no.
+func truthy(v interface{}) bool {
+	switch t := v.(type) {
+	case nil:
+		return false
+	case bool:
+		return t
+	}
+	switch strings.ToLower(strings.TrimSpace(fmt.Sprintf("%v", v))) {
+	case "t", "true", "y", "yes", "on", "1":
+		return true
+	}
+	return false
+}
+
 // sheetDir is the folder holding the org file a sheet was read from, which
 // is what a relative portrait link is relative to.
 func sheetDir(sheet *dnd.Sheet) string {
@@ -403,6 +450,13 @@ func (self *SheetExporter) context(sheet *dnd.Sheet, props map[string]string) ma
 	if _, ok := ctx["fontfamily"]; !ok {
 		ctx["fontfamily"] = "Cinzel"
 	}
+	// The sheet has a pretty face and a printer friendly one and the templates
+	// branch on this, so settle it here into a real bool. It can arrive either
+	// as a yaml bool from the exporter's own props or as a string from the
+	// export call, and a string is what makes settling it matter: left alone,
+	// printable=f would reach the template as a non-empty string and read as
+	// yes, so a default set in the config could never be turned back off.
+	ctx["printable"] = truthy(ctx["printable"])
 	// The html sheet talks back to the server to log play sessions. Point it
 	// at the server that exported it unless the config says otherwise, since
 	// the sheet is usually opened straight off disk and has no origin of its

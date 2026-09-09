@@ -264,6 +264,19 @@ func RestPlan(c *Character, rs *Ruleset, kind string) *RestPlanView {
 			plan.Recharges = append(plan.Recharges, RestRecharge{
 				Name: "Pact magic slots", Spent: plan.SlotsUsed, Kind: "slots",
 			})
+		} else if back := slotsShortRestReturns(c); back > 0 {
+			// An hour with your book open is worth one slot of every level
+			// you have spent one at. This is a house rule: by the book a
+			// short rest returns no slots at all to anyone but a warlock.
+			plan.Steps = append(plan.Steps, RestStep{
+				Id: "slots", Kind: "info", Title: "Spell slots",
+				Text: fmt.Sprintf("You get back one spell slot of each level "+
+					"you have spent one at: %d slot%s in all.",
+					back, plural(back, "", "s")),
+			})
+			plan.Recharges = append(plan.Recharges, RestRecharge{
+				Name: "Spell slots", Spent: back, Kind: "slots",
+			})
 		}
 		plan.Steps = append(plan.Steps, restFeatureStep(plan.Recharges))
 		return plan
@@ -414,6 +427,10 @@ func ApplyRest(c *Character, rs *Ruleset, req RestRequest) (*RestResult, error) 
 				res.SlotsBack += n
 			}
 			c.SlotsUsed = nil
+		} else {
+			// One slot of each level you have spent one at, which is the
+			// house rule this table plays with.
+			res.SlotsBack = RecoverOneSlotEachLevel(c)
 		}
 	} else {
 		c.HPCurrent = before.HPMax
@@ -486,4 +503,16 @@ func restLines(res *RestResult, note string) []string {
 		lines = append(lines, strings.TrimSpace(note))
 	}
 	return lines
+}
+
+// slotsShortRestReturns is how many slots a short rest hands back under the
+// one-of-each-level rule: one for every level with something spent at it.
+func slotsShortRestReturns(c *Character) int {
+	n := 0
+	for _, used := range c.SlotsUsed {
+		if used > 0 {
+			n++
+		}
+	}
+	return n
 }

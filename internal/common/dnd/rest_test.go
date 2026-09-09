@@ -67,21 +67,118 @@ func TestUsesReadOutOfFeatureText(t *testing.T) {
 	}
 }
 
-// A resource whose size lives in a class table and not in its prose is left
-// alone rather than given an invented limit.
-func TestUsesLeavesTableResourcesAlone(t *testing.T) {
+// A resource whose size is printed as a column of the class level table gets
+// its limit from that column, because its prose never states one.
+func TestUsesReadOutOfTheClassLevelTable(t *testing.T) {
 	rs := srd(t)
-	for _, tc := range []struct{ class, feature string }{
-		{"barbarian", "Rage"},
-		{"monk", "Ki"},
-		{"sorcerer", "Font of Magic"},
-		{"warlock", "Pact Magic"},
+	for _, tc := range []struct {
+		class    string
+		level    int
+		feature  string
+		max      int
+		recharge string
+	}{
+		{"barbarian", 1, "Rage", 2, RechargeLong},
+		{"barbarian", 10, "Rage", 4, RechargeLong},
+		{"barbarian", 17, "Rage", 6, RechargeLong},
+		{"monk", 2, "Ki", 2, RechargeShort},
+		{"monk", 10, "Ki", 10, RechargeShort},
+		{"sorcerer", 2, "Font of Magic", 2, RechargeLong},
+		{"sorcerer", 10, "Font of Magic", 10, RechargeLong},
 	} {
-		s := Compute(rester(tc.class, 10), rs)
-		if _, ok := FindLimitedTrait(s, tc.feature); ok {
-			t.Errorf("%s: %s has no limit in its text and should carry none",
-				tc.class, tc.feature)
+		s := Compute(rester(tc.class, tc.level), rs)
+		got := limited(t, s, tc.feature)
+		if got.UsesMax != tc.max || got.Recharge != tc.recharge {
+			t.Errorf("%s %d %s: want %d uses per %s rest, got %d per %s",
+				tc.class, tc.level, tc.feature, tc.max, tc.recharge,
+				got.UsesMax, got.Recharge)
 		}
+	}
+}
+
+// The table is the whole answer, so a level it gives nothing at carries no
+// limit: a 20th level barbarian's rages are unlimited and get no slots, and a
+// 1st level monk has no ki to spend at all.
+func TestUsesTableLevelsWithNothingInThemCarryNoLimit(t *testing.T) {
+	rs := srd(t)
+	for _, tc := range []struct {
+		class   string
+		level   int
+		feature string
+	}{
+		{"barbarian", 20, "Rage"},
+		{"monk", 1, "Ki"},
+	} {
+		s := Compute(rester(tc.class, tc.level), rs)
+		if tr, ok := FindLimitedTrait(s, tc.feature); ok {
+			t.Errorf("%s %d: %s should carry no limit, got %d uses",
+				tc.class, tc.level, tc.feature, tr.UsesMax)
+		}
+	}
+}
+
+// A table resource is spent, written and given back like any other: the whole
+// point of reading the column is that the sheet can tick it off.
+func TestTableResourceSpendsAndRestsLikeAnyOther(t *testing.T) {
+	rs := srd(t)
+	c := rester("barbarian", 10)
+	for i := 0; i < 2; i++ {
+		if _, err := ApplyUseChange(c, rs, "spend", "Rage"); err != nil {
+			t.Fatalf("raging: %v", err)
+		}
+	}
+	back, err := ParseOrg(RenderOrg(c, rs), rs)
+	if err != nil {
+		t.Fatalf("reading the sheet back: %v", err)
+	}
+	if got := limited(t, Compute(back, rs), "Rage"); got.UsesSpent != 2 || got.UsesMax != 4 {
+		t.Fatalf("want 2 of 4 rages spent, got %d of %d", got.UsesSpent, got.UsesMax)
+	}
+	// Rages come back on a long rest and not on a short one.
+	if _, err := ApplyRest(back, rs, RestRequest{Kind: ShortRest}); err != nil {
+		t.Fatalf("short rest: %v", err)
+	}
+	if got := limited(t, Compute(back, rs), "Rage"); got.UsesSpent != 2 {
+		t.Fatalf("a short rest should leave rages spent, got %d", got.UsesSpent)
+	}
+	if _, err := ApplyRest(back, rs, RestRequest{Kind: LongRest}); err != nil {
+		t.Fatalf("long rest: %v", err)
+	}
+	if got := limited(t, Compute(back, rs), "Rage"); got.UsesSpent != 0 {
+		t.Fatalf("a long rest should give every rage back, got %d spent", got.UsesSpent)
+	}
+}
+
+// A module may write a level table of its own, and it is believed over the
+// prose the same way a formula is. A level past the end of the table gets the
+// last row it has.
+func TestUsesByLevelDeclaredByAModuleWins(t *testing.T) {
+	tr := Trait{Name: "Starfall", UsesByLevel: []int{0, 1, 1, 2},
+		Text: "You can do so twice. You regain expended uses on a short rest."}
+	for _, tc := range []struct {
+		level, max int
+	}{{1, 1}, {3, 2}, {9, 2}} {
+		max, recharge, _ := DetectUses(tr, tc.level, nil, 3)
+		if max != tc.max || recharge != RechargeShort {
+			t.Errorf("level %d: want %d uses per short rest, got %d per %s",
+				tc.level, tc.max, max, recharge)
+		}
+	}
+}
+
+// A resource whose size is neither in its prose nor in a column is still left
+// alone rather than given an invented limit.
+func TestUsesLeavesUnstatedResourcesAlone(t *testing.T) {
+	rs := srd(t)
+	s := Compute(rester("warlock", 10), rs)
+	if _, ok := FindLimitedTrait(s, "Pact Magic"); ok {
+		t.Error("warlock: Pact Magic has no limit to read and should carry none")
+	}
+	max, _, _ := DetectUses(Trait{Name: "Starfall",
+		Text: "As an action you call down a star. You regain your uses when " +
+			"you finish a long rest."}, 5, nil, 3)
+	if max != 0 {
+		t.Errorf("a count nobody stated should not be invented, got %d", max)
 	}
 }
 
@@ -228,8 +325,9 @@ func TestLongRestGivesBackEverything(t *testing.T) {
 	}
 }
 
-// A warlock's slots are the one thing a short rest refills, and only when
-// every slot they have is a warlock's.
+// A warlock's slots all come back on a short rest, and only when every slot
+// they have is a warlock's. Everyone else gets the house rule instead: one
+// slot of each level they have spent one at.
 func TestShortRestRefillsPactSlotsOnly(t *testing.T) {
 	rs := srd(t)
 	warlock := rester("warlock", 5)
@@ -247,12 +345,64 @@ func TestShortRestRefillsPactSlotsOnly(t *testing.T) {
 	both.Classes = append(both.Classes, ClassLevel{Class: "wizard", Level: 3})
 	both.HPMax = Compute(both, rs).HPMax
 	both.HPCurrent = both.HPMax
-	both.SlotsUsed = []int{1, 1}
-	if _, err := ApplyRest(both, rs, RestRequest{Kind: "short"}); err != nil {
+	both.SlotsUsed = []int{2, 2}
+	res, err := ApplyRest(both, rs, RestRequest{Kind: "short"})
+	if err != nil {
 		t.Fatalf("short rest: %v", err)
 	}
-	if len(both.SlotsUsed) == 0 {
-		t.Fatal("a warlock/wizard's slots are mixed and wait for the long rest")
+	// Mixed slots are not all a warlock's, so they do not all come back: one
+	// of each level does, and the rest wait for the long rest.
+	if res.SlotsBack != 2 || len(both.SlotsUsed) != 2 ||
+		both.SlotsUsed[0] != 1 || both.SlotsUsed[1] != 1 {
+		t.Fatalf("want one slot of each level back, got %d back leaving %v",
+			res.SlotsBack, both.SlotsUsed)
+	}
+}
+
+// The house rule: an hour is worth one slot of every level you have spent one
+// at, and nothing at a level you have not.
+func TestShortRestGivesBackOneSlotOfEachLevel(t *testing.T) {
+	rs := srd(t)
+	c := rester("wizard", 5)
+	c.HPMax = Compute(c, rs).HPMax
+	c.HPCurrent = c.HPMax
+	c.SlotsUsed = []int{2, 0, 2}
+
+	res, err := ApplyRest(c, rs, RestRequest{Kind: "short"})
+	if err != nil {
+		t.Fatalf("short rest: %v", err)
+	}
+	if res.SlotsBack != 2 || len(c.SlotsUsed) != 3 ||
+		c.SlotsUsed[0] != 1 || c.SlotsUsed[1] != 0 || c.SlotsUsed[2] != 1 {
+		t.Fatalf("want one 1st and one 3rd back, got %d back leaving %v",
+			res.SlotsBack, c.SlotsUsed)
+	}
+	found := false
+	for _, line := range res.Lines {
+		if strings.Contains(line, "Recovered 2 spell slots") {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("the log should say what came back, got %v", res.Lines)
+	}
+
+	res, err = ApplyRest(c, rs, RestRequest{Kind: "short"})
+	if err != nil {
+		t.Fatalf("short rest: %v", err)
+	}
+	if res.SlotsBack != 2 || len(c.SlotsUsed) != 0 {
+		t.Fatalf("want the other two back, got %d leaving %v",
+			res.SlotsBack, c.SlotsUsed)
+	}
+
+	// Nothing spent, nothing to give back.
+	res, err = ApplyRest(c, rs, RestRequest{Kind: "short"})
+	if err != nil {
+		t.Fatalf("short rest: %v", err)
+	}
+	if res.SlotsBack != 0 {
+		t.Fatalf("want nothing back, got %d", res.SlotsBack)
 	}
 }
 

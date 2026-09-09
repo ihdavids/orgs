@@ -120,6 +120,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/spells", RequestDndSpells).Methods("GET")
 	api.HandleFunc("/dnd/spellbook", RequestDndSpellbook).Methods("GET")
 	api.HandleFunc("/dnd/spellbook", PostDndSpellbook).Methods("POST")
+	api.HandleFunc("/dnd/slots", PostDndSlots).Methods("POST")
 	api.HandleFunc("/dnd/rest", RequestDndRest).Methods("GET")
 	api.HandleFunc("/dnd/rest", PostDndRest).Methods("POST")
 	api.HandleFunc("/dnd/uses", PostDndUses).Methods("POST")
@@ -382,6 +383,7 @@ func RequestFilters(w http.ResponseWriter, r *http.Request) {
 	| =filelinks=    | string | no       | Set to =t= to include file-style links in the export.                              |
 	| =httpslinks=   | string | no       | Set to =t= to convert links to https-style links.                                  |
 	| =parent=       | string | no       | A parent property passed to the exporter (exporter-specific).                      |
+	| =printable=    | string | no       | Set to =t= for an exporter's printer friendly output where it has one.              |
 
 	*Response:* A =ResultMsg= JSON object.
 	- When =local= is not set: ={"status": true, "msg": "...exported content..."}=
@@ -397,6 +399,7 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	httpslinks := r.URL.Query().Get("httpslinks")
 	props := map[string]string{}
 	props["parent"] = r.URL.Query().Get("parent")
+	props["printable"] = r.URL.Query().Get("printable")
 	opts := common.ExportToFile{Name: ptype, Filename: fname, Query: query, Opts: "", Props: props}
 	if filelinks == "t" {
 		opts.Opts += "filelinks;"

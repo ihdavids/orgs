@@ -209,6 +209,34 @@
 \setlength{\colCin}{\dimexpr\colC-16pt\relax}
 {% endverbatim %}
 
+%% ---------------------------------------------------------------------------
+%% Printer friendly, when the exporter is asked for it.
+%%
+%% The pretty sheet paints a cream wash over the whole page and fills every
+%% panel and tile behind it. On screen that is the parchment it is meant to
+%% be; through a printer it is three inks laid over every square inch of the
+%% paper, for a colour the paper already is. Printable mode hands those areas
+%% back to the page: the wash goes, the panel and tile fills go white, and the
+%% medallion loses the block of ink behind the portrait.
+%%
+%% Only the areas change. Every mark that carries meaning is left exactly as
+%% it was - a filled proficiency pip still reads as proficient, a spent spell
+%% slot and a spent feature use are still filled in, the rules and gold rings
+%% still divide the sheet, and the lettering keeps its colours, which cost a
+%% printer almost nothing because they only ever cover glyphs.
+%%
+%% The colours are redefined rather than the styles rewritten: tikz looks a
+%% colour name up when it draws, so the panel, tile, caption and pip styles
+%% above pick these up without knowing anything about it.
+{% if printable %}
+\definecolor{dndpaper}{HTML}{FFFFFF}
+\definecolor{dndpanel}{HTML}{FFFFFF}
+\colorlet{dndmedalback}{white}
+\nopagecolor
+{% else %}
+\colorlet{dndmedalback}{dndink}
+{% endif %}
+
 \fancyfoot[L]{\scriptsize\color{dndmuted} {{ sheet.name }}}
 \fancyfoot[C]{\scriptsize\color{dndmuted} \thepage}
 \fancyfoot[R]{\scriptsize\color{dndmuted} {{ sheet.classLine }}}
@@ -232,7 +260,7 @@
   \begin{tikzpicture}[x=0.007in, y=0.007in]   % 100 units = the medal radius
     \begin{scope}
       \clip (0,0) circle (71);
-      \fill[dndink] (-110,-110) rectangle (110,110);
+      \fill[dndmedalback] (-110,-110) rectangle (110,110);
       \node[anchor=north west, inner sep=0]
         at ({{ portrait.x }}*200, {{ portrait.y }}*200)
         {\includegraphics[width={{ portrait.width }}\dndmedal]{\dndportraitfile}};
@@ -410,8 +438,8 @@
 \end{tikzpicture}\par\vspace{7pt}
 
 \begin{multicols}{2}
-{% for t in sheet.traits %}\featureentry{ {{ t.name }} }{ {{ t.source }} }{ {% if t.usesMax %}{\footnotesize\color{dndmuted}{% for i in t.usesPips %}{% if i <= t.usesSpent %}\usespent{% else %}\useleft{% endif %}{% endfor %} {{ t.usesNote }}}\par\vspace{1pt}{% endif %}{{ t.text }} }
-{% endfor %}{% for f in sheet.features %}\featureentry{ {{ f.name }} }{ {{ f.source }} }{ {% if f.usesMax %}{\footnotesize\color{dndmuted}{% for i in f.usesPips %}{% if i <= f.usesSpent %}\usespent{% else %}\useleft{% endif %}{% endfor %} {{ f.usesNote }}}\par\vspace{1pt}{% endif %}{{ f.text }} }
+{% for t in sheet.traits %}\featureentry{ {{ t.name }} }{ {{ t.source }} }{ {% if t.usesMax %}{\footnotesize\color{dndmuted}{% for i in t.usesPips %}{% if i <= t.usesSpent %}\usespent{% else %}\useleft{% endif %}{% endfor %}\hspace{3pt}{{ t.usesNote }}}\par\vspace{1pt}{% endif %}{{ t.text }} }
+{% endfor %}{% for f in sheet.features %}\featureentry{ {{ f.name }} }{ {{ f.source }} }{ {% if f.usesMax %}{\footnotesize\color{dndmuted}{% for i in f.usesPips %}{% if i <= f.usesSpent %}\usespent{% else %}\useleft{% endif %}{% endfor %}\hspace{3pt}{{ f.usesNote }}}\par\vspace{1pt}{% endif %}{{ f.text }} }
 {% endfor %}\end{multicols}
 
 {% if sheet.equipment|length > 20 %}

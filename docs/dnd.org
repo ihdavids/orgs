@@ -382,6 +382,30 @@
   own text where it does not, so homebrew spells that read like the SRD's
   cast correctly without being annotated.
 
+** Spell slots
+
+   Casting a spell of 1st level or higher costs a slot, and the sheet strikes
+   one off as it rolls the spell: the row of boxes at the top of the spell tab
+   fills in, the card in the roll tray says what the cast cost, and the count
+   is written to the character file in the =DND_SLOTS_USED= property - one
+   number per spell level, in order:
+
+   #+BEGIN_SRC org
+   :DND_SLOTS_USED:      2, 1
+   #+END_SRC
+
+   A spell may always be cast from a higher slot than its own, so when the
+   level it asks for is empty the cast reaches for the lowest slot above it
+   that still has one and the card says where it landed. With nothing left at
+   that level or above it the cast is refused, the dice are still yours to
+   read, and nothing is written to the file.
+
+   The boxes are a control in their own right. Clicking an empty one spends a
+   slot of that level and clicking a filled one hands it back - which is how
+   you record a spell cast from a scroll or a ring, which costs no slot at
+   all, and how you take back a cast the table decides never happened.
+   Cantrips cost nothing and are never counted.
+
 * Resting
 
   The menu behind the stack of lines in the bottom corner of the html sheet
@@ -394,8 +418,15 @@
   want to spend. Each die is thrown on the table like any other roll, lands in
   the roll tray, and adds what it rolled plus your constitution modifier to
   your hit points, and you decide after each one whether to spend another.
-  Then it hands back every feature that recharges on a short rest, and a
-  warlock's pact magic slots.
+  Then it hands back every feature that recharges on a short rest, and one
+  spell slot of every level you have spent one at - an hour with your book
+  open is worth that much. A warlock, whose slots all come back on a short
+  rest by the book, still gets all of them.
+
+  That one-slot-a-level rule is this table's, not the SRD's: by the book a
+  short rest returns no slots at all to anyone but a warlock. Rests are worked
+  out in =internal/common/dnd/rest.go= if you want it back the way it was
+  written.
 
   A long rest gives back every hit point, half your hit dice rounded down (at
   least one), every spell slot, and the uses of every limited feature. It also
@@ -430,12 +461,16 @@
    as it improves ("Bardic Inspiration (d6)" and "(d10)") the entries share
    one pool.
 
-   The reader is deliberately careful: a resource whose size lives in a class
-   table rather than in its prose - a barbarian's rages, a monk's ki points, a
-   sorcerer's sorcery points - is left with no slots at all rather than given
-   an invented number. If you want one tracked anyway, or your own module has
-   a limit worded too strangely to read, write it down and it is believed over
-   the text:
+   The three resources the rules print as a column of the class level table
+   rather than in the feature's own text - a barbarian's rages, a monk's ki
+   points, a sorcerer's sorcery points - say so in the ruleset instead, as
+   that column, and get their slots the same way. A 5th level barbarian has
+   three rages; a 20th level one has unlimited rages and so gets no slots at
+   all.
+
+   The reader itself stays deliberately careful, though: a limit nobody stated
+   is never guessed at. If your own module has one worded too strangely to
+   read, write it down and it is believed over the text:
 
    #+BEGIN_SRC yaml
    classes:
@@ -444,10 +479,14 @@
          - name: "Rage"
            uses: "3"
            recharge: "long"
+         - name: "Ki"
+           usesByLevel: [0, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+           recharge: "short"
    #+END_SRC
 
-   =uses= is a bonus formula, so =cha=, =1 + cha= and =prof= all work, and
-   =recharge= is =short= or =long=.
+   =uses= is a bonus formula, so =cha=, =1 + cha= and =prof= all work.
+   =usesByLevel= is the level table's own column, indexed by level, and a zero
+   in it means no limit at that level. =recharge= is =short= or =long=.
 
 * Recording a session
 
@@ -653,6 +692,18 @@
   | =/dnd/money=      | GET    | The purse, what it is worth, and its history   |
   | =/dnd/money=      | POST   | Spend, gain, set, change up or exchange coin   |
   | =/dnd/items=      | GET    | Fuzzy item search, as the add item box asks it |
+
+  Spells, slots and rests:
+
+  | Endpoint          | Method | Purpose                                       |
+  |-------------------+--------+-----------------------------------------------|
+  | =/dnd/spellbook=  | GET    | What a character knows, prepared and in slots |
+  | =/dnd/spellbook=  | POST   | Learn, give back, prepare or unprepare one    |
+  | =/dnd/spells=     | GET    | Every spell the character could take          |
+  | =/dnd/slots=      | POST   | Spend a slot on a cast, or hand one back      |
+  | =/dnd/rest=       | GET    | What a short and a long rest would give back  |
+  | =/dnd/rest=       | POST   | Take a rest                                   |
+  | =/dnd/uses=       | POST   | Spend or recover one use of a feature         |
 
   And the play session log:
 
