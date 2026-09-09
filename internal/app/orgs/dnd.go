@@ -69,20 +69,44 @@ func (s *dndSessionStore) expireLocked() {
 	}
 }
 
-// DndLibrary returns the ruleset library, configuring its search path from
-// the server settings the first time it is needed.
+// dndSearchPaths is the module search path the server settings ask for:
+// everything under dndPaths, then the defaults rooted at the configured
+// template path.
+func dndSearchPaths() []string {
+	paths := []string{}
+	if Conf().Server != nil {
+		paths = append(paths, Conf().Server.DndPaths...)
+		paths = append(paths, dndplug.DefaultPaths(Conf().Server.TemplatePath)...)
+	}
+	return dndplug.AbsPaths(append(paths, dndplug.DefaultPaths("")...))
+}
+
+// DndLibrary returns the ruleset library with its search path configured from
+// the server settings.
+//
+// The path is reconciled on every call rather than set once, because the
+// exporters reach the same library without going through here: whichever of
+// the two runs first used to decide what the library was loaded from for the
+// life of the process, and an export that ran first left it holding the built
+// in SRD and nothing else.
 func DndLibrary() *dnd.Library {
-	if len(dndplug.Paths()) == 0 {
-		paths := []string{}
-		if Conf().Server != nil {
-			paths = append(paths, Conf().Server.DndPaths...)
-			paths = append(paths, dndplug.DefaultPaths(Conf().Server.TemplatePath)...)
-		} else {
-			paths = dndplug.DefaultPaths("")
-		}
-		dndplug.SetPaths(paths)
+	want := dndSearchPaths()
+	if !dndSamePaths(dndplug.Paths(), want) {
+		dndplug.SetPaths(want)
 	}
 	return dndplug.Library()
+}
+
+func dndSamePaths(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func dndRuleset(id string) *dnd.Ruleset {
@@ -174,8 +198,7 @@ func RequestDndRulesets(w http.ResponseWriter, r *http.Request) {
 	EDOC */
 func PostDndReload(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
-	dndplug.SetPaths(nil)
-	DndLibrary()
+	dndplug.SetPaths(dndSearchPaths())
 	dndplug.Reload()
 	dndJson(w, DndLibrary().List())
 }

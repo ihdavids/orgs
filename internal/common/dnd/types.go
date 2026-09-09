@@ -607,6 +607,12 @@ type Ruleset struct {
 	Feats       []Feat       `yaml:"feats" json:"feats"`
 	Languages   []string     `yaml:"languages" json:"languages"`
 	Alignments  []string     `yaml:"alignments" json:"alignments"`
+	// Conditions and DamageTypes are what the sheet's defenses tab is drawn
+	// from. Both are empty in almost every module: the basic rules' fifteen
+	// conditions and thirteen damage types are built in (see conditions.go)
+	// and a module only writes them down to add one or replace one by id.
+	Conditions  []Condition  `yaml:"conditions" json:"conditions"`
+	DamageTypes []DamageType `yaml:"damageTypes" json:"damageTypes"`
 	// SlotTables lets a module replace the built in spell slot progressions.
 	SlotTables map[string][][]int `yaml:"slotTables" json:"slotTables"`
 	// Modules records which yaml files contributed to this ruleset.
@@ -732,6 +738,30 @@ type Character struct {
 	// happened, and lives in the file the same way the inventory log does as
 	// the Coin History section.
 	MoneyLog []MoneyEvent `yaml:"moneyLog" json:"moneyLog"`
+
+	// Conditions are what the character is currently under - frightened,
+	// poisoned, two levels into exhaustion. They are stored rather than
+	// derived: a condition is something that happened at the table, and
+	// nothing on the sheet can work out that it did.
+	Conditions []ConditionRef `yaml:"conditions" json:"conditions"`
+
+	// Resistances, Immunities and Vulnerabilities are what the character
+	// takes less, none, or more of. An entry is usually a damage type, but
+	// may be a condition ("immune to being frightened") or a phrase the
+	// rules have no id for, so they are kept as written.
+	Resistances     []string `yaml:"resistances" json:"resistances"`
+	Immunities      []string `yaml:"immunities" json:"immunities"`
+	Vulnerabilities []string `yaml:"vulnerabilities" json:"vulnerabilities"`
+
+	// ConditionLog is what has come and gone of both, in the order it
+	// happened, written to the sheet as the Condition History section and
+	// read straight back the way the coin and inventory logs are.
+	ConditionLog []ConditionEvent `yaml:"conditionLog" json:"conditionLog"`
+
+	// HealthLog is every point of damage taken and healing received, and
+	// every change to the temporary hit points, as the Health History
+	// section. Like the other logs it is the file's own record.
+	HealthLog []HealthEvent `yaml:"healthLog" json:"healthLog"`
 
 	Personality string `yaml:"personality" json:"personality"`
 	Ideals      string `yaml:"ideals" json:"ideals"`
@@ -987,6 +1017,15 @@ type Sheet struct {
 	// container each thing is stored in, with the weight and encumbrance
 	// worked out. The html sheet draws its inventory from this.
 	Inventory InventoryView `json:"inventory"`
+
+	// Defenses and Conditions are the defenses tab: what the character
+	// shrugs off, and what is currently wrong with them.
+	Defenses   DefensesView   `json:"defenses"`
+	Conditions ConditionsView `json:"conditions"`
+
+	// Health is the hit point line worked out: the bar, the temporary hit
+	// points in front of it, and whether the character is down or bloodied.
+	Health HealthView `json:"health"`
 
 	// Magic items carried, and the attunement slots they take up. Attuned
 	// lists the items actually attuned to; AttunementSlots is the limit,

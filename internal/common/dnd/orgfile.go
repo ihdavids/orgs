@@ -48,6 +48,14 @@ const InventoryHistoryHeading = "Inventory History"
 // earned or changed up.
 const CoinHistoryHeading = "Coin History"
 
+// ConditionHistoryHeading is where the conditions log lives: what has been
+// suffered and shaken off, and what defenses have come and gone.
+const ConditionHistoryHeading = "Condition History"
+
+// HealthHistoryHeading is where the hit point log lives: every blow taken,
+// every point healed, and every change to the temporary hit points.
+const HealthHistoryHeading = "Health History"
+
 // Property names used in the character property drawer.
 const (
 	PropId         = "DND_ID"
@@ -76,6 +84,10 @@ const (
 	PropInspire    = "DND_INSPIRATION"
 	PropSlotsUsed  = "DND_SLOTS_USED"
 	PropUsesSpent  = "DND_USES_SPENT"
+	PropConditions = "DND_CONDITIONS"
+	PropResist     = "DND_RESISTANCES"
+	PropImmune     = "DND_IMMUNITIES"
+	PropVulnerable = "DND_VULNERABILITIES"
 	PropImage      = "DND_IMAGE"
 	PropImageFocus = "DND_IMAGE_FOCUS"
 	PropImageZoom  = "DND_IMAGE_ZOOM"
@@ -144,6 +156,10 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{PropInspire, boolStr(c.Inspiration)},
 		[2]string{PropSlotsUsed, encodeInts(c.SlotsUsed)},
 		[2]string{PropUsesSpent, encodeUses(c.UsesSpent)},
+		[2]string{PropConditions, encodeConditions(c.Conditions)},
+		[2]string{PropResist, joinList(c.Resistances)},
+		[2]string{PropImmune, joinList(c.Immunities)},
+		[2]string{PropVulnerable, joinList(c.Vulnerabilities)},
 		[2]string{"DND_CP", itoa(c.Money.CP)},
 		[2]string{"DND_SP", itoa(c.Money.SP)},
 		[2]string{"DND_EP", itoa(c.Money.EP)},
@@ -217,6 +233,30 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	}
 	w("%s\n\n", orgTable(rows, 0))
 
+	// ---- defenses and conditions (derived from the property drawer) -------
+	//
+	// Both are stored up in the drawer, so these lines are regenerated every
+	// time the sheet is written. Editing them here does nothing; edit
+	// DND_RESISTANCES and DND_CONDITIONS instead, or use the character sheet.
+	w("*** Defenses\n")
+	def := func(label string, list []DefenseView) {
+		names := []string{}
+		for _, v := range list {
+			names = append(names, v.Name)
+		}
+		w("- %s :: %s\n", label, orDefault(joinList(names), "none"))
+	}
+	def("Resistances", s.Defenses.Resistances)
+	def("Immunities", s.Defenses.Immunities)
+	def("Vulnerabilities", s.Defenses.Vulnerabilities)
+	w("- Conditions :: %s\n", orDefault(s.Conditions.Summary, "none"))
+	for _, cd := range s.Conditions.Active {
+		if cd.Note != "" {
+			w("  - %s: %s\n", cd.Label, cd.Note)
+		}
+	}
+	w("\n")
+
 	w("*** Attacks\n")
 	rows = [][]string{{"Attack", "Bonus", "Damage", "Type", "Range", "Notes"}}
 	for _, a := range s.Attacks {
@@ -274,6 +314,44 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		for _, e := range c.MoneyLog {
 			rows = append(rows, []string{e.Date, e.Time, e.Action, e.Amount.String(),
 				moneyCell(e.Change), e.Balance.String(), e.Notes})
+		}
+		w("%s\n\n", orgTable(rows, 1))
+	}
+
+	// ---- condition history (parsed back) ----------------------------------
+	//
+	// What has been suffered and shaken off, and what defenses have come and
+	// gone. Read straight back the way the coin and inventory logs are, so a
+	// line corrected by hand stays corrected.
+	if len(c.ConditionLog) > 0 {
+		w("** %s\n", ConditionHistoryHeading)
+		w("What has been suffered and shaken off, newest last.\n")
+		rows = [][]string{{"Date", "Time", "Action", "What", "Level", "Notes"}}
+		for _, e := range c.ConditionLog {
+			level := ""
+			if e.Level > 0 {
+				level = itoa(e.Level)
+			}
+			rows = append(rows, []string{e.Date, e.Time, e.Action, e.Name, level, e.Notes})
+		}
+		w("%s\n\n", orgTable(rows, 1))
+	}
+
+	// ---- health history (parsed back) -------------------------------------
+	//
+	// Every blow taken and every point healed, so a night's fighting can be
+	// read back off the sheet afterwards.
+	if len(c.HealthLog) > 0 {
+		w("** %s\n", HealthHistoryHeading)
+		w("Damage taken and healing received, newest last.\n")
+		rows = [][]string{{"Date", "Time", "Action", "Amount", "Soaked", "HP", "Temp", "Notes"}}
+		for _, e := range c.HealthLog {
+			soaked := ""
+			if e.Absorbed > 0 {
+				soaked = itoa(e.Absorbed)
+			}
+			rows = append(rows, []string{e.Date, e.Time, e.Action, itoa(e.Amount), soaked,
+				fmt.Sprintf("%d/%d", e.HPAfter, e.HPMax), itoa(e.TempAfter), e.Notes})
 		}
 		w("%s\n\n", orgTable(rows, 1))
 	}
@@ -732,6 +810,46 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 		c.MoneyLog = append(c.MoneyLog, e)
 	}
 
+	// condition history, and the health history behind it, read back the same
+	// way the coin history is. Both use the shared header reader rather than
+	// repeating the column lookup a third and fourth time.
+	for _, row := range historyRows(tables, ConditionHistoryHeading) {
+		cell := row.cell
+		e := ConditionEvent{
+			Date: cell("date"), Time: cell("time"), Action: cell("action"),
+			Name: cell("what"), Level: atoi(cell("level")), Notes: cell("notes"),
+		}
+		if e.Name == "" {
+			// A sheet written before the column was called "what" said
+			// "condition"; both read.
+			e.Name = cell("condition")
+		}
+		if e.Action == "" && e.Name == "" {
+			continue
+		}
+		c.ConditionLog = append(c.ConditionLog, e)
+	}
+	for _, row := range historyRows(tables, HealthHistoryHeading) {
+		cell := row.cell
+		e := HealthEvent{
+			Date: cell("date"), Time: cell("time"), Action: cell("action"),
+			Amount: atoi(cell("amount")), Absorbed: atoi(cell("soaked")),
+			TempAfter: atoi(cell("temp")), Notes: cell("notes"),
+		}
+		if e.Action == "" {
+			continue
+		}
+		// The HP column is written "14/27", which is the pair worth keeping.
+		if hp := cell("hp"); hp != "" {
+			parts := strings.SplitN(hp, "/", 2)
+			e.HPAfter = atoi(parts[0])
+			if len(parts) == 2 {
+				e.HPMax = atoi(parts[1])
+			}
+		}
+		c.HealthLog = append(c.HealthLog, e)
+	}
+
 	// spell tables live under spellcasting/<level name>
 	for key, rows := range tables {
 		if !strings.HasPrefix(key, "spellcasting/") {
@@ -878,6 +996,14 @@ func applyProperty(c *Character, key, val string) {
 		c.Inspiration = isYes(val)
 	case PropSlotsUsed:
 		c.SlotsUsed = decodeInts(val)
+	case PropConditions:
+		c.Conditions = decodeConditions(val)
+	case PropResist:
+		c.Resistances = splitList(val)
+	case PropImmune:
+		c.Immunities = splitList(val)
+	case PropVulnerable:
+		c.Vulnerabilities = splitList(val)
 	case PropUsesSpent:
 		c.UsesSpent = decodeUses(val)
 	case "DND_CP":
@@ -987,6 +1113,82 @@ func decodeChoices(val string) map[string][]string {
 // channel-divinity=2", keyed by the slug of the feature's name. Nothing is
 // written for a feature with nothing spent, so a character who has rested
 // carries no line at all.
+// historyRow is one row of a history table with its header looked up, so a
+// column can be asked for by name.
+type historyRow struct {
+	cell func(name string) string
+}
+
+// historyRows finds a history table by its section heading and returns its
+// rows, header row dropped, each able to answer for a named column. Columns
+// are located by their header rather than by position so that a sheet written
+// before a column existed - or one reordered by hand - still reads.
+func historyRows(tables map[string][][]string, heading string) []historyRow {
+	rows := tables[normalizeHeading(heading)]
+	col := map[string]int{}
+	for _, row := range rows {
+		if len(row) == 0 || !strings.EqualFold(strings.TrimSpace(row[0]), "Date") {
+			continue
+		}
+		for i, h := range row {
+			col[strings.ToLower(strings.TrimSpace(h))] = i
+		}
+		break
+	}
+	out := []historyRow{}
+	for _, row := range rows {
+		if len(row) == 0 || strings.EqualFold(strings.TrimSpace(row[0]), "Date") {
+			continue
+		}
+		cells := row
+		out = append(out, historyRow{cell: func(name string) string {
+			i, ok := col[name]
+			if !ok || i >= len(cells) {
+				return ""
+			}
+			return strings.TrimSpace(cells[i])
+		}})
+	}
+	return out
+}
+
+// encodeConditions writes the conditions a character is under the way the
+// property drawer stores them: the id on its own, or "exhaustion:3" when the
+// condition has levels.
+func encodeConditions(list []ConditionRef) string {
+	out := []string{}
+	for _, ref := range list {
+		if strings.TrimSpace(ref.Id) == "" {
+			continue
+		}
+		out = append(out, ref.String())
+	}
+	return joinList(out)
+}
+
+func decodeConditions(val string) []ConditionRef {
+	out := []ConditionRef{}
+	for _, part := range splitList(val) {
+		id := part
+		level := 0
+		if i := strings.LastIndex(part, ":"); i > 0 {
+			if n := atoi(part[i+1:]); n > 0 {
+				id = strings.TrimSpace(part[:i])
+				level = n
+			}
+		}
+		id = Slugify(id)
+		if id == "" {
+			continue
+		}
+		out = append(out, ConditionRef{Id: id, Level: level})
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 func encodeUses(m map[string]int) string {
 	if len(m) == 0 {
 		return ""

@@ -388,6 +388,23 @@ func mergeRuleset(dst, src *Ruleset) {
 			dst.Feats = append(dst.Feats, f)
 		}
 	}
+	// Conditions and damage types are keyed by id like everything else, so a
+	// module may add one or restate one without repeating the whole set. An
+	// empty list on both sides leaves the built in ones in play.
+	for _, cd := range src.Conditions {
+		if i := indexOfCondition(dst.Conditions, cd.Id); i >= 0 {
+			dst.Conditions[i] = cd
+		} else {
+			dst.Conditions = append(dst.Conditions, cd)
+		}
+	}
+	for _, dt := range src.DamageTypes {
+		if i := indexOfDamageType(dst.DamageTypes, dt.Id); i >= 0 {
+			dst.DamageTypes[i] = dt
+		} else {
+			dst.DamageTypes = append(dst.DamageTypes, dt)
+		}
+	}
 	if len(src.SlotTables) > 0 {
 		if dst.SlotTables == nil {
 			dst.SlotTables = map[string][][]int{}
@@ -779,6 +796,24 @@ func indexOfSpell(l []Spell, id string) int {
 	return -1
 }
 func indexOfFeat(l []Feat, id string) int {
+	for i := range l {
+		if l[i].Id == id {
+			return i
+		}
+	}
+	return -1
+}
+
+func indexOfCondition(l []Condition, id string) int {
+	for i := range l {
+		if l[i].Id == id {
+			return i
+		}
+	}
+	return -1
+}
+
+func indexOfDamageType(l []DamageType, id string) int {
 	for i := range l {
 		if l[i].Id == id {
 			return i

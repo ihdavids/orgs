@@ -236,6 +236,10 @@ func StartServer(sets *common.ServerSettings) {
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
+	// Settle the dnd module search path from the config before anything can
+	// touch the ruleset library, so an export is never served off a library
+	// that was built without the configured dndPaths on it.
+	DndLibrary()
 	LoadExtensions()
 	GetDb().Watch()
 	defer func() {

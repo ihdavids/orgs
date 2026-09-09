@@ -371,6 +371,18 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 			s.HPPercent = 100
 		}
 	}
+	// The same three numbers again, worked out the way the hit point line
+	// draws them - how full the bar is, how far past its end the temporary
+	// hit points reach, and whether the character is down or bloodied.
+	s.Health = ComputeHealth(s)
+
+	// ---- defenses and conditions ------------------------------------------
+	//
+	// Neither is derived from anything: what a character shrugs off and what
+	// is currently wrong with them are both stored on the sheet, so all this
+	// does is resolve them against the ruleset's catalog.
+	s.Defenses = ComputeDefenses(c, rs)
+	s.Conditions = ComputeConditions(c, rs)
 
 	// ---- armour class, initiative, movement -------------------------------
 	s.AC, s.ACSource = computeAC(c, rs, s, magic)

@@ -85,6 +85,25 @@ header.sheet-head {
 .fact .label { display: block; font-size: .62rem; text-transform: uppercase; color: var(--muted); }
 .fact .value { font-size: 1.05rem; font-weight: 600; }
 
+/* Inspiration is the one fact on the header that is also a control: the DM
+   hands it out and the player spends it, so it is a button that writes
+   straight back to the org file. Held, it lights up. */
+.fact.insp { padding: 0; }
+.insp-btn {
+  display: block; width: 100%; height: 100%;
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+  background: none; border: 0; border-radius: 4px; padding: 5px 12px;
+}
+.insp-btn:hover { background: #f6f0e2; }
+.insp-btn:disabled { cursor: default; }
+.insp-btn .value { display: flex; align-items: center; gap: 5px; }
+.insp-btn .spark { width: 15px; height: 15px; flex: 0 0 auto; opacity: .3; }
+.insp-btn .word { font-size: .92rem; color: var(--muted); font-weight: 400; }
+.fact.insp.on { border-color: var(--accent-2); background: #fbf3dc; }
+.fact.insp.on .insp-btn .spark { opacity: 1; }
+.fact.insp.on .insp-btn .word { color: var(--accent-2); font-weight: 700; }
+.fact.insp.busy { opacity: .6; }
+
 /* ---------------- portrait medallion ----------------
    The portrait is an ordinary <img> in a round window with the frame drawn
    over it in svg, rather than an svg <image>: that way an animated gif or
@@ -353,11 +372,35 @@ h3.subhead {
   border-radius: 6px 6px 26px 26px / 6px 6px 34px 34px;
   border-color: var(--accent);
 }
-.hp-bar {
-  height: 9px; border-radius: 5px; background: #d8cbb2;
-  border: 1px solid var(--line); overflow: hidden; margin-top: 6px;
+/* The hit point bar, with the number you are on at one end of it and the
+   number you started with at the other, both on the bar's own line so the
+   pair reads as the fraction it is. */
+.hp-gauge { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.hp-gauge .hp-now, .hp-gauge .hp-max {
+  font-family: Cinzel, Georgia, serif; font-weight: 700;
+  font-variant-numeric: tabular-nums; line-height: 1;
+  flex: 0 0 auto; min-width: 2.2em;
 }
-.hp-fill { height: 100%; background: linear-gradient(90deg, #7b1b1b, #a33); }
+.hp-gauge .hp-now { font-size: 1.15rem; text-align: right; }
+.hp-gauge .hp-max { font-size: .95rem; color: var(--muted); text-align: left; }
+.hp-bar {
+  flex: 1 1 auto; min-width: 0;
+  height: 9px; border-radius: 5px; background: #d8cbb2;
+  border: 1px solid var(--line); overflow: hidden;
+}
+/* Green while you are hale, and down through yellow and orange to red as the
+   bar empties, so how much trouble you are in is the colour rather than the
+   arithmetic. The band is worked out by the engine (HealthLevel), so the
+   exported page and the live one always agree. */
+.hp-fill { height: 100%; background: linear-gradient(90deg, #3f6b2a, #5d8f33); }
+.hp-fill.hurt     { background: linear-gradient(90deg, #97891c, #c0ac26); }
+.hp-fill.bloodied { background: linear-gradient(90deg, #b06a12, #d98a1c); }
+.hp-fill.dying    { background: linear-gradient(90deg, #7b1b1b, #a33); }
+/* The number you are on takes the same colour as the bar under it. */
+.hp-now.hale { color: #3f6b2a; }
+.hp-now.hurt { color: #857a15; }
+.hp-now.bloodied { color: #a3620f; }
+.hp-now.dying { color: var(--accent); }
 
 /* ---------------- tables ---------------- */
 table { width: 100%; border-collapse: collapse; font-size: .88rem; }
@@ -527,6 +570,135 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   font-size: .62rem; text-transform: uppercase; letter-spacing: .05em;
   color: var(--muted);
 }
+
+/* ---------------- hit points ----------------
+   The line under the bar that says what is between the character and the
+   floor, and the three things that can be done about it. Hurt and Heal are
+   the two buttons that get pressed in a fight, so they are the ones that
+   carry colour. */
+.hp-temp {
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: .78rem; margin-top: 5px;
+}
+.hp-temp .nm { color: var(--muted); }
+.hp-temp .val {
+  font-family: Cinzel, Georgia, serif; font-weight: 700;
+  color: var(--accent-2); font-size: .95rem;
+}
+.hp-temp .val.none { color: var(--line); font-weight: 400; }
+.hp-ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.hp-ctl .hp-amt {
+  width: 62px; flex: 0 0 auto; text-align: center;
+  font-family: Cinzel, Georgia, serif; font-size: .9rem; padding: 3px 4px;
+}
+.hpb {
+  font-family: Cinzel, Georgia, serif; font-size: .64rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: var(--paper); padding: 4px 11px; cursor: pointer;
+}
+.hpb:hover { background: #fbf7ee; border-color: currentColor; }
+.hpb:disabled { opacity: .5; cursor: default; }
+/* Red on Hurt and green on Heal: the colour says which way the number goes,
+   so neither button is pressed by mistake in the middle of a fight. */
+.hpb.hurt { color: var(--accent); }
+.hpb.heal { color: #3f6b2a; }
+
+/* The hit die roller. It sits beside the hit points and is easy to take for a
+   number rather than a button, so it says what it is and what rolling it
+   costs. */
+.hitdie {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: var(--paper); padding: 2px 8px 3px; cursor: pointer;
+}
+.hitdie:hover { border-color: var(--accent); }
+.hitdie .hd-label {
+  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+}
+.hitdie .hd-val {
+  font-family: Cinzel, Georgia, serif; font-weight: 700; font-size: .95rem;
+}
+.hitdie .hd-spent { font-size: .62rem; color: var(--accent); }
+
+/* ---------------- defenses and conditions ----------------
+   Damage shrugged off, and whatever is currently wrong with the character.
+   The three defenses are told apart by colour rather than by reading the
+   label, since at the table they are glanced at rather than read. */
+.subhead + .def-rows { margin-top: 4px; }
+.def-rows { display: flex; flex-direction: column; gap: 5px; }
+.def-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.def-kind {
+  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  width: 76px; flex: 0 0 auto; color: var(--muted);
+}
+.def-kind.res { color: #1b4f9c; }
+.def-kind.imm { color: #1f7a3d; }
+.def-kind.vul { color: var(--accent); }
+.def-chip {
+  font-size: .74rem; border: 1px solid currentColor; border-radius: 10px;
+  padding: 1px 9px; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.def-chip.res { color: #1b4f9c; background: rgba(27,79,156,.07); }
+.def-chip.imm { color: #1f7a3d; background: rgba(31,122,61,.07); }
+.def-chip.vul { color: var(--accent); background: rgba(155,42,42,.07); }
+.def-chip .x {
+  border: 0; background: none; cursor: pointer; color: inherit;
+  font-size: .9rem; line-height: 1; padding: 0; opacity: .55;
+}
+.def-chip .x:hover { opacity: 1; }
+.def-empty { font-size: .78rem; color: var(--muted); margin: 4px 0 0; }
+.def-foot { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+
+/* the conditions that are on, each with its mark and its rules */
+.cond-active { display: flex; flex-direction: column; gap: 6px; margin-top: 5px; }
+.cond-on {
+  border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 4px; background: #fbf7ee; padding: 5px 9px;
+}
+.cond-on b { font-family: Cinzel, Georgia, serif; font-size: .78rem; white-space: nowrap; }
+.cond-on .tagline { margin-left: 7px; }
+.cond-on p { font-size: .74rem; color: var(--muted); margin: 3px 0 0; }
+.cond-on .ico { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; }
+.cond-on .lvl { margin-left: auto; display: inline-flex; gap: 3px; }
+.cond-head { display: flex; align-items: center; gap: 4px; }
+.cond-head .x {
+  margin-left: auto; border: 0; background: none; cursor: pointer;
+  color: var(--muted); font-size: 1rem; line-height: 1; padding: 0 2px;
+}
+.cond-head .x:hover { color: var(--accent); }
+
+/* the picker: every condition there is, as a grid of marks to tap */
+.cond-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 6px; overflow-y: auto; margin-top: 8px; flex: 1; min-height: 90px;
+}
+.cond-pick {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1px solid var(--line); border-radius: 5px;
+  background: var(--paper); color: var(--muted);
+  font-family: inherit; font-size: .62rem; text-align: center;
+  padding: 8px 4px 6px; cursor: pointer;
+}
+.cond-pick:hover { border-color: var(--edge); color: var(--ink); background: #fbf7ee; }
+.cond-pick.on {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(155,42,42,.08); font-weight: 600;
+}
+.cond-pick .ico { width: 26px; height: 26px; }
+.cond-pick .lv { font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; }
+.ico { fill: none; stroke: currentColor; stroke-width: 1.5;
+       stroke-linecap: round; stroke-linejoin: round; }
+.cond-why { font-size: .74rem; color: var(--muted); margin-top: 8px; min-height: 2.4em; }
+.cond-step {
+  border: 1px solid var(--line); border-radius: 4px; background: var(--paper);
+  color: var(--muted); font: inherit; font-size: .7rem; line-height: 1;
+  padding: 1px 6px; cursor: pointer;
+}
+.cond-step:hover { color: var(--ink); border-color: var(--edge); }
 
 /* the add, move and manage spells boxes, over the sheet. The shell is
    shared: only what goes inside them differs. */
@@ -1540,7 +1712,8 @@ footer.sheet-foot {
      tab happened to be open */
   .coin-spend, .coin-hint, .coin-log,
   .inv-tabs, .inv-actions, .inv-foot, .inv-modal, .cast-btn, .rest-modal,
-  .sb-modal, .spell-foot, .tabbar { display: none !important; }
+  .sb-modal, .spell-foot, .tabbar, .hp-ctl, .def-foot, .def-chip .x,
+  .cond-head .x, .cond-on .lvl { display: none !important; }
   /* on paper there is nothing to click, so every tab is printed as the
      section it was, heading and all */
   .box.has-tabs > .tabpane { display: block !important; }
@@ -1616,7 +1789,25 @@ footer.sheet-foot {
       {% if sheet.alignment %}<div class="fact"><span class="label">Alignment</span><span class="value">{{ sheet.alignment }}</span></div>{% endif %}
       {% if not sheet.imageSrc %}<div class="fact"><span class="label">Experience</span><span class="value">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span></div>{% endif %}
       {% if sheet.player %}<div class="fact"><span class="label">Player</span><span class="value">{{ sheet.player }}</span></div>{% endif %}
-      <div class="fact"><span class="label">Inspiration</span><span class="value">{% if sheet.inspiration %}Yes{% else %}&mdash;{% endif %}</span></div>
+      <!-- Inspiration is a button, not a reading: pressing it posts to the
+           server, which rewrites DND_INSPIRATION in the character's own org
+           file. Without a script - or on paper - it is still the fact it
+           always was. -->
+      <div class="fact insp{% if sheet.inspiration %} on{% endif %}" id="insp">
+        <button type="button" class="insp-btn" id="insp-btn"
+                aria-pressed="{% if sheet.inspiration %}true{% else %}false{% endif %}"
+                title="Inspiration: spend it for advantage on one roll. Press to gain or spend it.">
+          <span class="label">Inspiration</span>
+          <span class="value">
+            <svg class="spark" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2 L14.6 8.6 L21.5 9.4 L16.4 14 L17.9 20.8 L12 17.3
+                       L6.1 20.8 L7.6 14 L2.5 9.4 L9.4 8.6 Z"
+                    fill="var(--accent-2)"/>
+            </svg>
+            <span class="word" id="insp-word">{% if sheet.inspiration %}Held{% else %}None{% endif %}</span>
+          </span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -1691,43 +1882,123 @@ footer.sheet-foot {
 
     <!-- =============== middle column =============== -->
     <div class="col">
-      <div class="box">
-        <h2>Combat</h2>
-        <div class="combat">
-          <div class="tile shield">
-            <span class="tile-label">Armor Class</span>
-            <div class="big">{{ sheet.ac }}</div>
-            <span class="sub">{{ sheet.acSource }}</span>
+      <!-- Combat and the defenses share one box, shown a tab at a time:
+           what the character does on their turn, and what is done to
+           them. As everywhere else the markup is only the two sections
+           stacked, so a sheet with no script - or a printed one - still
+           shows both. -->
+      <div class="box tabbed" data-tabs="combat">
+        <div class="tabpane">
+          <h2>Combat</h2>
+          <div class="combat">
+            <div class="tile shield">
+              <span class="tile-label">Armor Class</span>
+              <div class="big">{{ sheet.ac }}</div>
+              <span class="sub">{{ sheet.acSource }}</span>
+            </div>
+            <div class="tile rollable" data-kind="check" data-mod="{{ sheet.initiativeStr }}"
+                 data-label="Initiative">
+              <span class="tile-label">Initiative</span>
+              <div class="big">{{ sheet.initiativeStr }}</div>
+              <span class="sub">dexterity</span>
+            </div>
+            <div class="tile">
+              <span class="tile-label">Speed</span>
+              <div class="big">{{ sheet.speed }}</div>
+              <span class="sub">feet &middot; {{ sheet.size }}</span>
+            </div>
           </div>
-          <div class="tile rollable" data-kind="check" data-mod="{{ sheet.initiativeStr }}"
-               data-label="Initiative">
-            <span class="tile-label">Initiative</span>
-            <div class="big">{{ sheet.initiativeStr }}</div>
-            <span class="sub">dexterity</span>
-          </div>
-          <div class="tile">
-            <span class="tile-label">Speed</span>
-            <div class="big">{{ sheet.speed }}</div>
-            <span class="sub">feet &middot; {{ sheet.size }}</span>
+          <!-- Hit points, the bar under them and the hit dice line are the
+               three things a rest moves, so each is named: the rest walkthrough
+               rewrites them in place rather than asking for the page again. -->
+          <div style="margin-top:10px">
+            <div class="row" style="border:0">
+              <span class="nm" id="hp-line"><strong>Hit Points</strong>{% if sheet.hpTemp %} <span class="tagline">+{{ sheet.hpTemp }} temp</span>{% endif %}</span>
+              {% if sheet.hitDice %}<span class="hitdie rollable" data-kind="hitdie"
+                    data-pool="{{ sheet.hitDice }}" data-mod="{{ sheet.abilityMap.con.mod }}"
+                    data-label="Hit Die"
+                    title="Roll one hit die and add your Constitution modifier. Spending one on a short rest is how you heal without magic; you get them back on a long rest."
+                    ><span class="hd-label">Roll hit die</span><span
+                     class="hd-val" id="hitdie-pool">{{ sheet.hitDice }}</span>{% if sheet.hitDiceUsed %}<span
+                     class="hd-spent" id="hitdie-spent">{{ sheet.hitDiceUsed }} spent</span>{% else %}<span
+                     class="hd-spent" id="hitdie-spent"></span>{% endif %}</span>{% endif %}
+            </div>
+            <!-- The bar reads left to right as the fraction it is: what you are
+                 on now, the bar itself, and what you started the day with. -->
+            <div class="hp-gauge">
+              <span class="hp-now {{ sheet.health.level }}" id="hp-now"
+                    title="Current hit points">{{ sheet.hpCurrent }}</span>
+              <div class="hp-bar" role="img"
+                   aria-label="{{ sheet.hpCurrent }} of {{ sheet.hpMax }} hit points"
+                   id="hp-bar"><div class="hp-fill {{ sheet.health.level }}" id="hp-fill"
+                   style="width:{{ sheet.hpPercent }}%"></div></div>
+              <span class="hp-max" id="hp-max" title="Maximum hit points">{{ sheet.hpMax }}</span>
+            </div>
+            <!-- What happens to hit points between rests: a number and three
+                 things to do with it. The panel is redrawn from what the server
+                 wrote into the org file, so the sheet and the file never
+                 disagree about how badly hurt somebody is. -->
+            <div class="hp-temp" id="hp-temp-line">
+              <span class="nm">Temporary hit points</span>
+              <span class="val{% if not sheet.hpTemp %} none{% endif %}" id="hp-temp-val">{{ sheet.hpTemp }}</span>
+            </div>
+            <div class="hp-ctl" id="hp-ctl">
+              <input type="number" class="inv-field hp-amt" id="hp-amount" min="0"
+                     inputmode="numeric" placeholder="0" autocomplete="off"
+                     aria-label="How many hit points">
+              <button type="button" class="hpb hurt" data-hp="hurt">Hurt</button>
+              <button type="button" class="hpb heal" data-hp="heal">Heal</button>
+              <button type="button" class="ib" data-hp="temp"
+                      title="Set your temporary hit points to that number">Temp</button>
+              <span class="inv-msg" id="hp-msg"></span>
+            </div>
+            <div class="tagline" style="margin-top:4px">
+              <span class="rollable" data-kind="check" data-mod="{{ sheet.deathSaveStr }}"
+                    data-label="Death Saving Throw">death saves {{ sheet.deathSaves }}{% if sheet.deathSaveBonus %}
+                    ({{ sheet.deathSaveStr }}){% endif %}</span> &middot;
+              carrying {{ sheet.weight }} of {{ sheet.carryCapacity }} lb
+            </div>
           </div>
         </div>
-        <!-- Hit points, the bar under them and the hit dice line are the
-             three things a rest moves, so each is named: the rest walkthrough
-             rewrites them in place rather than asking for the page again. -->
-        <div style="margin-top:10px">
-          <div class="row" style="border:0">
-            <span class="nm" id="hp-line"><strong>Hit Points</strong> {{ sheet.hpCurrent }} / {{ sheet.hpMax }}{% if sheet.hpTemp %} (+{{ sheet.hpTemp }} temp){% endif %}</span>
-            {% if sheet.hitDice %}<span class="val rollable" data-kind="hitdie"
-                  data-pool="{{ sheet.hitDice }}" data-mod="{{ sheet.abilityMap.con.mod }}"
-                  data-label="Hit Die">{{ sheet.hitDice }}</span>{% endif %}
-          </div>
-          <div class="hp-bar"><div class="hp-fill" id="hp-fill" style="width:{{ sheet.hpPercent }}%"></div></div>
-          <div class="tagline" style="margin-top:4px">
-            <span id="hitdice-line">Hit dice {{ sheet.hitDice }}{% if sheet.hitDiceUsed %}, {{ sheet.hitDiceUsed }} spent{% endif %}</span> &middot;
-            <span class="rollable" data-kind="check" data-mod="{{ sheet.deathSaveStr }}"
-                  data-label="Death Saving Throw">death saves {{ sheet.deathSaves }}{% if sheet.deathSaveBonus %}
-                  ({{ sheet.deathSaveStr }}){% endif %}</span> &middot;
-            carrying {{ sheet.weight }} of {{ sheet.carryCapacity }} lb
+
+        <!-- What the character shrugs off, and what is currently wrong with
+             them. Neither is derived from anything: a resistance may come from
+             a race, a spell that is running or a boon the DM handed out, and a
+             condition is something that happened at the table, so both are
+             stored on the character and written into the org file. The panel
+             is live; what is rendered here is what a sheet with no script -
+             or no server - still shows. -->
+        <div class="tabpane" id="defenses" data-tab="Defenses">
+          <h2>Defenses</h2>
+          <div id="def-live">
+            <h3 class="subhead">Resistances, Immunities &amp; Vulnerabilities</h3>
+            {% if sheet.defenses.any %}
+            <div class="def-rows">
+              {% if sheet.defenses.resistances %}<div class="def-row"><span class="def-kind res">Resistant</span>
+                {% for d in sheet.defenses.resistances %}<span class="def-chip res">{{ d.name }}</span>{% endfor %}</div>{% endif %}
+              {% if sheet.defenses.immunities %}<div class="def-row"><span class="def-kind imm">Immune</span>
+                {% for d in sheet.defenses.immunities %}<span class="def-chip imm">{{ d.name }}</span>{% endfor %}</div>{% endif %}
+              {% if sheet.defenses.vulnerabilities %}<div class="def-row"><span class="def-kind vul">Vulnerable</span>
+                {% for d in sheet.defenses.vulnerabilities %}<span class="def-chip vul">{{ d.name }}</span>{% endfor %}</div>{% endif %}
+            </div>
+            {% else %}
+            <p class="def-empty">Nothing yet. You take every kind of damage the way it comes.</p>
+            {% endif %}
+
+            <h3 class="subhead">Conditions</h3>
+            {% if sheet.conditions.active %}
+            <div class="cond-active">
+              {% for c in sheet.conditions.active %}
+              <div class="cond-on">
+                <b>{{ c.label }}</b>
+                {% if c.note %}<span class="tagline">{{ c.note }}</span>{% endif %}
+                {% if c.text %}<p>{{ c.text }}</p>{% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="def-empty">Nothing is on you.</p>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -1822,7 +2093,7 @@ footer.sheet-foot {
              changing coin up is written back to the org character sheet. What
              is rendered here is what a sheet with no script - or no server -
              still shows. -->
-        <div class="tabpane" id="coins" data-tab="$">
+        <div class="tabpane" id="coins" data-tab="Coins">
           <h2>Coins</h2>
           <div id="coin-live">
             <div class="coin-head">
@@ -2025,6 +2296,8 @@ footer.sheet-foot {
      data-character-id="{{ sheet.id }}" data-file="{{ sheetFile }}"></div>
 <script type="application/json" id="dnd-inventory-data">{{ inventoryJson|safe }}</script>
 <script type="application/json" id="dnd-money-data">{{ moneyJson|safe }}</script>
+<script type="application/json" id="dnd-defenses-data">{{ defensesJson|safe }}</script>
+<script type="application/json" id="dnd-health-data">{{ healthJson|safe }}</script>
 <noscript><style>.rollable { cursor: auto; text-decoration: none; }</style></noscript>
 <script>
 /* ---------------------------------------------------------------------------
@@ -5468,6 +5741,605 @@ footer.sheet-foot {
       .then(coinFocusAmount, coinFocusAmount);
   }
 
+  // --------------------------------------------------- defenses & conditions
+  //
+  // What the character shrugs off, and what is currently wrong with them.
+  // Neither can be worked out from the rules - a resistance may come from a
+  // race, a spell that is running or a cloak being worn, and a condition is
+  // something that happened at the table - so both are stored on the character
+  // and written straight into the org file, the same way coin and inventory
+  // are. Two people looking at the same character see the same state, and it
+  // is still there next session.
+  var DEF = { state: null, busy: false, error: '', msg: '', pick: '' };
+  var defBox, defLive, condModal, defAddBox;
+
+  // One mark per condition. They are line drawings in the same hand as the
+  // dice and quill marks elsewhere on the sheet, so a condition is recognised
+  // rather than read - which is the whole point of a picker you tap.
+  var COND_ICONS = {
+    blinded: '<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/>' +
+      '<circle cx="12" cy="12" r="2.6"/><path d="M3.5 3.5l17 17"/>',
+    charmed: '<path d="M12 20.4S3.6 14.9 3.6 8.9A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8.4 1.9' +
+      'c0 6-8.4 11.5-8.4 11.5z"/>',
+    deafened: '<path d="M7 9.4a5 5 0 0 1 10 0c0 3-3 3.6-3 6a2.4 2.4 0 0 1-4.6.9"/>' +
+      '<path d="M3.5 3.5l17 17"/>',
+    exhaustion: '<path d="M6 3h12M6 21h12"/>' +
+      '<path d="M8.4 3v3.4c0 2 3.6 3.5 3.6 5.6 0-2.1 3.6-3.6 3.6-5.6V3"/>' +
+      '<path d="M8.4 21v-3.4c0-2 3.6-3.5 3.6-5.6 0 2.1 3.6 3.6 3.6 5.6V21"/>',
+    frightened: '<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10.2" r="1.1"/>' +
+      '<circle cx="15" cy="10.2" r="1.1"/>' +
+      '<path d="M8.4 17.2c1-1.7 2.2-2.5 3.6-2.5s2.6.8 3.6 2.5"/>',
+    grappled: '<path d="M9 11.4V5.8a1.6 1.6 0 0 1 3.2 0v5.2"/>' +
+      '<path d="M12.2 10.6V4.6a1.6 1.6 0 0 1 3.2 0v6.2"/>' +
+      '<path d="M15.4 11V7.4a1.6 1.6 0 0 1 3.2 0v7c0 3.6-2.6 6.6-6.4 6.6-3.2 0-4.8-1.6-6.4-4.2' +
+      'L4 14.4a1.7 1.7 0 0 1 2.8-1.9L9 15.2"/>',
+    incapacitated: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+    invisible: '<path d="M2.4 12s4-6 9.6-6 9.6 6 9.6 6-4 6-9.6 6-9.6-6-9.6-6z" ' +
+      'stroke-dasharray="3.4 3"/><circle cx="12" cy="12" r="2.4"/>',
+    paralyzed: '<path d="M13.2 2.4 5.4 13.2h5.6l-1.6 8.4 8.8-11.6h-5.8z"/>',
+    petrified: '<path d="M4.2 14.8 7.8 6.4 14 4l6 5.6L18.4 19 8 20.2z"/>' +
+      '<path d="M7.8 6.4 14 4M8 20.2l1-6.2 5.4-3.4L20 9.6"/>',
+    poisoned: '<path d="M9.6 3h4.8M11 3v6.2L5.9 18a2.4 2.4 0 0 0 2.1 3.6h8a2.4 2.4 0 0 0 2.1-3.6' +
+      'L13 9.2V3"/><circle cx="10.8" cy="16.4" r=".9"/><circle cx="14" cy="18.6" r="1.2"/>',
+    prone: '<path d="M12 3v10.6"/><path d="M7.8 9.6 12 13.8l4.2-4.2"/><path d="M4 19.8h16"/>',
+    restrained: '<path d="M9.4 14.6 14.6 9.4"/>' +
+      '<path d="M7.8 12.2 6 14a3.5 3.5 0 0 0 5 5l1.8-1.8"/>' +
+      '<path d="M16.2 11.8 18 10a3.5 3.5 0 0 0-5-5l-1.8 1.8"/>',
+    stunned: '<path d="M12 15a3 3 0 1 0-3-3 5 5 0 1 0 5 5 7 7 0 1 1-7-7"/>',
+    unconscious: '<path d="M3 8.6h5.6L3 15.4h5.6"/><path d="M11.4 3.8h4.8l-4.8 5.6h4.8"/>' +
+      '<path d="M13.6 15h5.8l-5.8 6h5.8"/>',
+    // Anything homebrew the ruleset does not carry a drawing for.
+    unknown: '<circle cx="12" cy="12" r="9"/><path d="M12 7.6v5.6"/>' +
+      '<circle cx="12" cy="16.6" r=".7"/>'
+  };
+
+  function condIcon(id, cls) {
+    var d = COND_ICONS[id] || COND_ICONS.unknown;
+    return '<svg class="ico ' + (cls || '') + '" viewBox="0 0 24 24" ' +
+      'aria-hidden="true" focusable="false">' + d + '</svg>';
+  }
+
+  function defConfigured() { return !!(LOG.file || CHARACTER_ID); }
+
+  function defWho(body) {
+    body = body || {};
+    body.filename = LOG.file || '';
+    body.id = CHARACTER_ID || '';
+    return body;
+  }
+
+  function defLoad(quiet) {
+    if (!defConfigured()) { return Promise.resolve(); }
+    var q = '/dnd/conditions?filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    return api('GET', q).then(function (state) {
+      DEF.state = state;
+      DEF.error = '';
+      renderDefenses();
+    }, function (err) {
+      if (!quiet) { DEF.error = err.message || String(err); renderDefenses(); }
+    });
+  }
+
+  // One change, then redraw from what came back, so the panel always shows
+  // what is actually written in the file. A refused change leaves the
+  // character alone and there is nothing to undo.
+  function defChange(body) {
+    if (!defConfigured()) {
+      DEF.error = 'this sheet does not know which org file it came from';
+      renderDefenses();
+      return Promise.reject(new Error(DEF.error));
+    }
+    DEF.busy = true;
+    DEF.error = '';
+    renderDefenses();
+    return api('POST', '/dnd/conditions', defWho(body)).then(function (state) {
+      DEF.busy = false;
+      DEF.state = state;
+      DEF.msg = state.msg || '';
+      renderDefenses();
+      // The night's log gets a line, the way a rest does: what happened to
+      // this character is part of what happened at the table.
+      logNote(defLine(body, state));
+      return state;
+    }, function (err) {
+      DEF.busy = false;
+      DEF.error = err.message || String(err);
+      renderDefenses();
+      throw err;
+    });
+  }
+
+  // The line the session log gets. The server says what it did; this only
+  // decides which of the two headings it belongs under.
+  function defLine(body, state) {
+    if (!state.msg) { return ''; }
+    var act = body.action || '';
+    var head = (act === 'resist' || act === 'immune' || act === 'vulnerable' ||
+                act === 'unprotect') ? '*Defenses.*' : '*Condition.*';
+    var msg = state.msg;
+    return head + ' ' + msg.charAt(0).toUpperCase() + msg.slice(1) + '.';
+  }
+
+  function defState() { return DEF.state || {}; }
+  function defConditions() { return defState().conditions || {}; }
+  function defDefenses() { return defState().defenses || {}; }
+
+  // ------------------------------------------------------- drawing the panel
+  function defChipHtml(d, kind) {
+    return '<span class="def-chip ' + kind + '">' + esc(d.name || d.id) +
+      '<button type="button" class="x" data-drop="' + esc(d.name || d.id) +
+      '" aria-label="Drop ' + esc(d.name || d.id) + '">&times;</button></span>';
+  }
+
+  function defRowHtml(label, kind, list) {
+    if (!list || !list.length) { return ''; }
+    return '<div class="def-row"><span class="def-kind ' + kind + '">' + label +
+      '</span>' + list.map(function (d) { return defChipHtml(d, kind); }).join('') +
+      '</div>';
+  }
+
+  function condOnHtml(c) {
+    var step = '';
+    if (c.levels) {
+      step = '<span class="lvl">' +
+        '<button type="button" class="cond-step" data-lvl="' + esc(c.id) + ':' +
+          (c.level - 1) + '" aria-label="Ease ' + esc(c.name) + '">&minus;</button>' +
+        '<button type="button" class="cond-step" data-lvl="' + esc(c.id) + ':' +
+          (c.level + 1) + '" aria-label="Worsen ' + esc(c.name) + '"' +
+          (c.level >= c.levels ? ' disabled' : '') + '>+</button></span>';
+    }
+    return '<div class="cond-on"><div class="cond-head">' +
+      condIcon(c.icon || c.id) + '<b>' + esc(c.label || c.name) + '</b>' +
+      (c.note ? '<span class="tagline">' + esc(c.note) + '</span>' : '') + step +
+      '<button type="button" class="x" data-off="' + esc(c.id) +
+        '" aria-label="End ' + esc(c.name) + '">&times;</button></div>' +
+      (c.text ? '<p>' + esc(c.text) + '</p>' : '') + '</div>';
+  }
+
+  function renderDefenses() {
+    if (!defLive) { return; }
+    var d = defDefenses();
+    var c = defConditions();
+    var rows = defRowHtml('Resistant', 'res', d.resistances) +
+      defRowHtml('Immune', 'imm', d.immunities) +
+      defRowHtml('Vulnerable', 'vul', d.vulnerabilities);
+    var active = (c.active || []).map(condOnHtml).join('');
+
+    defLive.innerHTML =
+      '<h3 class="subhead">Resistances, Immunities &amp; Vulnerabilities</h3>' +
+      (rows ? '<div class="def-rows">' + rows + '</div>'
+            : '<p class="def-empty">Nothing yet. You take every kind of damage ' +
+              'the way it comes.</p>') +
+      '<div class="def-foot">' +
+        '<button type="button" class="inv-add" data-def="add">Add a defense&hellip;</button>' +
+      '</div>' +
+      '<h3 class="subhead" style="margin-top:12px">Conditions</h3>' +
+      (active ? '<div class="cond-active">' + active + '</div>'
+              : '<p class="def-empty">Nothing is on you.</p>') +
+      '<div class="def-foot">' +
+        '<button type="button" class="inv-add" data-def="pick">Conditions&hellip;</button>' +
+        ((c.active || []).length > 1
+          ? '<button type="button" class="ib" data-def="clear">Clear all</button>' : '') +
+        (DEF.busy ? '<span class="inv-msg">saving&hellip;</span>'
+                  : (DEF.msg ? '<span class="inv-msg">' + esc(DEF.msg) + '</span>' : '')) +
+        (DEF.error ? '<span class="inv-err">' + esc(DEF.error) + '</span>' : '') +
+      '</div>' +
+      '<div class="coin-hint">All of it is kept in your character file: the ' +
+        'defenses in its property drawer, and everything that has come and gone ' +
+        'in its <b>Condition History</b> section.</div>';
+  }
+
+  // ------------------------------------------------------------- the picker
+  function condPickHtml(c) {
+    return '<button type="button" class="cond-pick' + (c.on ? ' on' : '') +
+      '" data-cond="' + esc(c.id) + '" aria-pressed="' + (c.on ? 'true' : 'false') +
+      '" title="' + esc(c.text || '') + '">' +
+      condIcon(c.icon || c.id) + '<span>' + esc(c.name) + '</span>' +
+      (c.on && c.levels ? '<span class="lv">level ' + c.level + '</span>' : '') +
+      '</button>';
+  }
+
+  function renderCondPicker() {
+    if (!condModal) { return; }
+    var all = defConditions().all || [];
+    condModal.querySelector('#cond-grid').innerHTML = all.map(condPickHtml).join('');
+    var why = condModal.querySelector('#cond-why');
+    var found = null;
+    all.forEach(function (c) { if (c.id === DEF.pick) { found = c; } });
+    why.innerHTML = found
+      ? '<b>' + esc(found.name) + '.</b> ' + esc(found.text || '') +
+        (found.levels && found.on && found.note
+          ? ' <i>Level ' + found.level + ': ' + esc(found.note) + '.</i>' : '')
+      : 'Tap a condition to put it on or take it off. Exhaustion arrives at ' +
+        'level 1; step it up and down from the panel behind this.';
+    condModal.querySelector('#cond-err').textContent = DEF.error || '';
+  }
+
+  function openConditions() {
+    if (!condModal) { return; }
+    DEF.pick = '';
+    renderCondPicker();
+    condModal.classList.add('open');
+  }
+
+  // The kinds of damage come from the ruleset rather than from a list kept
+  // here, so a module that adds one is offered it without touching the sheet.
+  // Every condition is offered too: "immune to being frightened" is a defense.
+  function fillDamageTypes() {
+    var list = defAddBox && defAddBox.querySelector('#def-types');
+    if (!list) { return; }
+    var names = (defState().damageTypes || []).map(function (d) { return d.name; })
+      .concat((defConditions().all || []).map(function (c) { return c.name; }));
+    list.innerHTML = names.map(function (n) {
+      return '<option value="' + esc(n) + '">';
+    }).join('');
+  }
+
+  function openDefenseAdd() {
+    fillDamageTypes();
+    if (!defAddBox) { return; }
+    defAddBox.querySelector('#def-what').value = '';
+    defAddBox.querySelector('#def-err').textContent = '';
+    defAddBox.classList.add('open');
+    defAddBox.querySelector('#def-what').focus();
+  }
+
+  function doDefenseAdd(kind) {
+    var what = (defAddBox.querySelector('#def-what').value || '').trim();
+    if (!what) {
+      defAddBox.querySelector('#def-err').textContent = 'against what?';
+      return;
+    }
+    defChange({ action: kind, name: what }).then(function () {
+      defAddBox.classList.remove('open');
+    }, function (err) {
+      defAddBox.querySelector('#def-err').textContent = err.message || String(err);
+    });
+  }
+
+  // --------------------------------------------------------------- building
+  function buildDefenseUi() {
+    defBox = document.getElementById('defenses');
+    if (!defBox) { return; }
+    defLive = defBox.querySelector('#def-live');
+
+    // The sheet was exported with whatever state the character was in, so the
+    // panel is live before the server has said anything - and stays readable
+    // if the server never answers.
+    var seed = document.getElementById('dnd-defenses-data');
+    if (seed) {
+      try {
+        var got = JSON.parse(seed.textContent || 'null');
+        if (got && got.conditions) { DEF.state = got; }
+      } catch (e) { /* an unreadable blob just means we wait for the server */ }
+    }
+
+    condModal = document.createElement('div');
+    condModal.className = 'inv-modal';
+    condModal.id = 'cond-picker';
+    condModal.innerHTML =
+      '<div class="inv-card" role="dialog" aria-label="Conditions">' +
+        '<h3>Conditions' +
+          '<button type="button" class="x" data-def-close="1" aria-label="Close">' +
+          '&times;</button></h3>' +
+        '<div class="cond-grid" id="cond-grid"></div>' +
+        '<div class="cond-why" id="cond-why"></div>' +
+        '<div class="inv-err" id="cond-err"></div>' +
+      '</div>';
+    document.body.appendChild(condModal);
+
+    defAddBox = document.createElement('div');
+    defAddBox.className = 'inv-modal';
+    defAddBox.id = 'def-add';
+    defAddBox.innerHTML =
+      '<div class="inv-card" role="dialog" aria-label="Add a defense">' +
+        '<h3>Add a defense' +
+          '<button type="button" class="x" data-def-close="1" aria-label="Close">' +
+          '&times;</button></h3>' +
+        '<div class="inv-row">' +
+          '<input type="text" class="inv-field" id="def-what" autocomplete="off" ' +
+            'list="def-types" placeholder="fire" aria-label="Against what">' +
+          '<datalist id="def-types"></datalist>' +
+        '</div>' +
+        '<div class="inv-row">' +
+          '<button type="button" class="inv-go" data-add="resist">Resistant</button>' +
+          '<button type="button" class="inv-go" data-add="immune">Immune</button>' +
+          '<button type="button" class="inv-go" data-add="vulnerable">Vulnerable</button>' +
+        '</div>' +
+        '<div class="inv-hint">A kind of damage - <b>fire</b>, <b>necrotic</b>, ' +
+          '<b>bludgeoning</b> - or a condition you cannot be put under, or ' +
+          'anything else you want written down, such as ' +
+          '<b>bludgeoning from nonmagical attacks</b>. One kind of damage sits ' +
+          'in one of the three lists at a time.</div>' +
+        '<div class="inv-err" id="def-err"></div>' +
+      '</div>';
+    document.body.appendChild(defAddBox);
+
+    // ---- events
+    defBox.addEventListener('click', function (e) {
+      var act = e.target.closest('[data-def]');
+      if (act) {
+        var what = act.getAttribute('data-def');
+        if (what === 'pick') { openConditions(); }
+        else if (what === 'add') { openDefenseAdd(); }
+        else if (what === 'clear') { defChange({ action: 'clear' }).catch(noop); }
+        return;
+      }
+      var off = e.target.closest('[data-off]');
+      if (off) {
+        defChange({ action: 'remove', name: off.getAttribute('data-off') }).catch(noop);
+        return;
+      }
+      var lvl = e.target.closest('[data-lvl]');
+      if (lvl) {
+        var bits = lvl.getAttribute('data-lvl').split(':');
+        defChange({ action: 'level', name: bits[0],
+                    level: parseInt(bits[1], 10) || 0 }).catch(noop);
+        return;
+      }
+      var drop = e.target.closest('[data-drop]');
+      if (drop) {
+        defChange({ action: 'unprotect', name: drop.getAttribute('data-drop') })
+          .catch(noop);
+      }
+    });
+
+    condModal.addEventListener('click', function (e) {
+      if (e.target === condModal || e.target.closest('[data-def-close]')) {
+        condModal.classList.remove('open');
+        return;
+      }
+      var pick = e.target.closest('[data-cond]');
+      if (!pick) { return; }
+      DEF.pick = pick.getAttribute('data-cond');
+      // The picker stays open: putting three conditions on at once is one
+      // thing that happens, and closing after each would be three trips.
+      defChange({ action: 'toggle', name: DEF.pick })
+        .then(renderCondPicker, renderCondPicker);
+    });
+    condModal.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { condModal.classList.remove('open'); }
+    });
+
+    defAddBox.addEventListener('click', function (e) {
+      if (e.target === defAddBox || e.target.closest('[data-def-close]')) {
+        defAddBox.classList.remove('open');
+        return;
+      }
+      var go = e.target.closest('[data-add]');
+      if (go) { doDefenseAdd(go.getAttribute('data-add')); }
+    });
+    defAddBox.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { defAddBox.classList.remove('open'); return; }
+      if (e.key === 'Enter') { e.preventDefault(); doDefenseAdd('resist'); }
+    });
+    fillDamageTypes();
+
+    renderDefenses();
+    // The file on disk is the truth; the page catches up with it on load.
+    defLoad(true);
+  }
+
+  function noop() {}
+
+  // ------------------------------------------------------------- hit points
+  //
+  // The box next to the hit point bar: a number, and the three things that
+  // can be done with it between rests. Everything goes through the server and
+  // into the org file, so the damage taken tonight is still there next time
+  // the sheet is opened - and lands in the Health History section with it.
+  var HEALTH = { state: null, busy: false, error: '', msg: '' };
+  var hpCtl, hpAmount;
+
+  function healthConfigured() { return !!(LOG.file || CHARACTER_ID); }
+
+  function healthLoad(quiet) {
+    if (!healthConfigured()) { return Promise.resolve(); }
+    var q = '/dnd/hp?filename=' + encodeURIComponent(LOG.file || '') +
+      '&id=' + encodeURIComponent(CHARACTER_ID || '');
+    return api('GET', q).then(function (state) {
+      HEALTH.state = state;
+      HEALTH.error = '';
+      paintHitPoints();
+    }, function (err) {
+      if (!quiet) { HEALTH.error = err.message || String(err); paintHitPoints(); }
+    });
+  }
+
+  // The bands the bar is coloured in. These are HealthLevel in health.go said
+  // again in javascript, for the one caller - a rest - that works out where
+  // the hit points landed itself rather than being told by the server.
+  function hpLevel(percent) {
+    if (percent < 25) { return 'dying'; }
+    if (percent < 50) { return 'bloodied'; }
+    if (percent < 75) { return 'hurt'; }
+    return 'hale';
+  }
+
+  var HP_LEVELS = ['hale', 'hurt', 'bloodied', 'dying'];
+
+  // paintHpBar draws the gauge: the number you are on at the left, the bar,
+  // and the number you started with at the right, all three carrying the same
+  // colour so the bar is read without doing the arithmetic.
+  function paintHpBar(current, max, percent, level) {
+    if (typeof percent !== 'number') {
+      percent = max > 0 ? Math.max(0, Math.min(100, Math.round(current * 100 / max))) : 0;
+    }
+    level = level || hpLevel(percent);
+    var now = document.getElementById('hp-now');
+    if (now) {
+      now.textContent = current;
+      HP_LEVELS.forEach(function (l) { now.classList.toggle(l, l === level); });
+    }
+    var top = document.getElementById('hp-max');
+    if (top) { top.textContent = max; }
+    var bar = document.getElementById('hp-bar');
+    if (bar) { bar.setAttribute('aria-label', current + ' of ' + max + ' hit points'); }
+    var fill = document.getElementById('hp-fill');
+    if (fill) {
+      fill.style.width = percent + '%';
+      HP_LEVELS.forEach(function (l) { fill.classList.toggle(l, l === level); });
+    }
+  }
+
+  // paintHitPoints redraws the three things the hit point line is made of:
+  // the numbers, the bar and the temporary hit points. It is the one place
+  // that touches them, so a rest and a hit leave the sheet looking the same.
+  function paintHitPoints() {
+    var hp = (HEALTH.state && HEALTH.state.hp) || null;
+    var msg = document.getElementById('hp-msg');
+    if (msg) {
+      msg.className = HEALTH.error ? 'inv-err' : 'inv-msg';
+      msg.textContent = HEALTH.busy ? 'saving…' : (HEALTH.error || HEALTH.msg || '');
+    }
+    if (!hp) { return; }
+    var line = document.getElementById('hp-line');
+    if (line) {
+      line.innerHTML = '<strong>Hit Points</strong>' +
+        (hp.temp ? ' <span class="tagline">+' + hp.temp + ' temp</span>' : '');
+    }
+    paintHpBar(hp.current, hp.max, hp.percent, hp.level);
+    var val = document.getElementById('hp-temp-val');
+    if (val) {
+      val.textContent = hp.temp || 0;
+      // Nought temporary hit points is worth saying, but not worth shouting.
+      val.classList.toggle('none', !hp.temp);
+    }
+  }
+
+  function healthChange(action) {
+    if (!healthConfigured()) {
+      HEALTH.error = 'this sheet does not know which org file it came from';
+      paintHitPoints();
+      return;
+    }
+    var amount = parseInt(hpAmount && hpAmount.value, 10);
+    if (isNaN(amount) || amount < 0) {
+      HEALTH.error = action === 'temp' ? 'how many temporary hit points?' : 'how much?';
+      HEALTH.msg = '';
+      paintHitPoints();
+      if (hpAmount) { hpAmount.focus(); }
+      return;
+    }
+    HEALTH.busy = true;
+    HEALTH.error = '';
+    paintHitPoints();
+    api('POST', '/dnd/hp', { filename: LOG.file || '', id: CHARACTER_ID || '',
+                             action: action, amount: amount })
+      .then(function (state) {
+        HEALTH.busy = false;
+        HEALTH.state = state;
+        HEALTH.msg = state.msg || '';
+        if (hpAmount) { hpAmount.value = ''; hpAmount.focus(); }
+        paintHitPoints();
+        // A blow landing is worth a line in the night's log.
+        var last = (state.history || [])[state.history.length - 1];
+        if (last) {
+          var text = state.msg.charAt(0).toUpperCase() + state.msg.slice(1);
+          logNote((last.action === 'hurt' ? '*Damage.* '
+                 : last.action === 'healed' ? '*Healing.* '
+                 : '*Hit Points.* ') + text + '.');
+        }
+      }, function (err) {
+        HEALTH.busy = false;
+        HEALTH.msg = '';
+        HEALTH.error = err.message || String(err);
+        paintHitPoints();
+      });
+  }
+
+  function buildHealthUi() {
+    hpCtl = document.getElementById('hp-ctl');
+    if (!hpCtl) { return; }
+    hpAmount = document.getElementById('hp-amount');
+
+    var seed = document.getElementById('dnd-health-data');
+    if (seed) {
+      try {
+        var got = JSON.parse(seed.textContent || 'null');
+        if (got && got.hp) { HEALTH.state = got; }
+      } catch (e) { /* wait for the server */ }
+    }
+
+    hpCtl.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-hp]');
+      if (btn) { healthChange(btn.getAttribute('data-hp')); }
+    });
+    hpCtl.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' || e.target !== hpAmount) { return; }
+      e.preventDefault();
+      // Enter is the one that gets pressed in a fight, and in a fight it is
+      // nearly always damage.
+      healthChange('hurt');
+    });
+
+    paintHitPoints();
+    healthLoad(true);
+  }
+
+  // ------------------------------------------------------------ inspiration
+  // One bit, handed out by the DM and spent by the player. Pressing the
+  // marker in the header posts to the server, which rewrites
+  // DND_INSPIRATION in the character's own org file - so the sheet, the file
+  // and anyone else reading it agree, the same way hit points do.
+  var INSP = { held: false, busy: false };
+  var inspBox, inspBtn, inspWord;
+
+  function paintInspiration() {
+    if (!inspBox) { return; }
+    inspBox.classList.toggle('on', !!INSP.held);
+    inspBox.classList.toggle('busy', !!INSP.busy);
+    if (inspWord) { inspWord.textContent = INSP.held ? 'Held' : 'None'; }
+    if (inspBtn) {
+      inspBtn.setAttribute('aria-pressed', INSP.held ? 'true' : 'false');
+      inspBtn.disabled = !!INSP.busy;
+    }
+  }
+
+  function inspirationLoad() {
+    if (!healthConfigured()) { return; }
+    api('GET', '/dnd/inspiration?filename=' + encodeURIComponent(LOG.file || '') +
+        '&id=' + encodeURIComponent(CHARACTER_ID || ''))
+      .then(function (state) {
+        INSP.held = !!state.inspiration;
+        paintInspiration();
+      }, function () { /* the sheet already shows what was exported */ });
+  }
+
+  function inspirationToggle() {
+    if (INSP.busy) { return; }
+    if (!healthConfigured()) {
+      // Nothing to write to, so the marker stays where the export left it.
+      return;
+    }
+    INSP.busy = true;
+    paintInspiration();
+    var spending = INSP.held;
+    api('POST', '/dnd/inspiration', { filename: LOG.file || '',
+                                      id: CHARACTER_ID || '', action: 'toggle' })
+      .then(function (state) {
+        INSP.busy = false;
+        INSP.held = !!state.inspiration;
+        paintInspiration();
+        logNote(spending ? '*Inspiration.* Spent.' : '*Inspiration.* Gained.');
+      }, function () {
+        INSP.busy = false;
+        paintInspiration();
+      });
+  }
+
+  function buildInspirationUi() {
+    inspBox = document.getElementById('insp');
+    if (!inspBox) { return; }
+    inspBtn = document.getElementById('insp-btn');
+    inspWord = document.getElementById('insp-word');
+    INSP.held = inspBox.classList.contains('on');
+    if (inspBtn) { inspBtn.addEventListener('click', inspirationToggle); }
+    paintInspiration();
+    inspirationLoad();
+  }
+
   // ------------------------------------------------------------- spells
   //
   // The spell page is the character's book: what they know, what of it is
@@ -6006,20 +6878,19 @@ footer.sheet-foot {
   // sheet agrees with the file without being exported again.
   function applyRestToSheet(result, plan) {
     var line = document.getElementById('hp-line');
-    if (line) {
-      line.innerHTML = '<strong>Hit Points</strong> ' + result.hpAfter + ' / ' + result.hpMax;
-    }
-    var fill = document.getElementById('hp-fill');
-    if (fill && result.hpMax > 0) {
-      fill.style.width = Math.round(result.hpAfter * 100 / result.hpMax) + '%';
-    }
-    var dice = document.getElementById('hitdice-line');
-    if (dice && plan) {
+    if (line) { line.innerHTML = '<strong>Hit Points</strong>'; }
+    paintHpBar(result.hpAfter, result.hpMax);
+    var pool = document.getElementById('hitdie-pool');
+    var spent = document.getElementById('hitdie-spent');
+    if (plan) {
       var used = plan.hitDiceMax - plan.hitDiceLeft;
-      dice.textContent = 'Hit dice ' + (plan.hitDice || '') +
-        (used ? ', ' + used + ' spent' : '');
+      if (pool) { pool.textContent = plan.hitDice || ''; }
+      if (spent) { spent.textContent = used ? used + ' spent' : ''; }
     }
     resetFeatureUses(result.kind);
+    // A rest moves the hit points and a long one clears the temporary ones,
+    // so the hit point line is repainted from what the file now says.
+    healthLoad(true);
     // The slots came back too, and the spell page draws itself from the file.
     if (result.slotsBack > 0) { sbLoad(true); }
   }
@@ -6285,6 +7156,9 @@ footer.sheet-foot {
     buildCoinUi();
     buildSpellUi();
     buildRestUi();
+    buildDefenseUi();
+    buildHealthUi();
+    buildInspirationUi();
     buildSectionTabs();
     fitRingText();
 

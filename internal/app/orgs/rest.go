@@ -123,6 +123,12 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/rest", RequestDndRest).Methods("GET")
 	api.HandleFunc("/dnd/rest", PostDndRest).Methods("POST")
 	api.HandleFunc("/dnd/uses", PostDndUses).Methods("POST")
+	api.HandleFunc("/dnd/conditions", RequestDndConditions).Methods("GET")
+	api.HandleFunc("/dnd/conditions", PostDndConditions).Methods("POST")
+	api.HandleFunc("/dnd/hp", RequestDndHealth).Methods("GET")
+	api.HandleFunc("/dnd/hp", PostDndHealth).Methods("POST")
+	api.HandleFunc("/dnd/inspiration", RequestDndInspiration).Methods("GET")
+	api.HandleFunc("/dnd/inspiration", PostDndInspiration).Methods("POST")
 
 	// Dungeons & Dragons play session logs
 	api.HandleFunc("/dnd/play/sessions", RequestDndPlaySessions).Methods("GET")

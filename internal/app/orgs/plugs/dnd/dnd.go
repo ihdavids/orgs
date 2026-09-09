@@ -78,11 +78,14 @@ package dnd
 
 ** Sections share a box
 
-  The middle and right hand columns each hold one box that shows a section at
-  a time, picked from a row of tabs across the top of it: =Attacks=,
-  =Inventory=, =Personality= and =Appearance= in the middle, =Spellcasting=
-  and =Features & Traits= on the right. Which tab was last left open is
-  remembered, so a sheet reopens on whatever you were using.
+  Three boxes each show a section at a time, picked from a row of tabs across
+  the top of it: =Combat= and =Defenses= in the top of the middle column,
+  =Attacks=, =Inventory=, =Coins=, =Personality= and =Appearance= in the box
+  under it, and =Spellcasting= and =Features & Traits= on the right. What you
+  do on your turn and what is done to you sit together at the top of the
+  column; the rest of what a character carries and is sits below. Which tab
+  was last left open is remembered, so a sheet reopens on whatever you were
+  using.
 
   A section the character has nothing for - no spells to cast, no appearance
   filled in - is simply not there and gets no tab. The tabs are drawn by the
@@ -216,11 +219,23 @@ func Paths() []string {
 }
 
 // Library returns the shared ruleset library, loading it on first use.
+//
+// An empty search path means nobody has configured one yet - an exporter that
+// runs before the server has had a reason to touch the library, or the command
+// line client. Falling back to the default path here rather than loading the
+// built in SRD on its own is what stops that first caller from caching a
+// library with none of the add on modules in it. The fallback deliberately
+// does not write libPaths, so a later SetPaths from the server settings still
+// applies and still forces the reload.
 func Library() *dnd.Library {
 	libLock.Lock()
 	defer libLock.Unlock()
 	if library == nil {
-		library = dnd.NewLibrary(libPaths)
+		paths := libPaths
+		if len(paths) == 0 {
+			paths = DefaultPaths("")
+		}
+		library = dnd.NewLibrary(paths)
 	}
 	return library
 }
@@ -243,8 +258,22 @@ func DefaultPaths(templatePath string) []string {
 	if home, err := os.UserHomeDir(); err == nil {
 		paths = append(paths, filepath.Join(home, ".orgs", "dnd"))
 	}
+	return AbsPaths(paths)
+}
+
+// AbsPaths expands "~" and makes every path absolute, dropping duplicates.
+func AbsPaths(paths []string) []string {
 	out := []string{}
 	for _, p := range paths {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if strings.HasPrefix(p, "~") {
+			if home, err := os.UserHomeDir(); err == nil {
+				p = filepath.Join(home, strings.TrimPrefix(strings.TrimPrefix(p, "~"), "/"))
+			}
+		}
 		if abs, err := filepath.Abs(p); err == nil {
 			p = abs
 		}
@@ -389,13 +418,27 @@ func (self *SheetExporter) context(sheet *dnd.Sheet, props map[string]string) ma
 	return ctx
 }
 
+// sheetRuleset is the ruleset a sheet was computed against, looked up again
+// so the exported page can be handed catalogs - the damage types - that live
+// in the data rather than in the sheet. A nil ruleset answers with the built
+// in lists, so a sheet whose ruleset has gone missing still exports.
+func sheetRuleset(sheet *dnd.Sheet) *dnd.Ruleset {
+	if sheet == nil || sheet.Character == nil {
+		return nil
+	}
+	return Library().Get(sheet.Character.Ruleset)
+}
+
 func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string) (error, string) {
 	ctx := self.context(sheet, props)
-	if src, err := dnd.ImageSrc(sheet.Image, sheetDir(sheet)); err != nil {
+	// A character with no portrait of their own falls back to the drawn one
+	// for their race, so the medallion is never empty. A broken DND_IMAGE is
+	// still worth saying out loud, and the fallback is used anyway.
+	src, err := dnd.PortraitSrc(sheet.Character, sheetDir(sheet))
+	if err != nil {
 		sheet.Warnings = append(sheet.Warnings, err.Error())
-	} else {
-		sheet.ImageSrc = src
 	}
+	sheet.ImageSrc = src
 	ctx["sheet"] = dnd.SheetMap(sheet, nil)
 	// The inventory is handed over as json as well as through the sheet, so
 	// that the page's inventory panel starts from the same bag the sheet was
@@ -415,6 +458,33 @@ func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string)
 		ctx["moneyJson"] = string(data)
 	} else {
 		ctx["moneyJson"] = "null"
+	}
+	// The defenses tab and the hit point controls come over the same way, so
+	// both are readable and editable before the server has been asked
+	// anything. The history behind each rides along with it.
+	defenses := map[string]interface{}{
+		"conditions": sheet.Conditions, "defenses": sheet.Defenses,
+		"damageTypes": sheetRuleset(sheet).DamageTypeList(),
+		"history":     []dnd.ConditionEvent{},
+	}
+	health := map[string]interface{}{
+		"hp": sheet.Health, "history": []dnd.HealthEvent{},
+	}
+	if sheet.Character != nil {
+		if sheet.Character.ConditionLog != nil {
+			defenses["history"] = sheet.Character.ConditionLog
+		}
+		if sheet.Character.HealthLog != nil {
+			health["history"] = sheet.Character.HealthLog
+		}
+	}
+	ctx["defensesJson"] = "null"
+	if data, err := json.Marshal(defenses); err == nil {
+		ctx["defensesJson"] = string(data)
+	}
+	ctx["healthJson"] = "null"
+	if data, err := json.Marshal(health); err == nil {
+		ctx["healthJson"] = string(data)
 	}
 	// The sheet posts inventory changes back to the org file it came from.
 	ctx["sheetFile"] = ""
