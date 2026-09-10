@@ -94,6 +94,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tableformulainfo", PostFormulaInfo).Methods("POST")
 	api.HandleFunc("/tablerandomget", RequestTableRandomGet)
 	api.HandleFunc("/tablenames", RequestTableNames)
+	api.HandleFunc("/tables", RequestTables)
+	api.HandleFunc("/table", RequestTable).Methods("GET")
+	api.HandleFunc("/table", PostTable).Methods("POST")
+	api.HandleFunc("/table/eval", PostTableEval).Methods("POST")
 	api.HandleFunc("/tangle", RequestTangle)
 
 	// Dungeons & Dragons character module
