@@ -1,0 +1,536 @@
+/* nordic
+   a quiet swiss sans with hairline rules - reports, specs, reference pages
+
+   Pick it with "#+HTML_THEME: nordic" in a file, or ask for it at export time
+   with ?theme=nordic (which is what the worg files view does). The dark
+   counterpart is "nordic_dark".
+
+   Generated - do not hand edit. Regenerate the whole family with:
+       python3 tools/htmlthemes/gen_themes.py
+*/
+
+:root {
+	color-scheme: light;
+	--accent: #2f6fdb;
+	--accent-hi: #1d51ab;
+	--accent-soft: rgba(47, 111, 219, 0.28);
+	--bg: #ffffff;
+	--bg-code: #eef2f7;
+	--bg-inset: #f8fafc;
+	--bg-raised: #f6f8fa;
+	--body-weight: 400;
+	--code-bar: 1px solid var(--line);
+	--code-fg: #1d51ab;
+	--fg: #2b333d;
+	--fg-dim: #5a6674;
+	--fg-faint: #8a95a2;
+	--fg-strong: #0f161d;
+	--font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	--font-head: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	--font-mono: '{{fontfamily}}', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+	--font-table: var(--font-ui);
+	--font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	--h-tracking: -0.018em;
+	--h-weight: 650;
+	--h2-rule: none;
+	--h2-rule-pad: 0;
+	--leading: 1.66;
+	--line: #dfe5ec;
+	--line-soft: #edf1f5;
+	--marker: #a9b4c0;
+	--measure: 46rem;
+	--priority: #9a6b00;
+	--quote-style: normal;
+	--radius: 8px;
+	--row-alt: rgba(237, 241, 245, 0.5);
+	--row-hover: rgba(47, 111, 219, 0.06);
+	--sel: rgba(47, 111, 219, 0.14);
+	--shadow: 0 1px 2px rgba(15, 22, 29, 0.06), 0 10px 26px rgba(15, 22, 29, 0.07);
+	--shadow-inset: none;
+	--status-bg: transparent;
+	--strong-weight: 650;
+	--th-bg: #f6f8fa;
+	--th-fg: #5a6674;
+	--title-weight: 700;
+	--todo: #c0392b;
+}
+
+/* --- reset ------------------------------------------------------------- */
+
+*, *::before, *::after {
+	box-sizing: border-box; }
+
+* {
+	margin: 0;
+	padding: 0; }
+
+html {
+	font-size: 100%;
+	background-color: var(--bg);
+	color: var(--fg);
+	scrollbar-color: var(--line) transparent;
+	-webkit-text-size-adjust: 100%; }
+
+@media (min-width: 900px) {
+	html { font-size: 106.25%; } }
+
+body {
+	font-family: var(--font-body);
+	font-weight: var(--body-weight);
+	line-height: var(--leading);
+	background-color: var(--bg);
+	color: var(--fg);
+	max-width: var(--measure);
+	margin: 0 auto;
+	padding: 3.5rem 1.75rem 7rem;
+	word-wrap: break-word;
+	text-rendering: optimizeLegibility;
+	font-feature-settings: "kern" 1, "liga" 1; }
+
+@media (max-width: 640px) {
+	body { padding: 2rem 1.1rem 4rem; } }
+
+::selection {
+	background-color: var(--sel);
+	color: var(--fg-strong); }
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: 2px; }
+
+/* --- headings ---------------------------------------------------------- */
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--font-head);
+	font-weight: var(--h-weight);
+	letter-spacing: var(--h-tracking);
+	line-height: 1.22;
+	color: var(--fg-strong);
+	margin: 2.1em 0 0.6em; }
+
+h1 { font-size: 2.05rem; margin-top: 1.2em; }
+h2 { font-size: 1.55rem; border-bottom: var(--h2-rule); padding-bottom: var(--h2-rule-pad); }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1.02rem; }
+h5, h6 { font-size: 0.93rem; color: var(--fg-dim); }
+
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+	color: inherit;
+	border-bottom: none; }
+
+.title {
+	font-family: var(--font-head);
+	font-size: 2.7rem;
+	font-weight: var(--title-weight);
+	letter-spacing: -0.02em;
+	line-height: 1.12;
+	color: var(--fg-strong);
+	margin: 0 0 0.25em; }
+
+.subtitle {
+	font-weight: normal;
+	font-size: 1.05rem;
+	color: var(--fg-dim);
+	margin-bottom: 2.5em; }
+
+/* The exporter wraps each heading and its body in these. Nested sections get
+   a hairline down their left edge so the outline stays readable without the
+   indentation eating the measure. */
+
+.heading-wrapper { margin: 0; }
+.heading-title-wrapper { margin: 0; }
+.heading-content-wrapper { margin: 0; }
+.heading-content-text { margin: 0; }
+
+.content-level-3, .content-level-4, .content-level-5, .content-level-6 {
+	padding-left: 1.15em;
+	border-left: 1px solid var(--line-soft); }
+
+/* --- text -------------------------------------------------------------- */
+
+p { margin: 1em 0; }
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+	border-bottom: 1px solid var(--accent-soft);
+	transition: color 0.15s ease, border-color 0.15s ease; }
+a:hover, a:focus, a:active {
+	color: var(--accent-hi);
+	border-bottom-color: var(--accent); }
+
+strong, b {
+	font-weight: var(--strong-weight);
+	color: var(--fg-strong); }
+
+em, i { font-style: italic; }
+
+del, s { color: var(--fg-faint); }
+
+mark {
+	background-color: var(--sel);
+	color: inherit;
+	padding: 0 0.15em;
+	border-radius: 2px; }
+
+hr {
+	border: 0;
+	height: 1px;
+	background-image: linear-gradient(to right, transparent, var(--line) 18%, var(--line) 82%, transparent);
+	margin: 3em 0; }
+
+/* --- lists ------------------------------------------------------------- */
+
+ol, ul {
+	margin: 1em 0 1em 1.45em; }
+ol li ol, ol li ul, ul li ol, ul li ul {
+	margin: 0.3em 0 0.3em 1.25em; }
+li { margin: 0.32em 0; }
+li p { margin: 0.3em 0; }
+li::marker { color: var(--marker); }
+
+/* Org checkbox items carry these classes. The box is drawn rather than typed,
+   so it lands the same way whatever the body font has for \2610. */
+li.checked, li.unchecked, li.indeterminate {
+	list-style: none;
+	position: relative; }
+li.checked::before, li.unchecked::before, li.indeterminate::before {
+	position: absolute;
+	left: -1.6em;
+	top: 0.4em;
+	width: 0.84em;
+	height: 0.84em;
+	line-height: 0.78em;
+	text-align: center;
+	font-family: var(--font-ui);
+	font-size: 0.95em;
+	font-weight: 700;
+	background-color: var(--bg-raised);
+	border: 1px solid var(--marker);
+	border-radius: 3px; }
+li.unchecked::before { content: ""; }
+li.checked::before {
+	content: "\2713";
+	color: var(--accent);
+	border-color: var(--accent-soft); }
+li.indeterminate::before {
+	content: "\2013";
+	color: var(--priority); }
+li.checked { color: var(--fg-dim); }
+
+dl { margin: 1.3em 0; }
+dl > dt {
+	font-weight: var(--strong-weight);
+	color: var(--fg-strong);
+	margin-top: 1em; }
+dl > dd {
+	margin: 0.2em 0 0.2em 1.4em;
+	color: var(--fg-dim); }
+
+/* --- quotes and blocks ------------------------------------------------- */
+
+blockquote, .quote-block {
+	margin: 1.7em 0;
+	padding: 0.15em 0 0.15em 1.25em;
+	border-left: 2px solid var(--accent);
+	color: var(--fg-dim);
+	font-style: var(--quote-style); }
+blockquote p:first-child, .quote-block p:first-child { margin-top: 0; }
+blockquote p:last-child, .quote-block p:last-child { margin-bottom: 0; }
+
+.verse-block {
+	margin: 1.7em 0;
+	padding-left: 1.25em;
+	border-left: 1px solid var(--line);
+	white-space: pre-wrap;
+	font-style: italic;
+	color: var(--fg-dim); }
+
+.center-block { margin: 1.7em auto; }
+
+/* --- code -------------------------------------------------------------- */
+
+code, kbd, samp, .verbatim {
+	font-family: var(--font-mono);
+	font-size: 0.87em; }
+
+p code, li code, td code, dd code, h1 code, h2 code, h3 code, h4 code,
+code.verbatim, code.statistic {
+	background-color: var(--bg-code);
+	color: var(--code-fg);
+	padding: 0.12em 0.38em;
+	border: 1px solid var(--line-soft);
+	border-radius: calc(var(--radius) / 2.5); }
+
+code.statistic {
+	color: var(--fg-dim);
+	font-size: 0.78em; }
+
+kbd {
+	background-color: var(--bg-raised);
+	border: 1px solid var(--line);
+	border-bottom-width: 2px;
+	border-radius: 4px;
+	padding: 0.1em 0.4em; }
+
+/* Source and example blocks. highlight.js is only a stylesheet in the default
+   template - no script runs - so these carry their own colors. */
+pre, pre.example, pre.src, .highlight > pre {
+	font-family: var(--font-mono);
+	font-size: 0.82rem;
+	line-height: 1.6;
+	background-color: var(--bg-inset);
+	color: var(--fg);
+	border: 1px solid var(--line);
+	border-left: var(--code-bar);
+	border-radius: var(--radius);
+	padding: 1em 1.15em;
+	margin: 1.5em 0;
+	max-height: 42em;
+	overflow: auto;
+	box-shadow: var(--shadow-inset); }
+
+pre code, pre .hljs {
+	background: none;
+	border: 0;
+	padding: 0;
+	font-size: inherit;
+	color: inherit; }
+
+pre::-webkit-scrollbar, table::-webkit-scrollbar {
+	width: 9px;
+	height: 9px; }
+pre::-webkit-scrollbar-thumb, table::-webkit-scrollbar-thumb {
+	background-color: var(--line);
+	border-radius: 5px; }
+pre::-webkit-scrollbar-track, table::-webkit-scrollbar-track {
+	background: transparent; }
+
+/* Mermaid renders into the pre, so it must not look like a code block. */
+pre.mermaid {
+	background: none;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+	text-align: center;
+	max-height: none; }
+
+/* --- tables ------------------------------------------------------------ */
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 1.8em 0;
+	font-family: var(--font-table);
+	font-size: 0.92rem;
+	text-align: left; }
+
+thead th {
+	font-family: var(--font-ui);
+	font-size: 0.74rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--th-fg);
+	background-color: var(--th-bg);
+	padding: 0.75em 0.9em;
+	border-bottom: 1px solid var(--line);
+	position: sticky;
+	top: 0;
+	z-index: 1; }
+
+td, th {
+	padding: 0.55em 0.9em;
+	border-bottom: 1px solid var(--line-soft);
+	vertical-align: top; }
+
+tbody tr { transition: background-color 0.12s ease; }
+tbody tr:nth-of-type(even) { background-color: var(--row-alt); }
+tbody tr:hover { background-color: var(--row-hover); }
+tbody tr:last-of-type td { border-bottom: 1px solid var(--line); }
+tbody tr.active-row {
+	font-weight: var(--strong-weight);
+	color: var(--accent); }
+
+caption {
+	caption-side: bottom;
+	padding-top: 0.8em;
+	font-family: var(--font-ui);
+	font-size: 0.82rem;
+	color: var(--fg-faint);
+	text-align: left; }
+
+/* --- figures ----------------------------------------------------------- */
+
+/* The default template sets a drop shadow and a reflection on images inline;
+   both are undone here on purpose. */
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+	margin: 1.6em auto;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	-webkit-box-reflect: unset; }
+
+figure { margin: 1.9em 0; }
+
+figcaption {
+	font-family: var(--font-ui);
+	font-size: 0.8rem;
+	text-align: center;
+	color: var(--fg-faint);
+	margin-top: 0.6em; }
+
+svg { max-width: 100%; }
+
+/* --- org metadata ------------------------------------------------------ */
+
+.todo, .priority, .tags, .status {
+	font-family: var(--font-ui);
+	font-size: 0.66em;
+	font-weight: 650;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	vertical-align: 0.2em;
+	white-space: nowrap;
+	padding: 0.22em 0.6em;
+	border: 1px solid currentColor;
+	border-radius: 999px; }
+
+.todo { color: var(--todo); }
+.priority { color: var(--priority); }
+
+/* The exporter writes the status color inline from the server's statusColors,
+   and those defaults are chosen against a white page. Rather than override a
+   setting the user picked, the dark themes back the chip with a light plate so
+   whatever color lands on it stays readable. */
+.status {
+	margin-right: 0.4em;
+	background-color: var(--status-bg); }
+.tags {
+	color: var(--fg-faint);
+	border-color: var(--line);
+	background-color: var(--bg-raised);
+	margin-left: 0.35em; }
+
+.timestamp, .timestamp-wrapper {
+	font-family: var(--font-mono);
+	font-size: 0.8em;
+	white-space: nowrap;
+	color: var(--fg-faint);
+	background-color: var(--bg-raised);
+	padding: 0.1em 0.42em;
+	border: 1px solid var(--line-soft);
+	border-radius: calc(var(--radius) / 2.5); }
+
+/* --- footnotes --------------------------------------------------------- */
+
+.footnotes {
+	margin-top: 4em;
+	font-size: 0.9rem;
+	color: var(--fg-dim); }
+
+hr.footnotes-separatator {
+	margin: 0 0 1.5em;
+	background-image: linear-gradient(to right, var(--line), transparent); }
+
+sup.footnote-reference a {
+	border-bottom: none;
+	color: var(--accent);
+	font-weight: 650;
+	padding: 0 0.1em; }
+
+.footnote-definition {
+	position: relative;
+	margin: 0.9em 0;
+	padding-left: 1.8em; }
+.footnote-definition sup {
+	position: absolute;
+	left: 0;
+	top: 0.1em;
+	color: var(--accent);
+	font-weight: 650; }
+.footnote-definition .footnote-body p { margin: 0.25em 0; }
+
+/* --- alignment helpers ------------------------------------------------- */
+
+.align-left   { text-align: left;   }
+.align-center { text-align: center; }
+.align-right  { text-align: right;  }
+
+/* --- tree view (used by the folding exports) --------------------------- */
+
+ul.treeviewul, #treeviewul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0; }
+
+.caret, .folded, .node-link {
+	cursor: pointer;
+	user-select: none; }
+
+.caret::before {
+	content: "\25B8";
+	color: var(--accent);
+	display: inline-block;
+	margin-right: 0.5em;
+	transition: transform 0.15s ease; }
+
+.caret-down::before { transform: rotate(90deg); }
+
+.folded::after {
+	content: "\25B8";
+	color: var(--fg-faint);
+	display: inline-block;
+	margin-left: 0.5em; }
+
+.folded-down::after { transform: rotate(90deg); }
+
+.nested { display: none; }
+.active { display: block; }
+
+/* --- print ------------------------------------------------------------- */
+
+@media print {
+	html, body {
+		background: #fff;
+		color: #111;
+		max-width: none;
+		padding: 0; }
+	a { color: inherit; border-bottom: none; }
+	pre, table, figure, blockquote { break-inside: avoid; }
+	thead th { position: static; color: #111; background: #eee; }
+	img { box-shadow: none; }
+}
+
+/* --- nordic ------------------------------------------------------------ */
+
+/* A short accent rule above every section heading instead of a line under it. */
+h2::before {
+	content: "";
+	display: block;
+	width: 1.9rem;
+	height: 2px;
+	background-color: var(--accent);
+	border-radius: 1px;
+	margin-bottom: 0.7em; }
+
+h4, h5, h6 {
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	font-size: 0.82rem;
+	color: var(--fg-dim); }
+
+.subtitle { font-size: 1.1rem; }
+
+/* Cards rather than rules for the quieter surfaces. */
+.footnote-definition .footnote-body,
+blockquote {
+	background-color: var(--bg-raised);
+	border-radius: var(--radius); }
+blockquote {
+	padding: 0.9em 1.2em;
+	border-left-width: 3px; }
+.footnote-definition .footnote-body { padding: 0.5em 0.85em; }

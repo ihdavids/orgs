@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Portrait of a yuan-ti pureblood">
+<title>a yuan-ti pureblood</title>
+<defs>
+<radialGradient id="bg-yuan-ti" cx="50%" cy="34%" r="78%">
+<stop offset="0" stop-color="#e4eeda"/><stop offset="1" stop-color="#93ab7e"/>
+</radialGradient>
+<linearGradient id="cloak-yuan-ti" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#33402f"/><stop offset="1" stop-color="#1c231a"/>
+</linearGradient>
+<radialGradient id="vig-yuan-ti" cx="50%" cy="46%" r="72%">
+<stop offset=".55" stop-color="#000" stop-opacity="0"/>
+<stop offset="1" stop-color="#1c1a17" stop-opacity=".42"/>
+</radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg-yuan-ti)"/>
+<circle cx="200" cy="176" r="128" fill="#eef4e2" opacity=".22"/>
+<path d="M36 400 C 44 318 104 268 200 264 C 296 268 356 318 364 400 Z" fill="url(#cloak-yuan-ti)"/>
+<path d="M176 228 h48 v60 h-48 Z" fill="#626d47"/>
+<path d="M200 264 C 168 264 146 286 140 320 L 260 320 C 254 286 232 264 200 264 Z" fill="#3d4a2c" opacity=".55"/>
+<circle cx="200" cy="300" r="13" fill="#eef4e2" opacity=".85"/>
+<path d="M144 176 C 144 104 170 88 200 88 C 230 88 256 104 256 176 C 270 210 272 270 264 300 L 212 300 C 224 256 230 202 230 150 C 230 122 210 112 200 112 C 190 112 170 122 170 150 C 170 202 176 256 188 300 L 136 300 C 128 270 130 210 144 176 Z" fill="#3d4a2c"/>
+<ellipse cx="200" cy="166" rx="53" ry="74" fill="#9fb173"/>
+<ellipse cx="222.26" cy="172" rx="30.74" ry="63.64" fill="#626d47" opacity=".16"/>
+<path d="M153 138 Q 174 142 195 150" fill="none" stroke="#626d47" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/><g transform="translate(400,0) scale(-1,1)"><path d="M153 138 Q 174 142 195 150" fill="none" stroke="#626d47" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></g><ellipse cx="174" cy="174" rx="14" ry="9" fill="#f4eec8"/><circle cx="174" cy="174" r="7.6" fill="#c8a12e"/><ellipse cx="174" cy="174" rx="2.3" ry="7.448" fill="#363c27"/><path d="M159 173 Q 174 161.5 189 173" fill="none" stroke="#363c27" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="170.8" r="2" fill="#ffffff" opacity=".85"/><g transform="translate(400,0) scale(-1,1)"><ellipse cx="174" cy="174" rx="14" ry="9" fill="#f4eec8"/><circle cx="174" cy="174" r="7.6" fill="#c8a12e"/><ellipse cx="174" cy="174" rx="2.3" ry="7.448" fill="#363c27"/><path d="M159 173 Q 174 161.5 189 173" fill="none" stroke="#363c27" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="171.4" cy="170.8" r="2" fill="#ffffff" opacity=".85"/></g><path d="M198.5 189.5 L 196.4 200.55 Q 200 203.8 204.2 199.25" fill="none" stroke="#363c27" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/><path d="M180 226 Q 200 229 220 226" fill="none" stroke="#363c27" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+<path d="M144 152 C 144 106 170 90 200 90 C 230 90 256 106 256 152 C 250 126 228 114 200 114 C 172 114 150 126 144 152 Z" fill="#3d4a2c"/><path d="M161 126 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M189 118 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M217 126 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M147 150 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M231 150 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M147 198 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M231 198 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M159 218 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M219 218 q 11 -13 22 0" fill="none" stroke="#626d47" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/><path d="M200 230 L 200 243" fill="none" stroke="#b4564c" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M200 243 L 192.8 252" fill="none" stroke="#b4564c" stroke-width="3.08" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(400,0) scale(-1,1)"><path d="M200 243 L 192.8 252" fill="none" stroke="#b4564c" stroke-width="3.08" stroke-linecap="round" stroke-linejoin="round"/></g>
+<rect width="400" height="400" fill="url(#vig-yuan-ti)"/>
+</svg>

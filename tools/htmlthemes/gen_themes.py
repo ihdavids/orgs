@@ -1,0 +1,849 @@
+#!/usr/bin/env python3
+"""Generate the html export themes under templates/html_styles.
+
+Every theme here is one family (journal, nordic, slate) in a light and a dark
+variant. The rules are identical across all six files - only the token block at
+the top and a short per-family block at the bottom differ - so a change to the
+shape of a theme is made once, here, and regenerated:
+
+    python3 tools/htmlthemes/gen_themes.py
+
+Two constraints come from the exporter (internal/app/orgs/plugs/html/html.go):
+
+  * GetStylesheet rewrites every url(...) in the css to point at localhost, so
+    these themes never use url() - no font files, no data uris, no images.
+  * It also substitutes {{fontfamily}}, which is the google font the export was
+    asked for. It is the head of the monospace stack so that setting still wins.
+"""
+
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.normpath(os.path.join(HERE, "..", "..", "templates", "html_styles"))
+
+# --------------------------------------------------------------------------
+# The shared shape. Everything is driven off the tokens each theme declares.
+# --------------------------------------------------------------------------
+
+SKELETON = r"""
+/* --- reset ------------------------------------------------------------- */
+
+*, *::before, *::after {
+	box-sizing: border-box; }
+
+* {
+	margin: 0;
+	padding: 0; }
+
+html {
+	font-size: 100%;
+	background-color: var(--bg);
+	color: var(--fg);
+	scrollbar-color: var(--line) transparent;
+	-webkit-text-size-adjust: 100%; }
+
+@media (min-width: 900px) {
+	html { font-size: 106.25%; } }
+
+body {
+	font-family: var(--font-body);
+	font-weight: var(--body-weight);
+	line-height: var(--leading);
+	background-color: var(--bg);
+	color: var(--fg);
+	max-width: var(--measure);
+	margin: 0 auto;
+	padding: 3.5rem 1.75rem 7rem;
+	word-wrap: break-word;
+	text-rendering: optimizeLegibility;
+	font-feature-settings: "kern" 1, "liga" 1; }
+
+@media (max-width: 640px) {
+	body { padding: 2rem 1.1rem 4rem; } }
+
+::selection {
+	background-color: var(--sel);
+	color: var(--fg-strong); }
+
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+	border-radius: 2px; }
+
+/* --- headings ---------------------------------------------------------- */
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: var(--font-head);
+	font-weight: var(--h-weight);
+	letter-spacing: var(--h-tracking);
+	line-height: 1.22;
+	color: var(--fg-strong);
+	margin: 2.1em 0 0.6em; }
+
+h1 { font-size: 2.05rem; margin-top: 1.2em; }
+h2 { font-size: 1.55rem; border-bottom: var(--h2-rule); padding-bottom: var(--h2-rule-pad); }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1.02rem; }
+h5, h6 { font-size: 0.93rem; color: var(--fg-dim); }
+
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+	color: inherit;
+	border-bottom: none; }
+
+.title {
+	font-family: var(--font-head);
+	font-size: 2.7rem;
+	font-weight: var(--title-weight);
+	letter-spacing: -0.02em;
+	line-height: 1.12;
+	color: var(--fg-strong);
+	margin: 0 0 0.25em; }
+
+.subtitle {
+	font-weight: normal;
+	font-size: 1.05rem;
+	color: var(--fg-dim);
+	margin-bottom: 2.5em; }
+
+/* The exporter wraps each heading and its body in these. Nested sections get
+   a hairline down their left edge so the outline stays readable without the
+   indentation eating the measure. */
+
+.heading-wrapper { margin: 0; }
+.heading-title-wrapper { margin: 0; }
+.heading-content-wrapper { margin: 0; }
+.heading-content-text { margin: 0; }
+
+.content-level-3, .content-level-4, .content-level-5, .content-level-6 {
+	padding-left: 1.15em;
+	border-left: 1px solid var(--line-soft); }
+
+/* --- text -------------------------------------------------------------- */
+
+p { margin: 1em 0; }
+
+a {
+	color: var(--accent);
+	text-decoration: none;
+	border-bottom: 1px solid var(--accent-soft);
+	transition: color 0.15s ease, border-color 0.15s ease; }
+a:hover, a:focus, a:active {
+	color: var(--accent-hi);
+	border-bottom-color: var(--accent); }
+
+strong, b {
+	font-weight: var(--strong-weight);
+	color: var(--fg-strong); }
+
+em, i { font-style: italic; }
+
+del, s { color: var(--fg-faint); }
+
+mark {
+	background-color: var(--sel);
+	color: inherit;
+	padding: 0 0.15em;
+	border-radius: 2px; }
+
+hr {
+	border: 0;
+	height: 1px;
+	background-image: linear-gradient(to right, transparent, var(--line) 18%, var(--line) 82%, transparent);
+	margin: 3em 0; }
+
+/* --- lists ------------------------------------------------------------- */
+
+ol, ul {
+	margin: 1em 0 1em 1.45em; }
+ol li ol, ol li ul, ul li ol, ul li ul {
+	margin: 0.3em 0 0.3em 1.25em; }
+li { margin: 0.32em 0; }
+li p { margin: 0.3em 0; }
+li::marker { color: var(--marker); }
+
+/* Org checkbox items carry these classes. The box is drawn rather than typed,
+   so it lands the same way whatever the body font has for \2610. */
+li.checked, li.unchecked, li.indeterminate {
+	list-style: none;
+	position: relative; }
+li.checked::before, li.unchecked::before, li.indeterminate::before {
+	position: absolute;
+	left: -1.6em;
+	top: 0.4em;
+	width: 0.84em;
+	height: 0.84em;
+	line-height: 0.78em;
+	text-align: center;
+	font-family: var(--font-ui);
+	font-size: 0.95em;
+	font-weight: 700;
+	background-color: var(--bg-raised);
+	border: 1px solid var(--marker);
+	border-radius: 3px; }
+li.unchecked::before { content: ""; }
+li.checked::before {
+	content: "\2713";
+	color: var(--accent);
+	border-color: var(--accent-soft); }
+li.indeterminate::before {
+	content: "\2013";
+	color: var(--priority); }
+li.checked { color: var(--fg-dim); }
+
+dl { margin: 1.3em 0; }
+dl > dt {
+	font-weight: var(--strong-weight);
+	color: var(--fg-strong);
+	margin-top: 1em; }
+dl > dd {
+	margin: 0.2em 0 0.2em 1.4em;
+	color: var(--fg-dim); }
+
+/* --- quotes and blocks ------------------------------------------------- */
+
+blockquote, .quote-block {
+	margin: 1.7em 0;
+	padding: 0.15em 0 0.15em 1.25em;
+	border-left: 2px solid var(--accent);
+	color: var(--fg-dim);
+	font-style: var(--quote-style); }
+blockquote p:first-child, .quote-block p:first-child { margin-top: 0; }
+blockquote p:last-child, .quote-block p:last-child { margin-bottom: 0; }
+
+.verse-block {
+	margin: 1.7em 0;
+	padding-left: 1.25em;
+	border-left: 1px solid var(--line);
+	white-space: pre-wrap;
+	font-style: italic;
+	color: var(--fg-dim); }
+
+.center-block { margin: 1.7em auto; }
+
+/* --- code -------------------------------------------------------------- */
+
+code, kbd, samp, .verbatim {
+	font-family: var(--font-mono);
+	font-size: 0.87em; }
+
+p code, li code, td code, dd code, h1 code, h2 code, h3 code, h4 code,
+code.verbatim, code.statistic {
+	background-color: var(--bg-code);
+	color: var(--code-fg);
+	padding: 0.12em 0.38em;
+	border: 1px solid var(--line-soft);
+	border-radius: calc(var(--radius) / 2.5); }
+
+code.statistic {
+	color: var(--fg-dim);
+	font-size: 0.78em; }
+
+kbd {
+	background-color: var(--bg-raised);
+	border: 1px solid var(--line);
+	border-bottom-width: 2px;
+	border-radius: 4px;
+	padding: 0.1em 0.4em; }
+
+/* Source and example blocks. highlight.js is only a stylesheet in the default
+   template - no script runs - so these carry their own colors. */
+pre, pre.example, pre.src, .highlight > pre {
+	font-family: var(--font-mono);
+	font-size: 0.82rem;
+	line-height: 1.6;
+	background-color: var(--bg-inset);
+	color: var(--fg);
+	border: 1px solid var(--line);
+	border-left: var(--code-bar);
+	border-radius: var(--radius);
+	padding: 1em 1.15em;
+	margin: 1.5em 0;
+	max-height: 42em;
+	overflow: auto;
+	box-shadow: var(--shadow-inset); }
+
+pre code, pre .hljs {
+	background: none;
+	border: 0;
+	padding: 0;
+	font-size: inherit;
+	color: inherit; }
+
+pre::-webkit-scrollbar, table::-webkit-scrollbar {
+	width: 9px;
+	height: 9px; }
+pre::-webkit-scrollbar-thumb, table::-webkit-scrollbar-thumb {
+	background-color: var(--line);
+	border-radius: 5px; }
+pre::-webkit-scrollbar-track, table::-webkit-scrollbar-track {
+	background: transparent; }
+
+/* Mermaid renders into the pre, so it must not look like a code block. */
+pre.mermaid {
+	background: none;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+	text-align: center;
+	max-height: none; }
+
+/* --- tables ------------------------------------------------------------ */
+
+table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 1.8em 0;
+	font-family: var(--font-table);
+	font-size: 0.92rem;
+	text-align: left; }
+
+thead th {
+	font-family: var(--font-ui);
+	font-size: 0.74rem;
+	font-weight: 650;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+	color: var(--th-fg);
+	background-color: var(--th-bg);
+	padding: 0.75em 0.9em;
+	border-bottom: 1px solid var(--line);
+	position: sticky;
+	top: 0;
+	z-index: 1; }
+
+td, th {
+	padding: 0.55em 0.9em;
+	border-bottom: 1px solid var(--line-soft);
+	vertical-align: top; }
+
+tbody tr { transition: background-color 0.12s ease; }
+tbody tr:nth-of-type(even) { background-color: var(--row-alt); }
+tbody tr:hover { background-color: var(--row-hover); }
+tbody tr:last-of-type td { border-bottom: 1px solid var(--line); }
+tbody tr.active-row {
+	font-weight: var(--strong-weight);
+	color: var(--accent); }
+
+caption {
+	caption-side: bottom;
+	padding-top: 0.8em;
+	font-family: var(--font-ui);
+	font-size: 0.82rem;
+	color: var(--fg-faint);
+	text-align: left; }
+
+/* --- figures ----------------------------------------------------------- */
+
+/* The default template sets a drop shadow and a reflection on images inline;
+   both are undone here on purpose. */
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+	margin: 1.6em auto;
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	-webkit-box-reflect: unset; }
+
+figure { margin: 1.9em 0; }
+
+figcaption {
+	font-family: var(--font-ui);
+	font-size: 0.8rem;
+	text-align: center;
+	color: var(--fg-faint);
+	margin-top: 0.6em; }
+
+svg { max-width: 100%; }
+
+/* --- org metadata ------------------------------------------------------ */
+
+.todo, .priority, .tags, .status {
+	font-family: var(--font-ui);
+	font-size: 0.66em;
+	font-weight: 650;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	vertical-align: 0.2em;
+	white-space: nowrap;
+	padding: 0.22em 0.6em;
+	border: 1px solid currentColor;
+	border-radius: 999px; }
+
+.todo { color: var(--todo); }
+.priority { color: var(--priority); }
+
+/* The exporter writes the status color inline from the server's statusColors,
+   and those defaults are chosen against a white page. Rather than override a
+   setting the user picked, the dark themes back the chip with a light plate so
+   whatever color lands on it stays readable. */
+.status {
+	margin-right: 0.4em;
+	background-color: var(--status-bg); }
+.tags {
+	color: var(--fg-faint);
+	border-color: var(--line);
+	background-color: var(--bg-raised);
+	margin-left: 0.35em; }
+
+.timestamp, .timestamp-wrapper {
+	font-family: var(--font-mono);
+	font-size: 0.8em;
+	white-space: nowrap;
+	color: var(--fg-faint);
+	background-color: var(--bg-raised);
+	padding: 0.1em 0.42em;
+	border: 1px solid var(--line-soft);
+	border-radius: calc(var(--radius) / 2.5); }
+
+/* --- footnotes --------------------------------------------------------- */
+
+.footnotes {
+	margin-top: 4em;
+	font-size: 0.9rem;
+	color: var(--fg-dim); }
+
+hr.footnotes-separatator {
+	margin: 0 0 1.5em;
+	background-image: linear-gradient(to right, var(--line), transparent); }
+
+sup.footnote-reference a {
+	border-bottom: none;
+	color: var(--accent);
+	font-weight: 650;
+	padding: 0 0.1em; }
+
+.footnote-definition {
+	position: relative;
+	margin: 0.9em 0;
+	padding-left: 1.8em; }
+.footnote-definition sup {
+	position: absolute;
+	left: 0;
+	top: 0.1em;
+	color: var(--accent);
+	font-weight: 650; }
+.footnote-definition .footnote-body p { margin: 0.25em 0; }
+
+/* --- alignment helpers ------------------------------------------------- */
+
+.align-left   { text-align: left;   }
+.align-center { text-align: center; }
+.align-right  { text-align: right;  }
+
+/* --- tree view (used by the folding exports) --------------------------- */
+
+ul.treeviewul, #treeviewul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0; }
+
+.caret, .folded, .node-link {
+	cursor: pointer;
+	user-select: none; }
+
+.caret::before {
+	content: "\25B8";
+	color: var(--accent);
+	display: inline-block;
+	margin-right: 0.5em;
+	transition: transform 0.15s ease; }
+
+.caret-down::before { transform: rotate(90deg); }
+
+.folded::after {
+	content: "\25B8";
+	color: var(--fg-faint);
+	display: inline-block;
+	margin-left: 0.5em; }
+
+.folded-down::after { transform: rotate(90deg); }
+
+.nested { display: none; }
+.active { display: block; }
+
+/* --- print ------------------------------------------------------------- */
+
+@media print {
+	html, body {
+		background: #fff;
+		color: #111;
+		max-width: none;
+		padding: 0; }
+	a { color: inherit; border-bottom: none; }
+	pre, table, figure, blockquote { break-inside: avoid; }
+	thead th { position: static; color: #111; background: #eee; }
+	img { box-shadow: none; }
+}
+"""
+
+# --------------------------------------------------------------------------
+# Tokens every theme must declare, plus the values that rarely change.
+# --------------------------------------------------------------------------
+
+COMMON = {
+    "font-ui": "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+    "font-mono": "'{{fontfamily}}', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
+    "body-weight": "400",
+    "strong-weight": "650",
+    "title-weight": "700",
+    "quote-style": "normal",
+    "h2-rule-pad": "0.3em",
+    "shadow-inset": "none",
+    "code-bar": "1px solid var(--line)",
+    "status-bg": "transparent",
+}
+
+FAMILIES = {
+    "journal": {
+        "blurb": "an editorial serif on warm paper - long-form notes, essays, documents",
+        "tokens": {
+            "font-body": "'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif",
+            "font-head": "'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif",
+            "font-table": "var(--font-ui)",
+            "leading": "1.7",
+            "measure": "44rem",
+            "radius": "6px",
+            "h-weight": "600",
+            "h-tracking": "-0.008em",
+            "title-weight": "600",
+            "quote-style": "italic",
+        },
+        "extra": r"""
+/* --- journal ----------------------------------------------------------- */
+
+.title, .subtitle { text-align: center; }
+.subtitle { font-style: italic; }
+
+.title::after {
+	content: "";
+	display: block;
+	width: 4.5rem;
+	height: 1px;
+	background-color: var(--accent);
+	margin: 0.85em auto 0; }
+
+h3 {
+	font-variant-caps: small-caps;
+	letter-spacing: 0.045em;
+	color: var(--fg-dim); }
+
+/* Old style figures read better in running serif text. */
+p, li, dd, blockquote { font-variant-numeric: oldstyle-nums proportional-nums; }
+""",
+        "light": {
+            "bg": "#fbf8f3",
+            "bg-raised": "#f3ece1",
+            "bg-inset": "#f6f1e7",
+            "bg-code": "#f0e8da",
+            "fg": "#2e2a24",
+            "fg-strong": "#171410",
+            "fg-dim": "#5f574c",
+            "fg-faint": "#8d8477",
+            "accent": "#8c3a2b",
+            "accent-hi": "#6c2a1d",
+            "accent-soft": "rgba(140, 58, 43, 0.3)",
+            "line": "#ded4c3",
+            "line-soft": "#ebe3d5",
+            "sel": "rgba(140, 58, 43, 0.16)",
+            "marker": "#b6a892",
+            "todo": "#a2412f",
+            "priority": "#8a6a1f",
+            "code-fg": "#7c3f1d",
+            "th-bg": "#f3ece1",
+            "th-fg": "#6c6355",
+            "row-alt": "rgba(222, 212, 195, 0.22)",
+            "row-hover": "rgba(140, 58, 43, 0.07)",
+            "shadow": "0 8px 28px rgba(60, 45, 25, 0.1)",
+        },
+        "dark": {
+            "bg": "#191714",
+            "bg-raised": "#232019",
+            "bg-inset": "#14120f",
+            "bg-code": "#26221b",
+            "fg": "#ded6c8",
+            "fg-strong": "#f5f0e5",
+            "fg-dim": "#a9a092",
+            "fg-faint": "#7d7569",
+            "accent": "#d99a5b",
+            "accent-hi": "#eeb47c",
+            "accent-soft": "rgba(217, 154, 91, 0.34)",
+            "line": "#342f27",
+            "line-soft": "#2a2620",
+            "sel": "rgba(217, 154, 91, 0.2)",
+            "marker": "#6f665a",
+            "todo": "#e08a6f",
+            "priority": "#d9bd6a",
+            "code-fg": "#e2b884",
+            "th-bg": "#232019",
+            "th-fg": "#a9a092",
+            "row-alt": "rgba(255, 255, 255, 0.022)",
+            "row-hover": "rgba(217, 154, 91, 0.08)",
+            "shadow": "0 10px 30px rgba(0, 0, 0, 0.45)",
+            "status-bg": "#e7e1d4",
+        },
+    },
+    "nordic": {
+        "blurb": "a quiet swiss sans with hairline rules - reports, specs, reference pages",
+        "tokens": {
+            "font-body": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+            "font-head": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+            "font-table": "var(--font-ui)",
+            "leading": "1.66",
+            "measure": "46rem",
+            "radius": "8px",
+            "h-weight": "650",
+            "h-tracking": "-0.018em",
+        },
+        "extra": r"""
+/* --- nordic ------------------------------------------------------------ */
+
+/* A short accent rule above every section heading instead of a line under it. */
+h2::before {
+	content: "";
+	display: block;
+	width: 1.9rem;
+	height: 2px;
+	background-color: var(--accent);
+	border-radius: 1px;
+	margin-bottom: 0.7em; }
+
+h4, h5, h6 {
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	font-size: 0.82rem;
+	color: var(--fg-dim); }
+
+.subtitle { font-size: 1.1rem; }
+
+/* Cards rather than rules for the quieter surfaces. */
+.footnote-definition .footnote-body,
+blockquote {
+	background-color: var(--bg-raised);
+	border-radius: var(--radius); }
+blockquote {
+	padding: 0.9em 1.2em;
+	border-left-width: 3px; }
+.footnote-definition .footnote-body { padding: 0.5em 0.85em; }
+""",
+        "light": {
+            "bg": "#ffffff",
+            "bg-raised": "#f6f8fa",
+            "bg-inset": "#f8fafc",
+            "bg-code": "#eef2f7",
+            "fg": "#2b333d",
+            "fg-strong": "#0f161d",
+            "fg-dim": "#5a6674",
+            "fg-faint": "#8a95a2",
+            "accent": "#2f6fdb",
+            "accent-hi": "#1d51ab",
+            "accent-soft": "rgba(47, 111, 219, 0.28)",
+            "line": "#dfe5ec",
+            "line-soft": "#edf1f5",
+            "sel": "rgba(47, 111, 219, 0.14)",
+            "marker": "#a9b4c0",
+            "todo": "#c0392b",
+            "priority": "#9a6b00",
+            "code-fg": "#1d51ab",
+            "th-bg": "#f6f8fa",
+            "th-fg": "#5a6674",
+            "row-alt": "rgba(237, 241, 245, 0.5)",
+            "row-hover": "rgba(47, 111, 219, 0.06)",
+            "shadow": "0 1px 2px rgba(15, 22, 29, 0.06), 0 10px 26px rgba(15, 22, 29, 0.07)",
+        },
+        "dark": {
+            "bg": "#0f1318",
+            "bg-raised": "#171d24",
+            "bg-inset": "#0b0e12",
+            "bg-code": "#1a212a",
+            "fg": "#c7d1dc",
+            "fg-strong": "#eef3f8",
+            "fg-dim": "#93a0ad",
+            "fg-faint": "#6c7885",
+            "accent": "#7aa9f7",
+            "accent-hi": "#a3c4fb",
+            "accent-soft": "rgba(122, 169, 247, 0.32)",
+            "line": "#232c36",
+            "line-soft": "#1b222a",
+            "sel": "rgba(122, 169, 247, 0.2)",
+            "marker": "#5c6875",
+            "todo": "#f0776a",
+            "priority": "#e0b160",
+            "code-fg": "#9ec1fb",
+            "th-bg": "#171d24",
+            "th-fg": "#93a0ad",
+            "row-alt": "rgba(255, 255, 255, 0.02)",
+            "row-hover": "rgba(122, 169, 247, 0.08)",
+            "shadow": "0 10px 30px rgba(0, 0, 0, 0.5)",
+            "status-bg": "#e4eaf1",
+        },
+    },
+    "slate": {
+        "blurb": "a technical sheet with monospaced section labels - notes on code and systems",
+        "tokens": {
+            "font-body": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+            "font-head": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+            "font-table": "var(--font-mono)",
+            "leading": "1.64",
+            "measure": "48rem",
+            "radius": "10px",
+            "h-weight": "680",
+            "h-tracking": "-0.02em",
+            "code-bar": "3px solid var(--accent)",
+        },
+        "extra": r"""
+/* --- slate ------------------------------------------------------------- */
+
+/* Section labels are set in the code face, so prose and structure read as
+   two different kinds of thing. */
+h3, h4, h5, h6 {
+	font-family: var(--font-mono);
+	font-weight: 600;
+	letter-spacing: 0.11em;
+	text-transform: uppercase;
+	color: var(--accent-2); }
+h3 { font-size: 0.95rem; }
+h4 { font-size: 0.86rem; }
+h5, h6 { font-size: 0.8rem; color: var(--fg-dim); }
+
+.title {
+	font-family: var(--font-mono);
+	font-size: 2.2rem;
+	font-weight: 700;
+	letter-spacing: -0.03em; }
+
+.subtitle {
+	font-family: var(--font-mono);
+	font-size: 0.9rem;
+	letter-spacing: 0.04em;
+	color: var(--fg-faint); }
+
+thead th { color: var(--accent-2); }
+
+/* Keep the source blocks flush with the accent bar the family is built on. */
+pre.mermaid { border-left: 0; }
+""",
+        "light": {
+            "bg": "#fbfbfd",
+            "bg-raised": "#f2f2f8",
+            "bg-inset": "#f5f5fa",
+            "bg-code": "#eeeef6",
+            "fg": "#33333f",
+            "fg-strong": "#14141c",
+            "fg-dim": "#60606f",
+            "fg-faint": "#8e8e9e",
+            "accent": "#6244e0",
+            "accent-hi": "#4a2fc4",
+            "accent-2": "#0e7d79",
+            "accent-soft": "rgba(98, 68, 224, 0.28)",
+            "line": "#e2e2ec",
+            "line-soft": "#eeeef4",
+            "sel": "rgba(98, 68, 224, 0.14)",
+            "marker": "#b0b0c0",
+            "todo": "#c1442f",
+            "priority": "#9a6b00",
+            "code-fg": "#4a2fc4",
+            "th-bg": "#f2f2f8",
+            "th-fg": "#0e7d79",
+            "row-alt": "rgba(238, 238, 244, 0.55)",
+            "row-hover": "rgba(98, 68, 224, 0.06)",
+            "shadow": "0 1px 2px rgba(20, 20, 28, 0.06), 0 12px 30px rgba(20, 20, 28, 0.08)",
+        },
+        "dark": {
+            "bg": "#0e0f14",
+            "bg-raised": "#171924",
+            "bg-inset": "#0a0b0f",
+            "bg-code": "#1a1d29",
+            "fg": "#c6c9d6",
+            "fg-strong": "#eef0f8",
+            "fg-dim": "#8d92a5",
+            "fg-faint": "#6a6f82",
+            "accent": "#a18bff",
+            "accent-hi": "#c0b0ff",
+            "accent-2": "#4fd1c5",
+            "accent-soft": "rgba(161, 139, 255, 0.32)",
+            "line": "#242736",
+            "line-soft": "#1b1e29",
+            "sel": "rgba(161, 139, 255, 0.2)",
+            "marker": "#5a5f72",
+            "todo": "#f07a68",
+            "priority": "#e2bc6b",
+            "code-fg": "#bcaaff",
+            "th-bg": "#171924",
+            "th-fg": "#4fd1c5",
+            "row-alt": "rgba(255, 255, 255, 0.02)",
+            "row-hover": "rgba(161, 139, 255, 0.08)",
+            "shadow": "0 10px 32px rgba(0, 0, 0, 0.55)",
+            "status-bg": "#e8e6f3",
+        },
+    },
+}
+
+# Tokens the skeleton uses that carry no default and so must be in every
+# palette. Guards against a family losing one in an edit.
+REQUIRED = [
+    "bg", "bg-raised", "bg-inset", "bg-code", "fg", "fg-strong", "fg-dim",
+    "fg-faint", "accent", "accent-hi", "accent-soft", "line", "line-soft",
+    "sel", "marker", "todo", "priority", "code-fg", "th-bg", "th-fg",
+    "row-alt", "row-hover", "shadow", "status-bg", "font-body", "font-head",
+    "font-ui",
+    "font-mono", "font-table", "leading", "measure", "radius", "h-weight",
+    "h-tracking", "h2-rule", "h2-rule-pad", "title-weight", "body-weight",
+    "strong-weight", "quote-style", "code-bar", "shadow-inset",
+]
+
+HEADER = """/* {title}
+   {blurb}
+
+   Pick it with "#+HTML_THEME: {slug}" in a file, or ask for it at export time
+   with ?theme={slug} (which is what the worg files view does). The {other}
+   counterpart is "{otherslug}".
+
+   Generated - do not hand edit. Regenerate the whole family with:
+       python3 tools/htmlthemes/gen_themes.py
+*/
+"""
+
+
+def render(family, variant):
+    fam = FAMILIES[family]
+    slug = family if variant == "light" else family + "_dark"
+    otherslug = family + "_dark" if variant == "light" else family
+    other = "dark" if variant == "light" else "light"
+
+    tokens = dict(COMMON)
+    tokens.update(fam["tokens"])
+    tokens.update(fam[variant])
+    # The rule under h2 is drawn from the palette, so it lands after it.
+    tokens.setdefault("h2-rule", "1px solid var(--line)"
+                      if family == "journal" else "none")
+    if tokens["h2-rule"] == "none":
+        tokens["h2-rule-pad"] = "0"
+
+    missing = [t for t in REQUIRED if t not in tokens]
+    if missing:
+        raise SystemExit("%s/%s is missing tokens: %s" % (family, variant, ", ".join(missing)))
+
+    out = [HEADER.format(title=slug, blurb=fam["blurb"], slug=slug,
+                         other=other, otherslug=otherslug)]
+    out.append("\n:root {\n\tcolor-scheme: %s;\n" % variant)
+    for key in sorted(tokens):
+        out.append("\t--%s: %s;\n" % (key, tokens[key]))
+    out.append("}\n")
+    out.append(SKELETON)
+    out.append(fam["extra"])
+    return "".join(out)
+
+
+def main():
+    for family in FAMILIES:
+        for variant in ("light", "dark"):
+            slug = family if variant == "light" else family + "_dark"
+            path = os.path.join(OUT, slug + "_style.css")
+            with open(path, "w") as f:
+                f.write(render(family, variant))
+            print("wrote %s" % path)
+
+
+if __name__ == "__main__":
+    main()

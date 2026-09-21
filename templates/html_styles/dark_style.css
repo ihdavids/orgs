@@ -1,0 +1,276 @@
+/* The dark counterpart of default_style.css - same shape, dark palette.
+   Pick it with "#+HTML_THEME: dark" in a file, or by asking for it at export
+   time with ?theme=dark (which is what the worg files view does). */
+
+:root {
+	color-scheme: dark;
+	--bg: #14161a;
+	--bg-raised: #1c1f25;
+	--bg-inset: #101216;
+	--fg: #d7dae0;
+	--fg-dim: #9aa2af;
+	--fg-faint: #6f7784;
+	--accent: #fa8c5a;
+	--accent-dim: rgba(250, 140, 90, 0.45);
+	--line: #2c313a;
+	--table-head: #0f6f5c;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0; }
+
+html {
+	font: 100%/1.5 sans-serif;
+	word-wrap: break-word;
+	padding: 1.5em;
+	background-color: var(--bg);
+	color: var(--fg); }
+
+body {
+	background-color: var(--bg);
+	color: var(--fg); }
+
+@media (min-width: 768px) {
+	html { font-size: 125%; } }
+
+h1, h2, h3, h4 {
+	margin: 2.5rem 0 1.5rem 0;
+	line-height: 1.25; }
+
+h1 {
+	font-size: 22pt;
+	color: #f0f2f5;
+}
+h2 {
+	font-size: 20pt;
+	font-family: 'Courier New';
+	color: #b6bec9;
+}
+h3 {
+	font-size: 16pt;
+	color: #a4acb8;
+}
+h4 {
+	font-size: 14pt;
+	color: #98a0ac;
+}
+
+.title {
+	font-size: 2.5em;
+	color: #f0f2f5; }
+
+.subtitle {
+	font-weight: normal;
+	font-size: 0.75em;
+	color: var(--fg-dim); }
+
+a {
+	color: var(--accent);
+	text-decoration: none; }
+a:hover, a:focus, a:active {
+	text-decoration: underline; }
+
+p {
+	margin: 1em 0; }
+p code {
+	background-color: var(--bg-raised);
+	color: #e6c07b;
+	padding: 0.05em 0.2em;
+	border: 1px solid var(--line); }
+
+code, kbd, samp {
+	color: #e6c07b; }
+
+ol, ul {
+	margin: 1em; }
+ol li ol, ol li ul, ul li ol, ul li ul {
+	margin: 0 2em; }
+ol li p, ul li p {
+	margin: 0; }
+
+img {
+	max-width: 100%;
+	display: block;
+	margin: 0 auto;
+	padding: 0.5em; }
+
+hr {
+	border: none;
+	border-top: 1px solid var(--line); }
+
+blockquote {
+	padding-left: 1em;
+	font-style: italic;
+	color: var(--fg-dim);
+	border-left: solid 1px var(--accent); }
+
+table {
+	font-family: monospace, monospace;
+	font-size: 1rem;
+	text-align: left;
+	caption-side: bottom;
+	margin-bottom: 2em; }
+table * {
+	border: none; }
+table thead, table tr {
+	display: table;
+	table-layout: fixed;
+	width: 100%; }
+table tbody {
+	display: block;
+	max-height: 70vh;
+	overflow-y: auto; }
+table td, table th {
+	padding: 0.25em; }
+
+table, .highlight > pre, pre.example {
+	max-height: 70vh;
+	margin: 1em 0;
+	padding: 1em;
+	overflow: auto;
+	font-family: monospace, monospace;
+	font-size: 0.85rem;
+	border: 1px dashed var(--accent-dim); }
+
+.highlight > pre, pre.example, pre.src {
+	background-color: var(--bg-inset);
+	color: var(--fg); }
+
+figure {
+	margin: 1em 0;
+}
+
+figcaption {
+	font-family: monospace, monospace;
+	font-size: 0.75em;
+	text-align: center;
+	color: var(--fg-faint); }
+
+.footnote-definition sup {
+	float: left; }
+
+.footnote-definition .footnote-body {
+	margin: 1em 0;
+	padding: 0 1em;
+	border: 1px solid var(--accent-dim);
+	background-color: var(--bg-raised); }
+.footnote-definition .footnote-body p:only-child {
+	margin: 0.2em 0; }
+
+.align-left   { text-align: left;   }
+.align-center { text-align: center; }
+.align-right  { text-align: right;  }
+
+dl { font-family: monospace, monospace; }
+dl > dt { font-weight: bold; }
+dl > dd { margin: 1em; }
+
+.todo, .priority, .tags {
+	font-size: 0.8em;
+	color: #ff6b6b;
+}
+
+.timestamp {
+	background-color: var(--bg-raised);
+	color: var(--fg-dim);
+	padding: 0.05em 0.2em;
+	border: 1px solid var(--line); }
+
+table {
+	border-collapse: collapse;
+	margin: 25px 0;
+	font-size: 0.9em;
+	font-family: sans-serif;
+	min-width: 400px;
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.55);
+	border-collapse: separate;
+	border-radius: 20px;
+	background-color: var(--bg-raised);
+}
+thead tr {
+	background-color: var(--table-head);
+	color: #ffffff;
+	text-align: left;
+	border-radius: 6px;
+}
+th, td {
+	padding: 12px 15px;
+}
+tbody tr {
+	border-bottom: 1px solid var(--line);
+}
+tbody tr:nth-of-type(even) {
+	background-color: #20242b;
+}
+tbody tr:last-of-type {
+	border-bottom: 2px solid var(--table-head);
+}
+tbody tr.active-row {
+	font-weight: bold;
+	color: #2ec4a6;
+}
+
+.status {
+	color: #fff;
+}
+
+/* Remove default bullets */
+ul, #treeviewul {
+	list-style-type: none;
+}
+
+/* Remove margins and padding from the parent ul */
+#treeviewul {
+	margin: 0;
+	padding: 0;
+}
+
+/* Style the caret/arrow */
+.caret {
+	cursor: pointer;
+	user-select: none; /* Prevent text selection */
+}
+
+/* Create the caret/arrow with a unicode, and style it */
+.caret::before {
+	content: "\25B6";
+	color: var(--fg-dim);
+	display: inline-block;
+	margin-right: 6px;
+}
+
+/* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+.caret-down::before {
+	transform: rotate(90deg);
+}
+
+/* Style the caret/arrow */
+.folded {
+	cursor: pointer;
+	user-select: none; /* Prevent text selection */
+}
+
+/* Create the caret/arrow with a unicode, and style it */
+.folded::after {
+	content: "\25B6";
+	color: var(--fg-dim);
+	display: inline-block;
+	margin-left: 6px;
+}
+
+/* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+.folded-down::after {
+	transform: rotate(90deg);
+}
+
+/* Hide the nested list */
+.nested {
+	display: none;
+}
+
+/* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+.active {
+	display: block;
+}
