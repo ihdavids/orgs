@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
+	htmlexp "github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
 	"github.com/ihdavids/orgs/internal/common"
 
@@ -49,6 +50,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/file/{type}", RequestFile)               // html etc
 	api.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                // Get all stored filters from the server
+	api.HandleFunc("/html/themes", RequestHtmlThemes)         // The themes the html exporter can render with
 	api.HandleFunc("/taggroups", RequestTagGroups)
 	api.HandleFunc("/grep", RequestGrep)
 	api.HandleFunc("/search", RequestTodosExpr)
@@ -100,6 +102,11 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/table/eval", PostTableEval).Methods("POST")
 	api.HandleFunc("/tangle", RequestTangle)
 
+	// Backlinks and the link graph
+	api.HandleFunc("/links", RequestBacklinks).Methods("GET")
+	api.HandleFunc("/links/graph", RequestLinkGraph).Methods("GET")
+	api.HandleFunc("/links/stats", RequestLinkStats).Methods("GET")
+
 	// Dungeons & Dragons character module
 	api.HandleFunc("/dnd/rulesets", RequestDndRulesets).Methods("GET")
 	api.HandleFunc("/dnd/reload", PostDndReload).Methods("POST")
@@ -112,6 +119,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/answer", PostDndAnswer).Methods("POST")
 	api.HandleFunc("/dnd/random", PostDndRandom).Methods("POST")
 	api.HandleFunc("/dnd/save", PostDndSave).Methods("POST")
+	api.HandleFunc("/dnd/levelup", PostDndLevelUp).Methods("POST")
 	api.HandleFunc("/dnd/refresh", PostDndRefresh).Methods("POST")
 	api.HandleFunc("/dnd/import", PostDndImport).Methods("POST")
 
@@ -119,6 +127,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/items", RequestDndItems).Methods("GET")
 	api.HandleFunc("/dnd/inventory", RequestDndInventory).Methods("GET")
 	api.HandleFunc("/dnd/inventory", PostDndInventory).Methods("POST")
+	api.HandleFunc("/dnd/undo", RequestDndUndo).Methods("GET")
+	api.HandleFunc("/dnd/undo", PostDndUndo).Methods("POST")
 	api.HandleFunc("/dnd/money", RequestDndMoney).Methods("GET")
 	api.HandleFunc("/dnd/money", PostDndMoney).Methods("POST")
 	api.HandleFunc("/dnd/spells", RequestDndSpells).Methods("GET")
@@ -134,6 +144,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/hp", PostDndHealth).Methods("POST")
 	api.HandleFunc("/dnd/inspiration", RequestDndInspiration).Methods("GET")
 	api.HandleFunc("/dnd/inspiration", PostDndInspiration).Methods("POST")
+	api.HandleFunc("/dnd/concentration", RequestDndConcentration).Methods("GET")
+	api.HandleFunc("/dnd/concentration", PostDndConcentration).Methods("POST")
 
 	// Dungeons & Dragons play session logs
 	api.HandleFunc("/dnd/play/sessions", RequestDndPlaySessions).Methods("GET")
@@ -141,7 +153,11 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/play/session", PostDndPlaySession).Methods("POST")
 	api.HandleFunc("/dnd/play/session/{id}", RequestDndPlaySession).Methods("GET")
 	api.HandleFunc("/dnd/play/session/{id}/roll", PostDndPlayRoll).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/roll/{index}", PostDndPlayRollEdit).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/roll/{index}", DeleteDndPlayRoll).Methods("DELETE")
 	api.HandleFunc("/dnd/play/session/{id}/note", PostDndPlayNote).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/note/{index}", PostDndPlayNoteEdit).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/note/{index}", DeleteDndPlayNote).Methods("DELETE")
 	api.HandleFunc("/dnd/play/session/{id}/summary", PostDndPlaySummary).Methods("POST")
 
 	// Per-user extensions: stored queries
@@ -361,6 +377,30 @@ func RequestFilters(w http.ResponseWriter, r *http.Request) {
 }
 
 /* SDOC: API
+* GET /html/themes — List Html Export Themes
+	Returns the themes the html exporter can render a file with. A theme is a
+	=<name>_style.css= file in the =html_styles= folder under your template path,
+	optionally paired with an =html_<name>.tpl= template of its own.
+
+	Any of these names can be given to =/file/html= as =theme=<name>=, which
+	overrides the =#+HTML_THEME:= the file itself asks for. This is how the worg
+	files view renders every file in the theme the reader picked.
+
+	*Method:* =GET=
+
+	*Parameters:* None.
+
+	*Response:* ={"Ok": true, "Themes": ["dark", "default", "dnd", "docs"]}=
+	EDOC */
+func RequestHtmlThemes(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Ok     bool
+		Themes []string
+	}{Ok: true, Themes: htmlexp.HtmlThemes()})
+}
+
+/* SDOC: API
 * GET /file/{type} — Export a File via an Exporter Plugin
 	Runs the named exporter plugin against an org file and returns the exported result.
 	The ={type}= path segment selects the exporter (e.g. =html=, =latex=, =revealjs=,
@@ -388,6 +428,10 @@ func RequestFilters(w http.ResponseWriter, r *http.Request) {
 	| =httpslinks=   | string | no       | Set to =t= to convert links to https-style links.                                  |
 	| =parent=       | string | no       | A parent property passed to the exporter (exporter-specific).                      |
 	| =printable=    | string | no       | Set to =t= for an exporter's printer friendly output where it has one.              |
+	| =theme=        | string | no       | Render with this theme instead of the one the file asks for. See =/html/themes=.   |
+	| =backdrop=     | string | no       | Pictures to wash out behind a d&d character sheet: files, folders or urls.          |
+	| =backdropCycle= | string | no      | How long each backdrop stays up ("8m", "4m-12m", "off"), 25 minutes at the most.   |
+	| =backdropOpacity= | string | no    | How strongly the backdrop shows through ("18%"), 14% by default.                   |
 
 	*Response:* A =ResultMsg= JSON object.
 	- When =local= is not set: ={"status": true, "msg": "...exported content..."}=
@@ -404,6 +448,10 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	props := map[string]string{}
 	props["parent"] = r.URL.Query().Get("parent")
 	props["printable"] = r.URL.Query().Get("printable")
+	props["theme"] = r.URL.Query().Get("theme")
+	props["backdrop"] = r.URL.Query().Get("backdrop")
+	props["backdropCycle"] = r.URL.Query().Get("backdropCycle")
+	props["backdropOpacity"] = r.URL.Query().Get("backdropOpacity")
 	opts := common.ExportToFile{Name: ptype, Filename: fname, Query: query, Opts: "", Props: props}
 	if filelinks == "t" {
 		opts.Opts += "filelinks;"

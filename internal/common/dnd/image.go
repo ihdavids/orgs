@@ -174,6 +174,14 @@ func ImagePath(ref string, baseDir string) string {
 // Every web image format works, animated ones included - the bytes are copied
 // through as they are and the browser does the rest.
 func ImageSrc(ref string, baseDir string) (string, error) {
+	return imageSrc(ref, baseDir, "portrait")
+}
+
+// imageSrc is the work behind ImageSrc, with the word the warnings use handed
+// in: the same failure is a broken portrait on one property and a broken
+// backdrop on another, and a player reading the warning wants to be told
+// which picture the sheet could not find.
+func imageSrc(ref string, baseDir string, what string) (string, error) {
 	ref = ParseImageRef(ref)
 	if ref == "" {
 		return "", nil
@@ -184,7 +192,7 @@ func ImageSrc(ref string, baseDir string) (string, error) {
 	path := ImagePath(ref, baseDir)
 	info, err := os.Stat(path)
 	if err != nil {
-		return "", fmt.Errorf("portrait %s could not be read: %s", ref, err)
+		return "", fmt.Errorf("%s %s could not be read: %s", what, ref, err)
 	}
 	if info.Size() > maxEmbeddedImage {
 		// Too big to inline. A file url still shows on the machine that holds
@@ -193,7 +201,7 @@ func ImageSrc(ref string, baseDir string) (string, error) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("portrait %s could not be read: %s", ref, err)
+		return "", fmt.Errorf("%s %s could not be read: %s", what, ref, err)
 	}
 	return "data:" + imageMime(path, data) + ";base64," +
 		base64.StdEncoding.EncodeToString(data), nil

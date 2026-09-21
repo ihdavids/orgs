@@ -54,6 +54,52 @@ package dnd
   2. Every directory listed in =dndPaths= in your server settings.
   3. =<templatePath>/dnd= and =./templates/dnd=.
 
+** Widening a class's spell list
+
+  A book that hands an existing spell to a class that could not cast it
+  before - Tasha's does this a dozen times over for the druid - is widening a
+  spell list rather than adding a spell. Say so with =spellLists=, keyed by
+  class id:
+
+  #+BEGIN_SRC yaml
+  id: srd
+  spellLists:
+    druid: ["revivify", "Cone of Cold", "fire-shield"]
+  #+END_SRC
+
+  That hands each of those spells to the druid without restating what any of
+  them does, which matters because an entry under =spells:= whose id already
+  exists *replaces* that spell outright rather than merging into it. Restating
+  an SRD spell just to widen its class list would fork the generated data and
+  go stale the next time it was regenerated.
+
+  Spells may be named by id or by name, additions from different modules
+  accumulate rather than overwriting each other, and a name nothing answers to
+  is ignored - so a module written against a fuller ruleset still loads
+  against a thinner one.
+
+** Spells the books call something else
+
+  The SRD renames seventeen Player's Handbook spells, because the wizards they
+  are named after are product identity: Tasha's Hideous Laughter is published
+  as Hideous Laughter, and Bigby's Hand as Arcane Hand. A character sheet
+  written anywhere else - imported from D&D Beyond, or typed out by hand -
+  uses the names the books use, so every one of those spells carries the book
+  name as an alias and is found under either. Nothing needs configuring: the
+  set is built in.
+
+  Your own modules can do the same for anything they add:
+
+  #+BEGIN_SRC yaml
+  spells:
+    - id: "hideous-laughter"
+      aliases: ["Tasha's Hideous Laughter", "Laughter of Tasha"]
+  #+END_SRC
+
+  An alias is only consulted once nothing has matched on id or on name, so it
+  can never take a name that some other spell owns outright, and where two
+  spells claim the same alias the first one loaded keeps it.
+
 ** Attaching numbers to a feature
 
   The SRD data carries the rules /text/ of every feature but no mechanics -
@@ -336,6 +382,14 @@ func mergeRuleset(dst, src *Ruleset) {
 		dst.Extends = src.Extends
 	}
 	dst.Modules = append(dst.Modules, src.Modules...)
+	// Widened spell lists accumulate: two modules that each hand the druid
+	// something both get their way, rather than the later one deciding.
+	for class, spells := range src.SpellLists {
+		if dst.SpellLists == nil {
+			dst.SpellLists = map[string][]string{}
+		}
+		dst.SpellLists[class] = addUnique(dst.SpellLists[class], spells...)
+	}
 	dst.Languages = addUnique(dst.Languages, src.Languages...)
 	dst.Alignments = addUnique(dst.Alignments, src.Alignments...)
 
@@ -834,6 +888,7 @@ func (r *Ruleset) Index() {
 	r.bgIdx = map[string]*Background{}
 	r.itemIdx = map[string]*Item{}
 	r.spellIdx = map[string]*Spell{}
+	r.spellAliasIdx = map[string]*Spell{}
 	r.featIdx = map[string]*Feat{}
 	for i := range r.Skills {
 		r.skillIdx[r.Skills[i].Id] = &r.Skills[i]
@@ -857,10 +912,58 @@ func (r *Ruleset) Index() {
 	for i := range r.Spells {
 		r.spellIdx[r.Spells[i].Id] = &r.Spells[i]
 	}
+	// Aliases go in a second pass and a second map. The pass is second so
+	// that every real id is already indexed; the map is separate so that
+	// Spell() can try everything real before it tries anything approximate.
+	// Where two spells claim the same alias the first one keeps it, rather
+	// than the answer depending on the order the modules happened to load.
+	for i := range r.Spells {
+		for _, alias := range spellAliases(&r.Spells[i]) {
+			key := Slugify(alias)
+			if key == "" {
+				continue
+			}
+			if _, taken := r.spellAliasIdx[key]; !taken {
+				r.spellAliasIdx[key] = &r.Spells[i]
+			}
+		}
+	}
 	for i := range r.Feats {
 		r.featIdx[r.Feats[i].Id] = &r.Feats[i]
 	}
+	r.applySpellLists()
 	r.resolveItemBases()
+}
+
+// applySpellLists hands the spells a module widened a class's list with to
+// that class, by writing the class onto each spell. Doing it here rather than
+// at merge time means it lands however the ruleset was assembled, and it is
+// safe to run again because a class already on a spell is not added twice.
+//
+// The spell index is already built by the time this runs, which is what lets
+// an entry name a spell either way round - "ice-knife" or "Ice Knife".
+func (r *Ruleset) applySpellLists() {
+	for class, spells := range r.SpellLists {
+		class = Slugify(class)
+		if class == "" {
+			continue
+		}
+		for _, name := range spells {
+			sp := r.spellIdx[name]
+			if sp == nil {
+				sp = r.spellIdx[Slugify(name)]
+			}
+			if sp == nil {
+				sp = r.spellAliasIdx[Slugify(name)]
+			}
+			// A list may name spells this ruleset does not carry. That is not
+			// an error - it is a module written against a fuller one.
+			if sp == nil {
+				continue
+			}
+			sp.Classes = addUnique(sp.Classes, class)
+		}
+	}
 }
 
 // resolveItemBases fills in the fields a magic item inherits from the mundane
@@ -1003,19 +1106,28 @@ func (r *Ruleset) Item(id string) *Item {
 	return nil
 }
 
-// Spell looks up a spell by id or name.
+// Spell looks up a spell by id or name, and failing both by alias - the name
+// another book prints it under. See srdnames.go for why a spell needs one.
+//
+// The aliases come last on purpose. A name that some spell genuinely owns has
+// to win it, however many other spells offer it as an alias, so nothing
+// approximate is tried until everything exact has failed.
 func (r *Ruleset) Spell(id string) *Spell {
 	r.ensure()
 	if s, ok := r.spellIdx[id]; ok {
 		return s
 	}
-	if s, ok := r.spellIdx[Slugify(id)]; ok {
+	slug := Slugify(id)
+	if s, ok := r.spellIdx[slug]; ok {
 		return s
 	}
 	for i := range r.Spells {
 		if strings.EqualFold(r.Spells[i].Name, id) {
 			return &r.Spells[i]
 		}
+	}
+	if s, ok := r.spellAliasIdx[slug]; ok {
+		return s
 	}
 	return nil
 }

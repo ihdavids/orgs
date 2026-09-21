@@ -15,6 +15,7 @@ package dnd
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,6 +27,28 @@ const (
 	SetTemp   = "temp"
 	ClearTemp = "cleartemp"
 	SetHP     = "set"
+	// DeathSave marks one of the three successes or three failures a dying
+	// character collects, Stabilize ends the dying outright, and ClearDeath
+	// wipes the marks without changing the hit points.
+	DeathSave  = "deathsave"
+	Stabilize  = "stabilize"
+	ClearDeath = "cleardeath"
+)
+
+// The readings of a death saving throw. A natural 20 brings you round on one
+// hit point, a natural 1 counts as two failures, and DC 10 decides the rest.
+const (
+	SaveSuccess  = "success"
+	SaveFailure  = "failure"
+	SaveCritical = "critical"
+	SaveFumble   = "fumble"
+)
+
+// DeathSaveDC is the flat DC of a death saving throw, and DeathSaveMarks how
+// many of either kind it takes to settle the matter.
+const (
+	DeathSaveDC    = 10
+	DeathSaveMarks = 3
 )
 
 // HealthEvent is one line of the sheet's Health History: a hit taken, healing
@@ -40,6 +63,13 @@ type HealthEvent struct {
 	// cost 5 temporary and 4 real ones.
 	Amount   int `json:"amount"`
 	Absorbed int `json:"absorbed"`
+	// Type is the kind of damage a blow was, Raw what it would have been
+	// before the character's defenses were applied, and Defense which of
+	// them applied - "resistance", "immunity" or "vulnerability". Raw is
+	// only set when a defense actually changed the number.
+	Type    string `json:"type,omitempty"`
+	Raw     int    `json:"raw,omitempty"`
+	Defense string `json:"defense,omitempty"`
 	// Where the character stood before and after.
 	HPBefore   int `json:"hpBefore"`
 	HPAfter    int `json:"hpAfter"`
@@ -47,9 +77,21 @@ type HealthEvent struct {
 	TempAfter  int `json:"tempAfter"`
 	HPMax      int `json:"hpMax"`
 	// Down is true when the hit put the character on nothing at all.
-	Down  bool   `json:"down"`
-	Notes string `json:"notes"`
+	Down bool `json:"down"`
+	// DeathSaves is the marks as they stood after the change, so a line of
+	// history about a death saving throw can say what it came to.
+	DeathSaves string `json:"deathSaves,omitempty"`
+	Notes      string `json:"notes"`
+	// hasBefore says whether HPBefore and TempBefore are a real reading or
+	// merely zero. A line just applied always has them; one read back off a
+	// sheet written before the Was column existed does not, and undo must not
+	// mistake an absent reading for a character who was on nothing at all.
+	hasBefore bool
 }
+
+// HasBefore reports whether this line knows where the character stood before
+// it, which is what decides whether it can be taken back.
+func (e HealthEvent) HasBefore() bool { return e.hasBefore }
 
 // HealthView is the hit point line as the sheet draws it.
 type HealthView struct {
@@ -70,6 +112,19 @@ type HealthView struct {
 	// DeathSaves is the marks on the sheet, kept here so one answer redraws
 	// the whole line.
 	DeathSaves string `json:"deathSaves"`
+	// The same marks counted out, which is what the sheet draws as pips:
+	// three successes and you are stable, three failures and you are dead.
+	DeathSuccesses int `json:"deathSuccesses"`
+	DeathFailures  int `json:"deathFailures"`
+	// Dying is true while the character is down and the matter is unsettled,
+	// which is when the pips are worth drawing at all.
+	Dying  bool `json:"dying"`
+	Stable bool `json:"stable"`
+	Dead   bool `json:"dead"`
+	// DeathPips is 1..DeathSaveMarks, so a template that cannot count to three
+	// can still draw one mark per save. The same list does both rows: a mark is
+	// filled when its number is at or under the count.
+	DeathPips []int `json:"deathPips"`
 }
 
 // HealthRequest is one change to a character's hit points, posted by the html
@@ -81,7 +136,19 @@ type HealthRequest struct {
 	Action string `json:"action"`
 	// Amount is how many hit points, and is never negative: which way they
 	// go is the action's business.
-	Amount int    `json:"amount"`
+	Amount int `json:"amount"`
+	// Type is what kind of damage it was - "fire", "necrotic" - for a hurt.
+	// It is what lets the character's own resistances and immunities be
+	// applied rather than left as decoration under Defenses, and what the
+	// page colours the blow with. Empty is untyped damage, which nothing
+	// resists.
+	Type string `json:"type"`
+	// Result is what a death saving throw came to, said in words:
+	// "success", "failure", "critical" or "fumble". Roll is the same thing
+	// said as the number on the d20, which the sheet has to hand because it
+	// threw it - either will do, and Result wins when both are given.
+	Result string `json:"result"`
+	Roll   int    `json:"roll"`
 	Notes  string `json:"notes"`
 }
 
@@ -94,6 +161,13 @@ type HealthState struct {
 	HP       HealthView    `json:"hp"`
 	History  []HealthEvent `json:"history"`
 	Msg      string        `json:"msg"`
+	// Concentration is what the character is still holding, which a blow can
+	// cost them - so the hit point answer carries it rather than making the
+	// sheet ask a second question after every hit.
+	Concentration ConcentrationView `json:"concentration"`
+	// Save is the concentration check the blow just called for, nil when
+	// there was nothing to hold or nothing landed.
+	Save *ConcentrationSave `json:"save,omitempty"`
 }
 
 // ComputeHealth is the hit point line worked out from a computed sheet.
@@ -113,7 +187,59 @@ func ComputeHealth(s *Sheet) HealthView {
 	}
 	v.Down = v.Current <= 0
 	v.Level = HealthLevel(v.Percent)
+	v.DeathSuccesses, v.DeathFailures = ParseDeathSaves(v.DeathSaves)
+	v.Stable = v.Down && v.DeathSuccesses >= DeathSaveMarks
+	v.Dead = v.DeathFailures >= DeathSaveMarks
+	v.Dying = v.Down && !v.Stable && !v.Dead
+	for i := 1; i <= DeathSaveMarks; i++ {
+		v.DeathPips = append(v.DeathPips, i)
+	}
 	return v
+}
+
+// ParseDeathSaves counts the marks out of the DND_DEATH_SAVES property, which
+// is written "successes/failures" - the form the D&D Beyond import and the
+// builder both already use. A value in any other shape counts as no marks at
+// all rather than as an error: the property is editable by hand, and the first
+// death save rolled writes it back in the canonical form.
+func ParseDeathSaves(val string) (int, int) {
+	val = strings.TrimSpace(val)
+	if val == "" {
+		return 0, 0
+	}
+	parts := strings.SplitN(val, "/", 2)
+	succ, err := strconv.Atoi(strings.TrimSpace(parts[0]))
+	if err != nil {
+		return 0, 0
+	}
+	fail := 0
+	if len(parts) == 2 {
+		if n, err := strconv.Atoi(strings.TrimSpace(parts[1])); err == nil {
+			fail = n
+		}
+	}
+	return clampMarks(succ), clampMarks(fail)
+}
+
+// FormatDeathSaves writes the marks back. No marks at all is written as
+// nothing rather than as "0/0", so a character who has never been down and one
+// who has been brought round read the same.
+func FormatDeathSaves(succ, fail int) string {
+	succ, fail = clampMarks(succ), clampMarks(fail)
+	if succ == 0 && fail == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%d/%d", succ, fail)
+}
+
+func clampMarks(n int) int {
+	if n < 0 {
+		return 0
+	}
+	if n > DeathSaveMarks {
+		return DeathSaveMarks
+	}
+	return n
 }
 
 // HealthLevel is the band a hit point bar falls in, which is what colours it:
@@ -175,6 +301,22 @@ func ApplyHealth(c *Character, rs *Ruleset, req HealthRequest) (HealthEvent, err
 			return e, fmt.Errorf("how much damage?")
 		}
 		e.Action = "hurt"
+		// What the character shrugs off comes first: resistance halves the
+		// blow, vulnerability doubles it and immunity stops it, all before
+		// the temporary hit points get a look at what is left. That is the
+		// order the rules put them in, and it matters - resistance applied
+		// after the buffer would let a resistant character soak twice.
+		raw := amount
+		e.Type, e.Defense, amount = DefendDamage(c, rs, req.Type, amount)
+		if amount != raw {
+			e.Raw = raw
+		}
+		if amount == 0 {
+			// Immunity is not a refusal. It is a hit that did nothing, and
+			// is worth a line in the history saying so.
+			e.Amount = 0
+			break
+		}
 		e.Amount = amount
 		// The buffer goes first, and only what is left over draws blood.
 		soaked := temp
@@ -239,21 +381,139 @@ func ApplyHealth(c *Character, rs *Ruleset, req HealthRequest) (HealthEvent, err
 		}
 		cur = amount
 
+	case DeathSave, "save", "death":
+		// A death save is only a question while the character is down. Above
+		// nothing at all there is nothing to save against.
+		if cur > 0 {
+			return e, fmt.Errorf("you are on %d hit points, not dying", cur)
+		}
+		succ, fail := ParseDeathSaves(c.DeathSaves)
+		if succ >= DeathSaveMarks || fail >= DeathSaveMarks {
+			return e, fmt.Errorf("the death saves are already settled")
+		}
+		result := deathSaveResult(req)
+		switch result {
+		case SaveCritical:
+			// A natural 20 is not a success, it is standing back up.
+			e.Action = "revived"
+			e.Amount = 1
+			cur = 1
+			c.DeathSaves = ""
+		case SaveFumble:
+			e.Action = "death save"
+			fail += 2
+			c.DeathSaves = FormatDeathSaves(succ, fail)
+		case SaveSuccess:
+			e.Action = "death save"
+			succ++
+			c.DeathSaves = FormatDeathSaves(succ, fail)
+		case SaveFailure:
+			e.Action = "death save"
+			fail++
+			c.DeathSaves = FormatDeathSaves(succ, fail)
+		default:
+			return e, fmt.Errorf(
+				"unknown death save %q, expected success, failure, critical or fumble",
+				req.Result)
+		}
+		e.Notes = deathSaveNote(e.Notes, result, req.Roll)
+
+	case Stabilize, "stable":
+		if cur > 0 {
+			return e, fmt.Errorf("you are on %d hit points, not dying", cur)
+		}
+		succ, fail := ParseDeathSaves(c.DeathSaves)
+		if fail >= DeathSaveMarks {
+			return e, fmt.Errorf("it is too late to stabilise")
+		}
+		if succ >= DeathSaveMarks {
+			return e, fmt.Errorf("you are already stable")
+		}
+		e.Action = "stabilized"
+		c.DeathSaves = FormatDeathSaves(DeathSaveMarks, fail)
+
+	case ClearDeath, "cleardeathsaves":
+		if c.DeathSaves == "" {
+			return e, fmt.Errorf("there are no death saves to clear")
+		}
+		e.Action = "death saves cleared"
+		c.DeathSaves = ""
+
 	default:
 		return e, fmt.Errorf(
-			"unknown action %q, expected hurt, heal, temp, cleartemp or set", req.Action)
+			"unknown action %q, expected hurt, heal, temp, cleartemp, set, "+
+				"deathsave, stabilize or cleardeath", req.Action)
 	}
 
 	c.HPCurrent = cur
 	c.HPTemp = temp
 	e.HPAfter, e.TempAfter = cur, temp
 	e.Down = cur <= 0
+	e.DeathSaves = c.DeathSaves
+	// Being knocked out ends concentration: an unconscious caster is holding
+	// nothing. This is the one break that needs no saving throw.
+	if e.Down && c.Concentration != nil {
+		c.Concentration = nil
+	}
 	return logHealth(c, e), nil
+}
+
+// deathSaveResult is what the sheet said the save came to. A reading in words
+// is taken as given; a bare d20 is read against the flat DC of 10, with the
+// natural 20 and the natural 1 doing what the rules say they do.
+func deathSaveResult(req HealthRequest) string {
+	switch strings.ToLower(strings.TrimSpace(req.Result)) {
+	case SaveSuccess, "succeeded", "made":
+		return SaveSuccess
+	case SaveFailure, "failed", "fail":
+		return SaveFailure
+	case SaveCritical, "crit", "nat20":
+		return SaveCritical
+	case SaveFumble, "nat1", "critical failure":
+		return SaveFumble
+	case "":
+		// Nothing said in words, so read the die.
+	default:
+		return ""
+	}
+	if req.Roll <= 0 {
+		return ""
+	}
+	switch {
+	case req.Roll >= 20:
+		return SaveCritical
+	case req.Roll <= 1:
+		return SaveFumble
+	case req.Roll >= DeathSaveDC:
+		return SaveSuccess
+	}
+	return SaveFailure
+}
+
+// deathSaveNote keeps the number the die landed on in the history, since that
+// is the one thing the marks themselves cannot say afterwards.
+func deathSaveNote(notes, result string, roll int) string {
+	if roll <= 0 {
+		return notes
+	}
+	said := "rolled " + strconv.Itoa(roll)
+	switch result {
+	case SaveCritical:
+		said += ", a natural 20"
+	case SaveFumble:
+		said += ", a natural 1"
+	}
+	if notes == "" {
+		return said
+	}
+	return notes + " - " + said
 }
 
 // logHealth stamps an event with the time and appends it to the character's
 // health history, which is what gets written into the Health History section.
 func logHealth(c *Character, e HealthEvent) HealthEvent {
+	// A line being written now always knows where it started from.
+	e.hasBefore = true
 	now := time.Now()
 	e.Date = now.Format("2006-01-02")
 	e.Time = now.Format("15:04")
@@ -265,7 +525,23 @@ func logHealth(c *Character, e HealthEvent) HealthEvent {
 func HealthEventMsg(e HealthEvent) string {
 	switch e.Action {
 	case "hurt":
-		msg := fmt.Sprintf("took %d damage", e.Amount)
+		what := "damage"
+		if e.Type != "" {
+			what = strings.ToLower(e.Type)
+		}
+		// A blow the character shrugs off says so: the number that landed is
+		// not the number that was rolled, and the history should not look
+		// like the arithmetic went wrong.
+		if e.Defense == Immunity {
+			return fmt.Sprintf("immune to %s - %d shrugged off", what, e.Raw)
+		}
+		msg := fmt.Sprintf("took %d %s", e.Amount, what)
+		switch e.Defense {
+		case Resistance:
+			msg += fmt.Sprintf(", resisted from %d", e.Raw)
+		case Vulnerability:
+			msg += fmt.Sprintf(", doubled from %d", e.Raw)
+		}
 		if e.Absorbed > 0 {
 			msg += fmt.Sprintf(", %d soaked up", e.Absorbed)
 		}
@@ -284,6 +560,22 @@ func HealthEventMsg(e HealthEvent) string {
 		return fmt.Sprintf("temporary hit points down to %d", e.TempAfter)
 	case "set":
 		return fmt.Sprintf("hit points set to %d of %d", e.HPAfter, e.HPMax)
+	case "death save":
+		succ, fail := ParseDeathSaves(e.DeathSaves)
+		if fail >= DeathSaveMarks {
+			return fmt.Sprintf("%d of 3 failures - you are gone", fail)
+		}
+		if succ >= DeathSaveMarks {
+			return "three successes, you are stable"
+		}
+		return fmt.Sprintf("death saves %d success%s, %d failure%s",
+			succ, plural(succ, "", "es"), fail, plural(fail, "", "s"))
+	case "revived":
+		return "a natural 20 - back up on 1 hit point"
+	case "stabilized":
+		return "stabilised at 0 hit points"
+	case "death saves cleared":
+		return "death saves cleared"
 	}
 	return e.Action
 }
@@ -299,6 +591,8 @@ func HealthEventLine(e HealthEvent) string {
 		return "*Damage.* " + strings.ToUpper(msg[:1]) + msg[1:] + "."
 	case "healed":
 		return "*Healing.* " + strings.ToUpper(msg[:1]) + msg[1:] + "."
+	case "death save", "revived", "stabilized", "death saves cleared":
+		return "*Death Save.* " + strings.ToUpper(msg[:1]) + msg[1:] + "."
 	}
 	return "*Hit Points.* " + strings.ToUpper(msg[:1]) + msg[1:] + "."
 }

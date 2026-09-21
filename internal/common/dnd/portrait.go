@@ -18,13 +18,16 @@ package dnd
   Each one is drawn to what its race's own entry says about it rather than
   being a recoloured human: a tabaxi has a cat's ears, muzzle, whiskers and
   slit pupils, a dragonborn a scaled snout and swept horns, a warforged
-  plates and a lit eye slit, a triton fins and gills. Every one has brows,
+  plates and a lit eye slit, a triton fins and gills, a yuan-ti pureblood
+  scales, slit pupils, no ears and its tongue out, an aarakocra a hooked beak
+  where the nose and mouth would be and a plume of feathers for hair. Every one has brows,
   eyes and a mouth, because a bare oval reads as somebody the artist did not
   mean to draw.
 
   Portraits are carried for the races in the basic rules and for the ones the
-  common supplement rulesets add - aasimar, firbolg, goliath, tabaxi, triton,
-  warforged and cairnborn - so a ruleset beyond the SRD still gets a face.
+  common supplement rulesets add - aarakocra, aasimar, firbolg, goliath,
+  tabaxi, triton, warforged, yuan-ti and cairnborn - so a ruleset beyond the
+  SRD still gets a face.
   A race none of them has heard of falls back to a hooded adventurer, so a
   portrait is always found.
 

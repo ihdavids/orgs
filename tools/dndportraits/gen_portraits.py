@@ -407,6 +407,76 @@ def tusks(color, y=232, dx=17, h=30):
     return both(p)
 
 
+def beak(color, ink, cx=200, cy=186, half=20, drop=22):
+    """A hooked beak, which on a bird is the nose and the mouth at once: a
+    broad base on the face narrowing to a tip that turns down, the line of the
+    mouth across it and a nostril either side of the ridge."""
+    upper = fill_path("M%g %g Q %g %g %g %g Q %g %g %g %g Z"
+                      % (cx - half, cy, cx, cy - 7, cx + half, cy,
+                         cx + 5, cy + drop - 6, cx, cy + drop), color)
+    hook = fill_path("M%g %g Q %g %g %g %g Q %g %g %g %g Z"
+                     % (cx, cy + drop, cx + 7, cy + drop + 3, cx + 3, cy + drop + 9,
+                        cx - 3, cy + drop + 2, cx - 6, cy + drop - 6),
+                     shade(color, 0.78))
+    line = line_path("M%g %g Q %g %g %g %g"
+                     % (cx - half + 3, cy + 9, cx, cy + 13, cx + half - 3, cy + 9),
+                     ink, 2.4, ' opacity=".5"')
+    nare = both(circle(cx - 9, cy + 2, 2.2, ink, ' opacity=".5"'))
+    return upper + hook + line + nare
+
+
+def crest(color, edge=None, feathers=((0, 104, 0, 62), (30, 108, 46, 70),
+                                      (58, 118, 84, 86))):
+    """The plume an aarakocra wears where hair would be: leaf shaped feathers
+    swept back off the skull rather than spikes, mirrored about the middle."""
+    out = []
+    for dx, y, tx, ty in feathers:
+        x = MID + dx
+        d = ("M%g %g Q %g %g %g %g Q %g %g %g %g Z"
+             % (x - 11, y, x - 10, (y + ty) / 2.0 - 4, MID + tx, ty,
+                x + 13, (y + ty) / 2.0 + 2, x + 11, y))
+        out.append(fill_path(d, color))
+        if edge:
+            out.append(line_path(d, edge, 2.0, ' opacity=".45"'))
+        if dx:
+            m = ("M%g %g Q %g %g %g %g Q %g %g %g %g Z"
+                 % (2 * MID - x + 11, y, 2 * MID - x + 10, (y + ty) / 2.0 - 4,
+                    MID - tx, ty, 2 * MID - x - 13, (y + ty) / 2.0 + 2,
+                    2 * MID - x - 11, y))
+            out.append(fill_path(m, color))
+            if edge:
+                out.append(line_path(m, edge, 2.0, ' opacity=".45"'))
+    return "".join(out)
+
+
+def ruff(color, edge, top=228, drop=46, half=58):
+    """A collar of feathers where a bird's neck meets its shoulders. It is
+    here to be drawn, but it also does a job: with no hair falling beside the
+    face there is nothing else covering the neck, and a bare neck under a beak
+    reads as one long dangle rather than as a head."""
+    band = fill_path("M%g %g Q %g %g %g %g L %g %g Q %g %g %g %g Z"
+                     % (MID - half, top, MID, top + 16, MID + half, top,
+                        MID + half + 10, top + drop,
+                        MID, top + drop + 20, MID - half - 10, top + drop), color)
+    scallop = ""
+    for dx in (-38, -19, 0, 19, 38):
+        scallop += line_path("M%g %g q 9 11 19 0" % (MID + dx - 9, top + 14),
+                             edge, 2.6, ' opacity=".5"')
+    return band + scallop
+
+
+def forked_tongue(color, y=240, reach=15, split=10, thick=4.4):
+    """The flicker of tongue that gives a pureblood away: a short stem out of
+    the mouth and a clear V at the end of it. Kept short on purpose - drawn
+    any longer it stops reading as a tongue and starts reading as a dribble
+    down the chin."""
+    tip = y + reach
+    stem = line_path("M%g %g L %g %g" % (MID, y, MID, tip), color, thick)
+    fork = both(line_path("M%g %g L %g %g" % (MID, tip, MID - split * 0.8, tip + split),
+                          color, thick * 0.7))
+    return stem + fork
+
+
 def gills(ink, y=272, dx=40):
     p = ""
     for i in range(3):
@@ -661,6 +731,53 @@ RACES = [
                                  rx=13.5, ry=9) +
                             nose(p["ink"], y=200, w=7, kind="line") +
                             mouth(p["ink"], y=232, w=22, kind="line"))),
+
+    # --------------------------------------------------------------- yuan-ti
+    # A pureblood is the one the race entry says passes for human, so this is
+    # a human bust that keeps giving itself away: green under the skin, a
+    # patch of scales over the brow and along the jaw, barely a nose, slit
+    # pupils and the tongue out.
+    dict(id="yuan-ti", label="a yuan-ti pureblood",
+         bg=("#e4eeda", "#93ab7e"), cloak=("#33402f", "#1c231a"),
+         face="#9fb173", hair="#3d4a2c", light="#eef4e2",
+         head=dict(rx=53, ry=74, cy=166),
+         under=lambda p: long_hair(p["hair"], fall=300, wide=56),
+         # No ear: a snake has none, and leaving it off is most of what keeps
+         # this from reading as a green human.
+         over=lambda p: (hair_cap(p["hair"], top=90, drop=152, inner=114, wide=56) +
+                         scales(p["shade"], rows=((172, 126), (200, 118), (228, 126),
+                                                  (158, 150), (242, 150),
+                                                  (158, 198), (242, 198),
+                                                  (170, 218), (230, 218))) +
+                         forked_tongue("#b4564c", y=230, reach=13, split=9)),
+         face_of=lambda p: (brows(p["shade"], y=144, dx=26, length=42, thick=7,
+                                  tilt=-6, arc=2, opacity=0.7) +
+                            eyes("#f4eec8", "#c8a12e", p["ink"], cy=174, dx=26,
+                                 rx=14, ry=9, pupil="slit") +
+                            nose(p["ink"], y=196, w=6, h=13, kind="line") +
+                            mouth(p["ink"], y=226, w=20, thick=3.0))),
+
+    # ------------------------------------------------------------- aarakocra
+    # Birdfolk, so the face is a bird's: a hooked beak where the nose and
+    # mouth would be, feathers over the skull and a plume instead of hair, and
+    # the round forward eyes of something that hunts. No ears, no lips.
+    dict(id="aarakocra", label="an aarakocra",
+         bg=("#eceadf", "#a9a692"), cloak=("#3f4239", "#232520"),
+         face="#c3bfb2", hair="#7d5a34", light="#f2f0e8",
+         head=dict(rx=54, ry=66, cy=162),
+         under=lambda p: crest("#9c6b34", edge="#6d4a22"),
+         # A few soft arcs over the skull for the lie of the feathers, and
+         # none on the cheeks - down there they read as scratches, not down.
+         over=lambda p: (scales(p["shade"], rows=((174, 124), (200, 116), (226, 124),
+                                                  (186, 142), (214, 142))) +
+                         beak("#e0ad44", p["ink"], cy=186, half=20, drop=22) +
+                         ruff(p["face"], p["ink"], top=226, drop=40, half=52)),
+         # A beak takes the place of the nose and the mouth both, so the face
+         # is brows and eyes and nothing under them.
+         face_of=lambda p: (brows(p["shade"], y=140, dx=26, length=42, thick=8,
+                                  tilt=-8, arc=2) +
+                            eyes("#f6f1e0", "#c97f22", p["ink"], cy=170, dx=26,
+                                 rx=12.5, ry=12, pr=6.0))),
 
     # --------------------------------------------------------------- goliath
     # Grey as mountain stone, bald, and marked with the dark lithoderms the

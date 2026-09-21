@@ -878,6 +878,28 @@ USES_FEATURES = {
     "sorcerer": {"Font of Magic": {"column": "sorcery points", "recharge": "long"}},
 }
 
+# Spells that deal two kinds of damage at once, and the second of them.
+#
+# A spell's damage is read out of its text, and the reader takes the first
+# dice it finds - which is right for almost every spell and wrong for the
+# handful that roll two types in one breath. Flame strike is "4d6 fire damage
+# and 4d6 radiant damage" and only the fire was being carried across.
+#
+# They cannot be told from their text alone, because the same "X damage and Y
+# damage" shape covers spells that offer a choice of the two rather than
+# dealing both - fire shield's warm or chill, spirit guardians' radiant or
+# necrotic - and guessing wrong would have the sheet roll damage that is not
+# dealt. So the ones that really are both are named here, the same way the
+# resources whose size lives in a class table are named in USES_FEATURES.
+#
+# Second damage that belongs to a spell this file does not generate goes on
+# that spell's own entry in templates/dnd instead. See Spell.Damage2.
+SPELL_DAMAGE2 = {
+    "flame-strike": "4d6 radiant",
+    "ice-storm": "4d6 cold",
+    "meteor-swarm": "20d6 bludgeoning",
+}
+
 
 def parse_choice_options(bodies):
     """Collect the option list of a choice feature from every section that
@@ -1490,6 +1512,8 @@ def parse_spells(src, lists):
         dm = re.search(r"(\d+d\d+)(?: \+ \d+)? (\w+) damage", low)
         if dm:
             spell["damage"] = "%s %s" % (dm.group(1), dm.group(2))
+        if sid in SPELL_DAMAGE2:
+            spell["damage2"] = SPELL_DAMAGE2[sid]
         spell["classes"] = sorted(set(lists.get(sid, [])))
         out.append(spell)
     return out

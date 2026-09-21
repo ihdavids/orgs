@@ -14,6 +14,14 @@ package dnd
   ,#+SUMMARY: Ambushed on the road to Phandalin, Sildar is missing.
   ,#+FILETAGS: :dnd:session:
 
+  ,* Characters
+  ,** Lyra
+     :PROPERTIES:
+     :DND_ID: lyra-silverleaf-4c1f2a
+     :DND_CHARACTER: Lyra
+     :END:
+     [[file:/gtd/dnd/lyra.org][Lyra]]
+
   ,* Notes
   ,** 19:32
      The wagon tracks leave the road here.
@@ -29,6 +37,26 @@ package dnd
   file is yours. New notes are appended to the end of the notes section and
   new rolls to the end of the table, so anything you add by hand between
   sessions is left exactly where you put it.
+
+  Each character who played gets a heading carrying their =DND_ID= and an
+  ordinary file link to their sheet, so the evening and the character are one
+  click apart in either direction and the link graph knows about both. A
+  session written before the sheet said where it lived has the link added the
+  next time that character writes to it.
+
+  A note already in the file can be said again: =POST
+  /dnd/play/session/{id}/note/{index}= rewrites that one entry in place and
+  leaves everything around it alone, which is what the *Edit* button on a
+  note in the character sheet's session panel does.
+
+  A roll can be corrected the same way: =POST
+  /dnd/play/session/{id}/roll/{index}= rewrites one row of the table. The
+  character sheet uses it to settle a d20. Every d20 is rolled twice, so the
+  tray can show the flat roll, the better of the two and the worse all at
+  once; clicking one of those says which the table was actually owed, and the
+  row that was already written is rewritten to match rather than a second
+  roll being logged. Only the roll still on the card can be settled - once
+  you roll again it stands as it is.
 EDOC */
 
 import (
@@ -86,6 +114,10 @@ type SessionNote struct {
 type SessionCharacter struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+	// File is the character's own org sheet. The session file links to it
+	// under the character's heading, so the evening and the character who
+	// played it are one click apart in either direction.
+	File string `json:"file"`
 }
 
 // SessionInfo is the summary of a session file used by the session list.
@@ -342,7 +374,7 @@ func ParseNotes(text string) []SessionNote {
 		if cur == nil {
 			return
 		}
-		cur.Text = strings.TrimRight(strings.Join(body, "\n"), "\n")
+		cur.Text = strings.TrimRight(strings.Join(orgStripBreaks(body), "\n"), "\n")
 		out = append(out, *cur)
 		cur = nil
 		body = nil
@@ -389,6 +421,9 @@ func ParseSessionCharacters(text string) []SessionCharacter {
 		if cur == nil {
 			continue
 		}
+		if target := fileLinkTarget(lines[i]); target != "" && cur.File == "" {
+			cur.File = target
+		}
 		key, val := drawerProperty(lines[i])
 		switch key {
 		case PropSessionCharacterId:
@@ -413,8 +448,14 @@ func AddSessionCharacter(text string, ch SessionCharacter) string {
 		return text
 	}
 	known := ParseSessionCharacters(text)
-	for _, k := range known {
+	for i, k := range known {
 		if (ch.Id != "" && k.Id == ch.Id) || (ch.Id == "" && k.Name == ch.Name) {
+			// Already listed. A session written before the sheet knew where
+			// the character lived has no link back to it, so this is where
+			// one is added.
+			if ch.File != "" && k.File == "" {
+				return addCharacterLink(text, i, ch)
+			}
 			return text
 		}
 	}
@@ -428,6 +469,9 @@ func AddSessionCharacter(text string, ch SessionCharacter) string {
 		"   :" + PropSessionCharacterId + ": " + ch.Id,
 		"   :" + PropSessionCharacter + ": " + ch.Name,
 		"   :END:",
+	}
+	if link := characterLink(ch); link != "" {
+		entry = append(entry, "   "+link)
 	}
 
 	names := []string{}
@@ -464,6 +508,78 @@ func AddSessionCharacter(text string, ch SessionCharacter) string {
 	out = append(out, entry...)
 	out = append(out, "")
 	out = append(out, lines[end:]...)
+	return strings.Join(out, "\n")
+}
+
+// characterLink is the org link from a session back to the character sheet
+// that played it. It is an ordinary file link, so it opens in org mode, is
+// picked up by the backlink index, and reads as the character's name.
+func characterLink(ch SessionCharacter) string {
+	file := strings.TrimSpace(ch.File)
+	if file == "" {
+		return ""
+	}
+	name := strings.TrimSpace(ch.Name)
+	if name == "" {
+		name = strings.TrimSpace(ch.Id)
+	}
+	if name == "" {
+		return "[[file:" + file + "]]"
+	}
+	return "[[file:" + file + "][" + name + "]]"
+}
+
+// fileLinkTarget reads the target out of a line holding a file link, and
+// answers empty for a line that is not one.
+func fileLinkTarget(line string) string {
+	m := reFileLink.FindStringSubmatch(line)
+	if m == nil {
+		return ""
+	}
+	return strings.TrimSpace(m[1])
+}
+
+var reFileLink = regexp.MustCompile(`\[\[file:([^\]]+)\](?:\[[^\]]*\])?\]`)
+
+// addCharacterLink puts a link to the character's sheet into an entry that
+// was written without one, directly under its property drawer.
+func addCharacterLink(text string, index int, ch SessionCharacter) string {
+	link := characterLink(ch)
+	if link == "" {
+		return text
+	}
+	lines := splitLines(text)
+	start, end := findSection(lines, SessionCharactersHeading)
+	if start < 0 {
+		return text
+	}
+	at, n := -1, -1
+	for i := start; i < end; i++ {
+		if lvl, _ := headingOf(lines[i]); lvl == 2 {
+			n++
+			if n == index {
+				at = i
+			} else if at >= 0 {
+				end = i
+				break
+			}
+		}
+	}
+	if at < 0 {
+		return text
+	}
+	// After the drawer if the entry has one, otherwise straight under the
+	// heading. Either way the link is the last line of what is already there.
+	put := at + 1
+	for i := at + 1; i < end; i++ {
+		if strings.EqualFold(strings.TrimSpace(lines[i]), ":END:") {
+			put = i + 1
+			break
+		}
+	}
+	out := append([]string{}, lines[:put]...)
+	out = append(out, "   "+link)
+	out = append(out, lines[put:]...)
 	return strings.Join(out, "\n")
 }
 
@@ -577,8 +693,226 @@ func AppendNotes(text string, notes []SessionNote) string {
 	return strings.Join(out, "\n")
 }
 
+// UpdateRoll rewrites one row of the roll table where it stands. index is the
+// roll's position in the table, counted the way ParseRolls reads it, and was -
+// when it is given - is the label that row is expected to carry: a roll edited
+// against a stale reading of the file is refused rather than written over the
+// wrong row.
+//
+// It exists so that a die already thrown can be told what it meant. The sheet
+// rolls all three of a d20 - the flat roll, the better of two and the worse -
+// and the player says afterwards which one the table was owed; saying so
+// rewrites the one row rather than adding a second roll that never happened.
+//
+// Cells the edit leaves empty keep what the row already holds, so a caller
+// that only has a new result need not restate the time or who rolled it.
+func UpdateRoll(text string, index int, roll SessionRoll, was string) (string, error) {
+	lines := splitLines(text)
+	start, end, indent := findRollTable(lines)
+	if start < 0 || start == end {
+		return text, fmt.Errorf("this session has no rolls to edit")
+	}
+	rows := [][]string{}
+	for i := start; i < end; i++ {
+		if isTableRule(strings.TrimSpace(lines[i])) {
+			continue
+		}
+		rows = append(rows, parseTableRow(lines[i]))
+	}
+	// Data rows are counted exactly as ParseRolls counts them, so the index
+	// the caller read out of the session detail is the row it lands on.
+	data := []int{}
+	for i, cells := range rows {
+		if len(cells) > 0 && strings.EqualFold(cells[0], sessionRollHeader[0]) {
+			continue
+		}
+		data = append(data, i)
+	}
+	if index < 0 || index >= len(data) {
+		return text, fmt.Errorf("this session has no roll %d", index+1)
+	}
+	at := data[index]
+	old := rollFromRow(rows[at])
+	if was = strings.TrimSpace(was); was != "" && !strings.EqualFold(was, strings.TrimSpace(old.Label)) {
+		return text, fmt.Errorf(
+			"that roll now reads %q, not %q - read the session again before editing it",
+			old.Label, was)
+	}
+	keep := func(now, was string) string {
+		if strings.TrimSpace(now) == "" {
+			return was
+		}
+		return now
+	}
+	roll.Time = keep(roll.Time, old.Time)
+	roll.Character = keep(roll.Character, old.Character)
+	roll.Label = keep(roll.Label, old.Label)
+	roll.Formula = keep(roll.Formula, old.Formula)
+	roll.Result = keep(roll.Result, old.Result)
+	roll.Dice = keep(roll.Dice, old.Dice)
+	roll.Notes = keep(roll.Notes, old.Notes)
+	rows[at] = roll.row()
+	table := indentLines(strings.Split(orgTable(rows, 1), "\n"), indent)
+	out := append([]string{}, lines[:start]...)
+	out = append(out, table...)
+	out = append(out, lines[end:]...)
+	return strings.Join(out, "\n"), nil
+}
+
+// DeleteRoll takes one row out of a session's roll table.
+//
+// It finds the row the way UpdateRoll does, and refuses on the same terms: a
+// roll number that is not there, or one whose label is no longer what the
+// page thought it was. The check earns its keep here in the same way it does
+// for a note - deleting shifts every roll after it up by one.
+//
+// Taking the last row out takes the table with it, leaving the "#+NAME:"
+// anchor and nothing under it, which is exactly the state a session with no
+// rolls in it starts in. A lone header row would parse the same but would
+// read as a table somebody had emptied rather than one nothing had been
+// written to yet.
+func DeleteRoll(text string, index int, was string) (string, error) {
+	lines := splitLines(text)
+	start, end, indent := findRollTable(lines)
+	if start < 0 || start == end {
+		return text, fmt.Errorf("this session has no rolls to delete")
+	}
+	rows := [][]string{}
+	for i := start; i < end; i++ {
+		if isTableRule(strings.TrimSpace(lines[i])) {
+			continue
+		}
+		rows = append(rows, parseTableRow(lines[i]))
+	}
+	// Data rows are counted exactly as ParseRolls counts them, so the index
+	// the caller read out of the session detail is the row it lands on.
+	data := []int{}
+	for i, cells := range rows {
+		if len(cells) > 0 && strings.EqualFold(cells[0], sessionRollHeader[0]) {
+			continue
+		}
+		data = append(data, i)
+	}
+	if index < 0 || index >= len(data) {
+		return text, fmt.Errorf("this session has no roll %d", index+1)
+	}
+	at := data[index]
+	old := rollFromRow(rows[at])
+	if was = strings.TrimSpace(was); was != "" && !strings.EqualFold(was, strings.TrimSpace(old.Label)) {
+		return text, fmt.Errorf(
+			"that roll now reads %q, not %q - read the session again before deleting it",
+			old.Label, was)
+	}
+	rows = append(rows[:at], rows[at+1:]...)
+
+	table := []string{}
+	if len(data) > 1 {
+		table = indentLines(strings.Split(orgTable(rows, 1), "\n"), indent)
+	}
+	out := append([]string{}, lines[:start]...)
+	out = append(out, table...)
+	out = append(out, lines[end:]...)
+	return strings.Join(out, "\n"), nil
+}
+
+// UpdateNote rewrites one note that is already in the file, in place. index
+// is the note's position in the notes section, counted the way ParseNotes
+// reads them, and was - when it is given - is the time stamp that note is
+// expected to carry: a note edited from a stale page is refused rather than
+// written over the wrong entry.
+//
+// The rest of the file is untouched, including anything written between the
+// notes by hand, and a note is never emptied: rubbing one out is deleting it,
+// which is a thing to do in the file itself.
+func UpdateNote(text string, index int, note SessionNote, was string) (string, error) {
+	if strings.TrimSpace(note.Text) == "" {
+		return text, fmt.Errorf("a note cannot be left empty")
+	}
+	lines := splitLines(text)
+	start, end := findNotesSection(lines)
+	if start < 0 {
+		return text, fmt.Errorf("this session has no notes to edit")
+	}
+	heads := []int{}
+	for i := start; i < end; i++ {
+		if lvl, _ := headingOf(lines[i]); lvl == 2 {
+			heads = append(heads, i)
+		}
+	}
+	if index < 0 || index >= len(heads) {
+		return text, fmt.Errorf("this session has no note %d", index+1)
+	}
+	at := heads[index]
+	stop := end
+	if index+1 < len(heads) {
+		stop = heads[index+1]
+	}
+	_, title := headingOf(lines[at])
+	stamp := strings.TrimSpace(title)
+	if was = strings.TrimSpace(was); was != "" && !strings.EqualFold(was, stamp) {
+		return text, fmt.Errorf(
+			"that note now reads %q, not %q - read the session again before editing it",
+			stamp, was)
+	}
+	if t := strings.TrimSpace(note.Time); t != "" {
+		stamp = t
+	}
+	block := append([]string{"** " + stamp}, renderNoteBody(note.Text)...)
+	block = trimTrailingBlanks(block)
+	// The blank line that held this entry apart from the next one is part of
+	// how the file reads, not part of the note, so it stays.
+	if stop > at && strings.TrimSpace(lines[stop-1]) == "" {
+		block = append(block, "")
+	}
+	out := append([]string{}, lines[:at]...)
+	out = append(out, block...)
+	out = append(out, lines[stop:]...)
+	return strings.Join(out, "\n"), nil
+}
+
+// DeleteNote takes one entry out of a session's notes altogether.
+//
+// It finds the entry exactly the way UpdateNote does, and refuses on the same
+// terms: a note number that is not there, or one whose stamp is no longer what
+// the page thought it was. That check matters more here than it does for an
+// edit, because deleting shifts every note after it up by one - a page holding
+// stale numbers could otherwise throw away the wrong note and be none the
+// wiser.
+func DeleteNote(text string, index int, was string) (string, error) {
+	lines := splitLines(text)
+	start, end := findNotesSection(lines)
+	if start < 0 {
+		return text, fmt.Errorf("this session has no notes to delete")
+	}
+	heads := []int{}
+	for i := start; i < end; i++ {
+		if lvl, _ := headingOf(lines[i]); lvl == 2 {
+			heads = append(heads, i)
+		}
+	}
+	if index < 0 || index >= len(heads) {
+		return text, fmt.Errorf("this session has no note %d", index+1)
+	}
+	at := heads[index]
+	stop := end
+	if index+1 < len(heads) {
+		stop = heads[index+1]
+	}
+	_, title := headingOf(lines[at])
+	stamp := strings.TrimSpace(title)
+	if was = strings.TrimSpace(was); was != "" && !strings.EqualFold(was, stamp) {
+		return text, fmt.Errorf(
+			"that note now reads %q, not %q - read the session again before deleting it",
+			stamp, was)
+	}
+	out := append([]string{}, lines[:at]...)
+	out = append(out, lines[stop:]...)
+	return strings.Join(out, "\n"), nil
+}
+
 // renderNoteBody pushes the note's own headings two levels down so they nest
-// under the entry, and indents everything else to match.
+// under the entry, indents everything else to match, and writes the line
+// breaks somebody typed as line breaks org will honour - see orgBreakLines.
 func renderNoteBody(text string) []string {
 	out := []string{}
 	for _, line := range splitLines(strings.TrimRight(text, "\n")) {
@@ -592,7 +926,106 @@ func renderNoteBody(text string) []string {
 		}
 		out = append(out, "   "+strings.TrimRight(line, " \t"))
 	}
-	return out
+	return orgBreakLines(out)
+}
+
+// ----------------------------------------------------------------------------
+// Line breaks
+//
+// Org runs consecutive lines of prose together into one paragraph. That is
+// right for prose and wrong for a session note: somebody typing four short
+// lines into the notes box at the table means four lines, and getting one
+// run-on sentence back out of the export is not what they wrote.
+//
+// So a hard line break - org's trailing "\\" - is written wherever two lines
+// would otherwise be flowed into one, and taken off again when the note is
+// read back, so what the editor shows is what was typed. Both directions ask
+// the same question of the same lines, which is what keeps the round trip
+// honest: a break is only removed where one would have been added.
+// ----------------------------------------------------------------------------
+
+// orgBullet is a list marker, which starts something new rather than
+// continuing the line above it.
+var orgBullet = regexp.MustCompile(`^(?:[-+*]\s|\d+[.)]\s)`)
+
+// orgBreakLines adds the break. Nothing inside a #+BEGIN_/#+END_ block is
+// touched: those are verbatim, and a backslash pair in one is content.
+func orgBreakLines(lines []string) []string {
+	verbatim := false
+	for i := range lines {
+		t := strings.TrimSpace(lines[i])
+		up := strings.ToUpper(t)
+		if strings.HasPrefix(up, "#+BEGIN_") {
+			verbatim = true
+			continue
+		}
+		if strings.HasPrefix(up, "#+END_") {
+			verbatim = false
+			continue
+		}
+		if verbatim || !orgFlowsOn(lines, i) || strings.HasSuffix(t, `\\`) {
+			continue
+		}
+		lines[i] = strings.TrimRight(lines[i], " \t") + ` \\`
+	}
+	return lines
+}
+
+// orgStripBreaks takes it off again, and only where orgBreakLines would have
+// put it - so a backslash pair somebody typed themselves at the end of a last
+// line survives being read back.
+func orgStripBreaks(lines []string) []string {
+	verbatim := false
+	for i := range lines {
+		t := strings.TrimSpace(lines[i])
+		up := strings.ToUpper(t)
+		if strings.HasPrefix(up, "#+BEGIN_") {
+			verbatim = true
+			continue
+		}
+		if strings.HasPrefix(up, "#+END_") {
+			verbatim = false
+			continue
+		}
+		if verbatim || !orgFlowsOn(lines, i) || !strings.HasSuffix(t, `\\`) {
+			continue
+		}
+		lines[i] = strings.TrimRight(strings.TrimSuffix(
+			strings.TrimRight(lines[i], " \t"), `\\`), " \t")
+	}
+	return lines
+}
+
+// orgFlowsOn reports whether the line after i would be run into line i when
+// the org is read.
+func orgFlowsOn(lines []string, i int) bool {
+	if i < 0 || i+1 >= len(lines) {
+		return false
+	}
+	return orgFlowable(lines[i]) && orgFlowsInto(lines[i+1])
+}
+
+// orgFlowable is a line that can carry a break at all: prose, or a list item
+// with more of itself on the next line. A heading, a keyword, a table row and
+// a drawer line all end where they end.
+func orgFlowable(line string) bool {
+	t := strings.TrimSpace(line)
+	if t == "" {
+		return false
+	}
+	if lvl, _ := headingOf(line); lvl > 0 {
+		return false
+	}
+	if strings.HasPrefix(t, "#+") || strings.HasPrefix(t, "|") {
+		return false
+	}
+	return !(strings.HasPrefix(t, ":") && strings.HasSuffix(t, ":"))
+}
+
+// orgFlowsInto is a line org runs into the one above it. A bullet, a heading,
+// a table or a keyword starts something new instead.
+func orgFlowsInto(line string) bool {
+	return orgFlowable(line) && !orgBullet.MatchString(strings.TrimSpace(line))
 }
 
 // ----------------------------------------------------------------------------

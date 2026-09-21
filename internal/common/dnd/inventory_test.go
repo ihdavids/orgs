@@ -437,3 +437,102 @@ func TestWornSurvivesTheOrgFile(t *testing.T) {
 		t.Fatalf("worn armour did not survive the round trip: %+v", e)
 	}
 }
+
+// TestWhatCannotBeUsed pins which lines the sheet offers a Use button on.
+// Using something spends it, so gear that is drawn and put away again - armour,
+// shields, weapons - never gets one, while a potion or a ration does.
+func TestWhatCannotBeUsed(t *testing.T) {
+	rs := srd(t)
+	c := testChar()
+	InventoryAdd(c, rs, "chain-mail", "", 1, "", "")
+	InventoryAdd(c, rs, "shield", "", 1, "", "")
+	InventoryAdd(c, rs, "dagger", "", 1, "", "")
+	InventoryAdd(c, rs, "potion-of-healing", "", 1, "", "")
+	InventoryAdd(c, rs, "", "Gran's Lucky Spoon", 1, "", "")
+
+	v := ComputeInventory(Compute(c, rs).Equipment, rs, 10)
+	cases := []struct {
+		name string
+		want bool
+	}{
+		{"Chain Mail", false},
+		{"Shield", false},
+		{"Dagger", false},
+		{"Potion of Healing", true},
+		// Homebrew says nothing about what it is, so it keeps the button.
+		{"Gran's Lucky Spoon", true},
+	}
+	for _, tc := range cases {
+		e := entryFor(v, "", tc.name)
+		if e == nil {
+			t.Errorf("%s is not in the inventory", tc.name)
+			continue
+		}
+		if e.Usable != tc.want {
+			t.Errorf("%s usable = %v, want %v", tc.name, e.Usable, tc.want)
+		}
+	}
+}
+
+
+func TestDeleteTakesTheWholeLineAndLeavesNoHistory(t *testing.T) {
+	rs := srd(t)
+	c := testChar()
+	if _, err := InventoryAdd(c, rs, "torch", "", 5, "", ""); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+	if _, err := InventoryAdd(c, rs, "potion-of-healing", "", 2, "", ""); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+	was := len(c.InventoryLog)
+	e, err := InventoryDelete(c, rs, "torch", "")
+	if err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	if e.Qty != 5 || e.Action != InvDeleted {
+		t.Fatalf("the whole stack should go at once, got %+v", e)
+	}
+	v := ComputeInventory(c.Equipment, rs, 10)
+	if entryFor(v, "", "Torch") != nil {
+		t.Fatalf("the torches are still there")
+	}
+	if entryFor(v, "", "Potion of Healing") == nil {
+		t.Fatalf("something else went with them")
+	}
+	// Nothing happened in the fiction, so nothing is written down. Dropping
+	// is the one that leaves a line.
+	if len(c.InventoryLog) != was {
+		t.Fatalf("a correction should leave no history, got %+v",
+			c.InventoryLog[was:])
+	}
+}
+
+func TestDeletingAContainerTipsItOutFirst(t *testing.T) {
+	rs := srd(t)
+	c := testChar()
+	if _, err := InventoryAdd(c, rs, "backpack", "", 1, "", ""); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+	if _, err := InventoryAdd(c, rs, "rations-1-day", "", 3, "backpack", ""); err != nil {
+		t.Fatalf("add: %v", err)
+	}
+	if _, err := InventoryDelete(c, rs, "backpack", ""); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	v := ComputeInventory(c.Equipment, rs, 10)
+	// Losing the bag must never silently lose what was inside it.
+	if entryFor(v, "", "Rations (1 day)") == nil {
+		t.Fatalf("the rations went with the backpack: %+v", c.Equipment)
+	}
+	if entryFor(v, "", "Backpack") != nil {
+		t.Fatalf("the backpack is still there")
+	}
+}
+
+func TestDeletingWhatIsNotThereIsRefused(t *testing.T) {
+	rs := srd(t)
+	c := testChar()
+	if _, err := InventoryDelete(c, rs, "torch", ""); err == nil {
+		t.Fatalf("there is no torch to take off the sheet")
+	}
+}

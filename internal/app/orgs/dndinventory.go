@@ -89,18 +89,43 @@ func dndInventoryState(c *dnd.Character, rs *dnd.Ruleset, path, msg string) dnd.
 		history = []dnd.InventoryEvent{}
 	}
 	id := rs.Id
+	moneyLog := c.MoneyLog
+	if moneyLog == nil {
+		moneyLog = []dnd.MoneyEvent{}
+	}
 	return dnd.InventoryState{
 		Id: dnd.CharacterId(c), Name: c.Name, Filename: path, Ruleset: id,
 		Inventory: sheet.Inventory, History: history, Money: c.Money, Msg: msg,
+		AC: sheet.AC, ACSource: sheet.ACSource,
+		// Buying moves the purse, using something up can move the hit points,
+		// and attuning to a ring moves what is live - so everything a change
+		// here can touch rides back on the one answer rather than making the
+		// sheet ask three more questions.
+		Purse: sheet.Purse, MoneyHistory: moneyLog,
+		Attunement: dnd.ComputeAttunement(sheet),
+		HP:         dnd.ComputeHealth(sheet),
 	}
 }
 
 // dndWriteCharacter rewrites a sheet and tells the database about it.
-func dndWriteCharacter(c *dnd.Character, rs *dnd.Ruleset, path string) error {
+//
+// what, when given, is how undo will describe putting this change back. It
+// is optional because most callers have a perfectly good message of their
+// own by the time they get here and not all of them do; a change with no
+// description is still undoable, it just says so less well.
+func dndWriteCharacter(c *dnd.Character, rs *dnd.Ruleset, path string, what ...string) error {
+	// What the file said before, so undo has something to put back even for
+	// the changes that leave no history - see dndjournal.go.
+	before, _ := os.ReadFile(path)
 	org := dnd.RenderOrg(c, rs)
 	if err := os.WriteFile(path, []byte(org), 0644); err != nil {
 		return err
 	}
+	said := ""
+	if len(what) > 0 {
+		said = what[0]
+	}
+	dndRemember(path, string(before), org, said)
 	GetDb().ReloadFile(path)
 	return nil
 }
@@ -134,9 +159,24 @@ func dndWriteCharacter(c *dnd.Character, rs *dnd.Ruleset, path string) error {
 	    "level": "", "label": "Unencumbered"
 	  },
 	  "history": [{"date": "2025-09-05", "time": "19:32", "action": "added",
-	               "item": "Potion of Healing", "qty": 2, "to": "Backpack"}]
+	               "item": "Potion of Healing", "qty": 2, "to": "Backpack"}],
+	  "ac": 16, "acSource": "+2 Leather"
 	}
 	#+END_SRC
+
+	Each entry carries =wearable= and =usable=, which say whether the line is something
+	that can be worn or wielded and whether it is something that is spent by being used.
+	Armour, shields and weapons are wearable but never usable.
+
+	An entry that requires attunement says =attunement=, an entry whose text says plainly
+	what using one up does carries =use= (see below), and one the rules put a price on
+	carries =price= and =sale=, so the panel can offer to buy, sell or drink a line without
+	having to price or read anything itself.
+
+	=ac= and =acSource= are the armour class the character is left with, so a sheet that
+	wears or removes armour can redraw its armour class without loading again. =purse=,
+	=moneyHistory=, =attunement= and =hp= ride along for the same reason: buying moves the
+	coin, attuning moves what is live, and drinking a potion moves the hit points.
 	EDOC */
 func RequestDndInventory(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
@@ -169,7 +209,7 @@ func RequestDndInventory(w http.ResponseWriter, r *http.Request) {
 	|-------------+--------+----------+----------------------------------------------------------------|
 	| =filename=  | string | no       | The org character sheet. One of filename or id is required.    |
 	| =id=        | string | no       | The character's =DND_ID=.                                      |
-	| =action=    | string | yes      | =add=, =use=, =drop=, =move= or =equip=.                       |
+	| =action=    | string | yes      | =add=, =use=, =drop=, =delete=, =move= or =equip=.             |
 	| =item=      | string | yes      | An item id, or a name for homebrew the ruleset does not know.  |
 	| =name=      | string | no       | Display name for an item with no id.                           |
 	| =qty=       | number | no       | How many, defaults to 1.                                       |
@@ -201,6 +241,16 @@ func RequestDndInventory(w http.ResponseWriter, r *http.Request) {
 	#+BEGIN_SRC json
 	{"id": "lyra-silverleaf-4c1f2a", "action": "equip", "item": "chain-mail", "equipped": true}
 	#+END_SRC
+
+	=delete= takes a whole line off the equipment table and writes nothing to the
+	Inventory History. It is a correction to the sheet rather than something the
+	character did: dropping a torch is an event worth recording, and an item added by a
+	stray click was never there to be dropped. The whole stack goes, in that container,
+	and a container's contents are tipped out onto the character first.
+
+	#+BEGIN_SRC json
+	{"id": "lyra-silverleaf-4c1f2a", "action": "delete", "item": "torch", "container": "backpack"}
+	#+END_SRC
 	EDOC */
 func PostDndInventory(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
@@ -220,32 +270,54 @@ func PostDndInventory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Most changes are one line in the inventory and nothing else, and say so
+	// through the event. The three that move more than the bag - drinking a
+	// potion, buying, selling - carry their own message instead.
 	var event dnd.InventoryEvent
+	msg := ""
 	switch strings.ToLower(strings.TrimSpace(req.Action)) {
 	case "add":
 		event, err = dnd.InventoryAdd(c, rs, req.Item, req.Name, req.Qty, req.Container, req.Notes)
-	case "use", "consume":
-		event, err = dnd.InventoryRemove(c, rs, req.Item, req.Qty, req.Container, dnd.InvUsed, req.Notes)
+	case "use", "consume", "drink":
+		var used dnd.UseResult
+		used, err = dnd.UseItem(c, rs, req)
+		event, msg = used.Item, used.Msg
 	case "drop", "remove":
 		event, err = dnd.InventoryRemove(c, rs, req.Item, req.Qty, req.Container, dnd.InvDropped, req.Notes)
+	case "delete":
+		event, err = dnd.InventoryDelete(c, rs, req.Item, req.Container)
 	case "move", "stow":
 		event, err = dnd.InventoryMove(c, rs, req.Item, req.Qty, req.Container, req.To)
 	case "equip", "wear":
 		event, err = dnd.InventoryEquip(c, rs, req.Item, req.Container, req.Equipped)
+	case "attune":
+		event, err = dnd.InventoryAttune(c, rs, req.Item, req.Container, req.Attuned)
+	case "buy":
+		var deal dnd.Deal
+		deal, err = dnd.BuyItem(c, rs, req.Item, req.Name, req.Qty, req.Container, req.Notes)
+		event, msg = deal.Item, deal.Msg
+	case "sell":
+		var deal dnd.Deal
+		deal, err = dnd.SellItem(c, rs, req.Item, req.Name, req.Qty, req.Container, req.Notes)
+		event, msg = deal.Item, deal.Msg
 	default:
 		dndError(w, http.StatusBadRequest,
-			"unknown action %q, expected add, use, drop, move or equip", req.Action)
+			"unknown action %q, expected add, use, drop, delete, move, equip, "+
+				"attune, buy or sell", req.Action)
 		return
 	}
 	if err != nil {
 		dndError(w, http.StatusBadRequest, "%s", err)
 		return
 	}
-	if err := dndWriteCharacter(c, rs, path); err != nil {
+	if msg == "" {
+		msg = dndEventMsg(event)
+	}
+	if err := dndWriteCharacter(c, rs, path, msg); err != nil {
 		dndError(w, http.StatusInternalServerError, "could not write %s: %s", path, err)
 		return
 	}
-	dndJson(w, dndInventoryState(c, rs, path, dndEventMsg(event)))
+	dndJson(w, dndInventoryState(c, rs, path, msg))
 }
 
 // dndEventMsg is the one line the sheet shows after a change.
@@ -260,6 +332,16 @@ func dndEventMsg(e dnd.InventoryEvent) string {
 		return "wearing " + e.Item
 	case dnd.InvRemoved:
 		return "took off " + e.Item
+	case dnd.InvAttuned:
+		return "attuned to " + e.Item
+	case dnd.InvUnattuned:
+		return "gave up attunement to " + e.Item
+	case dnd.InvDeleted:
+		msg := "took " + qty + " " + e.Item + " off the sheet"
+		if strings.Contains(e.Notes, "moved onto your person") {
+			msg += ", " + strings.Trim(e.Notes[strings.Index(e.Notes, "("):], "()")
+		}
+		return msg
 	default:
 		return e.Action + " " + qty + " " + e.Item
 	}

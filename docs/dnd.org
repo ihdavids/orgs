@@ -169,12 +169,93 @@
    it only reads png, jpeg and pdf files from the local disk. A url or an
    animated gif is left out of the pdf and noted in the sheet warnings.
 
+* The sheet backdrop
+
+  The portrait is the character's face; the backdrop is the room they are
+  standing in. It is a picture - or a pile of pictures - washed out behind the
+  whole html sheet, and it is three more properties in the drawer:
+
+  #+BEGIN_SRC org
+  ,:DND_BACKDROP:         [[file:art/tavern.jpg]], https://example.com/woods.png
+  ,:DND_BACKDROP_CYCLE:   4m-12m
+  ,:DND_BACKDROP_OPACITY: 18%
+  #+END_SRC
+
+  =DND_BACKDROP= takes the same references =DND_IMAGE= does, one or more of
+  them, separated by commas or by whitespace. A reference naming a *folder*
+  stands for every image in it, in name order, so a folder of scenery is one
+  property and dropping another picture into it is the whole of adding it:
+
+  #+BEGIN_SRC org
+  ,:DND_BACKDROP: ~/pics/druid
+  #+END_SRC
+
+  A relative path resolves next to the org file, the way emacs would resolve
+  it, and a local file is inlined into the exported html so the sheet stays
+  one self contained document. That is worth remembering with a folder: nine
+  photographs make a sheet a good deal larger than one, and a url is not
+  inlined at all.
+
+** Cycling
+
+   With more than one backdrop the sheet changes picture on its own, picking
+   the next one at random - never the one already up - and crossfading to it.
+   How long a picture stays up is random too, so the sheet never falls into a
+   visible rhythm. =DND_BACKDROP_CYCLE= sets that dwell time:
+
+   | =8m=     | eight minutes every time                      |
+   | =4m-12m= | a random time between four and twelve minutes |
+   | =45s=    | forty five seconds                            |
+   | =10=     | a bare number is minutes                      |
+   | =off=    | no cycling, the first backdrop simply stays    |
+
+   Left out, a picture stays up for a random five to twenty five minutes. No
+   wait is ever longer than twenty five minutes - a larger one is clamped down
+   to it - and none is shorter than five seconds.
+
+** How washed out
+
+   =DND_BACKDROP_OPACITY= is how strongly the picture shows through, written
+   as =18%= or =0.18=, and it defaults to =14%=. The backdrop is desaturated
+   a little on top of that, so a busy photograph still reads as a background.
+   It shows strongest across the header and in the gaps between the panels,
+   which sit on their own fill.
+
+   The panels holding the sheet's content - ability scores, saving throws,
+   skills, combat and the rest - go translucent over a backdrop and show a
+   little of it too, a bit less than the bare page does. They paint the
+   picture themselves, pinned to the window the same way the page's backdrop
+   is, so the piece of it inside a panel is the piece that would be behind it
+   and the panels read as glass over the same scene. The stat boxes sitting
+   on them stay solid, so every number has plain paper behind it.
+
+   The backdrop is a screen affair. Printing the sheet leaves it out, and so
+   does the latex sheet - a page of toner spent on a picture nobody asked to
+   print helps nobody.
+
 * Rendering a sheet
 
   #+BEGIN_SRC bash
   orgs dnd show  -file lyra.org                          # in the terminal
   orgs dnd sheet -file lyra.org -format html -out l.html
   orgs dnd sheet -file lyra.org -format pdf  -out l.pdf
+  #+END_SRC
+
+  A backdrop can also be given to the export itself, which paints that one
+  sheet and writes nothing into the character's org file. =-backdrop= takes a
+  file, a folder or a url and may be given more than once:
+
+  #+BEGIN_SRC bash
+  orgs dnd sheet -file lyra.org -backdrop ~/pics/druid -backdrop-cycle 4m-12m
+  orgs dnd sheet -file lyra.org -backdrop a.png -backdrop a.jpg -backdrop-opacity 20%
+  #+END_SRC
+
+  The same flags work on =orgs dnd import=, where they are written into the
+  sheet as it lands, so a character brought over from D&D Beyond arrives with
+  its scenery already on it:
+
+  #+BEGIN_SRC bash
+  orgs dnd import -ddb 12345678 -backdrop ~/pics/druid
   #+END_SRC
 
   Both sheets are pongo2 templates in your template folder,
@@ -188,27 +269,31 @@
 
 * Your armour class
 
-  The sheet works out every armour class the character has available and shows
-  the best of them, which is what D&D Beyond does and what players expect to
-  see:
+  The sheet works out the armour class the character has while wearing what
+  they are actually wearing. Armour rules the answer:
 
-  - the armour actually worn, plus dexterity as that armour allows it - all of
-    it for light, at most +2 for medium, none for heavy,
-  - wearing nothing, which is 10 plus dexterity,
-  - and any unarmored defence their classes grant: a barbarian's
+  - a suit of armour that is worn is the calculation - its own armour class
+    plus dexterity as that armour allows it, all of it for light, at most +2
+    for medium, none for heavy,
+  - and while no armour is worn, it is 10 plus dexterity, or any unarmored
+    defence their classes grant if that is better: a barbarian's
     =10 + dex + con=, a monk's =10 + dex + wis=.
 
-  A shield is counted into each of those before they are compared, not added
-  to whichever won, because not every calculation allows one: a barbarian may
-  carry a shield with their unarmored defence and a monk may not. So a monk in
-  scale mail with a shield is compared as scale mail and shield against their
-  own bare defence, and gets whichever is actually higher.
+  An unarmored defence applies only while you wear no armour at all, which is
+  what the rules say, and it is what makes the Worn column of the html sheet
+  mean something: taking a jerkin off changes the number in the tile.
 
-  This is deliberately more generous than the letter of the rules, where an
-  unarmored defence applies only while you wear no armour at all. A barbarian
-  who keeps a leather jerkin in their pack is not made worse off by owning it;
-  the sheet shows what they could have with a moment's undressing, which is
-  the number on their D&D Beyond sheet.
+  Where more than one calculation applies - two unarmored defences from a
+  multiclass, say - the best of them is shown. A shield is counted into each
+  of those before they are compared, not added to whichever won, because not
+  every calculation allows one: a barbarian may carry a shield with their
+  unarmored defence and a monk may not.
+
+  Armour can therefore lower a character's armour class: a barbarian in a
+  leather jerkin is worse off than the same barbarian bare armed. Rather than
+  quietly hand them the better number they are not entitled to, the sheet says
+  what they would have without it - =Leather (18 without armor)= - so what the
+  jerkin is costing is on the page rather than a surprise.
 
   Anything that raises AC without being worn as armour - a ring of protection,
   a cloak of protection - is added on top of whichever calculation won, and

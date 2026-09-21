@@ -1410,100 +1410,109 @@ func choiceCount(ch Choice, level int) int {
 	return maxInt(ch.Count, 1)
 }
 
+// choiceOptions is what one choice offers this character. It is lifted out of
+// the creation step so that levelling up offers exactly the same list: an
+// invocation that is not available while building must not become available
+// only because it was reached a level at a time.
+func choiceOptions(rs *Ruleset, c *Character, ch Choice) []Option {
+	opts := []Option{}
+	switch ch.Kind {
+	case "options":
+		// An option may carry its own Level, which is the minimum
+		// class level needed to pick it. Fighting styles and
+		// invocations leave it unset, so they are always offered; the
+		// monk's elemental disciplines use it heavily.
+		for _, o := range ch.Options {
+			if o.Level > c.TotalLevel() {
+				continue
+			}
+			opts = append(opts, Option{Id: orDefault(Slugify(o.Name), o.Name), Name: o.Name,
+				Summary: firstSentence(o.Text), Detail: o.Text})
+		}
+	case "skills":
+		src := ch.From
+		if len(src) == 0 {
+			for _, sk := range rs.Skills {
+				src = append(src, sk.Id)
+			}
+		}
+		for _, sid := range src {
+			if c.HasSkill(sid) && ch.Kind != "expertise" {
+				continue
+			}
+			opts = append(opts, Option{Id: sid, Name: rs.SkillName(sid)})
+		}
+	case "expertise":
+		for _, sid := range c.Skills {
+			if c.HasExpertise(sid) {
+				continue
+			}
+			opts = append(opts, Option{Id: sid, Name: rs.SkillName(sid),
+				Summary: "double proficiency bonus"})
+		}
+	case "tools":
+		for _, t := range ch.From {
+			opts = append(opts, Option{Id: t, Name: Titleize(t)})
+		}
+	case "feat":
+		// A race or background that hands out a feat - variant human.
+		for i := range rs.Feats {
+			ft := &rs.Feats[i]
+			if containsStr(c.Feats, ft.Id) {
+				continue
+			}
+			if len(ch.From) > 0 && !containsStr(ch.From, ft.Id) {
+				continue
+			}
+			o := Option{Id: ft.Id, Name: ft.Name,
+				Summary: firstSentence(ft.Text), Detail: ft.Text}
+			if ft.Prerequisite != "" {
+				o.Summary = "Requires " + ft.Prerequisite + ". " + o.Summary
+			}
+			opts = append(opts, o)
+		}
+	case "spellgroup":
+		// One of several alternative spell lists the subclass offers.
+		// The ids are the group names tagged onto its SubSpells.
+		for _, g := range ch.From {
+			opts = append(opts, Option{Id: g, Name: Titleize(g),
+				Summary: spellGroupSummaryFor(rs, c, ch.Id, g)})
+		}
+	case "languages":
+		for _, l := range rs.AllLanguages() {
+			if containsStr(c.Languages, l) {
+				continue
+			}
+			opts = append(opts, Option{Id: l, Name: l})
+		}
+	case "spells":
+		list := ""
+		if len(ch.From) > 0 {
+			list = ch.From[0]
+		}
+		for _, sp := range rs.SpellsForClass(list, -1) {
+			if len(ch.SpellLevels) > 0 && !containsInt(ch.SpellLevels, sp.Level) {
+				continue
+			}
+			if hasSpell(c.Spells, sp.Id) {
+				continue
+			}
+			opts = append(opts, spellOption(sp))
+		}
+	default:
+		for _, f := range ch.From {
+			opts = append(opts, Option{Id: f, Name: Titleize(f)})
+		}
+	}
+	return opts
+}
+
 func stepChoice(ch Choice) stepDef {
 	id := "choice-" + ch.Id
 	return stepDef{
 		id: id,
 		build: func(s *Session, rs *Ruleset) *Prompt {
-			opts := []Option{}
-			switch ch.Kind {
-			case "options":
-				// An option may carry its own Level, which is the minimum
-				// class level needed to pick it. Fighting styles and
-				// invocations leave it unset, so they are always offered; the
-				// monk's elemental disciplines use it heavily.
-				for _, o := range ch.Options {
-					if o.Level > s.Char.TotalLevel() {
-						continue
-					}
-					opts = append(opts, Option{Id: orDefault(Slugify(o.Name), o.Name), Name: o.Name,
-						Summary: firstSentence(o.Text), Detail: o.Text})
-				}
-			case "skills":
-				src := ch.From
-				if len(src) == 0 {
-					for _, sk := range rs.Skills {
-						src = append(src, sk.Id)
-					}
-				}
-				for _, sid := range src {
-					if s.Char.HasSkill(sid) && ch.Kind != "expertise" {
-						continue
-					}
-					opts = append(opts, Option{Id: sid, Name: rs.SkillName(sid)})
-				}
-			case "expertise":
-				for _, sid := range s.Char.Skills {
-					if s.Char.HasExpertise(sid) {
-						continue
-					}
-					opts = append(opts, Option{Id: sid, Name: rs.SkillName(sid),
-						Summary: "double proficiency bonus"})
-				}
-			case "tools":
-				for _, t := range ch.From {
-					opts = append(opts, Option{Id: t, Name: Titleize(t)})
-				}
-			case "feat":
-				// A race or background that hands out a feat - variant human.
-				for i := range rs.Feats {
-					ft := &rs.Feats[i]
-					if containsStr(s.Char.Feats, ft.Id) {
-						continue
-					}
-					if len(ch.From) > 0 && !containsStr(ch.From, ft.Id) {
-						continue
-					}
-					o := Option{Id: ft.Id, Name: ft.Name,
-						Summary: firstSentence(ft.Text), Detail: ft.Text}
-					if ft.Prerequisite != "" {
-						o.Summary = "Requires " + ft.Prerequisite + ". " + o.Summary
-					}
-					opts = append(opts, o)
-				}
-			case "spellgroup":
-				// One of several alternative spell lists the subclass offers.
-				// The ids are the group names tagged onto its SubSpells.
-				for _, g := range ch.From {
-					opts = append(opts, Option{Id: g, Name: Titleize(g),
-						Summary: spellGroupSummary(s, rs, ch.Id, g)})
-				}
-			case "languages":
-				for _, l := range rs.AllLanguages() {
-					if containsStr(s.Char.Languages, l) {
-						continue
-					}
-					opts = append(opts, Option{Id: l, Name: l})
-				}
-			case "spells":
-				list := ""
-				if len(ch.From) > 0 {
-					list = ch.From[0]
-				}
-				for _, sp := range rs.SpellsForClass(list, -1) {
-					if len(ch.SpellLevels) > 0 && !containsInt(ch.SpellLevels, sp.Level) {
-						continue
-					}
-					if hasSpell(s.Char.Spells, sp.Id) {
-						continue
-					}
-					opts = append(opts, spellOption(sp))
-				}
-			default:
-				for _, f := range ch.From {
-					opts = append(opts, Option{Id: f, Name: Titleize(f)})
-				}
-			}
+			opts := choiceOptions(rs, s.Char, ch)
 			if len(opts) == 0 {
 				return nil
 			}
@@ -1977,8 +1986,12 @@ func firstSentence(text string) string {
 // the prompt can show "hold person, spike growth, ..." rather than a bare
 // terrain name.
 func spellGroupSummary(s *Session, rs *Ruleset, choiceId, group string) string {
+	return spellGroupSummaryFor(rs, s.Char, choiceId, group)
+}
+
+func spellGroupSummaryFor(rs *Ruleset, c *Character, choiceId, group string) string {
 	names := []string{}
-	for _, cl := range s.Char.Classes {
+	for _, cl := range c.Classes {
 		sc := rs.Subclass(cl.Class, cl.Subclass)
 		if sc == nil {
 			continue

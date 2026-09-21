@@ -33,6 +33,7 @@ func dndConditionState(c *dnd.Character, rs *dnd.Ruleset, path, msg string) dnd.
 		Id: dnd.CharacterId(c), Name: c.Name, Filename: path, Ruleset: id,
 		Conditions:  dnd.ComputeConditions(c, rs),
 		Defenses:    dnd.ComputeDefenses(c, rs),
+		Advice:      dnd.ComputeRollAdvice(c, rs),
 		DamageTypes: rs.DamageTypeList(),
 		History:     history, Msg: msg,
 	}

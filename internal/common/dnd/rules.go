@@ -82,6 +82,7 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	if s.ImageZoom <= 0 {
 		s.ImageZoom = 1
 	}
+	PlanBackdrop(s, c.Backdrop, c.BackdropCycle, c.BackdropOpacity, CharacterDir(c))
 	s.RulesetName = rs.Name
 	s.Proficiency = ProficiencyBonus(level)
 	s.ProficiencyStr = Signed(s.Proficiency)
@@ -383,6 +384,9 @@ func Compute(c *Character, rs *Ruleset) *Sheet {
 	// does is resolve them against the ruleset's catalog.
 	s.Defenses = ComputeDefenses(c, rs)
 	s.Conditions = ComputeConditions(c, rs)
+	// And what those conditions do to a d20, which is the one place the
+	// sheet's rolls get to hear about them.
+	s.RollAdvice = ComputeRollAdvice(c, rs)
 
 	// ---- armour class, initiative, movement -------------------------------
 	s.AC, s.ACSource = computeAC(c, rs, s, magic)
@@ -868,6 +872,7 @@ func magicItems(c *Character, rs *Ruleset, s *Sheet) itemBonuses {
 			case used >= AttunementSlots:
 				state = "required"
 				live = false
+				s.AttunementOver++
 				s.Warnings = append(s.Warnings, fmt.Sprintf(
 					"%s is marked attuned but you are already attuned to %d items, the maximum",
 					it.Name, AttunementSlots))
@@ -941,23 +946,53 @@ type acOption struct {
 	shield bool
 }
 
-// computeAC works the armour class out the way D&D Beyond does: every
-// calculation the character has available is worked out and the best one is
-// what the sheet shows. A barbarian who keeps a leather jerkin in their pack
-// is not made worse off by owning it, and a monk who picks up a breastplate
-// still gets their own defence if it is better.
+// computeAC works out the armour class the character has while wearing what
+// they are actually wearing. Armour rules the answer: a suit that is worn is
+// the calculation, and an unarmored defence - the barbarian's 10 + dex + con,
+// the monk's 10 + dex + wis - applies only while no armour is worn, which is
+// what the rules say and what makes the sheet's Worn column mean something.
 //
-// That is deliberately more generous than the letter of the rules, where an
-// unarmored defence applies only while wearing no armour. It is what the
-// character could have with a moment's undressing, and it is the number
-// players see on their D&D Beyond sheet, so it is the one to agree with.
+// Where a character has more than one calculation available - two unarmored
+// defences from a multiclass, say - the best of them is the one shown.
+//
+// Taking armour off can therefore raise a character's armour class rather
+// than lower it. Rather than quietly hand them the better number they are not
+// entitled to, the sheet says what they would have without it, so a barbarian
+// who has pulled a leather jerkin on can see what it is costing them.
 func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, string) {
 	dex := s.AbilityMap[DEX].Modifier
-	options := []acOption{}
+	armor := equippedArmor(c, rs)
 
-	// What is actually being worn, first, so it wins a tie: a character in
-	// armour should be told the armour's name.
-	if armor := equippedArmor(c, rs); armor != nil {
+	// Every unarmored calculation: wearing nothing at all, and then any
+	// unarmored defence style the character's classes grant. These are worked
+	// out whether or not armour is worn, because the ones that do not apply
+	// are still worth telling the wearer about.
+	bare := []acOption{{ac: 10 + dex, source: "Unarmored", shield: true}}
+	for _, cl := range c.Classes {
+		cls := rs.Class(cl.Class)
+		if cls == nil || cls.UnarmoredAC == "" {
+			continue
+		}
+		v := 10
+		for _, part := range strings.Split(cls.UnarmoredAC, "+") {
+			part = strings.TrimSpace(strings.ToLower(part))
+			if part == "" {
+				continue
+			}
+			if n := atoi(part); n > 0 {
+				v = n
+				continue
+			}
+			if av, ok := s.AbilityMap[part]; ok {
+				v += av.Modifier
+			}
+		}
+		bare = append(bare, acOption{
+			ac: v, source: cls.Name + " unarmored defense", shield: cls.UnarmoredShield})
+	}
+
+	options := bare
+	if armor != nil {
 		base := armor.AC
 		switch armor.ArmorType {
 		case "light":
@@ -982,39 +1017,14 @@ func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, str
 		if magic.active[armor.Id] {
 			base += armor.ACBonus
 		}
-		options = append(options, acOption{ac: base, source: armor.Name, shield: true})
-	}
-
-	// Wearing nothing at all, and then any unarmored defence style the
-	// character's classes grant.
-	options = append(options, acOption{ac: 10 + dex, source: "Unarmored", shield: true})
-	for _, cl := range c.Classes {
-		cls := rs.Class(cl.Class)
-		if cls == nil || cls.UnarmoredAC == "" {
-			continue
-		}
-		v := 10
-		for _, part := range strings.Split(cls.UnarmoredAC, "+") {
-			part = strings.TrimSpace(strings.ToLower(part))
-			if part == "" {
-				continue
-			}
-			if n := atoi(part); n > 0 {
-				v = n
-				continue
-			}
-			if av, ok := s.AbilityMap[part]; ok {
-				v += av.Modifier
-			}
-		}
-		options = append(options, acOption{
-			ac: v, source: cls.Name + " unarmored defense", shield: cls.UnarmoredShield})
+		// Armour is worn, so it is the only calculation that applies.
+		options = []acOption{{ac: base, source: armor.Name, shield: true}}
 	}
 
 	// A shield is worth a couple of points to most of these but not to all of
 	// them, so it is counted before they are compared rather than after: a
-	// monk's defence has to beat armour and shield together to be the better
-	// choice.
+	// monk with two defences to choose between has to compare each of them
+	// with the shield they are allowed to carry, not without it.
 	shieldBonus, shieldName := 0, ""
 	if shield := equippedShield(c, rs); shield != nil {
 		shieldBonus = shield.AC
@@ -1027,6 +1037,28 @@ func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, str
 		shieldName = shield.Name
 	}
 
+	ac, source := bestAC(options, shieldBonus, shieldName)
+
+	// Rings, cloaks and anything else that raises AC without being worn as
+	// armour. Armour and shields are already counted above.
+	if magic.ac != 0 {
+		ac += magic.ac
+		source += fmt.Sprintf(" %s magic", Signed(magic.ac))
+	}
+
+	// What the armour is costing a character whose own defence is better.
+	if armor != nil {
+		if without, _ := bestAC(bare, shieldBonus, shieldName); without+magic.ac > ac {
+			source += fmt.Sprintf(" (%d without armor)", without+magic.ac)
+		}
+	}
+	return ac, source
+}
+
+// bestAC picks the highest of a set of armour class calculations, counting the
+// shield into each one that allows it before they are compared, and names what
+// it used.
+func bestAC(options []acOption, shieldBonus int, shieldName string) (int, string) {
 	ac, source, withShield := 0, "Unarmored", false
 	for i, o := range options {
 		total := o.ac
@@ -1040,13 +1072,6 @@ func computeAC(c *Character, rs *Ruleset, s *Sheet, magic itemBonuses) (int, str
 	}
 	if withShield {
 		source += " + " + shieldName
-	}
-
-	// Rings, cloaks and anything else that raises AC without being worn as
-	// armour. Armour and shields are already counted above.
-	if magic.ac != 0 {
-		ac += magic.ac
-		source += fmt.Sprintf(" %s magic", Signed(magic.ac))
 	}
 	return ac, source
 }
@@ -1201,13 +1226,13 @@ func computeSpellcasting(c *Character, rs *Ruleset, s *Sheet) {
 		case "full":
 			casterLevel += float64(cl.Level)
 		case "half":
-			if multi {
+			if multi && !info.MulticlassRoundUp {
 				casterLevel += float64(cl.Level / 2)
 			} else {
 				casterLevel += float64((cl.Level + 1) / 2)
 			}
 		case "third":
-			if multi {
+			if multi && !info.MulticlassRoundUp {
 				casterLevel += float64(cl.Level / 3)
 			} else {
 				casterLevel += float64((cl.Level + 2) / 3)
@@ -1430,13 +1455,41 @@ func PreparedCount(sc *Spellcasting, level, abilityMod int) int {
 	return n
 }
 
+// trimUpcast keeps only the higher slot levels this character actually has
+// slots at. A wizard of 5th level may cast magic missile from a 3rd level
+// slot and no higher, whatever the spell's text goes on to say.
+func trimUpcast(ups []SpellUpcast, slots []SpellSlotView) []SpellUpcast {
+	if len(ups) == 0 || len(slots) == 0 {
+		return nil
+	}
+	has := map[int]bool{}
+	for _, sl := range slots {
+		if sl.Total > 0 {
+			has[sl.Level] = true
+		}
+	}
+	out := []SpellUpcast{}
+	for _, up := range ups {
+		if has[up.Level] {
+			out = append(out, up)
+		}
+	}
+	if len(out) == 0 {
+		return nil
+	}
+	return out
+}
+
 // groupSpells collects the character's spells into the levels the sheet shows
 // them in. The sheet is passed in because a spell entry carries what casting
 // it does - the attack bonus, the save DC - which are the sheet's numbers.
 func groupSpells(c *Character, rs *Ruleset, s *Sheet, slots []SpellSlotView) []SpellLevelView {
 	abilityMod := 0
 	if s != nil && s.CastingAbility != "" {
-		abilityMod = s.AbilityMap[s.CastingAbility].Modifier
+		// CastingAbility is the short name the sheet prints - "WIS" - and the
+		// ability map is keyed by the id underneath it. Looking one up with
+		// the other is how cure wounds lost its "+4" for a while.
+		abilityMod = s.AbilityMap[strings.ToLower(s.CastingAbility)].Modifier
 	}
 	byLevel := map[int][]SpellEntry{}
 	for _, ks := range c.Spells {
@@ -1457,6 +1510,9 @@ func groupSpells(c *Character, rs *Ruleset, s *Sheet, slots []SpellSlotView) []S
 			e.Save = sp.Save
 			if s != nil {
 				e.Cast = ComputeCast(sp, s.Level, s.SpellAttack, s.SpellSaveDC, abilityMod)
+				// A level this character has no slots for is not a level
+				// they can cast from, so it is never offered.
+				e.Cast.Upcast = trimUpcast(e.Cast.Upcast, slots)
 			}
 		} else {
 			e.Name = ks.Name

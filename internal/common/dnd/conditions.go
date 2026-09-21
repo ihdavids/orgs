@@ -391,6 +391,68 @@ func ComputeDefenses(c *Character, rs *Ruleset) DefensesView {
 	return out
 }
 
+// DefendDamage applies what a character shrugs off to one blow: resistance
+// halves it, vulnerability doubles it and immunity stops it dead. It answers
+// the damage type resolved to its proper name, which defense applied, and what
+// is left of the damage.
+//
+// Halving rounds down, which is the rule. Two resistances to the same type are
+// still one resistance, so nothing here counts how many times a type appears.
+// A character with both resistance and vulnerability to the same thing has
+// neither - the two are the same size and opposite - and that is rare enough
+// to be worth handling quietly rather than reporting.
+//
+// Untyped damage is what most damage on a character sheet is: nobody types in
+// "slashing" for every hit, and a blow with no type resists nothing.
+func DefendDamage(c *Character, rs *Ruleset, kind string, amount int) (string, string, int) {
+	kind = strings.TrimSpace(kind)
+	if c == nil || kind == "" || amount <= 0 {
+		return "", "", amount
+	}
+	name := kind
+	id := Slugify(kind)
+	if dt := rs.DamageType(kind); dt != nil {
+		name, id = dt.Name, dt.Id
+	}
+	against := func(list []string) bool {
+		for _, e := range list {
+			if defenseCovers(rs, e, id) {
+				return true
+			}
+		}
+		return false
+	}
+	if against(c.Immunities) {
+		return name, Immunity, 0
+	}
+	resists, vulnerable := against(c.Resistances), against(c.Vulnerabilities)
+	switch {
+	case resists && vulnerable:
+		return name, "", amount
+	case resists:
+		return name, Resistance, amount / 2
+	case vulnerable:
+		return name, Vulnerability, amount * 2
+	}
+	return name, "", amount
+}
+
+// defenseCovers reports whether one entry from a defense list is about this
+// damage type. The lists are free text - a defense may be a condition or a
+// phrase the rules have no id for - so an entry is resolved against the
+// catalog the same way ComputeDefenses resolves it for display, and compared
+// by name for anything the catalog has never heard of.
+func defenseCovers(rs *Ruleset, entry, id string) bool {
+	entry = strings.TrimSpace(entry)
+	if entry == "" {
+		return false
+	}
+	if dt := rs.DamageType(entry); dt != nil {
+		return dt.Id == id
+	}
+	return Slugify(entry) == id
+}
+
 // ComputeConditions resolves what the character is under against the ruleset's
 // catalog. A condition the catalog has never heard of is still shown - the
 // table's word beats the book's - it simply has no rules text behind it.
@@ -481,6 +543,9 @@ type ConditionsState struct {
 	Ruleset    string           `json:"ruleset"`
 	Conditions ConditionsView   `json:"conditions"`
 	Defenses   DefensesView     `json:"defenses"`
+	// Advice is what those conditions do to a d20, so a condition switched
+	// on in the panel changes the next roll without the page reloading.
+	Advice RollAdviceView `json:"advice"`
 	History    []ConditionEvent `json:"history"`
 	// DamageTypes is the ruleset's catalog, so the sheet can offer them
 	// rather than carrying its own copy of a list that lives in the data.

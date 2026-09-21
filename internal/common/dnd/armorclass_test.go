@@ -63,14 +63,30 @@ func TestACHeavyArmorIgnoresDex(t *testing.T) {
 	}
 }
 
-func TestACUnarmoredDefenseBeatsWornArmor(t *testing.T) {
+func TestACWornArmorSuppressesUnarmoredDefense(t *testing.T) {
 	// The case this was written for. K is a rogue/barbarian in a leather
-	// jerkin: the leather comes to 15, but their own unarmored defence comes
-	// to 18, and that is the number D&D Beyond shows, so it is the one the
-	// sheet has to show too.
+	// jerkin: the leather comes to 15 and their own unarmored defence would
+	// come to 18, but an unarmored defence applies only while wearing no
+	// armour, so the jerkin is what they have got. The sheet says what taking
+	// it off would be worth rather than quietly handing them the number.
 	ac, src := acCase(t,
 		[]ClassLevel{{Class: "rogue", Level: 5}, {Class: "barbarian", Level: 5}},
 		abilities(19, 18, 19, 15, 13, 10), worn("leather"))
+	if ac != 15 {
+		t.Errorf("AC = %d (%s), want 15 from the leather they are wearing", ac, src)
+	}
+	if !strings.Contains(src, "Leather") || !strings.Contains(src, "18 without armor") {
+		t.Errorf("AC source = %q, want the leather and what it is costing", src)
+	}
+}
+
+// TestACUnarmoredDefenseReturnsWhenArmorComesOff is the other half of the same
+// toggle: the Worn column of the html sheet takes the jerkin off and the
+// barbarian's own defence is theirs again.
+func TestACUnarmoredDefenseReturnsWhenArmorComesOff(t *testing.T) {
+	ac, src := acCase(t,
+		[]ClassLevel{{Class: "rogue", Level: 5}, {Class: "barbarian", Level: 5}},
+		abilities(19, 18, 19, 15, 13, 10), Gear{Id: "leather", Qty: 1})
 	if ac != 18 {
 		t.Errorf("AC = %d (%s), want 18", ac, src)
 	}
@@ -140,5 +156,18 @@ func TestACMulticlassTakesTheBestDefense(t *testing.T) {
 	}
 	if !strings.Contains(strings.ToLower(src), "monk") {
 		t.Errorf("AC source = %q, want the monk's", src)
+	}
+}
+
+// TestACMagicArmorCountsItsBonus pins the case the sheet was getting wrong:
+// a suit of magic armour is a variant item built on a mundane base, so its own
+// line says only what it adds. The base's armour class and type have to come
+// through the base chain or the wearer reads as unarmored.
+func TestACMagicArmorCountsItsBonus(t *testing.T) {
+	ac, src := acCase(t, []ClassLevel{{Class: "rogue", Level: 1}},
+		abilities(10, 16, 12, 10, 10, 10), worn("leather-plus-2"))
+	// leather 11 + dex 3 + 2 magic.
+	if ac != 16 || !strings.Contains(strings.ToLower(src), "leather") {
+		t.Errorf("AC = %d (%s), want 16 from the +2 leather", ac, src)
 	}
 }

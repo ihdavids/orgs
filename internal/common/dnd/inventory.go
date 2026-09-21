@@ -151,6 +151,32 @@ func CanEquip(it *Item) bool {
 	return EquippableKinds[strings.ToLower(strings.TrimSpace(it.Kind))]
 }
 
+// UnusableKinds are the kinds of thing that are never used up. Using is for
+// what is spent - potions, scrolls, rations, ammunition - and armour, shields
+// and weapons are drawn and put away rather than consumed. Their line already
+// has the Worn toggle, which is the thing anyone actually wants to click.
+var UnusableKinds = map[string]bool{
+	"armor":  true,
+	"shield": true,
+	"weapon": true,
+}
+
+// CanUse reports whether an item is something that can be used up.
+//
+// As with CanEquip, an item the ruleset does not know is allowed: homebrew
+// written straight onto the equipment table says nothing about what it is, and
+// refusing to let someone drink their own potion is the worse mistake.
+func CanUse(it *Item) bool {
+	if it == nil {
+		return true
+	}
+	if UnusableKinds[strings.ToLower(strings.TrimSpace(it.Kind))] {
+		return false
+	}
+	// A shield may be typed by its armour type rather than its kind.
+	return !strings.EqualFold(strings.TrimSpace(it.ArmorType), "shield")
+}
+
 // CarriedLabel is what the character carries on their person rather than in
 // anything, shown as the first tab of the inventory.
 const CarriedLabel = "On Person"
@@ -176,7 +202,24 @@ type InventoryEntry struct {
 	// container can be wearable without being wearable *there* - it has to
 	// come out first, which is the same rule that unequips anything packed
 	// away.
-	Wearable  bool   `json:"wearable"`
+	Wearable bool `json:"wearable"`
+	// Usable marks a stack that can be used up, so a sheet knows which lines
+	// are worth offering a Use button on. Armour, shields and weapons are not
+	// spent by being used, so they do not get one.
+	Usable bool `json:"usable"`
+	// Attunement marks a stack that requires attunement, so a sheet knows
+	// which lines are worth offering the attunement mark as a toggle rather
+	// than drawing it as a fact.
+	Attunement bool `json:"attunement"`
+	// Use is what using one up does, when the item's own text plainly says -
+	// the hit points a potion restores. Nil for everything else, which is
+	// nearly everything. See consume.go.
+	Use *UseEffect `json:"use,omitempty"`
+	// Price is what one of them costs and Sale what one fetches second hand,
+	// written the way the sheet says an amount, and empty for anything the
+	// rules put no price on.
+	Price     string `json:"price,omitempty"`
+	Sale      string `json:"sale,omitempty"`
 	Notes     string `json:"notes"`
 	Kind      string `json:"kind"`
 	Container string `json:"container"`
@@ -255,6 +298,14 @@ const (
 	// shows after it.
 	InvWorn    = "worn"
 	InvRemoved = "removed"
+	// InvAttuned and InvUnattuned are the same for attunement: attuning to a
+	// ring is not gaining one, so it is never written to the history either.
+	InvAttuned   = "attuned"
+	InvUnattuned = "unattuned"
+	// InvDeleted is a line taken off the sheet as a correction rather than
+	// something the character did with it. Like the two above it is never
+	// written to the Inventory History - see InventoryDelete for why.
+	InvDeleted = "deleted"
 )
 
 // InventoryRequest is a change to a character's inventory, posted by the html
@@ -273,8 +324,20 @@ type InventoryRequest struct {
 	// state wanted rather than a toggle, so two clicks racing each other end
 	// up where the second one asked rather than wherever the order happened
 	// to leave them.
-	Equipped bool   `json:"equipped"`
-	Notes    string `json:"notes"`
+	Equipped bool `json:"equipped"`
+	// Attuned is the same for the attune action: the state wanted, not a flip.
+	Attuned bool `json:"attuned"`
+	// Amount is what a use rolled, for an item whose effect the sheet threw
+	// dice for - the hit points a potion restored. The item is used up either
+	// way; this is what to do about it afterwards.
+	Amount int `json:"amount"`
+	// Effect says what that amount is: "heal" or "temp". An empty effect uses
+	// the item up and touches nothing else, which is what it always did.
+	Effect string `json:"effect"`
+	// Variant names which strength of an item is being used, for the potions
+	// the rules print as one entry with a table of them.
+	Variant string `json:"variant"`
+	Notes   string `json:"notes"`
 }
 
 // InventoryState is the answer to every inventory call: the bag as it now
@@ -288,6 +351,58 @@ type InventoryState struct {
 	History   []InventoryEvent `json:"history"`
 	Money     Money            `json:"money"`
 	Msg       string           `json:"msg"`
+	// AC and ACSource are the armour class the character is left with. Wearing
+	// or taking off armour or a shield moves it, so a sheet that edits its
+	// inventory in place is told the new number rather than having to be
+	// loaded again to find out.
+	AC       int    `json:"ac"`
+	ACSource string `json:"acSource"`
+	// Purse and MoneyHistory are the coin the character is left with, for the
+	// same reason: buying and selling move it, so the coin panel is redrawn
+	// from the answer rather than having to ask a second question.
+	Purse        MoneyView    `json:"purse"`
+	MoneyHistory []MoneyEvent `json:"moneyHistory"`
+	// Attunement is how many of the three attunement slots are in use and
+	// what is in them, which the inventory panel draws over the bag.
+	Attunement AttunementView `json:"attunement"`
+	// HP is the hit point line, filled in because using something up can move
+	// it: drinking a potion of healing is an inventory change and a healing in
+	// one go.
+	HP HealthView `json:"hp"`
+}
+
+// AttunementView is the attunement counter on the sheet: the three slots
+// everyone has, what is in them, and whether more items claim to be attuned
+// than there are slots to hold them.
+type AttunementView struct {
+	Used  int      `json:"used"`
+	Slots int      `json:"slots"`
+	Items []string `json:"items"`
+	// Over is set when the equipment table claims more attunements than the
+	// limit allows, which a sheet edited by hand can do. The items past the
+	// limit are inert, and the sheet says so.
+	Over bool `json:"over"`
+}
+
+// ComputeAttunement is the counter worked out from a computed sheet, where the
+// attunement rules have already been applied.
+func ComputeAttunement(s *Sheet) AttunementView {
+	v := AttunementView{Slots: AttunementSlots, Items: []string{}}
+	if s == nil {
+		return v
+	}
+	v.Used = s.AttunementUsed
+	v.Slots = s.AttunementSlots
+	if v.Slots == 0 {
+		v.Slots = AttunementSlots
+	}
+	if s.Attuned != nil {
+		v.Items = s.Attuned
+	}
+	// Items marked attuned that the limit left inert, which only a sheet
+	// edited by hand can manage - the attune button refuses to.
+	v.Over = s.AttunementOver > 0
+	return v
 }
 
 // ItemMatch is one hit from the item search behind the add item box.
@@ -372,13 +487,29 @@ func ComputeInventory(equip []Gear, rs *Ruleset, str int) InventoryView {
 			IsContainer: isBox,
 			Capacity:    spec.Capacity,
 			Wearable:    CanEquip(it),
+			Usable:      CanUse(it),
 		}
 		if it != nil {
 			entry.Kind = it.Kind
 			entry.Magic = it.IsMagic()
 			entry.Rarity = it.RarityName()
+			entry.Attunement = it.Attunement
 			if entry.Weight == 0 {
 				entry.Weight = it.Weight
+			}
+			// What using one up does, when the item's text says plainly
+			// enough, so the sheet can roll the potion's dice itself.
+			if use := ItemUse(it); use.Has() {
+				eff := use
+				entry.Use = &eff
+			}
+			// What one is worth, so a line can be sold and a hit in the add
+			// box can be bought, without the sheet having to price it.
+			if each, ok := ItemCost(it); ok {
+				entry.Price = each.String()
+				if sale, ok := SellPrice(it, 1); ok && !sale.IsZero() {
+					entry.Sale = sale.String()
+				}
 			}
 		}
 		at, seen := index[where+"\x00"+key]
@@ -530,7 +661,7 @@ func InventoryRemove(c *Character, rs *Ruleset, item string, qty int, container,
 	if qty <= 0 {
 		qty = 1
 	}
-	if action != InvUsed && action != InvDropped {
+	if action != InvUsed && action != InvDropped && action != InvSold {
 		action = InvDropped
 	}
 	where := ContainerKey(container)
@@ -568,6 +699,66 @@ func InventoryRemove(c *Character, rs *Ruleset, item string, qty int, container,
 		Action: action, Item: name, Qty: qty,
 		From: containerLabel(c, rs, where), Notes: notes,
 	}), nil
+}
+
+// InventoryDelete takes a whole line off the equipment table and writes
+// nothing to the Inventory History.
+//
+// It is not dropping something, and the difference matters. Dropping is
+// something the character did: they put the torches down, and the history
+// should say so. Deleting is something the *sheet* got wrong - an item added
+// by a stray click, a line imported twice, a thing the table decided was
+// never there - and a history line about it would be a record of an event
+// that did not happen.
+//
+// Every line of the stack goes, in that container: two daggers shown as one
+// line of two are one entry to the reader and should be one to the button.
+// A container's contents are tipped out onto the character first, exactly as
+// dropping the last of one does, because losing a backpack should never
+// silently lose what was inside it.
+func InventoryDelete(c *Character, rs *Ruleset, item, container string) (InventoryEvent, error) {
+	if c == nil {
+		return InventoryEvent{}, fmt.Errorf("no character")
+	}
+	where := ContainerKey(container)
+	id, label, _ := resolveItem(rs, item, "")
+	idx := findGear(c, id, label, where)
+	if idx < 0 {
+		return InventoryEvent{}, fmt.Errorf("no %s in %s", orDefault(label, item),
+			strings.ToLower(containerLabel(c, rs, where)))
+	}
+	name := gearName(c.Equipment[idx], ruleItem(rs, c.Equipment[idx]))
+	from := containerLabel(c, rs, where)
+
+	// Gather the whole stack before touching anything, so the count in the
+	// answer is what actually went.
+	gone, emptied := 0, ""
+	keep := make([]Gear, 0, len(c.Equipment))
+	for i, g := range c.Equipment {
+		if ContainerKey(g.Container) != where || !sameItem(g, id, label) {
+			keep = append(keep, g)
+			continue
+		}
+		gone += maxInt(g.Qty, 1)
+		if it := ruleItem(rs, g); it != nil {
+			if _, isBox := ItemContainer(it); isBox {
+				key := gearContainerKey(g, it)
+				if still := countIn(c, key); still > 0 && !anotherContainer(c, rs, key, i) {
+					emptied = spillContainer(c, key)
+				}
+			}
+		}
+	}
+	c.Equipment = keep
+
+	notes := "taken off the sheet"
+	if emptied != "" {
+		notes += " " + emptied
+	}
+	// Returned for the message the sheet shows, and deliberately not logged.
+	return InventoryEvent{
+		Action: InvDeleted, Item: name, Qty: gone, From: from, Notes: notes,
+	}, nil
 }
 
 // InventoryMove shifts a quantity of a stack from one container to another.
@@ -674,6 +865,68 @@ func InventoryEquip(c *Character, rs *Ruleset, item, container string, on bool) 
 	action := InvRemoved
 	if on {
 		action = InvWorn
+	}
+	return InventoryEvent{Action: action, Item: name, Qty: qty,
+		From: containerLabel(c, rs, where)}, nil
+}
+
+// InventoryAttune attunes to a magic item or gives that attunement up, and is
+// what the attunement mark on the html sheet toggles. Like equipping it carries
+// the state wanted rather than a flip, and it sets every line of the stack
+// together so a pair of identical rings shown as one line move as one.
+//
+// The two rules it enforces are the general ones: only an item that asks for
+// attunement can be attuned to, and a character has only AttunementSlots of
+// those to give. Attuning past the limit is refused here rather than allowed
+// and warned about, because unlike a sheet edited by hand this is a button
+// being pressed and there is somewhere to say no.
+//
+// Nothing is written to the Inventory History - attuning to a ring is not
+// gaining one - which is the same reason equipping writes nothing.
+func InventoryAttune(c *Character, rs *Ruleset, item, container string, on bool) (InventoryEvent, error) {
+	where := ContainerKey(container)
+	id, label, _ := resolveItem(rs, item, "")
+	idx := findGear(c, id, label, where)
+	if idx < 0 {
+		return InventoryEvent{}, fmt.Errorf("no %s in %s", orDefault(label, item),
+			strings.ToLower(containerLabel(c, rs, where)))
+	}
+	it := ruleItem(rs, c.Equipment[idx])
+	name := gearName(c.Equipment[idx], it)
+	if it == nil || !it.Attunement {
+		return InventoryEvent{}, fmt.Errorf("%s does not ask to be attuned to", name)
+	}
+	if on && !c.Equipment[idx].Attuned {
+		// What is already attuned, not counting this stack: a line already
+		// attuned is not spending a second slot by being set again.
+		used := 0
+		for i := range c.Equipment {
+			g := c.Equipment[i]
+			if ContainerKey(g.Container) == where && sameItem(g, id, label) {
+				continue
+			}
+			if other := ruleItem(rs, g); other != nil && other.Attunement && g.Attuned {
+				used++
+			}
+		}
+		if used >= AttunementSlots {
+			return InventoryEvent{}, fmt.Errorf(
+				"you are already attuned to %d items, the most anyone can be - "+
+					"give one up first", AttunementSlots)
+		}
+	}
+	qty := 0
+	for i := range c.Equipment {
+		g := &c.Equipment[i]
+		if ContainerKey(g.Container) != where || !sameItem(*g, id, label) {
+			continue
+		}
+		g.Attuned = on
+		qty += maxInt(g.Qty, 1)
+	}
+	action := InvUnattuned
+	if on {
+		action = InvAttuned
 	}
 	return InventoryEvent{Action: action, Item: name, Qty: qty,
 		From: containerLabel(c, rs, where)}, nil

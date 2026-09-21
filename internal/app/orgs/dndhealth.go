@@ -27,9 +27,13 @@ func dndHealthState(c *dnd.Character, rs *dnd.Ruleset, path, msg string) dnd.Hea
 	if rs != nil {
 		id = rs.Id
 	}
+	sheet := dnd.Compute(c, rs)
 	return dnd.HealthState{
 		Id: dnd.CharacterId(c), Name: c.Name, Filename: path, Ruleset: id,
-		HP: dnd.ComputeHealth(dnd.Compute(c, rs)), History: history, Msg: msg,
+		HP: dnd.ComputeHealth(sheet), History: history, Msg: msg,
+		// What the character is still holding. A blow can cost them it, so the
+		// banner is redrawn from the same answer the hit points are.
+		Concentration: dnd.ComputeConcentration(sheet, rs),
 	}
 }
 
@@ -91,9 +95,22 @@ func RequestDndHealth(w http.ResponseWriter, r *http.Request) {
 	|------------+--------+----------+-------------------------------------------------------------|
 	| =filename= | string | no       | The org character sheet. One of filename or id is required. |
 	| =id=       | string | no       | The character's =DND_ID=.                                   |
-	| =action=   | string | yes      | =hurt=, =heal=, =temp=, =cleartemp= or =set=.               |
+	| =action=   | string | yes      | See the table of actions below.                             |
 	| =amount=   | number | no       | How many hit points. Never negative.                        |
+	| =result=   | string | no       | For =deathsave=: success, failure, critical or fumble.       |
+	| =roll=     | number | no       | For =deathsave=: the d20, read against DC 10 instead.       |
 	| =notes=    | string | no       | What did it, kept in the history.                           |
+
+	| Action       | What it does                                                        |
+	|--------------+---------------------------------------------------------------------|
+	| =hurt=       | Takes damage, off the temporary hit points first.                    |
+	| =heal=       | Restores hit points, never past the maximum.                         |
+	| =temp=       | Sets the temporary hit points outright.                              |
+	| =cleartemp=  | Takes the temporary hit points away.                                 |
+	| =set=        | Says what the hit points are, for fixing them up by hand.            |
+	| =deathsave=  | Marks one of the three successes or failures of a dying character.   |
+	| =stabilize=  | Ends the dying: three successes, still on nothing at all.            |
+	| =cleardeath= | Wipes the marks without touching the hit points.                     |
 
 	#+BEGIN_SRC json
 	{"id": "lyra-silverleaf-4c1f2a", "action": "hurt", "amount": 9,
@@ -111,6 +128,20 @@ func RequestDndHealth(w http.ResponseWriter, r *http.Request) {
 	=temp= sets the temporary hit points outright rather than adding to them,
 	because temporary hit points do not stack: gaining them while you already
 	have some is a choice between the two, not a sum.
+
+	*Death saves.* =deathsave= is only accepted while the character is on nothing
+	at all, and takes either a =result= in words or the =roll= itself, which is read
+	against the flat DC of 10. A natural 20 is not a success but standing back up on
+	one hit point, and a natural 1 counts as two failures. Three of either settles
+	the matter and further saves are refused. The answer's =hp= carries the marks
+	counted out, along with =dying=, =stable= and =dead=, so one call redraws the
+	whole line.
+
+	*Concentration.* Every answer carries =concentration=, what the character is
+	still holding. Damage taken while holding a spell adds =save=: the Constitution
+	saving throw owed for it, at DC 10 or half the damage, whichever is more. The
+	roll is the sheet's to make; post it to =/dnd/concentration= to settle it.
+	Going down to nothing at all ends concentration outright and asks for no save.
 	EDOC */
 func PostDndHealth(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
@@ -129,6 +160,9 @@ func PostDndHealth(w http.ResponseWriter, r *http.Request) {
 		dndError(w, http.StatusNotFound, "%s", err)
 		return
 	}
+	// What was being held before the blow landed, since going down ends it and
+	// the answer still has to say the save was owed.
+	held := c.Concentration
 	event, err := dnd.ApplyHealth(c, rs, req)
 	if err != nil {
 		dndError(w, http.StatusBadRequest, "%s", err)
@@ -138,5 +172,13 @@ func PostDndHealth(w http.ResponseWriter, r *http.Request) {
 		dndError(w, http.StatusInternalServerError, "could not write %s: %s", path, err)
 		return
 	}
-	dndJson(w, dndHealthState(c, rs, path, dnd.HealthEventMsg(event)))
+	state := dndHealthState(c, rs, path, dnd.HealthEventMsg(event))
+	// Damage taken while holding a spell calls for a Constitution save at DC 10
+	// or half the damage, whichever is more. The roll is the sheet's to make -
+	// it has the dice - so the answer says what is owed rather than settling it
+	// here. Being knocked out needs no save: it has already ended.
+	if event.Action == "hurt" && event.Amount > 0 && held != nil && c.Concentration != nil {
+		state.Save = dnd.ConcentrationSaveFor(c, rs, dnd.Compute(c, rs), event.Amount)
+	}
+	dndJson(w, state)
 }

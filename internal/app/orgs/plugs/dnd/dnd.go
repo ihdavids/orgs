@@ -493,7 +493,40 @@ func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string)
 		sheet.Warnings = append(sheet.Warnings, err.Error())
 	}
 	sheet.ImageSrc = src
+	// The backdrops behind the sheet are resolved the same way, local files
+	// inlined so the page still has its scenery off a thumb drive. One that
+	// cannot be read is dropped and said out loud; the others still show.
+	//
+	// The export itself may carry a backdrop, which is how
+	// "orgs dnd sheet -backdrop ~/pics/druid" paints one sheet without
+	// writing anything into the character's org file. Anything it does not
+	// say is still the character's own.
+	backdrop, cycle, wash := "", "", 0.0
+	if sheet.Character != nil {
+		backdrop, cycle, wash = sheet.Character.Backdrop,
+			sheet.Character.BackdropCycle, sheet.Character.BackdropOpacity
+	}
+	if v := props["backdrop"]; v != "" {
+		backdrop = v
+	}
+	if v := props["backdropCycle"]; v != "" {
+		cycle = v
+	}
+	if v := props["backdropOpacity"]; v != "" {
+		wash = dnd.ParseOpacity(v)
+	}
+	dnd.PlanBackdrop(sheet, backdrop, cycle, wash, sheetDir(sheet))
+	backdrops, warns := dnd.ResolveBackdrops(sheet.Backdrop, sheetDir(sheet))
+	sheet.BackdropSrcs = backdrops
+	sheet.Warnings = append(sheet.Warnings, warns...)
 	ctx["sheet"] = dnd.SheetMap(sheet, nil)
+	// The backdrop list also goes over as json: the page picks from it at
+	// random rather than rendering it, and a data uri has no business being
+	// pasted into a style attribute three times over.
+	ctx["backdropJson"] = "[]"
+	if data, err := json.Marshal(backdrops); err == nil {
+		ctx["backdropJson"] = string(data)
+	}
 	// The inventory is handed over as json as well as through the sheet, so
 	// that the page's inventory panel starts from the same bag the sheet was
 	// printed with and can keep editing it without a round trip first.
@@ -520,6 +553,9 @@ func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string)
 		"conditions": sheet.Conditions, "defenses": sheet.Defenses,
 		"damageTypes": sheetRuleset(sheet).DamageTypeList(),
 		"history":     []dnd.ConditionEvent{},
+		// What those conditions do to a d20, so the first roll on a freshly
+		// opened sheet already knows the character is poisoned.
+		"advice": sheet.RollAdvice,
 	}
 	health := map[string]interface{}{
 		"hp": sheet.Health, "history": []dnd.HealthEvent{},
@@ -539,6 +575,17 @@ func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string)
 	ctx["healthJson"] = "null"
 	if data, err := json.Marshal(health); err == nil {
 		ctx["healthJson"] = string(data)
+	}
+	// The spell being concentrated on and the attunement counter go over the
+	// same way, so the banner and the counter are right before the server has
+	// been asked anything.
+	ctx["concentrationJson"] = "null"
+	if data, err := json.Marshal(dnd.ComputeConcentration(sheet, sheetRuleset(sheet))); err == nil {
+		ctx["concentrationJson"] = string(data)
+	}
+	ctx["attunementJson"] = "null"
+	if data, err := json.Marshal(dnd.ComputeAttunement(sheet)); err == nil {
+		ctx["attunementJson"] = string(data)
 	}
 	// The sheet posts inventory changes back to the org file it came from.
 	ctx["sheetFile"] = ""

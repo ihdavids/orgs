@@ -43,6 +43,13 @@ type DDBImportRequest struct {
 	// Player overrides the player name, which D&D Beyond only knows as a
 	// site username.
 	Player string `json:"player"`
+	// Backdrop, BackdropCycle and BackdropOpacity are written onto the
+	// imported sheet as they stand. D&D Beyond has no notion of scenery
+	// behind a character sheet, so this is the one way an import gets one
+	// without the org file being edited afterwards.
+	Backdrop        string  `json:"backdrop"`
+	BackdropCycle   string  `json:"backdropCycle"`
+	BackdropOpacity float64 `json:"backdropOpacity"`
 }
 
 // DDBImportResponse is the converted character, plus everything the mapping
@@ -1021,7 +1028,12 @@ func newMatchTable() *matchTable {
 	return &matchTable{bySlug: map[string]int{}, byAlias: map[string]int{}}
 }
 
-func (t *matchTable) add(id, name string) {
+// add files an entry under its own name, and under any other name it is
+// known to answer to. Those other names go in with the readings that are only
+// consulted after every entry has failed to match outright - a name the entry
+// itself owns has to beat a name it merely also answers to, whichever order
+// the two were added in.
+func (t *matchTable) add(id, name string, aliases ...string) {
 	idx := len(t.ids)
 	t.ids = append(t.ids, id)
 	t.names = append(t.names, name)
@@ -1033,7 +1045,12 @@ func (t *matchTable) add(id, name string) {
 	if _, seen := t.bySlug[id]; !seen {
 		t.bySlug[id] = idx
 	}
-	for _, key := range ddbAliasKeys(name) {
+	alias := ddbAliasKeys(name)
+	for _, other := range aliases {
+		alias = append(alias, ddbKeys(other)...)
+		alias = append(alias, ddbAliasKeys(other)...)
+	}
+	for _, key := range alias {
 		if _, seen := t.byAlias[key]; !seen {
 			t.byAlias[key] = idx
 		}
@@ -1048,6 +1065,16 @@ func (t *matchTable) find(names ...string) string {
 		}
 		for _, key := range ddbKeys(name) {
 			if idx, ok := t.bySlug[key]; ok {
+				return t.ids[idx]
+			}
+		}
+	}
+	// Nothing owns the name outright, so now the second choice readings: the
+	// name as it was given, against the names entries merely also answer to,
+	// and then the name with the wizard trimmed off the front of it.
+	for _, name := range names {
+		for _, key := range ddbKeys(name) {
+			if idx, ok := t.byAlias[key]; ok {
 				return t.ids[idx]
 			}
 		}
@@ -1085,7 +1112,11 @@ func (t *matchTable) find(names ...string) string {
 // The remainder has to be two words or more. At one word this stops being a
 // rename and becomes a category: burglar's pack would answer to "pack" and
 // thieves' tools to "tools", and either would swallow whichever unrelated
-// entry asked for it first.
+// entry asked for it first. That leaves Bigby's Hand and Mordenkainen's
+// Sword - one word of remainder each, and renamed outright to Arcane Hand and
+// Arcane Sword rather than trimmed, so no amount of trimming would find them.
+// Those come in as declared aliases instead, from the table in srdnames.go,
+// which is where the whole renamed set is written down.
 //
 // It does not stretch to the handful the SRD renamed outright rather than
 // trimmed - Bigby's Hand is Arcane Hand, Mordenkainen's Sword is Arcane Sword.
@@ -1199,7 +1230,10 @@ func newNameIndex(rs *Ruleset) *nameIndex {
 		idx.items.add(rs.Items[i].Id, rs.Items[i].Name)
 	}
 	for i := range rs.Spells {
-		idx.spells.add(rs.Spells[i].Id, rs.Spells[i].Name)
+		// A spell is also filed under whatever the books call it, so an
+		// imported character carrying Bigby's Hand lands on the SRD's Arcane
+		// Hand rather than arriving with no rules text. See srdnames.go.
+		idx.spells.add(rs.Spells[i].Id, rs.Spells[i].Name, spellAliases(&rs.Spells[i])...)
 	}
 	for i := range rs.Feats {
 		idx.feats.add(rs.Feats[i].Id, rs.Feats[i].Name)

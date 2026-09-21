@@ -349,7 +349,12 @@ type Spellcasting struct {
 	SpellsKnown   []int `yaml:"spellsKnown" json:"spellsKnown"`
 	// SpellList is the id of the spell list to draw from, defaults to the class id
 	SpellList string `yaml:"spellList" json:"spellList"`
-	Notes     string `yaml:"notes" json:"notes"`
+	// MulticlassRoundUp keeps a half or third caster's contribution to the
+	// multiclass caster level rounded up rather than down. Paladin and ranger
+	// round down, which is why that is the default; the artificer is the one
+	// class the rules say rounds up, and it rounds up either way.
+	MulticlassRoundUp bool   `yaml:"multiclassRoundUp" json:"multiclassRoundUp,omitempty"`
+	Notes             string `yaml:"notes" json:"notes"`
 }
 
 // Subclass is an archetype/domain/circle/oath etc.
@@ -565,13 +570,33 @@ type Spell struct {
 	Concentration bool     `yaml:"concentration" json:"concentration"`
 	Ritual        bool     `yaml:"ritual" json:"ritual"`
 	Classes       []string `yaml:"classes" json:"classes"`
-	Text          string   `yaml:"text" json:"text"`
-	HigherLevel   string   `yaml:"higherLevel" json:"higherLevel"`
+	// Aliases are other names this spell answers to when it is looked up by
+	// name - an older printing, a different book's wording, whatever a
+	// character sheet that came from somewhere else calls it. They are only
+	// consulted once nothing has matched on id or name, so an alias can never
+	// take a name that another spell owns outright. See srdnames.go, which is
+	// where the Player's Handbook names for the spells the SRD renamed live.
+	Aliases     []string `yaml:"aliases" json:"aliases,omitempty"`
+	Text        string   `yaml:"text" json:"text"`
+	HigherLevel string   `yaml:"higherLevel" json:"higherLevel"`
 	// Attack marks a spell that uses a spell attack roll, Save names the
 	// ability a target saves with. Both feed the attacks table on the sheet.
 	Attack bool   `yaml:"attack" json:"attack"`
 	Save   string `yaml:"save" json:"save"`
 	Damage string `yaml:"damage" json:"damage"`
+	// Damage2 is a second lot of damage the spell deals, in the same form as
+	// Damage ("2d6 cold"). A few spells roll two different damage types and
+	// there is no sensible way to add them up: ice knife throws a shard for
+	// piercing and then bursts for cold on a different saving throw, ice
+	// storm hails for bludgeoning and freezes for cold at once, hellfire
+	// burns and withers in the same breath. Rolling one of those as a single
+	// figure loses which half resistance applies to, so the sheet rolls them
+	// separately and the player applies each.
+	//
+	// Damage2Label names it on the button that rolls it - "Burst", "Cold" -
+	// and defaults to the damage type when it is not given.
+	Damage2      string `yaml:"damage2" json:"damage2,omitempty"`
+	Damage2Label string `yaml:"damage2Label" json:"damage2Label,omitempty"`
 }
 
 // LevelString renders "Cantrip" or "3rd level evocation".
@@ -614,9 +639,22 @@ type Ruleset struct {
 	Backgrounds []Background `yaml:"backgrounds" json:"backgrounds"`
 	Items       []Item       `yaml:"items" json:"items"`
 	Spells      []Spell      `yaml:"spells" json:"spells"`
-	Feats       []Feat       `yaml:"feats" json:"feats"`
-	Languages   []string     `yaml:"languages" json:"languages"`
-	Alignments  []string     `yaml:"alignments" json:"alignments"`
+	// SpellLists widens a class's spell list without restating the spells on
+	// it, keyed by class id: "these spells are also druid spells". It is the
+	// shape the books use whenever one of them hands an existing spell to a
+	// class that could not cast it before - Tasha's adds a dozen to the druid
+	// that way - and it is the only way to say that here, because a spells:
+	// entry whose id already exists replaces that spell outright rather than
+	// adding to it. Restating an SRD spell just to widen its classes would
+	// fork the generated data and go stale the next time it is regenerated.
+	//
+	// Entries name spells by id or by name, and a name nothing answers to is
+	// ignored: a module may widen a list for spells a thinner ruleset has
+	// never heard of.
+	SpellLists map[string][]string `yaml:"spellLists" json:"spellLists,omitempty"`
+	Feats      []Feat              `yaml:"feats" json:"feats"`
+	Languages  []string            `yaml:"languages" json:"languages"`
+	Alignments []string            `yaml:"alignments" json:"alignments"`
 	// Conditions and DamageTypes are what the sheet's defenses tab is drawn
 	// from. Both are empty in almost every module: the basic rules' fifteen
 	// conditions and thirteen damage types are built in (see conditions.go)
@@ -635,7 +673,12 @@ type Ruleset struct {
 	bgIdx    map[string]*Background
 	itemIdx  map[string]*Item
 	spellIdx map[string]*Spell
-	featIdx  map[string]*Feat
+	// spellAliasIdx is kept apart from spellIdx so that the order of lookup
+	// holds: every real id and name is tried before any alias is, which is
+	// what stops an alias standing in for a spell that genuinely owns that
+	// name.
+	spellAliasIdx map[string]*Spell
+	featIdx       map[string]*Feat
 }
 
 // ----------------------------------------------------------------------------
@@ -773,6 +816,12 @@ type Character struct {
 	// section. Like the other logs it is the file's own record.
 	HealthLog []HealthEvent `yaml:"healthLog" json:"healthLog"`
 
+	// Concentration is the spell the character is holding their attention on,
+	// nil when there is none. Like the conditions it is stored rather than
+	// derived: whether a spell is still up is something that happened at the
+	// table. See concentration.go.
+	Concentration *Concentration `yaml:"concentration" json:"concentration"`
+
 	Personality string `yaml:"personality" json:"personality"`
 	Ideals      string `yaml:"ideals" json:"ideals"`
 	Bonds       string `yaml:"bonds" json:"bonds"`
@@ -792,6 +841,15 @@ type Character struct {
 	Image      string  `yaml:"image" json:"image"`
 	ImageFocus string  `yaml:"imageFocus" json:"imageFocus"`
 	ImageZoom  float64 `yaml:"imageZoom" json:"imageZoom"`
+
+	// Backdrop is one or more images washed out behind the whole html sheet,
+	// written the same way as Image and separated by commas or whitespace.
+	// With more than one the sheet crossfades between them at random, waiting
+	// BackdropCycle ("4m-12m", "8m", "off") between changes, and
+	// BackdropOpacity is how strongly they show through.
+	Backdrop        string  `yaml:"backdrop" json:"backdrop"`
+	BackdropCycle   string  `yaml:"backdropCycle" json:"backdropCycle"`
+	BackdropOpacity float64 `yaml:"backdropOpacity" json:"backdropOpacity"`
 
 	Appearance string `yaml:"appearance" json:"appearance"`
 	Backstory  string `yaml:"backstory" json:"backstory"`
@@ -980,6 +1038,18 @@ type Sheet struct {
 	ImageFocusY float64 `json:"imageFocusY"`
 	ImageZoom   float64 `json:"imageZoom"`
 
+	// Backdrop is the list of background references as they were written in
+	// the org file, BackdropSrcs the same list resolved into things a css
+	// background can point at - which the html exporter fills in, so it is
+	// empty on a sheet that came straight from the rules engine. A picture
+	// stays up for a random time between BackdropMinSeconds and
+	// BackdropMaxSeconds; both are zero when the sheet is not to cycle.
+	Backdrop           []string `json:"backdrop"`
+	BackdropSrcs       []string `json:"backdropSrcs"`
+	BackdropOpacity    float64  `json:"backdropOpacity"`
+	BackdropMinSeconds int      `json:"backdropMinSeconds"`
+	BackdropMaxSeconds int      `json:"backdropMaxSeconds"`
+
 	Abilities      []AbilityView          `json:"abilities"`
 	AbilityMap     map[string]AbilityView `json:"abilityMap"`
 	Proficiency    int                    `json:"proficiency"`
@@ -1032,6 +1102,9 @@ type Sheet struct {
 	// shrugs off, and what is currently wrong with them.
 	Defenses   DefensesView   `json:"defenses"`
 	Conditions ConditionsView `json:"conditions"`
+	// RollAdvice is what those conditions do to a d20 - see rolleffects.go.
+	// It rides on the sheet so an exported page knows before it asks anything.
+	RollAdvice RollAdviceView `json:"rollAdvice"`
 
 	// Health is the hit point line worked out: the bar, the temporary hit
 	// points in front of it, and whether the character is down or bloodied.
@@ -1044,6 +1117,10 @@ type Sheet struct {
 	Attuned         []string        `json:"attuned"`
 	AttunementUsed  int             `json:"attunementUsed"`
 	AttunementSlots int             `json:"attunementSlots"`
+	// AttunementOver counts the items marked attuned on the equipment table
+	// that the limit left with nothing to stand on. A sheet edited by hand can
+	// claim four attunements; the fourth is inert, and the counter says so.
+	AttunementOver int `json:"attunementOver"`
 
 	ArmorProficiencies  []string `json:"armorProficiencies"`
 	WeaponProficiencies []string `json:"weaponProficiencies"`

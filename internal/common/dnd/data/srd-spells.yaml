@@ -2271,6 +2271,7 @@ spells:
     higherLevel: "When you cast this spell using a spell slot of 6th level or higher, the fire damage or the radiant damage (your choice) increases by 1d6 for each slot level above 5th."
     save: "dex"
     damage: "4d6 fire"
+    damage2: "4d6 radiant"
     classes: ["cleric"]
   - id: "flaming-sphere"
     name: "Flaming Sphere"
@@ -3024,6 +3025,7 @@ spells:
     higherLevel: "When you cast this spell using a spell slot of 5th level or higher, the bludgeoning damage increases by 1d8 for each slot level above 4th."
     save: "dex"
     damage: "2d8 bludgeoning"
+    damage2: "4d6 cold"
     classes: ["druid", "sorcerer", "wizard"]
   - id: "identify"
     name: "Identify"
@@ -3662,6 +3664,7 @@ spells:
       The spell damages objects in the area and ignites flammable objects that aren't being worn or carried.
     save: "dex"
     damage: "20d6 fire"
+    damage2: "20d6 bludgeoning"
     classes: ["sorcerer", "wizard"]
   - id: "mind-blank"
     name: "Mind Blank"

@@ -58,6 +58,15 @@ func PostDndImport(w http.ResponseWriter, r *http.Request) {
 	if req.Player != "" {
 		c.Player = req.Player
 	}
+	if req.Backdrop != "" {
+		c.Backdrop = req.Backdrop
+	}
+	if req.BackdropCycle != "" {
+		c.BackdropCycle = req.BackdropCycle
+	}
+	if req.BackdropOpacity > 0 {
+		c.BackdropOpacity = req.BackdropOpacity
+	}
 	res := dnd.DDBImportResponse{Ok: true, Character: c, Warnings: warnings}
 	if req.Preview {
 		res.Sheet = dnd.Compute(c, rs)
@@ -120,5 +129,10 @@ func dndCarryOver(fname string, c *dnd.Character, rs *dnd.Ruleset) {
 		c.Image = old.Image
 		c.ImageFocus = old.ImageFocus
 		c.ImageZoom = old.ImageZoom
+	}
+	if c.Backdrop == "" {
+		c.Backdrop = old.Backdrop
+		c.BackdropCycle = old.BackdropCycle
+		c.BackdropOpacity = old.BackdropOpacity
 	}
 }

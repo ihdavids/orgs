@@ -18,6 +18,7 @@ package dnd
   orgs dnd characters                   # every sheet the server knows about
   orgs dnd show -file lyra.org          # print a sheet in the terminal
   orgs dnd sheet -file lyra.org -format pdf -out lyra.pdf
+  orgs dnd levelup -file lyra.org       # take the level you just earned
   orgs dnd refresh -file lyra.org       # recompute after hand editing
   orgs dnd rulesets                     # what content is loaded
   orgs dnd import -ddb 12345678         # bring a character over from d&d beyond
@@ -85,6 +86,7 @@ EDOC */
 import (
 	"flag"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -137,11 +139,24 @@ type Dnd struct {
 	Id      string
 	Filter  string
 	Level   int
-	Force   bool
-	Open    bool
-	Local   bool
+	// Levels and Class belong to levelup: how many to gain, and which class
+	// gains them.
+	Levels int
+	Class  string
+	Force  bool
+	Open   bool
+	Local  bool
 
 	Printable bool
+
+	// Backdrop is the scenery behind an html sheet: files, folders or urls,
+	// repeatable and comma separated. BackdropCycle is how long each picture
+	// stays up and BackdropWash how strongly it shows through. On an import
+	// they are written into the sheet; on an export they paint the one sheet
+	// and change nothing on disk.
+	Backdrop      stringList
+	BackdropCycle string
+	BackdropWash  string
 
 	// D&D Beyond import
 	Ddb     string
@@ -181,6 +196,51 @@ func (self *Dnd) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.Dump, "dump", "", "save the d&d beyond payload to this file as well")
 	fset.BoolVar(&self.Preview, "preview", false, "convert and print without writing a sheet")
 	fset.BoolVar(&self.Forget, "forget", false, "clear the saved d&d beyond session cookie")
+	fset.IntVar(&self.Levels, "levels", 1, "how many levels to gain when levelling up")
+	fset.StringVar(&self.Class, "class", "", "class to gain the levels in (default the primary one)")
+	fset.Var(&self.Backdrop, "backdrop",
+		"image, folder or url to wash out behind the sheet (repeatable)")
+	fset.StringVar(&self.BackdropCycle, "backdrop-cycle", "",
+		"how long each backdrop stays up: 8m, 4m-12m, off (25 minutes at the most)")
+	fset.StringVar(&self.BackdropWash, "backdrop-opacity", "",
+		"how strongly the backdrop shows through, 18% or 0.18 (default 14%)")
+}
+
+// stringList is a flag that may be given more than once, and that also takes
+// several values at a time the way the org property does.
+type stringList []string
+
+func (self *stringList) String() string { return strings.Join(*self, ", ") }
+
+func (self *stringList) Set(v string) error {
+	*self = append(*self, v)
+	return nil
+}
+
+// backdropArg turns what was typed on the command line into a backdrop
+// property the server can resolve. The server has a working directory of its
+// own, so a path is made absolute here, while a url or a data uri is left
+// exactly as it stands. A path with a comma or a space in it is wrapped in an
+// org link, which is the one form that survives being read back as a list.
+func (self *Dnd) backdropArg() string {
+	out := []string{}
+	for _, raw := range self.Backdrop {
+		for _, ref := range dnd.ParseImageRefs(raw) {
+			if dnd.ImageIsRemote(ref) {
+				out = append(out, ref)
+				continue
+			}
+			p := dnd.ImagePath(ref, "")
+			if abs, err := filepath.Abs(p); err == nil {
+				p = abs
+			}
+			if strings.ContainsAny(p, ", \t") {
+				p = "[[file:" + p + "]]"
+			}
+			out = append(out, p)
+		}
+	}
+	return strings.Join(out, ", ")
 }
 
 func (self *Dnd) Exec(core *commands.Core) {
@@ -226,6 +286,8 @@ func (self *Dnd) Exec(core *commands.Core) {
 		self.runSheet(core)
 	case "refresh", "recompute":
 		self.runRefresh(core)
+	case "levelup", "level", "level-up":
+		self.runLevelUp(core)
 	case "import", "ddb", "dndbeyond":
 		if self.Forget {
 			ddbForget()
@@ -269,10 +331,24 @@ func (self *Dnd) usage() {
       Bring a character over from D&D Beyond. Public characters need nothing;
       a private one asks for your browser's CobaltSession cookie.
       -dump <file> keeps the raw payload, -json <file> imports one back.
+      -backdrop <file|folder|url> writes scenery into the sheet as it lands.
+
 
   orgs dnd sheet -file lyra.org [-format html|latex|pdf] [-out lyra.pdf] [-printable]
       Render a character sheet. -printable renders the pdf for a printer
       rather than for the screen: no page wash and no panel fills.
+      -backdrop <file|folder|url> washes a picture out behind the html sheet,
+      without writing anything into the character's org file. Give it more
+      than once, or point it at a folder, and the sheet crossfades between
+      them at random: -backdrop-cycle 4m-12m sets how long each stays up
+      (25 minutes at the most) and -backdrop-opacity 18% how much it shows.
+
+  orgs dnd levelup -file lyra.org [-levels N] [-class id]
+      Level a character up. Asks only what the new level actually makes you
+      decide - hit points, a subclass, an improvement or a feat, new spells -
+      and writes the answers back into the same file. Several levels at once
+      are taken one at a time, in order. -class levels a different class,
+      which is how you multiclass.
 
   orgs dnd refresh -file lyra.org
       Recompute the derived sections after hand editing the property drawer.
@@ -1164,6 +1240,18 @@ func (self *Dnd) runSheet(core *commands.Core) {
 	if self.Printable {
 		params["printable"] = "t"
 	}
+	// A backdrop given here paints this one sheet, the character's org file is
+	// not touched. The server reads the pictures, so the paths have to make
+	// sense to it - backdropArg makes them absolute.
+	if b := self.backdropArg(); b != "" {
+		params["backdrop"] = b
+	}
+	if self.BackdropCycle != "" {
+		params["backdropCycle"] = self.BackdropCycle
+	}
+	if self.BackdropWash != "" {
+		params["backdropOpacity"] = self.BackdropWash
+	}
 	res := get[common.ResultMsg](core, fmt.Sprintf("file/%s", exporter), params)
 	if !res.Ok {
 		fmt.Printf("%sexport failed: %s%s\n", cRed, res.Msg, cReset)
@@ -1308,4 +1396,95 @@ func init() {
 		func() commands.Cmd {
 			return &Dnd{Format: "html", Local: true}
 		})
+}
+
+// levelUpBody is the wire form of a level up call: the engine's request plus
+// the flag that says whether to write the file.
+type levelUpBody struct {
+	dnd.LevelUpRequest
+	Commit bool `json:"commit"`
+}
+
+// runLevelUp walks a character up one or more levels, asking only what the new
+// levels actually ask them to decide.
+//
+// The flow is stateless, so every call resends every answer given so far and
+// the server replays them. That means there is no session to lose, and it also
+// means the loop can simply ask for commit every time: the server only writes
+// once it has nothing left to ask, so the last call through is the one that
+// lands and every call before it is a dry run.
+func (self *Dnd) runLevelUp(core *commands.Core) {
+	if self.File == "" {
+		fmt.Println("usage: orgs dnd levelup -file <sheet.org> [-levels N] [-class id]")
+		return
+	}
+	levels := self.Levels
+	if levels < 1 {
+		levels = 1
+	}
+	body := levelUpBody{
+		LevelUpRequest: dnd.LevelUpRequest{
+			Filename: self.File, Class: self.Class, Levels: levels,
+			Answers: map[string][]string{},
+		},
+		Commit: true,
+	}
+	first := true
+	for {
+		plan, err := post[levelUpBody, dnd.LevelUpPlan](core, "dnd/levelup", &body)
+		if err != nil {
+			fmt.Printf("%slevel up failed: %s%s\n", cRed, err, cReset)
+			return
+		}
+		if plan.Error != "" {
+			fmt.Printf("%s%s%s\n", cRed, plan.Error, cReset)
+			return
+		}
+		// The seed comes back on the first answer and goes out with every one
+		// after it, so a die rolled for a level stays rolled.
+		body.Seed = plan.Seed
+		if first {
+			fmt.Printf("\n%s%sLevelling up%s  %s%s, level %d to %d as a %s%s\n\n",
+				cBold, cGold, cReset, cDim, plan.Character,
+				plan.FromLevel, plan.ToLevel, plan.ClassName, cReset)
+			first = false
+		}
+		if plan.Done {
+			fmt.Printf("\n%s%s is now level %d%s\n", cBold, plan.Character, plan.ToLevel, cReset)
+			for _, g := range plan.Gained {
+				fmt.Printf("  %s+%s %s\n", cGold, cReset, g)
+			}
+			// Choices the sheet was already missing before this level. Not
+			// asked about, because they are not what this level earned, but
+			// worth saying so they can be filled in.
+			if len(plan.Unrecorded) > 0 {
+				fmt.Printf("\n%sthe sheet does not record these earlier choices:%s\n", cDim, cReset)
+				for _, u := range plan.Unrecorded {
+					fmt.Printf("  %s· %s%s\n", cDim, u, cReset)
+				}
+			}
+			fmt.Printf("\n%s%s written%s\n\n", cDim, self.File, cReset)
+			if self.Open {
+				core.LaunchEditor(self.File, 0)
+			}
+			return
+		}
+		if plan.Next == nil {
+			fmt.Printf("%sthe server asked for nothing and finished nothing%s\n", cRed, cReset)
+			return
+		}
+		ans, quit := self.ask(plan.Next)
+		if quit {
+			fmt.Println("\nStopped. Nothing was written.")
+			return
+		}
+		self.remember(plan.Next.Step, ans)
+		values := ans.Values
+		// A typed in answer arrives as text rather than as a chosen option,
+		// which is how somebody enters the hit points they rolled at the table.
+		if len(values) == 0 && strings.TrimSpace(ans.Text) != "" {
+			values = []string{strings.TrimSpace(ans.Text)}
+		}
+		body.Answers[plan.Next.Step] = values
+	}
 }

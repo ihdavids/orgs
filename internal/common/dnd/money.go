@@ -442,7 +442,20 @@ type MoneyEvent struct {
 	// history can say a gold piece went out and nine silver came back.
 	Change Money  `json:"change"`
 	Notes  string `json:"notes"`
+	// Before is the purse as it stood before the line. Paying may have broken
+	// a gold piece into silver, so the coins that were there cannot be worked
+	// back from the value alone - and undo has to put back the coins, not the
+	// sum. See undo.go.
+	Before Money `json:"before"`
+	// hasBefore says whether Before is a real reading or merely an empty
+	// purse, which a line read back off a sheet written before the Was column
+	// existed cannot tell apart on its own.
+	hasBefore bool
 }
+
+// HasBefore reports whether this line knows what the purse held before it,
+// which is what decides whether it can be taken back.
+func (e MoneyEvent) HasBefore() bool { return e.hasBefore }
 
 // MoneyRequest is one change to a character's purse, posted by the html sheet.
 // Amount is the text form ("15 gp 3 sp"), Money the same thing said in fields;
@@ -556,6 +569,7 @@ func ApplyMoney(c *Character, req MoneyRequest) (MoneyEvent, error) {
 			"unknown action %q, expected spend, gain, set, consolidate or exchange", req.Action)
 	}
 
+	e.Before = c.Money
 	c.Money = purse
 	e.Balance = purse
 	return logMoney(c, e), nil
@@ -564,6 +578,8 @@ func ApplyMoney(c *Character, req MoneyRequest) (MoneyEvent, error) {
 // logMoney stamps a coin event with the time and appends it to the character's
 // coin history, which is what gets written into the Coin History section.
 func logMoney(c *Character, e MoneyEvent) MoneyEvent {
+	// A line being written now always knows what the purse held before it.
+	e.hasBefore = true
 	now := time.Now()
 	e.Date = now.Format("2006-01-02")
 	e.Time = now.Format("15:04")

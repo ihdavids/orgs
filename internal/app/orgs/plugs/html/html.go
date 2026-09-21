@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -398,18 +399,30 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 			props["title"] = title
 		}
 		theme := f.Get("HTML_THEME")
+		// This overrides the theme if present
+		style := f.Get("HTML_STYLE")
+		// A caller can ask for a theme of its own, which wins over what the file
+		// asks for. The worg files view uses this to render every file in the
+		// theme the reader picked rather than the one the author chose.
+		if req := props["theme"]; req != "" {
+			theme = req
+			style = ""
+		}
 		fontfamily := f.Get("HTML_FONTFAMILY")
 		if fontfamily == "" {
 			fontfamily = self.Props["fontfamily"].(string)
 		}
+		// The exporter is shared between requests, so the stylesheet is resolved
+		// every time rather than only when a file names one - otherwise a file
+		// with no theme keeps whatever the previous export left behind.
+		name := "default"
 		if theme != "" {
-			self.Props["stylesheet"] = GetStylesheet(theme, fontfamily)
+			name = theme
 		}
-		// This overrides the theme if present
-		style := f.Get("HTML_STYLE")
 		if style != "" {
-			self.Props["stylesheet"] = GetStylesheet(style, fontfamily)
+			name = style
 		}
+		self.Props["stylesheet"] = GetStylesheet(name, fontfamily)
 		attr := f.Get("ATTR_BODY_HTML")
 		self.Props["havebodyattr"] = false
 		if attr != "" {
@@ -483,7 +496,34 @@ func GetStylesheet(name string, fontfamily string) string {
 
 		return ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily)
 	}
+	// An unknown theme name still has to produce a styled page.
+	if name != "default" {
+		return GetStylesheet("default", fontfamily)
+	}
 	return ""
+}
+
+// HtmlThemes lists the themes the html exporter can render with: every
+// "<name>_style.css" under the template folder's html_styles directory.
+func HtmlThemes() []string {
+	dir := plugs.PlugExpandTemplatePath("html_styles")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return []string{"default"}
+	}
+	names := []string{}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		n := e.Name()
+		if !strings.HasSuffix(n, "_style.css") {
+			continue
+		}
+		names = append(names, strings.TrimSuffix(n, "_style.css"))
+	}
+	sort.Strings(names)
+	return names
 }
 
 func GetTemplate(defaultTemplate string, theme string) string {

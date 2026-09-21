@@ -222,3 +222,359 @@ func TestSessionPlayedByFallsBackToName(t *testing.T) {
 		t.Error("an entry with no id matched the wrong character")
 	}
 }
+
+func TestUpdateNoteRewritesOneEntryInPlace(t *testing.T) {
+	out := AppendNotes(emptySession, []SessionNote{
+		{Time: "19:32", Text: "The wagon tracks leave the road here."},
+		{Time: "19:45", Text: "Sildar is missing."},
+		{Time: "20:01", Text: "Camped by the stream."},
+	})
+	out, err := UpdateNote(out, 1, SessionNote{
+		Text: "* Sildar\nSildar is missing, and so is the wagon.\n- goblin arrows"}, "19:45")
+	if err != nil {
+		t.Fatalf("editing the middle note: %s", err)
+	}
+	notes := ParseNotes(out)
+	if len(notes) != 3 {
+		t.Fatalf("editing a note changed how many there are: %#v", notes)
+	}
+	if notes[1].Time != "19:45" {
+		t.Fatalf("an edited note keeps the time it was taken, got %q", notes[1].Time)
+	}
+	if !strings.Contains(notes[1].Text, "and so is the wagon") {
+		t.Fatalf("the new text did not land: %q", notes[1].Text)
+	}
+	if !strings.Contains(notes[1].Text, "* Sildar") {
+		t.Fatalf("a heading inside the note should survive the round trip: %q", notes[1].Text)
+	}
+	if notes[0].Text != "The wagon tracks leave the road here." ||
+		notes[2].Text != "Camped by the stream." {
+		t.Fatalf("the notes either side moved: %#v", notes)
+	}
+	// The rolls section is somebody else's, and stays exactly where it was.
+	if !strings.Contains(out, "* Rolls") {
+		t.Fatalf("the rest of the file was disturbed:\n%s", out)
+	}
+}
+
+func TestUpdateNoteCanRestampANote(t *testing.T) {
+	out := AppendNotes(emptySession, []SessionNote{{Time: "19:32", Text: "First light."}})
+	out, err := UpdateNote(out, 0, SessionNote{Time: "19:35", Text: "First light."}, "19:32")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if notes := ParseNotes(out); len(notes) != 1 || notes[0].Time != "19:35" {
+		t.Fatalf("want the note restamped, got %#v", notes)
+	}
+}
+
+func TestUpdateNoteRefusesWhatItCannotBeSureOf(t *testing.T) {
+	out := AppendNotes(emptySession, []SessionNote{{Time: "19:32", Text: "First light."}})
+	if _, err := UpdateNote(out, 3, SessionNote{Text: "Nope."}, ""); err == nil {
+		t.Fatal("there is no fourth note to edit")
+	}
+	// The page thought this note was taken at some other time, so the file
+	// has moved under it.
+	if _, err := UpdateNote(out, 0, SessionNote{Text: "Nope."}, "21:00"); err == nil {
+		t.Fatal("a stale edit should be refused")
+	}
+	if _, err := UpdateNote(out, 0, SessionNote{Text: "   "}, "19:32"); err == nil {
+		t.Fatal("a note cannot be emptied")
+	}
+	// A file with no notes at all has nothing to edit.
+	if _, err := UpdateNote("#+TITLE: Bare\n", 0, SessionNote{Text: "Hi"}, ""); err == nil {
+		t.Fatal("there is no notes section here")
+	}
+}
+
+func TestNoteKeepsTheLinesItWasTypedWith(t *testing.T) {
+	typed := "They came out of the trees.\nSildar went down first.\nWe ran."
+	out := AppendNotes(emptySession, []SessionNote{{Time: "19:32", Text: typed}})
+	// Org runs consecutive prose together, so every line but the last needs
+	// a hard break or the note comes back as one run-on sentence.
+	if strings.Count(out, `\\`) != 2 {
+		t.Fatalf("want a break after the first two lines:\n%s", out)
+	}
+	if strings.Contains(out, `We ran. \\`) {
+		t.Fatalf("the last line of a paragraph needs no break:\n%s", out)
+	}
+	// And what the editor gets back is what was typed, backslashes and all
+	// taken off again.
+	if got := ParseNotes(out)[0].Text; got != typed {
+		t.Fatalf("the round trip changed the note:\nwant %q\ngot  %q", typed, got)
+	}
+}
+
+func TestNoteBreaksOnlyWhereOrgWouldRunLinesTogether(t *testing.T) {
+	typed := "* Loot\n- 12 gp\n- a map\nfolded twice\n\n| a | b |\n| 1 | 2 |"
+	out := AppendNotes(emptySession, []SessionNote{{Time: "19:32", Text: typed}})
+	// A bullet after a bullet starts something new, so it needs no break;
+	// a line continuing a bullet does. A heading and a table row never do.
+	if strings.Contains(out, `12 gp \\`) {
+		t.Fatalf("a bullet before another bullet needs no break:\n%s", out)
+	}
+	if !strings.Contains(out, `a map \\`) {
+		t.Fatalf("a bullet continued on the next line does:\n%s", out)
+	}
+	if strings.Contains(out, `| a | b | \\`) || strings.Contains(out, `Loot \\`) {
+		t.Fatalf("a table row and a heading never carry one:\n%s", out)
+	}
+	if got := ParseNotes(out)[0].Text; got != typed {
+		t.Fatalf("the round trip changed the note:\nwant %q\ngot  %q", typed, got)
+	}
+}
+
+func TestNoteLeavesVerbatimBlocksAlone(t *testing.T) {
+	typed := "#+BEGIN_SRC go\na := 1\nb := 2\n#+END_SRC"
+	out := AppendNotes(emptySession, []SessionNote{{Time: "19:32", Text: typed}})
+	if strings.Contains(out, `\\`) {
+		t.Fatalf("nothing inside a block should be touched:\n%s", out)
+	}
+	if got := ParseNotes(out)[0].Text; got != typed {
+		t.Fatalf("the round trip changed the block:\nwant %q\ngot  %q", typed, got)
+	}
+}
+
+func TestDeleteRollTakesOneRowOut(t *testing.T) {
+	out := AppendRolls(emptySession, []SessionRoll{
+		{Time: "19:32", Character: "Lyra", Label: "Stealth", Formula: "d20 +5", Result: "18"},
+		{Time: "19:40", Character: "Lyra", Label: "Longsword", Formula: "d20 +6", Result: "12"},
+		{Time: "19:41", Character: "Lyra", Label: "Perception", Formula: "d20 +3", Result: "9"},
+	})
+	out, err := DeleteRoll(out, 1, "Longsword")
+	if err != nil {
+		t.Fatalf("deleting the middle roll: %s", err)
+	}
+	rolls := ParseRolls(out)
+	if len(rolls) != 2 {
+		t.Fatalf("want two rolls left, got %#v", rolls)
+	}
+	if rolls[0].Label != "Stealth" || rolls[1].Label != "Perception" {
+		t.Fatalf("the wrong roll went: %#v", rolls)
+	}
+	if strings.Contains(out, "Longsword") {
+		t.Fatalf("the roll is still in the file:\n%s", out)
+	}
+}
+
+func TestDeletingTheLastRollTakesTheTableWithIt(t *testing.T) {
+	out := AppendRolls(emptySession, []SessionRoll{
+		{Time: "19:32", Character: "Lyra", Label: "Stealth", Formula: "d20 +5", Result: "18"},
+	})
+	out, err := DeleteRoll(out, 0, "Stealth")
+	if err != nil {
+		t.Fatalf("deleting the only roll: %s", err)
+	}
+	if rolls := ParseRolls(out); len(rolls) != 0 {
+		t.Fatalf("want no rolls left, got %#v", rolls)
+	}
+	// Back to the state a session with nothing rolled in it starts in: the
+	// anchor, and no table under it.
+	if strings.Contains(out, "| Time") {
+		t.Fatalf("an emptied table should go altogether:\n%s", out)
+	}
+	if !strings.Contains(out, "#+NAME: "+SessionTableName) {
+		t.Fatalf("the next roll has nowhere to go:\n%s", out)
+	}
+	// And the next roll writes it back exactly as it was the first time.
+	again := AppendRolls(out, []SessionRoll{
+		{Time: "20:00", Character: "Lyra", Label: "Athletics", Formula: "d20 +4", Result: "15"},
+	})
+	if rolls := ParseRolls(again); len(rolls) != 1 || rolls[0].Label != "Athletics" {
+		t.Fatalf("the table did not come back: %#v", rolls)
+	}
+}
+
+func TestDeleteRollRefusesWhatItCannotBeSureOf(t *testing.T) {
+	out := AppendRolls(emptySession, []SessionRoll{
+		{Time: "19:32", Character: "Lyra", Label: "Stealth", Formula: "d20 +5", Result: "18"},
+		{Time: "19:40", Character: "Lyra", Label: "Longsword", Formula: "d20 +6", Result: "12"},
+	})
+	if _, err := DeleteRoll(out, 7, ""); err == nil {
+		t.Fatal("there is no eighth roll to delete")
+	}
+	// Deleting shifts every roll after it up by one, so a stale number
+	// would otherwise throw away the wrong row.
+	if _, err := DeleteRoll(out, 0, "Longsword"); err == nil {
+		t.Fatal("a stale delete should be refused")
+	}
+	if _, err := DeleteRoll("#+TITLE: Bare\n", 0, ""); err == nil {
+		t.Fatal("there are no rolls here to delete")
+	}
+	if rolls := ParseRolls(out); len(rolls) != 2 {
+		t.Fatalf("a refused delete moved something: %#v", rolls)
+	}
+}
+
+func TestDeleteNoteTakesOneOutAndLeavesTheRest(t *testing.T) {
+	out := AppendNotes(emptySession, []SessionNote{
+		{Time: "19:32", Text: "The wagon tracks leave the road here."},
+		{Time: "19:45", Text: "Sildar is missing."},
+		{Time: "20:01", Text: "Camped by the stream."},
+	})
+	out, err := DeleteNote(out, 1, "19:45")
+	if err != nil {
+		t.Fatalf("deleting the middle note: %s", err)
+	}
+	notes := ParseNotes(out)
+	if len(notes) != 2 {
+		t.Fatalf("want two notes left, got %#v", notes)
+	}
+	if notes[0].Text != "The wagon tracks leave the road here." ||
+		notes[1].Text != "Camped by the stream." {
+		t.Fatalf("the wrong note went: %#v", notes)
+	}
+	if strings.Contains(out, "Sildar") {
+		t.Fatalf("the note is still in the file:\n%s", out)
+	}
+	// The rolls section is somebody else's, and stays exactly where it was.
+	if !strings.Contains(out, "* Rolls") {
+		t.Fatalf("the rest of the file was disturbed:\n%s", out)
+	}
+}
+
+func TestDeleteNoteTakesTheLastOneAndTheOnlyOne(t *testing.T) {
+	out := AppendNotes(emptySession, []SessionNote{
+		{Time: "19:32", Text: "First light."},
+		{Time: "19:45", Text: "Last light."},
+	})
+	out, err := DeleteNote(out, 1, "19:45")
+	if err != nil {
+		t.Fatalf("deleting the last note: %s", err)
+	}
+	if notes := ParseNotes(out); len(notes) != 1 || notes[0].Text != "First light." {
+		t.Fatalf("want only the first left, got %#v", notes)
+	}
+	out, err = DeleteNote(out, 0, "19:32")
+	if err != nil {
+		t.Fatalf("deleting the only note: %s", err)
+	}
+	if notes := ParseNotes(out); len(notes) != 0 {
+		t.Fatalf("want no notes left, got %#v", notes)
+	}
+	// An empty notes section is still a notes section: the next note has
+	// somewhere to go.
+	if !strings.Contains(out, "* Notes") {
+		t.Fatalf("the notes heading should stay:\n%s", out)
+	}
+}
+
+func TestDeleteNoteRefusesWhatItCannotBeSureOf(t *testing.T) {
+	out := AppendNotes(emptySession, []SessionNote{
+		{Time: "19:32", Text: "First light."},
+		{Time: "19:45", Text: "Last light."},
+	})
+	if _, err := DeleteNote(out, 5, ""); err == nil {
+		t.Fatal("there is no sixth note to delete")
+	}
+	// Deleting shifts every note after it up by one, so a page holding a
+	// stale number would otherwise throw away the wrong note.
+	if _, err := DeleteNote(out, 0, "19:45"); err == nil {
+		t.Fatal("a stale delete should be refused")
+	}
+	if _, err := DeleteNote("#+TITLE: Bare\n", 0, ""); err == nil {
+		t.Fatal("there are no notes here to delete")
+	}
+	// A refusal leaves the file exactly as it was.
+	if notes := ParseNotes(out); len(notes) != 2 {
+		t.Fatalf("a refused delete moved something: %#v", notes)
+	}
+}
+
+func TestSessionCharacterLinksBackToTheSheet(t *testing.T) {
+	out := AddSessionCharacter(emptySession, SessionCharacter{
+		Id: "lyra-silverleaf-4c1f2a", Name: "Lyra", File: "/gtd/dnd/lyra.org"})
+	if !strings.Contains(out, "[[file:/gtd/dnd/lyra.org][Lyra]]") {
+		t.Fatalf("no link back to the character sheet:\n%s", out)
+	}
+	cast := ParseSessionCharacters(out)
+	if len(cast) != 1 || cast[0].File != "/gtd/dnd/lyra.org" {
+		t.Fatalf("the link did not survive the round trip: %#v", cast)
+	}
+	if cast[0].Id != "lyra-silverleaf-4c1f2a" || cast[0].Name != "Lyra" {
+		t.Fatalf("the link cost us the rest of the entry: %#v", cast)
+	}
+	// Listing the same character again changes nothing.
+	again := AddSessionCharacter(out, SessionCharacter{
+		Id: "lyra-silverleaf-4c1f2a", Name: "Lyra", File: "/gtd/dnd/lyra.org"})
+	if again != out {
+		t.Fatalf("a character was listed twice:\n%s", again)
+	}
+}
+
+func TestSessionCharacterGetsALinkItWasWrittenWithout(t *testing.T) {
+	// A session from before the sheet knew where the character lived.
+	out := AddSessionCharacter(emptySession, SessionCharacter{
+		Id: "lyra-silverleaf-4c1f2a", Name: "Lyra"})
+	if strings.Contains(out, "[[file:") {
+		t.Fatalf("there was no file to link to:\n%s", out)
+	}
+	out = AddSessionCharacter(out, SessionCharacter{
+		Id: "lyra-silverleaf-4c1f2a", Name: "Lyra", File: "/gtd/dnd/lyra.org"})
+	cast := ParseSessionCharacters(out)
+	if len(cast) != 1 {
+		t.Fatalf("topping up the link listed the character twice: %#v", cast)
+	}
+	if cast[0].File != "/gtd/dnd/lyra.org" {
+		t.Fatalf("the link was not added: %#v\n%s", cast, out)
+	}
+	// The second character in a file gets their own link, and the first one
+	// keeps theirs.
+	out = AddSessionCharacter(out, SessionCharacter{
+		Id: "durnan-7b21", Name: "Durnan", File: "/gtd/dnd/durnan.org"})
+	cast = ParseSessionCharacters(out)
+	if len(cast) != 2 || cast[0].File != "/gtd/dnd/lyra.org" ||
+		cast[1].File != "/gtd/dnd/durnan.org" {
+		t.Fatalf("two characters, two links: %#v\n%s", cast, out)
+	}
+}
+
+// The sheet rolls two d20 and shows all three readings of them; settling on
+// one afterwards must rewrite the row it already wrote rather than add a
+// second roll, and must leave the rolls either side of it alone.
+func TestUpdateRollSettlesOneRowInPlace(t *testing.T) {
+	out := AppendRolls(emptySession, []SessionRoll{
+		{Time: "19:33", Character: "Lyra", Label: "Perception", Formula: "d20 +5",
+			Result: "18", Dice: "d20 13, d20 17", Notes: "adv 22, dis 18"},
+		{Time: "19:40", Character: "Lyra", Label: "Stealth", Formula: "d20 +7",
+			Result: "12", Dice: "d20 5, d20 9", Notes: "adv 16, dis 12"},
+	})
+	out, err := UpdateRoll(out, 0, SessionRoll{Result: "22",
+		Notes: "advantage chosen; normal 18, adv 22, dis 18"}, "Perception")
+	if err != nil {
+		t.Fatalf("settling the roll was refused: %s", err)
+	}
+	rolls := ParseRolls(out)
+	if len(rolls) != 2 {
+		t.Fatalf("the edit changed how many rolls there are: %#v", rolls)
+	}
+	if rolls[0].Result != "22" || !strings.Contains(rolls[0].Notes, "advantage chosen") {
+		t.Fatalf("the roll was not settled: %#v", rolls[0])
+	}
+	// Cells the edit said nothing about keep what the row was written with.
+	if rolls[0].Time != "19:33" || rolls[0].Character != "Lyra" ||
+		rolls[0].Label != "Perception" || rolls[0].Formula != "d20 +5" {
+		t.Fatalf("the edit lost part of the row: %#v", rolls[0])
+	}
+	if rolls[1].Result != "12" || rolls[1].Label != "Stealth" {
+		t.Fatalf("the roll after it was disturbed: %#v", rolls[1])
+	}
+	if strings.Count(out, "#+NAME: rolls") != 1 {
+		t.Fatalf("the table was duplicated:\n%s", out)
+	}
+}
+
+func TestUpdateRollRefusesWhatItCannotBeSureOf(t *testing.T) {
+	out := AppendRolls(emptySession, []SessionRoll{
+		{Time: "19:33", Character: "Lyra", Label: "Perception", Result: "18"},
+	})
+	if _, err := UpdateRoll(out, 1, SessionRoll{Result: "22"}, ""); err == nil {
+		t.Fatalf("a roll that is not there was edited anyway")
+	}
+	if _, err := UpdateRoll(out, 0, SessionRoll{Result: "22"}, "Stealth"); err == nil {
+		t.Fatalf("a stale edit was written over the wrong roll")
+	}
+	if _, err := UpdateRoll(emptySession, 0, SessionRoll{Result: "22"}, ""); err == nil {
+		t.Fatalf("a session with no rolls accepted an edit")
+	}
+}

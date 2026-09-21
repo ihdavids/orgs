@@ -59,6 +59,15 @@ func (self *Dnd) runImport(core *commands.Core) {
 		Overwrite: self.Force,
 		Preview:   self.Preview,
 		Player:    self.Player,
+		// A backdrop given to the import is written into the sheet, so the
+		// character keeps its scenery without the org file being edited by
+		// hand afterwards.
+		Backdrop:        self.backdropArg(),
+		BackdropCycle:   self.BackdropCycle,
+		BackdropOpacity: dnd.ParseOpacity(self.BackdropWash),
+	}
+	if self.BackdropWash == "" {
+		req.BackdropOpacity = 0
 	}
 	// A refusal comes back either as a transport error or as a body that says
 	// it did not work, depending on how far the request got, so both are

@@ -85,12 +85,16 @@ const (
 	PropSlotsUsed  = "DND_SLOTS_USED"
 	PropUsesSpent  = "DND_USES_SPENT"
 	PropConditions = "DND_CONDITIONS"
+	PropConcentr   = "DND_CONCENTRATION"
 	PropResist     = "DND_RESISTANCES"
 	PropImmune     = "DND_IMMUNITIES"
 	PropVulnerable = "DND_VULNERABILITIES"
 	PropImage      = "DND_IMAGE"
 	PropImageFocus = "DND_IMAGE_FOCUS"
 	PropImageZoom  = "DND_IMAGE_ZOOM"
+	PropBackdrop   = "DND_BACKDROP"
+	PropBackCycle  = "DND_BACKDROP_CYCLE"
+	PropBackWash   = "DND_BACKDROP_OPACITY"
 )
 
 // RenderOrg writes a complete org mode character sheet.
@@ -157,6 +161,7 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{PropSlotsUsed, encodeInts(c.SlotsUsed)},
 		[2]string{PropUsesSpent, encodeUses(c.UsesSpent)},
 		[2]string{PropConditions, encodeConditions(c.Conditions)},
+		[2]string{PropConcentr, ConcentrationProp(c.Concentration)},
 		[2]string{PropResist, joinList(c.Resistances)},
 		[2]string{PropImmune, joinList(c.Immunities)},
 		[2]string{PropVulnerable, joinList(c.Vulnerabilities)},
@@ -174,6 +179,9 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{PropImage, c.Image},
 		[2]string{PropImageFocus, c.ImageFocus},
 		[2]string{PropImageZoom, FormatZoom(c.ImageZoom)},
+		[2]string{PropBackdrop, c.Backdrop},
+		[2]string{PropBackCycle, c.BackdropCycle},
+		[2]string{PropBackWash, FormatOpacity(c.BackdropOpacity)},
 	)
 	width := 0
 	for _, p := range props {
@@ -309,11 +317,13 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	// hand stays corrected.
 	if len(c.MoneyLog) > 0 {
 		w("** %s\n", CoinHistoryHeading)
-		w("What has been spent and earned, newest last.\n")
-		rows = [][]string{{"Date", "Time", "Action", "Amount", "Change", "Balance", "Notes"}}
+		w("What has been spent and earned, newest last. Was is what the purse\n")
+		w("held before the line.\n")
+		rows = [][]string{{"Date", "Time", "Action", "Amount", "Change", "Was",
+			"Balance", "Notes"}}
 		for _, e := range c.MoneyLog {
 			rows = append(rows, []string{e.Date, e.Time, e.Action, e.Amount.String(),
-				moneyCell(e.Change), e.Balance.String(), e.Notes})
+				moneyCell(e.Change), e.Before.String(), e.Balance.String(), e.Notes})
 		}
 		w("%s\n\n", orgTable(rows, 1))
 	}
@@ -343,15 +353,31 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 	// read back off the sheet afterwards.
 	if len(c.HealthLog) > 0 {
 		w("** %s\n", HealthHistoryHeading)
-		w("Damage taken and healing received, newest last.\n")
-		rows = [][]string{{"Date", "Time", "Action", "Amount", "Soaked", "HP", "Temp", "Notes"}}
+		w("Damage taken and healing received, newest last. Was is where the hit\n")
+		w("points and temporary hit points stood before the line.\n")
+		rows = [][]string{{"Date", "Time", "Action", "Type", "Amount", "Soaked", "Was",
+			"HP", "Temp", "Saves", "Notes"}}
 		for _, e := range c.HealthLog {
 			soaked := ""
 			if e.Absorbed > 0 {
 				soaked = itoa(e.Absorbed)
 			}
-			rows = append(rows, []string{e.Date, e.Time, e.Action, itoa(e.Amount), soaked,
-				fmt.Sprintf("%d/%d", e.HPAfter, e.HPMax), itoa(e.TempAfter), e.Notes})
+			// Where the character stood before the line, which is the one
+			// thing the numbers after it cannot be worked back to: a blow that
+			// took somebody to nought hit points says nothing about how many
+			// they had. It is what undo puts back - see undo.go - so it has to
+			// survive being written out and read in again.
+			// What kind of damage it was, and what the character's own
+			// defenses did about it - "fire" plainly, "fire resisted 12"
+			// when half of it never landed.
+			kind := e.Type
+			if kind != "" && e.Defense != "" && e.Raw > 0 {
+				kind += " " + e.Defense + " " + itoa(e.Raw)
+			}
+			rows = append(rows, []string{e.Date, e.Time, e.Action, kind, itoa(e.Amount), soaked,
+				fmt.Sprintf("%d/%d", e.HPBefore, e.TempBefore),
+				fmt.Sprintf("%d/%d", e.HPAfter, e.HPMax), itoa(e.TempAfter),
+				e.DeathSaves, e.Notes})
 		}
 		w("%s\n\n", orgTable(rows, 1))
 	}
@@ -807,6 +833,14 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 		e.Amount, _ = ParseMoney(ccell(row, "amount"))
 		e.Change, _ = ParseMoney(ccell(row, "change"))
 		e.Balance, _ = ParseMoney(ccell(row, "balance"))
+		// Was is the purse before the line. A sheet written before the column
+		// existed has none, which only makes that line one undo will not take
+		// back - see undo.go.
+		if was := ccell(row, "was"); was != "" {
+			if before, err := ParseMoney(was); err == nil {
+				e.Before, e.hasBefore = before, true
+			}
+		}
 		c.MoneyLog = append(c.MoneyLog, e)
 	}
 
@@ -834,7 +868,18 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 		e := HealthEvent{
 			Date: cell("date"), Time: cell("time"), Action: cell("action"),
 			Amount: atoi(cell("amount")), Absorbed: atoi(cell("soaked")),
-			TempAfter: atoi(cell("temp")), Notes: cell("notes"),
+			TempAfter: atoi(cell("temp")), DeathSaves: cell("saves"),
+			Notes:     cell("notes"),
+		}
+		// The Type column is "fire", or "fire resistance 12" where a defense
+		// halved or doubled it. Read back in the same three pieces.
+		if kind := cell("type"); kind != "" {
+			bits := strings.Fields(kind)
+			e.Type = bits[0]
+			if len(bits) >= 3 {
+				e.Defense = bits[1]
+				e.Raw = atoi(bits[2])
+			}
 		}
 		if e.Action == "" {
 			continue
@@ -846,6 +891,17 @@ func ParseOrg(text string, rs *Ruleset) (*Character, error) {
 			if len(parts) == 2 {
 				e.HPMax = atoi(parts[1])
 			}
+		}
+		// Was is the same pair for before the line, "18/5". A sheet written
+		// before the column existed simply has no before to read, which leaves
+		// the line readable and only makes it one that undo will not take back.
+		if was := cell("was"); was != "" {
+			parts := strings.SplitN(was, "/", 2)
+			e.HPBefore = atoi(parts[0])
+			if len(parts) == 2 {
+				e.TempBefore = atoi(parts[1])
+			}
+			e.hasBefore = true
 		}
 		c.HealthLog = append(c.HealthLog, e)
 	}
@@ -998,6 +1054,8 @@ func applyProperty(c *Character, key, val string) {
 		c.SlotsUsed = decodeInts(val)
 	case PropConditions:
 		c.Conditions = decodeConditions(val)
+	case PropConcentr:
+		c.Concentration = ParseConcentration(val)
 	case PropResist:
 		c.Resistances = splitList(val)
 	case PropImmune:
@@ -1034,6 +1092,12 @@ func applyProperty(c *Character, key, val string) {
 		c.ImageFocus = val
 	case PropImageZoom:
 		c.ImageZoom = ParseZoom(val)
+	case PropBackdrop:
+		c.Backdrop = val
+	case PropBackCycle:
+		c.BackdropCycle = val
+	case PropBackWash:
+		c.BackdropOpacity = ParseOpacity(val)
 	}
 }
 

@@ -436,6 +436,9 @@ func ApplyRest(c *Character, rs *Ruleset, req RestRequest) (*RestResult, error) 
 		c.HPCurrent = before.HPMax
 		c.HPTemp = 0
 		c.DeathSaves = ""
+		// A night's sleep ends any spell still being held: nobody
+		// concentrates through a long rest.
+		c.Concentration = nil
 		res.HPAfter = before.HPMax
 		res.Healed = before.HPMax - before.HPCurrent
 		// Half the total pool, rounded down, and never fewer than one.
