@@ -13,6 +13,37 @@ import (
 
 const KBAD_SALT = "THIS IS A DEFAULT SALT DO NOT USE THIS! SET YOUR OWN"
 
+// VoiceSettings is what a voice note needs: where the transcription service
+// is, what it should transcribe with, and where the recording and the heading
+// it becomes are put.
+//
+// Orgs transcribes nothing itself. It hands the recording to a go-whisper
+// server over its own http api and files what comes back, which is what keeps
+// the model, the hardware it runs on and the org side of this independent of
+// one another.
+type VoiceSettings struct {
+	// Where go-whisper is listening. Its api lives under /api/whisper there.
+	Url string `yaml:"url"`
+	// The model id to transcribe with. Empty means ask the server for its
+	// models and take the first - right for a machine with one installed.
+	Model string `yaml:"model"`
+	// A two letter language code, or empty to let whisper work it out.
+	Language string `yaml:"language"`
+	// Where recordings are kept, relative to the first orgDir, so that a
+	// note's audio sits in the org database beside the heading linking to it.
+	Dir string `yaml:"dir"`
+	// Seconds to wait for a transcription. A long take on a large model is
+	// minutes, so this is not the usual http timeout.
+	Timeout int `yaml:"timeout"`
+	// The largest single recording that will be accepted, in megabytes.
+	MaxMb int `yaml:"maxMb"`
+	// Tags put on every voice note heading.
+	Tags []string `yaml:"tags"`
+	// Where a voice note is filed when the client does not say. Same shape as
+	// a capture template's target.
+	Target Target `yaml:"target"`
+}
+
 type ServerSettings struct {
 	/* SDOC: Settings
 	* Orgs Keys
@@ -160,6 +191,46 @@ type ServerSettings struct {
 	// refile targets
 	RefileTargets []string `yaml:"refileTargets"`
 	/* SDOC: Settings
+	* Voice Notes
+		Recording and transcription. Orgs does not transcribe anything itself -
+		it hands the recording to a [[https://github.com/mutablelogic/go-whisper][go-whisper]]
+		server and files what comes back as an org heading.
+
+		#+BEGIN_SRC yaml
+	  voice:
+	    url: "http://localhost:8081"
+	    model: "ggml-medium-q5_0"
+	    language: "en"
+	    dir: "audio"
+	    timeout: 600
+	    maxMb: 64
+	    tags:
+	      - "voice"
+	    target:
+	      type: "file+headline"
+	      filename: "inbox.org"
+	      id: "Voice Notes"
+		#+END_SRC
+
+		=url= is where the go-whisper server is listening; everything under
+		=/api/whisper= on it is reached from there. =model= is the model id it
+		should transcribe with - when it is empty orgs asks the server what it
+		has and uses the first, which is right for a machine with one model
+		installed and wrong as soon as there are two. =language= is a two letter
+		code, and left empty whisper detects it.
+
+		=dir= is where recordings are kept, relative to your first orgDir, so
+		that a note's audio sits in the org database beside the heading that
+		links to it. =timeout= is how long to wait for a transcription - a long
+		take on a large model is minutes, not seconds - and =maxMb= caps the
+		size of a single recording.
+
+		=target= is where a voice note is filed when the client does not say,
+		and takes the same shape as a capture template's target. =tags= are put
+		on every voice note heading.
+		EDOC */
+	Voice VoiceSettings `yaml:"voice"`
+	/* SDOC: Settings
 	* Default Author
 		Default author parameter to use when generating new templates
 		#+BEGIN_SRC yaml
@@ -245,4 +316,13 @@ func (self *ServerSettings) Init() {
 	self.CaptureTemplates = []CaptureTemplate{}
 	self.AccessControl = "null"
 	self.RefileTargets = []string{".*\\.org"}
+	self.Voice = VoiceSettings{
+		Url:      "http://localhost:8081",
+		Model:    "",
+		Language: "",
+		Dir:      "audio",
+		Timeout:  600,
+		MaxMb:    64,
+		Tags:     []string{"voice"},
+	}
 }

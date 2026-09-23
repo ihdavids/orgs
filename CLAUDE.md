@@ -15,6 +15,8 @@ Go module: `github.com/ihdavids/orgs` (Go 1.23+, toolchain 1.24.2). There is no 
 
 ## Build and run
 
+Flags for a subcommand go *after* it (`./orgs serve -port 8010`), not before it - a flag ahead of the subcommand is consumed by the global parse and the command list is printed instead. And note that the HTTP listener runs in a goroutine while the HTTPS one blocks: with `allowHttps: false` the process falls straight through both and exits, so a throwaway server on another port still needs `allowHttps: true` and a cert to stay up.
+
 ```sh
 # Build everything (binaries land in the current directory or GOBIN):
 go build ./...
@@ -104,6 +106,32 @@ Server plugins implement one of the interfaces in `internal/common/plugs.go` (`E
 
 The `PluginManager` passed to plugins carries the shared templates, filter map, tag groups, org directories, and a cached password helper that can read from the OS keyring.
 
+### Voice notes and go-whisper
+
+`internal/app/orgs/voice.go` records nothing and transcribes nothing. A client records, the server keeps the audio, and transcription is a request to a [go-whisper](https://github.com/mutablelogic/go-whisper) server over its own http api (`/api/whisper/model`, `/api/whisper/transcribe`) — which is what keeps the model, and the hardware it wants, out of this program. Settings live under `voice:` in the server config (`url`, `model`, `language`, `dir`, `timeout`, `maxMb`, `tags`, `target`); `orgs.yaml`'s `voice.dir` is relative to the first orgDir so a note's audio sits in the org database beside the heading that links to it.
+
+Run the service alongside orgs:
+
+```sh
+gowhisper run --http.addr localhost:8081 --models /path/to/models --whisper.gpu
+```
+
+Five things to keep in mind when changing it:
+
+1. **The recording is saved before anything is attempted on it, and the transcript goes back to the client before anything is written.** A transcription fails in a dozen ways — whisper down, a model still loading, a take past the timeout — and none of them should cost the words that were said. `POST /voice/note` writes the *text it was sent*, never a fresh transcription, because what lands in the file has to be what was on screen.
+2. **Nothing is converted.** go-whisper decodes through ffmpeg, so a browser's webm/opus, a phone's m4a and a recorder's wav all go straight through; the extension follows the recording and the `filename` field tells whisper what container it is looking at.
+3. **`/api/whisper/model` answers with a bare JSON array**, whatever the api doc says about an object with a `models` field. `whisperModels` reads both, because guessing wrong is silent: an empty model list is indistinguishable from a server with nothing installed.
+4. The heading is built as **lines of text and spliced in** (`voiceNoteLines` + `insertLinesAt`), not written through go-org. Writing it through the document would rewrite the whole target file — every drawer re-indented, every table reflowed — to add one heading to the end of it.
+5. A recording id **is its own filename** (`voiceIdRe`), so there is no index beside the folder to fall out of step with it, and a path that is not exactly that shape is refused rather than joined.
+
+### Per-user extensions
+
+`internal/app/orgs/extensions.go` is a small per-user store written beside the main config (`orgs.yaml` → `orgs_extensions.yaml`), holding the things a user accumulates rather than configures: stored queries, their own capture templates, and kanban boards. Every handler reads the username off the auth token, so there is no user parameter anywhere in the API.
+
+Two things about the kanban board endpoints are worth knowing before changing them. A `KanbanBoard` deliberately holds **no cards** - it names a query and says how to draw whatever that finds, so it can never be stale and deleting one touches no heading. And `POST /ext/kanban/boards` replaces the whole list in one write, because renaming a board and reordering the tabs both change a list rather than one entry: done as a delete plus an add, a lost second call would leave the boards half written.
+
+The board that made it necessary is worg's Kanban tab, which writes a heading's property when a card is dropped in a column. That exposed a nil dereference in `SetProperty` (`todo.go`): a heading with no `:PROPERTIES:` drawer has `Headline.Properties == nil`, and the old `if props == nil` check could never fire, having taken the address of a field first. It now creates the drawer, which the org writer prints directly under the headline - so anything setting a property from outside the editor works on a heading that has never had one.
+
 ### Backlinks and the link graph
 
 `internal/app/orgs/links.go` walks every `[[target][description]]` link out of every parsed file, resolves it against the database, and indexes it from both ends. It serves `/links` (backlinks for one file), `/links/graph` (the graph around a file, or the whole database, at file or heading granularity) and `/links/stats` (per-file counts). Wire types are in `internal/common/links.go`; the worg client is `components/Files.tsx` plus the plain-svg force layout in `components/LinkGraph.tsx`.
@@ -158,6 +186,10 @@ A few rules to keep in mind when changing it:
 22. Notes keep the line breaks they were typed with. Org runs consecutive prose into one paragraph, so `orgBreakLines` in `sessionlog.go` writes org's hard break (`\\`) wherever two lines would otherwise be flowed together, and `orgStripBreaks` takes it off again on the way back - only where the writer would have added one, so the round trip is exact. The html sheet's own `orgToHtml` keeps them too; change one and change both or the sheet and the export disagree about what the note looks like.
 23. Every pane of the session drawer scrolls on its own (`.nd-view { overflow-y: auto }`), because the drawer is a fixed height and a night's timeline or a fight with nine combatants in it runs well past the bottom of it. The notes pane is the exception - it is a two-column split whose halves scroll themselves, and a pane scrollbar on top of those would be two bars doing different things. The **Timeline** and **Combat** tabs are both worked out rather than stored. The timeline reads a session's two logs back and finds the shape of the evening in them - rolls closer together than `TL_GAP` minutes and at least `TL_LEAST` of them are one Combat block, notes written inside one hang off it, and `TL_SCENE` minutes of quiet is a scene break - so a session edited anywhere else is right the next time it is opened, and nothing is written back. The combat tracker is the one part of the sheet that is about the table rather than the character: initiative, rounds, turns, hit points for whatever the party walked into, and two kinds of countdown - an effect on a combatant, which ticks at the start of *their* turn (where the rules put "until the end of your next turn"), and a clock on the table, which ticks at the top of each round. It lives in `localStorage` and talks to no endpoint, because six goblins have no business in a character's org file once the fight is over.
 24. Concentration is stored, not derived (`DND_CONCENTRATION`), the same way the conditions are. `/dnd/hp` works out the DC a blow calls for — 10 or half the damage, counting what temporary hit points soaked up — and hands it back on the answer as `save`; the roll is the sheet's and comes back to `/dnd/concentration`. Going to zero hit points ends it with no save at all, and so does a long rest.
+25. The timeline's **annotations** are the one thing in it that is stored (`sessionmark.go`, a `* Timeline` section of the session file). Everything else about a block is worked out from the logs each time, so nothing about the block may be written down beside the annotation - not how many rolls it held, not how long it ran - or it goes stale the moment a roll is corrected. The anchor is a **time and a kind together**, and the kind is part of it rather than a hint: a name written about the fight at 19:32 must not silently reattach itself to a note taken at the same minute. A mark that finds no block is drawn as a beat of its own rather than dropped, which is both how a name survives the block it named being deleted and how a moment nobody rolled for gets onto the timeline at all - that is what the toolbar's *Annotate* writes, with kind `moment`, which no block ever has.
+26. Deleting a timeline **block** is one call (`POST /dnd/play/session/{id}/delete`) carrying every roll and note it is made of, not one call per line. That is what makes it one write, one journal entry and **one press of undo**; a refusal anywhere refuses the lot, because half a fight deleted is worse than none of it. `DeleteEntries` removes back to front so the shifting never reaches an index it has not used yet.
+27. The timeline has its **own** undo (`/dnd/play/session/{id}/undo`), which is the journal narrowed to one file (`dndLastChangeTo`). The character sheet's Undo button takes back the last thing that happened anywhere; a drawer showing one evening must offer the last thing that happened to *that evening*, or deleting a block and then rolling a die leaves the timeline offering to un-roll the die. Only the newest entry for a file is ever offered, which is what makes taking one out of the middle of the journal safe.
+28. Folding and the timeline's search box are the page's own and are written nowhere - they are about reading the evening, not about what happened in it. One card folds and opens by **its dot on the spine** (`tlDot`), not by a chevron among the tools: the dot is already the mark the eye runs down looking for a place in the evening, and the tools on the right are the two that change the session file - name this, throw this away - so a third button among them that only changed what you could see read as one of those. Two things there are easy to get wrong: *fold all* clears the per-card overrides, because a card left open an hour ago quietly staying open is not what the button says; and the search matches on **everything a card holds** (`tlHay`), not on what it is currently showing, or folding the timeline would hide the very spell somebody folded it to go looking for.
 
 ### Documentation extraction (SDOC / EDOC)
 

@@ -63,6 +63,10 @@ type Todo struct {
 	Date        *org.OrgDate
 	Deadline    *org.OrgDate
 	Status      string
+	// The single letter out of a [#A] cookie, empty when the heading has none.
+	// go-org takes it off the headline text, so this is the only place a client
+	// that has only searched can see it.
+	Priority    string
 	Filename    string
 	LineNum     int
 	IsActive    bool

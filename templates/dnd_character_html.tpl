@@ -1830,7 +1830,20 @@ footer.sheet-foot {
   position: relative; z-index: 1; width: 22px; height: 22px; margin-top: 2px;
   border-radius: 50%; display: grid; place-items: center;
   background: #221f1a; box-shadow: 0 0 0 2px rgba(184,134,11,.4);
+  /* It is a button on every card that can be folded, so it must not inherit
+     the form control a browser would otherwise draw round it. */
+  border: 0; padding: 0; font: inherit; cursor: pointer;
+  transition: transform .12s ease, filter .12s ease;
 }
+button.tl-dot:hover { transform: scale(1.18); filter: brightness(1.25); }
+button.tl-dot:active { transform: scale(1.02); }
+button.tl-dot:focus-visible {
+  outline: none; box-shadow: 0 0 0 2px rgba(240,212,122,.9), 0 0 10px rgba(240,212,122,.5);
+}
+/* A folded card's dot says so, quietly: the ring closes up into a filled
+   disc, which reads as "there is more in here" without a chevron. */
+.tl-row.fold > .tl-dot { background: rgba(184,134,11,.26); }
+.tl-row.fold > .tl-dot svg { opacity: .85; }
 .tl-dot svg { width: 12px; height: 12px; fill: #b8860b; }
 .tl-row.fight .tl-dot { box-shadow: 0 0 0 2px rgba(196,78,42,.7); }
 .tl-row.fight .tl-dot svg { fill: #e07a4e; }
@@ -1929,6 +1942,112 @@ footer.sheet-foot {
   grid-column: 3; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase;
   color: #6f6754;
 }
+
+/* --- the tools on a card, the fold, the search and the annotations ---
+   The tools sit in the head and stay out of the way until the card is under
+   the pointer: a timeline is for reading, and three buttons shouting on
+   every one of forty cards would be the loudest thing on the page. They do
+   not hide on a touch screen, where there is no pointer to come under. */
+/* The timeline's toolbar carries a session picker, a search box and four
+   controls, which is more than fits on a narrow drawer - so it is the one
+   toolbar that wraps rather than pushing its last control off the edge. */
+#view-timeline .nd-toolbar {
+  flex-wrap: wrap;
+  /* The dice and level tabs are fixed to the right edge and sit over the
+     drawer. A card's last inch there is margin and does not mind; the last
+     control of a toolbar does, so this one keeps clear of them. */
+  padding-right: 36px;
+}
+.tl-find { flex: 1 1 220px; min-width: 160px; }
+.tl-count {
+  font-size: .64rem; letter-spacing: .08em; text-transform: uppercase;
+  color: #8d8368; white-space: nowrap; min-width: 62px;
+}
+.tl-count.bad { color: #e0845e; }
+.tl-undo {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 7px 11px; margin-bottom: 10px; border-radius: 6px;
+  background: rgba(184,134,11,.08); border: 1px solid rgba(184,134,11,.3);
+  font-size: .72rem; color: #9d9078;
+}
+.tl-undo b { color: #d8caa8; font-weight: 600; }
+.tl-undo span { flex: 1; min-width: 0; }
+.tl-undo .bad { color: #e0845e; }
+.tl-head { position: relative; }
+.tl-head.bare { margin-bottom: 0; min-height: 0; }
+.tl-tools {
+  margin-left: auto; display: flex; align-items: center; gap: 2px;
+  opacity: 0; transition: opacity .12s ease;
+}
+.tl-head.bare .tl-tools { position: absolute; right: 0; top: -2px; }
+.tl-row:hover .tl-tools, .tl-row:focus-within .tl-tools { opacity: 1; }
+@media (hover: none) { .tl-tools { opacity: .55; } }
+.tl-tool {
+  background: none; border: 0; border-radius: 4px; cursor: pointer;
+  width: 22px; height: 20px; padding: 0; display: grid; place-items: center;
+  color: #8d8368; font: inherit; font-size: .84rem; line-height: 1;
+}
+.tl-tool svg { width: 11px; height: 11px; fill: currentColor; }
+.tl-tool:hover { background: rgba(184,134,11,.16); color: var(--accent-2); }
+.tl-tool.on { color: #c7b4e8; opacity: 1; }
+.tl-tool.bad:hover { background: rgba(196,78,42,.18); color: #e0845e; }
+.tl-row.fold .tl-card { padding: 6px 11px; }
+.tl-row.fold .tl-head { margin-bottom: 0; }
+.tl-brief {
+  font-size: .72rem; color: #8d8368; margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tl-row.fold .tl-head b { font-size: .7rem; }
+/* The searched-for words, picked out wherever the card says them in plain
+   text. Rendered org markup is left alone - highlighting inside it would
+   mean going at built html with a regex. */
+.tl-hit {
+  font-style: normal; color: #1d1a15; background: #f0d47a;
+  border-radius: 2px; padding: 0 1px;
+}
+.tl-row.here .tl-card {
+  border-color: rgba(240,212,122,.7);
+  box-shadow: 0 0 0 1px rgba(240,212,122,.4), 0 0 18px rgba(240,212,122,.14);
+}
+.tl-row.deleting .tl-card { border-color: rgba(196,78,42,.6); }
+.tl-mark {
+  font-size: .8rem; color: #d8caa8; margin: 0 0 8px;
+  padding-left: 9px; border-left: 2px solid rgba(199,180,232,.45);
+}
+.tl-row.mark .tl-dot { box-shadow: 0 0 0 2px rgba(199,180,232,.5); }
+.tl-row.mark .tl-dot svg { fill: #c7b4e8; }
+.tl-row.mark .tl-card { border-left-color: rgba(199,180,232,.55); }
+.tl-new { padding-bottom: 0; }
+.tl-new::before { display: none; }
+.tl-row.editing .tl-card { border-color: rgba(184,134,11,.55); }
+.tl-editor { display: flex; flex-direction: column; gap: 7px; }
+.tl-editor .nd-input { width: 100%; }
+.tl-editor .tl-mk-at { max-width: 84px; text-align: center; }
+.tl-editor textarea {
+  width: 100%; min-height: 72px; resize: vertical; padding: 7px 9px;
+  border-radius: 5px; background: rgba(0,0,0,.28);
+  border: 1px solid rgba(184,134,11,.28); color: #e8dcc0;
+  font: inherit; font-size: .8rem; line-height: 1.5;
+}
+.tl-editor textarea:focus {
+  outline: none; border-color: rgba(184,134,11,.65);
+}
+.tl-editor-foot { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.tl-editor-foot .nd-hint { flex: 1; min-width: 0; }
+/* .dc-roll stretches by default, which is right for a row of dice buttons
+   and wrong for one Save at the end of a form. */
+.tl-editor-foot .dc-roll { flex: 0 0 auto; padding: 8px 14px; }
+.tl-editor .nd-err:empty { display: none; }
+.tl-ask {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 9px; padding-top: 8px; font-size: .74rem; color: #e0a07e;
+  border-top: 1px dashed rgba(196,78,42,.35);
+}
+.tl-ask span { flex: 1; min-width: 160px; }
+.tl-ask .nd-err { flex-basis: 100%; }
+.tl-ask .nd-err:empty { display: none; }
+.dt-btn.bad { border-color: rgba(196,78,42,.5); color: #e0845e; }
+.dt-btn.bad:hover { background: rgba(196,78,42,.18); }
 
 /* -------------------------------------------------------- combat tracker */
 /* The tracker reads as a column, not as a stripe: a name and a number
@@ -13718,11 +13837,35 @@ them up.">Temp</button>
   // written while it was going on are hung inside it. Everything else is a
   // beat in its own right.
   //
-  // Nothing here is stored. The session file is unchanged, and the timeline
-  // is worked out again from it each time, so a session edited anywhere else
-  // is right the next time this is opened.
+  // Almost nothing here is stored. The session file is unchanged and the
+  // shape is worked out again from it each time, so a session edited anywhere
+  // else is right the next time this is opened. The one exception is an
+  // annotation - the name somebody gave a fight, the line about the room it
+  // happened in - which cannot be derived from anything and so is written
+  // into a "* Timeline" section of the session file; see sessionmark.go.
+  //
+  // Four things can be done to a block from here: name it, take the name off
+  // again, throw the whole block away - every roll and note it is made of, in
+  // one write, so one press of Undo puts all of it back - and fold it down to
+  // a line. The folding and the search box are the page's own and are written
+  // nowhere: they are about reading the evening, not about what happened in
+  // it.
   var TL = { id: '', list: null, detail: null, cache: {}, open: {},
-             everything: false, busy: false, error: '' };
+             everything: false, busy: false, error: '',
+             // folded holds the cards somebody has folded or unfolded by
+             // hand; foldAll is what the rest of them do. A card is only in
+             // folded once it has been argued with, so "collapse all" is not
+             // quietly undone by a card that was opened an hour ago.
+             folded: {}, foldAll: false,
+             // The search box, the cards it matched, and which of them the
+             // reader is standing on.
+             q: '', hits: [], at: -1,
+             // The annotation editor and the delete question, each holding
+             // the key of the card it is open on. '+' is the editor opened
+             // from the toolbar, for a moment that has no block of its own.
+             editing: '', draft: null, asking: '',
+             // What one press of Undo would take back in this session.
+             undo: null, shape: null };
 
   // A fight is rolls no further apart than this, and it takes at least this
   // many of them before a flurry counts as one.
@@ -13747,6 +13890,23 @@ them up.">Temp</button>
       it.abs = it.at + day;
       last = it.abs;
     });
+  }
+
+  // Where a clock time sits on the unwrapped scale. An annotation carries
+  // nothing but the time it was anchored on, so which side of midnight it
+  // belongs to has to be worked out from the entries around it: the day that
+  // puts it nearest to something that actually happened is the right one.
+  function tlAbsFor(hhmm, items) {
+    var m = tlMinutes(hhmm);
+    if (m === null) { return null; }
+    var best = null, far = null;
+    items.forEach(function (it) {
+      if (it.at === null) { return; }
+      var abs = m + (it.abs - it.at);
+      var d = Math.abs(abs - it.abs);
+      if (far === null || d < far) { far = d; best = abs; }
+    });
+    return best === null ? m : best;
   }
 
   // What a logged roll was. The session table keeps what was rolled rather
@@ -13863,8 +14023,45 @@ them up.">Temp</button>
     });
     dumpLoose();
 
+    tlHang(events, d.markLog || [], items);
     events.sort(function (a, b) { return a.abs - b.abs; });
     return { events: events, items: items };
+  }
+
+  // Hanging the annotations on the blocks they were written about.
+  //
+  // The anchor is a time and a kind, and the kind is part of it rather than a
+  // hint: an annotation written about the fight at 19:32 belongs to a fight,
+  // and should not silently reattach itself to a note that happens to have
+  // been taken at the same minute. So a mark lands on the block of its own
+  // kind that starts at its time, or failing that on the block of its own
+  // kind whose span it falls inside - a fight whose first roll has since been
+  // corrected starts a minute or two later than it did, and TL_GAP of slack
+  // is what keeps its name on it.
+  //
+  // Anything left over is not thrown away. It is drawn as a beat in its own
+  // right at the time it carries, which is both how an annotation survives
+  // the block it named being deleted and how a moment nobody rolled for - the
+  // room, the door, who was waiting behind it - gets onto the timeline at all.
+  function tlHang(events, marks, items) {
+    marks.forEach(function (mk) {
+      var abs = tlAbsFor(mk.time, items);
+      var kind = String(mk.kind || '');
+      var home = null;
+      events.forEach(function (ev) {
+        if (home || ev.mark || ev.kind !== kind) { return; }
+        if (ev.time === mk.time) { home = ev; }
+      });
+      events.forEach(function (ev) {
+        if (home || ev.mark || ev.kind !== kind || abs === null) { return; }
+        var until = ev.until === undefined ? ev.abs : ev.until;
+        if (abs >= ev.abs - TL_GAP && abs <= until) { home = ev; }
+      });
+      if (home) { home.mark = mk; return; }
+      events.push({ kind: 'mark', abs: abs === null ? 0 : abs,
+                    time: mk.time || '', mark: mk,
+                    key: 'm' + (mk.time || '') + '-' + kind });
+    });
   }
 
   // One fight, summed up.
@@ -13891,6 +14088,75 @@ them up.">Temp</button>
              checks: checks, spells: Object.keys(spells) };
   }
 
+  // ------------------------------------------------- what a block is made of
+  //
+  // A block on the timeline is not one line of the file. Throwing a fight
+  // away means throwing every roll in it away and the notes written during it
+  // with them, which is one call rather than a dozen - so that it is one act
+  // at the table, one write to the file, and one press of Undo.
+  function tlParts(ev) {
+    var rolls = [], notes = [];
+    var addRoll = function (it) {
+      rolls.push({ index: it.index, was: it.row.label || '' });
+    };
+    var addNote = function (it) {
+      notes.push({ index: it.index, was: it.time || '' });
+    };
+    if (ev.kind === 'fight') { ev.rolls.forEach(addRoll); ev.beats.forEach(addNote); }
+    else if (ev.kind === 'roll') { addRoll(ev.item); }
+    else if (ev.kind === 'rolls') { ev.items.forEach(addRoll); }
+    else if (ev.kind === 'note') { addNote(ev.note); }
+    return { rolls: rolls, notes: notes };
+  }
+
+  // The anchor an annotation on this card is written against. A mark keeps
+  // the anchor it was written with even when it has come to rest on a block
+  // that starts a minute earlier, so editing it rewrites the entry that is
+  // there rather than leaving the old one behind and adding a second.
+  function tlAnchor(ev) {
+    if (ev.mark) { return { time: ev.mark.time || '', kind: ev.mark.kind || '' }; }
+    return { time: ev.time || '', kind: ev.kind };
+  }
+
+  // What deleting this card would take with it, said plainly, because the
+  // question is worth answering before it is asked. A card that is one line
+  // of the file says nothing: "throw a note away - one note" is the same
+  // sentence twice, and the useful version of this is the one that says a
+  // fight is twenty rolls and three notes.
+  function tlWeight(ev) {
+    var p = tlParts(ev), bits = [];
+    if (p.rolls.length) {
+      bits.push(p.rolls.length + (p.rolls.length === 1 ? ' roll' : ' rolls'));
+    }
+    if (p.notes.length) {
+      bits.push(p.notes.length + (p.notes.length === 1 ? ' note' : ' notes'));
+    }
+    if (ev.mark && ev.kind !== 'mark') { bits.push('the name on it'); }
+    if (bits.length === 1 && p.rolls.length + p.notes.length === 1) { return ''; }
+    return tlList(bits);
+  }
+
+  function tlList(bits) {
+    if (bits.length < 2) { return bits[0] || ''; }
+    return bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1];
+  }
+
+  function tlWhatIs(ev) {
+    if (ev.kind === 'fight') { return 'a combat block'; }
+    if (ev.kind === 'note') { return 'a note'; }
+    if (ev.kind === 'mark') { return 'an annotation'; }
+    if (ev.kind === 'roll') { return 'a roll'; }
+    return ev.items.length + (ev.items.length === 1 ? ' roll' : ' rolls');
+  }
+
+  function tlFind(key) {
+    var found = null;
+    ((TL.shape && TL.shape.events) || []).forEach(function (ev) {
+      if (ev.key === key) { found = ev; }
+    });
+    return found;
+  }
+
   // ---------------------------------------------------------- drawing it
   var TL_ICON = {
     fight: '<svg viewBox="0 0 24 24"><path d="M3 3h3l12 12v3h-3L3 6z"/>' +
@@ -13898,7 +14164,9 @@ them up.">Temp</button>
     note: '<svg viewBox="0 0 24 24"><path d="M5 3h9l5 5v13H5zM13 3.8V9h5.2"/></svg>',
     roll: '<svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7zm0 2.4 6.4 3.6' +
       'L12 11.6 5.6 8z"/></svg>',
-    rolls: '<svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>'
+    rolls: '<svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></svg>',
+    mark: '<svg viewBox="0 0 24 24"><path d="M11 2h9v9l-9 9-9-9zM16 5.6a1.6 1.6 0 1 0 0 3.2' +
+      'a1.6 1.6 0 0 0 0-3.2z"/></svg>'
   };
 
   function tlWhen(mins) {
@@ -13930,10 +14198,13 @@ them up.">Temp</button>
   function loadTimeline(id, force) {
     TL.id = id || '';
     TL.error = '';
-    if (!TL.id) { TL.detail = null; renderTimeline(); return; }
+    TL.editing = TL.asking = '';
+    TL.draft = null;
+    if (!TL.id) { TL.detail = null; TL.undo = null; renderTimeline(); return; }
     if (!force && TL.cache[TL.id]) {
       TL.detail = TL.cache[TL.id];
       renderTimeline();
+      tlAskUndo();
       return;
     }
     TL.busy = true;
@@ -13944,11 +14215,186 @@ them up.">Temp</button>
       TL.cache[TL.id] = d;
       TL.detail = d;
       renderTimeline();
+      tlAskUndo();
     }, function (err) {
       TL.busy = false;
       TL.error = err.message || String(err);
       renderTimeline();
     });
+  }
+
+  // What one press of Undo would take back in this session. The character
+  // sheet's own Undo button takes back the last thing that happened anywhere;
+  // a drawer showing one evening offers the last thing that happened to that
+  // evening, so deleting a block and then rolling a die does not leave the
+  // timeline offering to un-roll the die.
+  function tlAskUndo() {
+    if (!TL.id) { TL.undo = null; return; }
+    var want = TL.id;
+    api('GET', '/dnd/play/session/' + encodeURIComponent(want) + '/undo')
+      .then(function (plan) {
+        if (TL.id !== want) { return; }
+        TL.undo = plan && plan.can ? plan : null;
+        tlDrawUndo();
+      }, function () { TL.undo = null; tlDrawUndo(); });
+  }
+
+  function tlDrawUndo() {
+    if (!drawer) { return; }
+    var bar = drawer.querySelector('#tl-undo');
+    if (!bar) { return; }
+    if (!TL.undo) { bar.innerHTML = ''; bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.innerHTML = '<span>Last change: <b>' + esc(TL.undo.what || '') + '</b>' +
+      (TL.undo.when ? ' &middot; ' + esc(TL.undo.when) : '') + '</span>' +
+      '<button type="button" class="dt-btn" data-tl-undo="1">Undo it</button>';
+  }
+
+  function tlUndo(btn) {
+    if (btn) { btn.disabled = true; }
+    api('POST', '/dnd/play/session/' + encodeURIComponent(TL.id) + '/undo', {})
+      .then(tlAdopt, function (e) {
+        var bar = drawer.querySelector('#tl-undo');
+        if (bar) {
+          bar.innerHTML = '<span class="bad">' + esc(e.message || String(e)) + '</span>';
+        }
+        TL.undo = null;
+      });
+  }
+
+  // One answer from the server, taken in everywhere it is shown. Every write
+  // here hands back the whole session rather than a receipt, so the timeline
+  // redraws from what the file now says instead of from what the page hoped
+  // it would say - which matters because deleting shifts every entry after it
+  // up by one and the page's numbering has to catch up with the file's.
+  function tlAdopt(d) {
+    if (!d || !d.id) { return; }
+    TL.cache[d.id] = d;
+    if (TL.id === d.id) { TL.detail = d; }
+    TL.editing = TL.asking = '';
+    TL.draft = null;
+    renderTimeline();
+    // The offer that was standing was about the change this one just
+    // replaced, so it goes before the new one is asked for rather than
+    // sitting there for a round trip saying the wrong thing.
+    TL.undo = null;
+    tlDrawUndo();
+    tlAskUndo();
+    if (LOG.session && LOG.session.id === d.id) {
+      LOG.session = d;
+      saveLog();
+      renderSession();
+      loadStream(d.id);
+    }
+    if (openDetail && openDetail.id === d.id) { openSession(d.id); }
+  }
+
+  // ------------------------------------------------------- folding and search
+  function tlFolded(key) {
+    if (TL.folded.hasOwnProperty(key)) { return TL.folded[key]; }
+    return TL.foldAll;
+  }
+
+  // Everything worth matching on in one string. A search that only looked at
+  // what is currently drawn would miss a spell inside a folded fight, which
+  // is the very thing somebody folding the timeline is trying to find again.
+  function tlHay(ev) {
+    if (ev.hay !== undefined) { return ev.hay; }
+    var s = [ev.time || '', tlName(ev)];
+    if (ev.mark) { s.push(ev.mark.title || '', ev.mark.note || ''); }
+    var roll = function (it) {
+      s.push(it.row.label || '', it.row.formula || '', it.row.notes || '',
+             it.row.character || '', String(it.row.result || ''));
+    };
+    if (ev.kind === 'fight') {
+      s.push('combat fight');
+      ev.rolls.forEach(roll);
+      ev.beats.forEach(function (b) { s.push(b.text || ''); });
+      s.push(ev.spells.join(' '));
+    } else if (ev.kind === 'note') {
+      s.push('note', ev.note.text || '');
+    } else if (ev.kind === 'mark') {
+      s.push('note moment annotation');
+    } else if (ev.kind === 'roll') {
+      s.push('roll'); roll(ev.item);
+    } else {
+      s.push('rolls'); ev.items.forEach(roll);
+    }
+    ev.hay = s.join(' \n ').toLowerCase();
+    return ev.hay;
+  }
+
+  // Every word has to be somewhere in the card. Two words find the fight that
+  // had a fireball in it; one word finds too much to be useful.
+  function tlTerms() {
+    return String(TL.q || '').toLowerCase().split(/\s+/).filter(Boolean);
+  }
+
+  function tlMatches(ev) {
+    var terms = tlTerms();
+    if (!terms.length) { return true; }
+    var hay = tlHay(ev);
+    for (var i = 0; i < terms.length; i++) {
+      if (hay.indexOf(terms[i]) < 0) { return false; }
+    }
+    return true;
+  }
+
+  // Escaped text with the searched-for words picked out of it. Only ever
+  // called on plain text the page is about to escape anyway - never on markup
+  // that has already been built, which would tear tags in half.
+  function tlLit(text) {
+    var terms = tlTerms();
+    var out = esc(String(text === undefined || text === null ? '' : text));
+    if (!terms.length) { return out; }
+    terms.forEach(function (t) {
+      var safe = esc(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!safe) { return; }
+      out = out.replace(new RegExp('(' + safe + ')', 'gi'), '<em class="tl-hit">$1</em>');
+    });
+    return out;
+  }
+
+  function tlScrollTo(el) {
+    var pane = drawer && drawer.querySelector('#view-timeline');
+    if (!pane || !el) { return; }
+    pane.scrollTop += el.getBoundingClientRect().top -
+      pane.getBoundingClientRect().top - 72;
+  }
+
+  // Stepping through what the search found, which is the whole point of the
+  // box: a session with two hundred rolls in it has three moments in it you
+  // are looking for.
+  function tlJump(by) {
+    if (!TL.hits.length) { return; }
+    TL.at = (TL.at + by + TL.hits.length) % TL.hits.length;
+    var body = drawer.querySelector('#tl-body');
+    if (!body) { return; }
+    body.querySelectorAll('.tl-row.here').forEach(function (el) {
+      el.classList.remove('here');
+    });
+    var row = body.querySelector('[data-tl-key="' + cssEsc(TL.hits[TL.at]) + '"]');
+    if (!row) { return; }
+    row.classList.add('here');
+    tlScrollTo(row);
+    tlCount();
+  }
+
+  // A key goes into a selector, and a key is built out of a clock time, so it
+  // can hold a colon. Attribute selectors want that quoted rather than
+  // escaped, and CSS.escape is not everywhere.
+  function cssEsc(v) {
+    return String(v).replace(/["\\]/g, '\\$&');
+  }
+
+  function tlCount() {
+    var el = drawer && drawer.querySelector('#tl-count');
+    if (!el) { return; }
+    if (!TL.q) { el.textContent = ''; return; }
+    if (!TL.hits.length) { el.textContent = 'nothing'; el.className = 'tl-count bad'; return; }
+    el.className = 'tl-count';
+    el.textContent = (TL.at >= 0 ? (TL.at + 1) + ' of ' : '') + TL.hits.length +
+      (TL.hits.length === 1 ? ' moment' : ' moments');
   }
 
   function renderTimeline() {
@@ -13965,58 +14411,113 @@ them up.">Temp</button>
           (sv.date ? ' · ' + esc(sv.date) : '') + '</option>';
       }).join('') || '<option value="">no sessions yet</option>';
     }
+    var fold = drawer.querySelector('#tl-fold');
+    if (fold) { fold.textContent = TL.foldAll ? 'Open all' : 'Fold all'; }
+
+    TL.hits = [];
     if (TL.error) {
       body.innerHTML = '<div class="nd-err">' + esc(TL.error) + '</div>';
+      tlCount();
       return;
     }
-    if (TL.busy) { body.innerHTML = '<div class="dt-empty">Reading the night back&hellip;</div>'; return; }
+    if (TL.busy) {
+      body.innerHTML = '<div class="dt-empty">Reading the night back&hellip;</div>';
+      tlCount();
+      return;
+    }
     if (!TL.detail) {
       body.innerHTML = '<div class="dt-empty">No session to show. Start one from ' +
         'the session panel and the evening will draw itself here.</div>';
+      tlCount();
       return;
     }
 
     var d = TL.detail;
     var shape = tlEvents(d);
+    TL.shape = shape;
+    var head = '<div class="tl-title"><b>' + esc(d.name || d.id) + '</b>' +
+      (d.summary ? '<span>' + esc(d.summary) + '</span>' : '') + '</div>';
+    var fresh = TL.editing === '+'
+      ? '<div class="tl tl-new">' + tlEditorCard() + '</div>' : '';
+
     if (!shape.events.length) {
-      body.innerHTML = '<div class="dt-empty">Nothing has happened yet tonight.</div>';
+      body.innerHTML = head + fresh + '<div class="dt-empty">Nothing has happened ' +
+        'yet tonight.</div>';
+      tlCount();
       return;
     }
 
-    var head = '<div class="tl-title"><b>' + esc(d.name || d.id) + '</b>' +
-      (d.summary ? '<span>' + esc(d.summary) + '</span>' : '') + '</div>';
-
-    var prev = null;
+    var prev = null, shown = 0;
     var out = shape.events.map(function (ev) {
+      if (!tlMatches(ev)) { return ''; }
+      TL.hits.push(ev.key);
       var gap = '';
-      if (prev !== null && ev.abs - prev >= TL_SCENE) {
+      // The "later" rule reads off what is actually on the page. While a
+      // search is filtering it, the quiet between two hits is not quiet at
+      // the table, so nothing is said about it.
+      if (!TL.q && prev !== null && ev.abs - prev >= TL_SCENE) {
         gap = '<div class="tl-gap"><span>' + tlWhen(ev.abs - prev) + ' later</span></div>';
       }
       prev = ev.kind === 'fight' ? ev.until : ev.abs;
+      shown++;
       return gap + tlCard(ev);
     }).join('');
 
-    body.innerHTML = head + '<div class="tl">' + out +
-      '<div class="tl-end"><span>' + shape.events.length + ' ' +
-      (shape.events.length === 1 ? 'moment' : 'moments') + '</span></div></div>';
+    if (TL.at >= TL.hits.length) { TL.at = -1; }
+    if (!shown) {
+      body.innerHTML = head + fresh + '<div class="dt-empty">Nothing in this session ' +
+        'matches &ldquo;' + esc(TL.q) + '&rdquo;.</div>';
+      tlCount();
+      return;
+    }
+    body.innerHTML = head + fresh + '<div class="tl">' + out +
+      '<div class="tl-end"><span>' + shown + ' ' +
+      (shown === 1 ? 'moment' : 'moments') +
+      (TL.q ? ' of ' + shape.events.length : '') + '</span></div></div>';
+    tlCount();
   }
 
-  function tlCard(ev) {
-    if (ev.kind === 'fight') { return tlFightCard(ev); }
-    if (ev.kind === 'note') { return tlNoteCard(ev); }
-    if (ev.kind === 'roll') { return tlRollCard(ev); }
-    return tlRollsCard(ev);
+  // ------------------------------------------------------------- the cards
+  //
+  // Every card is the same shell: the clock outside the spine, a dot on it,
+  // and a card hung off the right holding a head, a body and its tools. What
+  // changes between kinds is the body, and whether the card is folded down to
+  // a line.
+  function tlName(ev) {
+    if (ev.mark && ev.mark.title) { return ev.mark.title; }
+    if (ev.kind === 'fight') { return 'Combat'; }
+    if (ev.kind === 'note') { return 'Note'; }
+    if (ev.kind === 'mark') { return 'A moment'; }
+    if (ev.kind === 'roll') { return ev.item.row.label || 'A roll'; }
+    return ev.items.length + (ev.items.length === 1 ? ' roll' : ' rolls');
   }
 
-  function tlDot(kind, extra) {
-    return '<span class="tl-dot ' + kind + (extra || '') + '">' +
-      (TL_ICON[kind] || '') + '</span>';
+  function tlFlag(ev) {
+    if (ev.kind === 'fight') { return ev.crits ? ' hot' : ''; }
+    if (ev.kind === 'roll') { return ev.item.nat === 20 ? ' hot' : ' cold'; }
+    return '';
   }
 
-  function tlRow(kind, time, inner, extra) {
-    return '<div class="tl-row ' + kind + (extra || '') + '">' +
-      '<time>' + esc(time || '') + '</time>' + tlDot(kind, extra) +
-      '<div class="tl-card">' + inner + '</div></div>';
+  // The dot on the spine is the fold toggle.
+  //
+  // It is already the thing the eye runs down when it is looking for a place
+  // in the evening, and it is already the one mark on the card that says what
+  // kind of thing this is - so pressing it to open and close that thing needs
+  // no chevron explaining itself beside two buttons that do something else
+  // entirely. The tools on the right stay what they are: name this, throw
+  // this away.
+  //
+  // Handed no key - the annotation editor's card - it is drawn as the plain
+  // mark it was, because there is nothing there to fold.
+  function tlDot(kind, extra, key, folded) {
+    var icon = TL_ICON[kind] || '';
+    if (key === undefined) {
+      return '<span class="tl-dot ' + kind + (extra || '') + '">' + icon + '</span>';
+    }
+    return '<button type="button" class="tl-dot ' + kind + (extra || '') +
+      '" data-tl-fold="' + esc(key) + '" aria-expanded="' + (folded ? 'false' : 'true') +
+      '" title="' + (folded ? 'Open this one' : 'Fold this one down to a line') +
+      '" aria-label="' + (folded ? 'Open' : 'Fold') + '">' + icon + '</button>';
   }
 
   function tlChip(label, value, cls) {
@@ -14024,7 +14525,126 @@ them up.">Temp</button>
       '<b>' + esc(String(value)) + '</b> ' + esc(label) + '</span>';
   }
 
-  function tlFightCard(ev) {
+  function tlCard(ev) {
+    if (TL.editing === ev.key) { return tlEditorCard(ev); }
+    var folded = tlFolded(ev.key);
+    var inner = tlHeadOf(ev, folded) +
+      (folded ? tlBrief(ev) : tlMarkNote(ev) + tlBody(ev)) +
+      (TL.asking === ev.key ? tlAskCard(ev) : '');
+    return '<div class="tl-row ' + ev.kind + tlFlag(ev) +
+      (folded ? ' fold' : '') + (TL.asking === ev.key ? ' deleting' : '') +
+      '" data-tl-key="' + esc(ev.key) + '">' +
+      '<time>' + esc(ev.time || '') + '</time>' +
+      tlDot(ev.kind, tlFlag(ev), ev.key, folded) +
+      '<div class="tl-card">' + inner + '</div></div>';
+  }
+
+  // The head carries the card's name, when it has one worth showing, and
+  // always carries its tools. A plain note with no annotation on it had no
+  // heading before this and still does not get a word of furniture over one
+  // line of prose - only the tools, which fade until the card is under the
+  // pointer.
+  function tlHeadOf(ev, folded) {
+    var named = !!(ev.mark && ev.mark.title);
+    var bare = ev.kind === 'note' && !named && !folded;
+    var span = '';
+    if (ev.kind === 'fight') {
+      span = esc(ev.time) +
+        (ev.endTime && ev.endTime !== ev.time ? '&ndash;' + esc(ev.endTime) : '') +
+        (named ? ' &middot; combat' : '');
+    } else if (ev.kind === 'roll') {
+      span = ev.item.nat === 20 ? 'natural 20' : 'natural 1';
+    } else if (ev.kind === 'rolls' && !folded) {
+      var names = {};
+      ev.items.forEach(function (it) { names[it.row.label || 'a roll'] = 1; });
+      var list = Object.keys(names);
+      span = esc(list.slice(0, 4).join(', ')) + (list.length > 4 ? '…' : '');
+    } else if (ev.kind === 'mark') {
+      span = 'annotation';
+    }
+    return '<div class="tl-head' + (bare ? ' bare' : '') + '">' +
+      (bare ? '' : '<b>' + tlLit(tlName(ev)) + '</b>') +
+      (span && !bare ? '<span class="tl-span">' + span + '</span>' : '') +
+      tlTools(ev) + '</div>';
+  }
+
+  // Naming it and throwing it away. Folding is not here - that is the dot on
+  // the spine; see tlDot.
+  function tlTools(ev) {
+    var mark = ev.mark ? ' on' : '';
+    return '<span class="tl-tools">' +
+      '<button type="button" class="tl-tool' + mark + '" data-tl-mark="' +
+        esc(ev.key) + '" title="' + (ev.mark ? 'Rename this, or say more about it'
+          : 'Name this, and say what happened here') + '" aria-label="Annotate">' +
+        '<svg viewBox="0 0 24 24"><path d="M11 2h9v9l-9 9-9-9zM16 5.6a1.6 1.6 0 1 0 0 3.2' +
+        'a1.6 1.6 0 0 0 0-3.2z"/></svg></button>' +
+      '<button type="button" class="tl-tool bad" data-tl-del="' + esc(ev.key) + '" ' +
+        'title="Throw this off the timeline" aria-label="Delete">&times;</button>' +
+      '</span>';
+  }
+
+  // The annotation itself, which sits above whatever the block is made of:
+  // somebody wrote it about the whole block, and reading it first is how the
+  // rest of the card makes sense.
+  function tlMarkNote(ev) {
+    if (!ev.mark || !String(ev.mark.note || '').trim()) { return ''; }
+    return '<div class="tl-mark org-rich">' + orgToHtml(ev.mark.note) + '</div>';
+  }
+
+  // Folded: one line, and enough of it to know whether this is the moment you
+  // were looking for.
+  function tlGist(text) {
+    var s = String(text || '')
+      .replace(/^\s*[*]+\s+/gm, '')
+      .replace(/\\\\$/gm, '')
+      .replace(/[=~*\/_]/g, '')
+      .replace(/\[\[[^\]]*\]\[([^\]]*)\]\]/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return s.length > 120 ? s.slice(0, 118) + '…' : s;
+  }
+
+  function tlBrief(ev) {
+    var bits = [];
+    if (ev.kind === 'fight') {
+      bits.push(ev.rolls.length + (ev.rolls.length === 1 ? ' roll' : ' rolls'));
+      if (ev.damage) { bits.push(ev.damage + ' damage'); }
+      if (ev.crits) { bits.push(ev.crits + (ev.crits === 1 ? ' crit' : ' crits')); }
+      if (ev.fumbles) { bits.push(ev.fumbles + (ev.fumbles === 1 ? ' fumble' : ' fumbles')); }
+      if (ev.beats.length) {
+        bits.push(ev.beats.length + (ev.beats.length === 1 ? ' note' : ' notes'));
+      }
+      if (ev.mins) { bits.push(tlWhen(ev.mins)); }
+    } else if (ev.kind === 'note') {
+      bits.push(tlGist(ev.note.text));
+    } else if (ev.kind === 'mark') {
+      bits.push(tlGist(ev.mark.note) || 'nothing else written');
+    } else if (ev.kind === 'roll') {
+      bits.push(String(ev.item.row.result || '?') + ' on ' +
+        (ev.item.row.formula || 'a roll'));
+    } else if (ev.items.length === 1) {
+      bits.push((ev.items[0].row.label || 'a roll') + ' ' +
+        (ev.items[0].row.result || '?'));
+    } else {
+      var names = {};
+      ev.items.forEach(function (it) { names[it.row.label || 'a roll'] = 1; });
+      bits.push(Object.keys(names).slice(0, 4).join(', '));
+    }
+    if (ev.mark && ev.mark.note && ev.kind !== 'mark' && ev.kind !== 'note') {
+      bits.push(tlGist(ev.mark.note));
+    }
+    return '<div class="tl-brief">' + tlLit(bits.filter(Boolean).join(' · ')) + '</div>';
+  }
+
+  function tlBody(ev) {
+    if (ev.kind === 'fight') { return tlFightBody(ev); }
+    if (ev.kind === 'note') { return tlNoteBody(ev); }
+    if (ev.kind === 'roll') { return tlRollBody(ev); }
+    if (ev.kind === 'mark') { return ''; }
+    return tlRollsBody(ev);
+  }
+
+  function tlFightBody(ev) {
     var chips = tlChip(ev.rolls.length === 1 ? 'roll' : 'rolls', ev.rolls.length);
     if (ev.damage) { chips += tlChip('damage', ev.damage, 'hurt'); }
     if (ev.crits) { chips += tlChip(ev.crits === 1 ? 'crit' : 'crits', ev.crits, 'crit'); }
@@ -14037,7 +14657,7 @@ them up.">Temp</button>
       : '';
     var spells = ev.spells.length
       ? '<div class="tl-spells">' + ev.spells.slice(0, 8).map(function (nm) {
-          return '<span>' + esc(nm) + '</span>'; }).join('') +
+          return '<span>' + tlLit(nm) + '</span>'; }).join('') +
         (ev.spells.length > 8 ? '<span class="more">+' + (ev.spells.length - 8) +
           '</span>' : '') + '</div>'
       : '';
@@ -14051,69 +14671,276 @@ them up.">Temp</button>
     var detail = (open || TL.everything)
       ? '<div class="tl-blow">' + ev.rolls.map(tlLine).join('') + '</div>' : '';
 
-    return tlRow('fight', ev.time,
-      '<div class="tl-head"><b>Combat</b>' +
-        '<span class="tl-span">' + esc(ev.time) +
-          (ev.endTime && ev.endTime !== ev.time ? '&ndash;' + esc(ev.endTime) : '') +
-        '</span></div>' +
-      '<div class="tl-chips">' + chips + '</div>' + best + spells + beats +
+    return '<div class="tl-chips">' + chips + '</div>' + best + spells + beats +
       '<button type="button" class="tl-more" data-tl-open="' + esc(ev.key) + '">' +
         (open ? 'hide the rolls' : 'all ' + ev.rolls.length + ' rolls') + '</button>' +
-      detail,
-      ev.crits ? ' hot' : '');
+      detail;
   }
 
   function tlLine(it) {
     var nat = it.nat === 20 ? ' crit' : it.nat === 1 ? ' fumble' : '';
     return '<div class="tl-line' + nat + '"><time>' + esc(it.time) + '</time>' +
-      '<span class="nm">' + esc(it.row.label || '') + '</span>' +
-      '<span class="fm">' + esc(it.row.formula || '') + '</span>' +
+      '<span class="nm">' + tlLit(it.row.label || '') + '</span>' +
+      '<span class="fm">' + tlLit(it.row.formula || '') + '</span>' +
       '<b>' + esc(String(it.row.result || '')) + '</b></div>';
   }
 
-  function tlNoteCard(ev) {
-    return tlRow('note', ev.time,
-      '<div class="org-rich">' + orgToHtml(ev.note.text) + '</div>');
+  function tlNoteBody(ev) {
+    return '<div class="org-rich">' + orgToHtml(ev.note.text) + '</div>';
   }
 
-  function tlRollCard(ev) {
+  function tlRollBody(ev) {
     var nat = ev.item.nat;
-    return tlRow('roll', ev.time,
-      '<div class="tl-head"><b>' + esc(ev.item.row.label || 'A roll') + '</b>' +
-        '<span class="tl-span">' + (nat === 20 ? 'natural 20' : 'natural 1') +
-        '</span></div>' +
-      '<div class="tl-chips">' + tlChip('rolled', ev.item.row.result || '?',
-        nat === 20 ? 'crit' : 'fumble') +
-        tlChip('', ev.item.row.formula || '', 'quiet') + '</div>',
-      nat === 20 ? ' hot' : ' cold');
+    return '<div class="tl-chips">' +
+      tlChip('rolled', ev.item.row.result || '?', nat === 20 ? 'crit' : 'fumble') +
+      tlChip('', ev.item.row.formula || '', 'quiet') + '</div>';
   }
 
-  function tlRollsCard(ev) {
+  function tlRollsBody(ev) {
     // One roll on its own says everything it has to say in a line. Giving
     // it a heading, a count and a button to unfold it makes three lines of
     // furniture round one number.
     if (ev.items.length === 1) {
       var it = ev.items[0];
-      return tlRow('rolls', ev.time,
-        '<div class="tl-one">' +
-          '<span class="nm">' + esc(it.row.label || 'a roll') + '</span>' +
-          '<span class="fm">' + esc(it.row.formula || '') + '</span>' +
-          '<b>' + esc(String(it.row.result || '')) + '</b></div>');
+      return '<div class="tl-one">' +
+        '<span class="nm">' + tlLit(it.row.label || 'a roll') + '</span>' +
+        '<span class="fm">' + tlLit(it.row.formula || '') + '</span>' +
+        '<b>' + esc(String(it.row.result || '')) + '</b></div>';
     }
     var open = TL.open[ev.key] || TL.everything;
-    var names = {}, i;
-    ev.items.forEach(function (it) { names[it.row.label || 'a roll'] = 1; });
-    var list = Object.keys(names);
-    return tlRow('rolls', ev.time,
-      '<div class="tl-head"><b>' + ev.items.length + ' ' +
-        (ev.items.length === 1 ? 'roll' : 'rolls') + '</b>' +
-        '<span class="tl-span">' + esc(list.slice(0, 4).join(', ')) +
-        (list.length > 4 ? '…' : '') + '</span></div>' +
-      (open ? '<div class="tl-blow">' + ev.items.map(tlLine).join('') + '</div>' : '') +
+    return (open ? '<div class="tl-blow">' + ev.items.map(tlLine).join('') + '</div>' : '') +
       '<button type="button" class="tl-more" data-tl-open="' + esc(ev.key) + '">' +
-        (open ? 'hide' : 'show them') + '</button>');
+        (open ? 'hide' : 'show them') + '</button>';
   }
 
+  // ------------------------------------------------------------- annotating
+  //
+  // The editor is the card, opened up. A block with an annotation on it
+  // already is editing that one; a block without is writing a new one against
+  // the anchor the block sits on. The one opened from the toolbar has no
+  // block at all and asks for the time itself, which is how a moment nobody
+  // rolled for - the room, the door, who was waiting behind it - gets written
+  // down.
+  function tlEditorCard(ev) {
+    var d = TL.draft || {};
+    var fresh = !ev;
+    var kind = fresh ? 'mark' : ev.kind;
+    var head = fresh ? 'A moment' : tlName(ev);
+    var inner =
+      '<div class="tl-head"><b>' + esc(fresh ? 'Write down a moment' : head) + '</b>' +
+        '<span class="tl-span">' + esc(fresh ? 'anywhere in the evening'
+          : tlWhatIs(ev) + ' at ' + (ev.time || '?')) + '</span></div>' +
+      '<div class="tl-editor">' +
+        (fresh ? '<input type="text" class="nd-input tl-mk-at" maxlength="5" ' +
+          'placeholder="19:32" value="' + esc(d.time || tlClock()) + '">' : '') +
+        '<input type="text" class="nd-input tl-mk-title" ' +
+          'placeholder="Name it: Ambush at the ford" value="' +
+          esc(d.title === undefined ? ((ev && ev.mark && ev.mark.title) || '') : d.title) +
+          '">' +
+        '<textarea class="tl-mk-note" spellcheck="true" placeholder="What happened ' +
+          'here? The room, who was in it, what it cost. Org markup works.">' +
+          esc(d.note === undefined ? ((ev && ev.mark && ev.mark.note) || '') : d.note) +
+        '</textarea>' +
+        '<div class="tl-editor-foot">' +
+          '<span class="nd-hint">Ctrl + Enter saves, Escape puts it back</span>' +
+          (ev && ev.mark ? '<button type="button" class="dt-btn bad" ' +
+            'data-tl-unmark="' + esc(ev.key) + '">Remove</button>' : '') +
+          '<button type="button" class="dt-btn" data-tl-cancel="1">Cancel</button>' +
+          '<button type="button" class="dc-roll" data-tl-save="' +
+            esc(fresh ? '+' : ev.key) + '">Save</button>' +
+        '</div>' +
+        '<div class="nd-err"></div>' +
+      '</div>';
+    return '<div class="tl-row ' + kind + ' editing" data-tl-key="' +
+      esc(fresh ? '+' : ev.key) + '">' +
+      '<time>' + esc(fresh ? '' : (ev.time || '')) + '</time>' +
+      tlDot(kind, '') + '<div class="tl-card">' + inner + '</div></div>';
+  }
+
+  function tlClock() {
+    var d = new Date();
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+
+  function tlEditorOf(el) {
+    var card = el.closest('.tl-row');
+    return card ? card.querySelector('.tl-editor') : null;
+  }
+
+  function tlSay(box, msg) {
+    var err = box && box.querySelector('.nd-err');
+    if (err) { err.textContent = msg || ''; }
+  }
+
+  function tlSaveMark(key) {
+    var body = drawer.querySelector('#tl-body');
+    var card = body.querySelector('[data-tl-key="' + cssEsc(key) + '"]');
+    var box = card && card.querySelector('.tl-editor');
+    if (!box) { return; }
+    var at = box.querySelector('.tl-mk-at');
+    var title = box.querySelector('.tl-mk-title').value;
+    var note = box.querySelector('.tl-mk-note').value;
+    var ev = key === '+' ? null : tlFind(key);
+    var anchor = ev ? tlAnchor(ev) : { time: at ? at.value : '', kind: 'moment' };
+    if (!String(title).trim() && !String(note).trim()) {
+      tlSay(box, 'Give it a name or something to say - to take one off, press Remove.');
+      return;
+    }
+    TL.draft = { time: anchor.time, title: title, note: note };
+    box.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    tlSay(box, '');
+    api('POST', '/dnd/play/session/' + encodeURIComponent(TL.id) + '/mark',
+        { time: anchor.time, kind: anchor.kind, title: title, note: note })
+      .then(tlAdopt, function (e) {
+        box.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+        tlSay(box, e.message || String(e));
+      });
+  }
+
+  function tlRemoveMark(key) {
+    var ev = tlFind(key);
+    if (!ev || !ev.mark) { return; }
+    var anchor = tlAnchor(ev);
+    api('DELETE', '/dnd/play/session/' + encodeURIComponent(TL.id) + '/mark' +
+        '?time=' + encodeURIComponent(anchor.time) +
+        '&kind=' + encodeURIComponent(anchor.kind))
+      .then(tlAdopt, function (e) {
+        var body = drawer.querySelector('#tl-body');
+        var card = body.querySelector('[data-tl-key="' + cssEsc(key) + '"]');
+        tlSay(card && card.querySelector('.tl-editor'), e.message || String(e));
+      });
+  }
+
+  // --------------------------------------------------------------- deleting
+  //
+  // Asking happens in the card, the way it does for a note in the session
+  // panel: what is about to be thrown away is right there to be read, which
+  // is the whole question, and a browser confirm would cover it up. Here it
+  // matters more, because a card can be twenty rolls and three notes and the
+  // page is the only thing that knows which.
+  function tlAskCard(ev) {
+    var what = tlWeight(ev);
+    return '<div class="tl-ask">' +
+      '<span>Throw ' + esc(tlWhatIs(ev)) + ' away? ' +
+        (what ? 'Off the session file: ' + esc(what) + '.'
+              : 'It comes off the session file.') + '</span>' +
+      '<button type="button" class="dt-btn bad" data-tl-yes="' + esc(ev.key) + '">Delete</button>' +
+      '<button type="button" class="dt-btn" data-tl-no="1">Keep</button>' +
+      '<div class="nd-err"></div></div>';
+  }
+
+  function tlDelete(key) {
+    var ev = tlFind(key);
+    if (!ev) { return; }
+    var body = drawer.querySelector('#tl-body');
+    var card = body.querySelector('[data-tl-key="' + cssEsc(key) + '"]');
+    var ask = card && card.querySelector('.tl-ask');
+    if (ask) {
+      ask.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    }
+    var fail = function (e) {
+      if (!ask) { return; }
+      ask.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+      var err = ask.querySelector('.nd-err');
+      if (err) { err.textContent = e.message || String(e); }
+    };
+    var done = tlAdopt;
+
+    // An annotation standing on its own is only an annotation: there is
+    // nothing of the logs under it to take with it.
+    if (ev.kind === 'mark') {
+      var anchor = tlAnchor(ev);
+      api('DELETE', '/dnd/play/session/' + encodeURIComponent(TL.id) + '/mark' +
+          '?time=' + encodeURIComponent(anchor.time) +
+          '&kind=' + encodeURIComponent(anchor.kind)).then(done, fail);
+      return;
+    }
+    var parts = tlParts(ev);
+    api('POST', '/dnd/play/session/' + encodeURIComponent(TL.id) + '/delete', {
+      rolls: parts.rolls, notes: parts.notes, what: tlWhatIs(ev),
+      mark: ev.mark ? { time: tlAnchor(ev).time, kind: tlAnchor(ev).kind } : null
+    }).then(done, fail);
+  }
+
+  // ---------------------------------------------------------- what it clicks
+  function tlClick(e) {
+    var hit = function (attr) {
+      var el = e.target.closest('[' + attr + ']');
+      return el ? el.getAttribute(attr) : null;
+    };
+    var key = hit('data-tl-fold');
+    if (key !== null) {
+      TL.folded[key] = !tlFolded(key);
+      renderTimeline();
+      return;
+    }
+    key = hit('data-tl-open');
+    if (key !== null) {
+      if (TL.open[key]) { delete TL.open[key]; } else { TL.open[key] = true; }
+      renderTimeline();
+      return;
+    }
+    key = hit('data-tl-mark');
+    if (key !== null) {
+      TL.editing = TL.editing === key ? '' : key;
+      TL.asking = '';
+      TL.draft = null;
+      renderTimeline();
+      tlFocusEditor();
+      return;
+    }
+    if (hit('data-tl-cancel') !== null) {
+      TL.editing = '';
+      TL.draft = null;
+      renderTimeline();
+      return;
+    }
+    key = hit('data-tl-save');
+    if (key !== null) { tlSaveMark(key); return; }
+    key = hit('data-tl-unmark');
+    if (key !== null) { tlRemoveMark(key); return; }
+    key = hit('data-tl-del');
+    if (key !== null) {
+      TL.asking = TL.asking === key ? '' : key;
+      TL.editing = '';
+      renderTimeline();
+      return;
+    }
+    if (hit('data-tl-no') !== null) { TL.asking = ''; renderTimeline(); return; }
+    key = hit('data-tl-yes');
+    if (key !== null) { tlDelete(key); return; }
+    if (hit('data-tl-undo') !== null) {
+      tlUndo(e.target.closest('[data-tl-undo]'));
+      return;
+    }
+  }
+
+  function tlFocusEditor() {
+    var box = drawer.querySelector('#tl-body .tl-editor');
+    if (!box) { return; }
+    var first = box.querySelector('.tl-mk-at') || box.querySelector('.tl-mk-title');
+    if (first) { first.focus(); first.select(); }
+    tlScrollTo(box.closest('.tl-row'));
+  }
+
+  function tlKey(e) {
+    var box = e.target.closest ? e.target.closest('.tl-editor') : null;
+    if (!box) { return; }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      TL.editing = '';
+      TL.draft = null;
+      renderTimeline();
+      return;
+    }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey ||
+        e.target.classList.contains('tl-mk-at') ||
+        e.target.classList.contains('tl-mk-title'))) {
+      e.preventDefault();
+      var card = box.closest('.tl-row');
+      tlSaveMark(card ? card.getAttribute('data-tl-key') : '+');
+    }
+  }
 
   // ========================================================= combat tracker
   //
@@ -14834,11 +15661,17 @@ them up.">Temp</button>
         '<div class="nd-view" id="view-timeline">' +
           '<div class="nd-toolbar">' +
             '<select id="tl-pick" class="nd-input nd-pick"></select>' +
+            '<input type="search" id="tl-find" class="nd-input tl-find" ' +
+              'placeholder="Find a moment: a name, a spell, a word from a note. ' +
+              'Enter steps through them.">' +
+            '<span class="tl-count" id="tl-count"></span>' +
+            '<button type="button" class="dt-btn" id="tl-fold">Fold all</button>' +
+            '<button type="button" class="dt-btn" id="tl-annotate">Annotate</button>' +
             '<button type="button" class="dt-btn" id="tl-refresh">Refresh</button>' +
             '<label class="tl-opt"><input type="checkbox" id="tl-all"> ' +
               'every roll</label>' +
-            '<span class="nd-meta">The night as it happened.</span>' +
           '</div>' +
+          '<div class="tl-undo" id="tl-undo" hidden></div>' +
           '<div id="tl-body"></div>' +
         '</div>' +
         '<div class="nd-view" id="view-combat">' +
@@ -14942,9 +15775,14 @@ them up.">Temp</button>
       if (!preview.hidden) { preview.innerHTML = orgToHtml(box.value); }
     });
 
+    // Refresh means everything, the list of sessions included: a session
+    // started in another window is exactly the thing somebody presses this
+    // for, and one that only reread the session already showing would never
+    // find it.
     drawer.querySelector('#tl-refresh').addEventListener('click', function () {
       TL.cache = {};
-      loadTimeline(TL.id, true);
+      TL.list = null;
+      openTimeline();
     });
     drawer.querySelector('#tl-pick').addEventListener('change', function (e) {
       TL.id = e.target.value;
@@ -14954,13 +15792,46 @@ them up.">Temp</button>
       TL.everything = e.target.checked;
       renderTimeline();
     });
-    drawer.querySelector('#tl-body').addEventListener('click', function (e) {
-      var more = e.target.closest('[data-tl-open]');
-      if (!more) { return; }
-      var key = more.getAttribute('data-tl-open');
-      if (TL.open[key]) { delete TL.open[key]; } else { TL.open[key] = true; }
+    // Folding all of them throws away the cards somebody had opened or
+    // folded by hand: pressing "fold all" and watching one card stay open
+    // because it was argued with an hour ago is not what the button says.
+    drawer.querySelector('#tl-fold').addEventListener('click', function () {
+      TL.foldAll = !TL.foldAll;
+      TL.folded = {};
       renderTimeline();
     });
+    drawer.querySelector('#tl-annotate').addEventListener('click', function () {
+      TL.editing = TL.editing === '+' ? '' : '+';
+      TL.asking = '';
+      TL.draft = null;
+      renderTimeline();
+      tlFocusEditor();
+    });
+    drawer.querySelector('#tl-find').addEventListener('input', function (e) {
+      TL.q = e.target.value;
+      TL.at = -1;
+      renderTimeline();
+    });
+    drawer.querySelector('#tl-find').addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.target.value = '';
+        TL.q = '';
+        TL.at = -1;
+        renderTimeline();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        tlJump(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        tlJump(-1);
+      }
+    });
+    drawer.querySelector('#tl-undo').addEventListener('click', tlClick);
+    drawer.querySelector('#tl-body').addEventListener('click', tlClick);
+    drawer.querySelector('#tl-body').addEventListener('keydown', tlKey);
     drawer.querySelector('#view-combat').addEventListener('click', combatClick);
     drawer.querySelector('#view-combat').addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') { return; }

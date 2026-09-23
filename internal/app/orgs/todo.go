@@ -799,7 +799,7 @@ func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 		fmt.Printf("HAVE A HABIT\n")
 		completions = parseHabitCompletions(v)
 	}
-	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Deadline: deadline, Status: v.Headline.Status, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl, Completions: completions}
+	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Deadline: deadline, Status: v.Headline.Status, Priority: v.Headline.Priority, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl, Completions: completions}
 	return &t
 }
 
@@ -1372,10 +1372,16 @@ func IsPropertyValueValid(hash *common.TodoHash, val string) bool {
 
 // The core lib does not have this option, we want it, eventually move this up!
 func SetProperty(n *org.Headline, key string, val string) {
-	props := &n.Properties.Properties
-	if props == nil {
-		return
+	// A heading that has never had a property gets a drawer here rather than
+	// being left alone: the org writer prints Properties directly under the
+	// headline when it is there, so the new drawer lands where org expects it.
+	// Without this a heading with no drawer is a nil dereference, which is the
+	// common case for anything setting a property from outside the editor -
+	// the kanban board dropping a card into a column, say.
+	if n.Properties == nil {
+		n.Properties = &org.PropertyDrawer{Properties: [][]string{}}
 	}
+	props := &n.Properties.Properties
 	for _, kvPair := range *props {
 		if kvPair[0] == key {
 			kvPair[1] = val

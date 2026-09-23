@@ -162,8 +162,12 @@ func (s *SessionInfo) PlayedBy(id, name string) bool {
 // SessionDetail is everything recorded in one session.
 type SessionDetail struct {
 	SessionInfo
-	RollLog  []SessionRoll `json:"rollLog"`
-	NoteLog  []SessionNote `json:"noteLog"`
+	RollLog []SessionRoll `json:"rollLog"`
+	NoteLog []SessionNote `json:"noteLog"`
+	// MarkLog is the timeline's annotations - the blocks somebody has named
+	// or written a line about. They are the one part of the timeline that is
+	// stored rather than worked out; see sessionmark.go.
+	MarkLog  []SessionMark `json:"markLog"`
 	Warnings []string      `json:"warnings,omitempty"`
 }
 
@@ -1254,11 +1258,15 @@ func SessionDetailFromText(id, file, text string) SessionDetail {
 	d := SessionDetail{SessionInfo: SessionInfoFromText(id, file, text)}
 	d.RollLog = ParseRolls(text)
 	d.NoteLog = ParseNotes(text)
+	d.MarkLog = ParseMarks(text)
 	if d.RollLog == nil {
 		d.RollLog = []SessionRoll{}
 	}
 	if d.NoteLog == nil {
 		d.NoteLog = []SessionNote{}
+	}
+	if d.MarkLog == nil {
+		d.MarkLog = []SessionMark{}
 	}
 	return d
 }

@@ -36,7 +36,10 @@ import (
 const dndJournalMax = 30
 
 // dndChange is one file as it stood before a change, and as it stood after.
+// Seq numbers the entry so that one taken out of the middle - which is what a
+// per-file undo does - can be found again without counting from either end.
 type dndChange struct {
+	Seq    uint64
 	Path   string
 	Before string
 	After  string
@@ -47,6 +50,7 @@ type dndChange struct {
 var (
 	dndJournalLock sync.Mutex
 	dndJournal     []dndChange
+	dndJournalSeq  uint64
 	// dndQuiet suppresses the journal while undo is putting a file back. An
 	// undo is not a change to be taken back, it is a change going away.
 	dndQuiet bool
@@ -63,8 +67,10 @@ func dndRemember(path, before, after, what string) {
 	if dndQuiet {
 		return
 	}
+	dndJournalSeq++
 	dndJournal = append(dndJournal, dndChange{
-		Path: path, Before: before, After: after, What: what, When: time.Now(),
+		Seq: dndJournalSeq, Path: path, Before: before, After: after,
+		What: what, When: time.Now(),
 	})
 	if len(dndJournal) > dndJournalMax {
 		dndJournal = dndJournal[len(dndJournal)-dndJournalMax:]
@@ -87,6 +93,53 @@ func dndLastChange() (dndChange, bool) {
 		dndJournal = dndJournal[:len(dndJournal)-1]
 	}
 	return dndChange{}, false
+}
+
+// dndLastChangeTo is dndLastChange narrowed to one file, which is what the
+// timeline's own undo asks: the session drawer is looking at one evening and
+// should offer to take back the last thing that happened to it, not the last
+// thing that happened anywhere.
+//
+// Only the newest entry for that file is ever offered. An older one could not
+// be put back without throwing away the newer changes stacked on top of it,
+// and the same guard applies as everywhere else here - the file must still be
+// exactly as the entry left it. When it is not, every entry for that file is
+// dropped: an older one cannot match a file a newer one does not.
+func dndLastChangeTo(path string) (dndChange, bool) {
+	dndJournalLock.Lock()
+	defer dndJournalLock.Unlock()
+	for i := len(dndJournal) - 1; i >= 0; i-- {
+		if dndJournal[i].Path != path {
+			continue
+		}
+		data, err := os.ReadFile(path)
+		if err == nil && string(data) == dndJournal[i].After {
+			return dndJournal[i], true
+		}
+		keep := dndJournal[:0]
+		for _, ch := range dndJournal {
+			if ch.Path != path {
+				keep = append(keep, ch)
+			}
+		}
+		dndJournal = keep
+		return dndChange{}, false
+	}
+	return dndChange{}, false
+}
+
+// dndDropSeq takes one named entry off wherever it sits, which is what
+// undoing a per-file change does.
+func dndDropSeq(seq uint64) {
+	dndJournalLock.Lock()
+	defer dndJournalLock.Unlock()
+	keep := dndJournal[:0]
+	for _, ch := range dndJournal {
+		if ch.Seq != seq {
+			keep = append(keep, ch)
+		}
+	}
+	dndJournal = keep
 }
 
 // dndDropChange takes the newest entry off, which is what undoing it does.

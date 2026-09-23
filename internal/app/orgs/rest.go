@@ -159,6 +159,11 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/play/session/{id}/note/{index}", PostDndPlayNoteEdit).Methods("POST")
 	api.HandleFunc("/dnd/play/session/{id}/note/{index}", DeleteDndPlayNote).Methods("DELETE")
 	api.HandleFunc("/dnd/play/session/{id}/summary", PostDndPlaySummary).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/delete", PostDndPlayBlockDelete).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/mark", PostDndPlayMark).Methods("POST")
+	api.HandleFunc("/dnd/play/session/{id}/mark", DeleteDndPlayMark).Methods("DELETE")
+	api.HandleFunc("/dnd/play/session/{id}/undo", RequestDndPlayUndo).Methods("GET")
+	api.HandleFunc("/dnd/play/session/{id}/undo", PostDndPlayUndo).Methods("POST")
 
 	// Per-user extensions: stored queries
 	api.HandleFunc("/ext/queries", RequestStoredQueries).Methods("GET")
@@ -170,6 +175,21 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/ext/capture/templates", RequestUserCaptureTemplates).Methods("GET")
 	api.HandleFunc("/ext/capture/template", PostUserCaptureTemplate).Methods("POST")
 	api.HandleFunc("/ext/capture/template", DeleteUserCaptureTemplate).Methods("DELETE")
+
+	// Voice notes: record, transcribe through go-whisper, file as org
+	api.HandleFunc("/voice/config", RequestVoiceConfig).Methods("GET")
+	api.HandleFunc("/voice/recording", PostVoiceRecording).Methods("POST")
+	api.HandleFunc("/voice/recordings", RequestVoiceRecordings).Methods("GET")
+	api.HandleFunc("/voice/recording/{id}", RequestVoiceAudio).Methods("GET")
+	api.HandleFunc("/voice/recording/{id}", DeleteVoiceRecording).Methods("DELETE")
+	api.HandleFunc("/voice/transcribe", PostVoiceTranscribe).Methods("POST")
+	api.HandleFunc("/voice/note", PostVoiceNote).Methods("POST")
+
+	// Per-user extensions: kanban boards
+	api.HandleFunc("/ext/kanban/boards", RequestKanbanBoards).Methods("GET")
+	api.HandleFunc("/ext/kanban/boards", PostKanbanBoards).Methods("POST")
+	api.HandleFunc("/ext/kanban/board", PostKanbanBoard).Methods("POST")
+	api.HandleFunc("/ext/kanban/board", DeleteKanbanBoard).Methods("DELETE")
 
 }
 

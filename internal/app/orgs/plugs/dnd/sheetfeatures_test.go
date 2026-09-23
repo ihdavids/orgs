@@ -829,6 +829,70 @@ func TestSessionTimelineTab(t *testing.T) {
 	}
 }
 
+// A block on the timeline can be named, thrown away whole, and either of
+// those taken back. The name is the one part of the timeline that is stored -
+// it cannot be derived from anything - and it goes into the session file, not
+// onto the character sheet.
+func TestTimelineBlocksCanBeAnnotatedAndDeleted(t *testing.T) {
+	html := renderOrg(t, dyingSheet)
+	for _, want := range []string{
+		// hanging a stored annotation on a derived block
+		"function tlHang", "function tlAnchor", "function tlAbsFor",
+		// what a block is made of, which is what deleting it takes
+		"function tlParts", "function tlWeight", "function tlDelete",
+		// writing and removing the annotation
+		"function tlSaveMark", "function tlRemoveMark", "function tlEditorCard",
+		// and taking any of it back, narrowed to this session
+		"function tlAskUndo", "function tlUndo", `id="tl-undo"`,
+		"/undo", "/mark", "/delete"} {
+		if !strings.Contains(html, want) {
+			t.Fatalf("the timeline is missing %s", want)
+		}
+	}
+	// Deleting a block is one call carrying every line of it, not one call
+	// per line: that is what makes it one press of undo.
+	if !strings.Contains(html, "rolls: parts.rolls, notes: parts.notes") {
+		t.Fatalf("a block must be deleted in one write")
+	}
+	// A fight and the notes taken during it go together.
+	if !strings.Contains(html, "ev.rolls.forEach(addRoll); ev.beats.forEach(addNote);") {
+		t.Fatalf("a combat block must take its notes with it")
+	}
+}
+
+// Forty cards is too many to read at once, so each one folds to a line and
+// the search box hides the ones that are not being looked for. Neither is
+// written anywhere: they are about reading the evening, not about what
+// happened in it.
+func TestTimelineFoldsAndSearches(t *testing.T) {
+	html := renderOrg(t, dyingSheet)
+	for _, want := range []string{
+		"function tlFolded", "function tlBrief", "function tlGist",
+		"function tlMatches", "function tlHay", "function tlJump", "function tlLit",
+		`id="tl-fold"`, `id="tl-find"`, `id="tl-count"`, "data-tl-fold="} {
+		if !strings.Contains(html, want) {
+			t.Fatalf("the timeline is missing %s", want)
+		}
+	}
+	// One card folds and opens by its dot on the spine, which is already the
+	// mark the eye runs down looking for a place in the evening. The tools on
+	// the right are the ones that change the session file - name this, throw
+	// this away - and a chevron among them would read as a third of those.
+	if !strings.Contains(html, `class="tl-dot ' + kind + (extra || '') +
+      '" data-tl-fold="`) {
+		t.Fatalf("the spine dot is not the fold toggle")
+	}
+	if strings.Contains(html, `class="tl-tool" data-tl-fold=`) {
+		t.Fatalf("folding is still one of the tools on the right")
+	}
+	// The search reads everything a card holds rather than what it is
+	// currently showing, or folding the timeline would hide the very spell
+	// somebody folded it to go looking for.
+	if !strings.Contains(html, "ev.hay = s.join") {
+		t.Fatalf("the search must match on the whole card, folded or not")
+	}
+}
+
 // The combat tracker is the one part of the sheet that is about the table
 // rather than about the character, so it is kept in the browser and written
 // to no org file at all.
