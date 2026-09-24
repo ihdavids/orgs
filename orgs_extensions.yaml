@@ -6,3 +6,4 @@ users:
     - name: Orch
       query: '!IsArchived() && IsStatus(''TODO'') && HasTags(''ORCHESTRATION25'')'
     captureTemplates: []
+    kanbanBoards: []

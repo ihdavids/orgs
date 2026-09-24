@@ -15,6 +15,8 @@ Go module: `github.com/ihdavids/orgs` (Go 1.23+, toolchain 1.24.2). There is no 
 
 ## Build and run
 
+The worg frontend is embedded into the binary from `worg/` (see `worg/embed.go`) and served by `StartServer`. `tools/buildworg.sh` builds worg from `../worg` and pulls the result in — it clears the old files first rather than writing over them, because the build's names carry content hashes and a plain copy leaves every previous build inside the binary. The built app asks the page's own origin for the api, so it works whatever port the server was started on.
+
 Flags for a subcommand go *after* it (`./orgs serve -port 8010`), not before it - a flag ahead of the subcommand is consumed by the global parse and the command list is printed instead. And note that the HTTP listener runs in a goroutine while the HTTPS one blocks: with `allowHttps: false` the process falls straight through both and exits, so a throwaway server on another port still needs `allowHttps: true` and a cert to stay up.
 
 ```sh
@@ -108,15 +110,25 @@ The `PluginManager` passed to plugins carries the shared templates, filter map, 
 
 ### Voice notes and go-whisper
 
-`internal/app/orgs/voice.go` records nothing and transcribes nothing. A client records, the server keeps the audio, and transcription is a request to a [go-whisper](https://github.com/mutablelogic/go-whisper) server over its own http api (`/api/whisper/model`, `/api/whisper/transcribe`) — which is what keeps the model, and the hardware it wants, out of this program. Settings live under `voice:` in the server config (`url`, `model`, `language`, `dir`, `timeout`, `maxMb`, `tags`, `target`); `orgs.yaml`'s `voice.dir` is relative to the first orgDir so a note's audio sits in the org database beside the heading that links to it.
+`internal/app/orgs/voice.go` records nothing and transcribes nothing. A client records, the server keeps the audio, and transcription is a request to a [go-whisper](https://github.com/mutablelogic/go-whisper) server over its own http api (`/api/whisper/model`, `/api/whisper/transcribe`).
 
-Run the service alongside orgs:
+`internal/app/orgs/whisperd.go` **runs that server**. Two settings are the whole configuration:
 
-```sh
-gowhisper run --http.addr localhost:8081 --models /path/to/models --whisper.gpu
+```yaml
+voice:
+  models: "/path/to/whisper/models"
+  port: 8081
 ```
 
-Five things to keep in mind when changing it:
+With those, `StartWhisper` (called from `StartServer`) spawns `gowhisper run --http.addr localhost:<port> --models <dir> --whisper.gpu` and looks after it; everything else under `voice:` has a default (`bin`, `gpu`, `args`, `url`, `model`, `language`, `dir`, `timeout`, `maxMb`, `tags`, `target`). `voice.dir` is relative to the first orgDir so a note's audio sits in the org database beside the heading that links to it.
+
+Orgs does **not** link whisper, and should not be made to: the model needs cgo and a built whisper.cpp, so linking it would put CMake and a whisper.cpp build on everybody who compiles orgs and never records anything. Supervising the binary keeps `go build ./...` working on a bare checkout. Three things about the supervisor are deliberate:
+
+- A whisper **already listening on the port is adopted**, not started again — so one you run by hand still works, and an orphan left by a `kill -9` is picked back up rather than fought with. An adopted server is never stopped by orgs; it was somebody else's.
+- The child is stopped **on a signal as well as on a clean exit**. `StartServer` ends the process through `log.Fatal`, which does not unwind, so a `SIGINT`/`SIGTERM` handler is the only place a ctrl-c can be caught — without it every run leaves a 500mb model resident.
+- Readiness is **polled, not assumed**, for up to three minutes, and `/voice/config` reports `state` (off/starting/ready/adopted/failed) with the tail of whisper's own output. "Still loading a model" and "not installed" are both not-ready and need very different words in front of somebody about to record.
+
+Five things to keep in mind when changing the note side:
 
 1. **The recording is saved before anything is attempted on it, and the transcript goes back to the client before anything is written.** A transcription fails in a dozen ways — whisper down, a model still loading, a take past the timeout — and none of them should cost the words that were said. `POST /voice/note` writes the *text it was sent*, never a fresh transcription, because what lands in the file has to be what was on screen.
 2. **Nothing is converted.** go-whisper decodes through ffmpeg, so a browser's webm/opus, a phone's m4a and a recorder's wav all go straight through; the extension follows the recording and the `filename` field tells whisper what container it is looking at.

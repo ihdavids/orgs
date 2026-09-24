@@ -184,6 +184,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/voice/recording/{id}", DeleteVoiceRecording).Methods("DELETE")
 	api.HandleFunc("/voice/transcribe", PostVoiceTranscribe).Methods("POST")
 	api.HandleFunc("/voice/note", PostVoiceNote).Methods("POST")
+	api.HandleFunc("/voice/whisper/restart", PostWhisperRestart).Methods("POST")
 
 	// Per-user extensions: kanban boards
 	api.HandleFunc("/ext/kanban/boards", RequestKanbanBoards).Methods("GET")

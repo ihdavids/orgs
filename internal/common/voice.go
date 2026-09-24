@@ -41,6 +41,13 @@ type VoiceConfig struct {
 	Msg   string `json:"Msg"`
 	Ready bool   `json:"ready"`
 	Url   string `json:"url"`
+	// Whether orgs is the one running whisper, and what the supervisor is
+	// doing: off, starting, ready, adopted or failed. A client shows these
+	// rather than guessing from Ready, because "starting" and "not installed"
+	// are both "not ready" and want very different words.
+	Managed bool     `json:"managed"`
+	State   string   `json:"state"`
+	Log     []string `json:"log"`
 	// The model a transcription would use right now, which is the configured
 	// one, or the server's first when nothing is configured.
 	Model    string   `json:"model"`

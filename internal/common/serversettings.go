@@ -22,7 +22,22 @@ const KBAD_SALT = "THIS IS A DEFAULT SALT DO NOT USE THIS! SET YOUR OWN"
 // the model, the hardware it runs on and the org side of this independent of
 // one another.
 type VoiceSettings struct {
-	// Where go-whisper is listening. Its api lives under /api/whisper there.
+	// The models directory. Naming one is what turns voice on: orgs starts a
+	// gowhisper of its own against it and looks after it for as long as the
+	// server runs. Left empty, orgs talks to whatever is already at Url.
+	Models string `yaml:"models"`
+	// The port to run it on. Also where orgs looks for it, so a server started
+	// by hand on the same port is adopted rather than duplicated.
+	Port int `yaml:"port"`
+	// The gowhisper binary. Found on PATH, and in a few of the usual places,
+	// when this is empty.
+	Bin string `yaml:"bin"`
+	// Let whisper use the GPU. On unless this says otherwise.
+	Gpu *bool `yaml:"gpu"`
+	// Anything else to put on the gowhisper command line.
+	Args []string `yaml:"args"`
+	// Where go-whisper is listening, for a server orgs does not start. Its api
+	// lives under /api/whisper there. Worked out from Port when left empty.
 	Url string `yaml:"url"`
 	// The model id to transcribe with. Empty means ask the server for its
 	// models and take the first - right for a machine with one installed.
@@ -193,17 +208,40 @@ type ServerSettings struct {
 	/* SDOC: Settings
 	* Voice Notes
 		Recording and transcription. Orgs does not transcribe anything itself -
-		it hands the recording to a [[https://github.com/mutablelogic/go-whisper][go-whisper]]
-		server and files what comes back as an org heading.
+		it runs a [[https://github.com/mutablelogic/go-whisper][go-whisper]]
+		server, hands it the recording, and files what comes back as an org
+		heading.
+
+		Two settings turn the whole thing on: where the models are, and the port
+		to run whisper on.
 
 		#+BEGIN_SRC yaml
 	  voice:
-	    url: "http://localhost:8081"
-	    model: "ggml-medium-q5_0"
-	    language: "en"
-	    dir: "audio"
-	    timeout: 600
-	    maxMb: 64
+	    models: "/Users/me/whisper/models"
+	    port: 8081
+		#+END_SRC
+
+		With those, orgs starts =gowhisper= itself when the server starts and
+		stops it when the server stops. The binary is looked for on your PATH
+		and in the usual places; =bin= says where it is when it is somewhere
+		else. Something already listening on that port is adopted rather than
+		started again, so a whisper you run by hand still works.
+
+		Everything else has a default worth leaving alone:
+
+		#+BEGIN_SRC yaml
+	  voice:
+	    models: "/Users/me/whisper/models"
+	    port: 8081
+	    bin: "/usr/local/bin/gowhisper"   # when it is not on PATH
+	    gpu: true                          # let whisper use the GPU
+	    args: []                           # anything else for its command line
+	    url: "http://otherbox:8081"        # a whisper orgs does not start
+	    model: "ggml-medium-q5_0"          # empty asks the server for its first
+	    language: "en"                     # empty lets whisper detect it
+	    dir: "audio"                       # recordings, relative to your orgDir
+	    timeout: 600                       # seconds to wait for a transcription
+	    maxMb: 64                          # the largest single recording
 	    tags:
 	      - "voice"
 	    target:
@@ -212,18 +250,14 @@ type ServerSettings struct {
 	      id: "Voice Notes"
 		#+END_SRC
 
-		=url= is where the go-whisper server is listening; everything under
-		=/api/whisper= on it is reached from there. =model= is the model id it
-		should transcribe with - when it is empty orgs asks the server what it
-		has and uses the first, which is right for a machine with one model
-		installed and wrong as soon as there are two. =language= is a two letter
-		code, and left empty whisper detects it.
+		=model= is the model id to transcribe with - when it is empty orgs asks
+		the server what it has and uses the first, which is right for a machine
+		with one model installed and wrong as soon as there are two.
 
 		=dir= is where recordings are kept, relative to your first orgDir, so
 		that a note's audio sits in the org database beside the heading that
 		links to it. =timeout= is how long to wait for a transcription - a long
-		take on a large model is minutes, not seconds - and =maxMb= caps the
-		size of a single recording.
+		take on a large model is minutes, not seconds.
 
 		=target= is where a voice note is filed when the client does not say,
 		and takes the same shape as a capture template's target. =tags= are put
@@ -316,8 +350,12 @@ func (self *ServerSettings) Init() {
 	self.CaptureTemplates = []CaptureTemplate{}
 	self.AccessControl = "null"
 	self.RefileTargets = []string{".*\\.org"}
+	gpu := true
 	self.Voice = VoiceSettings{
-		Url:      "http://localhost:8081",
+		Models:   "",
+		Port:     8081,
+		Gpu:      &gpu,
+		Url:      "",
 		Model:    "",
 		Language: "",
 		Dir:      "audio",

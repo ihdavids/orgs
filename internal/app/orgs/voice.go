@@ -178,11 +178,7 @@ func readVoiceMeta(path string) float64 {
 // ----------------------------------------------------------------------------
 
 func whisperUrl(path string) string {
-	base := strings.TrimRight(strings.TrimSpace(voiceSettings().Url), "/")
-	if base == "" {
-		base = "http://localhost:8081"
-	}
-	return base + "/api/whisper" + path
+	return whisperBase() + "/api/whisper" + path
 }
 
 // whisperModels asks the server what it can transcribe with. Kept on a short
@@ -548,24 +544,43 @@ func voiceJson(w http.ResponseWriter, v interface{}) {
 	EDOC */
 func RequestVoiceConfig(w http.ResponseWriter, r *http.Request) {
 	v := voiceSettings()
+	state, stateMsg, log := WhisperStatus()
 	out := common.VoiceConfig{
 		Ok:       true,
-		Url:      v.Url,
+		Url:      whisperBase(),
 		Language: v.Language,
 		MaxMb:    v.MaxMb,
 		Tags:     v.Tags,
 		Target:   v.Target,
 		Models:   []string{},
-	}
-	if out.Url == "" {
-		out.Url = "http://localhost:8081"
+		Managed:  whisperManaged(),
+		State:    state,
+		Log:      []string{},
 	}
 	models, err := whisperModels()
 	if err != nil {
 		// Said the way it will be read: the client puts this in front of
 		// somebody who is about to record, and "dial tcp: connect: connection
 		// refused" does not tell them which of their two servers is down.
-		out.Msg = fmt.Sprintf("no answer from the whisper server at %s - %s", out.Url, whisperReason(err))
+		// While orgs is still starting whisper that is not a fault at all, so
+		// the supervisor gets to speak first.
+		switch {
+		case out.Managed && state == WhisperStarting:
+			out.Msg = stateMsg
+			if out.Msg == "" {
+				out.Msg = "starting whisper - a large model takes a little while to load"
+			}
+		case out.Managed && stateMsg != "":
+			out.Msg = stateMsg
+			out.Log = log
+		case strings.TrimSpace(v.Models) == "" && strings.TrimSpace(v.Url) == "":
+			// Nothing has been configured at all, so the useful thing to say is
+			// how to configure it rather than which server did not answer.
+			out.Msg = "voice is not set up yet: point voice.models at a whisper models directory and orgs will run whisper itself."
+		default:
+			out.Msg = fmt.Sprintf("no answer from the whisper server at %s - %s", out.Url, whisperReason(err))
+			out.Log = log
+		}
 		voiceJson(w, out)
 		return
 	}
@@ -1015,4 +1030,33 @@ func PostVoiceNote(w http.ResponseWriter, r *http.Request) {
 		Headline: req.Headline,
 		Audio:    audioLink,
 	})
+}
+
+/* SDOC: API
+* POST /voice/whisper/restart — Start the Transcription Service Again
+	Stops the go-whisper server orgs is running and starts it again. This is the
+	answer to a model that failed to load or a service that has stopped answering,
+	and it is deliberately the only control over it: what to run is configuration,
+	not something a client gets to choose.
+
+	*Method:* =POST=
+
+	*Request Body:* None.
+
+	*Response:* A =ResultMsg=. The restart is not waited for - a large model takes
+	a while to load - so watch =GET /voice/config= for =state= to come back to
+	=ready=.
+
+	*Errors:*
+	- =401= if not authenticated.
+	- =400= if orgs is not the one running whisper, which is the case when
+	  =voice.models= is unset or =voice.url= names somebody else's server.
+	EDOC */
+func PostWhisperRestart(w http.ResponseWriter, r *http.Request) {
+	if err := RestartWhisper(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		voiceJson(w, common.ResultMsg{Ok: false, Msg: err.Error()})
+		return
+	}
+	voiceJson(w, common.ResultMsg{Ok: true, Msg: "starting whisper again"})
 }

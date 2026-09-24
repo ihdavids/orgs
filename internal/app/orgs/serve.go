@@ -280,6 +280,10 @@ func StartServer(sets *common.ServerSettings) {
 	//http.Handle("/", fileServer)
 	//http.HandleFunc("/orgs", portal)
 	startPlugins(sets)
+	// The transcription service, when the voice block asks orgs to run one.
+	// Started here rather than in a plugin because it outlives a reload and is
+	// not driven by the org files at all.
+	StartWhisper()
 
 	// Allow http connections but only from localhost
 	go func() {
@@ -342,6 +346,7 @@ func StartServer(sets *common.ServerSettings) {
 			log.Fatal("ListenAndServeTLS: ", err)
 		}
 	}
+	StopWhisper()
 	stopPlugins(sets)
 }
 
