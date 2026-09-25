@@ -107,6 +107,36 @@ func InsertSection(to *common.OrgFile, toInsert *org.Section, destination *org.S
 	}
 }
 
+// The last row of a heading's subtree: everything up to the next heading at the
+// same level or above, or the end of the file.
+//
+// This exists because `Headline.GetEnd()` under-reports for a heading whose body
+// is only a planning line and a property drawer - go-org keeps the drawer in
+// `Headline.Properties` rather than among the body nodes it measures, so the end
+// lands on the SCHEDULED line and a delete leaves the drawer behind, orphaned
+// under the parent. A heading with any other body, or with children, measures
+// correctly, which is why this only ever *extends* the range it is given and
+// never shrinks it.
+func subtreeEndRow(lines []string, startRow int, lvl int, atLeast int) int {
+	end := len(lines) - 1
+	for i := startRow + 1; i < len(lines); i++ {
+		line := lines[i]
+		stars := 0
+		for stars < len(line) && line[stars] == '*' {
+			stars++
+		}
+		// A heading is stars followed by a space; `**bold**` at column zero is not one.
+		if stars > 0 && stars <= lvl && stars < len(line) && line[stars] == ' ' {
+			end = i - 1
+			break
+		}
+	}
+	if end < atLeast {
+		return atLeast
+	}
+	return end
+}
+
 func DeleteTree(filename string, sec *org.Section, res *common.ResultMsg) {
 	fmt.Printf("[DeleteEntry]\n")
 	if r, err := os.Open(filename); err == nil {
@@ -122,11 +152,12 @@ func DeleteTree(filename string, sec *org.Section, res *common.ResultMsg) {
 			res.Msg = "Delete: failed to open file " + err.Error()
 		} else {
 			s, e := findDeletePos(sec)
+			end := subtreeEndRow(lines, s.Row, sec.Headline.Lvl, e.Row)
 			fileContent := ""
 			// Now iterate over the file and insert our content where it should go!
 			for i, line := range lines {
 
-				if i >= s.Row && i <= e.Row {
+				if i >= s.Row && i <= end {
 					continue
 				}
 				fileContent += line

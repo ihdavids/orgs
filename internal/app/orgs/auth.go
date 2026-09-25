@@ -118,6 +118,21 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// The user everything is done as when authentication is turned off. Without
+// one, `noAuth: true` does not mean "no authentication" but "no authentication,
+// and also no stored queries, no kanban boards and no capture templates" - every
+// per-user endpoint reads the username off the request and refuses an empty one.
+const NoAuthUsername = "local"
+
+// Stands in for `authenticate` when noAuth is set: no token is asked for, and
+// everybody is the same local user.
+func noAuthUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), contextKeyUsername, NoAuthUsername)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var tokenStr string

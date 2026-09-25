@@ -57,7 +57,7 @@ var mindMapDocEnd = `
   </script>
   <script>
     $(document).ready(function () {
-       mermaid.initialize({startOnLoad:true, securityLevel: 'loose'});
+       mermaid.initialize({startOnLoad:true, securityLevel: 'loose', maxTextSize: 2000000});
     });
   </script>
   <script>

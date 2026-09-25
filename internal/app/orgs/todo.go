@@ -1378,6 +1378,30 @@ func SetProperty(n *org.Headline, key string, val string) {
 	// Without this a heading with no drawer is a nil dereference, which is the
 	// common case for anything setting a property from outside the editor -
 	// the kanban board dropping a card into a column, say.
+	// Setting a property to nothing takes it off the heading, rather than
+	// leaving `:AFTER:` sitting there with no value after it. Anything undoing
+	// a property it set writes the old value back, and for a property that was
+	// not there before, the old value is nothing - so this is the difference
+	// between undo tidying up after itself and undo leaving litter.
+	if val == "" {
+		if n.Properties == nil {
+			return
+		}
+		kept := [][]string{}
+		for _, kvPair := range n.Properties.Properties {
+			if kvPair[0] != key {
+				kept = append(kept, kvPair)
+			}
+		}
+		if len(kept) == 0 {
+			// An empty drawer is litter too, and the writer leaves a heading
+			// with no Properties alone.
+			n.Properties = nil
+			return
+		}
+		n.Properties.Properties = kept
+		return
+	}
 	if n.Properties == nil {
 		n.Properties = &org.PropertyDrawer{Properties: [][]string{}}
 	}

@@ -37,7 +37,10 @@ func RestApi(router *mux.Router) {
 	if !Conf().Server.NoAuth {
 		api.Use(authenticate)
 	} else {
-		fmt.Println("WARNING: Authentication is disabled (noAuth: true)")
+		// Still a middleware: the per-user endpoints read a username off every
+		// request, and with nobody logged in they would all refuse.
+		api.Use(noAuthUser)
+		fmt.Printf("WARNING: Authentication is disabled (noAuth: true), everything is done as %q\n", NoAuthUsername)
 	}
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
@@ -101,6 +104,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/table", PostTable).Methods("POST")
 	api.HandleFunc("/table/eval", PostTableEval).Methods("POST")
 	api.HandleFunc("/tangle", RequestTangle)
+
+	// The gantt chart: the schedule behind one, and adding a task to it
+	api.HandleFunc("/gantt/tasks", RequestGanttTasks).Methods("GET")
+	api.HandleFunc("/gantt/add", PostGanttAdd).Methods("POST")
 
 	// Backlinks and the link graph
 	api.HandleFunc("/links", RequestBacklinks).Methods("GET")

@@ -139,7 +139,7 @@ function wordcloud(name, words) {
 	</script>
 	<script type="module">
 	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-	  mermaid.initialize({ startOnLoad: true });
+	  mermaid.initialize({ startOnLoad: true, maxTextSize: 2000000 });
 	</script>
 
     {%autoescape off%}
