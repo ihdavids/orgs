@@ -73,6 +73,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/status/change", PostChangeStatus).Methods("POST")
 	api.HandleFunc("/headline/change", PostRenameHeadline).Methods("POST")
 	api.HandleFunc("/body/change", PostChangeBody).Methods("POST")
+	api.HandleFunc("/body/{hash}", RequestTodoBody).Methods("GET")
+	api.HandleFunc("/checklist", PostChecklistToggle).Methods("POST")
+	api.HandleFunc("/addresses", RequestServerAddresses).Methods("GET")
+	api.HandleFunc("/status", RequestDefaultStatus).Methods("GET")
 	api.HandleFunc("/status/{hash}", RequestValidStatus)
 	api.HandleFunc("/date/change", PostChangeDate).Methods("POST")
 	api.HandleFunc("/date/change", DeleteDate).Methods("DELETE")
@@ -191,6 +195,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/voice/recording/{id}", DeleteVoiceRecording).Methods("DELETE")
 	api.HandleFunc("/voice/transcribe", PostVoiceTranscribe).Methods("POST")
 	api.HandleFunc("/voice/note", PostVoiceNote).Methods("POST")
+	api.HandleFunc("/voice/append", PostVoiceAppend).Methods("POST")
+	api.HandleFunc("/image/paste", PostImagePaste).Methods("POST")
 	api.HandleFunc("/voice/whisper/restart", PostWhisperRestart).Methods("POST")
 
 	// Per-user extensions: kanban boards
@@ -630,13 +636,25 @@ func RequestFullFileHtml(w http.ResponseWriter, r *http.Request) {
 	|-----------+--------+----------------------------------------------------------|
 	| ={hash}=  | string | Base64-URL-encoded hash of the heading to render.        |
 
-	*Response:* The rendered HTML string, or an error object on failure.
+	*Query Parameters:*
+	| Parameter | Type   | Required | Description                                                                 |
+	|-----------+--------+----------+-----------------------------------------------------------------------------|
+	| =theme=   | string | no       | Render through the html exporter with this theme and return its stylesheet.  |
+
+	Without =theme= the heading is rendered by go-org's own writer and =style= is
+	empty - a bare fragment. With one, the heading goes through the html
+	exporter instead, so pictures and recordings resolve to urls this server
+	serves, and =style= carries the theme's css for a client that has no
+	document to hang a =<head>= on. See =/html/themes= for the names.
+
+	*Response:* A =FullTodo= with the rendered html in =content= (and =style= when
+	a theme was asked for), or an error object on failure.
 	EDOC */
 func RequestFullTodoHtml(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		var hash common.TodoHash = common.TodoHash(h)
-		reply, err := QueryFullTodoHtml(&hash)
+		reply, err := QueryFullTodoHtmlThemed(&hash, r.URL.Query().Get("theme"))
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
@@ -2040,6 +2058,28 @@ func PostExecAllT(w http.ResponseWriter, r *http.Request) {
 	*Response:* A JSON array of valid status keyword strings (e.g. =["TODO", "NEXT", "DONE"]=),
 	or an error string.
 	EDOC */
+/* SDOC: API
+* GET /status — The Todo Keywords This Server Accepts
+
+	The keywords from =defaultTodoStates= in the server config, split the way
+	org splits them: everything before the =|= is a state a task is still in,
+	everything after it is a state it has finished in. A file with its own
+	=#+TODO:= line overrides these for its own headings - use =/status/{hash}=
+	to ask what one particular heading may be set to.
+
+	*Method:* =GET=
+
+	*Response:* ={"Active": ["TODO", ...], "Done": ["DONE", ...]}=
+
+	The order is the order they were configured in, which is the order they are
+	meant to be read in.
+EDOC */
+func RequestDefaultStatus(w http.ResponseWriter, r *http.Request) {
+	active, done := ParseTodoStates(Conf().Server.DefaultTodoStates)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(common.TodoStatesResult{Active: active, Done: done})
+}
+
 func RequestValidStatus(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {

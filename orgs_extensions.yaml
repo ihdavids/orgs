@@ -5,5 +5,109 @@ users:
       query: '!IsArchived() && IsStatus(''TODO'')'
     - name: Orch
       query: '!IsArchived() && IsStatus(''TODO'') && HasTags(''ORCHESTRATION25'')'
+    - name: Orch2
+      query: '!IsArchived() &&  HasTags(''ORCHESTRATION25'')'
     captureTemplates: []
-    kanbanBoards: []
+    kanbanBoards:
+    - name: Board
+      storedQuery: Orch2
+      query: ""
+      includeArchived: false
+      groupBy: status
+      groupKey: ""
+      columns:
+      - value: TODO
+        title: ""
+        color: blue
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: INPROGRESS
+        title: ""
+        color: indigo
+        limit: 0
+        collapsed: false
+        aliases:
+        - IN-PROGRESS
+      - value: NEXT
+        title: ""
+        color: violet
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: BLOCKED
+        title: ""
+        color: pink
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: PAUSED
+        title: ""
+        color: amber
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: WAITING
+        title: ""
+        color: orange
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: PHONE
+        title: ""
+        color: red
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: MEETING
+        title: ""
+        color: cyan
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: DONE
+        title: ""
+        color: green
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: BACKLOG
+        title: ""
+        color: blue
+        limit: 0
+        collapsed: false
+        aliases: []
+      - value: CANCELLED
+        title: ""
+        color: teal
+        limit: 0
+        collapsed: false
+        aliases: []
+      showUnset: true
+      unsetTitle: ""
+      colorBy: none
+      colorKey: ""
+      colors: {}
+      badges: []
+      backShows: both
+      sort: manual
+      orderKey: KANBAN
+      layout: board
+      listFields: []
+      labelSource: property
+      labelKey: SECTION
+      labelColors: {}
+      labelOrder: []
+      hidden:
+      - NEXT
+      folded:
+      - PAUSED
+      - PHONE
+      - MEETING
+      - CANCELLED
+      - WAITING
+      - BACKLOG
+      - NEXT
+      - TODO
+      headerKey: ""
+      headerColors: {}

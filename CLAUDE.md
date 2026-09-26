@@ -142,6 +142,10 @@ Five things to keep in mind when changing the note side:
 
 Two things about the kanban board endpoints are worth knowing before changing them. A `KanbanBoard` deliberately holds **no cards** - it names a query and says how to draw whatever that finds, so it can never be stale and deleting one touches no heading. And `POST /ext/kanban/boards` replaces the whole list in one write, because renaming a board and reordering the tabs both change a list rather than one entry: done as a delete plus an add, a lost second call would leave the boards half written.
 
+A board is drawn one of two ways, which `layout` picks: a row of columns of cards, or one grouped list with a table column per field (`listFields`, a key from worg's own list or `prop:NAME`). They are **layouts over one model**, not two boards - which group a heading is in, what order the rows are in and what a drag writes are all answered by `kanban.ts`, so a heading dragged into Done in the list is the same write as a card dropped in the Done column. Two things are the list's own. The **todo keyword leads every row** rather than sitting among the fields - it is what a todo list is read down - and it is a control: clicking it asks `/status/{hash}` what that heading's own file allows and offers those, so it is never the board's columns being offered. It is therefore filtered out of `listFields` (`PINNED_FIELDS`) rather than being pickable. And the **section order is the column order**, so moving a section up or down on a board that was reading its columns off the server's keywords takes them as its own - which is what ordering them means. How a keyword is drawn - icon, colour, and a dark-page ink as well as a light-page one - lives in `components/statuslook.tsx` and is shared with the search table, because a keyword drawn two ways is two things as far as the reader is concerned.
+
+A third, which has bitten twice: **a board setting that is not a field of `KanbanBoard`/`KanbanColumn` in `extensions.go` is silently dropped on save.** The board travels as json both ways and go unmarshals into the struct, so a field worg knows about and the server does not survives in the browser for as long as the tab is open and is gone the next time the boards are read back - with no error anywhere. Column `aliases`, the card header's `headerKey`/`headerColors`, the board's `folded` list, and `layout`/`listFields` are all there for that reason. Add the go field in the same change as the typescript one.
+
 The board that made it necessary is worg's Kanban tab, which writes a heading's property when a card is dropped in a column. That exposed a nil dereference in `SetProperty` (`todo.go`): a heading with no `:PROPERTIES:` drawer has `Headline.Properties == nil`, and the old `if props == nil` check could never fire, having taken the address of a field first. It now creates the drawer, which the org writer prints directly under the headline - so anything setting a property from outside the editor works on a heading that has never had one.
 
 ### Backlinks and the link graph
@@ -154,6 +158,10 @@ The index is cached against `OrgDb.ReloadIndex` and rebuilt whenever a file relo
 2. go-org ends a headline's body at a drawer written in column zero, which leaves `Headline.Properties` nil and drops the rest of that heading into `Document.Nodes` at the top level. So links are attributed to the last heading starting above them rather than trusting the outline alone, and ids are read from a local `idIndex` that also picks up those hoisted property drawers.
 
 That same worg file view shows a file three ways, picked from buttons over the page: the html exporter's page, the file's own text with org syntax colouring (`components/OrgSource.tsx` in worg - nothing server side), and, for the files `/dnd/characters` reports, the `dndsheet` character sheet fetched from `/file/dndsheet` as a string rather than written to disk.
+
+### Todo keywords over the wire
+
+`GET /status` answers with the keywords this server accepts - `defaultTodoStates` split the way org splits it, everything before the `|` active and everything after it finished - in the order they were configured, which is the order they are meant to be read in. `GET /status/{hash}` is the per-heading question and answers from that heading's own file (`#+TODO:`) when it has one. worg's kanban builds a board's default columns out of the global list.
 
 ### Filters and tag groups
 
@@ -203,11 +211,100 @@ A few rules to keep in mind when changing it:
 27. The timeline has its **own** undo (`/dnd/play/session/{id}/undo`), which is the journal narrowed to one file (`dndLastChangeTo`). The character sheet's Undo button takes back the last thing that happened anywhere; a drawer showing one evening must offer the last thing that happened to *that evening*, or deleting a block and then rolling a die leaves the timeline offering to un-roll the die. Only the newest entry for a file is ever offered, which is what makes taking one out of the middle of the journal safe.
 28. Folding and the timeline's search box are the page's own and are written nowhere - they are about reading the evening, not about what happened in it. One card folds and opens by **its dot on the spine** (`tlDot`), not by a chevron among the tools: the dot is already the mark the eye runs down looking for a place in the evening, and the tools on the right are the two that change the session file - name this, throw this away - so a third button among them that only changed what you could see read as one of those. Two things there are easy to get wrong: *fold all* clears the per-card overrides, because a card left open an hour ago quietly staying open is not what the button says; and the search matches on **everything a card holds** (`tlHay`), not on what it is currently showing, or folding the timeline would hide the very spell somebody folded it to go looking for.
 
+### What a kanban card shows of its heading's text
+
+A card reads three things out of the body under its heading: a **checklist**, a **recording** and a **picture**. All three come from `GET /body/{hash}` (`internal/app/orgs/checklist.go`), which answers with the body **as it is written in the file** - not `/todohtml/{hash}`, which is right for reading and useless here: a rendered `- [ ]` is a disabled input with no way back to the line it came from.
+
+Four things to keep in mind:
+
+1. **Ticking a box is a line edit**, `POST /checklist`, and nothing else. `/body/change` exists and would work, but it parses the new text and writes the whole document back through go-org - a lot of file to risk for one character, and every drawer and table reformatted on the way past.
+2. The write says **which box and what it said**. The index alone goes stale the moment a line is added above it; the text alone cannot tell two identical items apart. Both have to agree or the write is refused. It also says the state it wants rather than asking for a flip, so a double click cannot land as two flips.
+3. A `*` in column zero is a **heading, not a bullet**. `* [ ] something` is a heading whose text happens to start with a box, and counting it would put another card's item on this one. Client and server match the same shape and count the same items - they have to, because the client numbers the boxes and the server counts them again to find the line.
+4. The audio and image urls are resolved **server side** and handed over ready to use. A link is written relative to the org file that holds it and the file server is rooted at the first org directory; the client knows neither. It is the same sum the html exporter does for its audio players.
+
+Bodies are cached in the browser by hash. A hash does not change when the text does, so nothing expires on its own: the board clears the cache when it reads itself back, and a tick refreshes just that heading. Both **replace rather than drop** - the old body stays on screen until the new one arrives, because blank is worse than stale and dropping it makes the whole checklist blink out on every tick.
+
+### The search tab's inspect view
+
+Inspect shows a heading three ways at once: its rendered html for the prose, a player for a recording it points at, its pictures, and its tables drawn the way the Tables tab draws one (`components/OrgTableView.tsx` - read-only, with the `@n`/`$n` rulers).
+
+The tables and pictures come from `/body/{hash}` rather than from the html, and the rendered `<table>`s are **hidden in that view** (`'& table': { display: 'none' }`) so nothing is shown twice. Org tables are parsed by `tablesIn` in `worg/src/orgbody.ts`: a `|---+---|` line is a rule rather than a row of dashes, a `#+TBLFM:` line is not a row at all, and a blank line ends a table the way org ends one.
+
+### Pictures: pasting one, and filing a chart
+
+`POST /image/paste` keeps a picture in `images/` under the first org directory and appends a link to it. It is told where in one of two ways:
+
+- **a heading hash** - a picture pasted onto the back of a kanban card, which then turns up on the front, because the front already draws the first picture the heading points at;
+- **a filename and an `afterLine`** - the Tables view filing a chart, which belongs under the table it is of rather than at the end of whatever heading the table happens to sit in.
+
+`afterLine` is a **zero-based index**, which is what a table's `EndLine` is - go-org counts rows from zero. Inserting *at* that index puts the picture inside the table, one row up from the bottom.
+
+Nothing is converted: the bytes go down as they arrive, so the extension follows what was actually pasted. The link is written relative to the org file that holds it, so moving the org directory keeps every picture - the same rule a voice note's audio follows.
+
+Two things in the html exporter were wrong and are fixed here, both surfaced by this:
+
+1. `WriteRegularLink` chopped a fixed seven characters off `l.URL` assuming `file://`. Org writes `file:path` too - and that is what a link somebody typed looks like - so `file:images/x.png` became `ages/x.png`. It reads the target properly now.
+2. The default branch built `http://localhost:<port>/images/...`. That works on the machine running the server and nowhere else, which now matters: there is a QR code for opening worg on a phone. A page this server rendered and is about to serve gets a path of its own. The `filelinks;`, `httpslinks;` and `httplinks;` opts are unchanged - they are for a file on disk and for vscode.
+
+### Speaking into a heading that already exists
+
+The mic at the foot of a kanban card's back records, transcribes and appends - `POST /voice/append` (`internal/app/orgs/voiceappend.go`). It is the sibling of `/voice/note`, which files a recording as a **new heading** under a target; here the heading is already there and is what the card is about, so the words go into its own body and the audio is linked from its own `:AUDIO:`.
+
+The order is the voice notes' order and for the same reason: `/voice/recording` saves the audio the moment recording stops, **before** anything is attempted on it, and the text written is the text sent rather than a fresh transcription. A transcription that fails costs the transcription, not the words - and when whisper says nothing at all the recording is still filed and still linked, with the card saying so.
+
+Two things about the write:
+
+1. It is a **line splice**, like the voice notes and the checklist. Appending a paragraph to one heading should not reformat every drawer and table in the file it happens to live in.
+2. A heading that already has an `:AUDIO:` **keeps it**, and the second recording's link goes in the body beside its own words. The property holds one link; overwriting it would leave the first recording on disk with nothing pointing at it, and losing a link to a recording quietly is worse than having them in two places.
+
+### Reaching the server from a phone
+
+`GET /addresses` answers with every url this machine can be reached on, private addresses first. It exists because the page cannot work it out: the browser's bar almost always says `localhost`, and a phone pointed at `localhost` reaches itself. worg's sidebar foot turns the answer into a QR code.
+
+### Charting a spreadsheet selection
+
+worg's Tables tab charts the numbers in a selection (ctrl-g, or the chart button). It used to be one hand-drawn svg line chart; there are eighteen types now - lines, bars, parts of a whole, comparisons - so **echarts** draws them and `worg/src/chartspec.ts` decides what to draw. That module is pure and tested, because a chart drawn from the wrong axis still looks like a chart: the failure is a picture that reads perfectly and says something untrue. echarts is imported when the popup first opens rather than with the app - it is a megabyte and most sessions never chart anything.
+
+Three rules are pinned by `chartspec.test.ts`:
+
+1. **A gap is never a zero.** A missing reading is `null` all the way through, and lines break rather than being drawn across. Radar is the one exception - it has no notion of a missing point - and that is why it is the only place a zero stands in.
+2. **A type that cannot show several series folds them** (`foldToTotals`) rather than drawing the first and dropping the rest silently. Pie, donut, rose and funnel say so in the subtitle when they do it.
+3. **Horizontal bars swap the axes, not the data**, so the tooltip and the legend say the same thing whichever way round the chart is.
+
+### Mind maps
+
+worg's Mind Map tab draws a saved query's headings as a map, with three engines behind a dropdown: **mind-elixir** (the default - a map you can drag branches about in), **jsMind** (boxes and branches, easiest to read at a glance) and **mermaid** (a fixed drawing, the one that goes into a document). The engine is a browser setting (`mindEngine`), not a server one.
+
+All three are handed one tree, built in `worg/src/mindmap.ts` from the query's own rows rather than from the server's mermaid source. That is the thing to keep: the mermaid `mindmap` exporter emits a label and an indent and nothing else - no keyword, no tags, no file, no hash - so a map built by parsing it can never be clicked back to the heading, coloured by keyword, or filtered, and the old tab's regex-scraping of the exporter's html was exactly that. Four rules live in that module:
+
+1. A heading hangs off **the last heading above it with a smaller level**, whatever that level was. A query can find a level-3 heading whose level-2 parent does not match, and any other rule either orphans it or makes it a top-level branch.
+2. **One file goes straight under the root; several files each get a branch of their own**, because a map whose branches come from three files and does not say so reads as one outline.
+3. A node's **id is the heading's hash**, which is what lets a click in any of the three engines find its way back to the heading.
+4. Every node knows **which branch off the root it hangs from** (`branch`), because the classic mind-map colouring is by branch rather than by depth - a branch and everything on it share a hue, which is what makes a wide map readable.
+
+Nothing any engine does is written back to the org files. Dragging a node in mind-elixir rearranges the drawing, not the outline: this view is for reading a plan and moving it around to think, and a drag that silently refiled a heading is not what somebody rearranging a map expects.
+
+### Audio in an exported page
+
+A heading that names a recording in one of its properties gets a player in the html export (`WriteAudio` in `plugs/html/html.go`). `:AUDIO:` is the property orgs writes itself, from a voice note, but any property whose value points at a file with an audio extension gets one - so `:INTERVIEW: [[file:takes/mira.wav]]` works without the exporter knowing what an interview is. Three things about it:
+
+1. **Nothing is fetched until it is asked for** (`preload="none"`). A file with forty voice notes in it should cost one page, not forty recordings.
+2. **A link is written relative to the org file that holds it** - that is what makes moving the org directory keep every note's audio - while the file server is rooted at the *first org directory*, so `MediaSrc` puts the two back together, and falls back to resolving against the root because plenty of files are written that way. Outside the org directory there is nothing to serve, so it hands back a `file://` link rather than a url that would 404.
+3. The url is a **path** (`/images/...`) rather than `http://localhost:port/...`, so the page works whatever host and port the server was reached on - the `filelinks;`/`httpslinks;`/`httplinks;` opts still produce the absolute forms for an exported file on disk and for a vscode webview. `WriteRegularLink` keeps its own older rule for images; the two are not shared on purpose, because changing how an image url is built would change every page anybody has already exported.
+
 ### Gantt charts
 
 `internal/app/orgs/gantt.go` serves the two endpoints worg's Gantt tab needs that nothing else provided: **`GET /gantt/tasks`**, which answers with the schedule itself - every heading a query finds, its lane, its effort, what it comes after and the **hash to change it by** - and **`POST /gantt/add`**, which writes a new heading under a parent given by hash (`/capture` needs a template, and a chart knows its parent by hash). Wire types are in `internal/common/gantt.go`.
 
-It restates none of the scheduling rules: which heading comes after which, what lane it is in and whose it is are read with the mermaid exporter's own exported helpers (`mermaid.After`, `GetSection`, `GetResource`), so the charts worg draws and the page `/file/mermaid` exports cannot drift apart. Dates are deliberately **not laid out** server side - a task says when it starts or what it comes after, and the client resolves the chain, the same division of labour the exporter already has with mermaid's renderer. A task the query did not find but something it did find comes after is included with `Implied: true`, so the chain reads end to end.
+It restates none of the scheduling rules: which heading comes after which, what lane it is in and whose it is are read with the mermaid exporter's own exported helpers (`mermaid.After`, `GetSection`, `GetResource`), so the charts worg draws and the page `/file/mermaid` exports cannot drift apart.
+
+A heading's **lane** (`GetSection`) is the first of these that says anything, and nesting alone is not one of them - being somebody's child does nothing on its own:
+
+1. the heading's own `:SECTION:` property;
+2. the `:SECTION:` of its parent, but *only* when that parent is tagged `:project:`;
+3. its own `:ASSIGNED:` property.
+
+Anything still without one is drawn in a lane the client calls `main` (`DEFAULT_SECTION` in worg's `gantt.ts`). The **resource** (`GetResource`) is a separate ladder - `:ASSIGNED:`, then `:RID:`, then `:RESOURCEID:`, falling back to the *headline* of a parent tagged `:project:` - which is why a task with no assignee of its own is coloured by its project when the chart is coloured by assignee. Dates are deliberately **not laid out** server side - a task says when it starts or what it comes after, and the client resolves the chain, the same division of labour the exporter already has with mermaid's renderer. A task the query did not find but something it did find comes after is included with `Implied: true`, so the chain reads end to end.
 
 Everything a gantt client *changes* goes through endpoints that already existed (`/headline/change`, `/date/change`, `/property`, `/status/change`, `/delete`), which is why three bugs in those surfaced while building it and are fixed here:
 

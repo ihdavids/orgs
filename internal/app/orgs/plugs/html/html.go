@@ -175,6 +175,183 @@ func GetPropTag(name, revealName string, h org.Headline, secProps string) string
 	}
 	return secProps
 }
+// ---------------------------------------------------------------------------
+// Audio a heading points at
+// ---------------------------------------------------------------------------
+//
+// A heading can name a recording in one of its properties - `:AUDIO:` is the
+// one orgs writes itself, from a voice note - and the exported page gives it a
+// player rather than a line of text nobody can listen to. Any property whose
+// value points at a file with an audio extension gets one, so a heading that
+// says `:INTERVIEW: [[file:takes/mira.wav]]` works without anything here
+// knowing what an interview is.
+//
+// Nothing is fetched until it is asked for (`preload="none"`): a file with
+// forty voice notes in it should cost one page, not forty recordings.
+
+// The extensions a browser will take, and what to tell it they are. Firefox in
+// particular will refuse a source whose type it cannot guess from the url, and
+// a recorder's file may have no extension a server knows.
+var audioTypes = map[string]string{
+	".mp3":  "audio/mpeg",
+	".wav":  "audio/wav",
+	".ogg":  "audio/ogg",
+	".oga":  "audio/ogg",
+	".opus": "audio/ogg",
+	".webm": "audio/webm",
+	".weba": "audio/webm",
+	".m4a":  "audio/mp4",
+	".mp4a": "audio/mp4",
+	".aac":  "audio/aac",
+	".flac": "audio/flac",
+}
+
+// The target a property value points at, whatever shape it was written in:
+// an org link with or without a description, a bare `file:` link, or a plain
+// path. Anything that is not one of those comes back empty.
+func LinkTarget(v string) string {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return ""
+	}
+	if strings.HasPrefix(v, "[[") {
+		end := strings.Index(v, "]]")
+		if end < 0 {
+			return ""
+		}
+		v = v[2:end]
+		// `[[target][description]]` - the description is not the target.
+		if i := strings.Index(v, "]["); i >= 0 {
+			v = v[:i]
+		}
+	}
+	v = strings.TrimSpace(v)
+	v = strings.TrimPrefix(v, "file://")
+	v = strings.TrimPrefix(v, "file:")
+	return strings.TrimSpace(v)
+}
+
+// The audio type of a target, or "" when it is not one.
+func AudioType(target string) string {
+	i := strings.IndexAny(target, "?#")
+	if i >= 0 {
+		target = target[:i]
+	}
+	return audioTypes[strings.ToLower(filepath.Ext(target))]
+}
+
+// Where a browser can fetch a file the org file points at.
+//
+// A link is written relative to the org file that holds it - that is what
+// makes moving the whole org directory keep every note's audio - while the
+// file server is rooted at the org directory, so the two have to be put back
+// together here. A link that resolves to nothing under the org file is tried
+// again against the root, because plenty of org files are written that way.
+//
+// The three shapes are the ones WriteRegularLink already uses for images: an
+// exported page on disk wants file:// urls, a vscode webview wants localhost,
+// and a page served by this server wants a path of its own so that it works
+// whatever host and port it was reached on.
+func (w *OrgHtmlWriter) MediaSrc(doc *org.Document, target string) string {
+	if target == "" {
+		return ""
+	}
+	// Anything with a protocol of its own is already fetchable.
+	if strings.Contains(target, "://") || strings.HasPrefix(target, "//") {
+		return target
+	}
+
+	dirs := w.Exp.pm.OrgDirs
+	root := ""
+	if len(dirs) > 0 {
+		root, _ = filepath.Abs(dirs[0])
+	}
+
+	// Resolve against the file that names it, and fall back to the org root.
+	abs := ""
+	if doc != nil && doc.Path != "" && !filepath.IsAbs(target) {
+		abs, _ = filepath.Abs(filepath.Join(filepath.Dir(doc.Path), filepath.FromSlash(target)))
+		if _, err := os.Stat(abs); err != nil {
+			if root != "" {
+				alt, _ := filepath.Abs(filepath.Join(root, filepath.FromSlash(target)))
+				if _, err := os.Stat(alt); err == nil {
+					abs = alt
+				}
+			}
+		}
+	} else if filepath.IsAbs(target) {
+		abs = filepath.FromSlash(target)
+	} else if root != "" {
+		abs, _ = filepath.Abs(filepath.Join(root, filepath.FromSlash(target)))
+	}
+	if abs == "" {
+		return ""
+	}
+
+	if strings.Contains(w.Opts, "filelinks;") {
+		return "file://" + filepath.ToSlash(abs)
+	}
+
+	// Under the file server, which is rooted at the first org directory. A
+	// file outside it cannot be served, and is offered as a file:// link
+	// rather than as a url that would answer 404.
+	rel := ""
+	if root != "" {
+		if r, err := filepath.Rel(root, abs); err == nil && !strings.HasPrefix(r, "..") {
+			rel = filepath.ToSlash(r)
+		}
+	}
+	if rel == "" {
+		return "file://" + filepath.ToSlash(abs)
+	}
+	if strings.Contains(w.Opts, "httpslinks;") {
+		return fmt.Sprintf("https://localhost:%d/images/%s", w.Exp.pm.TLSPort, rel)
+	}
+	if strings.Contains(w.Opts, "httplinks;") {
+		return fmt.Sprintf("http://localhost:%d/images/%s", w.Exp.pm.Port, rel)
+	}
+	return "/images/" + rel
+}
+
+// The players for one heading, in the order the properties were written. The
+// property's own name is the label unless it is the obvious one, because
+// `:AUDIO:` over a player says nothing that the player does not.
+func (w *OrgHtmlWriter) WriteAudio(h org.Headline) {
+	if h.Properties == nil {
+		return
+	}
+	for _, kv := range h.Properties.Properties {
+		if len(kv) < 2 {
+			continue
+		}
+		name := strings.ToUpper(strings.TrimSpace(kv[0]))
+		target := LinkTarget(kv[1])
+		mime := AudioType(target)
+		if mime == "" {
+			continue
+		}
+		src := w.MediaSrc(h.Doc, target)
+		if src == "" {
+			continue
+		}
+		label := ""
+		if name != "AUDIO" {
+			label = fmt.Sprintf(`<span class="org-audio-label">%s</span>`, html.EscapeString(name))
+		}
+		w.WriteString(fmt.Sprintf(
+			`<div class="org-audio">%s<audio class="org-audio-player" controls preload="none">`+
+				`<source src="%s" type="%s"/>`+
+				`<a href="%s">%s</a>`+
+				`</audio><a class="org-audio-file" href="%s" title="%s">%s</a></div>`,
+			label,
+			html.EscapeString(src), mime,
+			html.EscapeString(src), html.EscapeString(target),
+			html.EscapeString(src), html.EscapeString(target),
+			html.EscapeString(filepath.Base(target)),
+		))
+	}
+}
+
 func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 	if l.Protocol == "file" && l.Kind() == "image" {
 
@@ -182,7 +359,11 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 		// Since a vscode webview is a seperate entity self signed certificates also do not work.
 		// So we support localhost access over http to fix that. It's not ideal but works.
 
-		url := l.URL[len("file://"):]
+		// `file://path` and `file:path` are both written, and org itself puts
+		// the shorter one in a link somebody typed. Chopping a fixed seven
+		// characters eats the first two of the path on every one of those -
+		// which is how `file:images/x.png` became `ages/x.png`.
+		url := LinkTarget(l.URL)
 		//fname, _ := filepath.Abs(url)
 
 		//fname = "file://" + fname
@@ -210,9 +391,20 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 					fname = "file://" + fname
 				}
 			}
-		} else { //if strings.Contains(w.Opts, "httplinks;") {
+		} else if strings.Contains(w.Opts, "httplinks;") {
 			fname = url
 			fname = fmt.Sprintf("http://localhost:%d/images/%s", w.Exp.pm.Port, fname)
+		} else {
+			// A page this server rendered and is about to serve: a path of its
+			// own works whatever host and port it was reached on, and a
+			// `http://localhost` one does not work at all on the phone that
+			// scanned the QR code. The three explicit opts above are
+			// unchanged - they are for a file on disk and for vscode.
+			if src := w.MediaSrc(w.Document, url); src != "" {
+				fname = src
+			} else {
+				fname = "/images/" + url
+			}
 		}
 		if l.Description == nil {
 			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`, fname, fname, url))
@@ -317,6 +509,10 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	w.WriteString("</div>")
 	w.WriteString(fmt.Sprintf("<div id=\"%s-content\" class=\"heading-content-wrapper content-level-%d\">", id, h.Lvl+1))
 	w.WriteString(fmt.Sprintf("<div id=\"%s-text\" class=\"heading-content-text\">", id))
+
+	// Before the text: a recording is what the heading is about when it has
+	// one, and a player below three paragraphs is a player nobody finds.
+	w.WriteAudio(h)
 
 	if content := w.WriteNodesAsString(h.Children...); content != "" {
 		w.WriteString(content)
@@ -488,13 +684,29 @@ func NewHtmlExp() *OrgHtmlExporter {
 var hljsver = "11.9.0"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
+// The player's own styling, appended to whatever stylesheet the page uses.
+//
+// Kept here rather than in the twelve theme files because it is the same on
+// all of them: it borrows the page's own colour and says everything else in
+// size and spacing, so a theme added later gets it without being told. The
+// native control is left alone - a hand-built transport is a lot of code to
+// end up worse at being a play button - and only asked to follow the reader's
+// light or dark setting.
+const audioStyles = `
+.org-audio { display: flex; align-items: center; gap: 0.6em; flex-wrap: wrap; margin: 0.5em 0 0.9em; }
+.org-audio-player { height: 34px; flex: 1 1 260px; max-width: 460px; color-scheme: light dark; }
+.org-audio-label { font-size: 0.72em; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; }
+.org-audio-file { font-size: 0.75em; opacity: 0.55; text-decoration: none; color: inherit; word-break: break-all; }
+.org-audio-file:hover { opacity: 1; text-decoration: underline; }
+`
+
 func GetStylesheet(name string, fontfamily string) string {
 	if data, err := os.ReadFile(plugs.PlugExpandTemplatePath("html_styles/" + name + "_style.css")); err == nil {
 		// HACK: We probably do not alway want to do this. Need to think of a better way to handle this!
 		re := regexp.MustCompile(`url\(([^)]+)\)`)
 		ff := regexp.MustCompile(`[{][{]fontfamily[}][}]`)
 
-		return ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily)
+		return ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily) + audioStyles
 	}
 	// An unknown theme name still has to produce a styled page.
 	if name != "default" {
@@ -569,4 +781,36 @@ func init() {
 	common.AddExporter("html", func() common.Exporter {
 		return &OrgHtmlExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "html_default.tpl"}
 	})
+}
+
+// RenderFragment renders a handful of nodes the way an exported page renders
+// them and hands back the html on its own - no document, no template, no
+// stylesheet.
+//
+// It exists for the callers that show one heading rather than a file: worg's
+// inspect popup and the kanban cards. Going through this writer rather than
+// go-org's plain one is what makes a picture in a heading resolve to a url this
+// server actually serves and a recording come back as a player, since those are
+// this writer's overrides and not go-org's.
+//
+// The exporter is shared between requests and this reads its props, so it must
+// not be called while an export is writing its own.
+func (self *OrgHtmlExporter) RenderFragment(nodes ...org.Node) string {
+	self.Props = ValidateMap(self.Props)
+	w := NewOrgHtmlWriter(self)
+	org.WriteNodes(w, nodes...)
+	return w.String()
+}
+
+// ThemeStyle is the stylesheet a named theme renders with, for a caller showing
+// a fragment that has no document of its own to hang a <head> on. An empty name
+// is the default theme, and a name no theme answers to falls back to it too.
+func (self *OrgHtmlExporter) ThemeStyle(theme string) string {
+	self.Props = ValidateMap(self.Props)
+	name := theme
+	if name == "" {
+		name = "default"
+	}
+	fontfamily, _ := self.Props["fontfamily"].(string)
+	return GetStylesheet(name, fontfamily)
 }

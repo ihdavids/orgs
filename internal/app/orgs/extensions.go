@@ -35,8 +35,16 @@ type KanbanColumn struct {
 	Color string `yaml:"color" json:"color"`
 	// Work in progress limit. Zero means no limit; the board only warns.
 	Limit int `yaml:"limit" json:"limit"`
-	// Drawn folded to a spine until it is opened again.
+	// Drawn folded to a spine until it is opened again. Worked out from the
+	// board's Folded list when the columns are built rather than stored here,
+	// and kept only so a board written before that still reads.
 	Collapsed bool `yaml:"collapsed" json:"collapsed"`
+	// Other spellings of the same thing, shown in this column too: a board
+	// whose files say both IN-PROGRESS and INPROGRESS wants one column, not
+	// two. Dropping a card on the column writes Value; the aliases are offered
+	// as drop targets of their own while a card is being dragged, so the other
+	// spelling can still be written deliberately.
+	Aliases []string `yaml:"aliases" json:"aliases"`
 }
 
 // KanbanBoard is one saved board: where its cards come from, what splits them
@@ -80,6 +88,36 @@ type KanbanBoard struct {
 	// is written to.
 	Sort     string `yaml:"sort" json:"sort"`
 	OrderKey string `yaml:"orderKey" json:"orderKey"`
+	// Drawn as a board of columns or as one grouped list: the same cards, the
+	// same groups and the same drag, laid out differently. ListFields names the
+	// table columns the list lays out beside a heading, in order, either one of
+	// the fields worg knows or "prop:NAME" for a property.
+	Layout     string   `yaml:"layout" json:"layout"`
+	ListFields []string `yaml:"listFields" json:"listFields"`
+	// The coloured bars across a card, for categorising at a glance. They come
+	// either from the heading's tags or from one property holding several
+	// values; LabelColors maps a value to a colour, and LabelOrder is the set
+	// the card's own menu offers.
+	LabelSource string            `yaml:"labelSource" json:"labelSource"`
+	LabelKey    string            `yaml:"labelKey" json:"labelKey"`
+	LabelColors map[string]string `yaml:"labelColors" json:"labelColors"`
+	LabelOrder  []string          `yaml:"labelOrder" json:"labelOrder"`
+	// The sections put away out of sight, by value. Not the same as folded: a
+	// folded section is still on the list with its count, a hidden one is not
+	// drawn at all and is brought back from the toolbar.
+	Hidden []string `yaml:"hidden" json:"hidden"`
+	// The columns drawn folded, by value. On the board rather than on the
+	// columns because a board that reads its columns off the server's todo
+	// keywords has no stored column to write a flag on, and the catch-all
+	// column is appended rather than stored.
+	Folded []string `yaml:"folded" json:"folded"`
+	// The thin bar across the top of a card. HeaderKey names the property it is
+	// read from; empty means the card's own COLOUR (or COLOR), read as the name
+	// of a colour, so a heading can be given one with nothing configured here.
+	// HeaderColors maps that property's values to palette colour names for the
+	// values that are not colours - :CLIENT: Acme being blue.
+	HeaderKey    string            `yaml:"headerKey" json:"headerKey"`
+	HeaderColors map[string]string `yaml:"headerColors" json:"headerColors"`
 }
 
 // UserExt holds per-user extension data.

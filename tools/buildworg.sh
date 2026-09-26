@@ -18,8 +18,22 @@ fi
 echo "building worg in $WORG"
 (cd "$WORG" && npm run build)
 
+# A failed `npm run build` leaves the previous build's public files behind and
+# no `static/`, which looked enough like a build to be copied over the embedded
+# copy - and the binary then served whatever it had last, while this script
+# said "done". Checked explicitly rather than trusted to exit codes.
+if [ ! -f "$WORG/build/index.html" ] || [ ! -d "$WORG/build/static" ]; then
+    echo "worg did not build: $WORG/build has no index.html or static/ - nothing copied" >&2
+    exit 1
+fi
+
 echo "pulling the build into $HERE/worg"
 find "$HERE/worg" -mindepth 1 -maxdepth 1 ! -name embed.go -exec rm -rf {} +
 cp -R "$WORG/build/." "$HERE/worg/"
+
+if [ ! -f "$HERE/worg/index.html" ] || [ ! -d "$HERE/worg/static" ]; then
+    echo "the copy into $HERE/worg is incomplete" >&2
+    exit 1
+fi
 
 echo "done - rebuild orgs to pick it up:  go build -o orgs ./cmd/orgs"

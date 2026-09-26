@@ -83,6 +83,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/govaluate"
+	htmlexp "github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -337,6 +338,60 @@ func HeadingMatchesRe(p *org.Section, headingRe string) bool {
 		title += n.String()
 	}
 	if ok, err := regexp.MatchString(headingRe, title); err == nil && ok {
+		return true
+	}
+	return false
+}
+
+// The text written under a heading, without its child headings: what a person
+// would call the contents of the node.
+//
+// Built from the parsed nodes rather than from the file, because this runs
+// inside a query over every heading in the database and reading a file per
+// heading would make a search of a big org directory unusable.
+func HeadingText(p *org.Section) string {
+	if p == nil || p.Headline == nil {
+		return ""
+	}
+	var b strings.Builder
+	for _, n := range p.Headline.Children {
+		// A child heading is its own node and its own search result.
+		if isHeadline(n) {
+			break
+		}
+		b.WriteString(n.String())
+		b.WriteString("\n")
+	}
+	return b.String()
+}
+
+// Whether a body node is actually a nested heading.
+//
+// go-org's parser builds a heading as `&Headline{...}`, so what sits in
+// `Children` is a *Headline - and a type switch on the value type never fires.
+// Written out here because getting it wrong is silent: a heading's "own body"
+// quietly becomes its whole subtree, which reads as a search that matches too
+// much rather than as a bug.
+func isHeadline(n org.Node) bool {
+	switch n.(type) {
+	case org.Headline, *org.Headline:
+		return true
+	}
+	return false
+}
+
+// Run a regular expression over a heading's own text. The headline is included
+// because "the contents" of a node, to somebody searching, is the thing they
+// can see - and a match that skipped the title would be a surprise.
+func ContentMatchesRe(p *org.Section, re string) bool {
+	if p == nil || p.Headline == nil {
+		return false
+	}
+	var title string
+	for _, n := range p.Headline.Title {
+		title += n.String()
+	}
+	if ok, err := regexp.MatchString(re, title+"\n"+HeadingText(p)); err == nil && ok {
 		return true
 	}
 	return false
@@ -604,6 +659,13 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			s := args[0].(string)
 			return HeadingMatchesRe(p, s), nil
 		},
+		// Run an RE against the heading and everything written under it, short
+		// of its child headings - which are their own results.
+		"MatchContent": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			s := args[0].(string)
+			return ContentMatchesRe(p, s), nil
+		},
 
 		// -----------------------------------------------
 		// DATE TIME QUERIES
@@ -680,11 +742,14 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 			}
 		}
 		td.Props = props
+		// This heading's own body: everything up to the first child heading.
+		// Stopping at the *first* one matters as much as recognising one at
+		// all - taking the last would keep every heading before it.
 		var contentNodes []org.Node = s.Headline.Children
 		for i, n := range s.Headline.Children {
-			switch n.(type) {
-			case org.Headline:
+			if isHeadline(n) {
 				contentNodes = s.Headline.Children[0:i]
+				break
 			}
 		}
 		w := org.NewOrgWriter()
@@ -695,7 +760,33 @@ func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 	return td, fmt.Errorf("failed to find todo by hash")
 }
 
+// The configured html exporter, or nil when the server has none. It is what
+// knows the themes and how to turn a picture or a recording in a heading into
+// something a browser can fetch, so a caller that wants a heading rendered the
+// way the file view renders a page has to go through it rather than through
+// go-org's plain writer.
+func htmlExporter() *htmlexp.OrgHtmlExporter {
+	for _, exp := range Conf().Server.Exporters {
+		if exp.Name != "html" {
+			continue
+		}
+		if h, ok := exp.Plugin.(*htmlexp.OrgHtmlExporter); ok {
+			return h
+		}
+	}
+	return nil
+}
+
 func QueryFullTodoHtml(query *common.TodoHash) (common.FullTodo, error) {
+	return QueryFullTodoHtmlThemed(query, "")
+}
+
+// One heading rendered to html. A theme name renders it through the html
+// exporter instead of go-org's plain writer and hands the theme's stylesheet
+// back beside the fragment, so a client showing the heading on its own can
+// style it the same way the exported page is styled. An empty name is the
+// bare fragment every other caller already expects.
+func QueryFullTodoHtmlThemed(query *common.TodoHash, theme string) (common.FullTodo, error) {
 	var td common.FullTodo
 	if s, ok := GetDb().ByHash[(string)(*query)]; ok {
 		var title string
@@ -713,12 +804,23 @@ func QueryFullTodoHtml(query *common.TodoHash) (common.FullTodo, error) {
 			}
 		}
 		td.Props = props
+		// This heading's own body: everything up to the first child heading.
+		// Stopping at the *first* one matters as much as recognising one at
+		// all - taking the last would keep every heading before it.
 		var contentNodes []org.Node = s.Headline.Children
 		for i, n := range s.Headline.Children {
-			switch n.(type) {
-			case org.Headline:
+			if isHeadline(n) {
 				contentNodes = s.Headline.Children[0:i]
+				break
 			}
+		}
+		// Asking for a theme is asking for the exporter's rendering as well
+		// as its stylesheet: a themed page whose pictures are still file:
+		// links would be styled and broken.
+		if exp := htmlExporter(); theme != "" && exp != nil {
+			td.Content = exp.RenderFragment(contentNodes...)
+			td.Style = exp.ThemeStyle(theme)
+			return td, nil
 		}
 		w := org.NewHTMLWriter()
 		org.WriteNodes(w, contentNodes...)

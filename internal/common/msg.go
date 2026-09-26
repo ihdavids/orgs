@@ -86,6 +86,11 @@ type FullTodo struct {
 	Props    map[string]string
 	Hash     string
 	Priority string
+	// The stylesheet the Content was rendered for, when a theme was asked
+	// for. Empty otherwise, which is what a caller that wants the bare
+	// fragment gets. A fragment cannot carry a <head>, so the css travels
+	// beside it and the client is what puts the two together.
+	Style string `json:",omitempty"`
 }
 
 type TodoHash string

@@ -145,7 +145,10 @@ func authenticate(next http.Handler) http.Handler {
 			if val, err := base64.StdEncoding.DecodeString(c.Value); err != nil {
 				fmt.Printf("Failed to decode the token str\n")
 			} else {
-				fmt.Printf("Using cookie token: %s\n", string(val))
+				// The token itself is never printed. It is a bearer
+				// credential: anything that can read the log can then be
+				// whoever the log was about, and a server's stdout ends up in
+				// terminals, journals and pasted-in bug reports.
 				tokenStr = string(val)
 			}
 		} else {
