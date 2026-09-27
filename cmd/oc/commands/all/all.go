@@ -7,6 +7,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clocks"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clocktable"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clockout"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/contact"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/daypage"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/dnd"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/export"

@@ -85,6 +85,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tags", PostToggleTags).Methods("POST")
 	api.HandleFunc("/capture", PostCapture).Methods("POST")
 	api.HandleFunc("/capture/templates", RequestCaptureTemplates)
+	api.HandleFunc("/voice/link", RequestVoiceLink).Methods("GET")
 	api.HandleFunc("/delete", PostDelete).Methods("POST")
 	api.HandleFunc("/refilefiles", RequestRefileTargets)
 	api.HandleFunc("/refile", PostRefile).Methods("POST")
@@ -109,20 +110,46 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/table/eval", PostTableEval).Methods("POST")
 	api.HandleFunc("/tangle", RequestTangle)
 
+	// Every source block in the database, read rather than merely located.
+	api.HandleFunc("/code", RequestCode).Methods("GET")
+	api.HandleFunc("/code/run", PostCodeRun).Methods("POST")
+	api.HandleFunc("/code/update", PostCodeUpdate).Methods("POST")
+
 	// The gantt chart: the schedule behind one, and adding a task to it
 	api.HandleFunc("/gantt/tasks", RequestGanttTasks).Methods("GET")
 	api.HandleFunc("/gantt/add", PostGanttAdd).Methods("POST")
+
+	// Records and collections: the contact book, and everything else somebody
+	// wants to keep a list of.
+	api.HandleFunc("/records", RequestRecords).Methods("GET")
+	api.HandleFunc("/records/collections", RequestCollections).Methods("GET")
+	api.HandleFunc("/records/fields", RequestRecordFields).Methods("GET")
+	api.HandleFunc("/records/birthdays", RequestBirthdays).Methods("GET")
+	api.HandleFunc("/records/collection", PostCollection).Methods("POST")
+	api.HandleFunc("/records/collection/update", PostCollectionUpdate).Methods("POST")
+	api.HandleFunc("/record", PostRecord).Methods("POST")
+	api.HandleFunc("/record/update", PostRecordUpdate).Methods("POST")
+	api.HandleFunc("/record/{hash}", RequestRecord).Methods("GET")
+	// The contact book is records of type "contact"; these are the same
+	// endpoints with the type filled in.
+	api.HandleFunc("/contacts", RequestContacts).Methods("GET")
+	api.HandleFunc("/contact", PostContact).Methods("POST")
 
 	// Backlinks and the link graph
 	api.HandleFunc("/links", RequestBacklinks).Methods("GET")
 	api.HandleFunc("/links/graph", RequestLinkGraph).Methods("GET")
 	api.HandleFunc("/links/stats", RequestLinkStats).Methods("GET")
+	api.HandleFunc("/links/all", RequestAllLinks).Methods("GET")   // every link, flat
 
 	// Dungeons & Dragons character module
 	api.HandleFunc("/dnd/rulesets", RequestDndRulesets).Methods("GET")
 	api.HandleFunc("/dnd/reload", PostDndReload).Methods("POST")
 	api.HandleFunc("/dnd/catalog", RequestDndCatalog).Methods("GET")
 	api.HandleFunc("/dnd/characters", RequestDndCharacters).Methods("GET")
+	api.HandleFunc("/dnd/books", RequestDndBooks).Methods("GET")   // files written as a dndbook
+	api.HandleFunc("/files/themes", RequestFileThemes).Methods("GET") // files naming their own html theme
+	api.HandleFunc("/files/search", RequestFileSearch).Methods("GET")  // ripgrep over the text of every file
+	api.HandleFunc("/pdf", RequestPdfView).Methods("GET")          // one file, run through pdflatex
 	api.HandleFunc("/dnd/sheet", RequestDndSheet).Methods("GET")
 	api.HandleFunc("/dnd/session", PostDndSession).Methods("POST")
 	api.HandleFunc("/dnd/session/{id}", RequestDndSession).Methods("GET")

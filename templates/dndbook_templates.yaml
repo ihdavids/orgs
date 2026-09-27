@@ -1,4 +1,18 @@
 tables:
+  # A table nobody named. In this class that is a DndTable rather than a
+  # tabular: the column spec the exporter builds for a dndbook is made of
+  # tabularx's X columns, which mean nothing to a plain tabular - and a book
+  # whose tables are not the book's tables is the whole class missed.
+  #
+  # Special rows - the |---+---| rule under a header - are dropped rather than
+  # turned into \hline, because DndTable draws its own header and stripes the
+  # rows itself.
+  default:
+    vertical: false
+    template: |+
+      \begin{DndTable}{% if havecaption %}[header={ {{caption}} }]{% endif %}{ {{separators}} }
+      {% for row in rows %}{% if row.Isspecial %}{% else %}{{ row.Cols | sepList: "&" | safe}} \\{% endif %}
+      {% endfor %}\end{DndTable}
   Stats:
     template: |+
       \DndMonsterBasics[
@@ -107,6 +121,19 @@ tables:
       {% for act in tbl %}  \DndMonsterLegendaryAction{ {{act.name}} }{ {{act.description}} }
       {% endfor %}
       \end{DndMonsterLegendaryActions}
+# A paragraph in this class is a paragraph, with nothing in front of it.
+#
+# The generic class writes \par before each one, and the writer has always had
+# a `docclass != "dndbook"` guard saying this class should not get it - a guard
+# that never fired, because the template always won over the branch holding it.
+# It matters beyond taste: a \par is fatal inside the argument of a macro that
+# is not \long, which is what \DndMonsterType is. The blank line the template
+# ends on separates one paragraph from the next, which is all \par was for.
+paragraph:
+  default:
+    template: |+
+      {{content | safe}}
+
 headings:
   ITEM:
     template: |+

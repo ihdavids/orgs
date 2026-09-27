@@ -631,6 +631,30 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			s := args[0].(string)
 			return p.Headline.Priority == s, nil
 		},
+		// IsRecord() is true for any heading that is a record - a contact, a
+		// piece of equipment, anything with a RECORD property on it.
+		// IsRecord("contact") asks about one collection.
+		//
+		// It is here so that a query can leave the address book out of a
+		// search: a contact matches "jane" as readily as the task about
+		// ringing her, and it is rarely the one being looked for.
+		"IsRecord": func(args ...interface{}) (interface{}, error) {
+			t := RecordTypeOf(exp.Sec)
+			if t == "" {
+				return false, nil
+			}
+			if len(args) > 0 {
+				if want, ok := args[0].(string); ok && want != "" {
+					return strings.EqualFold(t, want), nil
+				}
+			}
+			return true, nil
+		},
+		// IsCollection() is true for the container heading a collection files
+		// its records under, which is not itself a record.
+		"IsCollection": func(args ...interface{}) (interface{}, error) {
+			return CollectionTypeOf(exp.Sec) != "", nil
+		},
 		// Returns true if the headline has the specific property
 		"HasProperty": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec

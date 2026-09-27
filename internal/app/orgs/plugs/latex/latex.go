@@ -292,7 +292,16 @@ func (s *SubTemplates) ParagraphTemplate(name string, usedefault ...bool) (Strin
 	return StringTemplate{""}, false
 }
 
-func MakeTemplateRegistry(defaultPath, classPath string) *SubTemplates {
+// The templates for one document: the ones its class brings, and the ones every
+// class falls back on.
+//
+// The two were the wrong way round - the parameters were named for the opposite
+// of what the one caller passes - so a dndbook document was looking in
+// book_templates.yaml first and its own file second. Everything a class defines
+// is a thing the generic file also has a worse answer for, so nothing failed
+// outright: tables came out as plain tabulars in a class whose whole point is
+// that they should not.
+func MakeTemplateRegistry(classPath, defaultPath string) *SubTemplates {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
@@ -599,10 +608,24 @@ var sectionTypes = []string{
 var cleanHeadlineTitleForHTMLAnchorRegexp = regexp.MustCompile(`</?a[^>]*>`) // nested a tags are not valid HTML
 var tocHeadlineMaxLvlRegexp = regexp.MustCompile(`headlines\s+(\d+)`)
 
+// One template, rendered as LaTeX rather than as html.
+//
+// pongo2 escapes every value it interpolates for html unless the template says
+// `| safe` - which is right for a web page and wrong for everything here. An
+// apostrophe arriving as `&#39;` is not a cosmetic problem: `&` is LaTeX's
+// column separator, so a monster whose description mentions "the creature's
+// turn" ends the run with "Misplaced alignment tab character &". Saying it once
+// here is better than `| safe` on every value of every template, which is what
+// the dnd templates were quietly relying on somebody to remember.
+func (w *OrgLatexWriter) render(temp string, props map[string]any) string {
+	return w.exporter.pm.Tempo.RenderTemplateString(
+		"{% autoescape off %}"+temp+"{% endautoescape %}", props)
+}
+
 func (w *OrgLatexWriter) RenderContentTemplate(temp string, content string) {
 	tp := w.TemplateProps()
 	(*tp)["content"] = strings.TrimSpace(content)
-	res := w.exporter.pm.Tempo.RenderTemplateString(temp, *tp)
+	res := w.render(temp, *tp)
 	w.WriteString(res)
 }
 
@@ -644,7 +667,7 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 	}
 	(*tp)["title"] = title
 	if tmp, ok := w.templateRegistry.HeadingTemplate("TITLE"); ok {
-		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		res := w.render(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
 		// DEPRECATED
@@ -668,7 +691,7 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 	}
 	(*tp)["title"] = auth
 	if tmp, ok := w.templateRegistry.HeadingTemplate("AUTHOR"); ok {
-		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		res := w.render(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
 		// DEPRECATED
@@ -692,7 +715,7 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 	}
 	(*tp)["date"] = dt
 	if tmp, ok := w.templateRegistry.HeadingTemplate("DATE"); ok {
-		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		res := w.render(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
 		// DEPRECATED
@@ -854,7 +877,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		if tmp, ok := w.templateRegistry.BlockTemplate("SRC"); ok {
 			(*tp)["lang"] = lang
 			(*tp)["content"] = content
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			// TODO: Deprecated
@@ -867,7 +890,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	case "EXAMPLE":
 		if tmp, ok := w.templateRegistry.BlockTemplate("EXAMPLE"); ok {
 			(*tp)["content"] = EscapeString(content)
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			w.startEnv("verbatim")
@@ -881,7 +904,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	case "QUOTE":
 		if tmp, ok := w.templateRegistry.BlockTemplate("QUOTE"); ok {
 			(*tp)["content"] = content
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			w.startEnv("displayquote")
@@ -891,7 +914,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 	case "CENTER":
 		if tmp, ok := w.templateRegistry.BlockTemplate("CENTER"); ok {
 			(*tp)["content"] = content
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			w.WriteString("\n" + `\begin{center}\n\centering\n`)
@@ -899,8 +922,12 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		}
 	case "MONSTERTYPE":
 		if tmp, ok := w.templateRegistry.BlockTemplate("MONSTERTYPE"); ok {
-			(*tp)["content"] = content
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			// The content goes straight into a macro argument, and
+			// \DndMonsterType is not \long: a paragraph break anywhere inside
+			// the braces ends the argument, and the run with it. What the block
+			// holds is one line about a monster, so it is written as one.
+			(*tp)["content"] = oneLine(content)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			w.WriteString("\n" + fmt.Sprintf(`\DndMonsterType{%s}`, content) + "\n")
@@ -909,7 +936,7 @@ func (w *OrgLatexWriter) WriteBlock(b org.Block) {
 		if tmp, ok := w.templateRegistry.BlockTemplate("default"); ok {
 			(*tp)["content"] = content
 			(*tp)["envname"] = strings.ToLower(b.Name)
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			w.startEnv(strings.ToLower(b.Name))
@@ -935,7 +962,7 @@ func (w *OrgLatexWriter) WriteInlineBlock(b org.InlineBlock) {
 	case "src":
 		if tmp, ok := w.templateRegistry.BlockTemplate("inline_src"); ok {
 			(*tp)["content"] = content
-			res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+			res := w.render(tmp.Template, *tp)
 			w.WriteString(res)
 		} else {
 			w.WriteString(` \begin{verbatim} ` + content + ` \end{verbatim}` + "\n")
@@ -1006,7 +1033,7 @@ func (w *OrgLatexWriter) WriteOutline(d *org.Document, maxLvl int) {
 	// Presence of a title allow TOC to work.
 	tp := w.TemplateProps()
 	if tmp, ok := w.templateRegistry.BlockTemplate("toc"); ok {
-		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		res := w.render(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
 		if w.docclass != "dndbook" || w.HaveTitle(d) {
@@ -1137,7 +1164,7 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 				}
 				props["heading"] = head
 				props["content"] = content
-				res := w.exporter.pm.Tempo.RenderTemplateString(temp.Template, props)
+				res := w.render(temp.Template, props)
 				if res != "" {
 					fmt.Printf("HEADING EXPANSION: \n[%s]\n------------------------\n", res)
 					w.WriteString(res)
@@ -1237,7 +1264,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 		if content := w.WriteNodesAsString(h.Children...); content != "" {
 			(*tp)["content"] = content
 		}
-		res := w.exporter.pm.Tempo.RenderTemplateString(tmp.Template, *tp)
+		res := w.render(tmp.Template, *tp)
 		w.WriteString(res)
 	} else {
 		sectionFormat := sectionTypes[lvl]
@@ -1761,7 +1788,7 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 				}
 			}
 		}
-		res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, props)
+		res := w.render(tbl.Template, props)
 		if res != "" {
 			fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
 			w.WriteString(res)
@@ -1924,7 +1951,7 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 		fmt.Printf("RENDERING TEMPLATE: %s\n", "default")
 		fmt.Printf("\n%v\n", tbl.Template)
-		res := w.exporter.pm.Tempo.RenderTemplateString(tbl.Template, *tp)
+		res := w.render(tbl.Template, *tp)
 		fmt.Printf("RENDERED\n%v\n", res)
 		w.WriteString(res)
 
@@ -1991,6 +2018,12 @@ func (w *OrgLatexWriter) withHTMLAttributes(input string, kvs ...string) string 
 		return out.String()
 	*/
 	return ""
+}
+
+// Whitespace runs squeezed to single spaces, for text that has to survive being
+// a macro argument. See the MONSTERTYPE case in WriteBlock.
+func oneLine(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 func (w *OrgLatexWriter) blockContent(name string, children []org.Node) string {

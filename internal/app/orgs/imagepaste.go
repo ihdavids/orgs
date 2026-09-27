@@ -101,7 +101,13 @@ func PostImagePaste(w http.ResponseWriter, r *http.Request) {
 	if v := r.FormValue("afterLine"); v != "" {
 		fmt.Sscanf(v, "%d", &afterLine)
 	}
-	if hash == "" && intoFile == "" {
+	// A third way, for a capture being composed: keep the picture and hand
+	// back the link, but write into nothing. There is no heading to write to
+	// yet - the text carrying the link is still being typed - so the link has
+	// to be made relative to where that text is *going*, which is the capture
+	// template's target.
+	stash := r.FormValue("stash") != "" && r.FormValue("stash") != "0"
+	if hash == "" && intoFile == "" && !stash {
 		res.Msg = "no heading or file was named"
 		imageJson(w, res)
 		return
@@ -165,7 +171,9 @@ func PostImagePaste(w http.ResponseWriter, r *http.Request) {
 	var from, to, at int
 	var indentLvl int
 
-	if hash != "" {
+	if stash && hash == "" && intoFile == "" {
+		filename = captureTargetFile(r.FormValue("template"), GetUsername(r))
+	} else if hash != "" {
 		var herr error
 		filename, lines, from, to, herr = headingBodyLines(hash)
 		if herr != nil {
@@ -235,6 +243,18 @@ func PostImagePaste(w http.ResponseWriter, r *http.Request) {
 	link := filepath.ToSlash(path)
 	if rel, rerr := filepath.Rel(filepath.Dir(filename), path); rerr == nil && !strings.HasPrefix(rel, "..") {
 		link = filepath.ToSlash(rel)
+	}
+
+	// A stash is done here: the picture is kept and the link is worked out,
+	// and nothing is written. Whoever asked is composing the text that will
+	// carry it.
+	if stash {
+		res.Ok = true
+		res.Link = linkRelativeTo(path, filename)
+		res.Url = mediaURL(res.Link, filename)
+		res.Filename = filename
+		imageJson(w, res)
+		return
 	}
 
 	// Written at the indent the body around it uses, the same as a voice

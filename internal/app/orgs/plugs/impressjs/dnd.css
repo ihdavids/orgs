@@ -1,0 +1,400 @@
+@import "https://fonts.googleapis.com/css?family=Libre+Baskerville&display=swap";
+
+/* --
+   Reset common values
+*/
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del,
+dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form,
+label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header,
+hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+
+body {
+  line-height: 1;
+}
+
+ol, ul {
+  list-style: none;
+}
+
+blockquote, q {
+  quotes: none;
+  &:before, &:after {
+    content: '';
+    content: none;
+  }
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+body {
+    background: #f7ebcb;
+    font-family: Libre Baskerville, serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+    background-image: url(./images/paper_background.jpeg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #7a2b17;
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin: 24px 0 12px
+}
+
+h1:first-letter,
+h2:first-letter,
+h3:first-letter,
+h4:first-letter,
+h5:first-letter,
+h6:first-letter {
+    font-size: 150%
+}
+
+h1 {
+    font-size: 24px
+}
+
+h1,
+h2 {
+    border-bottom: 2px solid tan
+}
+
+/* --
+   Layout
+*/
+.page {
+  background-color: #eee5ce;
+
+  margin-left:auto;
+  margin-right:auto;
+
+  overflow: hidden;
+
+  padding-left: 1cm;
+  padding-right: 1cm;
+
+  &.two-col {
+    padding-bottom: 1.7cm;
+
+    page-break-before: always;
+    page-break-after: always;  
+  }
+}
+
+.two-col {
+  column-count: 2;
+  column-gap: 1cm;
+  column-fill: auto;
+  column-width: 8cm;
+}
+
+.col-break {
+  display: block;
+  -webkit-column-break-after: always;
+}
+
+hr {
+  background-image: url("images/hr.png");
+  background-size: 100% 100%;
+  border: none;
+  height: 3px;
+  margin: 4px 0;
+}
+
+
+/*
+body {
+  font-family: "Bookmania";
+  font-size: .8rem;
+  text-rendering: optimizeLegibility;
+}
+
+p {
+  padding: .4em 0;
+  line-height: 1.3em;
+}
+
+//
+// Headings
+//
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Mrs Eaves OT";
+  font-variant: small-caps;
+  font-weight: 800;
+  margin-top: .5em;
+}
+
+h1 {
+  font-size: 2.4rem;
+  column-span: all;
+}
+
+h2 {
+  font-size: .705cm;
+}
+
+h3 {
+  border-bottom: 2px solid #c9ad6a;
+  font-size: .529cm;
+}
+
+h4 {
+  font-size: .458cm;
+  margin-bottom: 0;
+}
+
+h5 {
+  font-family: "Scala Sans SC";
+  font-size: .423cm;
+  font-variant: normal;
+}
+
+h6 {
+
+}
+*/
+
+p {
+    line-height: 1.4;
+    margin: 0
+}
+
+p+p {
+    text-indent: 24px;
+    margin-top: 0 !important
+}
+
+.box {
+    background-color: transparent;
+    padding: 16px;
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+    overflow: hidden;
+    margin: 16px 0
+}
+
+/* --
+   Lists
+*/
+ul, ol {
+  font-size: .352cm;
+  line-height: 1.3em;
+  list-style-position: outside;
+  padding: .4em 0 .4em 1.4em;
+}
+
+ul {
+  list-style-type: disc;
+}
+
+ol {
+  list-style-type: decimal;
+}
+
+ul.no-bullet {
+  list-style-type: none;
+}
+
+/* --
+   Tables
+*/
+
+table {
+  font-family: "Scala Sans";
+  font-size: 10pt;
+  margin: 0.5rem 0;
+
+  thead {
+    font-weight: 800;
+  }
+
+  tbody {
+    tr:nth-child(odd) {
+      background-color: #e0e5c1;
+    }
+  }
+
+  th, td {
+    padding: .3rem 1rem;
+  }
+}
+
+table {
+  width: 100%;
+}
+
+/* --
+   Components
+*/
+blockquote, q, .description, .note {
+  h1, h2, h3, h4, h5, h6 {
+    column-span: initial;
+    font-family: "Scala Sans SC";
+    font-size: .423cm;
+    font-variant: normal;
+  }
+
+  font-family: "Scala Sans";
+}
+
+blockquote, q, .description {
+  background-color: #faf7ea;
+  border-style: solid;
+  border-image: url("images/description-border.png") 12 round;
+  border-image-outset: 4px;
+  border-width: 7px;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.note {
+  background-color: #e0e5c1;
+  border-image: url("images/note-border.png") 11;
+  border-image-outset: 9px 0;
+  border-style: solid;
+  border-width: 11px;
+  margin-top: 1rem;
+  padding: 0 10px;
+}
+
+.stats {
+  background-color: #e0e5c1;
+  border-image: url("images/stats-border.png") 11;
+  border-style: solid;
+  border-width: 11px;
+  box-shadow: 1px 4px 14px #888;
+  font-family: "ScalySans";
+  font-size: 0.75rem;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  padding: 5px 10px;
+
+  &.two-col { column-span: all; }
+
+  h2 {
+    margin-top: .1em;
+  }
+
+  h3 {
+    border-bottom: 1px solid #58180D;
+    font-family: "ScalySans";
+    font-size: .45cm;
+    font-weight: 400;
+    padding-bottom: 0.1rem;
+  }
+
+  ul, ol, p {
+    font-size: 0.75rem;
+  }
+
+  > ul.no-bullet {
+    padding-left: 0;
+  }
+
+  .abilities {
+    width: 100%;
+  }
+}
+
+.abilities {
+  th, td {
+    text-align: center;
+    padding: 0;
+  }
+  th {
+    font-family: "Scala Sans";
+    font-size: 0.75rem;
+  }
+  td {
+    font-family: "ScalySans";
+    font-size: 0.8rem;
+  }
+  tr:nth-child(odd) {
+    background-color: transparent;
+  }
+}
+
+.classtable {
+  background-color: white;
+  border: initial;
+  border-collapse: separate;
+  border-image-outset: 25px 17px;
+  border-image-repeat: round;
+  border-image-slice: 150 200 150 200;
+  border-image-source: url("images/table-border.png");
+  border-image-width: 47px;
+  border-style: solid;
+  margin-bottom: 40px;
+  margin-top: 25px;
+  column-span: all;
+  table-layout: auto;
+  table {
+    th, td {
+      line-height: 1.2;
+      padding: .3rem .1rem;
+    }
+  }
+}
+
+.cover {
+  column-span: all;
+  margin-top: 400px;
+  text-align: center;
+}
+
+/* -- 
+   Print make the background white
+*/
+@media print {
+  .page {
+    background-color: white;
+    padding: 0 0.5cm 1cm 0.5cm;
+  }
+}
+
+.a2 { width: 420mm; }
+.a3 { width: 297mm; }
+.a4 { width: 210mm; }
+.a5 { width: 148mm; }
+.a6 { width: 105mm; }
+
+.b3 { width: 364mm; }
+.b4 { width: 257mm; }
+.b5 { width: 182mm; }
+
+.letter { width: 8.5in; }
+.legal { width: 8.5in; }
+
+.a2.two-col { height: 594mm; }
+.a3.two-col { height: 420mm; }
+.a4.two-col { height: 297mm; }
+.a5.two-col { height: 210mm; }
+.a6.two-col { height: 148mm; }
+
+.b3.two-col { height: 515mm; }
+.b4.two-col { height: 364mm; }
+.b5.two-col { height: 257mm; }
+
+.letter.two-col { height: 11in; }
+.legal.two-col { height: 14in; }

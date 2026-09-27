@@ -51,11 +51,6 @@ package orgs
           type: "file+datetree"
           filename: "test.org"
           id: "Captures"
-          template: ":PROPERTIES:
-                        :DATE: {{date}}
-                     :END:
-                     {{CONTENT}}
-                    "
       - name: "OlpDatetree"
         type: "entry"
         target:
@@ -63,6 +58,65 @@ package orgs
           filename: "test.org"
           id: "Captures::Level1::Level2"
     #+END_SRC
+
+** The template string
+
+   A template may also carry a =template:= of its own, which is the shape of
+   what gets captured. The server does nothing with it - it hands the client's
+   headline and content to the file exactly as they arrive - so the string is a
+   *form for the client to put up*: worg reads it in =worg/src/capture.ts= and
+   turns it into boxes to fill in, and anything else talking to =/capture= is
+   free to do the same or to ignore it.
+
+   #+BEGIN_SRC yaml
+      - name: "QuickNote"
+        type: "entry"
+        target:
+          type: "file+headline"
+          filename: "notes.org"
+          id: "Inbox"
+        template: |-
+          :PROPERTIES:
+          :CREATED: {{now}}
+          :SOURCE:  {{source|Where did this come from?}}
+          :END:
+          {{CONTENT}}
+   #+END_SRC
+
+   Note the =|-=. A yaml scalar written over several lines *without* it folds
+   its newlines into spaces, so the whole template arrives as one line - which
+   is a property drawer that is not a property drawer. Use a block scalar for
+   anything longer than one line.
+
+   The syntax is three rules:
+
+   | Written                | Means                                             |
+   |------------------------+---------------------------------------------------|
+   | ={{CONTENT}}=          | The body - one big box, and where a dictation or  |
+   |                        | a pasted picture lands                            |
+   | ={{name}}=             | A value to fill in, labelled from the name        |
+   | ={{name\vert prompt}}= | The same, asked for in your own words             |
+
+   A handful of names fill themselves in, and stay editable - a thing captured
+   today did not necessarily happen today:
+
+   | Name                      | Becomes                  |
+   |---------------------------+--------------------------|
+   | ={{date}}=                | =2026-09-26=             |
+   | ={{time}}=                | =14:05=                  |
+   | ={{datetime}}=            | =2026-09-26 14:05=       |
+   | ={{today}}= / ={{active}}=| =<2026-09-26 Sat>=       |
+   | ={{now}}= / ={{inactive}}=| =[2026-09-26 Sat 14:05]= |
+   | ={{week}}=                | =2026-W39=               |
+   | ={{month}}=               | =2026-09=                |
+   | ={{year}}=                | =2026=                   |
+
+   A line whose *only* content was a placeholder nobody filled in is dropped
+   rather than written empty, so a template offering three optional properties
+   writes the one that was answered.
+
+   A template with no string at all asks for a headline and a body, which is
+   what every example above is.
 EDOC */
 
 import (
@@ -255,13 +309,18 @@ func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Se
 				// Last line of file has to be added after
 				if i == p.Row {
 					// fmt.Printf("WRITING: i %d row %d endLine %d", i, p.Row, len(lines))
+					indent := strings.Repeat(" ", sec.Headline.Lvl+2)
 					if tname == "entry" {
-						fileContent += strings.Repeat("*", sec.Headline.Lvl+1) + " " + args.NewNode.Headline + "\n"
+						head := strings.Repeat("*", sec.Headline.Lvl+1) + " " + args.NewNode.Headline
+						if t := captureTags(args.NewNode.Tags); t != "" {
+							head += "  " + t
+						}
+						fileContent += head + "\n"
 					}
 					if tname == "plain" || tname == "entry" {
-						fileContent += strings.Repeat(" ", sec.Headline.Lvl+2) + args.NewNode.Content + "\n"
+						fileContent += indentEachLine(args.NewNode.Content, indent)
 					} else if tname == "table-line" {
-						fileContent += strings.Repeat(" ", sec.Headline.Lvl+2) + "- [ ] " + args.NewNode.Content + "\n"
+						fileContent += indent + "- [ ] " + args.NewNode.Content + "\n"
 					}
 				}
 			}
@@ -271,6 +330,41 @@ func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Se
 			res.Msg = "Capture successful"
 		}
 	}
+}
+
+// Every line of a capture's content at the body indent.
+//
+// It used to be one concatenation - indent, the whole content, a newline -
+// which is right for the one line somebody types into the terminal client and
+// wrong for everything a template produces. A template's content is several
+// lines, and only the first of them came out indented: the rest landed at
+// column zero, where org reads a property drawer as belonging to the document
+// rather than to the heading above it.
+func indentEachLine(content, indent string) string {
+	out := ""
+	for _, line := range strings.Split(strings.TrimRight(content, "\n"), "\n") {
+		if strings.TrimSpace(line) == "" {
+			out += "\n"
+			continue
+		}
+		out += indent + strings.TrimRight(line, " \t") + "\n"
+	}
+	return out
+}
+
+// The tags of a captured entry, written the way org writes them. Kept out of
+// the headline when there are none rather than leaving `::` behind.
+func captureTags(tags []string) string {
+	clean := []string{}
+	for _, t := range tags {
+		if t = strings.TrimSpace(t); t != "" {
+			clean = append(clean, t)
+		}
+	}
+	if len(clean) == 0 {
+		return ""
+	}
+	return ":" + strings.Join(clean, ":") + ":"
 }
 
 func isEmpty(s string) bool {

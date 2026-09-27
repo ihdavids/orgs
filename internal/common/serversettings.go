@@ -265,6 +265,45 @@ type ServerSettings struct {
 		EDOC */
 	Voice VoiceSettings `yaml:"voice"`
 	/* SDOC: Settings
+	* Running Source Blocks
+
+		Orgs can run the =#+BEGIN_SRC= blocks in your files and hand the result
+		back - what org calls babel. It is **off unless you turn it on**, and
+		that is deliberate: a source block is somebody else's program, the
+		server may be reachable from anything on your network, and =noAuth= is a
+		setting people use. Reading your files and running them are different
+		promises.
+
+		#+BEGIN_SRC yaml
+		babel:
+		  enable: true
+		  languages: ["python", "sh", "emacs-lisp"]
+		  timeout: 30
+		#+END_SRC
+
+		=languages= is an allow list. Empty means every language orgs knows how
+		to run, which is the shorter way of saying yes to all of them. The
+		names are the ones you write after =#+BEGIN_SRC=, and the aliases go
+		with them - allowing =python= allows =py= too.
+
+		=timeout= is in seconds and is a wall clock limit on one block, so a
+		loop that never ends costs half a minute rather than the server.
+
+		=commands= replaces how a language is run, for an interpreter that is
+		not on the path or one orgs does not know:
+
+		#+BEGIN_SRC yaml
+		babel:
+		  enable: true
+		  commands:
+		    python: ["/usr/local/bin/python3.12"]
+		    julia: ["julia", "--startup-file=no"]
+		#+END_SRC
+
+		The code is handed to the command on standard input.
+	EDOC */
+	Babel BabelSettings `yaml:"babel"`
+	/* SDOC: Settings
 	* Default Author
 		Default author parameter to use when generating new templates
 		#+BEGIN_SRC yaml
@@ -351,6 +390,13 @@ func (self *ServerSettings) Init() {
 	self.AccessControl = "null"
 	self.RefileTargets = []string{".*\\.org"}
 	gpu := true
+	self.Babel = BabelSettings{
+		// Off. Turning it on is a decision somebody has to make on purpose.
+		Enable:    false,
+		Languages: []string{},
+		Timeout:   30,
+		Commands:  map[string][]string{},
+	}
 	self.Voice = VoiceSettings{
 		Models:   "",
 		Port:     8081,
@@ -363,4 +409,22 @@ func (self *ServerSettings) Init() {
 		MaxMb:    64,
 		Tags:     []string{"voice"},
 	}
+}
+
+// What orgs may do about running a source block.
+//
+// Off unless it is turned on. Reading somebody's org files and executing the
+// programs inside them are different promises, and the second one has to be
+// made deliberately - the server may be reachable from anything on the
+// network, and noAuth is a setting people use.
+type BabelSettings struct {
+	Enable bool `yaml:"enable"`
+	// The languages that may be run. Empty means every one orgs knows how to
+	// run; a list means only those, by the name written after #+BEGIN_SRC.
+	Languages []string `yaml:"languages"`
+	// Seconds one block may take before it is killed.
+	Timeout int `yaml:"timeout"`
+	// How to run a language, replacing what orgs would have used. The code is
+	// handed to the command on standard input.
+	Commands map[string][]string `yaml:"commands"`
 }

@@ -87,3 +87,68 @@ type LinkStatsResult struct {
 	Msg   string
 	Files []LinkFileStat
 }
+
+// One link as the links tab reads it: what it says, where it was written, and
+// - for a link that leaves the org files - what it points at out there.
+//
+// This is the same link the graph is built from, turned inside out. The graph
+// cares about org files pointing at each other and throws the rest away; this
+// is mostly about the rest, because a link to a ticket, a document or a video
+// is the kind a person goes looking for later and has no other index of.
+type LinkEntry struct {
+	// The target exactly as it was written, and the text it was written under.
+	Raw  string
+	Desc string
+	// id, custom-id, file, heading, fuzzy, external or unresolved.
+	Kind   string
+	Broken bool
+
+	// For a link that leaves the org files: the parts of it worth grouping and
+	// searching by. Empty for a link from one heading to another.
+	Scheme string // https, mailto, doi
+	Host   string // news.ycombinator.com
+	// What service that host belongs to, said the way a person would say it:
+	// "GitHub", "Google Docs", "Jira". Worked out from the host, and falling
+	// back to the domain itself, so a host nobody has heard of still groups
+	// with the others from the same place.
+	Service string
+
+	// Where it was written.
+	Filename string
+	Heading  string
+	Olp      []string
+	Hash     string
+	Line     int
+
+	// Where it lands, for a link that stays inside the org files.
+	ToFilename string
+	ToHeadline string
+	ToHash     string
+
+	// For a link that names a file on disk rather than an org heading - a
+	// picture, a recording, a pdf beside the notes - where this server serves
+	// it from and what kind of thing it is ("image", "audio", "video", "pdf",
+	// "text", "binary"). Resolved here for the same reason a source block's
+	// result file is: a link is written relative to the org file that holds
+	// it, and the client knows neither that directory nor the org roots.
+	Url   string
+	Media string
+}
+
+// One service, and how many links point at it - the filter strip the links tab
+// offers before anybody has typed anything.
+type LinkService struct {
+	Service string
+	Count   int
+}
+
+// Every link in the database, and the services to group them by. One request
+// rather than two, for the same reason the code index is one: the second is
+// derived from the first and asking twice can only disagree with itself.
+type LinkList struct {
+	Links    []LinkEntry
+	Services []LinkService
+	// How many links there are altogether, before any filter, so a client can
+	// say "12 of 300" honestly.
+	Total int
+}

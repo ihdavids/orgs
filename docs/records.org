@@ -1,0 +1,355 @@
+#+TITLE: Records — the contact book, and everything else worth a list
+#+OPTIONS: toc:2 num:nil
+
+* What a record is
+
+  A *record* is one org heading that stands for one thing. The heading is the
+  thing's name, the property drawer holds its fields, the body under it is
+  whatever anybody wanted to write about it, and the =LOGBOOK= drawer is the
+  history of what has been changed.
+
+  #+BEGIN_SRC org
+  ,* John Doe
+    :PROPERTIES:
+    :RECORD:       contact
+    :ID:           b1d1a2f4-3c58-4f2a-9a3d-0f9a1c7e51aa
+    :ADDED:        [2026-09-26 Sat 09:12]
+    :EMAIL:        john.doe@example.com
+    :EMAIL_WORK:   jdoe@acme.example.com
+    :PHONE_MOBILE: +1-555-555-0199
+    :PHONE_HOME:   +1-555-555-0100
+    :ADDRESS:      123 Main St, Cityville
+    :BIRTHDAY:     1990-05-15
+    :IMAGE:        [[file:images/contacts/john-doe.jpg]]
+    :LINKEDIN:     https://www.linkedin.com/in/johndoe
+    :END:
+    :LOGBOOK:
+    - Updated [2026-09-26 Sat 14:02] EMAIL_WORK, PHONE_MOBILE
+    - Added [2026-09-26 Sat 09:12]
+    :END:
+
+    Met at the 2019 conference. Allergic to shellfish.
+  #+END_SRC
+
+  It is an ordinary org heading. Nothing here needs a special file, a special
+  mode or a particular place to live: write that by hand in any file the server
+  watches and the contacts tab has it a second later.
+
+** The one thing that makes it a record
+
+   #+BEGIN_EXAMPLE
+   :RECORD: contact
+   #+END_EXAMPLE
+
+   That property, and nothing else. Its value names the *collection* the record
+   belongs to.
+
+   =contact= is just the collection this was built for first. =equipment=,
+   =cards=, =wine= and =synths= are records in exactly the same sense, read and
+   written by exactly the same code. A heading with no =RECORD= property is not
+   a record wherever it sits, and a heading with one is a record even if it
+   sits on its own in the middle of a project file — which is what makes a
+   record identifiable without any knowledge of where it lives.
+
+   Programmatically:
+
+   - in a query :: =IsRecord()=, or =IsRecord("contact")= for one collection
+   - over rest :: =GET /records?type=contact=
+   - in a file :: =grep -n ':RECORD:' *.org=
+
+* Fields
+
+  A field is a property named =NAME= or =NAME_LABEL=.
+
+  The label is free text and is how a thing has more than one of something:
+
+  #+BEGIN_EXAMPLE
+  :PHONE_MOBILE: +1-555-555-0199
+  :PHONE_HOME:   +1-555-555-0100
+  :PHONE_WORK:   +1-555-555-0150
+  :EMAIL:        john.doe@example.com
+  :EMAIL_WORK:   jdoe@acme.example.com
+  :EMAIL_OLD:    jd@previous.example
+  #+END_EXAMPLE
+
+  Nothing has to be declared first, and a label can be anything:
+  =PHONE_BOAT= works.
+
+** How a field knows what it is
+
+   What a field *is* is worked out from its name, so a client draws a field by
+   its kind and never needs a list of property names. This is the whole reason
+   a guitar pedal and a person can share one view.
+
+   | Name                                          | Kind   | What you get                     |
+   |-----------------------------------------------+--------+----------------------------------|
+   | EMAIL, MAIL                                   | email  | a =mailto:= link                 |
+   | PHONE, MOBILE, CELL, TEL, FAX, TELEPHONE      | tel    | a =tel:= link                    |
+   | ADDRESS, ADDR                                 | postal | the text, and a map link         |
+   | URL, WEBSITE, WEB, HOMEPAGE, LINK, BLOG, SITE | url    | a link                           |
+   | LINKEDIN, FACEBOOK, GITHUB, MASTODON, …       | social | a link, built from a bare handle |
+   | BIRTHDAY, BIRTHDATE, DOB, ANNIVERSARY, DATE   | date   | a date, and a place on the agenda |
+   | IMAGE, PHOTO, AVATAR, PORTRAIT, PICTURE, LOGO | image  | the picture itself               |
+   | anything else                                 | text   | the text as written              |
+
+   Two suffix rules cover the way things other than people get named, because
+   =PURCHASE_DATE= is as natural as =DATE_PURCHASED=:
+
+   | Ends with            | Kind  | Example                       |
+   |----------------------+-------+-------------------------------|
+   | =_DATE=              | date  | =:BOUGHT_DATE: 2024-03-02=    |
+   | =_URL=, =_LINK=      | url   | =:MANUAL_URL: https://…=      |
+   | =_IMAGE=, =_PHOTO=   | image | =:BOX_IMAGE: [[file:box.jpg]]=  |
+
+   The suffix list is deliberately short. =EMAIL= and =PHONE= are not in it,
+   because =EMAIL_WORK= is far commoner than =WORK_EMAIL= and =MOBILE= as a
+   suffix is the *label* on =PHONE_MOBILE= — reading that as a kind would throw
+   the label away.
+
+   To add a social network or change any of these, see =socialNetworks= and
+   =fieldOf= in =internal/app/orgs/records.go=. The worg side says the same
+   rules again in =worg/src/records.ts= so that an add form can show the right
+   input before anything has been saved — change one and change both.
+
+** Social handles
+
+   A social field takes either form:
+
+   #+BEGIN_EXAMPLE
+   :LINKEDIN: johndoe
+   :LINKEDIN: https://www.linkedin.com/in/johndoe
+   #+END_EXAMPLE
+
+   A bare handle is turned into the network's own address where the address is
+   predictable. A network with no known address keeps the handle as text rather
+   than being sent somewhere guessed at.
+
+** Dates
+
+   Three ways of writing a yearly date are read, and all three are exact:
+
+   | Written        | Means                                          |
+   |----------------+------------------------------------------------|
+   | =1990-05-15=   | the 15th of May 1990                           |
+   | =<1990-05-15>= | the same, as an org timestamp                  |
+   | =--05-15=      | the 15th of May, year not known (vCard's form) |
+
+   A birthday with no year gets no age — it is not guessed at.
+
+   The 29th of February is kept on the 28th in a year that has no 29th, on the
+   agenda and on the card alike.
+
+* The bookkeeping fields
+
+  | Property | Written by | Means                                             |
+  |----------+------------+---------------------------------------------------|
+  | RECORD   | you or us  | which collection this belongs to — the identity   |
+  | ID       | us         | a uuid, so links and other records can point here |
+  | ADDED    | us         | when the record was first written down            |
+
+  They are kept out of the field list a client is handed to draw, because they
+  are about the record rather than about the thing.
+
+* The history
+
+  Every change made through the record endpoints — from worg, from the CLI, or
+  by anything else calling them — prepends a line to the heading's =LOGBOOK=
+  drawer:
+
+  #+BEGIN_EXAMPLE
+  :LOGBOOK:
+  - Noted [2026-09-26 Sat 14:10]
+  - Updated [2026-09-26 Sat 14:02] EMAIL_WORK, PHONE_MOBILE
+  - Renamed [2026-09-26 Sat 13:55] John Doe
+  - Added [2026-09-01 Tue 09:12]
+  :END:
+  #+END_EXAMPLE
+
+  Newest first, the way org writes a logbook. =Renamed= records the name it
+  had *before*. The clock entries org puts in the same drawer are left alone
+  and ignored, and a line somebody writes by hand that does not match is
+  skipped rather than being a parse error.
+
+  Changes made by editing the file in a text editor leave no line, which is
+  right: the history is of what was done through the tools, not a claim to know
+  everything that ever happened to the heading.
+
+* Collections
+
+  A collection is every record sharing one =RECORD= value. It does not have to
+  be declared — the first heading with =:RECORD: wine:= on it makes the wine
+  collection exist — but a *container* gives new records somewhere to go, and
+  gives the collection a name and an icon:
+
+  #+BEGIN_SRC org
+  ,* Contacts
+    :PROPERTIES:
+    :COLLECTION: contact
+    :ICON:       👤
+    :FIELDS:     EMAIL, PHONE_MOBILE, ADDRESS, BIRTHDAY, IMAGE
+    :END:
+
+  ,** John Doe
+     :PROPERTIES:
+     :RECORD: contact
+     …
+  #+END_SRC
+
+  | Property   | Means                                                     |
+  |------------+-----------------------------------------------------------|
+  | COLLECTION | this heading is where records of that type are filed      |
+  | ICON       | one emoji, for the tab strip                              |
+  | FIELDS     | the fields an add form should offer, in this order        |
+
+  =FIELDS= is a suggestion, not a restriction: a record may carry anything at
+  all. Where a collection has no =FIELDS=, the server offers whatever its
+  records already use, commonest first.
+
+  A record does *not* have to be a child of the container. Being a child is
+  only how new ones get filed; a record moved elsewhere is still the same
+  record, because the =RECORD= property travels with the heading.
+
+  Only the first container found for a type is used, so that a second one
+  somewhere else cannot quietly become the place things land.
+
+* Changing a collection
+
+  The Collections tab's *Define* button changes a collection's own heading: what
+  it is called, its icon, and the fields its add form offers.
+
+  Renaming the *type* is the one with consequences. The type is what every
+  record in the collection says it is, so renaming it rewrites the =RECORD=
+  property on all of them - in every file they happen to live in, not only
+  under the container. The dialog says how many will move before it does it,
+  and the answer says how many did.
+
+  #+BEGIN_EXAMPLE
+  POST /records/collection/update
+  { "Hash": "...", "SetType": true, "Type": "synthesiser" }
+  → { "Ok": true, "Type": "synthesiser", "Moved": 4 }
+  #+END_EXAMPLE
+
+  Two things it deliberately does not do. It writes no history line on the
+  records that move - the change happened to the collection, not to the thing
+  each record stands for, and a hundred identical logbook lines is noise rather
+  than history. And it refuses when another collection already answers to the
+  new name, because two containers for one type means new records land in
+  whichever was found first.
+
+* Duplicating an entry
+
+  Copy the heading, change the name and the values, and *delete the =ID= and
+  =ADDED= lines*. The server fills those in the next time it writes to the
+  record, and two records with the same =ID= is the one thing that will confuse
+  a link.
+
+  #+BEGIN_SRC org
+  ,** Jane Roe
+     :PROPERTIES:
+     :RECORD:     contact
+     :EMAIL:      jane@example.org
+     :PHONE_WORK: +1-555-555-0123
+     :BIRTHDAY:   --09-28
+     :END:
+
+     Knows everything about postgres.
+  #+END_SRC
+
+  That is a complete, valid contact. Nothing else about a record is derived, so
+  one written by hand in a text editor is exactly the same as one added from
+  worg or from the terminal.
+
+* Where records are used
+
+** The Contacts tab
+
+   =contact= records, with a search, a card per person, and the birthdays
+   coming up in the next six weeks across the top. Adding and editing write the
+   heading for you.
+
+** The Collections tab
+
+   The same view over any other collection, with a strip to pick between them
+   and a button to start a new one.
+
+** The Search tab
+
+   Records are **left out of search results by default**, with a *Records*
+   toggle in the filter bar to put them back. A contact matches "jane" as
+   readily as the task about ringing her and is rarely the one being looked
+   for; the toggle is remembered per browser.
+
+   In a query of your own: =!IsRecord() && !IsCollection()=.
+
+** The Agenda
+
+   Birthdays and anniversaries appear as all-day entries with a cake on them,
+   and colour the day markers on the little calendars. They are worked out from
+   the records rather than stored anywhere, so a birthday corrected in the file
+   is right on the agenda immediately.
+
+** The terminal
+
+   #+BEGIN_EXAMPLE
+   orgs contact                     everybody, one line each
+   orgs contact find jane           the ones matching
+   orgs contact show jane           one, in full
+   orgs contact add                 asked for, field by field
+   orgs contact edit jane           change a field on one
+   orgs contact birthdays           who is next, and how long
+   orgs contact collections         what else is being kept
+   #+END_EXAMPLE
+
+   Every one of them takes =-type= to work on another collection:
+
+   #+BEGIN_EXAMPLE
+   orgs contact list -type equipment
+   orgs contact show -type equipment thinkpad
+   orgs contact add -type wine "Ch. Example 2019" -set REGION=Bordeaux -set YEAR=2019
+   #+END_EXAMPLE
+
+* The endpoints
+
+  | Method | Path                   | Does                                          |
+  |--------+------------------------+-----------------------------------------------|
+  | GET    | /records               | find records: =?type=&q=&body=1=              |
+  | GET    | /record/{hash}         | one record, with its notes and history        |
+  | GET    | /records/collections   | what collections exist, and where they live   |
+  | GET    | /records/fields        | the fields a type uses: =?type=contact=       |
+  | GET    | /records/birthdays     | occasions in a window: =?from=&to==           |
+  | POST   | /record                | add one                                       |
+  | POST   | /record/update         | change one                                    |
+  | POST   | /records/collection    | start a collection                            |
+  | GET    | /contacts              | =/records?type=contact=                       |
+  | POST   | /contact               | =/record= with the type filled in             |
+
+  On =/record/update=, every field named in =Set= is written and a field set to
+  an empty string is taken off — the same rule the property endpoint follows.
+  =SetName= with =Name= renames the heading; =SetNotes= with =Notes= replaces
+  the body.
+
+  Deleting a record is =/delete= with its hash, like any other heading: a
+  record is a heading and nothing about it needs a delete of its own.
+
+* How the writing works, and why
+
+  Every write here is a *line edit* on the file rather than a rewrite of the
+  parsed document. A record usually shares its file with a hundred others and
+  with whatever else is in there, and writing the document back through go-org
+  would reformat all of it — every drawer re-indented, every table reflowed —
+  to change one phone number.
+
+  Three things follow from that and are worth knowing before changing it:
+
+  1. The drawers are found by *walking the lines* under the headline, not by
+     asking go-org. A drawer written in column zero ends the headline's body as
+     far as the parser is concerned and hoists the rest of the heading to the
+     top of the document, where looking for it is guesswork.
+  2. After any edit that changes how many lines a record has, its range is
+     *found again* rather than adjusted. Keeping half a dozen indices in step
+     through an insert, a delete and a rename is how off-by-one bugs get
+     written.
+  3. The property drawer is *re-aligned* after an edit. It is cosmetic and
+     nothing reads the padding back — but a record is a text file somebody
+     opens in an editor, and a ragged column is what "written by a program"
+     looks like.
