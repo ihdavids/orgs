@@ -397,7 +397,7 @@ func (s *RevealExporter) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *RevealExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("REVEAL: Export called")
+	fmt.Fprintf(os.Stderr, "REVEAL: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
@@ -411,13 +411,13 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	t := template.Must(template.New("").Funcs(funcMap).Parse(temp))
 	err := t.Execute(o, m)
 	if err != nil {
-		fmt.Printf("TEMPLATE ERROR: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "TEMPLATE ERROR: %s\n", err.Error())
 	}
 }
 
 func (self *RevealExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Printf("REVEAL: Export string called [%s]:[%s]\n", query, opts)
+	fmt.Fprintf(os.Stderr, "REVEAL: Export string called [%s]:[%s]\n", query, opts)
 
 	if f := db.FindByFile(query); f != nil {
 		theme := f.Get("REVEAL_THEME")
@@ -435,12 +435,12 @@ func (self *RevealExporter) ExportToString(db common.ODb, query string, opts str
 		self.Props["slide_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
 
-		fmt.Printf("DOC START: ========================================\n")
+		fmt.Fprintf(os.Stderr, "DOC START: ========================================\n")
 		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
-		fmt.Printf("XXX: %s\n", res)
+		fmt.Fprintf(os.Stderr, "XXX: %s\n", res)
 		return nil, res
 	} else {
-		fmt.Printf("Failed to find file in database: [%s]", query)
+		fmt.Fprintf(os.Stderr, "Failed to find file in database: [%s]", query)
 		return fmt.Errorf("failed to find file in database: [%s]", query), ""
 	}
 }

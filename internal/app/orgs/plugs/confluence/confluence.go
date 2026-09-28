@@ -126,7 +126,7 @@ func (self *OrgConfluenceExporter) Unmarshal(unmarshal func(interface{}) error) 
 }
 
 func (self *OrgConfluenceExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("CONFLUENCE: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "CONFLUENCE: Export called", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
@@ -141,7 +141,7 @@ func (self *OrgConfluenceExporter) Export(db common.ODb, query string, to string
 		t := template.Must(template.New("").Funcs(funcMap).Parse(temp))
 		err := t.Execute(o, m)
 		if err != nil {
-			fmt.Printf("TEMPLATE ERROR: %s\n", err.Error())
+			fmt.Fprintf(os.Stderr, "TEMPLATE ERROR: %s\n", err.Error())
 		}
 	}
 */
@@ -178,9 +178,9 @@ func (self *OrgConfluenceExporter) CreateConfluencePage(res string, props map[st
 		page_data["parentId"] = pid
 	}
 	body, err := json.Marshal(page_data)
-	fmt.Printf("body: %s\n", body)
+	fmt.Fprintf(os.Stderr, "body: %s\n", body)
 	if err != nil {
-		fmt.Printf("ERROR could not marshal json data: ", err)
+		fmt.Fprintf(os.Stderr, "ERROR could not marshal json data: ", err)
 		return nil
 	}
 	// create post body
@@ -194,7 +194,7 @@ func (self *OrgConfluenceExporter) CreateConfluencePage(res string, props map[st
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	fmt.Println("Status:", resp.Status)
+	fmt.Fprintln(os.Stderr, "Status:", resp.Status)
 
 	return resp
 }

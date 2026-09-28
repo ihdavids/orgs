@@ -14,7 +14,7 @@ import (
 )
 
 func keyringGet(user string) (string, error) {
-	fmt.Printf("KEYRING GET CALLED: %s\n", user)
+	fmt.Fprintf(os.Stderr, "KEYRING GET CALLED: %s\n", user)
 	password, err := keyring.Get("orgs", user)
 	if err != nil {
 		return password, err
@@ -225,7 +225,7 @@ type ExportCreator func() Exporter
 var ExporterRegistry = map[string]ExportCreator{}
 
 func AddExporter(name string, creator ExportCreator) {
-	//fmt.Printf("ADDING EXPORTER: %s\n", name)
+	//fmt.Fprintf(os.Stderr, "ADDING EXPORTER: %s\n", name)
 	ExporterRegistry[name] = creator
 }
 
@@ -242,7 +242,7 @@ type PollerCreator func() Poller
 var PollerRegistry = map[string]PollerCreator{}
 
 func AddPoller(name string, creator PollerCreator) {
-	//fmt.Printf("ADDING PLUGIN: %s\n", name)
+	//fmt.Fprintf(os.Stderr, "ADDING PLUGIN: %s\n", name)
 	PollerRegistry[name] = creator
 }
 
@@ -292,15 +292,15 @@ func (self *PluginDef) Start(db ODb) {
 	self.quit = make(chan struct{})
 	go func(plug PluginDef, name string, t *time.Ticker, frequency int) {
 		p := plug
-		fmt.Printf("PLUGIN START: %s %d %v\n", name, frequency, time.Now())
+		fmt.Fprintf(os.Stderr, "PLUGIN START: %s %d %v\n", name, frequency, time.Now())
 		for {
 			select {
 			case <-p.quit:
-				fmt.Printf("PLUGIN STOP:  %s %d\n", name, frequency)
+				fmt.Fprintf(os.Stderr, "PLUGIN STOP:  %s %d\n", name, frequency)
 				t.Stop()
 				return
 			case <-t.C:
-				fmt.Printf("UPDATE [%s:%d]: <%v>\n", name, frequency, time.Now())
+				fmt.Fprintf(os.Stderr, "UPDATE [%s:%d]: <%v>\n", name, frequency, time.Now())
 				p.Plugin.Update(db)
 			}
 		}
@@ -350,6 +350,6 @@ func FindUpdater(name string) UpdaterCreator {
 }
 
 func AddUpdater(name string, creator UpdaterCreator) {
-	//fmt.Printf("ADDING PLUGIN: %s\n", name)
+	//fmt.Fprintf(os.Stderr, "ADDING PLUGIN: %s\n", name)
 	UpdaterRegistry[name] = creator
 }

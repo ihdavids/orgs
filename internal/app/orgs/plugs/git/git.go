@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -94,7 +95,7 @@ func (self *Git) gitAddAll() bool {
 	if err = cmd.Run(); err == nil {
 		return true
 	} else {
-		fmt.Printf("Git Add All Failed: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Git Add All Failed: %s\n", err)
 	}
 	return false
 }
@@ -106,7 +107,7 @@ func (self *Git) gitCommit(msg string) bool {
 	if err = cmd.Run(); err == nil {
 		return true
 	} else {
-		fmt.Printf("Git commit error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Git commit error: %s\n", err)
 	}
 	return false
 }
@@ -118,7 +119,7 @@ func (self *Git) gitPull() bool {
 	if err = cmd.Run(); err == nil {
 		return true
 	} else {
-		fmt.Printf("Git pull error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Git pull error: %v\n", err)
 	}
 	return false
 }
@@ -138,22 +139,22 @@ func (self *Git) Unmarshal(unmarshal func(interface{}) error) error {
 
 func (self *Git) Update(db common.ODb) {
 	if self.ok {
-		fmt.Printf("Git Update...\n")
+		fmt.Fprintf(os.Stderr, "Git Update...\n")
 		modified := self.haveChanges()
 		localChanges := self.localChanges()
 		if modified || localChanges {
-			fmt.Printf("Git found local changes, checking in...\n")
+			fmt.Fprintf(os.Stderr, "Git found local changes, checking in...\n")
 			self.gitAddAll()
 			self.gitCommit("auto checkin from orgs")
 		}
-		fmt.Printf("Git pull...\n")
+		fmt.Fprintf(os.Stderr, "Git pull...\n")
 		self.gitPull()
 		if modified || localChanges {
-			fmt.Printf("Git have changes pushing...\n")
+			fmt.Fprintf(os.Stderr, "Git have changes pushing...\n")
 			self.gitPush()
 		}
 	} else {
-		fmt.Printf("Git update skipped, not okay... is path setup correctly?\n")
+		fmt.Fprintf(os.Stderr, "Git update skipped, not okay... is path setup correctly?\n")
 	}
 }
 
@@ -165,11 +166,11 @@ func (self *Git) Startup(freq int, manager *common.PluginManager, opts *common.P
 		self.ok = false
 	} else {
 		self.GitPath = filepath.FromSlash(gitPath)
-		fmt.Printf("Git module okay: %s\n", self.GitPath)
+		fmt.Fprintf(os.Stderr, "Git module okay: %s\n", self.GitPath)
 		if self.OrgsSyncDir == "" {
 			self.OrgsSyncDir = manager.OrgDirs[0]
 			self.OrgsSyncDir = filepath.FromSlash(self.OrgsSyncDir)
-			fmt.Printf("Git sync dir set to: %s\n", self.OrgsSyncDir)
+			fmt.Fprintf(os.Stderr, "Git sync dir set to: %s\n", self.OrgsSyncDir)
 		} else {
 			self.OrgsSyncDir = filepath.FromSlash(self.OrgsSyncDir)
 		}

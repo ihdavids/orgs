@@ -251,6 +251,15 @@ func FreeArgs(fset *flag.FlagSet) []string {
 	words := []string{}
 	args := fset.Args()
 	for {
+		// `--` is the shell's own way of saying "no more flags", and a re-parse
+		// that did not honour it would read the words after it as flags again -
+		// which is exactly what somebody writing it was protecting against.
+		if i := indexOf(args, "--"); i >= 0 {
+			if err := fset.Parse(args[:i]); err == nil {
+				words = append(words, fset.Args()...)
+			}
+			return append(words, args[i+1:]...)
+		}
 		if err := fset.Parse(args); err != nil {
 			return words
 		}
@@ -261,6 +270,15 @@ func FreeArgs(fset *flag.FlagSet) []string {
 		words = append(words, rest[0])
 		args = rest[1:]
 	}
+}
+
+func indexOf(hay []string, needle string) int {
+	for i, s := range hay {
+		if s == needle {
+			return i
+		}
+	}
+	return -1
 }
 
 // FreeText is FreeArgs joined back up, for a command whose words are one
@@ -280,6 +298,18 @@ func FreeText(fset *flag.FlagSet) string {
 // than a mangled one.
 func HashPath(hash string) string {
 	return base64.URLEncoding.EncodeToString([]byte(hash))
+}
+
+// StdinIsPipe reports whether something is being piped in, which is how a
+// write verb knows it was handed a list of headings rather than asked to go
+// and find some. It is the opposite question to Interactive() rather than the
+// same one: a cron job has neither a pipe nor a terminal.
+func StdinIsPipe() bool {
+	st, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return (st.Mode() & os.ModeCharDevice) == 0
 }
 
 // Interactive reports whether there is a person at the other end to answer a

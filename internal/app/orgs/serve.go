@@ -5,7 +5,10 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/gorilla/mux"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
@@ -256,10 +259,10 @@ func StartServer(sets *common.ServerSettings) {
 	for i, path := range sets.OrgDirs {
 		if i == 0 {
 			if fpath, err := filepath.Abs(path); err == nil {
-				fmt.Printf("PREFIX: %s\n", fpath)
+				fmt.Fprintf(os.Stderr, "PREFIX: %s\n", fpath)
 				fs := http.FileServer(http.Dir(fpath))
 				tpath, _ := filepath.Abs(Conf().TemplateImagesPath)
-				fmt.Printf("TEMP PATH: %s\n", tpath)
+				fmt.Fprintf(os.Stderr, "TEMP PATH: %s\n", tpath)
 				internalfs := http.FileServer(http.Dir(tpath))
 				tfpath, _ := filepath.Abs(Conf().TemplateFontPath)
 				internalfontfs := http.FileServer(http.Dir(tfpath))
@@ -290,9 +293,9 @@ func StartServer(sets *common.ServerSettings) {
 		var corsHandler http.Handler
 		if sets.AccessControl == "*" {
 			corsPolicy := cors.New(cors.Options{
-				AllowedOrigins:   []string{"*"},
-				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-				AllowedHeaders:   []string{"*"},
+				AllowedOrigins: []string{"*"},
+				AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowedHeaders: []string{"*"},
 			})
 			corsHandler = corsPolicy.Handler(router)
 		} else {
@@ -308,9 +311,9 @@ func StartServer(sets *common.ServerSettings) {
 			corsHandler = corsPolicy.Handler(router)
 		}
 		//if orgs.Conf().AllowHttp {
-		fmt.Printf("HTTP PORT: %d\n", sets.Port)
-		//fmt.Printf("WEB: %s\n", orgs.Conf().WebServePath)
-		//fmt.Printf("ORG: %s\n", orgs.Conf().ServePath)
+		fmt.Fprintf(os.Stderr, "HTTP PORT: %d\n", sets.Port)
+		//fmt.Fprintf(os.Stderr, "WEB: %s\n", orgs.Conf().WebServePath)
+		//fmt.Fprintf(os.Stderr, "ORG: %s\n", orgs.Conf().ServePath)
 		err := http.ListenAndServe(fmt.Sprint(":", sets.Port), corsHandler)
 		if err != nil {
 			log.Fatal("ListenAndServe: ", err)
@@ -323,9 +326,9 @@ func StartServer(sets *common.ServerSettings) {
 		var tlsCorsHandler http.Handler
 		if sets.AccessControl == "*" {
 			corsPolicy := cors.New(cors.Options{
-				AllowedOrigins:   []string{"*"},
-				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-				AllowedHeaders:   []string{"*"},
+				AllowedOrigins: []string{"*"},
+				AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+				AllowedHeaders: []string{"*"},
 			})
 			tlsCorsHandler = corsPolicy.Handler(router)
 		} else {
@@ -334,17 +337,32 @@ func StartServer(sets *common.ServerSettings) {
 				AllowCredentials: true,
 				AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 				AllowedHeaders:   []string{"*"},
-				Debug: true,
+				Debug:            true,
 			})
 			tlsCorsHandler = corsPolicy.Handler(router)
 		}
-		fmt.Printf("PORT: %d\n", sets.TLSPort)
+		fmt.Fprintf(os.Stderr, "PORT: %d\n", sets.TLSPort)
 		servercrt := sets.ServerCrt
 		serverkey := sets.ServerKey
 		err := http.ListenAndServeTLS(fmt.Sprint(":", sets.TLSPort), servercrt, serverkey, tlsCorsHandler)
 		if err != nil {
 			log.Fatal("ListenAndServeTLS: ", err)
 		}
+	} else {
+		// The https listener is what used to hold this function open, so with
+		// allowHttps off the process fell straight through both listeners and
+		// exited - `orgs serve` on http alone started, printed that it was
+		// listening, and was gone before anything could connect to it. The http
+		// listener is in a goroutine and does not hold the process up on its
+		// own.
+		//
+		// Waiting on a signal rather than on nothing, so the whisper child and
+		// the plugins below still get stopped on a ctrl-c. StartServer is
+		// normally ended by log.Fatal, which does not unwind, so this is the
+		// only path on which those two lines run at all.
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+		<-sig
 	}
 	StopWhisper()
 	stopPlugins(sets)

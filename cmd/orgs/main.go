@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
+	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -56,18 +59,34 @@ func logToFile() *os.File {
 	return f
 }
 
+// A dash-word is a value somebody wrote with a minus in front of it to mean
+// "take this off" - a tag, mostly. Deliberately narrow: it must look like a
+// plain word, so a mistyped flag is still reported as a mistyped flag rather
+// than being silently swallowed as a value.
+var dashWordRe = regexp.MustCompile(`^-[A-Za-z0-9_@#%.]+$`)
+
+// Whether the server for this command is running inside this process. Read by
+// the token check, which has nothing to check against a server that issued no
+// token.
+var localMode bool
+
 type refreshResponse struct {
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"ExpiresAt"`
 }
 
 // refreshToken calls POST /refresh to get a new token, updates the
-// Authorization header on core.Rest, and persists the new token and
-// expiry back to the config file.
-func refreshToken(core *commands.Core) {
+// Authorization header on core.Rest, and persists the new token and expiry back
+// to the config file.
+//
+// refreshToken renews the session and reports whether it managed to. The bool
+// is what tells "your session was renewed" from "you have to log in again":
+// without it an expiry in the past was treated as the end of the session even
+// when the server would happily have issued a new token.
+func refreshToken(core *commands.Core) bool {
 	resp, err := common.RestPost[refreshResponse](&core.Rest, "refresh", &struct{}{})
 	if err != nil || resp.Token == "" {
-		return
+		return false
 	}
 	core.Rest.Header.Set("Authorization", "Bearer "+resp.Token)
 	// Persist refreshed token and expiry to config file
@@ -86,6 +105,94 @@ func refreshToken(core *commands.Core) {
 		setLine("tokenExpiry", fmt.Sprintf("%q", resp.ExpiresAt.Format(time.RFC3339)))
 		os.WriteFile(core.ConfigFile, []byte(strings.Join(lines, "\n")), 0600)
 	}
+	return true
+}
+
+// startLocalServer runs the server inside this process for the length of one
+// command, and hands back the url to talk to it on.
+//
+// Everything on the client side assumes a daemon is up. That is right for a
+// desktop and wrong everywhere else: `orgs agenda` in a git hook, `orgs fmt
+// -check` in CI, `orgs search` over ssh on a box where nobody has started
+// anything. So -local makes this process the server for as long as it takes to
+// answer, and leaves nothing running.
+//
+// Three things about it:
+//
+//  1. **The port is asked for rather than chosen.** Port 0 gets whatever is
+//     free from the kernel, which matters because the whole point is running
+//     where something else may already be on 8010 - including the user's own
+//     real server, which this must not collide with or talk to by accident.
+//  2. **It is http on the loopback and authentication is off.** There is
+//     nothing to authenticate to: the listener is this process, reachable from
+//     this machine, for one command. A token dance here would be ceremony with
+//     no security in it.
+//  3. **Readiness is polled, not assumed.** StartServer parses every org file
+//     in the database before it answers anything, which on a large database is
+//     seconds rather than milliseconds. The same rule whisperd.go follows, for
+//     the same reason: "still loading" and "not there" need different words.
+func startLocalServer(core *commands.Core) string {
+	sets := orgs.Conf().Server
+	if sets == nil {
+		fmt.Fprintln(os.Stderr, "-local: no server settings to run with")
+		os.Exit(1)
+	}
+	if dirs := orgs.Conf().LocalDirs; dirs != "" {
+		sets.OrgDirs = strings.Split(dirs, ",")
+		for i := range sets.OrgDirs {
+			sets.OrgDirs[i] = strings.TrimSpace(sets.OrgDirs[i])
+		}
+	}
+	if len(sets.OrgDirs) == 0 {
+		fmt.Fprintln(os.Stderr, "-local: no org directories - pass -orgdir ./notes")
+		os.Exit(1)
+	}
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "-local: could not find a free port: %v\n", err)
+		os.Exit(1)
+	}
+	port := ln.Addr().(*net.TCPAddr).Port
+	// Handed straight back rather than passed in: StartServer calls
+	// ListenAndServe itself, and holding the socket open until then would make
+	// the bind it does fail.
+	ln.Close()
+
+	sets.Port = port
+	// The https listener is the one that blocks, and there is no certificate to
+	// serve one with here. Left on, StartServer would try and log.Fatal.
+	sets.AllowHttps = false
+	sets.NoAuth = true
+
+	go orgs.StartServer(sets)
+
+	url := fmt.Sprintf("http://127.0.0.1:%d", port)
+	if !waitForServer(url, 3*time.Minute) {
+		fmt.Fprintln(os.Stderr, "-local: the server did not come up")
+		os.Exit(1)
+	}
+	return url
+}
+
+// waitForServer polls an endpoint that costs nothing until it answers. /status
+// is that endpoint - it reads a list off the config and touches no file - and
+// it is behind the auth middleware, so a 200 from it also says the middleware
+// is in place and doing what -local expects of it.
+func waitForServer(url string, limit time.Duration) bool {
+	deadline := time.Now().Add(limit)
+	client := &http.Client{Timeout: 2 * time.Second}
+	for time.Now().Before(deadline) {
+		resp, err := client.Get(url + "/status")
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return true
+			}
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+	return false
 }
 
 // Aliases allow for command line helpers for the orgs command line tool.
@@ -116,18 +223,52 @@ func main() {
 	args := flag.Args()
 
 	args = expandAliases(args)
-	// Execute command line options
-	for k, _ := range commands.CmdRegistry {
+
+	// -local (or -orgdir, which implies it) puts the server in this process.
+	// Not for `serve`, which *is* the server, and not for `login`, which has
+	// nothing to log in to.
+	if (orgs.Conf().Local || orgs.Conf().LocalDirs != "") &&
+		len(args) > 0 && args[0] != "serve" && args[0] != "login" {
+		core.Rest.Url = startLocalServer(core)
+		// Nothing is authenticated in local mode, so a stale token from the
+		// config would be sent to a server that never issued it.
+		core.Rest.Header.Del("Authorization")
+		localMode = true
+	}
+	ran := false
+	// Execute command line options.
+	//
+	// A map walked in map order, mutating `args` as it goes, and never stopping
+	// once it has found its command: so a command whose *argument* happened to
+	// be another command's name ran both of them, in whichever order the map
+	// felt like that run. `orgs __complete tag ''` ran the completion and then
+	// `orgs tag`; `orgs watch -file todo.org` would have been at the same risk.
+	// Dispatch is one command, so it stops at one.
+	for k := range commands.CmdRegistry {
 		if len(args) > 0 && k == args[0] {
-			// Check token expiry for commands that talk to the server
-			if k != "login" && k != "serve" && orgs.Conf().TokenExpiry != "" {
+			// Check token expiry for commands that talk to the server.
+			//
+			// Two things this used to get wrong. It ran for commands with no
+			// server to talk to, so `orgs completion zsh` - a shell script
+			// printed from a table in this binary - refused to run because of a
+			// token it was never going to send. And it exited on an expired
+			// token *without trying the refresh*, so a session that could have
+			// been renewed silently told people to log in again.
+			_, offline := commands.CmdRegistry[k].Cmd.(commands.Offline)
+			if !localMode && !offline && k != "login" && k != "serve" &&
+				orgs.Conf().TokenExpiry != "" {
 				if expiry, err := time.Parse(time.RFC3339, orgs.Conf().TokenExpiry); err == nil {
-					if time.Now().After(expiry) {
-						fmt.Fprintf(os.Stderr, "Token expired at %s. Please run: orgs login\n", expiry.Local().Format(time.RFC822))
+					// Try the renewal first and only give up if it fails: an
+					// expiry in the past does not mean the session is gone, and
+					// telling somebody to log in again when they did not have to
+					// is the worst of the three outcomes.
+					renewed := refreshToken(core)
+					if !renewed && time.Now().After(expiry) {
+						fmt.Fprintf(os.Stderr,
+							"Token expired at %s. Run: orgs login  (or -local to run without a server)\n",
+							expiry.Local().Format(time.RFC822))
 						os.Exit(1)
 					}
-					// Token still valid — refresh it before running the command
-					refreshToken(core)
 				}
 			}
 			v := commands.CmdRegistry[k]
@@ -140,11 +281,48 @@ func main() {
 				if len(oldArgs) > 1 {
 					args = oldArgs[1:]
 				}
+				// A command that takes dash-words - `orgs tag -someday` - gets
+				// them off the line before the parse, because the flag package
+				// would call one an undefined flag and exit. Only words this
+				// command has not defined as a flag are taken, so -json stays
+				// a flag everywhere.
+				if dw, ok := mod.(commands.DashWords); ok && v.Flags != nil {
+					var taken []string
+					kept := []string{}
+					for _, a := range args {
+						if len(a) > 1 && a[0] == '-' && a != "--" &&
+							v.Flags.Lookup(strings.TrimLeft(a, "-")) == nil &&
+							dashWordRe.MatchString(a) {
+							taken = append(taken, a)
+							continue
+						}
+						kept = append(kept, a)
+					}
+					dw.TakeDashWords(taken)
+					args = kept
+				}
 				if v.Flags != nil && nil != v.Flags.Parse(args) {
 					panic(fmt.Sprintf("failed to parse arguments for: %s\n", k))
 				}
 			}
 			mod.Exec(core)
+			ran = true
+			break
+		}
+	}
+
+	// Nothing matched. `orgs` on its own and `orgs nonsense` are the same
+	// question - "what can this do" - and both used to be answered with a
+	// registry dump in map order, or with silence.
+	if !ran {
+		if len(args) > 0 {
+			fmt.Fprintf(os.Stderr, "orgs: no command called %q\n\n", args[0])
+		}
+		if h := commands.Find("help"); h != nil {
+			h.Cmd.Exec(core)
+		}
+		if len(args) > 0 {
+			os.Exit(1)
 		}
 	}
 

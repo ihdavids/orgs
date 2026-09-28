@@ -9,12 +9,13 @@ EDOC */
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/ihdavids/orgs/internal/common"
 )
 
 func ExportToFile(db common.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
-	fmt.Printf("EXPORT CALLED!\n")
+	fmt.Fprintf(os.Stderr, "EXPORT CALLED!\n")
 	var didWrite = false
 	var found = false
 	msg := "Unknown Error"
@@ -45,7 +46,7 @@ func ExportToFile(db common.ODb, args *common.ExportToFile) (common.ResultMsg, e
 }
 
 func ExportToString(db common.ODb, args *common.ExportToFile) (common.ResultMsg, error) {
-	fmt.Printf("EXPORT String CALLED!\n")
+	fmt.Fprintf(os.Stderr, "EXPORT String CALLED!\n")
 	var didWrite = false
 	msg := "Unknown Error"
 	for _, exp := range Conf().Server.Exporters {
@@ -70,7 +71,7 @@ func ExportToString(db common.ODb, args *common.ExportToFile) (common.ResultMsg,
 }
 
 func PluginUpdateTarget(db common.ODb, args *common.Target, name string) (common.ResultMsg, error) {
-	fmt.Printf("UPDATE CALLED!\n")
+	fmt.Fprintf(os.Stderr, "UPDATE CALLED!\n")
 	var didWrite = false
 	msg := "Unknown Error"
 	for _, exp := range Conf().Server.Updaters {

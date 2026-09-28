@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	mrand "math/rand"
+	"os"
 	"time"
 )
 
@@ -330,7 +331,7 @@ func (self *ServerSettings) Validate() {
 	}
 	// You have to have a salt of some kind defined
 	if self.OrgSalt == KBAD_SALT {
-		fmt.Printf("B")
+		fmt.Fprintf(os.Stderr, "B")
 		log.Default().Printf("BAD SALT!\n>> You NEED to set orgSalt in your config file!\n")
 	}
 }

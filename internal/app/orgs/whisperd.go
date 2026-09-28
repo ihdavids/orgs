@@ -209,7 +209,7 @@ func StartWhisper() {
 		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 		go func() {
 			<-ch
-			fmt.Printf("\n[whisper] stopping\n")
+			fmt.Fprintf(os.Stderr, "\n[whisper] stopping\n")
 			StopWhisper()
 			os.Exit(0)
 		}()
@@ -222,20 +222,20 @@ func (self *whisperd) start() {
 	// it was killed outright.
 	if whisperAnswering(2 * time.Second) {
 		self.set(WhisperAdopted, "adopted the whisper already listening on "+whisperBase())
-		fmt.Printf("[whisper] adopted the server already on %s\n", whisperBase())
+		fmt.Fprintf(os.Stderr, "[whisper] adopted the server already on %s\n", whisperBase())
 		return
 	}
 
 	models, err := whisperModelsDir()
 	if err != nil {
 		self.set(WhisperFailed, err.Error())
-		fmt.Printf("[whisper] %s\n", err)
+		fmt.Fprintf(os.Stderr, "[whisper] %s\n", err)
 		return
 	}
 	bin, err := whisperBinary()
 	if err != nil {
 		self.set(WhisperFailed, err.Error())
-		fmt.Printf("[whisper] %s\n", err)
+		fmt.Fprintf(os.Stderr, "[whisper] %s\n", err)
 		return
 	}
 
@@ -265,10 +265,10 @@ func (self *whisperd) start() {
 
 	if err := cmd.Start(); err != nil {
 		self.set(WhisperFailed, fmt.Sprintf("could not run %s: %s", bin, err))
-		fmt.Printf("[whisper] could not run %s: %s\n", bin, err)
+		fmt.Fprintf(os.Stderr, "[whisper] could not run %s: %s\n", bin, err)
 		return
 	}
-	fmt.Printf("[whisper] %s run --http.addr localhost:%d --models %s\n", bin, whisperPort(), models)
+	fmt.Fprintf(os.Stderr, "[whisper] %s run --http.addr localhost:%d --models %s\n", bin, whisperPort(), models)
 
 	go self.drain(stdout)
 	go self.drain(stderr)
@@ -291,7 +291,7 @@ func (self *whisperd) drain(r io.ReadCloser) {
 			continue
 		}
 		self.say("%s", line)
-		fmt.Printf("[whisper] %s\n", line)
+		fmt.Fprintf(os.Stderr, "[whisper] %s\n", line)
 	}
 }
 
@@ -311,7 +311,7 @@ func (self *whisperd) wait(cmd *exec.Cmd, attempt int) {
 	if err != nil {
 		why = fmt.Sprintf("whisper exited: %s", err)
 	}
-	fmt.Printf("[whisper] %s\n", why)
+	fmt.Fprintf(os.Stderr, "[whisper] %s\n", why)
 	if starts >= 3 {
 		self.set(WhisperFailed, why+" - not starting it again. The last lines of its output are in the voice panel.")
 		return
@@ -336,7 +336,7 @@ func (self *whisperd) awaitReady() {
 		}
 		if whisperAnswering(2 * time.Second) {
 			self.set(WhisperReady, "")
-			fmt.Printf("[whisper] ready on %s\n", whisperBase())
+			fmt.Fprintf(os.Stderr, "[whisper] ready on %s\n", whisperBase())
 			return
 		}
 		time.Sleep(time.Second)

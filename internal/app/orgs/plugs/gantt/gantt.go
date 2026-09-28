@@ -259,7 +259,7 @@ func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.
 		for curNode.Parent != "" {
 			par := db.FindByHash(curNode.Parent)
 			if par == nil {
-				//fmt.Printf("Cannot find parent of %v : %v\n", curNode.Headline, curNode.Parent)
+				//fmt.Fprintf(os.Stderr, "Cannot find parent of %v : %v\n", curNode.Headline, curNode.Parent)
 				break
 			}
 			if _, ok := par.Props["ORDERED"]; ok {
@@ -407,7 +407,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 
 func (self *Gantt) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
-	fmt.Printf("GANTT: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "GANTT: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)
@@ -420,7 +420,7 @@ func (self *Gantt) Export(db common.ODb, query string, to string, opts string, p
 	}
 	var res error = nil
 	o := bytes.NewBufferString("")
-	fmt.Println(self.Props)
+	fmt.Fprintln(os.Stderr, self.Props)
 	ExpandTemplateIntoBuf(o, docStart, self.Props)
 	for idx, td := range tds {
 		//line = ""
@@ -454,7 +454,7 @@ func (self *Gantt) Export(db common.ODb, query string, to string, opts string, p
 
 func (self *Gantt) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Println("GANTT: Export string called", query, opts)
+	fmt.Fprintln(os.Stderr, "GANTT: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)
@@ -467,8 +467,8 @@ func (self *Gantt) ExportToString(db common.ODb, query string, opts string, prop
 	}
 	var res error = nil
 	o := bytes.NewBufferString("")
-	fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	fmt.Println(self.Props)
+	fmt.Fprintln(os.Stderr, "++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	fmt.Fprintln(os.Stderr, self.Props)
 	ExpandTemplateIntoBuf(o, docStart, self.Props)
 
 	for idx, td := range tds {
@@ -478,7 +478,7 @@ func (self *Gantt) ExportToString(db common.ODb, query string, opts string, prop
 	ExpandTemplateIntoBuf(o, endMarkers, self.Props)
 	ExpandTemplateIntoBuf(o, docEnd, self.Props)
 	txt := o.String()
-	fmt.Printf("%s\n", txt)
+	fmt.Fprintf(os.Stderr, "%s\n", txt)
 	return res, txt
 }
 

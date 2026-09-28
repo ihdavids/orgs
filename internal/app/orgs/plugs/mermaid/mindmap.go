@@ -148,7 +148,7 @@ func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db common.ODb, nam
 
 func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
-	fmt.Printf("MindMap: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "MindMap: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: mindmap failed to query expression, %v [%s]\n", err, query)
@@ -161,7 +161,7 @@ func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts 
 	}
 	var res error = nil
 	o := bytes.NewBufferString("")
-	fmt.Println(self.Props)
+	fmt.Fprintln(os.Stderr, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, mindMapDocStart, self.Props)
 
 	minTd, cntAtMin, minLevel := lookForRootNode(tds)
@@ -219,7 +219,7 @@ func lookForRootNode(tds common.Todos) (common.Todo, int, int) {
 
 func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Println("MindMap: Export string called", query, opts)
+	fmt.Fprintln(os.Stderr, "MindMap: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: mipmap failed to query expression, %v [%s]\n", err, query)
@@ -232,8 +232,8 @@ func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts str
 	}
 	var res error = nil
 	o := bytes.NewBufferString("")
-	//fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	//fmt.Println(self.Props)
+	//fmt.Fprintln(os.Stderr, "++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	//fmt.Fprintln(os.Stderr, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, mindMapDocStart, self.Props)
 
 	minTd, cntAtMin, minLevel := lookForRootNode(tds)
@@ -253,7 +253,7 @@ func (self *MermaidMindMap) ExportToString(db common.ODb, query string, opts str
 	plugs.ExpandTemplateIntoBuf(o, mindMapEndMarkers, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, mindMapDocEnd, self.Props)
 	txt := o.String()
-	fmt.Printf("%s\n", txt)
+	fmt.Fprintf(os.Stderr, "%s\n", txt)
 	return res, txt
 }
 

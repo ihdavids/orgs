@@ -3,6 +3,7 @@ package orgs
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ihdavids/orgs/internal/common"
 )
@@ -137,7 +138,7 @@ func (s *Db) QueryCaptureTemplates(args *string, reply *[]common.CaptureTemplate
 	var err error = nil
 	*reply, err = QueryCaptureTemplates("")
 	if err != nil {
-		fmt.Printf("QueryCaptureTemplates: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "QueryCaptureTemplates: %s", err.Error())
 	}
 	return err
 }

@@ -165,7 +165,7 @@ func GetEndOfHeadline(n *org.Headline) *org.Pos {
 	/*
 		if len(n.Children) > 0 {
 			pos := n.Children[len(n.Children)-1].GetPos()
-			fmt.Printf("GOT END: %v\n", pos)
+			fmt.Fprintf(os.Stderr, "GOT END: %v\n", pos)
 			return &pos
 		}
 		pos := n.GetPos()
@@ -216,10 +216,10 @@ func GetListRow(sec *org.Section, subType string, tname string) (*org.Pos, *org.
 		}
 		// Check me
 		for _, node := range sec.Headline.Children {
-			//fmt.Printf("NODE: %v\n", node)
+			//fmt.Fprintf(os.Stderr, "NODE: %v\n", node)
 			// Find the first list in the nodes of the section
 			if lst, ok := node.(org.List); ok {
-				//fmt.Printf("This IS a list: %v %v\n", subType, lst.Kind)
+				//fmt.Fprintf(os.Stderr, "This IS a list: %v %v\n", subType, lst.Kind)
 				if subType == lst.Kind && isRightListType(checked, lst) {
 					item := lst.Items[len(lst.Items)-1]
 					pos := item.GetPos()
@@ -252,11 +252,11 @@ func GetTableRow(sec *org.Section, tname string) (*org.Pos, *org.Table) {
 			if tbl, ok := node.(org.Table); ok {
 				pos := tbl.GetEnd()
 				end := tbl.GetPos()
-				fmt.Printf("GOT TABLE!!!!!!!!!!!!!!!!!!!!! %v %v\n", pos, end)
+				fmt.Fprintf(os.Stderr, "GOT TABLE!!!!!!!!!!!!!!!!!!!!! %v %v\n", pos, end)
 				for _, r := range tbl.Rows {
-					fmt.Printf("%v %v\n", r.GetPos(), r.GetEnd())
+					fmt.Fprintf(os.Stderr, "%v %v\n", r.GetPos(), r.GetEnd())
 					for _, c := range r.Columns {
-						fmt.Printf("| %v %v |\n", c.GetPos(), c.GetEnd())
+						fmt.Fprintf(os.Stderr, "| %v %v |\n", c.GetPos(), c.GetEnd())
 					}
 				}
 				return &pos, &tbl
@@ -280,7 +280,7 @@ func GetTableRow(sec *org.Section, tname string) (*org.Pos, *org.Table) {
 }
 
 func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Section, res *common.ResultMsg, tname string, findInsertPos FindInsertPosition) {
-	fmt.Printf("[InsertEntryUsingTemplate]: %s\n", filename)
+	fmt.Fprintf(os.Stderr, "[InsertEntryUsingTemplate]: %s\n", filename)
 	if r, err := os.Open(filename); err == nil {
 		defer r.Close()
 		// Split the file into lines of text
@@ -308,7 +308,7 @@ func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Se
 
 				// Last line of file has to be added after
 				if i == p.Row {
-					// fmt.Printf("WRITING: i %d row %d endLine %d", i, p.Row, len(lines))
+					// fmt.Fprintf(os.Stderr, "WRITING: i %d row %d endLine %d", i, p.Row, len(lines))
 					indent := strings.Repeat(" ", sec.Headline.Lvl+2)
 					if tname == "entry" {
 						head := strings.Repeat("*", sec.Headline.Lvl+1) + " " + args.NewNode.Headline
@@ -324,7 +324,7 @@ func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Se
 					}
 				}
 			}
-			fmt.Printf("Writing FILE: %v\n", filename)
+			fmt.Fprintf(os.Stderr, "Writing FILE: %v\n", filename)
 			os.WriteFile(filename, []byte(fileContent), 0644)
 			res.Ok = true
 			res.Msg = "Capture successful"
@@ -372,7 +372,7 @@ func isEmpty(s string) bool {
 }
 
 func InsertItemUsingTemplate(args *common.Capture, filename string, sec *org.Section, res *common.ResultMsg, tname string) {
-	fmt.Printf("  [InsertItemUsingTemplate]\n")
+	fmt.Fprintf(os.Stderr, "  [InsertItemUsingTemplate]\n")
 	if r, err := os.Open(filename); err == nil {
 		defer r.Close()
 		// Split the file into lines of text
@@ -425,7 +425,7 @@ func InsertItemUsingTemplate(args *common.Capture, filename string, sec *org.Sec
 				}
 			}
 
-			// fmt.Printf("Have some stuff: %v %v\n", p, litem)
+			// fmt.Fprintf(os.Stderr, "Have some stuff: %v %v\n", p, litem)
 			fileContent := ""
 			// Now iterate over the file and insert our content where it should go!
 			var emptyLines []string = []string{}
@@ -479,7 +479,7 @@ func InsertItemUsingTemplate(args *common.Capture, filename string, sec *org.Sec
 					}
 				}
 			}
-			fmt.Printf("Writing FILE: %v\n", filename)
+			fmt.Fprintf(os.Stderr, "Writing FILE: %v\n", filename)
 			os.WriteFile(filename, []byte(fileContent), 0644)
 			res.Ok = true
 			res.Msg = "Capture successful"
@@ -511,12 +511,12 @@ func Capture(db common.ODb, args *common.Capture, username string) (common.Resul
 		} else if tname == "plain" {
 			InsertItemUsingTemplate(args, file.Doc.Path, secs, &res, tname)
 		} else {
-			fmt.Printf("Capture: invalid capture type [%s]\n", temp.Type)
+			fmt.Fprintf(os.Stderr, "Capture: invalid capture type [%s]\n", temp.Type)
 			res.Msg = fmt.Sprintf("Capture: invalid capture type  [%s]", temp.Type)
 		}
 		return res, nil
 	} else {
-		fmt.Printf("Failed to find capture template [%s]\n", args.Template)
+		fmt.Fprintf(os.Stderr, "Failed to find capture template [%s]\n", args.Template)
 		res.Msg = fmt.Sprintf("failed to find capture template [%s]", args.Template)
 		res.Ok = false
 		return res, nil

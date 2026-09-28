@@ -8,6 +8,7 @@ EDOC */
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
@@ -22,14 +23,14 @@ func ExecBlock(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error)
 			Log().Infof("Babel Block Execution\n")
 			// TODO Babel by name
 			if lang, ok := blk.ParameterMap()[":lang"]; ok {
-				fmt.Printf("Running language: %s\n", lang)
+				fmt.Fprintf(os.Stderr, "Running language: %s\n", lang)
 			}
 		} else if blk.Name == "DYN" {
 			Log().Infof("Dynamic Block Execution\n")
 			if lang, ok := blk.ParameterMap()[":lang"]; ok {
-				fmt.Printf("Function name: %s\n", lang)
+				fmt.Fprintf(os.Stderr, "Function name: %s\n", lang)
 				if blockExec, ok := Conf().PlugManager.BlockExec[lang]; ok {
-					fmt.Printf("Have function\n")
+					fmt.Fprintf(os.Stderr, "Have function\n")
 					res = *blockExec(ofile, sec, blk)
 					if res.Ok {
 						blk.Children = []org.Node{org.Text{Content: res.Msg}}
@@ -38,7 +39,7 @@ func ExecBlock(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error)
 				}
 			}
 			for k, v := range blk.ParameterMap() {
-				fmt.Printf("KEY: %s VAL: %v\n", k, v)
+				fmt.Fprintf(os.Stderr, "KEY: %s VAL: %v\n", k, v)
 			}
 		}
 	}

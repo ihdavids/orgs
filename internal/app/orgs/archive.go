@@ -3,6 +3,7 @@ package orgs
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"slices"
 	"strings"
@@ -55,7 +56,14 @@ func FindArchiveTarget(db common.ODb, tgt *common.Target) *common.Target {
 		} else {
 			// We do not handle datetree yet
 			if m := headlineRegexp.FindStringSubmatch(heading); m != nil {
-				res := common.Target{Filename: fname, Type: "file+heading", Id: m[2], Lvl: len(m[1])}
+				// "file+headline", not "file+heading". The singular spelling
+				// appeared nowhere else in the codebase and `GetFromTarget`
+				// does not answer to it, so it fell through to the default and
+				// returned nothing - which meant archiving to a heading, the
+				// form every `#+ARCHIVE:` line in the wild uses, had never
+				// worked at all. It failed as "could not find destination
+				// target", which reads like the heading is missing.
+				res := common.Target{Filename: fname, Type: "file+headline", Id: m[2], Lvl: len(m[1])}
 				return &res
 			}
 		}
@@ -147,7 +155,7 @@ func fixupArchiveHeading(ofile *common.OrgFile, sec *org.Section) *org.Section {
 		setProp(c, "ARCHIVE_OUTLINE_PATH", path)
 	}
 	for _, p := range c.Headline.Properties.Properties {
-		fmt.Printf("PROP: %v\n", p)
+		fmt.Fprintf(os.Stderr, "PROP: %v\n", p)
 	}
 
 	if Conf().ArchiveMarkDone {
@@ -162,13 +170,13 @@ func Archive(db common.ODb, tgt *common.Target) (common.ResultMsg, error) {
 	// Refile to the archive target
 	archiveTgt := FindArchiveTarget(db, tgt)
 	if archiveTgt != nil {
-		fmt.Printf("Archive target found: %s [%s]\n", archiveTgt.Filename, archiveTgt.Id)
+		fmt.Fprintf(os.Stderr, "Archive target found: %s [%s]\n", archiveTgt.Filename, archiveTgt.Id)
 		refile := common.Refile{FromId: *tgt, ToId: *archiveTgt}
 		// This does not quite work because we need to add a bunch of properties to the
 		// copied section
 		return Refile(db, &refile, fixupArchiveHeading, true)
 	} else {
-		fmt.Printf("Could not find archive target. ABORT")
+		fmt.Fprintf(os.Stderr, "Could not find archive target. ABORT")
 	}
 	res.Ok = false
 	res.Msg = "failed to find archive target"

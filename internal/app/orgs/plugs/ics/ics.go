@@ -113,7 +113,7 @@ func FormatIt(input string) string {
 }
 
 func (self *Ics) Update(db common.ODb) {
-	fmt.Printf("Ics Update...%v\n", time.Now())
+	fmt.Fprintf(os.Stderr, "Ics Update...%v\n", time.Now())
 	loc, err := time.LoadLocation(self.Timezone)
 	if err != nil {
 		log.Printf("Timezone not found: %s using PDT\n", self.Timezone)

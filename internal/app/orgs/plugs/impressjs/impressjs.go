@@ -251,7 +251,7 @@ func (s *ImpressExporter) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *ImpressExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("IMPRESS: Export called")
+	fmt.Fprintf(os.Stderr, "IMPRESS: Export called")
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
@@ -265,7 +265,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	t := template.Must(template.New("").Funcs(funcMap).Parse(temp))
 	err := t.Execute(o, m)
 	if err != nil {
-		fmt.Printf("TEMPLATE ERROR: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "TEMPLATE ERROR: %s\n", err.Error())
 	}
 }
 
@@ -280,7 +280,7 @@ func (e *ImpressExporter) ExpandThemePath(tname string) string {
 
 func (self *ImpressExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Printf("IMPRESS: Export string called [%s]:[%s]\n", query, opts)
+	fmt.Fprintf(os.Stderr, "IMPRESS: Export string called [%s]:[%s]\n", query, opts)
 	/*
 		_, err := db.QueryTodosExpr(query)
 		if err != nil {
@@ -298,9 +298,9 @@ func (self *ImpressExporter) ExportToString(db common.ODb, query string, opts st
 		if theme != "" {
 			self.Props["theme"] = theme
 			fname := self.ExpandThemePath(theme)
-			fmt.Printf("THEME PATH: %s\n", fname)
+			fmt.Fprintf(os.Stderr, "THEME PATH: %s\n", fname)
 			if tdata, ferr := os.ReadFile(fname); ferr == nil {
-				fmt.Printf("THEME DATA: %s\n", tdata)
+				fmt.Fprintf(os.Stderr, "THEME DATA: %s\n", tdata)
 				self.Props["themedata"] = string(tdata)
 			}
 		}
@@ -314,12 +314,12 @@ func (self *ImpressExporter) ExportToString(db common.ODb, query string, opts st
 		res := w.String()
 		self.Props["slide_data"] = res
 
-		fmt.Printf("DOC START: ========================================\n")
+		fmt.Fprintf(os.Stderr, "DOC START: ========================================\n")
 		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
-		fmt.Printf("XXX: %s\n", res)
+		fmt.Fprintf(os.Stderr, "XXX: %s\n", res)
 		return nil, res
 	} else {
-		fmt.Printf("Failed to find file in database: [%s]", query)
+		fmt.Fprintf(os.Stderr, "Failed to find file in database: [%s]", query)
 		return fmt.Errorf("failed to find file in database: [%s]", query), ""
 	}
 }

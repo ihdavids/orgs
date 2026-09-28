@@ -161,14 +161,14 @@ func LoadExtensions() {
 	data, err := os.ReadFile(path)
 	if err == nil {
 		if err := yaml.Unmarshal(data, ec); err != nil {
-			fmt.Printf("Extensions: failed to parse %s: %v\n", path, err)
+			fmt.Fprintf(os.Stderr, "Extensions: failed to parse %s: %v\n", path, err)
 		}
 	}
 	if ec.Users == nil {
 		ec.Users = make(map[string]*UserExt)
 	}
 	extensions = ec
-	fmt.Printf("Extensions: loaded from %s (%d users)\n", path, len(ec.Users))
+	fmt.Fprintf(os.Stderr, "Extensions: loaded from %s (%d users)\n", path, len(ec.Users))
 }
 
 // save writes the extensions config back to disk. Must be called with mu held for writing.

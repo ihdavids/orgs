@@ -576,7 +576,7 @@ func PostTable(w http.ResponseWriter, r *http.Request) {
 	}
 	var args common.TableEdit
 	if err = json.Unmarshal(body, &args); err != nil {
-		fmt.Println("Table edit failed to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Table edit failed to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(common.TableResult{Ok: false, Msg: err.Error()})
 		return
 	}

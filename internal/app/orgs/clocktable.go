@@ -8,6 +8,7 @@ EDOC */
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -62,7 +63,7 @@ func ParseBlock(blk string) *BlockTest {
 		b := &BlockTest{}
 		now := time.Now()
 		w := now.Weekday()
-		fmt.Printf("Weekday: %d\n", int(w))
+		fmt.Fprintf(os.Stderr, "Weekday: %d\n", int(w))
 		b.Date = &org.OrgDate{Start: time.Now().AddDate(0, 0, -int(w)), End: time.Now(), HaveTime: true}
 		t := b.Date.Start
 		b.Date.Start = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
@@ -238,7 +239,7 @@ func (s *ClockTableState) GenerateTableForSubtree(ofile *common.OrgFile, sec *or
 	ctx := make(map[string]interface{})
 	ctx["data"] = data
 	res = Conf().PlugManager.Tempo.RenderTemplate(template, ctx)
-	//fmt.Printf("TABLE\n%s\n", res)
+	//fmt.Fprintf(os.Stderr, "TABLE\n%s\n", res)
 	return res
 }
 

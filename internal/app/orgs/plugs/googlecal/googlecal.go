@@ -85,7 +85,7 @@ func saveTokenToKeyring(tok *oauth2.Token, gc *GoogleCalendar) {
 // Request a token from the web, then returns the retrieved token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the "+
+	fmt.Fprintf(os.Stderr, "Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
 
 	var authCode string
@@ -123,7 +123,7 @@ func tokenFromKeyring(keyRingTok string) (*oauth2.Token, error) {
 
 // Saves a token to a file path.
 func saveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
+	fmt.Fprintf(os.Stderr, "Saving credential file to: %s\n", path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Fatalf("Unable to cache oauth token: %v", err)
@@ -162,7 +162,7 @@ func (self *GoogleCalendar) SetCreds(data []byte) {
 }
 
 func (self *GoogleCalendar) Update(db common.ODb) {
-	fmt.Printf("Google Calendar Update...\n")
+	fmt.Fprintf(os.Stderr, "Google Calendar Update...\n")
 
 	crds := self.GetCreds()
 	ctx := context.Background()
@@ -203,7 +203,7 @@ func (self *GoogleCalendar) Update(db common.ODb) {
 	if cals != nil && cals.Items != nil {
 		for _, cal := range cals.Items {
 			if cal.Hidden {
-				fmt.Printf("SKIPPING: %s\n", cal.Summary)
+				fmt.Fprintf(os.Stderr, "SKIPPING: %s\n", cal.Summary)
 				continue
 			}
 			fmt.Fprintf(f, "* %-25s\t\t:Cal:\n", cal.Summary)
@@ -217,9 +217,9 @@ func (self *GoogleCalendar) Update(db common.ODb) {
 			if err != nil {
 				log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
 			}
-			//fmt.Println("Upcoming events:")
+			//fmt.Fprintln(os.Stderr, "Upcoming events:")
 			if len(events.Items) == 0 {
-				fmt.Printf("No upcoming events found for calendar: %s\n", cal.Summary)
+				fmt.Fprintf(os.Stderr, "No upcoming events found for calendar: %s\n", cal.Summary)
 			} else {
 				for _, item := range events.Items {
 					date, err := time.Parse(time.RFC3339, item.Start.DateTime)

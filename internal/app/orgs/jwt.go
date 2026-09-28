@@ -2,6 +2,7 @@ package orgs
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/go-jose/go-jose/v4"
@@ -32,7 +33,7 @@ func generateToken(username string) (string, time.Time, error) {
 
 	jwsKey := []byte(Conf().Server.OrgJWS)
 	if signer, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: jwsKey}, nil); err != nil {
-		fmt.Printf("Failed to get new signer: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to get new signer: %v\n", err)
 		return "", expirationTime, err
 	} else {
 		if rawJwt, err := jwt.Signed(signer).Claims(claims).Serialize(); err != nil {
@@ -99,21 +100,21 @@ func GenerateEncryptedToken(username string) (string, time.Time, error) {
 func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken, error) {
 	// First decrypt the encrypted token
 	if tokenBytes, err := decryptJWT(encToken); err != nil {
-		fmt.Printf("Decrypt failed: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Decrypt failed: %v\n", err)
 		return nil, err
 	} else {
 
 		jwsKey := []byte(Conf().Server.OrgJWS)
 		if rawJwt, err := jwt.ParseSigned(string(tokenBytes), []jose.SignatureAlgorithm{jose.HS256}); err != nil {
-			fmt.Printf("Parse signed: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Parse signed: %v\n", err)
 			return nil, err
 		} else {
 			if err := rawJwt.Claims(jwsKey, claims); err != nil {
-				fmt.Printf("Claims! %v\n", err)
+				fmt.Fprintf(os.Stderr, "Claims! %v\n", err)
 				return nil, err
 			} else {
 				if err := validateToken(rawJwt, claims); err != nil {
-					fmt.Printf("Failed validate token: %v\n", err)
+					fmt.Fprintf(os.Stderr, "Failed validate token: %v\n", err)
 					return nil, err
 				} else {
 					return rawJwt, nil

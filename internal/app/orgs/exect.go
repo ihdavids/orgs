@@ -8,6 +8,7 @@ EDOC */
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,7 +25,7 @@ func ExecTable(db common.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.
 	end := tbl.GetEnd()
 	res.Pos = org.Pos{Row: strt.Row, Col: strt.Col}
 	res.End = org.Pos{Row: end.Row, Col: end.Col}
-	//fmt.Printf("GOING TO EXECUTE\n")
+	//fmt.Fprintf(os.Stderr, "GOING TO EXECUTE\n")
 	// Okay we have a table and we have a formula, lets go execute it!
 	if err := ExecuteFormula(db, sec, ofile, tbl); err != nil {
 		res.Msg = err.Error()
@@ -33,7 +34,7 @@ func ExecTable(db common.ODb, ofile *common.OrgFile, sec *org.Section, tbl *org.
 	w := org.NewOrgWriter()
 	// Recompute our sizes so the table is the correct size.
 	tbl.RecomputeColumnInfos()
-	//fmt.Printf("SERIALIZE\n")
+	//fmt.Fprintf(os.Stderr, "SERIALIZE\n")
 	// Setup our indent for the current node so the table is indented properly
 	w.Indent = strings.Repeat(" ", sec.Headline.Lvl+1)
 	// Respect the fact that a table represents an implicit line break
@@ -132,7 +133,7 @@ func ExecAllTables(db common.ODb, filename string) ([]common.ResultMsg, []error)
 			for _, tbl := range sec.Headline.Tables {
 				r, e := ExecTable(db, ofile, sec, tbl)
 				if e != nil {
-					fmt.Printf("HAVE TABLE ERROR: %s\n", e)
+					fmt.Fprintf(os.Stderr, "HAVE TABLE ERROR: %s\n", e)
 					err = append(err, e)
 				}
 				res = append(res, r)
@@ -684,7 +685,7 @@ func FormulaDetailsAt(db common.ODb, t *common.PreciseTarget) (common.ResultTabl
 
 func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl *org.Table) error {
 	if tbl.Formulas == nil {
-		fmt.Printf("Table does not have any formulas, skipping")
+		fmt.Fprintf(os.Stderr, "Table does not have any formulas, skipping")
 		return nil
 	}
 	parameters := BuildParameters(ofile, sec, tbl)
@@ -693,7 +694,7 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 		if frml == nil || frml.Expr == "" {
 			return fmt.Errorf("missing formula in slot %d", idx)
 		}
-		fmt.Printf("[%d] TABLE =============================\n", idx)
+		fmt.Fprintf(os.Stderr, "[%d] TABLE =============================\n", idx)
 		out := frml.Target.CreateIterator(tbl)
 		calcState := &CalcState{}
 		calcState.ProcessCalcSpecifiers(strings.TrimSpace(frml.Format))
@@ -727,9 +728,9 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 				return err
 			}
 			// Replace other ranges with RangeIters
-			//fmt.Printf("XXXXXXXXXXXXXXXXXXXXXXx\n")
-			//fmt.Printf("%v\n", ms)
-			//fmt.Printf("XXXXXXXXXXXXXXXXXXXXXXx\n")
+			//fmt.Fprintf(os.Stderr, "XXXXXXXXXXXXXXXXXXXXXXx\n")
+			//fmt.Fprintf(os.Stderr, "%v\n", ms)
+			//fmt.Fprintf(os.Stderr, "XXXXXXXXXXXXXXXXXXXXXXx\n")
 			frml.Expr = ReplaceAllNamedColsAndCells(frml.Expr, tbl)
 			rngCnt := 0
 			frml.Expr = string(RE_TARGET_A.ReplaceAllFunc([]byte(frml.Expr), func(in []byte) []byte {
@@ -756,15 +757,15 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 				return fmt.Errorf("Failed parsing formula [%s][%d](%s)", frml.Keyword.Value, idx, frml.Expr)
 			}
 
-			//fmt.Printf("GOT SLOT: %d %d\n", tgt.Row, tgt.Col)
+			//fmt.Fprintf(os.Stderr, "GOT SLOT: %d %d\n", tgt.Row, tgt.Col)
 			result, err := expr.Expression.Evaluate(*parameters)
 			eout := ""
 			if err != nil {
 				eout = " [" + err.Error() + "] "
 			}
 
-			//fmt.Printf("   RESULT: %s => %v %s ON: [%d,%d..%d,%d]\n     >> %s", frml.Expr, result, eout, frml.Target.Start.Row, frml.Target.Start.Col, frml.Target.End.Row, frml.Target.End.Col, tbl.Formulas.Keywords[0].Value)
-			fmt.Printf("   RESULT: %s => %v %s ON: [%d,%d..%d,%d]\n", frml.Expr, result, eout, frml.Target.Start.Row, frml.Target.Start.Col, frml.Target.End.Row, frml.Target.End.Col)
+			//fmt.Fprintf(os.Stderr, "   RESULT: %s => %v %s ON: [%d,%d..%d,%d]\n     >> %s", frml.Expr, result, eout, frml.Target.Start.Row, frml.Target.Start.Col, frml.Target.End.Row, frml.Target.End.Col, tbl.Formulas.Keywords[0].Value)
+			fmt.Fprintf(os.Stderr, "   RESULT: %s => %v %s ON: [%d,%d..%d,%d]\n", frml.Expr, result, eout, frml.Target.Start.Row, frml.Target.Start.Col, frml.Target.End.Row, frml.Target.End.Col)
 			if result != nil && err == nil {
 				switch r := result.(type) {
 				case *org.RowColRef:
@@ -776,9 +777,9 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 				if !(calcState.SkipHeader && TableHasHeader(tbl) && tgt.Row == 1) {
 					calcState.SetCell(tbl, tgt, result)
 				}
-				//fmt.Printf("---> Setting value\n")
+				//fmt.Fprintf(os.Stderr, "---> Setting value\n")
 			} else {
-				fmt.Printf("HAD ERR: %v\n", err)
+				fmt.Fprintf(os.Stderr, "HAD ERR: %v\n", err)
 				return fmt.Errorf("formula execution error: [%s]", err.Error())
 			}
 			frml.Expr = oldexpr

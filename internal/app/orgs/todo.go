@@ -287,7 +287,7 @@ func IsOn(p *org.Section, t time.Time) bool {
 	if p != nil && p.Headline != nil {
 		// If we are closed we do not show up after the close date
 		if p.Headline.HasClosed() {
-			fmt.Printf("*** HAVE CLOSED %v vs %v %s", t, p.Headline.Timestamp.Time, p.Headline.Title[0])
+			fmt.Fprintf(os.Stderr, "*** HAVE CLOSED %v vs %v %s", t, p.Headline.Timestamp.Time, p.Headline.Title[0])
 			if t.After(p.Headline.Closed.Date.Start) {
 				return false
 			}
@@ -419,20 +419,27 @@ func IsPartOfProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
 // AND
 // this project does not have a NEXT status task. This is part of ensuring projects are moving
 // forward.
+// IsBlockedProject is a project with nothing to do next: a heading that has
+// children with keywords on them, none of which is NEXT.
+//
+// It used to return the opposite of its own name - `childHasNext`, so it
+// answered true for exactly the projects that were *not* blocked. docs.org has
+// always described it the right way round ("DOES NOT have a child marked
+// NEXT"), so the documentation was right and the code was wrong; this is what a
+// weekly review asks first and it was answering with the healthy projects.
+//
+// The projectRe argument was never read and is kept only so a query that passes
+// one still parses. The expression wrapper no longer requires it.
 func IsBlockedProject(p *org.Section, projectRe string, f *common.OrgFile) bool {
-	// We have a headline
-	if p != nil && p.Headline != nil {
-		// This is a project
-		if IsProject(p, f) {
-			// Do any of the children have a NEXT status
-			var childHasNext bool = false
-			for _, c := range p.Children {
-				childHasNext = childHasNext || IsNextTask(c, f)
-			}
-			return childHasNext
+	if p == nil || p.Headline == nil || !IsProject(p, f) {
+		return false
+	}
+	for _, c := range p.Children {
+		if IsNextTask(c, f) {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func HasTable(p *org.Section, f *common.OrgFile) bool {
@@ -563,9 +570,17 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			return IsPartOfProject(p, args[0].(string), exp.File), nil
 		},
 		"IsBlockedProject": func(args ...interface{}) (interface{}, error) {
-			p := exp.Sec
-			//p := args[0].(*org.Section)
-			return IsBlockedProject(p, args[0].(string), exp.File), nil
+			// The argument is optional. It was required, and unused - so
+			// `IsBlockedProject()`, which is how the documentation writes it and
+			// the only way anybody would think to call it, panicked on
+			// args[0] and the whole query answered nothing.
+			re := ""
+			if len(args) > 0 {
+				if s, ok := args[0].(string); ok {
+					re = s
+				}
+			}
+			return IsBlockedProject(exp.Sec, re, exp.File), nil
 		},
 		"HasBlock": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -578,6 +593,26 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"HasTable": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			return HasTable(p, exp.File), nil
+		},
+		// A heading with checkboxes on it, and how far through them it is.
+		// `HasChecklist()` is what the terminal's checkbox picker offers over;
+		// `ChecklistDone()` is "every box ticked", which is not the same
+		// question as IsStatus("DONE") and is the one a review wants -
+		// a heading whose list is finished and whose keyword nobody moved.
+		"HasChecklist": func(args ...interface{}) (interface{}, error) {
+			return HasChecklist(exp.Sec, exp.File), nil
+		},
+		"ChecklistDone": func(args ...interface{}) (interface{}, error) {
+			done, total := ChecklistCounts(exp.Sec, exp.File)
+			return total > 0 && done == total, nil
+		},
+		"ChecklistCount": func(args ...interface{}) (interface{}, error) {
+			_, total := ChecklistCounts(exp.Sec, exp.File)
+			return total, nil
+		},
+		"ChecklistLeft": func(args ...interface{}) (interface{}, error) {
+			done, total := ChecklistCounts(exp.Sec, exp.File)
+			return total - done, nil
 		},
 		"HasTags": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -794,6 +829,62 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 
 			return IsOn(p, now), nil
 		},
+		// The planning lines, as questions rather than as values.
+		//
+		// The query language could ask what a heading *was* - its keyword, its
+		// tags, its properties - and could ask whether a date fell on a
+		// particular day, but could not ask the two questions a review is made
+		// of: does this have a date at all, and has that date gone past. Every
+		// one of these is a field that was already on the headline.
+		"HasScheduled": func(args ...interface{}) (interface{}, error) {
+			return exp.Sec != nil && exp.Sec.Headline != nil &&
+				exp.Sec.Headline.Scheduled != nil, nil
+		},
+		"HasDeadline": func(args ...interface{}) (interface{}, error) {
+			return exp.Sec != nil && exp.Sec.Headline != nil &&
+				exp.Sec.Headline.Deadline != nil, nil
+		},
+		"HasTimestamp": func(args ...interface{}) (interface{}, error) {
+			return exp.Sec != nil && exp.Sec.Headline != nil &&
+				exp.Sec.Headline.Timestamp != nil, nil
+		},
+		"HasAnyDate": func(args ...interface{}) (interface{}, error) {
+			h := exp.Sec.Headline
+			return exp.Sec != nil && h != nil &&
+				(h.Scheduled != nil || h.Deadline != nil || h.Timestamp != nil), nil
+		},
+		// Past, meaning strictly before today rather than before this instant:
+		// a deadline of today is due, not overdue, and a review that called it
+		// overdue at nine in the morning would be wrong for the rest of the day.
+		"DeadlinePast": func(args ...interface{}) (interface{}, error) {
+			return datePast(sdcDate(exp.Sec, "DEADLINE")), nil
+		},
+		"ScheduledPast": func(args ...interface{}) (interface{}, error) {
+			return datePast(sdcDate(exp.Sec, "SCHEDULED")), nil
+		},
+		// Whether time has ever been booked against this heading, which is what
+		// tells "still open and worked on" from "still open and forgotten".
+		"HasClock": func(args ...interface{}) (interface{}, error) {
+			return exp.Sec != nil && exp.Sec.Headline != nil &&
+				len(exp.Sec.Headline.Clocks) > 0, nil
+		},
+		// How long ago the heading's own date was, in days, as a number to
+		// compare: OlderThan(30) is a month of nothing happening. A heading
+		// with no date at all answers -1, so it never satisfies OlderThan.
+		"DaysOld": func(args ...interface{}) (interface{}, error) {
+			return daysOld(exp.Sec), nil
+		},
+		"OlderThan": func(args ...interface{}) (interface{}, error) {
+			if len(args) == 0 {
+				return false, fmt.Errorf("OlderThan needs a number of days")
+			}
+			want, err := toFloat(args[0])
+			if err != nil {
+				return false, err
+			}
+			d := daysOld(exp.Sec)
+			return d >= 0 && float64(d) >= want, nil
+		},
 		"Today": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
@@ -960,9 +1051,9 @@ func parseHabitCompletions(v *org.Section) []string {
 			// The drawer's String() renders all children (Lists, Paragraphs, etc.)
 			// into org-mode text which we can regex over line by line.
 			text := d.String()
-			fmt.Printf("GOO: %s\n", text)
+			fmt.Fprintf(os.Stderr, "GOO: %s\n", text)
 			for _, m := range habitDoneRe.FindAllStringSubmatch(text, -1) {
-				fmt.Printf("HABIT: %s\n", m[1])
+				fmt.Fprintf(os.Stderr, "HABIT: %s\n", m[1])
 				completions = append(completions, m[1])
 			}
 		}
@@ -1005,10 +1096,10 @@ func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 	}
 	var completions []string
 	if title == "Meditate for 10 minutes" {
-		fmt.Printf("PROPS: %v\n", props)
+		fmt.Fprintf(os.Stderr, "PROPS: %v\n", props)
 	}
 	if props["STYLE"] == "habit" {
-		fmt.Printf("HAVE A HABIT\n")
+		fmt.Fprintf(os.Stderr, "HAVE A HABIT\n")
 		completions = parseHabitCompletions(v)
 	}
 	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Deadline: deadline, Status: v.Headline.Status, Priority: v.Headline.Priority, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl, Completions: completions}
@@ -1135,13 +1226,13 @@ func QueryStringNodesOnFile(query string, file *common.OrgFile) ([]*org.Section,
 func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	var todos common.Todos
 	files := GetDb().GetFiles()
-	fmt.Printf("    > QUERY: %s\n", query.Query)
+	fmt.Fprintf(os.Stderr, "    > QUERY: %s\n", query.Query)
 
 	// Render {{ FILTER }} in our template
 	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
 	query.Query = Conf().PlugManager.Tempo.ExecuteTemplateString(query.Query, ctx)
 
-	fmt.Printf("    > QUERY AFTER EXPANSION: %s\n", query.Query)
+	fmt.Fprintf(os.Stderr, "    > QUERY AFTER EXPANSION: %s\n", query.Query)
 	exp, err := ParseString(query)
 	if err != nil {
 		return &todos, err
@@ -1158,7 +1249,7 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 func Grep(query string, delimeter string) ([]string, error) {
 	res := []string{}
 	if re, err := regexp.Compile(query); err != nil {
-		fmt.Printf("ERROR: failed to compile query: %v", err)
+		fmt.Fprintf(os.Stderr, "ERROR: failed to compile query: %v", err)
 		return res, err
 	} else {
 		files := GetDb().GetFiles()
@@ -1268,7 +1359,7 @@ func QueryProjects() common.Todos {
 
 func WriteOutOrgFile(f *common.OrgFile) bool {
 	if f == nil {
-		fmt.Printf("INVALID (NIL) DOCUMENT PASSED TO WRITEOUTORGFILE, SKIPPING!")
+		fmt.Fprintf(os.Stderr, "INVALID (NIL) DOCUMENT PASSED TO WRITEOUTORGFILE, SKIPPING!")
 		return false
 	}
 	// Need the doc to serialize and write it out.
@@ -1371,16 +1462,41 @@ func ChangeBody(query *common.TodoItemChange) (common.Result, error) {
 		// Parse the new body content as org-mode text
 		bodyDoc := org.New().Parse(strings.NewReader(query.Value), "./")
 		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
-			// Preserve child headlines, replace body content
+			// Replace the body, and keep everything that is not the body.
+			//
+			// Two things live among a headline's children that a caller
+			// changing its *text* is not talking about, and both used to be
+			// thrown away here:
+			//
+			//  1. **Child headings.** The old loop matched `case org.Headline`,
+			//     which never fires - a nested heading is a `*org.Headline`,
+			//     and a type switch on the value form does not match the
+			//     pointer. So every child of the heading, and their whole
+			//     subtrees, were deleted by any change to the parent's body.
+			//     Appending one line of note to a project heading took the
+			//     project's tasks with it, with a `{"status":true}` in reply.
+			//  2. **The planning line.** SCHEDULED/DEADLINE/CLOSED are SDC
+			//     children (ChangeDate puts them there), so a body change
+			//     dropped the heading's dates as well.
+			//
+			// The property drawer is safe either way - it hangs off
+			// n.Properties rather than off Children.
+			var planning []org.Node
 			var childHeadlines []org.Node
 			for _, c := range n.Children {
 				switch c.(type) {
-				case org.Headline:
+				case org.Headline, *org.Headline:
 					childHeadlines = append(childHeadlines, c)
+				case org.SDC, *org.SDC:
+					planning = append(planning, c)
 				}
 			}
-			// New children = parsed body nodes + preserved child headlines
-			n.Children = append(bodyDoc.Nodes, childHeadlines...)
+			// The planning line comes directly under the headline, then the
+			// body, then the children - which is the order org writes them and
+			// the order the parser expects to read them back in.
+			kept := append([]org.Node{}, planning...)
+			kept = append(kept, bodyDoc.Nodes...)
+			n.Children = append(kept, childHeadlines...)
 			return *n
 		}); set {
 			didWrite = WriteOutOrgFile(f)
@@ -1676,7 +1792,7 @@ func remove(slice []string, s string) []string {
 }
 
 func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
-	fmt.Printf("TOGGLE TAG CALLED: %s\n", query.Value)
+	fmt.Fprintf(os.Stderr, "TOGGLE TAG CALLED: %s\n", query.Value)
 	didWrite := true
 	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
 		// Change a tag
@@ -1696,10 +1812,10 @@ func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
 }
 
 func Reformat(query *common.FileList) (common.Result, error) {
-	fmt.Printf("[REFORMAT CALLED]\n")
+	fmt.Fprintf(os.Stderr, "[REFORMAT CALLED]\n")
 	didWrite := true
 	for _, filename := range *query {
-		fmt.Printf("  reformat: [%v]\n", filename)
+		fmt.Fprintf(os.Stderr, "  reformat: [%v]\n", filename)
 		f := GetDb().FindByFile(filename)
 		didWrite = didWrite && WriteOutOrgFile(f)
 	}
@@ -1874,4 +1990,91 @@ func fileNameOf(f *common.OrgFile) string {
 		return ""
 	}
 	return f.Filename
+}
+
+
+// ---------------------------------------------------------------------------
+// The date questions the query language asks
+// ---------------------------------------------------------------------------
+
+// sdcDate is one of a heading's planning dates, or nil.
+func sdcDate(sec *org.Section, which string) *org.OrgDate {
+	if sec == nil || sec.Headline == nil {
+		return nil
+	}
+	var sdc *org.SDC
+	switch which {
+	case "SCHEDULED":
+		sdc = sec.Headline.Scheduled
+	case "DEADLINE":
+		sdc = sec.Headline.Deadline
+	case "CLOSED":
+		sdc = sec.Headline.Closed
+	}
+	if sdc == nil {
+		return nil
+	}
+	return sdc.Date
+}
+
+// datePast is "before today", counted in days rather than instants: a deadline
+// of today is due and not overdue, and a check that said otherwise would be
+// wrong from one minute past midnight.
+func datePast(d *org.OrgDate) bool {
+	if d == nil || d.Start.IsZero() {
+		return false
+	}
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	start := d.Start
+	return time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
+		start.Location()).Before(today)
+}
+
+// daysOld is how long ago the most recent of a heading's dates was, in whole
+// days. A heading with no date answers -1 rather than zero, so "older than
+// thirty days" is never true of a heading that has no date to be old.
+func daysOld(sec *org.Section) int {
+	if sec == nil || sec.Headline == nil {
+		return -1
+	}
+	var newest time.Time
+	for _, sdc := range []*org.SDC{sec.Headline.Scheduled, sec.Headline.Deadline,
+		sec.Headline.Closed} {
+		if sdc == nil || sdc.Date == nil || sdc.Date.Start.IsZero() {
+			continue
+		}
+		if sdc.Date.Start.After(newest) {
+			newest = sdc.Date.Start
+		}
+	}
+	if sec.Headline.Timestamp != nil && sec.Headline.Timestamp.Time != nil &&
+		sec.Headline.Timestamp.Time.Start.After(newest) {
+		newest = sec.Headline.Timestamp.Time.Start
+	}
+	if newest.IsZero() {
+		return -1
+	}
+	return int(time.Since(newest).Hours() / 24)
+}
+
+// toFloat reads a number out of whatever the expression evaluator handed over -
+// it produces float64 for a literal and can produce an int from a function.
+func toFloat(v interface{}) (float64, error) {
+	switch n := v.(type) {
+	case float64:
+		return n, nil
+	case float32:
+		return float64(n), nil
+	case int:
+		return float64(n), nil
+	case int64:
+		return float64(n), nil
+	case string:
+		var f float64
+		if _, err := fmt.Sscanf(n, "%g", &f); err == nil {
+			return f, nil
+		}
+	}
+	return 0, fmt.Errorf("expected a number, got %T", v)
 }

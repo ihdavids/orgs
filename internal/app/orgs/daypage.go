@@ -86,11 +86,11 @@ func getPreviousDayPage(dt time.Time) (string, string) {
 		filename, title := getDayPageFilename(dt)
 		if _, err := os.Stat(filename); err == nil {
 			filename, _ = filepath.Abs(filename)
-			fmt.Printf("Found old daypage: %s\n", filename)
+			fmt.Fprintf(os.Stderr, "Found old daypage: %s\n", filename)
 			return filename, title
 		}
 	}
-	fmt.Printf("Did not find old daypage!\n")
+	fmt.Fprintf(os.Stderr, "Did not find old daypage!\n")
 	return "", ""
 }
 
@@ -120,11 +120,11 @@ func CreateDayPage() (common.FileList, error) {
 
 		var nodes []*org.Section
 		oldFn, _ := getPreviousDayPage(dt)
-		//fmt.Printf("PREV DAY: %s\n", oldFn)
+		//fmt.Fprintf(os.Stderr, "PREV DAY: %s\n", oldFn)
 		if oldFn != "" {
 			if ofile := GetDb().FindByFile(oldFn); ofile != nil {
 				nodes, _ = QueryStringNodesOnFile("!IsArchived() && IsTask() && IsActive()", ofile)
-				//fmt.Printf("WE HAVE %d NODES\n", len(nodes))
+				//fmt.Fprintf(os.Stderr, "WE HAVE %d NODES\n", len(nodes))
 
 				// Now go archive the old page since we have a new page to work with.
 				if AddFileTag("ARCHIVE", ofile.Doc) {
@@ -142,7 +142,7 @@ func CreateDayPage() (common.FileList, error) {
 				//
 				// Double adding happens when we add a node with children, then add its children!
 				if !ParentIn(nodes, n) {
-					fmt.Printf("APPENDING: %s\n", n.Headline.Title[0].String())
+					fmt.Fprintf(os.Stderr, "APPENDING: %s\n", n.Headline.Title[0].String())
 					d.Nodes = append(d.Nodes, *n.Headline)
 				}
 			}
@@ -151,7 +151,7 @@ func CreateDayPage() (common.FileList, error) {
 			d.Write(w)
 			todayData = w.String()
 		}
-		fmt.Printf("WRITING TEMPLATE %s\n", filename)
+		fmt.Fprintf(os.Stderr, "WRITING TEMPLATE %s\n", filename)
 		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
 	}
 	return []string{filename}, nil

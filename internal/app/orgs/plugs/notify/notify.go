@@ -28,6 +28,7 @@ EDOC */
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gen2brain/beeep"
@@ -72,7 +73,7 @@ func max(a int, b int) int {
 }
 
 func (self *Notify) Update(db common.ODb) {
-	//fmt.Printf("Notify Update...%v\n", time.Now())
+	//fmt.Fprintf(os.Stderr, "Notify Update...%v\n", time.Now())
 
 	curDate := time.Now()
 	query := fmt.Sprintf(`!IsProject() && !IsArchived() && IsTodo() && OnDate("%s")`, curDate.Format("2006 02 01"))
@@ -83,7 +84,7 @@ func (self *Notify) Update(db common.ODb) {
 			minDiff := v.Date.Start.Minute() - curDate.Minute()
 
 			if v.Date.Start.Hour() == curDate.Hour() && minDiff >= 0 && minDiff <= notWindow && !contains(self.haveNotified, v) {
-				fmt.Printf("Less than %d minutes till: %s\n", minDiff, v.Headline)
+				fmt.Fprintf(os.Stderr, "Less than %d minutes till: %s\n", minDiff, v.Headline)
 				if self.Beep {
 					beeep.Beep(beeep.DefaultFreq, beeep.DefaultDuration)
 				}

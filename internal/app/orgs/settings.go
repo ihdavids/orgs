@@ -27,8 +27,25 @@ type Config struct {
 	Out         *logging.Logger
 	Config      string
 	HomeDir     string
-	Server      *common.ServerSettings `yaml:"server"`
-	Author      string                 `yaml:"author"`
+	// Run the server in this process for the length of one command, rather than
+	// talking to one over the network.
+	//
+	// The whole client side assumes a daemon is up, which is right for a
+	// desktop and wrong everywhere else: `orgs agenda` in a git hook, `orgs fmt
+	// -check` in CI, `orgs search` over ssh on a box where nobody has started
+	// anything. With -local the binary is the server for as long as it takes to
+	// answer, and nothing is left running.
+	//
+	// NOT serialized: it is a property of this invocation, not of a
+	// configuration.
+	Local bool
+	// Org directories for this run, overriding the configured ones. Implies
+	// -local, because pointing the client at somebody else's server and then
+	// telling it which directories to read would be two answers to one
+	// question.
+	LocalDirs string
+	Server    *common.ServerSettings `yaml:"server"`
+	Author    string                 `yaml:"author"`
 	// What template file to render when generating a new org file
 	// This is a file found in the templatePath option
 	NewFileTemplate string `yaml:"newFileTemplate"`
@@ -277,16 +294,16 @@ func (self *Config) Validate() {
 
 func Usage() {
 	flag.PrintDefaults()
-	fmt.Printf("  Commands:\n")
+	fmt.Fprintf(os.Stderr, "  Commands:\n")
 	for name, val := range commands.CmdRegistry {
-		fmt.Printf("   %-15s\t%s\n", name, val.Usage)
+		fmt.Fprintf(os.Stderr, "   %-15s\t%s\n", name, val.Usage)
 	}
 }
 
 func (self *Config) AddCommands() {
-	//fmt.Printf("Add Commands\n")
+	//fmt.Fprintf(os.Stderr, "Add Commands\n")
 	for name, val := range commands.CmdRegistry {
-		//fmt.Printf("NAME: %s\n", name)
+		//fmt.Fprintf(os.Stderr, "NAME: %s\n", name)
 		op := flag.NewFlagSet(name, flag.ExitOnError)
 		val.Flags = op
 		val.Cmd.SetupParameters(op)
@@ -318,6 +335,10 @@ func (self *Config) SetupCommandLine() {
 	flag.StringVar(&self.Config, "config", self.Config, "config file")
 
 	flag.StringVar(&self.Url, "url", self.Url, "server url for non serve mode")
+	flag.BoolVar(&self.Local, "local", false,
+		"run the server in this process for one command, instead of talking to one")
+	flag.StringVar(&self.LocalDirs, "orgdir", "",
+		"org directories to read, comma separated; implies -local")
 	self.AddCommands()
 
 }
@@ -335,15 +356,28 @@ func (self *Config) ParseConfig() {
 	filename := self.Config
 	if _, err := os.Stat(filename); err != nil {
 		// I should really remove this crap!
-		filename, _ := filepath.Abs("orgc.yaml")
-		if _, err = os.Stat(filename); err != nil {
+		alt, _ := filepath.Abs("orgc.yaml")
+		if _, err = os.Stat(alt); err == nil {
+			filename = alt
+		} else if self.Local || self.LocalDirs != "" {
+			// -local with -orgdir needs no configuration at all: the whole
+			// point of it is `orgs -orgdir ./notes agenda` on a machine that
+			// has never run this before. Defaults() has already run, so there
+			// is a working config in hand; the only thing missing is the file,
+			// and nothing here needs one.
+			filename = ""
+		} else {
 			fmt.Fprintf(os.Stderr, "Looks like you do not have a [%s] configuration file. Please add one!\n", self.Config)
 			os.Exit(-1)
 		}
 	}
 	// Parse our config file next if present.
-	self.Out.Infof("Loading: %s\n", filename)
-	yamlFile, err := ioutil.ReadFile(filename)
+	var yamlFile []byte
+	var err error = fmt.Errorf("no configuration file")
+	if filename != "" {
+		self.Out.Infof("Loading: %s\n", filename)
+		yamlFile, err = ioutil.ReadFile(filename)
+	}
 	if err == nil {
 		err = yaml.Unmarshal(yamlFile, self)
 		if err != nil {

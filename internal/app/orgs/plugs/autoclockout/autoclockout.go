@@ -26,6 +26,7 @@ EDOC */
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/ihdavids/orgs/internal/common"
@@ -76,7 +77,7 @@ func (self *AutoClockOut) Update(db common.ODb) {
 	for _, t := range self.ClockOutTimes {
 		parsed, err := time.Parse("15:04", t)
 		if err != nil {
-			fmt.Printf("autoclockout: invalid time format %q, expected HH:MM\n", t)
+			fmt.Fprintf(os.Stderr, "autoclockout: invalid time format %q, expected HH:MM\n", t)
 			continue
 		}
 		targetMins := parsed.Hour()*60 + parsed.Minute()
@@ -89,12 +90,12 @@ func (self *AutoClockOut) Update(db common.ODb) {
 		// Trigger if we are within the polling window past the target time
 		diff := nowMins - targetMins
 		if diff >= 0 && diff < (self.freq/60+1) {
-			fmt.Printf("autoclockout: clocking out at configured time %s\n", t)
+			fmt.Fprintf(os.Stderr, "autoclockout: clocking out at configured time %s\n", t)
 			reply, _ := self.clock.ClockOut()
 			if reply.Ok {
-				fmt.Printf("autoclockout: %s\n", reply.Msg)
+				fmt.Fprintf(os.Stderr, "autoclockout: %s\n", reply.Msg)
 			} else {
-				fmt.Printf("autoclockout: clock out failed: %s\n", reply.Msg)
+				fmt.Fprintf(os.Stderr, "autoclockout: clock out failed: %s\n", reply.Msg)
 			}
 			self.lastTriggered[key] = today
 		}

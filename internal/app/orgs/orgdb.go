@@ -37,6 +37,10 @@ type OrgDb struct {
 	Tags         []string
 	Filenames    []string
 	ReloadIndex  uint64
+	// Whether the hash/id registries have been walked in full, and for which
+	// reload. See FindByHash.
+	hashIndexBuilt bool
+	hashIndexAt    uint64
 
 	dblock      sync.RWMutex
 	watcher     *rfsnotify.RWatcher
@@ -119,13 +123,79 @@ func (self *OrgDb) FindByAnyId(hash string) *org.Section {
 	return nil
 }
 
+// FindByHash is the section a hash names, building the index first if nothing
+// has built it yet.
+//
+// Sections are registered into ByHash lazily - `ScanNode`'s RegisterSection call
+// is commented out - so the map fills in as queries walk it. On a server that
+// has answered a query that is invisible; on one that has not, every hash
+// lookup answers "no heading with that hash", which reads like a stale hash
+// rather than an empty index. That is every request to a freshly started
+// server, and every request to a `-local` one, which is a fresh server by
+// definition: `orgs search … | orgs tag +x -` looked up its first hash against
+// an index nobody had built.
+//
+// Built once and cached against ReloadIndex, the same way the link and record
+// indexes are, so the walk costs nothing on the second lookup and cannot go
+// stale behind a file that changed.
 func (self *OrgDb) FindByHash(hash string) *org.Section {
+	self.dblock.RLock()
+	v, ok := self.ByHash[hash]
+	self.dblock.RUnlock()
+	if ok {
+		return v
+	}
+	self.buildHashIndex()
 	self.dblock.RLock()
 	defer self.dblock.RUnlock()
 	if v, ok := self.ByHash[hash]; ok {
 		return v
 	}
 	return nil
+}
+
+// buildHashIndex walks every file into the hash, id and custom-id registries.
+// Skipped when it has already been done for this reload.
+func (self *OrgDb) buildHashIndex() {
+	self.dblock.RLock()
+	done := self.hashIndexAt == self.ReloadIndex && self.hashIndexBuilt
+	self.dblock.RUnlock()
+	if done {
+		return
+	}
+	// The files are taken under the read lock and walked outside it, because
+	// RegisterSection takes the write lock for each section it registers.
+	self.dblock.RLock()
+	files := make([]*common.OrgFile, 0, len(self.ByFile))
+	for _, f := range self.ByFile {
+		files = append(files, f)
+	}
+	at := self.ReloadIndex
+	self.dblock.RUnlock()
+
+	for _, f := range files {
+		if f == nil || f.Doc == nil || f.Doc.Outline.Section == nil {
+			continue
+		}
+		self.registerSections(f.Doc.Outline.Section.Children, f)
+	}
+
+	self.dblock.Lock()
+	self.hashIndexBuilt = true
+	self.hashIndexAt = at
+	self.dblock.Unlock()
+}
+
+func (self *OrgDb) registerSections(sections []*org.Section, f *common.OrgFile) {
+	for _, v := range sections {
+		if v == nil || v.Headline == nil {
+			continue
+		}
+		if v.Hash != "" {
+			self.RegisterSection(v.Hash, v, f)
+		}
+		self.registerSections(v.Children, f)
+	}
 }
 
 // Returns the next sibling after this node
@@ -378,8 +448,12 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		// We increment this with each reload to tell if the DB is dirty or not.
 		self.ReloadIndex += 1
 		self.dblock.Unlock()
+		// Anybody watching /events hears about it here, which is the one place
+		// every re-read of a file goes through - a watcher event, a write from
+		// a handler, or a file appearing in a watched directory.
+		PublishReload(filename)
 	} else {
-		fmt.Println("****** Failed to parse file {}", filename)
+		fmt.Fprintln(os.Stderr, "****** Failed to parse file {}", filename)
 	}
 }
 
@@ -418,7 +492,7 @@ func (self *OrgDb) Watch() {
 
 	var dirs []string = Conf().Server.OrgDirs
 	for _, dir := range dirs {
-		fmt.Printf("WATCHING: %s\n", dir)
+		fmt.Fprintf(os.Stderr, "WATCHING: %s\n", dir)
 		err = self.watcher.AddRecursive(dir)
 		if err != nil {
 			if Conf().Server.CanFailWatch {
@@ -435,7 +509,7 @@ func (self *OrgDb) RebuildDb() {
 	for _, dir := range dirs {
 		files := self.ListFilesInDir(dir)
 		for _, file := range files {
-			// fmt.Println("Loading: ", file)
+			// fmt.Fprintln(os.Stderr, "Loading: ", file)
 			self.LoadFile(file)
 		}
 	}
@@ -579,11 +653,11 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		context["title"] = title
 		context["author"] = Conf().Author
 		data := Conf().PlugManager.Tempo.RenderTemplate(template, context)
-		fmt.Printf("WRITING ORG FILE %s\n", fname)
+		fmt.Fprintf(os.Stderr, "WRITING ORG FILE %s\n", fname)
 		ioutil.WriteFile(fname, []byte(data), fs.ModePerm)
 		return self.ReloadFile(fname)
 	} else {
-		fmt.Printf("RELOAD ATTEMPT: %s\n", fname)
+		fmt.Fprintf(os.Stderr, "RELOAD ATTEMPT: %s\n", fname)
 		return self.ReloadFile(fname)
 	}
 	return nil

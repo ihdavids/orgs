@@ -41,7 +41,7 @@ func RestApi(router *mux.Router) {
 		// Still a middleware: the per-user endpoints read a username off every
 		// request, and with nobody logged in they would all refuse.
 		api.Use(noAuthUser)
-		fmt.Printf("WARNING: Authentication is disabled (noAuth: true), everything is done as %q\n", NoAuthUsername)
+		fmt.Fprintf(os.Stderr, "WARNING: Authentication is disabled (noAuth: true), everything is done as %q\n", NoAuthUsername)
 	}
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
@@ -78,6 +78,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/body/{hash}", RequestTodoBody).Methods("GET")
 	api.HandleFunc("/checklist", PostChecklistToggle).Methods("POST")
 	api.HandleFunc("/addresses", RequestServerAddresses).Methods("GET")
+	api.HandleFunc("/events", RequestEvents).Methods("GET")
 	api.HandleFunc("/status", RequestDefaultStatus).Methods("GET")
 	api.HandleFunc("/status/{hash}", RequestValidStatus)
 	api.HandleFunc("/date/change", PostChangeDate).Methods("POST")
@@ -92,7 +93,11 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/refilefiles", RequestRefileTargets)
 	api.HandleFunc("/refile", PostRefile).Methods("POST")
 	api.HandleFunc("/archive", PostArchive).Methods("POST")
+	api.HandleFunc("/move", PostMove).Methods("POST")                 // refile, copy or archive, one heading or many
+	api.HandleFunc("/refile/targets", RequestRefileTargets2).Methods("GET") // where a heading can go, with hashes
+	api.HandleFunc("/copy", PostCopy).Methods("POST")                 // a refile that leaves the original
 	api.HandleFunc("/reformat", PostReformat).Methods("POST")
+	api.HandleFunc("/reformat", RequestReformatCheck).Methods("GET")
 	api.HandleFunc("/setexclusivemarker", PostMarker).Methods("POST")
 	api.HandleFunc("/exclusivemarker", RequestMarker)
 	api.HandleFunc("/update", PostUpdate).Methods("POST")
@@ -342,7 +347,7 @@ func RequestGrep(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if res, err := Grep(qry, del); err != nil {
-		fmt.Printf("ERROR: %v\n", err)
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 		json.NewEncoder(w).Encode([]string{})
 	} else {
 		json.NewEncoder(w).Encode(res)
@@ -750,11 +755,11 @@ func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("ERROR during request", err)
+			fmt.Fprintln(os.Stderr, "ERROR during request", err)
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("ERROR getting hash value", err)
+		fmt.Fprintln(os.Stderr, "ERROR getting hash value", err)
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1046,12 +1051,12 @@ func DeleteDate(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =Result= JSON object with ={"status": true}= on success.
 	EDOC */
 func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostChangeProperty")
+	fmt.Fprintln(os.Stderr, "PostChangeProperty")
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoPropertyChange
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("Deserialized")
+		fmt.Fprintln(os.Stderr, "Deserialized")
 		var reply common.Result
 		reply, err = ChangeProperty(&args)
 		if err == nil {
@@ -1060,7 +1065,7 @@ func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Failed to deserialize")
+		fmt.Fprintln(os.Stderr, "Failed to deserialize")
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1082,12 +1087,12 @@ func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =Result= JSON object with ={"status": true}= on success.
 	EDOC */
 func PostToggleTags(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostToggleTags")
+	fmt.Fprintln(os.Stderr, "PostToggleTags")
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoItemChange
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("Deserialized")
+		fmt.Fprintln(os.Stderr, "Deserialized")
 		var reply common.Result
 		reply, err = ToggleTag(&args)
 		if err == nil {
@@ -1096,7 +1101,7 @@ func PostToggleTags(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Failed to deserialize")
+		fmt.Fprintln(os.Stderr, "Failed to deserialize")
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1116,13 +1121,72 @@ func PostToggleTags(w http.ResponseWriter, r *http.Request) {
 
 	*Response:* A =Result= JSON object with ={"status": true}= on success.
 	EDOC */
+/* SDOC: API
+* GET /reformat — What Reformatting Would Change
+	Answers with the text the org writer would produce for a file, and whether
+	that is already what is on disk - without writing anything. The POST of the
+	same path does the write; this is the same question asked without doing it,
+	which is what a pre-commit hook or a CI step needs.
+
+	*Method:* =GET=
+
+	*Query Parameters:*
+	| Parameter  | Type   | Required | Description                                          |
+	|------------+--------+----------+------------------------------------------------------|
+	| =filename= | string | yes      | The org file to check.                               |
+	| =text=     | string | no       | Set to =f= to leave the formatted text out of the answer. |
+
+	*Response:* A =ReformatCheck= JSON object.
+	#+BEGIN_SRC json
+	{"Ok": true, "Formatted": false, "Text": "* TODO Something\n"}
+	#+END_SRC
+EDOC */
+func RequestReformatCheck(w http.ResponseWriter, r *http.Request) {
+	filename := r.URL.Query().Get("filename")
+	w.Header().Set("Content-Type", "application/json")
+	res := common.ReformatCheck{}
+	if filename == "" {
+		res.Msg = "missing filename parameter"
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+	f := GetDb().FindByFile(filename)
+	if f == nil || f.Doc == nil {
+		res.Msg = fmt.Sprintf("no org file called %s", filename)
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+	// Exactly what WriteOutOrgFile would put on disk, built the same way and
+	// not written. Any other way of producing it would be a second answer to
+	// drift from the first.
+	ow := org.NewOrgWriter()
+	f.Doc.Write(ow)
+	want := ow.String()
+
+	have, err := ioutil.ReadFile(f.Filename)
+	if err != nil {
+		res.Msg = err.Error()
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+	res.Ok = true
+	// Compared without the trailing newline, because that is the one difference
+	// between a file somebody saved and the writer's output that nobody means
+	// anything by.
+	res.Formatted = strings.TrimRight(string(have), "\n") == strings.TrimRight(want, "\n")
+	if r.URL.Query().Get("text") != "f" {
+		res.Text = want
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
 func PostReformat(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostReformat")
+	fmt.Fprintln(os.Stderr, "PostReformat")
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.FileList
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("Deserialized")
+		fmt.Fprintln(os.Stderr, "Deserialized")
 		var reply common.Result
 		reply, err = Reformat(&args)
 		if err == nil {
@@ -1131,7 +1195,7 @@ func PostReformat(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Failed to deserialize")
+		fmt.Fprintln(os.Stderr, "Failed to deserialize")
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1337,10 +1401,10 @@ func RequestDayPageAt(w http.ResponseWriter, r *http.Request) {
 	EDOC */
 func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 	if Conf().Server.DayPageMode == "week" {
-		fmt.Println("DAYPAGE INC: 7")
+		fmt.Fprintln(os.Stderr, "DAYPAGE INC: 7")
 		json.NewEncoder(w).Encode(7)
 	} else {
-		fmt.Println("DAYPAGE INC: 1")
+		fmt.Fprintln(os.Stderr, "DAYPAGE INC: 1")
 		json.NewEncoder(w).Encode(1)
 	}
 }
@@ -1372,7 +1436,7 @@ func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	res, err := QueryCaptureTemplates(username)
 	if err != nil {
-		fmt.Printf("QueryCaptureTemplates: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "QueryCaptureTemplates: %s", err.Error())
 	}
 	if res == nil || err != nil {
 		if err == nil {
@@ -1404,23 +1468,23 @@ func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	- An error on failure.
 	EDOC */
 func PostCapture(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostCapture")
+	fmt.Fprintln(os.Stderr, "PostCapture")
 	username := GetUsername(r)
 	body, _ := io.ReadAll(r.Body)
 	var args common.Capture
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.ResultMsg
 		reply, err = Capture(db, &args, username)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("Capture failed to operate")
+			fmt.Fprintln(os.Stderr, "Capture failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Failed to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Failed to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1478,22 +1542,22 @@ func RequestMarker(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =Result= JSON object with ={"status": true}= on success.
 	EDOC */
 func PostMarker(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostMarker")
+	fmt.Fprintln(os.Stderr, "PostMarker")
 	body, _ := io.ReadAll(r.Body)
 	var args common.ExclusiveTagMarker
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.Result
 		reply, err = SetMarkerTag(&args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("Today failed to operate")
+			fmt.Fprintln(os.Stderr, "Today failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Failed to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Failed to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1517,22 +1581,22 @@ func PostMarker(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostDelete(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostDelete")
+	fmt.Fprintln(os.Stderr, "PostDelete")
 	body, _ := io.ReadAll(r.Body)
 	var args common.Target
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.ResultMsg
 		reply, err = Delete(db, &args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("Delete failed to operate")
+			fmt.Fprintln(os.Stderr, "Delete failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Delete to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Delete to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1555,22 +1619,22 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostUpdate(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostUpdate")
+	fmt.Fprintln(os.Stderr, "PostUpdate")
 	body, _ := io.ReadAll(r.Body)
 	var args common.Update
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.ResultMsg
 		reply, err = PluginUpdateTarget(db, &args.Target, args.Name)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("Update failed to operate")
+			fmt.Fprintln(os.Stderr, "Update failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Update to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Update to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1592,24 +1656,137 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostRefile(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostRefile")
+	fmt.Fprintln(os.Stderr, "PostRefile")
 	body, _ := io.ReadAll(r.Body)
 	var args common.Refile
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.ResultMsg
 		reply, err = Refile(db, &args, nil, false)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("Refile failed to operate")
+			fmt.Fprintln(os.Stderr, "Refile failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Refile to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Refile to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
+}
+
+/* SDOC: API
+* POST /move — Refile, Copy or Archive, One Heading or Many
+
+	The one endpoint for moving headings about. =Op= is =refile=, =copy= or
+	=archive=; =From= is a list of targets and =To= is where they go (ignored by
+	=archive=, which works its own destination out of org's archive rules).
+
+	*It is a list on purpose, and a client must not loop over =/refile= itself.*
+	A heading's hash is accumulated from the document name and the chain of
+	headline titles above it, so it is stable only while the file's structure is:
+	move one heading out of a file and every heading after it has a different
+	hash. Twenty hashes collected from one search and posted one at a time get
+	the first right and then address headings that are not there - or headings
+	that have since inherited those hashes. This resolves every source before it
+	writes anything, and addresses each by its outline path afterwards.
+
+	A heading whose ancestor is also in the list is *skipped*, not moved: moving
+	the ancestor takes it along, and moving it as well would be moving it out of
+	the thing that has just moved.
+
+	*Method:* =POST=
+
+	*Request Body (JSON):* A =MoveRequest=.
+	| Field    | Type     | Required | Description                                            |
+	|----------+----------+----------+--------------------------------------------------------|
+	| =Op=     | string   | no       | =refile= (the default), =copy= or =archive=.           |
+	| =From=   | []Target | yes      | The headings to move.                                  |
+	| =To=     | Target   | for both | Where they go. Not read for =archive=.                 |
+	| =Create= | bool     | no       | Create the destination heading when it is missing.     |
+
+	*Response:* A =MoveResponse=: =Ok= only when everything worked, =Results= one
+	per heading either way, and =Done= / =Failed= / =Skipped= counts.
+	EDOC */
+func PostMove(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	var args common.MoveRequest
+	if err := json.Unmarshal(body, &args); err != nil {
+		json.NewEncoder(w).Encode(common.MoveResponse{Ok: false, Msg: err.Error()})
+		return
+	}
+	reply, err := Move(db, &args)
+	if err != nil && reply.Msg == "" {
+		reply.Msg = err.Error()
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reply)
+}
+
+/* SDOC: API
+* POST /copy — Copy a Heading Somewhere Else
+
+	A refile that leaves the original where it is. Same request body as
+	=/refile=.
+
+	The copy has its =ID= and =CUSTOM_ID= taken off it. Those are how an
+	=[[id:...]]= link finds a heading, and two headings answering to one id is
+	not a duplicate - it is a link that points at whichever of them the database
+	registered last.
+
+	*Method:* =POST=
+
+	*Request Body (JSON):* A =Refile= object: =FromId= and =ToId=.
+
+	*Response:* A =ResultMsg=.
+	EDOC */
+func PostCopy(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	var args common.Refile
+	if err := json.Unmarshal(body, &args); err != nil {
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: err.Error()})
+		return
+	}
+	reply, err := Copy(db, &args, false)
+	if err != nil && reply.Msg == "" {
+		reply.Msg = err.Error()
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reply)
+}
+
+/* SDOC: API
+* GET /refile/targets — Where a Heading Can Go
+
+	Every place a heading could be refiled or copied to: each file, and each
+	heading down to =depth=.
+
+	This is the structured sibling of =/refilefiles=, and differs from it twice.
+	It **falls back to every file** when the =refileTargets= setting is unset -
+	which is the default, and which made the flat one answer with nothing at
+	all, so a refile dialog had no targets to offer on a fresh server. And a
+	target carries its **hash, outline path, keyword and tags**, where the flat
+	form is ="file|H1|H2"= - which cannot say which of two headings with the
+	same name is meant, and has nowhere to put what tells them apart.
+
+	*Method:* =GET=
+
+	*Query Parameters:*
+	| Parameter | Type   | Required | Description                                      |
+	|-----------+--------+----------+--------------------------------------------------|
+	| =depth=   | int    | no       | How deep to walk. Defaults to 3.                 |
+	| =file=    | string | no       | Only this file. Repeatable.                      |
+
+	*Response:* A =RefileTargetList=. =Files= is how many files were looked at,
+	and =Truncated= says the walk stopped early.
+	EDOC */
+func RequestRefileTargets2(w http.ResponseWriter, r *http.Request) {
+	depth := 0
+	fmt.Sscanf(r.URL.Query().Get("depth"), "%d", &depth)
+	files := r.URL.Query()["file"]
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(RefileTargets(files, depth))
 }
 
 /* SDOC: API
@@ -1630,22 +1807,22 @@ func PostRefile(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostArchive(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostArchive")
+	fmt.Fprintln(os.Stderr, "PostArchive")
 	body, _ := io.ReadAll(r.Body)
 	var args common.Target
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.ResultMsg
 		reply, err = Archive(db, &args)
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("Archive failed to operate")
+			fmt.Fprintln(os.Stderr, "Archive failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("Archive to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "Archive to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1703,22 +1880,27 @@ func RequestClock(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostClockIn(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostClockIn")
+	fmt.Fprintln(os.Stderr, "PostClockIn")
 	body, _ := io.ReadAll(r.Body)
 	var args common.Target
 	var err = json.Unmarshal(body, &args)
 	if err == nil {
-		fmt.Println("  Deserialized", args)
+		fmt.Fprintln(os.Stderr, "  Deserialized", args)
 		var reply common.ResultMsg
 		reply, err = Clock().ClockIn(&args)
 		if err == nil {
+			if reply.Ok {
+				// A clock starting is the one thing a status line wants to
+				// know about without being asked, so it goes on /events.
+				Publish(Event{Kind: EventClockIn, Hash: args.Id, Msg: reply.Msg})
+			}
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("ClockIn failed to operate")
+			fmt.Fprintln(os.Stderr, "ClockIn failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("ClockIn to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "ClockIn to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1735,19 +1917,22 @@ func PostClockIn(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostClockOut(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostClockOut")
+	fmt.Fprintln(os.Stderr, "PostClockOut")
 	body, err := io.ReadAll(r.Body)
 	if err == nil {
 		var reply common.ResultMsg
 		reply, err = Clock().ClockOut()
 		if err == nil {
+			if reply.Ok {
+				Publish(Event{Kind: EventClockOut, Msg: reply.Msg})
+			}
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			fmt.Println("ClockOut failed to operate")
+			fmt.Fprintln(os.Stderr, "ClockOut failed to operate")
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("ClockOut to deserialize", err, string(body))
+		fmt.Fprintln(os.Stderr, "ClockOut to deserialize", err, string(body))
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1853,7 +2038,7 @@ func RequestLogbook(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object. On success, =msg= contains the execution result.
 	EDOC */
 func PostExecb(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostExecb")
+	fmt.Fprintln(os.Stderr, "PostExecb")
 	body, err := io.ReadAll(r.Body)
 	if err == nil {
 		var args common.PreciseTarget
@@ -1864,15 +2049,15 @@ func PostExecb(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				json.NewEncoder(w).Encode(reply)
 			} else {
-				fmt.Println("BlockExec failed to exec")
+				fmt.Fprintln(os.Stderr, "BlockExec failed to exec")
 				json.NewEncoder(w).Encode(err)
 			}
 		} else {
-			fmt.Println("BlockExec failed to deserialize", err, string(body))
+			fmt.Fprintln(os.Stderr, "BlockExec failed to deserialize", err, string(body))
 			json.NewEncoder(w).Encode(err)
 		}
 	} else {
-		fmt.Println("BlockExec failed to read body", err)
+		fmt.Fprintln(os.Stderr, "BlockExec failed to read body", err)
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -1893,7 +2078,7 @@ func PostExecb(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object. On success, =msg= contains a row like =| col1 | col2 |=.
 	EDOC */
 func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("RequestTableRandomGet")
+	fmt.Fprintln(os.Stderr, "RequestTableRandomGet")
 	/*
 		vars := mux.Vars(r)
 	*/
@@ -1919,12 +2104,12 @@ func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 				res += "|"
 			}
 			rep = common.ResultMsg{Ok: true, Msg: res}
-			fmt.Printf("RESULT: %v\n", rep)
+			fmt.Fprintf(os.Stderr, "RESULT: %v\n", rep)
 		} else {
 			rep = common.ResultMsg{Ok: false, Msg: fmt.Sprintf("Failed to find tables with name %s", name)}
 		}
 	} else {
-		fmt.Println("ERR: Name must be specified for table query!")
+		fmt.Fprintln(os.Stderr, "ERR: Name must be specified for table query!")
 		rep = common.ResultMsg{Ok: false, Msg: "Failed to find table did you specify a name?"}
 	}
 	json.NewEncoder(w).Encode(rep)
@@ -1947,7 +2132,7 @@ func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 	Returns ={"Ok": false, "NamedTables": null}= if no named tables exist.
 	EDOC */
 func RequestTableNames(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("RequestTableNames")
+	fmt.Fprintln(os.Stderr, "RequestTableNames")
 	/*
 		vars := mux.Vars(r)
 	*/
@@ -1987,7 +2172,7 @@ func RequestTableNames(w http.ResponseWriter, r *http.Request) {
 	with ={"status": false}= on failure.
 	EDOC */
 func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostFormulaInfo")
+	fmt.Fprintln(os.Stderr, "PostFormulaInfo")
 	body, err := io.ReadAll(r.Body)
 	if err == nil {
 		var args common.PreciseTarget
@@ -1996,20 +2181,20 @@ func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
 			var reply common.ResultTableDetailsMsg
 			reply, err = FormulaDetailsAt(db, &args)
 			if err == nil {
-				fmt.Printf("RETURNING OK\n")
+				fmt.Fprintf(os.Stderr, "RETURNING OK\n")
 				json.NewEncoder(w).Encode(reply)
 			} else {
-				fmt.Println("Table Info failed: ", err.Error())
+				fmt.Fprintln(os.Stderr, "Table Info failed: ", err.Error())
 				rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 				json.NewEncoder(w).Encode(rep)
 			}
 		} else {
-			fmt.Println("TableInfo failed to deserialize", err, string(body))
+			fmt.Fprintln(os.Stderr, "TableInfo failed to deserialize", err, string(body))
 			rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 			json.NewEncoder(w).Encode(rep)
 		}
 	} else {
-		fmt.Println("TableFailed failed to read body", err)
+		fmt.Fprintln(os.Stderr, "TableFailed failed to read body", err)
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -2031,7 +2216,7 @@ func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
 	*Response:* A =ResultMsg= JSON object.
 	EDOC */
 func PostExect(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostExecT")
+	fmt.Fprintln(os.Stderr, "PostExecT")
 	body, err := io.ReadAll(r.Body)
 	if err == nil {
 		var args common.PreciseTarget
@@ -2042,17 +2227,17 @@ func PostExect(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				json.NewEncoder(w).Encode(reply)
 			} else {
-				fmt.Println("Table Execution failed: ", err.Error())
+				fmt.Fprintln(os.Stderr, "Table Execution failed: ", err.Error())
 				rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 				json.NewEncoder(w).Encode(rep)
 			}
 		} else {
-			fmt.Println("TableExec failed to deserialize", err, string(body))
+			fmt.Fprintln(os.Stderr, "TableExec failed to deserialize", err, string(body))
 			rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 			json.NewEncoder(w).Encode(rep)
 		}
 	} else {
-		fmt.Println("TableExec failed to read body", err)
+		fmt.Fprintln(os.Stderr, "TableExec failed to read body", err)
 		json.NewEncoder(w).Encode(err)
 	}
 }
@@ -2073,7 +2258,7 @@ func PostExect(w http.ResponseWriter, r *http.Request) {
 	={"status": false}= containing concatenated error messages on failure.
 	EDOC */
 func PostExecAllT(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("PostExecAllT")
+	fmt.Fprintln(os.Stderr, "PostExecAllT")
 	body, err := io.ReadAll(r.Body)
 	if err == nil {
 		var args string
@@ -2088,17 +2273,17 @@ func PostExecAllT(w http.ResponseWriter, r *http.Request) {
 					msg += e.Error() + "\n"
 				}
 				err = fmt.Errorf(msg)
-				fmt.Println("All Table Execution failed: ", err.Error())
+				fmt.Fprintln(os.Stderr, "All Table Execution failed: ", err.Error())
 				rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 				json.NewEncoder(w).Encode(rep)
 			}
 		} else {
-			fmt.Println("AllTableExec failed to deserialize", err, string(body))
+			fmt.Fprintln(os.Stderr, "AllTableExec failed to deserialize", err, string(body))
 			rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 			json.NewEncoder(w).Encode(rep)
 		}
 	} else {
-		fmt.Println("AllTableExec failed to read body", err)
+		fmt.Fprintln(os.Stderr, "AllTableExec failed to read body", err)
 		json.NewEncoder(w).Encode(err)
 	}
 }

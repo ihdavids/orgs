@@ -382,7 +382,7 @@ func (self *OrgLatexExporter) Unmarshal(unmarshal func(interface{}) error) error
 }
 
 func (self *OrgLatexExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("LATEX: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "LATEX: Export called", query, to, opts)
 	err, str := self.ExportToString(db, query, opts, props)
 	if err != nil {
 		return err
@@ -401,10 +401,10 @@ func (self *OrgLatexExporter) Export(db common.ODb, query string, to string, opt
 }
 
 func GetDocConf(path string) *DocClassConf {
-	fmt.Printf("[GetDocConf] %s\n", path)
+	fmt.Fprintf(os.Stderr, "[GetDocConf] %s\n", path)
 	var c *DocClassConf = &DocClassConf{}
 	if _, errStat := os.Stat(path); errStat == nil {
-		fmt.Printf("Trying to load config file...\n")
+		fmt.Fprintf(os.Stderr, "Trying to load config file...\n")
 		yamlFile, err := ioutil.ReadFile(path)
 		if err != nil {
 			log.Printf("ERROR: yamlFile.Get err   #%v ", err)
@@ -463,7 +463,7 @@ func EndEnv(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, errOut *p
 
 func (self *OrgLatexExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Printf("LATEX: Export string called [%s]:[%s]\n", query, opts)
+	fmt.Fprintf(os.Stderr, "LATEX: Export string called [%s]:[%s]\n", query, opts)
 
 	if f := db.FindByFile(query); f != nil {
 		for k, v := range f.BufferSettings {
@@ -508,13 +508,13 @@ func (self *OrgLatexExporter) ExportToString(db common.ODb, query string, opts s
 		self.Props["latex_data"] = res
 		//self.Props["post_scripts"] = w.PostWriteScripts
 
-		fmt.Printf("DOC START: ========================================\n")
-		fmt.Printf("TEMP: %s\n", self.TemplatePath)
+		fmt.Fprintf(os.Stderr, "DOC START: ========================================\n")
+		fmt.Fprintf(os.Stderr, "TEMP: %s\n", self.TemplatePath)
 		res = self.pm.Tempo.RenderTemplate(self.TemplatePath, self.Props)
-		fmt.Printf("XXX: %s\n", res)
+		fmt.Fprintf(os.Stderr, "XXX: %s\n", res)
 		return nil, res
 	} else {
-		fmt.Printf("Failed to find file in database: [%s]", query)
+		fmt.Fprintf(os.Stderr, "Failed to find file in database: [%s]", query)
 		return fmt.Errorf("Failed to find file in database: [%s]", query), ""
 	}
 }
@@ -1076,7 +1076,7 @@ func (w *OrgLatexWriter) WriteDndPropertyHeadline(p PropHead, h org.Headline) bo
 		w.WriteString("\n" + fmt.Sprintf(p.Format, head) + "\n")
 		for _, prop := range p.Props {
 			if v, ok := h.Properties.Get(prop); ok {
-				fmt.Printf("HAVE PROP %s!!!\n", prop)
+				fmt.Fprintf(os.Stderr, "HAVE PROP %s!!!\n", prop)
 				if p.PropSquare {
 					w.WriteString(fmt.Sprintf("  [%s]\n", v))
 				} else {
@@ -1166,11 +1166,11 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 				props["content"] = content
 				res := w.render(temp.Template, props)
 				if res != "" {
-					fmt.Printf("HEADING EXPANSION: \n[%s]\n------------------------\n", res)
+					fmt.Fprintf(os.Stderr, "HEADING EXPANSION: \n[%s]\n------------------------\n", res)
 					w.WriteString(res)
 					return true
 				} else {
-					fmt.Printf("ERROR: Heading template failed to expand! %s\n", tag)
+					fmt.Fprintf(os.Stderr, "ERROR: Heading template failed to expand! %s\n", tag)
 				}
 				break
 			}
@@ -1282,7 +1282,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 			head += strings.Join(h.Tags, " ")
 		}
 		numberPrefix := ""
-		fmt.Printf("EXPORT TEST: %s\n", w.Document.GetOption("num"))
+		fmt.Fprintf(os.Stderr, "EXPORT TEST: %s\n", w.Document.GetOption("num"))
 		if w.Document.GetOption("num") != "nil" {
 			if num, err := strconv.Atoi(w.Document.GetOption("num")); err == nil {
 				if lvl > num {
@@ -1299,7 +1299,7 @@ func (w *OrgLatexWriter) WriteHeadline(h org.Headline) {
 }
 
 func (w *OrgLatexWriter) WriteText(t org.Text) {
-	fmt.Printf("%s\n", t.Content)
+	fmt.Fprintf(os.Stderr, "%s\n", t.Content)
 	w.WriteString(t.Content)
 }
 
@@ -1695,8 +1695,8 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err)
 		}
 	}()
-	fmt.Printf("  == [Special Table] ==\n")
-	fmt.Printf("    == [CONF] ==\n")
+	fmt.Fprintf(os.Stderr, "  == [Special Table] ==\n")
+	fmt.Fprintf(os.Stderr, "    == [CONF] ==\n")
 	if tbl, ok := w.templateRegistry.TableTemplate(name); ok {
 		props := map[string]interface{}{}
 		if !tbl.Vertical {
@@ -1713,7 +1713,7 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 				cellName = strings.ReplaceAll(cellName, "{", "")
 				cellName = strings.ReplaceAll(cellName, "}", "")
 				cellName = strings.ReplaceAll(cellName, " ", "")
-				fmt.Printf("  NAME: %s\n", cellName)
+				fmt.Fprintf(os.Stderr, "  NAME: %s\n", cellName)
 				val := w.WriteNodesAsString(t.Rows[1].Columns[i].Children...)
 				props[cellName] = val
 			}
@@ -1769,7 +1769,7 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 				name = strings.ToLower(name)
 				name = strings.TrimSpace(strings.ReplaceAll(name, " ", ""))
 				if name != "" {
-					fmt.Printf("  NAME: %s\n", name)
+					fmt.Fprintf(os.Stderr, "  NAME: %s\n", name)
 					val := ""
 					for j, colNode := range nameRow.Columns {
 						if j > 0 {
@@ -1790,21 +1790,21 @@ func (w *OrgLatexWriter) SpecialTable(name string, t org.Table) bool {
 		}
 		res := w.render(tbl.Template, props)
 		if res != "" {
-			fmt.Printf("TABLE EXPANSION: \n[%s]\n------------------------\n", res)
+			fmt.Fprintf(os.Stderr, "TABLE EXPANSION: \n[%s]\n------------------------\n", res)
 			w.WriteString(res)
 			return true
 		} else {
-			fmt.Printf("ERROR: Table template failed to expand! %s\n", name)
+			fmt.Fprintf(os.Stderr, "ERROR: Table template failed to expand! %s\n", name)
 		}
 	} else {
-		fmt.Printf("[%s] is NOT in conf table entries\n", name)
+		fmt.Fprintf(os.Stderr, "[%s] is NOT in conf table entries\n", name)
 	}
 	return false
 }
 
 func (w *OrgLatexWriter) HandleDndSpecialTables(t org.Table) bool {
 	e := w.envs.GetEnv("")
-	fmt.Printf("CHECKING FOR STATS: %s\n", e)
+	fmt.Fprintf(os.Stderr, "CHECKING FOR STATS: %s\n", e)
 	if e != "" && w.SpecialTable(e, t) {
 		return true
 	}
@@ -1949,14 +1949,14 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		} else {
 			(*tp)["havecaption"] = false
 		}
-		fmt.Printf("RENDERING TEMPLATE: %s\n", "default")
-		fmt.Printf("\n%v\n", tbl.Template)
+		fmt.Fprintf(os.Stderr, "RENDERING TEMPLATE: %s\n", "default")
+		fmt.Fprintf(os.Stderr, "\n%v\n", tbl.Template)
 		res := w.render(tbl.Template, *tp)
-		fmt.Printf("RENDERED\n%v\n", res)
+		fmt.Fprintf(os.Stderr, "RENDERED\n%v\n", res)
 		w.WriteString(res)
 
 	} else {
-		fmt.Printf("FAILED TO RENDER TEMPLATE: %s\n", "default")
+		fmt.Fprintf(os.Stderr, "FAILED TO RENDER TEMPLATE: %s\n", "default")
 		// TODO: Show an error here! We failed
 	}
 

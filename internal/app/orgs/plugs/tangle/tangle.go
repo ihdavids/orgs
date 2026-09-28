@@ -166,19 +166,36 @@ func expandNoweb(content string, nowebRefs map[string][]string, sep string, dept
 	})
 }
 
-// collectBlocks walks the document nodes and collects all SRC blocks.
+// collectBlocks walks every source block out of a node tree.
+//
+// Two things about go-org make this harder than it reads, and both were silent:
+//
+//  1. **A block is a `*org.Block`**, not an `org.Block`. This used to match only
+//     the value form, which the parser never produces - so no block was ever
+//     collected, and tangling any file answered "nothing to tangle" however many
+//     :tangle headers it had. A nested heading is a `*org.Headline` for the same
+//     reason and was already handled.
+//  2. **`Headline.Blocks` is not the blocks under a heading.** The loop that
+//     fills it stops after the first node it looks at, so a heading with a
+//     paragraph and then a block has an empty list. Walking the children is what
+//     actually finds them, so the two together would double-count - the blocks
+//     are taken from the walk alone.
 func collectBlocks(nodes []org.Node) []*org.Block {
 	var blocks []*org.Block
 	for _, node := range nodes {
 		switch n := node.(type) {
+		case *org.Block:
+			if strings.ToUpper(n.Name) == "SRC" {
+				blocks = append(blocks, n)
+			}
 		case org.Block:
 			if strings.ToUpper(n.Name) == "SRC" {
-				blocks = append(blocks, &n)
+				b := n
+				blocks = append(blocks, &b)
 			}
 		case *org.Headline:
-			// Blocks are indexed on the headline
-			blocks = append(blocks, n.Blocks...)
-			// Also walk headline children for any top-level blocks
+			blocks = append(blocks, collectBlocks(n.Children)...)
+		case org.Headline:
 			blocks = append(blocks, collectBlocks(n.Children)...)
 		}
 	}

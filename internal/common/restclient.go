@@ -7,15 +7,31 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 type Rest struct {
 	Url    string
 	Header http.Header
+	// How long to wait for the server, when waiting forever is the wrong
+	// answer. Zero means no limit, which is right for everything a person is
+	// sitting in front of and wrong for a shell completion: a prompt that has
+	// stopped responding because a server is slow is worse than one with no
+	// suggestions in it.
+	Timeout time.Duration
+}
+
+// client is the http client for this Rest, with its timeout if it has one.
+func (self *Rest) client() *http.Client {
+	if self.Timeout > 0 {
+		return &http.Client{Timeout: self.Timeout}
+	}
+	return http.DefaultClient
 }
 
 func (self *Rest) Insecure() {
@@ -48,13 +64,13 @@ func (self *Rest) Get(api string, ps map[string]string) string {
 			base.RawQuery = params.Encode()
 		}
 	}
-	//fmt.Printf("URL STR: %s\n", base.String())
+	//fmt.Fprintf(os.Stderr, "URL STR: %s\n", base.String())
 	req, err := http.NewRequest("GET", base.String(), nil)
 	if err != nil {
 		return fmt.Sprintf("Rest request error: %s", err)
 	}
 	req.Header = self.Header.Clone()
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := self.client().Do(req)
 	if err != nil {
 		log.Println(err)
 		return fmt.Sprintf("Rest call error: %s", err)
@@ -75,7 +91,7 @@ func (self *Rest) Post(api string, data []byte) ([]byte, error) {
 	}
 	req.Header = self.Header.Clone()
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := self.client().Do(req)
 	if err != nil {
 		log.Println(err)
 		return nil, fmt.Errorf("Rest call error: %s", err)
@@ -86,6 +102,104 @@ func (self *Rest) Post(api string, data []byte) ([]byte, error) {
 		log.Println(rerr)
 	}
 	return body, nil
+}
+
+// Delete is the fourth verb. Several endpoints answer to it and nothing on this
+// side could ask - a stored query could be written and never removed, and the
+// voice recordings could be listed and never tidied.
+//
+// It takes query parameters rather than a body, because that is what every
+// DELETE handler here reads: `?name=` for a stored query, a path segment for a
+// recording.
+func (self *Rest) Delete(api string, ps map[string]string) ([]byte, error) {
+	coreurl := self.Url + "/" + api
+	base, err := url.Parse(coreurl)
+	if err != nil {
+		return nil, fmt.Errorf("Rest parse error: %s", err)
+	}
+	if len(ps) > 0 {
+		params := url.Values{}
+		for k, v := range ps {
+			params.Add(k, v)
+		}
+		base.RawQuery = params.Encode()
+	}
+	req, err := http.NewRequest("DELETE", base.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Rest request error: %s", err)
+	}
+	req.Header = self.Header.Clone()
+	resp, err := self.client().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Rest call error: %s", err)
+	}
+	body, rerr := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if rerr != nil {
+		return nil, rerr
+	}
+	return body, nil
+}
+
+func RestDelete[T any](self *Rest, api string, ps map[string]string) (T, error) {
+	var result T
+	body, err := self.Delete(api, ps)
+	if err != nil {
+		return result, err
+	}
+	return parseJSON[T](body)
+}
+
+// PostFile uploads one file as multipart/form-data, which is the only shape
+// `POST /voice/recording` takes - it is an upload rather than a document, and
+// base64 in a json body would be a third more bytes for no gain.
+//
+// field is the form field the handler reads ("audio"), name is the filename it
+// is told, which is how the far end knows what container it is looking at.
+func (self *Rest) PostFile(api, field, name string, data []byte,
+	extra map[string]string) ([]byte, error) {
+	var body bytes.Buffer
+	w := multipart.NewWriter(&body)
+	for k, v := range extra {
+		if err := w.WriteField(k, v); err != nil {
+			return nil, err
+		}
+	}
+	part, err := w.CreateFormFile(field, name)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := part.Write(data); err != nil {
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", self.Url+"/"+api, &body)
+	if err != nil {
+		return nil, fmt.Errorf("Rest request error: %s", err)
+	}
+	req.Header = self.Header.Clone()
+	// Set after the clone, because the boundary is this request's own and must
+	// not be carried over from whatever the header already said.
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	resp, err := self.client().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Rest call error: %s", err)
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
+}
+
+func RestPostFile[T any](self *Rest, api, field, name string, data []byte,
+	extra map[string]string) (T, error) {
+	var result T
+	body, err := self.PostFile(api, field, name, data, extra)
+	if err != nil {
+		return result, err
+	}
+	return parseJSON[T](body)
 }
 
 func RestGet[T any](self *Rest, api string, ps map[string]string) T {
@@ -134,7 +248,7 @@ func (self *Rest) GetRaw(api string, ps map[string]string) ([]byte, string, int,
 		return nil, "", 0, fmt.Errorf("rest request error: %s", err)
 	}
 	req.Header = self.Header.Clone()
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := self.client().Do(req)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("rest call error: %s", err)
 	}

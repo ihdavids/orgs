@@ -15,6 +15,45 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+// DashWords is implemented by a command that takes words beginning with a dash
+// as *words*: `orgs tag -someday` means take the tag off.
+//
+// Go's flag package reads `-someday` as an undefined flag and, with a flag set
+// made with ExitOnError, kills the process before the command ever runs. The
+// alternatives are all worse than they look: `!someday` is history expansion in
+// bash, `~someday` is tilde expansion, and making the caller write `-rm someday`
+// for the other half of a pair whose first half is `+work` is asking them to
+// remember which side of the pair they are on.
+//
+// So main.go takes those words off the line before the parse and hands them
+// here. It only takes a word that is **not a flag this command defines**, which
+// is what keeps `-json` a flag and `-someday` a word with no list to maintain.
+type DashWords interface {
+	TakeDashWords(words []string)
+}
+
+// Grouped lets a command say which heading it belongs under in `orgs help`.
+//
+// The groups are otherwise a table in the help command, which is right for the
+// commands that are compiled in and wrong for the ones that are not: every
+// filter in the yaml is registered as a command of its own, so the table can
+// never name them and they all landed under "Other" - forty lines of a listing
+// whose heading said nothing about what they were.
+type Grouped interface {
+	HelpGroup() string
+}
+
+// Offline is implemented by a command that does not talk to a server at all.
+//
+// `orgs completion zsh` prints a shell script; `orgs initconfig` prints a yaml
+// file; `orgs help` reads the registry it is already holding. None of them has
+// anything to authenticate to, and all of them were being stopped by the token
+// check on the way in - which made the completion generator unusable on exactly
+// the machines where somebody was setting the tool up for the first time.
+type Offline interface {
+	NeedsNoServer() bool
+}
+
 type Cmd interface {
 	StartPlugin(manager *common.PluginManager)
 	Unmarshal(unmarshal func(interface{}) error) error
@@ -224,6 +263,19 @@ func SendReceivePost[RPC any, RESP any](core *Core, name string, args *RPC, resp
 	*resp, _ = common.RestPost[RESP](&core.Rest, name, args)
 }
 
+// SendReceiveGetOr is a read whose failure is not interesting: it answers with
+// the zero value rather than making every caller write the same three lines.
+// A listing that comes back empty prints an empty listing, which is the right
+// thing to show and the right thing for a program reading json to receive.
+func SendReceiveGetOr[RESP any](core *Core, name string, ps map[string]string) RESP {
+	resp, err := common.RestGetErr[RESP](&core.Rest, name, ps)
+	if err != nil {
+		var zero RESP
+		return zero
+	}
+	return resp
+}
+
 // SendReceiveGetErr is SendReceiveGet with the error handed back rather than
 // printed and swallowed. A command that is about to print a listing does not
 // care; anything that has to decide what to do next does.
@@ -240,6 +292,16 @@ func SendReceivePostErr[RPC any, RESP any](core *Core, name string, args *RPC) (
 		return zero, ErrDryRun
 	}
 	return common.RestPost[RESP](&core.Rest, name, args)
+}
+
+// SendReceiveDelete is a removal, and like a POST it refuses on -dry-run: a
+// delete is a write, whatever verb carries it.
+func SendReceiveDelete[RESP any](core *Core, name string, ps map[string]string) (RESP, error) {
+	var zero RESP
+	if Wrote("DELETE /"+name, ps) {
+		return zero, ErrDryRun
+	}
+	return common.RestDelete[RESP](&core.Rest, name, ps)
 }
 
 // ErrDryRun is what a write answers with when -dry-run stopped it. It is not a

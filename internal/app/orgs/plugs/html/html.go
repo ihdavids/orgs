@@ -557,7 +557,7 @@ func (self *OrgHtmlExporter) Unmarshal(unmarshal func(interface{}) error) error 
 }
 
 func (self *OrgHtmlExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("HTML: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "HTML: Export called", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
@@ -572,14 +572,14 @@ func (self *OrgHtmlExporter) Export(db common.ODb, query string, to string, opts
 		t := template.Must(template.New("").Funcs(funcMap).Parse(temp))
 		err := t.Execute(o, m)
 		if err != nil {
-			fmt.Printf("TEMPLATE ERROR: %s\n", err.Error())
+			fmt.Fprintf(os.Stderr, "TEMPLATE ERROR: %s\n", err.Error())
 		}
 	}
 */
 func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
-	fmt.Printf("PPPP: %v\n", self.Props)
+	fmt.Fprintf(os.Stderr, "PPPP: %v\n", self.Props)
 	self.Props = ValidateMap(self.Props)
-	fmt.Printf("HTML: Export string called [%s]:[%s]\n", query, opts)
+	fmt.Fprintf(os.Stderr, "HTML: Export string called [%s]:[%s]\n", query, opts)
 
 	defer func() { //catch or finally
 		if err := recover(); err != nil { //catch
@@ -589,7 +589,7 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 	}()
 
 	if f := db.FindByFile(query); f != nil {
-		fmt.Printf("File found\n")
+		fmt.Fprintf(os.Stderr, "File found\n")
 		title := f.Get("TITLE")
 		if title != "" {
 			props["title"] = title
@@ -636,23 +636,23 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 		}
 		w := NewOrgHtmlWriter(self)
 		w.Opts = opts
-		fmt.Printf("Writing nodes...\n")
+		fmt.Fprintf(os.Stderr, "Writing nodes...\n")
 		org.WriteNodes(w, f.Nodes...)
-		fmt.Printf("Done writing nodes...\n")
+		fmt.Fprintf(os.Stderr, "Done writing nodes...\n")
 		res := w.String()
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
 		nodestr, _ := json.Marshal(w.Nodes)
 		self.Props["nodes_json"] = string(nodestr)
 
-		fmt.Printf("DOC START: ========================================\n")
+		fmt.Fprintf(os.Stderr, "DOC START: ========================================\n")
 		templatePath := GetTemplate(self.TemplatePath, theme)
-		fmt.Printf("TEMPLATE: %s\n", templatePath)
+		fmt.Fprintf(os.Stderr, "TEMPLATE: %s\n", templatePath)
 		res = self.pm.Tempo.RenderTemplate(templatePath, self.Props)
-		fmt.Printf("XXX: %s\n", res)
+		fmt.Fprintf(os.Stderr, "XXX: %s\n", res)
 		return nil, res
 	} else {
-		fmt.Printf("Failed to find file in database: [%s]", query)
+		fmt.Fprintf(os.Stderr, "Failed to find file in database: [%s]", query)
 		return fmt.Errorf("Failed to find file in database: [%s]", query), ""
 	}
 }

@@ -144,6 +144,20 @@ type ResultTableDetailsMsg struct {
 	Details TableFormulaDetails `yaml:"details"`
 }
 
+// ReformatCheck is what GET /reformat answers with: the text the org writer
+// would produce for a file, and whether the file already says that. It exists
+// so a formatter can be *checked* rather than only run - which is the whole of
+// what a pre-commit hook needs, and the POST cannot offer because it writes.
+type ReformatCheck struct {
+	Ok  bool
+	Msg string
+	// Whether what is on disk already matches what the writer would produce.
+	Formatted bool
+	// What the writer would produce. Left out when asked for with text=f, for a
+	// caller that only wants the verdict over a hundred files.
+	Text string `json:",omitempty"`
+}
+
 type ListResult struct {
 	Vals []string
 }

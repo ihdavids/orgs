@@ -1,6 +1,7 @@
 package agenda
 
 import (
+	"context"
 	//"strings"
 	"flag"
 	"fmt"
@@ -22,6 +23,9 @@ const (
 )
 
 type CommandAgenda struct {
+	// Do not redraw when an org file changes under the screen. On by default:
+	// everything drawn here comes from files the server is already watching.
+	noLive              bool
 	Reply               common.Todos
 	TaskReply           common.FullTodo
 	Error               error
@@ -47,12 +51,12 @@ type CommandAgenda struct {
 	layout              *tview.Flex
 	screenHeight        int
 	screenWidth         int
-	monthCursorDay      int              // 1-based day of month
-	monthCursorEntry    int              // -1 = day header selected, 0+ = entry index
+	monthCursorDay      int                   // 1-based day of month
+	monthCursorEntry    int                   // -1 = day header selected, 0+ = entry index
 	monthDayTodos       map[int][]common.Todo // day -> sorted todos for current month
-	monthMaxVis         int              // max visible entries per day cell
+	monthMaxVis         int                   // max visible entries per day cell
 	pages               *tview.Pages
-	dayEntries          []common.Todo    // ordered list of entries in the day view (matches render order)
+	dayEntries          []common.Todo // ordered list of entries in the day view (matches render order)
 }
 
 func NewCommandAgenda() *CommandAgenda {
@@ -1419,7 +1423,9 @@ func (self *CommandAgenda) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
 
-func (self *CommandAgenda) SetupParameters(*flag.FlagSet) {
+func (self *CommandAgenda) SetupParameters(fset *flag.FlagSet) {
+	fset.BoolVar(&self.noLive, "no-live", false,
+		"do not redraw when an org file changes under it")
 }
 
 func (self *CommandAgenda) StartPlugin(manager *common.PluginManager) {
@@ -1457,6 +1463,29 @@ func (self *CommandAgenda) Exec(core *commands.Core) {
 	})
 	self.updateStatusBar()
 	self.ShowAgendaPane(core)
+	// An agenda that has not noticed its own files changing is the problem this
+	// is for: the whole screen is derived from files the server is already
+	// watching, and until /events there was no way to hear about it. Redrawn
+	// through QueueUpdateDraw because tview owns the screen and a goroutine
+	// writing to it directly is a race with the draw loop.
+	if !self.noLive {
+		ctx, stopLive := context.WithCancel(context.Background())
+		defer stopLive()
+		go func() {
+			common.Events(ctx, &core.Rest, common.EventOpts{
+				Kinds: []string{"reload", "clockin", "clockout"},
+			}, func(e common.OrgEvent) bool {
+				if e.Kind == "hello" {
+					return true
+				}
+				self.app.QueueUpdateDraw(func() {
+					self.ShowAgendaPane(core)
+					self.updateStatusBar()
+				})
+				return true
+			})
+		}()
+	}
 	if err := self.app.SetRoot(self.pages, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}

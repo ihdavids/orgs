@@ -75,6 +75,10 @@ func (self *Filter) StartPlugin(manager *common.PluginManager) {
 	}
 }
 
+// HelpGroup: every filter in the yaml is a command, and they belong together
+// under a heading that says what they are rather than among the built-in ones.
+func (self *Filter) HelpGroup() string { return "Your filters (each is a command)" }
+
 func (self *Filter) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.CoreQuery, "f", "", "Filter name to execute")
 	fset.StringVar(&self.DynamicQuery, "q", "", "Additional query to combine with filter")

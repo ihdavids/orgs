@@ -138,6 +138,231 @@ The server grew records, links, code, file search and babel; these are the termi
 
 One edge they all share: **a heading's hash in a url path is base64 encoded a second time.** The hash arrives on a `Todo` as base64 already, and `GetHash` in `rest.go` base64-URL-*decodes* the path segment before looking it up. Written into a url as it stands, the `+` becomes a space and the `/` a path separator; the handler answers "no heading with that hash", which reads like a stale hash rather than a mangled one. `commands.HashPath` is the one place that does it.
 
+### The write verbs, and how a command names the heading it is about
+
+`orgs todo`, `sched`, `deadline`, `tag`, `prop`, `rename`, `note`, `check`,
+`archive` and `rm` are `cmd/oc/commands/edit/`. Every endpoint behind them
+already existed and every one was already reachable - from `orgs mcp`, and from
+inside the `tui` and `agenda` screens - but none of them was reachable from a
+prompt, so an agent had better write access to somebody's org files than they
+did.
+
+They are one package because what makes them worth having is the part they
+share: **`commands.Resolve` in `target.go`** decides which heading, identically
+for all of them. Four ways in, and the last is the one that makes the read half
+of the tool worth more than the sum of it:
+
+```sh
+orgs todo DONE                        # a picker
+orgs todo DONE 'IsStatus("NEXT")'     # a query
+orgs todo DONE hOpOB7vIg6oiYz5sMVS=   # a hash
+orgs search '…' -json | jq -r .Hash | orgs tag +stale -   # hashes on stdin
+```
+
+Rules that are load-bearing:
+
+1. **More than one match is a question, not an assumption.** With a person
+   there the matches go to a picker; with only a pipe it refuses and says how
+   many it found. `-all` is how you say you meant all of them, `-at N` for one.
+2. **A hash is recognised by its shape** - 28 characters of base64 ending in
+   `=` - so the thing the tool itself printed can be pasted back without a flag.
+3. **`orgs tag` reads the heading's current tags first.** `POST /tags` *toggles*,
+   so `+work` on a heading already tagged work would take the tag off; doing
+   what was asked means knowing what is there, which is what makes the verb safe
+   to run twice and safe in a pipeline nobody is watching.
+4. **`orgs note` strips the property drawer and the planning line** out of what
+   `/body/{hash}` hands back before writing it through `/body/change`
+   (`proseOnly`). The body is returned *as written*, drawer included, and the
+   drawer is regenerated from the headline - so handing the whole thing back
+   wrote it twice.
+5. **A dash-word is a value, not a flag.** `orgs tag -someday` is a tag being
+   removed, and Go's flag package calls it an undefined flag and exits. A
+   command implementing `commands.DashWords` has those words taken off the line
+   in `main.go` *before* the parse - and only words it has not defined as a
+   flag, so `-json` stays a flag everywhere with no list to maintain.
+
+### Running without a server: `-local`
+
+`orgs -local <command>`, or `orgs -orgdir ./notes <command>` which implies it,
+runs the server inside the process for the length of one command. That is what
+makes `orgs agenda` work in a git hook, `orgs fmt -check` in CI and `orgs
+search` over ssh on a box where no daemon was ever started. The port is asked of
+the kernel (port 0), authentication is off, and readiness is polled rather than
+assumed.
+
+Two things had to be fixed for it to work at all, and both were bugs on their
+own:
+
+1. **`orgs serve` exited immediately with `allowHttps: false`.** The https
+   listener was what held `StartServer` open; without it the process fell
+   through both listeners and ended. It now waits on a signal instead, which is
+   also the only path on which `StopWhisper` and `stopPlugins` ever run.
+2. **The server printed to stdout.** Three hundred-odd `fmt.Printf` calls across
+   the server and the plugins are diagnostics, and in `-local` mode the server
+   shares stdout with the command - so `orgs search -json | jq` got `WATCHING:`
+   and `PLUGIN START:` spliced into its json. They all go to stderr now. Same
+   rule as the log and `orgs mcp`: **stdout is the answer.**
+
+### `GET /events`, and the things that are live
+
+`internal/app/orgs/events.go` is server-sent events on one long GET. The server
+has watched the org files since the beginning and had no way to say so; the
+websocket API that would have carried it was commented out years ago.
+
+- `orgs watch` prints each change, `-exec 'make notes'` runs something about it
+  (`{}` becomes the file), `-file` narrows it, `-once` waits for one.
+- `orgs clocks -w -short` is a status line: one line, redrawn when the clock
+  changes *and* once a minute, because the elapsed time moves with nothing
+  happening.
+- The agenda redraws itself when a file changes under it (`-no-live` to stop it),
+  through `app.QueueUpdateDraw` - tview owns the screen and a goroutine drawing
+  to it directly is a race.
+
+Four things about the stream: a subscriber that is not reading is **dropped, not
+waited for** (a sleeping laptop must not stall the file watcher); an event says
+**what happened, never what the thing now is**; there is a **heartbeat every
+twenty seconds** because a proxy closes an idle connection and the reader cannot
+tell that from a quiet database; and **reloads are coalesced** over 120ms,
+because one save is often three filesystem events and three redraws read as a
+flicker. The client half is `internal/common/events.go`, which **reconnects with
+a backoff** - a watch is meant to be left running for a day, and in that day the
+server will be restarted.
+
+### Tab completion
+
+`orgs completion zsh|bash|fish` prints a script; all three do the same thing and
+shell out to **`orgs __complete <words…>`**, so the interesting part is written
+once in Go rather than three times in shell, and a command added tomorrow
+completes without anybody editing a script. What it completes is server-knowable:
+files, tags, *this heading's file's* keywords, saved queries, filters, exporters,
+themes, collections.
+
+Two rules: it has a **900ms timeout** (`Rest.Timeout`) and degrades to no
+suggestions, because a prompt that has stopped responding is worse than one with
+nothing in it; and it **does not complete the target of a destructive verb** -
+completing a query is a convenience, completing the heading `orgs rm` will delete
+is a way to delete the wrong thing quickly.
+
+### `orgs review`, `orgs diff`, `orgs blame`, `orgs doctor`
+
+- **`review`** is the weekly review as ten named checks, each one a query and a
+  sentence and nothing else - a check that needed code of its own would be a
+  second implementation of the query language. A check that finds nothing prints
+  a green line rather than staying silent; that line is the most valuable output
+  it has. `-fix` walks the findings into the editor, deliberately not into a menu
+  of automatic repairs: "this project has no next action" is answered by deciding
+  something.
+- **`diff` and `blame`** (`gitorg/`) read git as *org*: which headings changed
+  and how, rather than which lines moved. They parse both revisions **here**
+  rather than asking the server, which is what makes them work in a pre-commit
+  hook and on somebody else's checkout. Two traps: a nested heading is a
+  `*org.Headline` (the pointer trap again), and go-org's default keyword list is
+  `TODO | DONE` alone - so in a file with no `#+TODO` line every other keyword
+  was read as part of the headline text and every NEXT→DONE looked like a rename.
+- **`doctor`** asks every question at once, because "the server is not running",
+  "the token expired" and "that exporter was never put in the yaml" all answer
+  "could not" and none of them says which. It is marked `NeedsNoServer` so the
+  checks on the way in cannot stop the command that exists to diagnose them.
+
+### `orgs help`, and the commands that need no server
+
+`commands.Offline` (`NeedsNoServer()`) marks a command that has nothing to
+authenticate to. The token check in `main.go` used to run for every command, so
+`orgs completion zsh` - a script printed from a table in this binary - refused to
+run because of a token it was never going to send. It also exited on an expired
+token **without trying the refresh**, so a session that could have been renewed
+told people to log in again.
+
+`commands.Grouped` (`HelpGroup()`) is how a command registered at runtime says
+where it belongs in the listing - every filter in the yaml is a command, and the
+group table in `help.go` can never name them.
+
+While in there: **the dispatch loop in `main.go` did not stop at the command it
+found.** It walked `CmdRegistry` in map order mutating `args` as it went, so a
+command whose *argument* was another command's name ran both, in whichever order
+the map felt like that run - `orgs __complete tag ''` ran the completion and then
+`orgs tag`.
+
+### The commands that were endpoints with nobody to call them
+
+`cmd/oc/commands/orgtools/` is `tangle`, `fmt`, `tags`, `outline` and `log`;
+`savedq/` is `orgs q`; `voice/` is `orgs voice`. Each is one request to an
+endpoint that already existed.
+
+- **`orgs tangle`** says what the blocks would write by default, `-w` writes on
+  the server's disk and `-o DIR` writes here - the distinction `orgs export` had
+  to learn. Under `-o` the paths are taken **relative to the org file**, because
+  the server answers with its own absolute ones.
+- **`orgs fmt -check`** writes nothing and exits non-zero, which is the whole
+  contract a pre-commit hook needs. `POST /reformat` always writes, so the check
+  goes to a new **`GET /reformat`** which answers with what the writer *would*
+  produce and whether the file already says it. The comparison is the server's:
+  the file may not be on this machine.
+- **`orgs outline -match`** is a sparse tree - the headings a query found plus
+  enough ancestors to say where they are, which is org's most useful way of
+  reading a big file and the one thing `orgs search` cannot be.
+- **`orgs q`** is the same stored queries worg's search tab keeps. Running one is
+  `/search` with the text looked up first, so everything `search` grew works on a
+  saved query without this command knowing any of it.
+- **`orgs voice`** records with `sox`/`ffmpeg`/`arecord` - not linked in, for the
+  same reason whisperd.go supervises go-whisper rather than linking it - then
+  follows the voice notes' order exactly: **the audio is uploaded before anything
+  is attempted on it, and the transcript is shown before anything is written.** A
+  recording that cannot be uploaded is written to a temp file and the path is
+  printed; losing the only copy of something somebody said is the one outcome it
+  must never have. `Rest.PostFile` is the multipart upload it needed.
+
+Four bugs surfaced while building these, all of them silent and none of them new:
+
+1. **`collectBlocks` in the tangler matched `case org.Block`**, and the parser
+   only ever produces `*org.Block` - so no block was ever collected and tangling
+   any file answered "nothing to tangle" however many `:tangle` headers it had.
+   `/tangle` had never worked. The same pointer trap as `*org.Headline`.
+2. **`ChangeBody` deleted every child heading.** Its loop preserved
+   `case org.Headline`, which never fires, so appending one line of note to a
+   project heading took the project's tasks with it and answered
+   `{"status":true}`. It dropped the planning line too, since SCHEDULED/DEADLINE
+   are SDC children.
+3. **`IsBlockedProject` returned the opposite of its name** - `childHasNext`, so
+   it answered true for exactly the projects that were *not* blocked. docs.org
+   has always described it correctly ("DOES NOT have a child marked NEXT"). It
+   also required an argument it never read, so `IsBlockedProject()`, which is how
+   the documentation writes it, panicked.
+4. **`/hash/{hash}` failed on a server that had not answered a query yet.**
+   Sections are registered into `ByHash` lazily, as queries walk them, so on a
+   freshly started server the index is empty and every hash lookup answered "no
+   heading with that hash" - which reads like a stale hash rather than an empty
+   index. `FindByHash` now builds the index on a miss and caches it against
+   `ReloadIndex`, like the link and record indexes. This is why
+   `orgs search … | orgs tag +x -` failed under `-local`, which is a fresh
+   server by definition, and it was the same for worg and `orgs mcp` against a
+   server that had just started.
+5. **go-org could not parse a repeater on a planning line.** `CompileSDCRe` built
+   its regex with `nocookie`, which wanted the closing bracket immediately after
+   the day - so `SCHEDULED: <2026-09-28 Mon .+2d>` did not match the
+   planning-line pattern at all: **every habit's schedule was invisible**, the
+   date never reached `Headline.Scheduled`, and the line was re-parsed as body
+   text. `ToDate` then dropped the cookie on the way out, so even a parsed
+   repeater was lost on the next write. Both fixed in the go-org checkout the
+   `replace` directive points at, pinned by `TestSDCKeepsItsCookie`.
+
+### The query functions the review needed
+
+`HasScheduled()`, `HasDeadline()`, `HasTimestamp()`, `HasAnyDate()`,
+`DeadlinePast()`, `ScheduledPast()`, `HasClock()`, `DaysOld()` and
+`OlderThan(30)` are in `todo.go` beside the rest. The language could ask what a
+heading *was* and whether a date fell on a given day, and could not ask the two
+questions a review is made of: does this have a date at all, and has it gone
+past. `HasChecklist()`, `ChecklistDone()`, `ChecklistCount()` and
+`ChecklistLeft()` are in `checklist.go` rather than `todo.go`, because they have
+to count boxes exactly the way the *write* counts them - `orgs check 3` and
+`HasChecklist()` disagreeing would put a tick on the wrong line.
+
+Two things are deliberate: **past means before today**, counted in days rather
+than instants, so a deadline of today is due rather than overdue; and a heading
+with no date answers `DaysOld() == -1`, so `OlderThan` is never true of a heading
+that has no date to be old.
+
 ### The pickers
 
 Five commands are an fzf list with a pane beside it: **`orgs code`**, **`orgs links`**, **`orgs tables`**, **`orgs rec`** and **`orgs contact`**, each bare (no subcommand). `orgs grep` was the first of these and hands its pane to `bat`, which knows how to colour a file and nothing about org. None of them is a file — a source block is a header line and variables and code, a link is a target and the paragraph it was written in, a table is a grid and its formulas, a record is a drawer of fields whose kinds were worked out for it — so the pane is drawn by this binary.
@@ -639,6 +864,26 @@ Everything a gantt client *changes* goes through endpoints that already existed 
 1. `subtreeEndRow` in `refile.go` - `Headline.GetEnd()` under-reports for a heading whose body is only a planning line and a property drawer, because go-org keeps the drawer in `Headline.Properties` rather than among the body nodes it measures. `/delete` left the drawer behind, orphaned under the parent, and `/gantt/add` wrote new tasks *into* the last child, between its date and its drawer. Both now take the end of the subtree off the file's own lines - the next heading at the same level or above - and that only ever extends the range go-org gives, never shrinks it.
 2. `SetProperty` in `todo.go` - writing a property with an **empty value now removes it** (and the drawer with it, when it was the last one) rather than leaving `:AFTER:` sitting there with nothing after it. Undo writes the old value back, and for a property that was not there before, the old value is nothing.
 3. `noAuthUser` in `auth.go` - with `noAuth: true` the authenticate middleware was skipped entirely, so no username reached the per-user endpoints and stored queries, kanban boards and capture templates all answered 401. There is now a middleware either way, and with authentication off everything is done as `local`.
+
+### Moving headings: refile, copy and archive
+
+`POST /move` (`internal/app/orgs/move.go`, wire types in `internal/common/move.go`) is one endpoint for all three, taking a list of sources and an `Op`. The three are one operation with three endings: all of them find a heading, work out where it should go and write it there; a refile then deletes the original, a copy does not, and an archive decides the destination for itself out of org's rules rather than being told. `GET /refile/targets` is the structured sibling of `/refilefiles` - the same places, but as hash, outline path, level, keyword and tags rather than as `"file|H1|H2"` strings that cannot tell two headings called Notes apart. `POST /copy` is the single-heading form of the copy, beside the existing `/refile`.
+
+**The whole batch is one request because a heading's hash is not stable across an edit to its file.** The hash is accumulated from the document name and the chain of headline titles the parser has walked, so moving one heading out of a file changes the hash of every heading after it. A client that collects twenty hashes off a search and posts twenty refiles gets the first one right and is then addressing headings that are not there - or, worse, headings that have since inherited those hashes. `Move` resolves **every** source to `(file, outline path, headline)` before it writes anything, then addresses each one by `file+olp`, which does survive the file being rewritten, and reloads every touched file between operations.
+
+Three more things it decides:
+
+1. **A source whose ancestor is in the same batch is skipped, not failed.** Moving the ancestor takes it along, and moving it as well would be moving it out of the thing that has just moved. The result says so per heading (`Skipped`), because a client has to be able to tell "it went with its parent" from "it could not be found".
+2. **`Ok` is whether *everything* worked**, and the per-heading results are always present rather than only on failure. A batch that half worked is neither a success nor a failure and the honest summary says both halves.
+3. **`Create` is off by default.** Creating a destination heading because somebody mistyped the one they meant is a worse outcome than being told it does not exist.
+
+Building it surfaced three pre-existing bugs, all of which were corrupting files through the *old* `/refile` endpoint long before any of this existed. `internal/app/orgs/refile_test.go` pins all three:
+
+1. **`formatHeading` wrote a subtree once per level.** It recursed over `sec.Children` on top of the recursion `WriteHeadline` already does (`WriteNodesLB(1, w, h.Children...)`, and a headline's children include the headlines nested in it). Refiling a heading with a child and a grandchild wrote the child twice and the grandchild three times. The recursion is gone.
+2. **The delete was measured against the file as it was before the insert.** `DeleteTree` re-reads the file - which `InsertSection` has just rewritten - but took its rows and its level off the parse tree beforehand. Two things had moved: every row below the insertion point, and the source's own `Headline.Lvl`, because `formatHeadingAt` calls `fixUpLevel` on a `CopySection` that *shares* the `*org.Headline` (it has to - the headlines nested in `Headline.Children` are those same pointers, which is what makes renumbering the subtree for writing work at all). `subtreeEndRow` then walked forward to the next heading at the *destination's* depth and ran straight through the source's siblings. Refiling `Alpha` out of `Projects/Kitchen` up into `Inbox` deleted `Kitchen`, `Gamma` and `Gamma child` with it and reported success. `Refile` now reloads the source file and finds the heading again by its outline path before deleting it, which answers the rows and the level at once.
+3. **Archive had never worked.** `FindArchiveTarget` built a target of type `"file+heading"`; `GetFromTarget` only knows `"file+headline"`. One word.
+
+The client half is `worg/src/move.ts` (pure, tested), `MoveDialog.tsx` (one dialog for all three) and `FileMove.tsx` (the file view's outline picker), reachable from the search tab's row menu and bulk bar, the kanban card's back, and the files tab's toolbar.
 
 ### Documentation extraction (SDOC / EDOC)
 

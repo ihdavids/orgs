@@ -277,7 +277,7 @@ func (self *JiraSync) CreateJira(db common.ODb, target *common.Target) (common.R
 	res.Ok = false
 	res.Msg = "Unknown error, did not create JIRA"
 	if !self.HaveStarted {
-		fmt.Printf("ERROR: Attempt to create jira when plugin has not started! ABORT\n")
+		fmt.Fprintf(os.Stderr, "ERROR: Attempt to create jira when plugin has not started! ABORT\n")
 		return res, fmt.Errorf("attempt to create jira when plugin has not started")
 	}
 	self.out.Infof("CreateJira Called\n")
@@ -332,13 +332,13 @@ func (self *JiraSync) CreateJira(db common.ODb, target *common.Target) (common.R
 			}
 
 			if err := defaultIssueType(o, self.Endpoint, &project, &issueType); err != nil {
-				fmt.Printf("  Failed querying default IssueType: %s...\n", err.Error())
+				fmt.Fprintf(os.Stderr, "  Failed querying default IssueType: %s...\n", err.Error())
 				res.Msg = "Failed querying default issue type for issue"
 				return res, err
 			}
 			createMeta, err := jira.GetIssueCreateMetaIssueType(o, self.Endpoint, project, issueType)
 			if err != nil {
-				fmt.Printf("  Failed generating meta: %s...\n", err.Error())
+				fmt.Fprintf(os.Stderr, "  Failed generating meta: %s...\n", err.Error())
 				res.Msg = "Failed generating metadata for issue"
 				return res, err
 			}
@@ -490,7 +490,7 @@ func (self *JiraSync) DoQuery(db common.ODb) {
 			data, err := jira.Search(self.hclient, self.Endpoint, &query, jira.WithAutoPagination())
 			if err == nil {
 				if data != nil {
-					fmt.Printf("DATA: %d\n", data.Total)
+					fmt.Fprintf(os.Stderr, "DATA: %d\n", data.Total)
 					self.out.Debugf("JIRA GO: %d\n", data.Total)
 				} else {
 					self.out.Debugf("JIRA Query is nil?\n")
@@ -505,10 +505,10 @@ func (self *JiraSync) DoQuery(db common.ODb) {
 				if data != nil {
 					res = self.pm.Tempo.RenderTemplate(template, ctx)
 				} else {
-					fmt.Printf("ERROR: No data returned from JIRA, abort render")
+					fmt.Fprintf(os.Stderr, "ERROR: No data returned from JIRA, abort render")
 				}
 				//jiracli.RunTemplate("list", data, nil)
-				//fmt.Printf("RESULTS: \n%s\n", res)
+				//fmt.Fprintf(os.Stderr, "RESULTS: \n%s\n", res)
 				os.WriteFile(query.Filename, []byte(res), os.ModePerm)
 			} else {
 				self.out.Errorf("JIRA: GOT ERROR [%v]\n", err)
@@ -519,7 +519,7 @@ func (self *JiraSync) DoQuery(db common.ODb) {
 		self.out.Error("JIRA: No endpoint, cannot sync!")
 	}
 
-	//fmt.Printf("TEMPLATE: %s\n", listTemp)
+	//fmt.Fprintf(os.Stderr, "TEMPLATE: %s\n", listTemp)
 
 	/*
 			:ASSIGNED:  {% for j in i.Fields.assignee %} {{j}}{%endfor%}
@@ -531,7 +531,7 @@ func (self *JiraSync) DoQuery(db common.ODb) {
 }
 
 func (self *JiraSync) Update(db common.ODb) {
-	fmt.Printf("Jira Sync Update...\n")
+	fmt.Fprintf(os.Stderr, "Jira Sync Update...\n")
 	self.DoQuery(db)
 	/*
 		ctx := context.Background()
@@ -562,7 +562,7 @@ func (self *JiraSync) Update(db common.ODb) {
 		if cals != nil && cals.Items != nil {
 			for _, cal := range cals.Items {
 				if cal.Hidden {
-					fmt.Printf("SKIPPING: %s\n", cal.Summary)
+					fmt.Fprintf(os.Stderr, "SKIPPING: %s\n", cal.Summary)
 					continue
 				}
 				fmt.Fprintf(f, "* %-25s\t\t:Cal:\n", cal.Summary)
@@ -576,9 +576,9 @@ func (self *JiraSync) Update(db common.ODb) {
 				if err != nil {
 					log.Fatalf("Unable to retrieve next ten of the user's events: %v", err)
 				}
-				//fmt.Println("Upcoming events:")
+				//fmt.Fprintln(os.Stderr, "Upcoming events:")
 				if len(events.Items) == 0 {
-					fmt.Printf("No upcoming events found for calendar: %s\n", cal.Summary)
+					fmt.Fprintf(os.Stderr, "No upcoming events found for calendar: %s\n", cal.Summary)
 				} else {
 					for _, item := range events.Items {
 						date, err := time.Parse(time.RFC3339, item.Start.DateTime)

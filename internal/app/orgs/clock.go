@@ -58,9 +58,9 @@ func (self *OrgsClock) ClockOut() (common.ResultMsg, error) {
 			if drawer != nil {
 				drawer.Append(secs.Headline, clock)
 				/*
-					fmt.Printf("HAVE DRAWER\n")
+					fmt.Fprintf(os.Stderr, "HAVE DRAWER\n")
 					for _, c := range drawer.Children {
-						fmt.Printf("[%s] %s ENTRY: %s\n", c.GetTypeName(), Conf().ClockIntoDrawer, c.String())
+						fmt.Fprintf(os.Stderr, "[%s] %s ENTRY: %s\n", c.GetTypeName(), Conf().ClockIntoDrawer, c.String())
 					}
 				*/
 			} else {

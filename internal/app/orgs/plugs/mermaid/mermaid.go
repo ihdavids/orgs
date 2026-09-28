@@ -127,7 +127,7 @@ func CheckPushDownChild(have map[string]*common.Todo, db common.ODb, n *common.T
 func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.Todo {
 	var dep *common.Todo = nil
 	if p, ok := n.Props["AFTER"]; ok && p != "" {
-		//fmt.Printf("AFTER: %s\n", n.Props["AFTER"])
+		//fmt.Fprintf(os.Stderr, "AFTER: %s\n", n.Props["AFTER"])
 		// Search by ID
 		d := db.FindByAnyId(p)
 		// If we have a node, but the node is not in proper list
@@ -141,7 +141,7 @@ func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.
 		for curNode.Parent != "" {
 			par := db.FindByHash(curNode.Parent)
 			if par == nil {
-				//fmt.Printf("Cannot find parent of %v : %v\n", curNode.Headline, curNode.Parent)
+				//fmt.Fprintf(os.Stderr, "Cannot find parent of %v : %v\n", curNode.Headline, curNode.Parent)
 				break
 			}
 			if _, ok := par.Props["ORDERED"]; ok {
@@ -279,7 +279,7 @@ func (self *Mermaid) ExportRes(o *bytes.Buffer, db common.ODb, sectionMap map[st
 	start := formatDateForGantt(now)
 	end := formatDateForGantt(now)
 	if haveDate(td) {
-		fmt.Printf("TIMESTAMP TYPE: %d\n", td.Date.TimestampType)
+		fmt.Fprintf(os.Stderr, "TIMESTAMP TYPE: %d\n", td.Date.TimestampType)
 		start = formatDateForGantt(td.Date.Start)
 		if td.Date.Start != td.Date.End {
 			end = formatDateForGantt(td.Date.End)
@@ -365,7 +365,7 @@ func (self *Mermaid) ExportRes(o *bytes.Buffer, db common.ODb, sectionMap map[st
 
 func (self *Mermaid) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
-	fmt.Printf("GANTT: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "GANTT: Export called", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)
@@ -378,7 +378,7 @@ func (self *Mermaid) Export(db common.ODb, query string, to string, opts string,
 	}
 	var res error = nil
 	o := bytes.NewBufferString("")
-	fmt.Println(self.Props)
+	fmt.Fprintln(os.Stderr, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, docStart, self.Props)
 	var section = ""
 	var idx = 0
@@ -416,7 +416,7 @@ func (self *Mermaid) Export(db common.ODb, query string, to string, opts string,
 
 func (self *Mermaid) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
 	self.Props = ValidateMap(self.Props)
-	fmt.Println("GANTT: Export string called", query, opts)
+	fmt.Fprintln(os.Stderr, "GANTT: Export string called", query, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)
@@ -429,8 +429,8 @@ func (self *Mermaid) ExportToString(db common.ODb, query string, opts string, pr
 	}
 	var res error = nil
 	o := bytes.NewBufferString("")
-	fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	fmt.Println(self.Props)
+	fmt.Fprintln(os.Stderr, "++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	fmt.Fprintln(os.Stderr, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, docStart, self.Props)
 
 	namesMap := map[string]string{}
@@ -444,7 +444,7 @@ func (self *Mermaid) ExportToString(db common.ODb, query string, opts string, pr
 	plugs.ExpandTemplateIntoBuf(o, endMarkers, self.Props)
 	plugs.ExpandTemplateIntoBuf(o, docEnd, self.Props)
 	txt := o.String()
-	fmt.Printf("%s\n", txt)
+	fmt.Fprintf(os.Stderr, "%s\n", txt)
 	return res, txt
 }
 

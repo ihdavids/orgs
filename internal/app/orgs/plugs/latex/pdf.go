@@ -64,7 +64,7 @@ func (self *OrgPdfExporter) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *OrgPdfExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Printf("PDF: Export called: [%s] [%s]\n%v", query, to, opts)
+	fmt.Fprintf(os.Stderr, "PDF: Export called: [%s] [%s]\n%v", query, to, opts)
 	exp := self.pm.Plugs.GetExporter("latex")
 	if exp == nil {
 		self.pm.Out.Error("Failed to find latex exporter for pdf conversion!")
@@ -72,7 +72,7 @@ func (self *OrgPdfExporter) Export(db common.ODb, query string, to string, opts 
 	}
 	if err, res := exp.ExportToString(db, query, opts, props); err == nil {
 		if tmp, e2 := os.CreateTemp("", "latexcache-*.tex"); e2 == nil {
-			fmt.Printf("SOURCE FILE: %s\n", tmp.Name())
+			fmt.Fprintf(os.Stderr, "SOURCE FILE: %s\n", tmp.Name())
 			defer os.Remove(tmp.Name())
 			{
 				defer tmp.Close()
@@ -99,13 +99,13 @@ func (self *OrgPdfExporter) Export(db common.ODb, query string, to string, opts 
 				os.Rename(outputtemp, to)
 				self.pm.Out.Info("CONVERSION FINISHED\n")
 			} else {
-				fmt.Printf("ERROR PDF Export: %v\n%v\n%v\n", cmd.Args, e3, string(out))
+				fmt.Fprintf(os.Stderr, "ERROR PDF Export: %v\n%v\n%v\n", cmd.Args, e3, string(out))
 			}
 		} else {
-			fmt.Printf("Temp file not created... %v\n", e2)
+			fmt.Fprintf(os.Stderr, "Temp file not created... %v\n", e2)
 		}
 
-		//fmt.Printf("RES: %s\n", res)
+		//fmt.Fprintf(os.Stderr, "RES: %s\n", res)
 	} else {
 		self.pm.Out.Error("Latex Conversion Error: %v", err)
 	}
@@ -136,7 +136,7 @@ func (self *OrgPdfExporter) Export(db common.ODb, query string, to string, opts 
 // ----------- [ Exporter System ] -----------------------
 
 func (self *OrgPdfExporter) ExportToString(db common.ODb, query string, opts string, props map[string]string) (error, string) {
-	fmt.Printf("PDF: Export string called [%s]:[%s]\n", query, opts)
+	fmt.Fprintf(os.Stderr, "PDF: Export string called [%s]:[%s]\n", query, opts)
 	return nil, ""
 }
 

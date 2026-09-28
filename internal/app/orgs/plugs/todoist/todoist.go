@@ -15,6 +15,7 @@ EDOC */
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/ihdavids/orgs/internal/common"
 
@@ -32,7 +33,7 @@ func (self *Todoist) Unmarshal(unmarshal func(interface{}) error) error {
 }
 
 func (self *Todoist) Update(db common.ODb) {
-	fmt.Printf("Todoist Update...\n")
+	fmt.Fprintf(os.Stderr, "Todoist Update...\n")
 	if self.client != nil {
 		projects, _, err := self.client.Projects.List(context.Background(), "")
 		if err != nil {
@@ -45,33 +46,33 @@ func (self *Todoist) Update(db common.ODb) {
 
 		for _, p := range projects {
 			if p.IsDeleted == 0 && p.IsArchived == 0 {
-				fmt.Printf("* %-25s :Project:\n", p.Name)
+				fmt.Fprintf(os.Stderr, "* %-25s :Project:\n", p.Name)
 				for _, t := range tasks {
 					if t.IsDeleted == 0 && t.ProjectID == p.ID {
 						status := "TODO"
 						if t.Checked == 1 {
 							status = "DONE"
 						}
-						fmt.Printf("** %s %s\n", status, t.Content)
+						fmt.Fprintf(os.Stderr, "** %s %s\n", status, t.Content)
 						if t.Due != nil {
 							d := (*t.Due).(map[string]interface{})
 							//for key, element := range d {
-							//	fmt.Printf("%s, %v\n", key, element)
+							//	fmt.Fprintf(os.Stderr, "%s, %v\n", key, element)
 							//}
 							if dt, ok := d["date"]; ok {
-								fmt.Printf("   DEADLINE: <%s>\n", dt)
+								fmt.Fprintf(os.Stderr, "   DEADLINE: <%s>\n", dt)
 							}
 						}
-						fmt.Printf("   :PROPERTIES:\n")
+						fmt.Fprintf(os.Stderr, "   :PROPERTIES:\n")
 						if t.DateAdded != "" {
-							fmt.Printf("     :Created: %s\n", t.DateAdded)
+							fmt.Fprintf(os.Stderr, "     :Created: %s\n", t.DateAdded)
 						}
 						if t.DateCompleted != nil {
-							fmt.Printf("     :Completed: %s\n", *t.DateCompleted)
+							fmt.Fprintf(os.Stderr, "     :Completed: %s\n", *t.DateCompleted)
 						}
-						fmt.Printf("   :END:\n")
+						fmt.Fprintf(os.Stderr, "   :END:\n")
 						if t.Description != "" {
-							fmt.Printf("   %s\n", t.Description)
+							fmt.Fprintf(os.Stderr, "   %s\n", t.Description)
 						}
 					}
 				}

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -25,11 +26,11 @@ func GetUsername(r *http.Request) string {
 func login(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
 	//body, _ := io.ReadAll(r.Body)
-	//fmt.Printf("LOGIN REQUEST: %s\n", string(body))
+	//fmt.Fprintf(os.Stderr, "LOGIN REQUEST: %s\n", string(body))
 	//read := io.ByteReader(body)
 	err := json.NewDecoder(r.Body).Decode(&creds)
 	if err != nil {
-		fmt.Printf("Boo: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Boo: %v\n", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -38,7 +39,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	hsh.Write([]byte(creds.Password))
 
 	if ok := GetKeystore().Validate(creds.Username, creds.Password); !ok {
-		fmt.Printf("Failed validate\n")
+		fmt.Fprintf(os.Stderr, "Failed validate\n")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -49,10 +50,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 	*/
 
-	//fmt.Printf("Encrypted token gen\n")
+	//fmt.Fprintf(os.Stderr, "Encrypted token gen\n")
 	token, expiresAt, err := GenerateEncryptedToken(creds.Username)
 	if err != nil {
-		fmt.Printf("bad token: %v [%s]\n", err, creds.Username)
+		fmt.Fprintf(os.Stderr, "bad token: %v [%s]\n", err, creds.Username)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -90,14 +91,14 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 
 	claims := &Claims{}
 	if _, err := ValidateEncryptedToken(tokenStr, claims); err != nil {
-		fmt.Printf("Refresh: failed to validate existing token: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Refresh: failed to validate existing token: %v\n", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	token, expiresAt, err := GenerateEncryptedToken(claims.Username)
 	if err != nil {
-		fmt.Printf("Refresh: failed to generate token: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Refresh: failed to generate token: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -143,7 +144,7 @@ func authenticate(next http.Handler) http.Handler {
 		} else if c, err := r.Cookie("orgstoken"); err == nil {
 			// Fall back to cookie (for browser clients)
 			if val, err := base64.StdEncoding.DecodeString(c.Value); err != nil {
-				fmt.Printf("Failed to decode the token str\n")
+				fmt.Fprintf(os.Stderr, "Failed to decode the token str\n")
 			} else {
 				// The token itself is never printed. It is a bearer
 				// credential: anything that can read the log can then be
@@ -152,18 +153,18 @@ func authenticate(next http.Handler) http.Handler {
 				tokenStr = string(val)
 			}
 		} else {
-			fmt.Printf("ERROR: %v\n", err)
+			fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
 		claims := &Claims{}
 		if _, err := ValidateEncryptedToken(tokenStr, claims); err != nil {
-			fmt.Printf("Failed to authenticate: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Failed to authenticate: %v\n", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		fmt.Printf("AUTHENTICATION OKAY\n")
+		fmt.Fprintf(os.Stderr, "AUTHENTICATION OKAY\n")
 		ctx := context.WithValue(r.Context(), contextKeyUsername, claims.Username)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

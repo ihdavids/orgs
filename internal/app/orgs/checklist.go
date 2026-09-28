@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -353,4 +354,62 @@ func bodyJson(w http.ResponseWriter, res BodyResult) {
 func checklistJson(w http.ResponseWriter, res common.ResultMsg) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// ---------------------------------------------------------------------------
+// The query language's side of a checklist
+// ---------------------------------------------------------------------------
+
+// HasChecklist reports whether a heading's own body holds checkboxes, and
+// ChecklistCounts says how many of them are ticked. They are here rather than
+// in todo.go because they have to count boxes exactly the way the *write* counts
+// them - `orgs check 3` and `HasChecklist()` disagreeing about what a box is
+// would put a tick on the wrong line.
+//
+// Counted off the file's own lines rather than out of the parse tree, for the
+// same reason the toggle is a line edit: what org calls a list item and what
+// somebody looking at the file calls a checkbox are not quite the same set, and
+// the file is the thing being written to.
+func HasChecklist(p *org.Section, f *common.OrgFile) bool {
+	_, total := ChecklistCounts(p, f)
+	return total > 0
+}
+
+// ChecklistCounts is how many boxes are ticked and how many there are. A
+// heading with no boxes answers 0, 0 - which is what lets `ChecklistDone()` be
+// false for one rather than vacuously true.
+func ChecklistCounts(p *org.Section, f *common.OrgFile) (done int, total int) {
+	if p == nil || p.Headline == nil || f == nil || f.Doc == nil {
+		return 0, 0
+	}
+	b, err := os.ReadFile(f.Doc.Path)
+	if err != nil {
+		return 0, 0
+	}
+	lines := strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+	start := p.Headline.Pos.Row
+	if start < 0 || start >= len(lines) {
+		return 0, 0
+	}
+	end := subtreeEndRow(lines, start, p.Headline.Lvl, start)
+	for i := start + 1; i <= end && i < len(lines); i++ {
+		// This heading's own body, so stop at the first child heading - the
+		// same boundary headingBodyLines draws.
+		stars := 0
+		for stars < len(lines[i]) && lines[i][stars] == '*' {
+			stars++
+		}
+		if stars > 0 && stars < len(lines[i]) && lines[i][stars] == ' ' {
+			break
+		}
+		m := checkItem(lines[i])
+		if m == nil {
+			continue
+		}
+		total++
+		if m[3] != " " {
+			done++
+		}
+	}
+	return done, total
 }
