@@ -33,6 +33,9 @@ func (self *Clocks) Exec(core *commands.Core) {
 	var qry map[string]string = map[string]string{}
 	var data ClockData
 	commands.SendReceiveGet(core, "clock", qry, &data)
+	if commands.RenderOne(data, nil) {
+		return
+	}
 	if !data.Active {
 		fmt.Println("No active clock")
 		return

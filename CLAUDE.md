@@ -38,6 +38,8 @@ go build -o orgs ./cmd/orgs
 go build -o docex ./cmd/docex
 ```
 
+`orgs export` writes **here** by default and `-local` makes the server write it at that path on its own disk. It used to be the other way round, which is right for a server and a client on the same machine and surprising everywhere else: `orgs -url https://box:8010 export -out ./notes.html` wrote notes.html on box. `-f pdf` is not an exporter call — the pdf exporter writes a file and returns nothing to a string, so `/pdf` is its own endpoint answering with bytes, cached against what the org file was when it was built. `-list` and `-list-themes` ask the server what it has; `/exporters` was added for the first of those, because an exporter compiled in but not named in the yaml is not there as far as a request is concerned and the refusal looks the same as the one for an exporter that does not exist.
+
 There is no Makefile and no lint config. `go vet ./...` and `go build ./...` are the practical health checks. `go test ./internal/common/dnd/ ./cmd/oc/commands/dnd/` runs the handful of tests that do exist - a plain `go test ./...` fails on the vet check `go test` runs by default, over pre-existing `fmt.Printf` calls in several plugins.
 
 ## Configuration
@@ -102,6 +104,131 @@ Inside `Exec`, commands talk to the server using the helpers in `cmd/oc/commands
 
 When adding a new CLI command: create `cmd/oc/commands/<name>/<name>.go`, implement the interface, register in `init()`, **and add the blank import to `cmd/oc/commands/all/all.go`**. Running `go build ./...` from the repo root is sufficient to verify it links.
 
+### Every command's four flags, and where they come from
+
+`-json`, `-format`, `-dry-run` and `-no-color` are not registered by any command. `Config.AddCommands` in `settings.go` calls `commands.AddGlobalFlags` on each command's flag set **after** `SetupParameters`, and `AddGlobalFlags` only defines a name that is still free — so the dnd client keeps its own `-json` (a saved D&D Beyond payload) and its own `-format` (html/latex/pdf), and every other command grows both. The command's own meaning always wins, which is the right way round.
+
+`cmd/oc/commands/output.go` is the whole of it:
+
+- **`Render(rows, plain)` / `RenderOne(row, plain)`** are what a command calls instead of printing its own listing. `-json` marshals; `-format` runs a Go `text/template` once per row (with `base`, `dir`, `upper`, `lower`, `trim`, `join`, `cut`, `pad` and `prop` — `prop` reaching into the `Props` map every heading carries); neither runs `plain()`. A command writes its listing once and is scriptable without knowing it.
+- **`Machine()`** is "something is reading this rather than somebody", which is the question to ask before opening an fzf chooser or a survey prompt. A command that would block on a question nobody can answer refuses instead.
+- **`Colour()`** is a terminal, not `-no-color`, not `NO_COLOR`, and not `Machine()`. `C(code)` returns the escape or `""`, so callers concatenate without branching.
+- **`Fail`** says what went wrong the way the caller asked to be told: as a `{Ok, Msg}` object when `-json` is on, as a line on stderr otherwise.
+
+`-dry-run` is answered in **`SendReceivePost`** rather than in each command, so a command written tomorrow gets it without asking and one that forgets cannot write anyway. It prints the method, the path and the request body to stderr and returns. `SendReceivePostErr` does the same and answers with `ErrDryRun`, which a caller must treat as "nothing happened" rather than as a failure. The handful of writes that are not a POST — an exporter asked to put its answer on the server's disk, a local file write, running a source block — call `Wrote(what, detail)` explicitly.
+
+Three things this depended on, all of which were bugs on their own:
+
+1. **The log goes to stderr.** `logToFile` in `cmd/orgs/main.go` used to `io.MultiWriter(os.Stdout, f)`, so every run put `Loading: orgs.yaml` into its own stdout. Invisible on a terminal, fatal for `orgs search -json | jq`, and fatal on the first line for `orgs mcp`.
+2. **`RestGet`'s unmarshal complaint goes to stderr** for the same reason, and so does the missing-config-file message in `settings.go`.
+3. **`FreeArgs`/`FreeText`** re-run the parse after taking each word off, because Go's `flag` stops at the first argument that is not a flag — so `orgs search 'IsTask()' -json` parsed no flags at all and `-json` became a second word of the query. `search`, `find`, `links`, `export`, `tui`, `code` and `rec` all use it, and the rule is that flags and words may be written in any order.
+
+### The CLI commands that read the server's newer endpoints
+
+The server grew records, links, code, file search and babel; these are the terminal halves of them. All are thin — each is one request to an endpoint that already exists, because a command that needed logic of its own would be a second answer to a question the server already answers.
+
+- **`orgs search '<expr>'`** — `/search`, the query language. `-sort`, `-limit`, `-count`, `-group`, `-open`.
+- **`orgs find '<re>'`** — `/files/search`, a regular expression over the raw text. Not `orgs grep`, which answers with `"file|line|text"` strings that cannot be taken apart again when the line holds a colon; here a match carries its offsets, so the match is coloured without running the pattern a second time and the two regular expression engines never have to agree.
+- **`orgs links`** — `/links/all`, `/links`, `/links/stats`. Bare, it is a picker with the far end drawn beside it; `ls` is the listing. See **The pickers** below.
+- **`orgs tables`** — `/tables`, `/table`, `/table/eval`. The Tables tab as a picker: the grid with its `@n`/`$n` rulers and its formulas. See **The pickers** below.
+- **`orgs code`** — an fzf picker with the block drawn beside it, the way `orgs grep` is an fzf picker with the file drawn beside it. `ls`, `show` and `run` are still there for naming one outright. See **The code picker** below.
+- **`orgs rec`** — the record endpoints, over *every* collection rather than one. `orgs contact` is the same engine with the address book's manners on and is unchanged; `record` used to be a second name for `contact` defaulting to the contact collection, which is exactly the wrong default for a command named after the general thing, and is now an alias for `rec`.
+- **`orgs tui`** — see below.
+- **`orgs mcp`** — see below.
+
+One edge they all share: **a heading's hash in a url path is base64 encoded a second time.** The hash arrives on a `Todo` as base64 already, and `GetHash` in `rest.go` base64-URL-*decodes* the path segment before looking it up. Written into a url as it stands, the `+` becomes a space and the `/` a path separator; the handler answers "no heading with that hash", which reads like a stale hash rather than a mangled one. `commands.HashPath` is the one place that does it.
+
+### The pickers
+
+Five commands are an fzf list with a pane beside it: **`orgs code`**, **`orgs links`**, **`orgs tables`**, **`orgs rec`** and **`orgs contact`**, each bare (no subcommand). `orgs grep` was the first of these and hands its pane to `bat`, which knows how to colour a file and nothing about org. None of them is a file — a source block is a header line and variables and code, a link is a target and the paragraph it was written in, a table is a grid and its formulas, a record is a drawer of fields whose kinds were worked out for it — so the pane is drawn by this binary.
+
+Which means the preview is **a second run of the same binary**: fzf's `--preview` shells out to `orgs <thing> preview …`. The machinery is `cmd/oc/commands/picker.go` — `Pick`, `SelfCommand`, `Shq`, `PaneWidth`, `OpenBox`/`BoxLine`/`CloseBox` — shared so they behave identically and a fix lands once. Four rules, each a bug before it was a rule:
+
+1. **The child has to reach the same server.** It is a fresh process with a fresh config load, so `-config` and `-url` are passed through explicitly rather than left to defaults that resolve against a working directory fzf's child does not necessarily have.
+2. **The command is a shell string**, so every path in it is single quoted (`Shq`). fzf quotes the `{1}`/`{2}` it substitutes, so those are left alone.
+3. **The list is tab separated**, address fields first and hidden (`--with-nth`). `orgs grep` splits on `|` and a path with a pipe in it takes a line apart in the wrong place. What is *shown* is also what is *searched*, which is why the full path is in the display as well as in the address.
+4. **The pane draws to whatever width it is given** (`FZF_PREVIEW_COLUMNS`, then `COLUMNS`, then 80). Its boxes are **open on the right** on purpose: a box that closes has to know the display width of every line in it, and one line with a tab or a wide character makes that a guess. A box with one ragged edge reads as a box; one with the wrong edge reads as a bug.
+
+And one that is not about fzf at all: **`commands.FreeArgs` consumes the arguments as it parses them**, so a command wanting both flags-anywhere *and* a subcommand has to take the words once and read the subcommand off that slice. Asking the flag set afterwards gets nothing, which silently turned `orgs links preview` into a search for the word "preview".
+
+#### The code pane
+
+The pane is the inputs, the code, and the outputs: a box of switches, header arguments and `:var` bindings — each resolved, so `:var data=monthly` shows `→ table 6×7 in notes.org` and a name that resolves to nothing is said in danger colours because that is a block that cannot run — then the code (through `bat` when it is on PATH, line-numbered plainly when it is not), then a `results` box when the block has a `#+RESULTS:`.
+
+A block is very often looked for by **the table it reads** rather than by its own name, and an unnamed block has nothing else to be found by, so the list line carries `← monthly` as well as the name.
+
+Two ways to run from the picker: `ctrl-r` runs the highlighted block without leaving the list (the point of a preview pane is deciding whether to run the thing), and picking one prints it and then **asks**. Running somebody's program because they pressed enter on a list is not what enter on a list means; `-run` skips the question and `-no-run` never asks.
+
+`commands.Interactive()` gates every picker. A pipe, a `-json` run or a cron job gets the listing instead — the same question answered in a form that caller can use, rather than a full-screen application it can neither see nor answer.
+
+#### The links pane
+
+The list answers "where do my links go". The pane answers the question you opened the list to ask — "is this the one I meant" — and for a link that is mostly about **where it was written**: a ticket pasted into a heading eighteen months ago is identified by the paragraph around it, not by its url. So the pane is what the link says, what it is, and the lines of the org file around it with its own line marked; then the far end — the target heading's body for an org link, the file for a `file:` one, a plain refusal for a broken one.
+
+Three things about it:
+
+* **The address is the row's position in the list**, not anything about the link. A link has no id of its own — it is named by the file, the line and what it said — and threading three fields through a shell command is three chances to quote something wrong. The pane re-runs the same query and indexes into the same answer, which is why `previewArgs` has to pass on **every** flag that changes what is in that answer. Miss one and `-at 4` means a different link in the child than in the parent.
+* **The context lines are read from the file here**, not asked for. A whole endpoint for "six lines of a file" is a lot of server for a preview pane, and when the file is not on this machine the pane says so and the rest of it still reads.
+* **Enter opens where the link was written**, not where it points. Following it is the browser's job; getting back to the heading you wrote it in is what the terminal can do that the browser cannot. `ctrl-o` follows it, through the desktop's own opener — there is no knowing here what a `doi:` or a `mailto:` should do.
+
+While building it: **go-org gives every inline node the position of the node it was parsed in**, so two links in a two-line paragraph both claimed the first line. `fixLinkLines` in `links.go` now finds each link's real line in the file — in document order, with a cursor that never goes backwards (so the same url twice resolves to the first occurrence and then the second), starting from the parser's row, which is right or early but never late. A link it cannot place keeps the row it had. This was wrong everywhere the line was used: the links tab, `orgs links`, the editor jump. The pane drawing the file around the link is only where it became visible.
+
+#### The records pane
+
+`orgs rec` and `orgs contact` are both pickers over the same records, and the whole of what they draw - the list line, the card, the bindings - is **`cmd/oc/commands/recview`**. That package is its own thing rather than living in either command because neither owns the other: `rec` is the general one over every collection, `contact` is the same engine with the address book's manners on. A copy in each would say different things about the same record within a month, which is exactly what the records engine avoids by working a field's kind out from its name rather than having a view per collection.
+
+Nothing in `recview` knows what a contact is, or a guitar pedal. A record is a name, some fields whose kinds the server decided, some notes and a history, and that is all it draws. Three things follow:
+
+* **Fields are ordered by kind, and an unknown kind sorts into the middle rather than last.** The odds and ends a collection of guitar pedals grows are the whole point of that record and should not be hidden under its urls.
+* **The two commands differ in exactly one drawing decision**, and it is a `PickOptions` field: the general one labels each row with its collection, the address book does not, because every row there is in the same one and a column of the same word is not a column.
+* **A record is addressed by its own hash**, not by its position in the list the way a link is — a record has an identity and a link does not. So the pane still finds it after the list has been filtered under it. The hash goes into the url encoded a second time (`commands.HashPath`): it is base64 already, and written in as it stands its `+` becomes a space and its `/` a path separator.
+
+Occasion arithmetic — "turns 36 in eight days" — is deliberately **not** in the pane. The rule for which date fields are celebrations is already written twice (`birthdayFields` in Go, `CELEBRATIONS` in TypeScript); a third copy in the CLI is the drift the codebase keeps warning about. `orgs rec birthdays` asks the server, which is the one place that knows.
+
+Both commands kept their previous narrow-to-one chooser under the name `narrow`: `show`, `edit` and `set` still resolve a name to one record with a survey prompt, which is right for a command given a name rather than opened to browse.
+
+#### The tables pane
+
+`orgs tables` is worg's Tables tab as a picker, and it draws the three things that view draws:
+
+1. **The rulers** — `@1` down the side, `$1` across the top — because a formula is written in those coordinates, and a table without them is one you have to count along with a finger to read `$3=$1*$2`.
+2. **The rules.** A `|---+---|` line is a rule and does **not** take a row number: org does not count it, so numbering it would put every formula below one off by however many there are.
+3. **The formulas against the cells they fill.** `CellFormulas` is keyed `"row,col"` and a computed cell is drawn in green. This is the part nothing else will tell you — a `#+TBLFM:` line at the foot of a table says `$4=$2*$3` and says nothing about where that lands.
+
+Columns are measured from their widest cell and then squeezed, a character at a time off whatever is currently widest, until the grid fits the pane. A table too wide for the pane is the common case rather than the exception.
+
+`orgs tables eval` runs the formulas and writes them back through **`POST /table/eval`** — the file and the table's ordinal, the same address everything else here uses. **Not `/exectable`**, which looks like the right one and is not: its SDOC says "the file is re-saved to disk after the update" and `ExecTable` does no such thing — it runs the formulas into the *in-memory* table and returns the rendered org text. Calling it appears to work, because the read afterwards comes from the same memory and shows the computed values, and it leaves the file on disk untouched so they vanish on the next reload. That doc comment is still wrong and is worth fixing.
+
+### `orgs tui`
+
+One screen: a table of whatever a query found, `/` to filter, `:` to re-query, `t` to change a keyword, `v` for the heading's body, Enter to open it.
+
+The two boxes are two on purpose. The **query** costs a request and can say `IsStatus("NEXT")`; the **filter** costs nothing and can say "the one about the invoice". Keeping them apart is what lets the filter run on every keystroke, which is the whole reason it exists. The filter is `internal/common/dnd/fuzzy.go` — the same matcher the dnd chooser and worg's palette use — so the letters that find a heading in one of them find it here.
+
+Three things in it are load-bearing:
+
+1. **The filter's haystack is the file's base name, never its path.** A fuzzy match walks for its letters in order and does not care how far apart they are, so an absolute path — long, identical on every row, and full of letters nobody typed — matches very nearly anything: with files under `/Users/someone/dev/notes`, `mig` found every heading in the database. It is also what a person means when they type a file at a filter.
+2. **The keyword menu asks `/status/{hash}`** when it opens, rather than offering the keywords the last query happened to turn up. A heading's own file may declare its own `#+TODO:`, and offering a keyword that file does not have is offering to write something org will not read back. Same rule worg's kanban follows.
+3. **Opening an editor suspends the application** (`app.Suspend`). A terminal editor and a tview application both want the terminal, and whichever loses draws over the other.
+
+### `orgs mcp`
+
+The org database as tools an agent can call, over MCP on stdin and stdout. It is a **client**, not a second server: every tool is one request to a running orgs server, which is what makes it worth having rather than a second implementation to keep in step with the first. `cmd/oc/commands/mcp/mcp.go` is the transport, `tools.go` the table.
+
+```json
+{"mcpServers": {"orgs": {"command": "orgs", "args": ["mcp"]}}}
+```
+
+- **Stdout is the protocol** — one JSON object per line and nothing else ever. Anything added that prints must print to stderr. (This is what the log change above was for.)
+- **A notification has no id and gets no answer.** `notifications/initialized` arrives right after the handshake and replying to it is a protocol error, not a harmless extra.
+- **A tool that fails answers with `isError`, not a JSON-RPC error.** The model is meant to see what went wrong and try something else; a transport-level error is for the client library and never reaches it. Only an unknown method or unreadable json is a real error.
+- **An empty answer is said out loud** ("(nothing matched)"). A blank string and a failure look identical to a model, and it will assume the latter and try again.
+- **`-read-only` drops every tool that writes**, which is a smaller surface than trusting an agent not to. `-dry-run` works too and the refusal comes back as something the model can read rather than as an error it would retry.
+- Every list tool takes a **`limit`** and says when it used one. Trimming before the answer reaches a model is not tidiness, it is the difference between an answer and a context window.
+- Two tools look alike and the descriptions say which to reach for: `org_search` understands headings, keywords, tags and dates; `org_find` understands nothing and is the one that finds a phrase in a drawer, a table or a source block.
+
+`orgs mcp -list` prints the table with the writing tools marked. `-json` on it hands over the name, description, `Writes` and schema rather than the `Tool` struct, which holds the function that runs it and will not marshal.
+
 ### Server-side plugins
 
 Server plugins implement one of the interfaces in `internal/common/plugs.go` (`Exporter`, `Poller`, `Updater`) and register themselves in `init()`. They are instantiated from the YAML config under `server.exporters`, `server.plugins`, and `server.updaters`, then started by `ParseConfig` via `pd.Plugin.Startup(...)`. As with CLI commands, a new plugin package must be blank-imported in `internal/app/orgs/plugs/all/all.go` to be reachable from YAML.
@@ -156,6 +283,8 @@ The index is cached against `OrgDb.ReloadIndex` and rebuilt whenever a file relo
 
 1. Sections are registered into `ByHash` / `ById` / `ByCustomId` lazily, as queries walk them (`ScanNode`'s `RegisterSection` call is commented out), so `buildLinkIndex` walks every file into the registry in a first pass before resolving anything.
 2. go-org ends a headline's body at a drawer written in column zero, which leaves `Headline.Properties` nil and drops the rest of that heading into `Document.Nodes` at the top level. So links are attributed to the last heading starting above them rather than trusting the outline alone, and ids are read from a local `idIndex` that also picks up those hoisted property drawers.
+
+The query language reaches this index too. `HasBacklinks()` (optionally with a floor: `HasBacklinks(2)`), `BacklinkCount()` as a number to compare, `HasLinks()`, `LinksTo(re)` and `HasBrokenLinks()` are defined in `todo.go` and made of `BacklinksTo` / `LinksOut` at the foot of `links.go`. Two rules there: a link naming the **file** is not counted against any heading in it, or every heading in a linked-to file would claim a backlink it has not got; and `LinksTo` runs its pattern over the link as written, its description, and the file and headline it lands on, because "links to notes.org" and "links to the migration heading" are both things somebody means by it. The index is cached against `ReloadIndex`, so the first heading a query evaluates builds it and a query mentioning no link function never builds it at all.
 
 That same worg file view shows a file three ways, picked from buttons over the page: the html exporter's page, the file's own text with org syntax colouring (`components/OrgSource.tsx` in worg - nothing server side), and, for the files `/dnd/characters` reports, the `dndsheet` character sheet fetched from `/file/dndsheet` as a string rather than written to disk.
 
@@ -229,6 +358,205 @@ Bodies are cached in the browser by hash. A hash does not change when the text d
 Inspect shows a heading three ways at once: its rendered html for the prose, a player for a recording it points at, its pictures, and its tables drawn the way the Tables tab draws one (`components/OrgTableView.tsx` - read-only, with the `@n`/`$n` rulers).
 
 The tables and pictures come from `/body/{hash}` rather than from the html, and the rendered `<table>`s are **hidden in that view** (`'& table': { display: 'none' }`) so nothing is shown twice. Org tables are parsed by `tablesIn` in `worg/src/orgbody.ts`: a `|---+---|` line is a rule rather than a row of dashes, a `#+TBLFM:` line is not a row at all, and a blank line ends a table the way org ends one.
+
+The prose is shown in the html theme the files view uses, which is what `?theme=` on `/todohtml/{hash}` is for: the answer carries the theme's stylesheet in `Style`, since a fragment has no `<head>` to put it in. The files view can afford an iframe, which gets a document for free at the price of a fixed height; a popup has to grow to whatever the heading is, so `components/ThemedHtml.tsx` puts the fragment in a **shadow root** instead, where the theme's stylesheet reaches the heading and nothing else on the page. `worg/src/htmlframe.ts` rewrites the two things that have no meaning inside one, and getting either wrong is silent - the heading still renders, in whatever survived:
+
+1. `html` and `body`, which are the theme's name for the page, become `.org-page`, the wrapper the fragment sits in. The theme's page box (`padding: 1.5em`, `margin: 3em auto`, `max-width: 40em`) is then overridden, because a popup is already a frame.
+2. `:root`, which is where most of these themes keep their whole palette, becomes `:host`. `:root` matches the document element, which a shadow root does not have - so every `var(--bg)` resolved to nothing and the heading came out in the theme's fonts with none of its colours. `htmlframe.test.ts` pins both rewrites.
+
+### Editing a row of the search table in place
+
+Four of the table's columns are edited where they sit rather than in a dialog in the middle of the window: the **keyword**, the **date**, the **tags** and the **properties** (`worg/src/components/Search.tsx`). Changing one of these is something you do to a row and then to the row under it, so a lightbox is a trip across the desk every time.
+
+The keyword is a Joy `Dropdown`, the same control the kanban list's rows use (`StatusCell` in `KanbanList.tsx`), and like it asks `/status/{hash}` when the menu opens rather than while two hundred rows are drawn - the keywords offered are the heading's own file's. The other three are a `Popper` with a `ClickAwayListener` rather than a `Menu`, because what is in them is a form and a menu moves the focus with the arrow keys and answers to typing.
+
+One rule holds all four together: **a cell that opens a panel must not stop the click from propagating.** The rows have no click handler of their own, so there is nothing to guard against - and the panels close themselves through a `ClickAwayListener`, which listens on the *document*. `stopPropagation` keeps the native event from ever reaching it, so opening one panel leaves the last one still on screen and the table ends up wearing two.
+
+Two smaller things. The tags panel is one box that both filters the tags the database already knows and, on Enter, adds one it has never seen - and it keeps the focus through a chip click, because tagging is usually more than one tag. And the date panel is the only one with a Save button: a date with no kind is meaningless and a time with no date is nothing at all, so the three are held together and sent at once, where the others commit as you go.
+
+### Records: the contact book, and everything else worth a list
+
+A **record** is one heading standing for one thing - a person, a laptop, a playing card. The heading is its name, the property drawer is its fields, the body is the notes, the `LOGBOOK` is the history. `docs/records.org` is the format written out for somebody who wants to type one by hand; `internal/app/orgs/records.go` carries the same thing as an SDOC block, plus the engine and the endpoints. `internal/common/records.go` is the wire, `worg/src/records.ts` the client half, `RecordBrowser.tsx` the view both worg tabs are made of, and `cmd/oc/commands/rec/` the terminal client - with `cmd/oc/commands/contact/` the same engine with the address book's manners on.
+
+One property is the whole identity: **`:RECORD: contact`**, whose value names the collection. A heading with one is a record wherever it sits, and a heading without one is not a record however it looks. `IsRecord()` and `IsCollection()` are query functions, so the search tab leaves them out with `!IsRecord() && !IsCollection()` rather than filtering in the browser.
+
+Six things to keep in mind when changing it:
+
+1. **A field's kind is worked out from its name, never declared.** `EMAIL_WORK` is an email labelled work, `PHONE_MOBILE` a phone labelled mobile, `BOUGHT_DATE` a date called bought. That is what lets a contact and a guitar pedal share one view, and it is why nothing in `RecordBrowser.tsx` names a property. The rules live in `fieldOf` in `records.go` and are **said again in `records.ts`** so an add form can show the right input before anything is saved - change one and change both. The same goes for which date fields are an *occasion*: `birthdayFields` in Go, `CELEBRATIONS` in TypeScript. A laptop's purchase date is a date; "turns 3 in 5 months" about a laptop is the view being clever at the reader's expense.
+2. **Every write is a line edit, not a document rewrite.** A record shares its file with a hundred others, and writing the parsed document back would reformat all of it to change one phone number. The drawers are found by walking the lines under the headline rather than by asking go-org, for the column-zero reason that bites everywhere else; after any edit that changes the line count the record's range is **found again** rather than adjusted; and the property drawer is re-aligned afterwards, because a record is a text file somebody opens in an editor.
+3. **`RECORD` and `ADDED` are refused by the update endpoint.** One is the record's identity and the other is when it started - neither is somebody's to edit through a form. `ID` is allowed, because a duplicated entry needs its old one cleared.
+4. **Reading every record means walking every section of every file and opening every file they are in**, so it is cached against `OrgDb.ReloadIndex` the way the link index is. The contacts tab searches as you type; without the cache that is the whole database per keystroke. Nothing can go stale behind it, because anything that writes a file bumps the counter.
+5. **`InCollection("contact")` is the loose one and `IsRecord("contact")` the strict one.** `IsRecord` answers only for the records themselves; `InCollection` walks up the outline and is also true for the collection's container and for anything written underneath it. A contact's notes are not a record — they have no `RECORD` property of their own — but they are part of the address book, and a query saying "not the address book" means them too.
+6. **Birthdays are worked out, never stored.** `/records/birthdays` takes a window and answers with the occurrences in it, so the agenda, the CLI and the contact card all get the same answer - including the 29th of February, which is kept on the 28th in a year that has no 29th. A birthday corrected in the file is right everywhere on the next read.
+
+The agenda draws them as all-day entries with a cake, coloured by a `BIRTHDAY` entry in its own `STATUS_COLORS`. They are merged into the agenda's two lists (`dayShown`, `everything`) rather than into either fetch, so whichever request lands second still shows both.
+
+### The Links tab: where every link goes
+
+`GET /links/all` (`internal/app/orgs/linklist.go`) is the flat sibling of `/links` and `/links/graph`. Those answer "what points at this file" and throw away everything that is not org to org; this keeps **all** of it, because the links worth going back and finding are usually the external ones - a ticket pasted into a heading eighteen months ago is findable by grep and by nothing else. It is built from the same cached index the graph is, so it costs nothing extra and the two cannot disagree about what a link is.
+
+Four things it decides, all of them server side:
+
+1. **The service** (`serviceOf`) - the name a person would use for where a link goes. A short list covers the ones that are either not named after themselves (`*.atlassian.net` is Jira) or worth gathering under one name (drive, docs and sheets are all Google Docs); everything else is called after its own domain. The list cannot be complete, which is why the fallback matters more than the entries: a host nobody has heard of still has to land in a group of its own rather than in no group.
+2. **The scheme and host** (`linkSchemeHost`) are only read for a link the resolver itself calls external. `splitProtocol` calls anything before a colon a protocol, so `notes.org::*Plans` comes back as a "scheme" called `notes.org` - checking against `externalProtocols` is what keeps the answer agreeing with the `Kind` the link was given.
+3. **A `file:` link is grouped by its protocol, not as "external"**, or a folder of pasted screenshots ends up in with the things that are genuinely elsewhere.
+4. **A link naming a file on disk is resolved to something showable** - `mediaURL` plus `mediaKindOf`, the same sum a source block's result file and a kanban card's picture do - so the tab can show the picture rather than the path.
+
+The client half is `worg/src/links.ts` (pure, tested) and `components/Links.tsx`. The **regular expression** is the reason the model is a separate module: somebody typing a pattern types half a pattern first, so "does not compile yet" is an ordinary state of the box - it says why, and it **keeps matching everything** rather than emptying the list under the person typing. The pattern runs over everything about a link (`linkHay`: target, description, host, service, heading, file, and where it lands), because "that jira link about the migration" and "that link in the meeting notes" are both things people type.
+
+The right-hand pane shows the far end of whatever is selected: an http(s) page in a sandboxed frame, an org link's target heading rendered through `ThemedHtml` the way the search tab's inspect view draws one, and a picture, player or pdf for a link at a file. **A framed page may refuse to be framed** - most big sites do - and there is no way to ask in advance, so the way out ("open it in a tab") sits above the frame from the start rather than appearing after a blank.
+
+### The Code tab: finding source blocks
+
+`GET /code` (`internal/app/orgs/code.go`) answers with every `#+BEGIN_SRC` block, **read** rather than merely located: language, name, switches, babel header arguments and variables. worg's Code tab (`components/Code.tsx`, helpers in `src/code.ts`) is the Tables tab for code.
+
+The reason it is an endpoint rather than a grep is the **variables**. `:var data=monthly` and `:var scale=2` are the same shape and mean completely different things — one names a table further up the file, the other is the number two — and only the database can tell which. Each variable comes back resolved: what it points at, what kind of thing that is, where it lives and, for a table, its shape. A name that resolves to nothing comes back with an empty kind and is drawn in danger colours, because that is a block that cannot run.
+
+Four things go-org makes harder than they look, all of them silent when got wrong:
+
+1. **`Headline.Blocks` is not the blocks under a heading.** The loop that fills it `break`s after the first node it looks at, so a heading with a paragraph and then a block has an empty list — which is most headings with a block in them. The blocks are walked out of the node tree instead, and attributed to the **last heading starting above them**, the same rule the link index follows and for the same column-zero-drawer reason.
+2. **A block never sees its own `#+NAME:`.** The parser consumes it as a *named node* keyword, so it is absent from the block's keyword list; and the name map it goes into is then overwritten by a `#+RESULTS: chart` under the block, which registers the *result* under the same name and wins by being written later. The name is read off the file's own lines instead, scanning up over the affiliated keywords.
+3. **`Block.Result` is a `Result` value, not a `*Result`.** Asserting only the pointer form gave no result, no error and nothing on screen to say a block had ever been run.
+4. **`splitParameters` leaves the switches glued to the language**, because it splits on `" :"` — so `python -n -r` arrives as one token and the first word has to be taken off it.
+
+The index is cached against `OrgDb.ReloadIndex` like the records, because the tab searches as you type. The language counts are of the whole database rather than of what survived the filter: counting the filtered set would empty the strip the moment a language was picked and leave no way back.
+
+### Running a source block
+
+`POST /code/run` (`internal/app/orgs/babel.go`) runs one block and hands back what it produced. It is **off unless `babel.enable` is set** in the server settings, and the refusal says what to write: reading somebody's org files and executing the programs inside them are different promises, the server may be reachable from more than the machine it runs on, and `noAuth` is a setting people use.
+
+Three things carry the feature:
+
+1. **The variables are written in front of the code in the language's own syntax.** `:var scale=2` becomes an assignment; `:var data=monthly` naming a table becomes that table as a list of lists, with cells that parse as numbers left bare so `sum(r[1] for r in data)` works without the block converting anything. This is what the resolution in `/code` was *for*. Go and emacs-lisp run without their variables rather than pretending — a prepended assignment does not survive either — and that is stated rather than silent.
+2. **The code is dedented before it runs**, and arrives dedented on the wire. A block under a heading is indented, and that indent belongs to the org file rather than to the program: handed to python as it stands it is an `IndentationError` on line one. `UpdateBlock` re-indents on the way back, so the round trip is exact.
+3. **A table comes back as org table text.** The server does not invent a row format and the client does not need one: `tablesIn` parses it and `OrgTableView` draws it — the same parser and the same viewer the Tables tab uses. `:results` is read where it says something and the shape is guessed from the output where it does not, and the guess is deliberately timid (org table, tab-separated, or a printed list of lists) because a paragraph cut into columns on a hunch reads worse than a paragraph. Whatever was guessed, "as it printed" is one click away.
+
+A result that **names a file** is only half an answer, so the server goes and looks. `describeResultFile` reads the name out of the link, resolves it against the block's own directory first and then each org directory, and hands back what it found: the size, a url this server will serve it from, what kind of thing it is (`Media`: image, audio, video, pdf, text or binary), the language to colour it as, and - for text small enough to be worth it, capped at 512kB - the contents. The client draws the link exactly as before and then a second box: a picture, a player, or the file's own text coloured by `CodeText`. Four things about it:
+
+1. **The path is resolved server side.** A block runs beside the org file it is written in, so that is what `plot.png` is relative to - and the client knows neither that directory nor the org roots. It is the same sum `MediaSrc` does for a voice note's audio.
+2. **A block that printed its own link keeps it.** `babelFormat` used to wrap the output in `[[file:...]]` unconditionally, which turned a printed `[[file:plot.png]]` into `[[file:[[file:plot.png]]]]` - a link naming no file. Printing the link is what emacs babel puts in the buffer, so it is the common case; `TestFileResultIsNotWrappedTwice` pins it.
+3. **A named file that is not there is said out loud.** The link on its own reads like an answer, so a block that named a file it never wrote has to be caught - that is most of why the server looks at all.
+4. **Named like text and full of bytes is `binary`, not printed.** The extension is a claim, and `looksLikeText` checks it against the first 8kB before a megabyte of noise is put on the page.
+
+`POST /code/update` writes a block's name, header line and body back. The header is rebuilt from its parts in org's own order — language, switches, variables, then the rest — so a block edited in worg reads like one written by hand; `headerLine` says that order in Go and `headerLine` in `worg/src/code.ts` says it again for the preview, and the two have to agree. Only the lines the block occupies are touched, and the body is spliced before the header and the name are, so every row used is still the row it was worked out from.
+
+The Code tab gathers its list three ways (`codeGroupBy`): flat, by language, or by file with the Tables tab's base-name formatting and the full path on the tooltip. Same shape as the search tab's grouping — a sort plus bands in the same list.
+
+### Syntax colouring inside a source block
+
+The code inside a `#+BEGIN_SRC` block is coloured by `worg/src/codehl.ts`, painted out of **the org theme the reader chose** — so a block of python in a Nord file looks like Nord and the same block in Solarized looks like Solarized. That is why it is hand written rather than a library: highlight.js and its kin arrive with their own themes, and a theme that cannot follow the one next to it is the whole feature missed. A scheme publishes eight new roles (`codeKeyword`, `codeString`, `codeComment`, `codeNumber`, `codeFunc`, `codeType`, `codeBuiltin`, `codePunct`) built from the same base colours as everything else, so every existing scheme got it for free.
+
+Punctuation is two roles rather than one. `faint` is the right weight for a horizontal rule — felt rather than read — and the wrong one for a brace: in Solarized Dark it is `#073642` on a `#002b36` ground, a contrast ratio of **1.15:1**, which is a brace you have to hunt for. Both are mixed towards the foreground (`codePunct` 0.6, `codeOp` 0.85), operators further because `:=` is something a reader is *reading* while `{` is something they are only locating. The blend is computed from each scheme's own two colours rather than picked by hand eleven times, so a scheme added later gets it right without anybody thinking about it.
+
+It is a scanner, not a parser, exactly like the org highlighter it lives beside. It does not know scope, cannot tell a division from a regex, and will call a variable named `class` a keyword — each of which is one word the wrong colour, the failure a highlighter is allowed. What it must never do is lose a character or let a string run away with the rest of the file, and `codehl.test.ts` pins both: every span concatenated has to be the line it was given.
+
+Two things about how it plugs in:
+
+1. **The state is carried per line by `walk`, not worked out while painting.** The source view paints a screenful at a time and in fold order, so a scanner run over what happens to be on screen would start a python file in the middle of a docstring and colour the rest of it as prose. `LineState` carries the block's language and where the scanner had got to.
+2. **Only `src` blocks in a language with a spec are coloured.** An `example`, an `export`, or a language nobody wrote a spec for stays one plain span — half-colouring by guesswork reads worse than not colouring at all. `isKnownLang` is the gate, and the fallback spec claims no keywords for the same reason.
+
+### The command palette
+
+⌘K / ctrl-K (or ctrl-shift-P, or the ⌘ on the rail) opens `worg/src/components/Palette.tsx`: one box that goes anywhere and does the handful of things that are never about the page you are on. It offers the panels, the capture templates, every org file, the saved searches, the kanban boards, the collections, a few global toggles - and **headings, asked for as you type**, which is the one thing in it that cannot be a list held in the browser.
+
+Four things carry it:
+
+1. **The matcher is `worg/src/fuzzy.ts`, which is `internal/common/dnd/fuzzy.go` said again in typescript** - the same matcher the terminal chooser and the character sheet's own palette use. It is written out again rather than asked for because a palette runs it on every keystroke, and a round trip per keystroke is the delay a palette exists to remove. Change one and change both. A term matches a command's **name** loosely (`mm` finds Mind Map) and the line under it only on **whole words**, because fuzzy matching over a sentence matches nearly everything.
+2. **What you pick is remembered** (`noteUse`, localStorage), and with nothing typed the recent ones come first under their own band. That is the whole difference between a palette people open and one they forget. Recency is a *nudge* once something is typed - capped, so it breaks ties between equally good matches and never lifts a worse one over a better; `palette.test.ts` pins that.
+3. **A panel's other words live in `PANELS`** in `palette.ts` - "spreadsheet" finds Tables, "calendar" finds the Agenda - so the palette is searched the way somebody thinks of a thing rather than the way the sidebar labels it. It says again what `AppBar.tsx` draws, deliberately: one is a place on screen, the other is a name you type at.
+4. **Headings are a query, debounced, each request aborting the one before it**, and `headlineQuery` makes typed text safe to be a regular expression *and* case insensitive (`(?i)`). Without that, "jane" never finds "Jane Roe" - which is most of what typing at a palette is for. Headings are also the one kind of command never written to the recents, because the id would name a row that has since moved or gone.
+
+The palette does nothing to the panels directly: it is handed a `PaletteActions` from `App`, which is where switching panels, opening the capture dialog and putting a jump down all live. A board and a collection are opened by **writing the browser setting the panel reads on the way in** (`kanbanBoard`, `collection`) rather than by adding a second way in.
+
+### Sending the reader from one tab to another
+
+`worg/src/NavContext.tsx` is how a panel puts the reader somewhere in another panel — the search tab's jump button opens the file in the Files tab at that heading's line. It follows `ChromeContext`'s shape and exists for the same reason: the panels are siblings routed by `App`, so neither can call the other without an import cycle.
+
+A jump is **left waiting rather than delivered**. `toFile` puts it down and switches panels, and the Files tab — which that switch *mounts* — takes it on the way in and clears it. Delivering it the other way round would mean handing something to a component that does not exist yet.
+
+Every jump carries **the way back**, because going to look at the file is nearly always something you do *while* doing something else: reading down a search, working through a list of tables. The jump names the panel to return to, what the button should say, and an opaque `where` that only the panel which wrote it reads - `NavContext` has no business knowing that a search has pages or that the Tables tab has a selection. `goBack` puts the `where` down and switches back, exactly the outward trip run backwards, and the Files tab draws the button (twice: in the toolbar, and floating over the page when the toolbar has been slid away, which is precisely when a full-page read of somebody else's file wants it).
+
+Two rules there, both learnt the hard way:
+
+1. **The restore is taken at once and acted on later.** The panel being returned to is mounted by the switch that set the restore, so its own list has not arrived yet and there is nothing to select. Taking it on arrival and holding it in local state until the row, block or table it names turns up is what works; consuming it on the first pass leaves the reader looking at "pick something" - and leaving it down instead would leave it lying about for another panel to find.
+2. **Leaving the Files tab by the sidebar drops it.** A button offering to return you to a search you walked away from twenty minutes ago is a button that lies.
+
+The search tab's rows carry `data-row-hash` for this: a React key is React's handle on a row, not the document's, and coming back has to find it again and give it a moment of colour - one row in twenty-five needs saying which, not just showing.
+
+The two views land differently because they have to: the exported page has no line numbers, so it scrolls to the heading by its text (`pendingHeading`), while the source view scrolls to the line (`OrgSource`'s `scrollToLine`, which wins over `scrollTo` because two headings in one file can read the same). Both flash what they landed on.
+
+Which view the Files tab reads in is a **browser setting** (`fileView`) rather than component state. It always said it kept whatever view you were reading in; as state it lost that the moment you looked at another tab and came back, which is exactly the trip a jump makes. A character sheet still overrides it and is never stored — "sheet" is not a way of reading every file.
+
+### A file that is a D&D book
+
+`#+LATEX_CLASS: dndbook` is somebody writing an adventure or a bestiary to be printed the way the books are. The file view already offers a character sheet for the files the server reads as characters; a book gets the same treatment and two more buttons: **Book**, which is the html exporter's own `dnd` theme, and **PDF**, which is the file run through pdflatex.
+
+`GET /dnd/books` (`internal/app/orgs/dndbook.go`) is the book-shaped sibling of `/dnd/characters` - every watched file carrying that class. `GET /pdf` is the other half, and is an endpoint of its own rather than a `/file/{type}` because the answer is **bytes**: the pdf exporter writes a file and returns nothing to a string. Three things about it:
+
+1. **It is cached against what the file was when it was built** - path, modification time and size - so opening a book twice runs pdflatex once, and editing the org file invalidates it on the next request because the key changes with it. `refresh=t` (which the file view's reload button sends, and only it) is the way past a cached failure.
+2. **One build at a time per file.** Two tabs asking at once would otherwise have pdflatex writing the same output twice, and the loser of that race serves half a file.
+3. **The client fetches it as a blob, not as an iframe src**, because the request has to carry the `Authorization` header and an iframe cannot be given one. The object url it makes is revoked when it is replaced - a look at a book would otherwise leak a pdf into the tab.
+
+Getting the example file (`dnd_pdf_example.org`) to compile needed four fixes in the latex exporter, all of which were breaking every dndbook export, not just this one:
+
+1. **`MakeTemplateRegistry`'s parameters were the wrong way round.** The one caller passes (class, default) and the signature said (default, class), so a dndbook document read `book_templates.yaml` *first* and its own file second. Nothing failed outright, because the generic file has a worse answer for everything the class defines - tables came out as plain `tabular`s in a class whose whole point is that they should not.
+2. **A dndbook table is a `DndTable`.** The writer already built the column spec out of tabularx's `X` columns for this class, which mean nothing to a `tabular` - `\begin{tabular}{ XXX }` is an "Empty preamble" error. `dndbook_templates.yaml` now carries the `default` table template that wraps them in `DndTable`, and drops the `|---+---|` rule rather than turning it into an `\hline`, because that environment draws its own header.
+3. **`\par` inside a macro argument ends the run.** The paragraph template writes `\par` before every paragraph and the writer has always had a `docclass != "dndbook"` guard saying this class should not get it - a guard that could never fire, because the template always won over the branch holding it. The class now has its own paragraph template, and `MONSTERTYPE`'s content is squeezed to one line (`oneLine`), because `\DndMonsterType` is not `\long`.
+4. **pongo2 escapes for html unless told not to.** Every latex template is now rendered inside `{% autoescape off %}` (`OrgLatexWriter.render`). An apostrophe arriving as `&#39;` is not cosmetic: `&` is LaTeX's column separator, so a monster whose text mentions "the creature's turn" ends the run with "Misplaced alignment tab character &". Saying it once there beats `| safe` on every value of every template, which is what the dnd templates were quietly relying on somebody to remember.
+
+### A file that says how it wants to be read
+
+Three kinds of file ask for a view of their own, and the file view offers each as a button beside Rendered and Org: a **character sheet** (from `/dnd/characters`), a **D&D book** (`/dnd/books`), and a file naming its own html theme with `#+HTML_THEME:` (`/files/themes`, in `dndbook.go` beside the other two). A file that asks opens in what it asked for; anything else keeps whatever view you were already reading in.
+
+The theme one exists because the Rendered button *cannot* show it. That view passes the reader's own html theme setting, which overrides the file's `#+HTML_THEME:` unless the setting happens to be "file" - so a documentation file written to be read in the `docs` theme was only ever shown in it by accident. The button is labelled with the theme's own name (`themeLabel`: "docs" → Docs), asks for that theme **by name** rather than by sending an empty theme, and the ground behind the frame follows the file's theme rather than the reader's - a stylesheet that never names a background leaves the page transparent, and the wrong ground shows through.
+
+None of the four owned views (`sheet`, `book`, `pdf`, `theme`) is ever written to the `fileView` setting: none of them is a way of reading *every* file.
+
+The theme a file names is reported **as the file wrote it**, whether or not this server has a stylesheet by that name - `/html/themes` is the list of the ones it has, and answering with only those would swallow a typo silently.
+
+### Searching the text of every file
+
+The files tab has two boxes. The first filters by what files are *called*; the second (`/files/search`, `internal/app/orgs/filesearch.go`) is a regular expression over what is *in* them, and turns the panel into the list of lines that matched - emacs' swiper, over the whole database. The arrow keys walk it from the box, Enter and a click do the same thing, and moving **opens** rather than merely highlighting, because reading a hit list is looking at the lines one after another.
+
+It is not `/search`, which queries the parsed database and understands headings, keywords and dates. This reads lines and understands nothing, which is exactly what finds a phrase written in a drawer, a table or a source block. It is not `/grep` either, which has always done something close to this but answers with `"file:12:text"` strings - which cannot be taken apart again when the line holds a colon, and say nothing about what was left out.
+
+Five things it has to get right:
+
+1. **A half-typed pattern is a state of the box, not a failed request.** `Ok: false` with the reason comes back `200`, and the panel says "Not a pattern yet — …" while keeping what it was showing.
+2. **The cap is on the lines kept, never on the count.** `.` matches every line of every file, and somebody types `.` on the way to something; each file reports how many lines matched even when only the first forty came back (`Truncated`).
+3. **The scanner's buffer is raised to 4MB.** One pasted image or minified blob is a line past `bufio`'s 64k default, and that stops the scan dead - silently losing every match after it in that file. `TestSearchPastAVeryLongLine` pins it.
+4. **A very long line is sent as a window around the match** (`trimAround`), with the offsets moved to match and an ellipsis to say it was cut - and the match itself is never cut in half.
+5. **The offsets come from the server**, so the client picks the match out of the line without running the pattern again: Go's regular expressions and the browser's do not have to agree, and they differ over exactly the things people reach for in a search box.
+
+A hit lands in the **source** view, whatever the file would otherwise open as - a line number means nothing in a rendered page.
+
+### The Tables tab's jump
+
+The open table's header carries the same jump the search tab's rows do - the file, at the table's own line, in the Files tab - and the same way back. A table has a `Line` already (it is how the list says `code.org:19`), so there was nothing to add on the server for it.
+
+### The search tab's file affordances
+
+Two browser settings, both about reading rather than about what was found. `searchShowFile` puts the file and line in small muted type under each headline — outside the hover tooltip, so running the pointer along a path does not open the heading preview. `searchGroupByFile` gathers the results under a band per file, with a fold and a count.
+
+Grouping is a **sort plus header rows in the same table**, not a different structure: the rows are the same rows and the columns still line up, so sorting, selecting and editing in place keep working with no second code path. The bands take a slot in the page the way a row does — paging over rows and drawing bands around them afterwards is the obvious alternative and is wrong, because a folded file has no rows on any page and its band would have nowhere to be drawn.
+
+While in there: the Headline column's sort arrow was sorting on `id`, which a search row does not have, so every comparison came out equal and `stableSort` kept the order it was given — the arrow turned round and nothing moved. It sorts on `Headline` now.
+
+### Quick capture from worg
+
+`c` anywhere in worg, or the pencil on the rail, opens the capture dialog (`worg/src/components/Capture.tsx`). It asks `/capture/templates` which templates exist, puts one up as a form, and posts to `/capture` - the same two endpoints `orgs cap` uses from the terminal.
+
+The thing to understand before changing it is **where the template language lives**. A `CaptureTemplate` carries a `template:` string and the server does nothing with it - `common.CaptureTemplate` says so in its own comment. It is a form for the client to put up, and `worg/src/capture.ts` is the only implementation of it there is: `{{CONTENT}}` is the body, `{{name}}` is a value to fill in, `{{name|prompt}}` is the same asked for in your own words, and a dozen names (`now`, `today`, `date`, `week`…) fill themselves in and stay editable. `capture.test.ts` pins all of it, and the SDOC block in `capture.go` documents it for whoever writes a template.
+
+Four things about the rest of it:
+
+1. **A yaml template longer than one line needs a block scalar** (`template: |-`). A plain multi-line scalar folds its newlines into spaces, which turns a property drawer into one long line. The shipped example used to get this wrong.
+2. **A line whose only content was an unanswered placeholder is dropped**, so a template offering three optional properties writes the one that was answered rather than one and two empty ones - the same rule the record editor follows.
+3. **A capture has no heading yet**, which is why dictating and pasting a picture need `internal/app/orgs/capturestash.go`. The kanban card can keep a picture *and* link it in one call because it has a heading; a capture being composed has to keep the file first and carry the link in the text it is still typing. Both need to know which file the link will be relative to, and the only thing the dialog knows is the template - hence `stash=1&template=NAME` on `/image/paste`, and `/voice/link`.
+4. **The mic writes into the box the cursor was in**, which it works out on mouse down by reading `document.activeElement` back to a `data-cap-key` — not from a focus handler it kept. Pressing a button *moves* the focus onto the button, so asking afterwards is too late and asking a remembered state is asking something that may never have been told. The tooltip names the box it is about to write into, so there is no guessing before you speak.
+5. **The preview is `OrgSource` with `openDrawers`**. The file view starts drawers shut because a file of headings is mostly drawer; a four-line preview starts them open, because what is *in* the drawer is exactly what somebody is checking before they press Capture.
+
+`InsertEntryUsingTemplate` used to write the content as one concatenation - indent, the whole string, a newline - which indented only its first line. Every line is indented now, because anything a template produces is several lines and a `:PROPERTIES:` drawer landing at column zero is the go-org trap that hoists the rest of the heading to the top of the document. It writes `NewNode.Tags` as well, which the wire type has always carried and nothing wrote.
 
 ### Pictures: pasting one, and filing a chart
 
@@ -316,4 +644,9 @@ Everything a gantt client *changes* goes through endpoints that already existed 
 
 Comment blocks fenced with `SDOC: <section>` and `EDOC` inside the Go sources are extracted by `cmd/docex` into Org documentation. When editing existing comments that contain these markers, preserve the markers and their section names — they are load-bearing for the doc build, not dead comments.
 
-**Do not run `gofmt` on a file whose SDOC block sits directly above a declaration** (the `/dnd/*` endpoint files are all like this). Go 1.19+ reformats doc comments: it re-indents the block, turns the `* Heading` line into a `- Heading` list item and reflows the org tables inside it, which silently mangles the extracted docs. A block separated from the next declaration by a blank line — the ones above `import` in `internal/common/dnd/` — is left alone. `go build ./...` and `go vet ./...` are the health checks here, not `gofmt`.
+**Do not run `gofmt` on a file whose SDOC block sits directly above a declaration** (the `/dnd/*` and `/records/*` endpoint files are all like this). Go 1.19+ reformats doc comments: it re-indents the block, turns the `* Heading` line into a `- Heading` list item and reflows the org tables inside it, which silently mangles the extracted docs. Two of the breakages are load-bearing and invisible in the diff unless you look for them — `docex` matches both markers as whole lines:
+
+- `/* SDOC: API` becomes `/*` on one line and `SDOC: API` on the next, and the block is **not extracted at all**;
+- `EDOC */` becomes `EDOC` and `*/`, and the block **runs on** into whatever follows.
+
+`grep -c '/\* SDOC' file.go` and `grep -c 'EDOC \*/' file.go` should be equal and should match the number of blocks. Building the extractor and diffing its output is the real check: `go build -o /tmp/docex ./cmd/docex && /tmp/docex -src . -out /tmp/docs.org`. A block separated from the next declaration by a blank line — the ones above `import` in `internal/common/dnd/` — is left alone. `go build ./...` and `go vet ./...` are the health checks here, not `gofmt`.

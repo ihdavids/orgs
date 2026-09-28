@@ -2,7 +2,6 @@ package projects
 
 import (
 	"flag"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -78,8 +77,6 @@ func (self *ProjectsQuery) ShowTodos(core *commands.Core, reply common.Todos) {
 }
 
 func (self *ProjectsQuery) Exec(core *commands.Core) {
-	fmt.Printf("ProjectsQuery called\n")
-
 	var qry map[string]string = map[string]string{}
 	//qry["filename"] = "./out.html"
 	qry["query"] = "IsProject()"
@@ -90,6 +87,11 @@ func (self *ProjectsQuery) Exec(core *commands.Core) {
 
 	//func SendReceiveGet[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
 	commands.SendReceiveGet(core, "search", qry, &reply)
+
+	// Nothing is reading a full screen table, so answer with the rows and go.
+	if commands.Render([]common.Todo(reply), nil) {
+		return
+	}
 
 	self.table = tview.NewTable().SetFixed(1, 1)
 	self.core = core

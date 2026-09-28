@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -214,8 +215,36 @@ func SendReceiveGet[RESP any](core *Core, name string, ps map[string]string, res
 }
 
 func SendReceivePost[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
+	// Every write a command makes comes through here, which is why -dry-run is
+	// answered here rather than in each command: one written tomorrow gets it
+	// without asking, and one that forgets to ask cannot write anyway.
+	if Wrote("POST /"+name, args) {
+		return
+	}
 	*resp, _ = common.RestPost[RESP](&core.Rest, name, args)
 }
+
+// SendReceiveGetErr is SendReceiveGet with the error handed back rather than
+// printed and swallowed. A command that is about to print a listing does not
+// care; anything that has to decide what to do next does.
+func SendReceiveGetErr[RESP any](core *Core, name string, ps map[string]string) (RESP, error) {
+	return common.RestGetErr[RESP](&core.Rest, name, ps)
+}
+
+// SendReceivePostErr is the same for a write, and it too refuses on -dry-run -
+// saying so in the error rather than answering with a zero value that reads
+// like a failure.
+func SendReceivePostErr[RPC any, RESP any](core *Core, name string, args *RPC) (RESP, error) {
+	var zero RESP
+	if Wrote("POST /"+name, args) {
+		return zero, ErrDryRun
+	}
+	return common.RestPost[RESP](&core.Rest, name, args)
+}
+
+// ErrDryRun is what a write answers with when -dry-run stopped it. It is not a
+// failure and a caller that sees it should say nothing more.
+var ErrDryRun = errors.New("dry run: nothing was written")
 
 func (core *Core) LaunchEditor(filename string, line int) {
 	eargs := make([]string, len(core.EditorTemplate))

@@ -32,8 +32,6 @@ func (self *GrepQuery) SetupParameters(fset *flag.FlagSet) {
 }
 
 func (self *GrepQuery) Exec(core *commands.Core) {
-	fmt.Printf("Grep called\n")
-
 	var qry map[string]string = map[string]string{}
 	delimeter := "|"
 	qry["query"] = self.Query
@@ -41,6 +39,12 @@ func (self *GrepQuery) Exec(core *commands.Core) {
 	var reply common.FileList = common.FileList{}
 
 	commands.SendReceiveGet(core, "grep", qry, &reply)
+	// `orgs find` is the one to reach for from a script - it answers with a
+	// line, its file and where in it the match was. This one has always
+	// answered with "file|line|text" strings, so that is what it hands over.
+	if commands.Render([]string(reply), nil) {
+		return
+	}
 	if reply != nil {
 		inputChan := make(chan string)
 		go func() {

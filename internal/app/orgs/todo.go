@@ -63,6 +63,14 @@ package orgs
   - *HasTable* - Checks if the node contains a table.
   - *HasDrawer* - Checks if the node contains a drawer.
   - *HasBlock* - Checks if the node contains a block object.
+  - *IsRecord* - returns true for a record heading (anything with a RECORD property); IsRecord("contact") asks about one collection
+  - *IsCollection* - returns true for the container heading a collection files its records under
+  - *InCollection* - InCollection("contact") is true for anything filed in that collection - the records, the container, and anything written under it
+  - *HasBacklinks* - returns true when something else links at this heading; HasBacklinks(2) asks for at least two
+  - *BacklinkCount* - how many links point at this heading, as a number to compare: BacklinkCount() == 0 finds the orphans
+  - *HasLinks* - returns true when this heading links out at all
+  - *LinksTo* - LinksTo(REGEX) is true when a link under this heading points at something matching - the target as written, its description, or the file and headline it lands on
+  - *HasBrokenLinks* - returns true when a link under this heading resolves to nothing
   - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
   - *MatchHeadline* - Run an RE against each headline and check for a match
   - *OnDate* - Check if a todo is targetting a specific date
@@ -654,6 +662,84 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		// its records under, which is not itself a record.
 		"IsCollection": func(args ...interface{}) (interface{}, error) {
 			return CollectionTypeOf(exp.Sec) != "", nil
+		},
+		// InCollection("contact") is true for anything filed in that
+		// collection: a record carrying that RECORD value, the container
+		// heading that holds them, and anything written underneath it.
+		//
+		// IsRecord("contact") is the strict one and answers only for the
+		// records themselves. This is the one to reach for when a query means
+		// "leave the address book alone" - the notes under a contact are part
+		// of the address book too.
+		"InCollection": func(args ...interface{}) (interface{}, error) {
+			want := ""
+			if len(args) > 0 {
+				if s, ok := args[0].(string); ok {
+					want = s
+				}
+			}
+			return InCollection(exp.Sec, want), nil
+		},
+		// HasBacklinks() is true for a heading something else points at.
+		// HasBacklinks(2) asks for at least that many - the argument is a
+		// floor, not an exact count.
+		//
+		// A link that names the *file* rather than a heading in it does not
+		// count towards any heading in it, or every heading in a linked-to
+		// file would claim a backlink it has not got.
+		"HasBacklinks": func(args ...interface{}) (interface{}, error) {
+			least := 1.0
+			if len(args) > 0 {
+				if n, ok := args[0].(float64); ok {
+					least = n
+				}
+			}
+			return float64(BacklinksTo(exp.Sec.Hash)) >= least, nil
+		},
+		// BacklinkCount() is the number itself, for a query that wants to
+		// compare it: BacklinkCount() > 3, or == 0 for the orphans.
+		"BacklinkCount": func(args ...interface{}) (interface{}, error) {
+			return float64(BacklinksTo(exp.Sec.Hash)), nil
+		},
+		// HasLinks() is true for a heading that links out at all.
+		"HasLinks": func(args ...interface{}) (interface{}, error) {
+			return len(LinksOut(fileNameOf(exp.File), exp.Sec.Hash)) > 0, nil
+		},
+		// LinksTo(RE) is true when a link written under this heading points at
+		// something matching the expression. The pattern is run over the link
+		// as written, its description, and - for a link that stays inside the
+		// org files - the file and headline it lands on, because "links to
+		// notes.org" and "links to the migration heading" are both things
+		// somebody means by it.
+		"LinksTo": func(args ...interface{}) (interface{}, error) {
+			if len(args) == 0 {
+				return false, nil
+			}
+			pat, ok := args[0].(string)
+			if !ok || pat == "" {
+				return false, nil
+			}
+			re, err := regexp.Compile("(?i)" + pat)
+			if err != nil {
+				return false, err
+			}
+			for _, l := range LinksOut(fileNameOf(exp.File), exp.Sec.Hash) {
+				if re.MatchString(l.Raw) || re.MatchString(l.Desc) ||
+					re.MatchString(l.To.Filename) || re.MatchString(l.To.Headline) {
+					return true, nil
+				}
+			}
+			return false, nil
+		},
+		// HasBrokenLinks() is true for a heading holding a link that resolves
+		// to nothing. What a link tidy-up query is made of.
+		"HasBrokenLinks": func(args ...interface{}) (interface{}, error) {
+			for _, l := range LinksOut(fileNameOf(exp.File), exp.Sec.Hash) {
+				if l.Broken {
+					return true, nil
+				}
+			}
+			return false, nil
 		},
 		// Returns true if the headline has the specific property
 		"HasProperty": func(args ...interface{}) (interface{}, error) {
@@ -1749,4 +1835,43 @@ func GetMarkerTag(name string) (*common.Todos, error) {
 	q := common.StringQuery{Query: query}
 	// Turn off today on anything that already has it.
 	return QueryStringTodos(&q)
+}
+
+// InCollection reports whether a heading is filed in a record collection:
+// either it is a record of that type, or it is the collection's container
+// heading, or it is written somewhere underneath that container.
+//
+// The walk up the outline is what separates this from IsRecord. A contact's
+// notes are not a record - they have no RECORD property of their own - but
+// they are part of the address book, and a query saying "not the address
+// book" means them too.
+func InCollection(sec *org.Section, want string) bool {
+	if sec == nil {
+		return false
+	}
+	match := func(t string) bool {
+		if t == "" {
+			return false
+		}
+		return want == "" || strings.EqualFold(t, want)
+	}
+	if match(RecordTypeOf(sec)) {
+		return true
+	}
+	for s := sec; s != nil; s = s.Parent {
+		if match(CollectionTypeOf(s)) {
+			return true
+		}
+	}
+	return false
+}
+
+// The file a query is being evaluated against, without assuming there is one.
+// A query runs over parsed files so there always is, but Expr carries a
+// pointer and a nil deref here would take the whole search down.
+func fileNameOf(f *common.OrgFile) string {
+	if f == nil {
+		return ""
+	}
+	return f.Filename
 }

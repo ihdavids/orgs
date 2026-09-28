@@ -260,7 +260,64 @@ func collectFileLinks(f *common.OrgFile) []foundLink {
 	for _, sec := range f.Doc.Outline.Children {
 		collectSectionLinks(sec, &out)
 	}
+	fixLinkLines(f, out)
 	return out
+}
+
+// Put each link on the line it is actually written on.
+//
+// go-org gives every inline node the position of the *node it was parsed in*,
+// which for a link means the first line of its paragraph. Two links in a two
+// line paragraph therefore both claim the first line, and everything reading
+// that number is wrong about one of them: the links tab, `orgs links`, the
+// editor jump, and the pane that draws the file around the link and marks it.
+//
+// So the lines are found in the file itself. Three things make that safe:
+//
+//   - The search starts at the row go-org reported, never before it. That row
+//     is right or early, never late, so this only ever moves a link *down* to
+//     where it really is.
+//   - It is done in document order with a cursor that never goes backwards, so
+//     the same url written twice in one paragraph resolves to the first
+//     occurrence and then the second, rather than both to the first.
+//   - A link that cannot be found keeps the row it had. A file changed on disk
+//     since it was parsed, or a link built out of a macro, is a link this
+//     cannot place - and the parser's answer is still the best one available.
+func fixLinkLines(f *common.OrgFile, links []foundLink) {
+	if len(links) == 0 {
+		return
+	}
+	lines, err := readFileLines(f.Filename)
+	if err != nil {
+		return
+	}
+	// In document order, which is not the order they were collected in: the
+	// top level links are gathered before the sections.
+	order := make([]int, len(links))
+	for i := range order {
+		order[i] = i
+	}
+	sort.SliceStable(order, func(a, b int) bool { return links[order[a]].line < links[order[b]].line })
+
+	cursor := 0
+	for _, i := range order {
+		l := &links[i]
+		from := l.line
+		if from < cursor {
+			from = cursor
+		}
+		if from < 0 {
+			from = 0
+		}
+		needle := "[[" + l.raw
+		for row := from; row < len(lines); row++ {
+			if strings.Contains(lines[row], needle) {
+				l.line = row
+				cursor = row
+				break
+			}
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -1138,4 +1195,74 @@ func RequestLinkStats(w http.ResponseWriter, r *http.Request) {
 	res := QueryLinkStats()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+// ---------------------------------------------------------------------------
+// What the query language asks of the link index
+// ---------------------------------------------------------------------------
+
+// The three functions below are what HasBacklinks(), LinksTo() and friends in
+// todo.go are made of. They are here rather than there because the index is
+// here, and because a query asking about links has to agree with the Links tab
+// and the graph about what a link is - which it can only do by asking the same
+// index.
+//
+// The index is cached against OrgDb.ReloadIndex, so the first heading a query
+// evaluates builds it and every heading after that reads it. A query that
+// mentions no link function never builds it at all.
+
+// BacklinksTo counts the links pointing at one heading. A link that names the
+// *file* rather than a heading in it is not counted against any heading in it:
+// it points at the file, and saying otherwise would give every heading in a
+// linked-to file a backlink it does not have.
+func BacklinksTo(hash string) int {
+	if hash == "" {
+		return 0
+	}
+	idx := getLinkIndex()
+	n := 0
+	for _, l := range idx.links {
+		if l.To.Hash == hash {
+			n++
+		}
+	}
+	return n
+}
+
+// BacklinksToFile counts the links pointing at a file, or at any heading in
+// it. This is the file-level question `/links` answers.
+func BacklinksToFile(filename string) int {
+	if filename == "" {
+		return 0
+	}
+	idx := getLinkIndex()
+	n := 0
+	for _, i := range idx.toFile[filename] {
+		// A file does not count as linking to itself: the interesting question
+		// is who else points here.
+		if idx.links[i].From.Filename != filename {
+			n++
+		}
+	}
+	return n
+}
+
+// LinksOut is every link written under one heading, which is what LinksTo()
+// runs its pattern over.
+func LinksOut(filename string, hash string) []common.OrgLink {
+	out := []common.OrgLink{}
+	if filename == "" {
+		return out
+	}
+	idx := getLinkIndex()
+	for _, i := range idx.fromFile[filename] {
+		l := idx.links[i]
+		// An empty hash means the whole file - a heading asks about its own
+		// links, and a query run against a file-level node asks about all of
+		// them.
+		if hash == "" || l.From.Hash == hash {
+			out = append(out, l)
+		}
+	}
+	return out
 }

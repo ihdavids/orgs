@@ -28,18 +28,14 @@ func (self *FilesQuery) SetupParameters(*flag.FlagSet) {
 }
 
 func (self *FilesQuery) Exec(core *commands.Core) {
-	fmt.Printf("FilesQuery called\n")
-
 	var qry map[string]string = map[string]string{}
-	//qry["filename"] = "./out.html"
-	//qry["query"] = "IsTask() && HasProperty(\"EFFORT\")"
 	var reply common.FileList = common.FileList{}
 
-	//func SendReceiveGet[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
 	commands.SendReceiveGet(core, "files", qry, &reply)
-	//commands.SendReceiveRpc(core, "Db.ExportToFile", &query, &reply)
+	if commands.Render([]string(reply), nil) {
+		return
+	}
 	if reply != nil {
-		//fmt.Printf("OK")
 		f, err := fzf.New(
 			fzf.WithNoLimit(true),
 			fzf.WithCountViewEnabled(true),
@@ -109,18 +105,16 @@ func (self *FilesQuery) SetupParameters(*flag.FlagSet) {
 }
 
 func (self *FilesQuery) Exec(core *commands.Core) {
-	fmt.Printf("FilesQuery called\n")
-
 	var qry map[string]string = map[string]string{}
-	//qry["filename"] = "./out.html"
-	//qry["query"] = "IsTask() && HasProperty(\"EFFORT\")"
 	var reply common.FileList = common.FileList{}
 
-	//func SendReceiveGet[RPC any, RESP any](core *Core, name string, args *RPC, resp *RESP) {
 	commands.SendReceiveGet(core, "files", qry, &reply)
-	//commands.SendReceiveRpc(core, "Db.ExportToFile", &query, &reply)
+	// A chooser is no use to a program, so -json and -format answer with the
+	// list instead of opening one.
+	if commands.Render([]string(reply), nil) {
+		return
+	}
 	if reply != nil {
-		//fmt.Printf("OK")
 
 		inputChan := make(chan string)
 		go func() {
@@ -176,9 +170,8 @@ func (self *FilesQuery) Exec(core *commands.Core) {
 		options.Output = outputChan
 
 		// Run fzf
-		code, _ := fzf.Run(options)
+		fzf.Run(options)
 
-		fmt.Printf("OUTPUT: %v\n", code)
 		for _, o := range output {
 			core.LaunchEditor(o, 0)
 			//fmt.Println(reply[i])

@@ -44,7 +44,12 @@ func logToFile() *os.File {
 		log.Fatalf("error opening file: %v", err)
 	}
 	//defer f.Close()
-	wrt := io.MultiWriter(os.Stdout, f)
+	// Stderr, not stdout. The log used to go to both stdout and the file,
+	// which is invisible on a terminal and ruinous anywhere else: `orgs search
+	// -json | jq` got "Loading: ..." in the middle of its json, and `orgs mcp`
+	// speaks JSON-RPC over stdout, where one stray log line ends the session.
+	// Nothing about a log line wants to be in the answer.
+	wrt := io.MultiWriter(os.Stderr, f)
 	log.SetOutput(wrt)
 	//log.SetOutput(f)
 	log.Println("--- [OrgS] ----------------------------------")

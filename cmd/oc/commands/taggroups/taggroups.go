@@ -4,7 +4,6 @@ package taggroups
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/internal/common"
@@ -24,11 +23,14 @@ func (self *TagGroups) SetupParameters(fset *flag.FlagSet) {
 }
 
 func (self *TagGroups) Exec(core *commands.Core) {
-	fmt.Printf("TagGroups called\n")
-
 	var qry map[string]string = map[string]string{}
 	var reply map[string][]string = map[string][]string{}
 	commands.SendReceiveGet(core, "taggroups", qry, &reply)
+	// A chooser is no use to a program, so -json and -format answer with the
+	// groups instead of opening one.
+	if commands.RenderOne(reply, nil) {
+		return
+	}
 	common.FzfMapOfStringArray(reply)
 }
 

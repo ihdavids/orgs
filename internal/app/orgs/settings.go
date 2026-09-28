@@ -290,6 +290,11 @@ func (self *Config) AddCommands() {
 		op := flag.NewFlagSet(name, flag.ExitOnError)
 		val.Flags = op
 		val.Cmd.SetupParameters(op)
+		// -json, -format, -dry-run and -no-color, for every command, and only
+		// where the command has not already taken the name. After the command
+		// so that its own meaning wins: the dnd client's -json is a saved D&D
+		// Beyond payload and must stay one.
+		commands.AddGlobalFlags(op)
 	}
 	flag.Usage = Usage
 }
@@ -332,7 +337,7 @@ func (self *Config) ParseConfig() {
 		// I should really remove this crap!
 		filename, _ := filepath.Abs("orgc.yaml")
 		if _, err = os.Stat(filename); err != nil {
-			fmt.Printf("Looks like you do not have a [%s] configuration file. Please add one!", self.Config)
+			fmt.Fprintf(os.Stderr, "Looks like you do not have a [%s] configuration file. Please add one!\n", self.Config)
 			os.Exit(-1)
 		}
 	}

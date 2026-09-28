@@ -39,11 +39,12 @@ func (self *FiltersList) SetupParameters(fset *flag.FlagSet) {
 }
 
 func (self *FiltersList) Exec(core *commands.Core) {
-	fmt.Printf("Filters called\n")
-
 	var qry map[string]string = map[string]string{}
 	var reply map[string]string = map[string]string{}
 	commands.SendReceiveGet(core, "filters", qry, &reply)
+	if commands.RenderOne(reply, nil) {
+		return
+	}
 	output := common.FzfMapOfString(reply)
 	fmt.Printf("%v\n", output)
 	for _, o := range output {

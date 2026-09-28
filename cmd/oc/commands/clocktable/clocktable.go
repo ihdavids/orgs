@@ -68,6 +68,11 @@ func (self *ClockTable) Exec(core *commands.Core) {
 	var report common.ClockReport
 	commands.SendReceiveGet(core, "clockreport", qry, &report)
 
+	// The whole report rather than the rows: the totals are the point of a
+	// clock table and a caller reading json should not have to add them up.
+	if commands.RenderOne(report, nil) {
+		return
+	}
 	if len(report.Entries) == 0 {
 		fmt.Printf("No clock entries for: %s\n", block)
 		return

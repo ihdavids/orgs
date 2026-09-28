@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -54,6 +55,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                // Get all stored filters from the server
 	api.HandleFunc("/html/themes", RequestHtmlThemes)         // The themes the html exporter can render with
+	api.HandleFunc("/exporters", RequestExporters).Methods("GET") // The exporters this server was configured with
 	api.HandleFunc("/taggroups", RequestTagGroups)
 	api.HandleFunc("/grep", RequestGrep)
 	api.HandleFunc("/search", RequestTodosExpr)
@@ -459,6 +461,39 @@ func RequestHtmlThemes(w http.ResponseWriter, r *http.Request) {
 		Ok     bool
 		Themes []string
 	}{Ok: true, Themes: htmlexp.HtmlThemes()})
+}
+
+/* SDOC: API
+* GET /exporters — What This Server Can Export To
+
+	Answers with the names of the exporters configured under =server.exporters=,
+	which are exactly the ={type}= values =/file/{type}= will accept.
+
+	The list cannot be guessed from the outside: an exporter that is compiled in
+	but not named in the yaml is not there as far as a request is concerned, and
+	the refusal for one that is missing looks the same as the refusal for one
+	that does not exist. A client offering a format to pick from has to be able
+	to ask.
+
+	*Method:* =GET=
+
+	*Response:*
+	| Field  | Type  | Description                        |
+	|--------+-------+------------------------------------|
+	| =Ok=   | bool  | Always true                        |
+	| =Names=| array | The exporter names, sorted         |
+	EDOC */
+func RequestExporters(w http.ResponseWriter, r *http.Request) {
+	names := []string{}
+	for _, e := range Conf().Server.Exporters {
+		names = append(names, e.Name)
+	}
+	sort.Strings(names)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Ok    bool
+		Names []string
+	}{Ok: true, Names: names})
 }
 
 /* SDOC: API

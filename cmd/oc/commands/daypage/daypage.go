@@ -2,7 +2,6 @@ package daypage
 
 import (
 	"flag"
-	"fmt"
 	"time"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
@@ -23,7 +22,6 @@ func (self *DayPage) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *DayPage) Exec(core *commands.Core) {
-	fmt.Printf("DayPage called\n")
 	var reply common.FileList
 	cur := time.Now()
 
@@ -32,6 +30,9 @@ func (self *DayPage) Exec(core *commands.Core) {
 	//SendReceiveRpc(core, "Db.CreateDayPage", &query, &reply)
 
 	// Okay we created the page, now launch it!
+	if commands.Render([]string(reply), nil) {
+		return
+	}
 	if len(reply) > 0 {
 		core.LaunchEditor(reply[0], 0)
 	}

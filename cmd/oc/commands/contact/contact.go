@@ -18,12 +18,14 @@ package contact
 import (
 	"flag"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	"github.com/ihdavids/orgs/cmd/oc/commands/recview"
 	"github.com/ihdavids/orgs/internal/common"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 )
@@ -49,6 +51,7 @@ type Contact struct {
 	Value  string
 	File   string
 	Days   int
+	Hash   string
 	All    bool
 	Notes  bool
 	Plain  bool
@@ -78,6 +81,7 @@ func (self *Contact) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.Value, "value", "", "what to set -field to (empty removes it)")
 	fset.StringVar(&self.File, "file", "", "org file to write to when the collection has no home yet")
 	fset.IntVar(&self.Days, "days", 90, "how far ahead birthdays looks")
+	fset.StringVar(&self.Hash, "hash", "", "one contact by its hash, for `preview` and `open`")
 	fset.BoolVar(&self.All, "all", false, "show every field rather than the useful ones")
 	fset.BoolVar(&self.Notes, "notes", false, "include the notes in a listing")
 	fset.BoolVar(&self.Plain, "plain", false, "no colour, one record per line, for piping")
@@ -86,7 +90,10 @@ func (self *Contact) SetupParameters(fset *flag.FlagSet) {
 }
 
 func (self *Contact) Exec(core *commands.Core) {
-	sub := "list"
+	// Bare `orgs contact` is the picker, the way bare `orgs code` is. The
+	// listing is one word away and is what anything reading the answer gets
+	// whatever was asked for.
+	sub := "pick"
 	words := []string{}
 	if self.fset != nil {
 		args := self.fset.Args()
@@ -110,6 +117,12 @@ func (self *Contact) Exec(core *commands.Core) {
 	free := strings.TrimSpace(strings.Join(words, " "))
 
 	switch strings.ToLower(sub) {
+	case "pick":
+		self.pick(core, free)
+	case "preview":
+		self.preview(core)
+	case "open":
+		self.openAt(core)
 	case "list", "ls":
 		self.list(core, free)
 	case "find", "search", "grep":
@@ -153,6 +166,65 @@ func firstNonEmpty(vals ...string) string {
 }
 
 // ----------------------------------------------------------------------------
+// The picker
+// ----------------------------------------------------------------------------
+
+// Bare `orgs contact` is the address book as a list with the card beside it.
+//
+// The line, the pane and the bindings are `commands/recview`, shared with
+// `orgs rec`. The two commands are one engine with different manners - this one
+// defaults to the contact collection and does not label every row with it -
+// and a contact that looked different in the two of them would be two contacts
+// as far as anybody using both is concerned.
+func (self *Contact) pick(core *commands.Core, q string) {
+	// Nothing is reading a chooser: a pipe, a -json run or a cron job gets the
+	// listing instead.
+	if !commands.Interactive() {
+		self.list(core, q)
+		return
+	}
+	recs := self.fetch(core, q)
+	if len(recs) == 0 {
+		if q != "" {
+			fmt.Fprintf(os.Stderr, "nothing in %s matches %q\n", self.Type, q)
+		} else {
+			fmt.Fprintf(os.Stderr, "there is nothing in %s yet — `orgs contact add` starts it off\n", self.Type)
+		}
+		return
+	}
+	for _, r := range recview.Choose(core, recs, recview.PickOptions{
+		Verb:   "contact",
+		Prompt: self.Type + "> ",
+		// The address book never says which collection a row is in: every row
+		// is in the same one, and a column of the same word is not a column.
+		// `-type equipment` is the exception and is the reader asking for it.
+		WithType: false,
+		All:      self.All,
+	}) {
+		if self.Open {
+			core.LaunchEditor(r.Filename, r.LineNum+1)
+			continue
+		}
+		recview.RenderPane(r, commands.PaneWidth(), self.All)
+	}
+}
+
+func (self *Contact) preview(core *commands.Core) {
+	if self.Hash == "" {
+		commands.Fail("orgs contact preview: -hash says which contact")
+	}
+	recview.Preview(core, self.Hash, self.All)
+}
+
+func (self *Contact) openAt(core *commands.Core) {
+	r, ok := recview.ByHash(core, self.Hash)
+	if !ok {
+		return
+	}
+	core.LaunchEditor(r.Filename, r.LineNum+1)
+}
+
+// ----------------------------------------------------------------------------
 // Talking to the server
 // ----------------------------------------------------------------------------
 
@@ -178,6 +250,9 @@ func (self *Contact) collectionsOf(core *commands.Core) []common.RecordCollectio
 
 func (self *Contact) list(core *commands.Core, q string) {
 	recs := self.fetch(core, q)
+	if commands.Render(recs, nil) {
+		return
+	}
 	if len(recs) == 0 {
 		if q != "" {
 			fmt.Printf("Nothing in %s matches %q.\n", self.Type, q)
@@ -257,7 +332,10 @@ func (self *Contact) c(code string) string {
 	if self.Plain {
 		return ""
 	}
-	return code
+	// -plain came first and is kept; -no-color is the one every command has,
+	// and the two saying different things about the same listing would be a
+	// bug waiting to be reported.
+	return commands.C(code)
 }
 
 // ----------------------------------------------------------------------------
@@ -265,8 +343,11 @@ func (self *Contact) c(code string) string {
 // ----------------------------------------------------------------------------
 
 func (self *Contact) show(core *commands.Core, q string) {
-	rec, ok := self.pick(core, q, "Which one?")
+	rec, ok := self.narrow(core, q, "Which one?")
 	if !ok {
+		return
+	}
+	if commands.RenderOne(rec, nil) {
 		return
 	}
 	self.print(rec)
@@ -277,7 +358,7 @@ func (self *Contact) show(core *commands.Core, q string) {
 
 // pick narrows to one record, asking when the search found several. A search
 // that found nothing says so rather than opening an empty chooser.
-func (self *Contact) pick(core *commands.Core, q string, message string) (common.Record, bool) {
+func (self *Contact) narrow(core *commands.Core, q string, message string) (common.Record, bool) {
 	recs := self.fetch(core, q)
 	switch len(recs) {
 	case 0:
@@ -551,7 +632,7 @@ func (self *Contact) suggestCollection(core *commands.Core) {
 // ----------------------------------------------------------------------------
 
 func (self *Contact) edit(core *commands.Core, q string) {
-	rec, ok := self.pick(core, q, "Which one?")
+	rec, ok := self.narrow(core, q, "Which one?")
 	if !ok {
 		return
 	}
@@ -663,6 +744,9 @@ func (self *Contact) birthdays(core *commands.Core) {
 
 func (self *Contact) collections(core *commands.Core) {
 	cols := self.collectionsOf(core)
+	if commands.Render(cols, nil) {
+		return
+	}
 	if len(cols) == 0 {
 		fmt.Println("Nothing is being kept as records yet.")
 		return
@@ -691,11 +775,8 @@ func init() {
 		func() commands.Cmd {
 			return &Contact{Type: "contact", Days: 90}
 		})
-	// Deliberately a second name for the same command: somebody keeping a
-	// collection of guitar pedals should not have to type "contact".
-	commands.AddCmd("record",
-		"the same thing as contact, for collections that are not people",
-		func() commands.Cmd {
-			return &Contact{Type: "contact", Days: 90}
-		})
+	// "record" used to be a second name for this one, defaulting to the
+	// contact collection - which is exactly the wrong default for a command
+	// named after the general thing. It is `orgs rec` now, which starts on
+	// every collection and lays a record out as the fields it has.
 }
