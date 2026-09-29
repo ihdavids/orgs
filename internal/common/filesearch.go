@@ -44,4 +44,14 @@ type FileSearchResult struct {
 	// whole database - so a client can say what it is showing part of.
 	FileCount int
 	Total     int
+	// How many files were actually opened and read.
+	//
+	// The trigram index narrows the search to the files that could possibly
+	// match, so this is usually far fewer than the database holds - and where
+	// it is not, the pattern was one the index could say nothing about and
+	// every file was read, exactly as before the index existed. Reported
+	// because "why was that slow" and "why was that fast" should both have an
+	// answer, and because an index that quietly stopped narrowing would
+	// otherwise look like nothing at all.
+	Scanned int
 }

@@ -142,7 +142,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -485,32 +484,19 @@ func trimStamp(v string) string {
 	return strings.TrimSpace(v)
 }
 
-// Every record in the database, cached against the reload counter.
+// Every record in the database.
 //
 // Reading the records means walking every section of every file, and reading
 // their notes and history means opening every file one of them is in. The
-// contacts tab searches as you type, so that happens per keystroke without
-// this - and the answer cannot go stale behind the cache, because anything
-// that changes a file bumps the counter.
-type recordCache struct {
-	reload uint64
-	recs   []*common.Record
-	cols   []common.RecordCollection
-}
-
-var recordCached *recordCache
-var recordCacheLock sync.Mutex
-
+// contacts tab searches as you type, so that happens per keystroke without a
+// cache - and it used to be one cache of the whole database gated on the reload
+// counter, which meant a saved file threw away every file's records.
+//
+// It is now a cache per file (see fileparts.go), so a save costs the file that
+// was saved. The joining below - the collections, their counts, the sort - is
+// over the parts and is cheap.
 func cachedRecords() ([]*common.Record, []common.RecordCollection) {
-	db := GetDb()
-	recordCacheLock.Lock()
-	defer recordCacheLock.Unlock()
-	if recordCached != nil && recordCached.reload == db.ReloadIndex {
-		return recordCached.recs, recordCached.cols
-	}
-	recs, cols := walkRecords()
-	recordCached = &recordCache{reload: db.ReloadIndex, recs: recs, cols: cols}
-	return recs, cols
+	return walkRecords()
 }
 
 // allRecords is every record of one type, or of every type when rtype is
@@ -535,8 +521,62 @@ func allRecords(rtype string, withBody bool) []*common.Record {
 // walkRecords is the walk itself. Sections are registered lazily as queries
 // touch them, so this registers as it goes for the same reason the link index
 // does - a record looked up by hash straight afterwards has to be there.
+// What one file contributes: its records, and the container headings it holds.
+type recordPart struct {
+	recs []*common.Record
+	// One entry per collection type found in this file, in the order found.
+	cols  []common.RecordCollection
+	order []string
+	// How many records of each type this file holds, for the counts.
+	counts map[string]int
+}
+
+// One file's records, cached per file.
+//
+// Was one walk of every file gated on the reload counter, so a saved file cost
+// a walk of the database - and the contacts tab searches as you type.
+var recordParts = NewFileParts[recordPart]()
+
+// walkRecords is the walk itself, now per file and joined afterwards.
+//
+// Sections are registered lazily as queries touch them, so this registers as it
+// goes for the same reason the link index does - a record looked up by hash
+// straight afterwards has to be there.
 func walkRecords() ([]*common.Record, []common.RecordCollection) {
-	db := GetDb()
+	per := recordParts.All(func(f *common.OrgFile) recordPart {
+		db := GetDb()
+		fname := f.Doc.Path
+		part := recordPart{counts: map[string]int{}}
+		byType := map[string]int{}
+		for _, sec := range flattenSections(f) {
+			db.RegisterSection(sec.Hash, sec, f)
+			if t := CollectionTypeOf(sec); t != "" {
+				if _, have := byType[t]; !have {
+					c := common.RecordCollection{Type: t, Name: titleOf(t)}
+					c.Hash = sec.Hash
+					c.Filename = fname
+					c.LineNum = sec.Headline.Pos.Row
+					if n := sectionTitle(sec); n != "" {
+						c.Name = n
+					}
+					_, props := sectionProps(sec)
+					c.Icon = props["ICON"]
+					c.Fields = splitList(props["FIELDS"])
+					byType[t] = len(part.cols)
+					part.cols = append(part.cols, c)
+					part.order = append(part.order, t)
+				}
+			}
+			if t := RecordTypeOf(sec); t != "" {
+				part.counts[t]++
+				if rec := readRecord(sec, f, true); rec != nil {
+					part.recs = append(part.recs, rec)
+				}
+			}
+		}
+		return part
+	})
+
 	out := []*common.Record{}
 	byType := map[string]*common.RecordCollection{}
 	order := []string{}
@@ -549,38 +589,32 @@ func walkRecords() ([]*common.Record, []common.RecordCollection) {
 		order = append(order, t)
 		return c
 	}
-	for _, fname := range db.GetFiles() {
-		f := db.FindByFile(fname)
-		if f == nil || f.Doc == nil {
-			continue
+	for _, part := range per {
+		out = append(out, part.recs...)
+		for _, c := range part.cols {
+			existing := get(c.Type)
+			// The first container found wins, so that a second one somewhere
+			// else does not quietly become the place new records land. "First"
+			// is in the database's file order, which is why the parts have to
+			// come back in that order rather than a map's.
+			//
+			// Only the container's own fields are taken: the count is
+			// accumulated across every file and a wholesale copy would put it
+			// back to whatever this file's container said, which is zero.
+			if existing.Hash == "" {
+				existing.Hash = c.Hash
+				existing.Filename = c.Filename
+				existing.LineNum = c.LineNum
+				existing.Name = c.Name
+				existing.Icon = c.Icon
+				existing.Fields = c.Fields
+			}
 		}
-		for _, sec := range flattenSections(f) {
-			db.RegisterSection(sec.Hash, sec, f)
-			if t := CollectionTypeOf(sec); t != "" {
-				c := get(t)
-				// The first container found wins, so that a second one
-				// somewhere else does not quietly become the place new
-				// records land.
-				if c.Hash == "" {
-					c.Hash = sec.Hash
-					c.Filename = fname
-					c.LineNum = sec.Headline.Pos.Row
-					if n := sectionTitle(sec); n != "" {
-						c.Name = n
-					}
-					_, props := sectionProps(sec)
-					c.Icon = props["ICON"]
-					c.Fields = splitList(props["FIELDS"])
-				}
-			}
-			if t := RecordTypeOf(sec); t != "" {
-				get(t).Count++
-				if rec := readRecord(sec, f, true); rec != nil {
-					out = append(out, rec)
-				}
-			}
+		for t, n := range part.counts {
+			get(t).Count += n
 		}
 	}
+
 	sort.SliceStable(out, func(a, b int) bool {
 		if out[a].Type != out[b].Type {
 			return out[a].Type < out[b].Type

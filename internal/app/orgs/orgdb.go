@@ -17,9 +17,9 @@ import (
 	"time"
 
 	//"github.com/fsnotify/fsnotify"
-	"github.com/ihdavids/orgs/internal/common/rfsnotify"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/rfsnotify"
 )
 
 type TableFile struct {
@@ -37,6 +37,13 @@ type OrgDb struct {
 	Tags         []string
 	Filenames    []string
 	ReloadIndex  uint64
+	// How many times each file has been read, one counter per file.
+	//
+	// `ReloadIndex` is the whole database's version and every index here is
+	// gated on it, so one saved file invalidates all of them - which is the
+	// difference between a save costing one file and a save costing the
+	// database. This is the number a per-file cache can be keyed on instead.
+	fileVersion map[string]uint64
 	// Whether the hash/id registries have been walked in full, and for which
 	// reload. See FindByHash.
 	hashIndexBuilt bool
@@ -55,6 +62,7 @@ func NewOrgDb() *OrgDb {
 	db.ById = make(map[string]*org.Section)
 	db.ByCustomId = make(map[string]*org.Section)
 	db.NamedTables = make(map[string][]*TableFile)
+	db.fileVersion = make(map[string]uint64)
 	db.ReloadIndex = 0
 	return db
 }
@@ -108,7 +116,29 @@ func (self *OrgDb) RegisterSection(hash string, v *org.Section, d *common.OrgFil
 	}
 }
 
+// FindByAnyId is the section a hash, an ID or a CUSTOM_ID names, building the
+// index first if nothing has built it yet.
+//
+// The same lazy-registry trap FindByHash below documents, in its sibling: the
+// three maps fill in as queries walk them, so on a server that has not answered
+// a query yet they are empty and every id lookup answers "no such heading" -
+// which reads like a dead link rather than an empty index. That is every
+// request to a freshly started server, and every `-local` run, which is a fresh
+// server by definition.
+//
+// It is what `[[id:...]]` resolves through, so it reaches the id link endpoint,
+// the link index, the gantt and mermaid exporters' :AFTER: chains and the
+// markdown exporter's cross-file anchors. None of them was wrong about the id;
+// there was simply nothing to find it in.
 func (self *OrgDb) FindByAnyId(hash string) *org.Section {
+	if v := self.findAnyId(hash); v != nil {
+		return v
+	}
+	self.buildHashIndex()
+	return self.findAnyId(hash)
+}
+
+func (self *OrgDb) findAnyId(hash string) *org.Section {
 	self.dblock.RLock()
 	defer self.dblock.RUnlock()
 	if v, ok := self.ByHash[hash]; ok {
@@ -330,6 +360,70 @@ func (self *OrgDb) ScanNode(v *org.Section, f *common.OrgFile) {
 	}
 }
 
+// Forget the sections a previous parse of this file left in the registries.
+//
+// The hash, id and custom-id maps hold `*org.Section` values, and a reload
+// builds a whole new tree - so without this they go on pointing at the sections
+// of the *old* parse. Those sections still answer, and every one of them
+// carries the row it used to be on: a lookup by hash after a file has changed
+// hands back a heading that is three lines from where the database says it is.
+//
+// That is not an abstract risk. It is how an endpoint that writes twice in one
+// request - give a heading an id, then append a link to it - wrote the second
+// edit into the heading above, because the first edit had moved everything
+// below it and nothing had told the registry.
+//
+// Dropped rather than replaced, because the registries are filled in lazily as
+// queries walk them: a miss now rebuilds (see FindByHash), and a hash whose
+// heading has genuinely gone should answer with nothing rather than with where
+// it used to be. Mirrors CleanupTableRefsForFile, which is here for the same
+// reason a reload leaves named tables behind.
+//
+// Called with the write lock held.
+func (self *OrgDb) forgetSectionsForFile(filename string) {
+	old, ok := self.ByFile[filename]
+	if !ok || old == nil || old.Doc == nil || old.Doc.Outline.Section == nil {
+		return
+	}
+	// Walked out of the *old* file's own tree rather than found by scanning the
+	// maps: the maps are keyed by hash and id, and the only thing that reliably
+	// says which file a section came from is the tree it was parsed into.
+	var forget func(secs []*org.Section)
+	forget = func(secs []*org.Section) {
+		for _, sec := range secs {
+			if sec == nil {
+				continue
+			}
+			if sec.Hash != "" {
+				delete(self.ByHash, sec.Hash)
+				delete(self.ByHashToFile, sec.Hash)
+			}
+			if sec.Headline != nil && sec.Headline.Properties != nil {
+				for _, p := range sec.Headline.Properties.Properties {
+					if len(p) < 2 {
+						continue
+					}
+					switch strings.ToUpper(p[0]) {
+					case "ID":
+						if cur, ok := self.ById[p[1]]; ok && cur == sec {
+							delete(self.ById, p[1])
+						}
+					case "CUSTOM_ID":
+						if cur, ok := self.ByCustomId[p[1]]; ok && cur == sec {
+							delete(self.ByCustomId, p[1])
+						}
+					}
+				}
+			}
+			forget(sec.Children)
+		}
+	}
+	forget(old.Doc.Outline.Section.Children)
+	// The index has to be built again, since it has just been emptied of one
+	// file's worth of sections.
+	self.hashIndexBuilt = false
+}
+
 func (self *OrgDb) CleanupTableRefsForFile(filename string) {
 	for k, v := range self.NamedTables {
 		didChange := false
@@ -430,6 +524,9 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		ofile.Filename = filename
 		ofile.Doc = d
 		self.dblock.Lock()
+		// Anything the previous parse of this file left in the registries is
+		// about to be wrong - a section carrying the row it used to be on.
+		self.forgetSectionsForFile(filename)
 		self.ByFile[filename] = ofile
 		// Unique append to our filenames list.
 		// NOTE: Reload, it's important to try to maintain the ordering of this list
@@ -447,6 +544,10 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		self.ScanFile(ofile)
 		// We increment this with each reload to tell if the DB is dirty or not.
 		self.ReloadIndex += 1
+		if self.fileVersion == nil {
+			self.fileVersion = map[string]uint64{}
+		}
+		self.fileVersion[filename] += 1
 		self.dblock.Unlock()
 		// Anybody watching /events hears about it here, which is the one place
 		// every re-read of a file goes through - a watcher event, a write from
@@ -513,6 +614,27 @@ func (self *OrgDb) RebuildDb() {
 			self.LoadFile(file)
 		}
 	}
+}
+
+// What version of one file the database is holding, and of all of them.
+//
+// A per-file cache asks the first and rebuilds only what has moved; the second
+// is how it notices a file appearing or going away, which no per-file counter
+// can say on its own.
+func (self *OrgDb) FileVersion(filename string) uint64 {
+	self.dblock.RLock()
+	defer self.dblock.RUnlock()
+	return self.fileVersion[filename]
+}
+
+func (self *OrgDb) FileVersions() (map[string]uint64, uint64) {
+	self.dblock.RLock()
+	defer self.dblock.RUnlock()
+	out := make(map[string]uint64, len(self.fileVersion))
+	for k, v := range self.fileVersion {
+		out[k] = v
+	}
+	return out, self.ReloadIndex
 }
 
 func (self *OrgDb) GetFiles() []string {

@@ -16,6 +16,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -249,10 +251,29 @@ func RequestAllLinks(w http.ResponseWriter, r *http.Request) {
 					e.Scheme = proto
 				}
 			}
+			// An attachment is a file the heading owns, and where it is depends
+			// on which heading that is - so it is resolved against the heading
+			// the link was written in rather than against the file. Without
+			// this the links tab lists every attachment and can preview none of
+			// them, which is the wrong half of the answer.
+			if name, isAttach := common.AttachLinkName(l.Raw); isAttach && e.Hash != "" {
+				if sec := GetDb().FindByHash(e.Hash); sec != nil {
+					if dir, from, _ := attachDirOf(sec, GetDb().FileFromSection(sec)); dir != "" && from != "" {
+						if _, err := os.Stat(filepath.Join(dir, filepath.FromSlash(name))); err == nil {
+							e.Url = attachmentUrl(e.Hash, name)
+							e.Media, _ = mediaKindOf(name)
+						} else {
+							// Named but not there. A link to an attachment that
+							// has gone is broken in the way that matters.
+							e.Broken = true
+						}
+					}
+				}
+			}
 			// A link at a file beside the notes is worth showing rather than
 			// merely naming: the same sum the kanban cards and a source block's
 			// result file do.
-			if e.Host == "" {
+			if e.Url == "" && e.Host == "" {
 				if _, rest := splitProtocol(l.Raw); rest != "" {
 					target := strings.TrimPrefix(rest, "//")
 					if url := mediaURL(target, l.From.Filename); url != "" {

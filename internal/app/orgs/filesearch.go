@@ -116,10 +116,25 @@ func RequestFileSearch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, fname := range GetDb().GetFiles() {
+	// Which files could possibly match, from the trigram index.
+	//
+	// nil means it could not tell - a pattern with no mandatory literal run,
+	// `.` or `a|b` or anything starting with a character class - and then every
+	// file is scanned, which is what happened before the index existed. The
+	// index only ever narrows, and the real expression still runs on whatever
+	// survives, so a search cannot be made wrong by it. See trigram.go.
+	all := GetDb().GetFiles()
+	maybe := getTrigramIndex().candidates(pattern, all)
+	out.Scanned = 0
+
+	for _, fname := range all {
 		if only != "" && fname != only {
 			continue
 		}
+		if maybe != nil && !maybe[fname] {
+			continue
+		}
+		out.Scanned++
 		hits, err := searchOneFile(fname, re, max)
 		if err != nil || hits.Count == 0 {
 			continue

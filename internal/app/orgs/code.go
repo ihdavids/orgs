@@ -49,7 +49,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
@@ -550,48 +549,44 @@ func splitParametersLike(s string) []string {
 // The index
 // ----------------------------------------------------------------------------
 
-type codeCache struct {
-	reload uint64
-	blocks []common.CodeBlock
-}
+// One file's source blocks, cached per file.
+//
+// Was one cache of the whole database gated on the reload counter, which meant
+// a single saved file threw away every file's blocks and the next request
+// walked all five hundred of them - about fifty milliseconds, on every save, for
+// a tab that searches as you type.
+var codeParts = NewFileParts[[]common.CodeBlock]()
 
-var codeCached *codeCache
-var codeCacheLock sync.Mutex
-
-// Every source block in the database, cached against the reload counter the
-// same way the records are: the code tab searches as you type, and walking
-// every file per keystroke is the thing the cache exists to stop.
+// Every source block in the database.
 func allCodeBlocks() []common.CodeBlock {
-	db := GetDb()
-	codeCacheLock.Lock()
-	defer codeCacheLock.Unlock()
-	if codeCached != nil && codeCached.reload == db.ReloadIndex {
-		return codeCached.blocks
-	}
-	out := []common.CodeBlock{}
-	for _, fname := range db.GetFiles() {
-		f := db.FindByFile(fname)
-		if f == nil || f.Doc == nil {
-			continue
-		}
+	per := codeParts.All(func(f *common.OrgFile) []common.CodeBlock {
 		// Sections are registered lazily as queries walk them, and a block's
 		// hash is its section's - so register on the way past, the way the
 		// link index and the records do.
 		for _, sec := range flattenSections(f) {
-			db.RegisterSection(sec.Hash, sec, f)
+			GetDb().RegisterSection(sec.Hash, sec, f)
 		}
 		names := namedKinds(f)
+		blocks := []common.CodeBlock{}
 		for _, ref := range collectFileBlocks(f) {
-			out = append(out, readBlock(ref, names))
+			blocks = append(blocks, readBlock(ref, names))
 		}
+		return blocks
+	})
+	out := []common.CodeBlock{}
+	for _, part := range per {
+		out = append(out, part...)
 	}
+	// The parts arrive in the database's file order, so this only orders within
+	// a file - but it is left as it was rather than dropped, because "in file
+	// then line order" is what the tab's grouping relies on and the database's
+	// own order is not guaranteed to be sorted.
 	sort.SliceStable(out, func(a, b int) bool {
 		if out[a].Filename != out[b].Filename {
 			return out[a].Filename < out[b].Filename
 		}
 		return out[a].Line < out[b].Line
 	})
-	codeCached = &codeCache{reload: db.ReloadIndex, blocks: out}
 	return out
 }
 

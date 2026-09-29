@@ -537,6 +537,9 @@ type Expr struct {
 	Doc        *org.Document
 	File       *common.OrgFile
 	Tbl        *org.Table
+	// The parameter map handed to Evaluate, reused across sections. See
+	// EvalString.
+	params map[string]interface{}
 }
 
 func ParseString(expString *common.StringQuery) (*Expr, error) {
@@ -777,6 +780,23 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			return false, nil
 		},
 		// Returns true if the headline has the specific property
+		// A habit is a heading with :STYLE: habit and a repeating schedule. These
+		// three read the history that marking something done now writes - see
+		// habit.go - so they answer about orgs' own data rather than about
+		// whatever Emacs last left in the drawer.
+		"IsHabit": func(args ...interface{}) (interface{}, error) {
+			return IsHabitSection(exp.Sec), nil
+		},
+		// How many times in a row it has been kept, as a number to compare:
+		// `IsHabit() && HabitStreak() > 7`. Zero when the run is already broken,
+		// because a streak is one you are currently on.
+		"HabitStreak": func(args ...interface{}) (interface{}, error) {
+			return (float64)(HabitStreak(exp.Sec, time.Now())), nil
+		},
+		// Left longer than its own repeater allows. The question a review asks.
+		"MissedHabit": func(args ...interface{}) (interface{}, error) {
+			return MissedHabit(exp.Sec, time.Now()), nil
+		},
 		"HasProperty": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			s := args[0].(string)
@@ -912,13 +932,20 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 }
 
 func EvalString(exp *Expr, v *org.Section, f *common.OrgFile) bool {
-	parameters := make(map[string]interface{}, 8)
-	parameters["section"] = v
+	// The parameter map belongs to the expression rather than to the call.
+	//
+	// It was allocated fresh for every section - seven thousand maps per query
+	// here - and it holds one entry that the expression only ever reads. An
+	// Expr is used by one query at a time, which is what makes reusing it safe.
+	if exp.params == nil {
+		exp.params = make(map[string]interface{}, 1)
+	}
+	exp.params["section"] = v
 	// This is the implicit this pointer of our expressions
 	exp.Sec = v
 	exp.Doc = f.Doc
 	exp.File = f
-	result, _ := exp.Expression.Evaluate(parameters)
+	result, _ := exp.Expression.Evaluate(exp.params)
 	if result != nil {
 		return result.(bool)
 	}
@@ -1044,17 +1071,54 @@ func QueryFullFileHtml(query *common.TodoHash) (common.FullTodo, error) {
 
 var habitDoneRe = regexp.MustCompile(`.*State\s+"DONE".*\[(\d{4}[-]\d{2}[-]\d{2})`)
 
+// The days a habit was completed on, read out of the `State "DONE"` lines in its
+// own logbook - which is where org puts them and, since ChangeStatus learnt to
+// write them, where orgs puts them too.
+//
+// Two things here were wrong and both were silent. The drawer was matched as
+// `org.Drawer`, and the parser only ever produces `*org.Drawer` - the same
+// pointer trap as `*org.Headline` - so the loop never fired and every habit came
+// back with no completions whatever was in its logbook. And the drawer looked for
+// was `LOGBOOK` alone, which is right for the default and wrong for anybody who
+// pointed `org-log-into-drawer` somewhere else: the history is wherever this
+// heading's settings say it is.
 func parseHabitCompletions(v *org.Section) []string {
 	var completions []string
+	if v == nil || v.Headline == nil {
+		return nil
+	}
+	want := "LOGBOOK"
+	if f := GetDb().FileFromSection(v); f != nil {
+		if d := fileLogSettings(f).drawer; d != "" {
+			want = d
+		}
+	}
+	read := func(name, text string) {
+		if !strings.EqualFold(name, want) {
+			return
+		}
+		for _, m := range habitDoneRe.FindAllStringSubmatch(text, -1) {
+			completions = append(completions, m[1])
+		}
+	}
 	for _, n := range v.Headline.Children {
-		if d, ok := n.(org.Drawer); ok && d.Name == "LOGBOOK" {
-			// The drawer's String() renders all children (Lists, Paragraphs, etc.)
-			// into org-mode text which we can regex over line by line.
-			text := d.String()
-			fmt.Fprintf(os.Stderr, "GOO: %s\n", text)
-			for _, m := range habitDoneRe.FindAllStringSubmatch(text, -1) {
-				fmt.Fprintf(os.Stderr, "HABIT: %s\n", m[1])
-				completions = append(completions, m[1])
+		switch d := n.(type) {
+		case *org.Drawer:
+			read(d.Name, d.String())
+		case org.Drawer:
+			read(d.Name, d.String())
+		}
+	}
+	// A heading whose log went into the body rather than into a drawer keeps the
+	// same lines as a plain list, so they are worth reading there too - otherwise
+	// turning the drawer off would turn the habit graph off with it.
+	if len(completions) == 0 {
+		for _, n := range v.Headline.Children {
+			switch l := n.(type) {
+			case *org.List:
+				read(want, l.String())
+			case org.List:
+				read(want, l.String())
 			}
 		}
 	}
@@ -1095,11 +1159,7 @@ func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 		deadline = v.Headline.Deadline.Date
 	}
 	var completions []string
-	if title == "Meditate for 10 minutes" {
-		fmt.Fprintf(os.Stderr, "PROPS: %v\n", props)
-	}
 	if props["STYLE"] == "habit" {
-		fmt.Fprintf(os.Stderr, "HAVE A HABIT\n")
 		completions = parseHabitCompletions(v)
 	}
 	var t common.Todo = common.Todo{Parent: par, Headline: title, Tags: v.Headline.Tags, Hash: v.Hash, Date: date, Deadline: deadline, Status: v.Headline.Status, Priority: v.Headline.Priority, Filename: f.Filename, LineNum: v.Headline.Pos.Row, IsActive: IsActive(v, f), Props: props, Level: v.Headline.Lvl, Completions: completions}
@@ -1172,7 +1232,8 @@ func LastChild(hash *common.TodoHash) *common.Todo {
 }
 
 func ProcessNode(exp *Expr, v *org.Section, f *common.OrgFile, todos common.Todos) (common.Todos, error) {
-	GetDb().RegisterSection(v.Hash, v, f)
+	// Registration used to happen here, once per heading per query. It is done
+	// once per version of each file instead - see registerAllSections.
 	res := EvalString(exp, v, f)
 	if res {
 		var t *common.Todo = SectionToTodo(v, f)
@@ -1225,25 +1286,65 @@ func QueryStringNodesOnFile(query string, file *common.OrgFile) ([]*org.Section,
 
 func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	var todos common.Todos
-	files := GetDb().GetFiles()
-	fmt.Fprintf(os.Stderr, "    > QUERY: %s\n", query.Query)
 
 	// Render {{ FILTER }} in our template
 	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
+	before := query.Query
 	query.Query = Conf().PlugManager.Tempo.ExecuteTemplateString(query.Query, ctx)
-
-	fmt.Fprintf(os.Stderr, "    > QUERY AFTER EXPANSION: %s\n", query.Query)
+	// Said once, and only where a filter actually expanded into something else.
+	// It used to be two lines per query whatever happened, which on a client
+	// that queries as you type is two lines of log per keystroke.
+	if query.Query != before {
+		fmt.Fprintf(os.Stderr, "    > QUERY: %s -> %s\n", before, query.Query)
+	}
 	exp, err := ParseString(query)
 	if err != nil {
 		return &todos, err
 	}
+
+	// Every section is registered into the hash index once per version of its
+	// file rather than once per query.
+	//
+	// ProcessNode used to do it on the way past, which meant a query took the
+	// database's *write* lock once per heading - seven thousand times here -
+	// re-registering sections that were already registered, and blocking every
+	// other reader while it did. See registerFileSections.
+	registerAllSections()
+
+	// The files this query could possibly match. A query that demands a keyword
+	// or a tag skips every file whose summary says it has none; anything else
+	// gets the whole database, exactly as before. See queryindex.go.
+	files, _ := filesForQuery(query.Query)
 	for _, file := range files {
 		f := GetDb().GetFile(file)
+		if f == nil || f.Doc == nil {
+			continue
+		}
 		for _, v := range f.Doc.Outline.Children {
 			todos, _ = ProcessNode(exp, v, f, todos)
 		}
 	}
 	return &todos, nil
+}
+
+// Registration, done once per version of each file.
+//
+// The sections of a file only change when the file is read again, so this is a
+// per-file cache like the others (see fileparts.go) and costs nothing on a
+// query that changes nothing.
+var sectionRegistry = NewFileParts[int]()
+
+func registerAllSections() {
+	sectionRegistry.All(func(f *common.OrgFile) int {
+		n := 0
+		for _, sec := range flattenSections(f) {
+			if sec.Hash != "" {
+				GetDb().RegisterSection(sec.Hash, sec, f)
+				n++
+			}
+		}
+		return n
+	})
 }
 
 func Grep(query string, delimeter string) ([]string, error) {
@@ -1422,23 +1523,55 @@ func SetThing(f *common.OrgFile, s *org.Section, doit func(head *org.Headline) o
 	return false
 }
 
+// ChangeStatus moves a heading to another todo keyword, and does what org does
+// when it lands on a done one: stamps CLOSED, writes down which state it came
+// from, and moves a repeating date on rather than leaving the keyword stuck.
+//
+// See logbook.go for all of that and for the three places it can be configured.
+// Two things about this function itself changed with it:
+//
+//  1. **It is a line edit.** This used to set `Headline.Status` on the parsed
+//     document and write the whole thing back through go-org, so ticking off one
+//     task reformatted every drawer and reflowed every table in its file. Every
+//     other writer in the server splices lines; there was never a reason for
+//     this one to be the exception, and there is now a positive reason not to be:
+//     the timestamps being rewritten have to keep the spelling they were written
+//     with.
+//  2. **It looks the heading up with FindByHash.** Reading `ByHash` directly
+//     answers with whatever the last parse left there, and sections are
+//     registered lazily - so on a freshly started server it answered with
+//     nothing, and after any edit it could answer with a section from the parse
+//     before.
 func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
-	didWrite := true
 	hh := common.TodoHash(query.Hash)
 	if !IsStatusValid(&hh, query.Value) {
 		return common.Result{Ok: false}, fmt.Errorf("status value is not valid for this item")
 	}
-	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
-		// Change the status
-		f := GetDb().ByHashToFile[(string)(query.Hash)]
-		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
-			n.Status = query.Value
-			return *n
-		}); set {
-			didWrite = WriteOutOrgFile(f)
-		}
+	sec := GetDb().FindByHash((string)(query.Hash))
+	if sec == nil || sec.Headline == nil {
+		return common.Result{Ok: false}, fmt.Errorf("no heading with that hash")
 	}
-	return common.Result{Ok: didWrite}, nil
+	f := GetDb().ByHashToFile[(string)(query.Hash)]
+	if f == nil {
+		return common.Result{Ok: false}, fmt.Errorf("no file for that heading")
+	}
+	res, err := applyStatusChange(f, sec, query.Value, query.Note, time.Now())
+	if err != nil {
+		return common.Result{Ok: false}, err
+	}
+	return common.Result{Ok: true, Msg: statusChangeMessage(res, query.Value)}, nil
+}
+
+// What to tell a client that asked for DONE and got TODO back.
+//
+// Said out loud because it is surprising the first time: a kanban card dragged
+// into Done that reappears in Next looks like the write failed. It did not - the
+// heading repeats, which is what its own date says it should do.
+func statusChangeMessage(res StatusChangeResult, asked string) string {
+	if res.Repeated && res.Status != asked {
+		return fmt.Sprintf("%s repeats: moved on and set back to %s", asked, res.Status)
+	}
+	return ""
 }
 
 func RenameHeadline(query *common.TodoItemChange) (common.Result, error) {
@@ -1808,7 +1941,7 @@ func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
 			didWrite = WriteOutOrgFile(f)
 		}
 	}
-	return common.Result{didWrite}, nil
+	return common.Result{Ok: didWrite}, nil
 }
 
 func Reformat(query *common.FileList) (common.Result, error) {
@@ -1819,38 +1952,34 @@ func Reformat(query *common.FileList) (common.Result, error) {
 		f := GetDb().FindByFile(filename)
 		didWrite = didWrite && WriteOutOrgFile(f)
 	}
-	return common.Result{didWrite}, nil
+	return common.Result{Ok: didWrite}, nil
 }
 
+// ParseTodoStates splits a `#+TODO:` line the way org splits it - everything
+// before the bar is a live state and everything after it a finished one - and
+// hands back the keywords themselves.
+//
+// The keywords themselves is the part that was wrong. A `#+TODO:` line written
+// the way the org manual writes them carries a cookie on each keyword:
+// `TODO(t) NEXT(n!) | DONE(d!)`, where the letter is a key to press and the `!`
+// or `@` says to log something on entering that state. This used to hand back
+// `NEXT(n!)` as the keyword - so in any file using the standard notation every
+// keyword this server would accept was one no reader would recognise,
+// `IsStatus("NEXT")` matched nothing, and the kanban offered `NEXT(n!)` as a
+// column to drag a card into. The cookies are read properly in logbook.go,
+// where what they ask for is acted on.
 func ParseTodoStates(ftagstr string) ([]string, []string) {
-
-	var active []string
-	var done []string
-
-	ss := strings.Split(ftagstr, "|")
-	if len(ss) >= 1 {
-		sss := strings.Fields(ss[0])
-		for _, x := range sss {
-			x = strings.TrimSpace(x)
-			if x != "" {
-				if !contains(active, x) {
-					active = append(active, x)
-				}
+	active, done := parseTodoKeywords(ftagstr)
+	names := func(kws []TodoKeyword) []string {
+		var out []string
+		for _, k := range kws {
+			if k.Name != "" && !contains(out, k.Name) {
+				out = append(out, k.Name)
 			}
 		}
+		return out
 	}
-	if len(ss) >= 2 {
-		sss := strings.Fields(ss[1])
-		for _, x := range sss {
-			x = strings.TrimSpace(x)
-			if x != "" {
-				if !contains(done, x) {
-					done = append(done, x)
-				}
-			}
-		}
-	}
-	return active, done
+	return names(active), names(done)
 }
 
 func ValidStatusFromFile(f *common.OrgFile) ([]string, []string) {
@@ -1991,7 +2120,6 @@ func fileNameOf(f *common.OrgFile) string {
 	}
 	return f.Filename
 }
-
 
 // ---------------------------------------------------------------------------
 // The date questions the query language asks

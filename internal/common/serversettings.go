@@ -14,6 +14,39 @@ import (
 
 const KBAD_SALT = "THIS IS A DEFAULT SALT DO NOT USE THIS! SET YOUR OWN"
 
+// AttachSettings is where a heading's own files are kept and what is done to
+// the heading when it gets one.
+//
+// The defaults are org-attach's own, so a database orgs attaches to is one
+// emacs can read and the other way round.
+// LogSettings is what orgs writes down when a heading changes state - org's
+// org-log-done, org-log-repeat and org-log-into-drawer, under those names.
+//
+// Every field is a string rather than a bool because org's own settings are
+// three-valued: not at all, a timestamp, or a timestamp and a note. A bool
+// could not say the third thing and would have to grow a second setting beside
+// it to do so.
+type LogSettings struct {
+	Done          string `yaml:"done"`
+	Repeat        string `yaml:"repeat"`
+	IntoDrawer    string `yaml:"intoDrawer"`
+	States        bool   `yaml:"states"`
+	RepeatToState string `yaml:"repeatToState"`
+}
+
+type AttachSettings struct {
+	// The root of the attachment store, relative to the first orgDir. A
+	// heading's folder is this, then its id split two characters deep.
+	// "data" when empty, which is what org-attach-id-dir is.
+	Dir string `yaml:"dir"`
+	// The tag put on a heading the first time something is attached to it.
+	// "ATTACH" when empty, which is what org-attach-auto-tag is; set it to
+	// "-" to tag nothing.
+	Tag string `yaml:"tag"`
+	// The biggest single upload to take, in megabytes. 64 when unset.
+	MaxMb int `yaml:"maxMb"`
+}
+
 // VoiceSettings is what a voice note needs: where the transcription service
 // is, what it should transcribe with, and where the recording and the heading
 // it becomes are put.
@@ -265,6 +298,133 @@ type ServerSettings struct {
 		on every voice note heading.
 		EDOC */
 	Voice VoiceSettings `yaml:"voice"`
+	/* SDOC: Settings
+	* Attachments
+
+		Files that belong to a heading - a pdf, a photograph of a whiteboard, a
+		spreadsheet somebody sent - kept the way org-attach keeps them.
+
+		#+BEGIN_SRC yaml
+		attach:
+		  dir: "data"
+		  tag: "ATTACH"
+		  maxMb: 64
+		#+END_SRC
+
+		Nothing here is required; every value above is the default.
+
+		=dir= is where a heading's folder is made, relative to your first
+		orgDir. A heading's folder is that directory, then the first two
+		characters of its =:ID:=, then the rest of it - =data/8f/3c1a20-.../= -
+		which is exactly what emacs' org-attach does, so a database written by
+		either is readable by the other.
+
+		A heading can also name its own folder with a =:DIR:= property (or the
+		older =:ATTACH_DIR:=), which is read relative to the org file that
+		holds the heading. A heading with one of those does not need an =:ID:=
+		and will not be given one.
+
+		=tag= is put on a heading the first time something is attached to it,
+		so that =IsTask() && HasTags("ATTACH")= finds everything with a file on
+		it. Set it to an empty string to tag nothing.
+
+		=maxMb= is the biggest single upload that will be taken.
+		EDOC */
+	Attach AttachSettings `yaml:"attach"`
+	/* SDOC: Settings
+	* Encryption
+
+		A heading tagged =:crypt:= whose body is ciphertext on disk - org-crypt's
+		format exactly, so a heading encrypted here opens in emacs and one
+		encrypted in emacs opens here.
+
+		#+BEGIN_SRC yaml
+		crypt:
+		  key: ""             # a gpg key id. Empty means symmetric.
+		  tag: "crypt"
+		  bin: ""             # the gpg binary, found on PATH when empty
+		  unlockSeconds: 0
+		#+END_SRC
+
+		Nothing here is required and there is nothing to turn on: if gpg is
+		installed, =/crypt/*= works. =GET /crypt/config= says which mode it is
+		in and how many tagged headings are still sitting in the clear.
+
+		**What this protects, and what it does not.** It protects the file - a
+		backup, a sync folder, a git remote, a stolen disk - and every part of
+		this server that reads org files without going through the crypt
+		endpoints: the search index, grep, the link graph, every exporter. None
+		of them had to be taught to keep a secret, because there is no secret in
+		what they read.
+
+		It does not on its own protect against somebody who can reach the
+		server. That is a question about who holds the key, which is why **the
+		server holds no passphrase**: one arrives with the request that needs
+		it, is handed to gpg down a pipe, and is forgotten.
+
+		=key= is the arrangement worth having on a server other machines can
+		reach. With a public key the server encrypts with no secret at all and
+		**cannot decrypt**, whatever is done to it - decryption needs the
+		private key, which lives where you keep it. A heading can name its own
+		with a =:CRYPTKEY:= property, as org-crypt does.
+
+		=unlockSeconds= holds a passphrase in memory for that long so it does
+		not have to be retyped. It is off by default and is a number rather than
+		a switch because it trades the property above away: for those seconds,
+		reaching the server is enough.
+		EDOC */
+	Crypt CryptSettings `yaml:"crypt"`
+	/* SDOC: Settings
+	* Marking Something Done
+
+		Org does three things when a heading reaches a DONE keyword, and orgs
+		used to do none of them: it stamps =CLOSED:=, it writes a line saying
+		which state the heading moved from and when, and - if the heading
+		repeats - it moves the repeating date on instead of leaving the keyword
+		sitting on DONE forever.
+
+		These are the same three switches org has, under the same names, and
+		they can be set here, per file with =#+STARTUP:=, or per heading with a
+		=:LOGGING:= property. The narrowest one that says anything wins.
+
+		#+BEGIN_SRC yaml
+		log:
+		  done: "time"          # none | time | note
+		  repeat: "time"        # none | time | note
+		  intoDrawer: "LOGBOOK" # a drawer name, or "" to write into the body
+		  states: false         # log every state change, not only done ones
+		  repeatToState: ""     # a keyword, "previous", or "" for the first one
+		#+END_SRC
+
+		=done= is org's =org-log-done=. =time= stamps =CLOSED:= and writes a
+		=State "DONE" from "NEXT" [...]= line; =note= does the same and keeps a
+		note with it; =none= does neither. =repeat= is =org-log-repeat= and says
+		what to write when a repeating date moves on - a repeat is not a
+		closure, so no =CLOSED:= is stamped and any existing one is taken off.
+
+		=intoDrawer= is =org-log-into-drawer=. A name puts the lines in that
+		drawer; empty writes them into the body as a plain list, which is what
+		org does by default. It defaults to =LOGBOOK= here rather than to
+		nothing, because the agenda's habit graph is built by reading those
+		lines back out of =LOGBOOK= and can only work if that is where they go.
+
+		=states= logs every change between keywords rather than only the ones
+		into a DONE state. Per-keyword cookies in a =#+TODO:= line say the same
+		thing for one keyword and always win: =NEXT(n!)= logs a timestamp on
+		entering NEXT whatever =states= says, and =WAITING(w@)= keeps a note.
+
+		=repeatToState= is =org-todo-repeat-to-state=: which keyword a repeating
+		heading goes back to. Empty means the first keyword of the sequence,
+		which is what org does; =previous= means whichever state it was in
+		before it was marked done; anything else is used as the keyword.
+
+		At the file level, the =#+STARTUP:= words org defines all work:
+		=logdone=, =nologdone=, =lognotedone=, =logrepeat=, =nologrepeat=,
+		=lognoterepeat=, =logdrawer= and =nologdrawer=. So does
+		=#+PROPERTY: LOG_INTO_DRAWER=, and a heading's own =:LOG_INTO_DRAWER:=
+		or =:LOGGING:= property.
+		EDOC */
+	Log LogSettings `yaml:"log"`
 	/* SDOC: Settings
 	* Running Source Blocks
 

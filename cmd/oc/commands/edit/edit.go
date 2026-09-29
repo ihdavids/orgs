@@ -64,6 +64,10 @@ func (self *Todo) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Cycle, "cycle", false,
 		"move to the next keyword in this heading's own sequence")
 	fset.BoolVar(&self.Done, "done", false, "the first finished keyword this heading's file has")
+	// A note to keep with the change, for the keywords whose `@` cookie asks for
+	// one. The server cannot prompt for it, so this is the only way one reaches
+	// the file from a terminal.
+	fset.StringVar(&self.Note, "note", "", "a note to keep with the state change")
 }
 
 func (self *Todo) Exec(core *commands.Core) {
@@ -113,7 +117,7 @@ func (self *Todo) Exec(core *commands.Core) {
 
 		var reply common.Result
 		commands.SendReceivePost(core, "status/change",
-			&common.TodoItemChange{Hash: t.Hash, Value: want}, &reply)
+			&common.TodoItemChange{Hash: t.Hash, Value: want, Note: self.Note}, &reply)
 		if commands.DryRun {
 			continue
 		}
@@ -124,7 +128,13 @@ func (self *Todo) Exec(core *commands.Core) {
 		if shown == "" {
 			shown = "(no keyword)"
 		}
-		lines = append(lines, fmt.Sprintf("%s → %s", commands.Describe(t), keywordInk(shown)))
+		line := fmt.Sprintf("%s → %s", commands.Describe(t), keywordInk(shown))
+		// A repeating heading asked for DONE comes back on a live keyword, which
+		// looks like the write having failed unless it is said out loud.
+		if reply.Msg != "" {
+			line += " (" + reply.Msg + ")"
+		}
+		lines = append(lines, line)
 	}
 	commands.Ok(len(lines), "changed", lines)
 }

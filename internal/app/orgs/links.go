@@ -738,6 +738,23 @@ func resolveLink(db *OrgDb, ids *idIndex, lookup *fileLookup, raw string, fromFi
 // Building and caching the index
 // ---------------------------------------------------------------------------
 
+// What one file contributes before anything is resolved: the links written in
+// it, and its headings' ids.
+//
+// The *collection* is per file - walking a document for links looks at nothing
+// else - and it is the expensive half. The *resolution* is not and cannot be:
+// a link in one file lands on a heading in another, so it has to happen once
+// the whole database has been collected. So the parts below cache the walk and
+// the resolution is redone each time, which is arithmetic over what was already
+// found rather than a second pass over the files.
+type linkPart struct {
+	links []foundLink
+	file  *common.OrgFile
+	secs  []*org.Section
+}
+
+var linkParts = NewFileParts[linkPart]()
+
 func buildLinkIndex(db *OrgDb) *linkIndex {
 	idx := &linkIndex{
 		reload:   db.ReloadIndex,
@@ -745,30 +762,35 @@ func buildLinkIndex(db *OrgDb) *linkIndex {
 		toFile:   map[string][]int{},
 	}
 	lookup := buildFileLookup(db)
-	files := db.GetFiles()
 
-	// Sections are registered lazily as queries touch them, so an "id:" link
-	// written in the first file could not find a heading in the last one. Walk
-	// every file into the registry first, then resolve.
-	ids := newIdIndex()
-	for _, fname := range files {
-		f := db.FindByFile(fname)
-		if f == nil || f.Doc == nil {
-			continue
-		}
+	// The walk, cached per file: a saved file costs one file's links rather
+	// than the database's.
+	parts := linkParts.All(func(f *common.OrgFile) linkPart {
 		secs := flattenSections(f)
 		for _, sec := range secs {
-			db.RegisterSection(sec.Hash, sec, f)
+			GetDb().RegisterSection(sec.Hash, sec, f)
 		}
-		ids.addFile(f, secs)
-	}
+		return linkPart{links: collectFileLinks(f), file: f, secs: secs}
+	})
 
-	for _, fname := range files {
-		f := db.FindByFile(fname)
-		if f == nil || f.Doc == nil {
+	// Sections are registered lazily as queries touch them, so an "id:" link
+	// written in the first file could not find a heading in the last one. Every
+	// file goes into the id index before anything is resolved.
+	ids := newIdIndex()
+	for i := range parts {
+		if parts[i].file == nil {
 			continue
 		}
-		for _, fl := range collectFileLinks(f) {
+		ids.addFile(parts[i].file, parts[i].secs)
+	}
+
+	for i := range parts {
+		p := &parts[i]
+		if p.file == nil || p.file.Doc == nil {
+			continue
+		}
+		fname := p.file.Doc.Path
+		for _, fl := range p.links {
 			link := common.OrgLink{Raw: fl.raw, Desc: fl.desc}
 			link.From = common.LinkEnd{Filename: fname, Line: fl.line}
 			if fl.sec != nil {

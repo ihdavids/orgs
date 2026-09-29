@@ -395,6 +395,7 @@ func (self *Config) ParseConfig() {
 		manager.Port = self.Server.Port
 		manager.TLSPort = self.Server.TLSPort
 		manager.OrgDirs = self.Server.OrgDirs
+		manager.Attach = self.Server.Attach
 	}
 	config.PlugManager = manager
 	if self.Server != nil {

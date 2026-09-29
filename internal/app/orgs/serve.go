@@ -287,6 +287,11 @@ func StartServer(sets *common.ServerSettings) {
 	// Started here rather than in a plugin because it outlives a reload and is
 	// not driven by the org files at all.
 	StartWhisper()
+	// The trigram index, so that searching the text of every file is not
+	// reading the text of every file. Built in the background: the first
+	// request is somebody typing into a search box, and a first keystroke that
+	// costs a walk of the whole database is what this is here to stop.
+	StartTrigramIndex()
 
 	// Allow http connections but only from localhost
 	go func() {
@@ -365,6 +370,7 @@ func StartServer(sets *common.ServerSettings) {
 		<-sig
 	}
 	StopWhisper()
+	StopTrigramIndex()
 	stopPlugins(sets)
 }
 

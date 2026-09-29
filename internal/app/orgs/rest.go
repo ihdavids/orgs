@@ -148,6 +148,11 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/links/stats", RequestLinkStats).Methods("GET")
 	api.HandleFunc("/links/all", RequestAllLinks).Methods("GET")   // every link, flat
 
+	// The database as a galaxy: every file or heading a star. Not the link
+	// graph - that one only holds the things something links to, and a map has
+	// to hold everything.
+	api.HandleFunc("/starmap", RequestStarmap).Methods("GET")
+
 	// Dungeons & Dragons character module
 	api.HandleFunc("/dnd/rulesets", RequestDndRulesets).Methods("GET")
 	api.HandleFunc("/dnd/reload", PostDndReload).Methods("POST")
@@ -223,6 +228,23 @@ func RestApi(router *mux.Router) {
 
 	// Voice notes: record, transcribe through go-whisper, file as org
 	api.HandleFunc("/voice/config", RequestVoiceConfig).Methods("GET")
+	// org-crypt: a heading tagged :crypt: whose body is ciphertext on disk.
+	api.HandleFunc("/crypt/config", RequestCryptConfig).Methods("GET")
+	api.HandleFunc("/crypt/headings", RequestCryptHeadings).Methods("GET")
+	api.HandleFunc("/crypt/encrypt", PostCryptEncrypt).Methods("POST")
+	api.HandleFunc("/crypt/decrypt", PostCryptDecrypt).Methods("POST")
+	api.HandleFunc("/crypt/update", PostCryptUpdate).Methods("POST")
+	api.HandleFunc("/crypt/sweep", PostCryptSweep).Methods("POST")
+	api.HandleFunc("/crypt/lock", PostCryptLock).Methods("POST")
+
+	// Attachments: the files a heading owns. org-attach, so the folder is the
+	// one emacs would use.
+	api.HandleFunc("/attach", PostAttach).Methods("POST")
+	api.HandleFunc("/attachments", RequestAttachments).Methods("GET")
+	api.HandleFunc("/attachments/all", RequestAllAttachments).Methods("GET")
+	api.HandleFunc("/attachment/{hash}/{name}", RequestAttachment).Methods("GET")
+	api.HandleFunc("/attachment/{hash}/{name}", DeleteAttachment).Methods("DELETE")
+
 	api.HandleFunc("/voice/recording", PostVoiceRecording).Methods("POST")
 	api.HandleFunc("/voice/recordings", RequestVoiceRecordings).Methods("GET")
 	api.HandleFunc("/voice/recording/{id}", RequestVoiceAudio).Methods("GET")

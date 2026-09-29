@@ -45,6 +45,10 @@ type PluginManager struct {
 	Plugs          PluginLookup
 	Filters        map[string]string
 	TagGroups      map[string][]string
+	// Where a heading's attachments live. Carried here because an exporter has
+	// to turn `[[attachment:report.pdf]]` into something a reader can open, and
+	// an exporter cannot ask the server - the server imports the exporters.
+	Attach AttachSettings
 }
 
 // Updating plugins are called with a target

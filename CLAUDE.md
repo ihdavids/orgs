@@ -517,6 +517,87 @@ That same worg file view shows a file three ways, picked from buttons over the p
 
 `GET /status` answers with the keywords this server accepts - `defaultTodoStates` split the way org splits it, everything before the `|` active and everything after it finished - in the order they were configured, which is the order they are meant to be read in. `GET /status/{hash}` is the per-heading question and answers from that heading's own file (`#+TODO:`) when it has one. worg's kanban builds a board's default columns out of the global list.
 
+### What DONE does
+
+`ChangeStatus` in `todo.go` used to set `Headline.Status` and write the file, and
+that was all of it. Org does three more things when a heading reaches a DONE
+keyword, and `internal/app/orgs/logbook.go` is those three: it stamps `CLOSED:`,
+it writes a `- State "DONE"  from "NEXT"  [...]` line, and it **moves a repeating
+date on instead of leaving the keyword stuck on DONE**. Every writer funnels
+through this one function - worg's kanban drag, `orgs todo`, the MCP tool, the
+tui's `t` menu, the gantt client - so a habit touched anywhere outside Emacs was
+quietly broken everywhere.
+
+The consequence was already in the tree: `parseHabitCompletions` builds the
+agenda's habit graph by reading exactly those `State "DONE"` lines, out of a
+drawer nothing in orgs had ever written. `IsHabit()`, `HabitStreak()` and
+`MissedHabit()` (`habit.go`) are the queries that history is worth having for.
+
+Configured the way org configures it, narrowest wins: `log:` in the yaml
+(`done`, `repeat`, `intoDrawer`, `states`, `repeatToState`), then the file's
+`#+STARTUP:` words (`nologdone`, `lognotedone`, `logrepeat`, `nologdrawer` and
+the rest) and `#+PROPERTY: LOG_INTO_DRAWER`, then a heading's own `:LOGGING:` or
+`:LOG_INTO_DRAWER:`. Two defaults differ from vanilla Emacs deliberately -
+`done: time` and `intoDrawer: LOGBOOK` - because the complaint this answers is
+that marking something done recorded nothing, and the habit graph reads `LOGBOOK`
+specifically.
+
+Five things here are load-bearing:
+
+1. **It is a line edit, not a document rewrite.** `ChangeStatus` went through
+   `WriteOutOrgFile`, so ticking off one task reformatted every drawer and
+   reflowed every table in its file. Everything else that writes splices lines;
+   this is also what lets a timestamp keep the spelling it was written with.
+2. **Every edit that adds or removes a line moves the ones below it**, so the
+   heading's extent is measured again after each (`reread`). Measuring once at
+   the top and using it throughout writes the second edit into the wrong heading
+   and reports success.
+3. **A repeat is not a closure.** No `CLOSED:` is stamped and any existing one
+   comes off, `:LAST_REPEAT:` is written, and the keyword goes back to a live
+   state - which is why the reply carries a `Msg` saying so. A card dragged into
+   Done that reappears in Next otherwise reads as a failed write.
+4. **The three repeater spellings are three different sums.** `+2d` counts from
+   the old date and may stay in the past; `++2d` counts from it until strictly
+   in the future; `.+2d` counts from today - but keeps the *time of day* the
+   stamp carried, or a daily 09:00 reminder walks round the clock over a week of
+   being ticked off late.
+5. **A day is the unit for habit counting**, so a habit ticked twice in an
+   afternoon is one day's worth and a double-click is harmless.
+
+Four bugs surfaced building this, all silent, none of them new, and the first
+three in the vendored go-org:
+
+1. **`trimFastTags` only stripped a three-character cookie.** `TODO(t)` worked;
+   `NEXT(n!)` and `WAITING(w@/!)` - org's own logging notation, and the reason
+   cookies matter here at all - were left on the keyword. Since keywords are
+   matched on a headline by literal prefix, `* NEXT Write the thing` came out
+   with **no keyword at all**, titled "NEXT Write the thing": not a task, not
+   findable by keyword, never in an agenda. Every file using the notation the org
+   manual documents was affected. `ParseTodoStates` had the same bug on its own
+   side, so `/status` offered `NEXT(n!)` as a keyword to write.
+2. **Only one planning keyword per line was read.** Org keeps all of a heading's
+   planning on one line, and `DEADLINE: <...> SCHEDULED: <...>` - which Emacs
+   writes whenever a heading has both - lost the deadline entirely. So did
+   `CLOSED: [...] DEADLINE: <...>`, which is what stamping CLOSED produces. One
+   line in is still one line out (`SDC.Others`), or the first rewrite would split
+   every done heading in the file.
+3. **A habit's `.+1d/3d` did not parse.** org-habit's slack half was absent from
+   the cookie pattern, so the whole timestamp failed to match: the planning line
+   was re-read as body text and the heading came back with `Scheduled` nil - the
+   same silence `CompileSDCRe` used to produce for a plain repeater. Orgs' own
+   timestamp pattern in `logbook.go` had to learn it too, where the symptom was a
+   habit that never repeated. Fixing the parse meant also writing the slack half
+   back, or it would have introduced the data loss it removed.
+4. **`parseHabitCompletions` matched `org.Drawer`**, and the parser only ever
+   produces `*org.Drawer` - the same pointer trap as `*org.Headline` - so the
+   loop never fired and every habit came back with no completions whatever was in
+   its logbook. It also looked only for `LOGBOOK`, which is wrong for anybody who
+   pointed the drawer elsewhere.
+
+On the real corpus (541 files, 7,187 headings) the three parser changes make
+**zero** difference - they only widen what parses - which is how they were
+checked: the same walk under both versions, diffed.
+
 ### Filters and tag groups
 
 `Filters` and `TagGroups` in the YAML are macro-like helpers referenced by queries. `AddInternalFilters` / `AddInternalTagGroups` in `settings.go` seed a default set (`AllTasks`, `HomeTasks`, `WorkTasks`, `WorkProjects`, `PERSONAL`, `HOME`, `WORK`) unless `noInternalFilters` / `noInternalTagGroups` is set. Queries reference filters using `{{ FilterName }}` handlebars-style substitution.

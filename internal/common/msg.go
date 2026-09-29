@@ -56,13 +56,13 @@ func (self *Date) Get() (time.Time, error) {
 }
 
 type Todo struct {
-	Headline    string
-	Tags        []string
-	Props       map[string]string
-	Hash        string
-	Date        *org.OrgDate
-	Deadline    *org.OrgDate
-	Status      string
+	Headline string
+	Tags     []string
+	Props    map[string]string
+	Hash     string
+	Date     *org.OrgDate
+	Deadline *org.OrgDate
+	Status   string
 	// The single letter out of a [#A] cookie, empty when the heading has none.
 	// go-org takes it off the headline text, so this is the only place a client
 	// that has only searched can see it.
@@ -97,6 +97,11 @@ type TodoHash string
 type TodoItemChange struct {
 	Hash  string
 	Value string
+	// A note to keep with the state change, for the keywords org's `@` cookie
+	// (or `log: {done: note}`) asks for one on. A server cannot prompt for it,
+	// so a client that has one sends it and one that has not gets the plain
+	// timestamp line.
+	Note string `json:",omitempty"`
 }
 
 type TodoPropertyChange struct {
@@ -106,9 +111,9 @@ type TodoPropertyChange struct {
 }
 
 type TodoDateChange struct {
-	Hash     string
-	Name     string // "SCHEDULED", "DEADLINE", "CLOSED", or "TIMESTAMP"
-	Value    string // org date string e.g. "<2024-01-01 Mon>" or "" to clear
+	Hash  string
+	Name  string // "SCHEDULED", "DEADLINE", "CLOSED", or "TIMESTAMP"
+	Value string // org date string e.g. "<2024-01-01 Mon>" or "" to clear
 }
 
 type Todos []Todo
@@ -118,6 +123,11 @@ type StringQuery struct {
 }
 type Result struct {
 	Ok bool `yaml:"status"`
+	// Something the server wants said about a write that worked but did not do
+	// quite what was asked - a DONE that became a TODO again because the heading
+	// repeats, which otherwise looks to a client like the write having failed.
+	// Omitted when empty, so every existing reply is unchanged.
+	Msg string `yaml:"msg" json:"Msg,omitempty"`
 }
 
 type ResultMsg struct {

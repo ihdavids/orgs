@@ -92,6 +92,25 @@ type OrgHtmlWriter struct {
 	Opts             string
 	Nodes            []OrgHeadingNode
 	isClosed         map[string]bool
+
+	// The document being written.
+	//
+	// Not `w.Document`, which go-org's own `Before` would set and which this
+	// exporter never calls - so it is the empty default, and its Path is "".
+	// Setting it properly would be the better fix and is not this change's to
+	// make: it would also switch on `:noexport:` exclusion and `#+LINK:`
+	// expansion, which would quietly change every page anybody already
+	// exports. This is the narrow thing attachment links need: a file to
+	// resolve a relative `:DIR:` against.
+	SrcDoc *org.Document
+	// The heading currently being written, for `[[attachment:...]]`.
+	//
+	// An attachment link says which file rather than where it is, so resolving
+	// one needs the heading that owns it - and a link node carries no way back
+	// to its own heading. Recorded on the way past instead, which is exact:
+	// every link inside a heading is written between that heading's start and
+	// the next one's.
+	inHeadline *org.Headline
 }
 
 var docStart = `
@@ -111,7 +130,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}}
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}, nil, nil}
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -252,10 +271,78 @@ func AudioType(target string) string {
 // exported page on disk wants file:// urls, a vscode webview wants localhost,
 // and a page served by this server wants a path of its own so that it works
 // whatever host and port it was reached on.
+// `[[attachment:report.pdf]]` turned into a path, or the target unchanged when
+// it is not an attachment link.
+//
+// Resolved here, in the exporter, because an attachment link is the one link
+// type whose meaning depends on the heading it sits in: the same
+// `attachment:report.pdf` under two headings is two different files. The
+// arithmetic itself is `internal/common`, so the server and every exporter
+// reach the same folder.
+func (w *OrgHtmlWriter) attachTarget(target string) string {
+	name, ok := common.AttachLinkName(target)
+	if !ok {
+		return target
+	}
+	if w.inHeadline == nil {
+		return target
+	}
+	orgFile := ""
+	if w.SrcDoc != nil {
+		orgFile = w.SrcDoc.Path
+	} else if w.Document != nil {
+		orgFile = w.Document.Path
+	}
+	dirs := []string{}
+	set := common.AttachSettings{}
+	if w.Exp != nil && w.Exp.pm != nil {
+		dirs = w.Exp.pm.OrgDirs
+		set = w.Exp.pm.Attach
+	}
+	dir, from, _ := common.AttachDirFrom(
+		headlineProp(w.inHeadline, "DIR", "ATTACH_DIR"),
+		headlineProp(w.inHeadline, "ID"),
+		orgFile, dirs, set)
+	if dir == "" || from == "" {
+		// The heading owns no folder, so the link names nothing. Left as it
+		// was rather than turned into a path that does not exist: a broken
+		// link that still says `attachment:` is one somebody can act on.
+		return target
+	}
+	return filepath.Join(dir, filepath.FromSlash(name))
+}
+
+// One property off a headline, by any of the names it might be written under.
+func headlineProp(h *org.Headline, names ...string) string {
+	if h == nil || h.Properties == nil {
+		return ""
+	}
+	for _, p := range h.Properties.Properties {
+		for _, n := range names {
+			if strings.EqualFold(p[0], n) {
+				return p[1]
+			}
+		}
+	}
+	return ""
+}
+
+var imageNameRe = regexp.MustCompile(`(?i)[.](png|gif|jpe?g|svg|tiff?|webp|avif|bmp|ico)$`)
+
+// Is this attachment a picture? Its name is the only thing to go on, which is
+// the same answer the rest of the media handling gives.
+func isImageName(name string) bool {
+	if i := strings.IndexAny(name, "?#"); i >= 0 {
+		name = name[:i]
+	}
+	return imageNameRe.MatchString(name)
+}
+
 func (w *OrgHtmlWriter) MediaSrc(doc *org.Document, target string) string {
 	if target == "" {
 		return ""
 	}
+	target = w.attachTarget(target)
 	// Anything with a protocol of its own is already fetchable.
 	if strings.Contains(target, "://") || strings.HasPrefix(target, "//") {
 		return target
@@ -353,6 +440,31 @@ func (w *OrgHtmlWriter) WriteAudio(h org.Headline) {
 }
 
 func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
+	// `[[attachment:report.pdf]]` - a file the heading owns. Written as a
+	// picture when it is one and as a link when it is not, which is what org
+	// does with it, and resolved against the heading rather than against the
+	// file: the same name under two headings is two different files.
+	if name, ok := common.AttachLinkName(l.URL); ok {
+		src := w.MediaSrc(w.Document, l.URL)
+		if src == "" {
+			// The heading owns no folder, or the file is somewhere nothing can
+			// serve. Say the name rather than writing a link to nowhere.
+			w.WriteString(html.EscapeString(name))
+			return
+		}
+		description := name
+		if l.Description != nil {
+			description = org.String(l.Description...)
+		}
+		if isImageName(name) {
+			w.WriteString(fmt.Sprintf(`<img src="%s" alt="%s" title="%s" style="width: 70%%; height: 70%%;"/>`,
+				src, html.EscapeString(description), html.EscapeString(name)))
+			return
+		}
+		w.WriteString(fmt.Sprintf(`<a href="%s" class="attachment" download="%s">%s</a>`,
+			src, html.EscapeString(name), html.EscapeString(description)))
+		return
+	}
 	if l.Protocol == "file" && l.Kind() == "image" {
 
 		// This bit is tricky: VSCode will not work with anything not setup as accessible in the webroot
@@ -462,6 +574,12 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	if h.IsExcluded(w.Document) {
 		return
 	}
+	// Whose attachments any `[[attachment:...]]` below belongs to, until the
+	// next heading takes over. Put back on the way out rather than cleared, so
+	// that a nested heading does not leave its parent's links unresolvable.
+	was := w.inHeadline
+	w.inHeadline = &h
+	defer func() { w.inHeadline = was }()
 	if w.Exp.ExtendedHeadline != nil {
 		w.Exp.ExtendedHeadline(w, h)
 		return
@@ -636,6 +754,7 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 		}
 		w := NewOrgHtmlWriter(self)
 		w.Opts = opts
+		w.SrcDoc = f
 		fmt.Fprintf(os.Stderr, "Writing nodes...\n")
 		org.WriteNodes(w, f.Nodes...)
 		fmt.Fprintf(os.Stderr, "Done writing nodes...\n")

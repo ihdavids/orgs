@@ -62,6 +62,14 @@ type BodyResult struct {
 	// whole heading wants all of them, and which folder each link is relative
 	// to is a sum only this end can do.
 	Images []string
+	// The files this heading owns - its org-attach folder, already listed and
+	// resolved. A card that can be dragged a pdf onto has to be able to show
+	// that the pdf is there.
+	//
+	// Listed rather than left to a second request: the card is already asking
+	// for the body, and a card per request is what makes a board of forty
+	// cards forty requests.
+	Attachments []common.Attachment
 }
 
 var audioExt = map[string]bool{
@@ -197,12 +205,16 @@ func checkItem(line string) []string {
 // at the first heading at the same level or above. Child headings are not part
 // of it - a card shows what is written on its own heading.
 func headingBodyLines(hash string) (filename string, lines []string, from int, to int, err error) {
-	sec, ok := GetDb().ByHash[hash]
-	if !ok || sec == nil || sec.Headline == nil {
+	// FindByHash rather than the raw map: the registries are filled in lazily,
+	// so on a server that has not answered a query yet the map is empty - and
+	// after a file has been written the entries for it have been dropped, which
+	// is what stops this handing back a heading three lines from where it is.
+	sec := GetDb().FindByHash(hash)
+	if sec == nil || sec.Headline == nil {
 		return "", nil, 0, 0, fmt.Errorf("no heading with that hash")
 	}
-	f, ok := GetDb().ByHashToFile[hash]
-	if !ok || f == nil || f.Doc == nil {
+	f := GetDb().FileFromSection(sec)
+	if f == nil || f.Doc == nil {
 		return "", nil, 0, 0, fmt.Errorf("that heading has no file")
 	}
 	filename = f.Doc.Path
@@ -277,6 +289,29 @@ func RequestTodoBody(w http.ResponseWriter, r *http.Request) {
 	// Image is what a card reads, and is the first of them.
 	if len(res.Images) > 0 {
 		res.Image = res.Images[0]
+	}
+	// What the heading owns, and - when it owns a picture and points at no
+	// other - the picture the card draws. Attaching a screenshot to a card and
+	// having the card not show it would be a surprise.
+	if sec := GetDb().FindByHash(string(h)); sec != nil {
+		dir, from, _ := attachDirOf(sec, GetDb().FileFromSection(sec))
+		if dir != "" && from != "" {
+			res.Attachments = attachmentsIn(dir, string(h))
+			for _, a := range res.Attachments {
+				if a.Media == "image" {
+					if res.Image == "" {
+						res.Image = a.Url
+					}
+					res.Images = append(res.Images, a.Url)
+				}
+				if a.Media == "audio" && res.Audio == "" {
+					res.Audio = a.Url
+				}
+			}
+		}
+	}
+	if res.Attachments == nil {
+		res.Attachments = []common.Attachment{}
 	}
 	bodyJson(w, res)
 }
