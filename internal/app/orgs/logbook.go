@@ -398,6 +398,34 @@ func (self repeater) step(t time.Time) time.Time {
 	return t
 }
 
+// One interval back from a date.
+//
+// The only reversal of a repeat there is. It is exact for `+2d`, which takes one
+// step from the date it had; it lands on the day the tick happened for `.+2d`,
+// which counted from that day; and for `++2d` it lands on the latest date the
+// heading could have been carrying, since `++` steps until it is past today and
+// one step back from the first date after today is therefore on or before it.
+//
+// Which is as good as this can be got: `++2d` may have taken several steps and
+// nothing left in the file says how many. That is the reason a habit tick cannot
+// be reversed by arithmetic alone, and the reason this is used only when
+// :LAST_REPEAT: says the step happened today.
+func (self repeater) back(t time.Time) time.Time {
+	switch self.unit {
+	case "h":
+		return t.Add(-time.Duration(self.n) * time.Hour)
+	case "d":
+		return t.AddDate(0, 0, -self.n)
+	case "w":
+		return t.AddDate(0, 0, -7*self.n)
+	case "m":
+		return t.AddDate(0, -self.n, 0)
+	case "y":
+		return t.AddDate(-self.n, 0, 0)
+	}
+	return t
+}
+
 // Where a repeating date goes next, which is three different sums depending on
 // how the repeater was written - and the difference between them is the whole
 // reason org has three spellings:

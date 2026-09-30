@@ -373,6 +373,7 @@ Which means the preview is **a second run of the same binary**: fzf's `--preview
 2. **The command is a shell string**, so every path in it is single quoted (`Shq`). fzf quotes the `{1}`/`{2}` it substitutes, so those are left alone.
 3. **The list is tab separated**, address fields first and hidden (`--with-nth`). `orgs grep` splits on `|` and a path with a pipe in it takes a line apart in the wrong place. What is *shown* is also what is *searched*, which is why the full path is in the display as well as in the address.
 4. **The pane draws to whatever width it is given** (`FZF_PREVIEW_COLUMNS`, then `COLUMNS`, then 80). Its boxes are **open on the right** on purpose: a box that closes has to know the display width of every line in it, and one line with a tab or a wide character makes that a guess. A box with one ragged edge reads as a box; one with the wrong edge reads as a bug.
+5. **The pane has to be told it may use colour** (`commands.PickerOutput`). fzf runs the child with a *pipe* for stdout, so `term.IsTerminal` is false and `Colour()` answered no - every one of these panes was quietly drawing in black and white from the day it was written. This is the same thing `bat --color=always` is for. It was invisible for as long as the panes were the only thing affected; it became visible the moment `orgs habits` grew a key that **reloads the list**, because then a coloured list drawn by the parent was replaced by an uncoloured one drawn by a child, in front of somebody watching. `-no-color` and `NO_COLOR` still win, and a command that passes flags to its children has to pass `-no-color` among them or the pane and the listing disagree.
 
 And one that is not about fzf at all: **`commands.FreeArgs` consumes the arguments as it parses them**, so a command wanting both flags-anywhere *and* a subcommand has to take the words once and read the subcommand off that slice. Asking the flag set afterwards gets nothing, which silently turned `orgs links preview` into a search for the word "preview".
 
@@ -516,6 +517,222 @@ That same worg file view shows a file three ways, picked from buttons over the p
 ### Todo keywords over the wire
 
 `GET /status` answers with the keywords this server accepts - `defaultTodoStates` split the way org splits it, everything before the `|` active and everything after it finished - in the order they were configured, which is the order they are meant to be read in. `GET /status/{hash}` is the per-heading question and answers from that heading's own file (`#+TODO:`) when it has one. worg's kanban builds a board's default columns out of the global list.
+
+### The habit tracker
+
+`GET /habits` (`internal/app/orgs/habit.go`) answers with every `:STYLE: habit`
+heading and how it is going: the current run, the best run it has ever been on,
+how much of what the cadence asked for actually happened, and one entry per day
+for the last eight weeks. worg's Agenda tab draws it above the calendar
+(`components/HabitTracker.tsx`, model and tone in `src/habits.ts`), folding to
+one line and a progress bar.
+
+It only became possible when `ChangeStatus` learnt to write `State "DONE"` lines:
+the history is read back out of each heading's own logbook, so before that this
+endpoint could only have answered about habits kept in Emacs. Ticking one off in
+the tracker is `POST /status/change` like everything else - the server moves the
+repeater on, writes the line, and the next read of `/habits` fills the square.
+
+The decisions worth keeping are all about **not lying to somebody about their own
+habits**, which is the way a tracker fails:
+
+1. **Three day states, not two.** `done`, `miss`, and `ok` - where `ok` is a day
+   inside the grace the habit's own repeater grants. A habit written `.+1d/3d`
+   not done yesterday is a day you had in hand; drawing that as a gap makes a
+   well-kept habit look like a failing one.
+2. **The day a habit comes round is never a miss.** You have that day to do it.
+   Off by one here paints a red square on every habit every morning, which is a
+   tracker that cannot be trusted and so will not be looked at.
+3. **No day before the habit's first completion is a miss** either - there was
+   nothing to miss yet, and a new habit opening with eight weeks of red is the
+   tracker arguing with somebody who has just started.
+4. **`Rate` counts from the first completion**, not from the edge of the window.
+   A habit started on Tuesday and kept since is at 100%, not at 4%.
+5. **"Best ever" needs a previous run to beat** (`Total > Streak`). A first
+   unbroken run is technically its own best from day two, and saying so daily
+   makes the words worthless by the time the run is worth something - 40 needs no
+   adjective.
+6. **A broken run never says what it was.** "start again", not "you lost a 40 day
+   run": the job at that moment is to make starting again look small.
+
+`habits.ts` is a separate module for the same reason `chartspec.ts` is - getting
+the tone wrong is not the sort of bug a screenshot catches, so the branching is
+pinned by tests. The per-file half of the walk is cached with `FileParts`; the
+half that changes at midnight (the window, the streaks) is not.
+
+#### `orgs habits`, the tracker at a prompt
+
+`cmd/oc/commands/habits/` is the same tracker in a terminal: `orgs habits` is the
+listing, `show` draws one, `done` ticks one off, `untick` takes today's tick off
+again, `pick` is the fzf picker with the habit drawn beside the list, `-short` is one line for a status bar and `-w`
+redraws it as the files change. One request to `/habits` and one write to
+`/status/change` (or `/habits/untick`) - the tone decisions are in `view.go` beside
+`view_test.go`,
+which is the same split as `habits.ts` and its tests and exists for the same
+reason.
+
+The six rules above are said again there, deliberately, and **must not drift**: a
+habit read in the browser and the same habit read in a terminal have to be worth
+the same thing, or it reads as two habits. `view_test.go` pins them on this side.
+One of them has already drifted in worg's favour and the fix belongs there rather
+than here: `Cadence` answers "does not repeat" for a heading marked `:STYLE: habit`
+whose schedule has no repeater, where `cadence()` in `habits.ts` says "every day" -
+the server reports `Every` as 1 for those because a zero would divide, not because
+they happen daily, so the question has to be asked of `Repeater`.
+
+Four things are the terminal's own:
+
+1. **Three day states are three *characters*** (`█` kept, `░` missed, `·` in hand)
+   as well as three colours. The browser can rely on colour; here it is off down a
+   pipe, off under `NO_COLOR`, off in a status bar and off whenever somebody passes
+   `-no-color`, and the one rule that matters about the strip - a missed day has to
+   be as readable as a kept one - has to survive all of that. The legend at the
+   foot says which is which, because three shades of block are not self
+   explanatory and the difference between "missed" and "in hand" is the whole
+   reason there are three.
+2. **The window is trimmed to the terminal from the oldest end, never sampled.**
+   It is asked for once at the widest and cut per screen, the way `recentDays`
+   does in worg. A strip that dropped every other day would fit any width and
+   could not say what it was looking at, and the footer names how many days it is
+   actually showing.
+3. **The default is the tracker, not a picker.** `orgs tables` and `orgs code`
+   open a picker because they are about one of hundreds of things; somebody has
+   eight habits and all eight fit on the screen. `orgs habits pick` is there for
+   when choosing one is what you came for, and the picker's `ctrl-d` ticks off and
+   **reloads** - the square filling in is the point, so it goes through a hidden
+   `orgs habits lines` rather than leaving the row it just wrote to on screen
+   unchanged. `ctrl-u` takes today's tick off again, and the two are a pair rather
+   than a feature and a nicety: the moment somebody finds out they pressed the
+   wrong key is the moment they need the other one, and a picker with a key that
+   writes and no key that unwrites is one you cannot afford to explore. Both go through `quiet()` -
+   `execute` rather than `execute-silent`, output thrown away, the *refusal*
+   waiting for a key - because a write that worked is about to redraw the row it
+   changed, and one that could not looks exactly like a square that declined to
+   change. `Binds` is a function so that `TestBindingsParse` can hand the strings
+   to fzf's own parser: a malformed binding is not a dead key, it is the picker
+   refusing to open.
+4. **The month ruler is drawn once**, at the foot, rather than under every row.
+   Every habit's window is the same days - one request answers about all of them -
+   so a ruler per row is the same row of month names once per habit. worg draws it
+   per row because there it has nowhere else to go. The pane is a **calendar**
+   rather than a strip for the matching reason: a row answers "how often" and one
+   habit on its own is being asked "when" - which Tuesdays, and whether the gaps
+   are weekends.
+
+#### Taking today's tick off: `POST /habits/untick`
+
+A habit ticked off by accident has to be clearable, and the obvious way - keep a
+copy of the file and put it back - **was built first and had to be thrown away**.
+It is worth knowing why, because the reasoning applies to anything else tempted by
+an undo buffer over org files: a copy of a whole file is only good while the file
+is untouched, and **habits live many to a file**. Tick a second one off and the
+first one's copy is stale; so is any write from worg, a clock, or Emacs. The undo
+refused precisely when somebody was most likely to want it, which is halfway down a
+list of habits.
+
+`internal/app/orgs/habituntick.go` asks the *file* instead - is there a completion
+recorded for today? - so there is nothing to go stale. It works on a habit ticked
+off in Emacs this morning, on one ticked off twice, after a restart, and under
+`-local`. `orgs habits untick [name]` is the client and `ctrl-u` in the picker is
+the same call; "nothing recorded for today" is an answer rather than a failure,
+which is what makes pressing the key twice harmless.
+
+Five things it decides:
+
+1. **A day is the unit**, which is what the whole tracker counts by, so *every*
+   completion recorded today comes off rather than the last one. A habit ticked
+   twice in an afternoon is one filled square and has to be cleared as one, or the
+   square stays filled and the key has to be pressed again.
+2. **What comes off is exactly what fills the square** - the lines
+   `parseHabitCompletions` counts, `habitDoneRe` and all. A tracker and its eraser
+   disagreeing about which lines count is either a square that cannot be cleared or
+   a line vanishing from a file with nothing changing on screen.
+3. **The date only goes back on evidence that it went forward today**, which is
+   what `:LAST_REPEAT:` is. Without it the date is left alone: a habit whose
+   repeater did not move today has nothing to put back, and moving it anyway would
+   be inventing a schedule.
+4. **A `.+` date is reconstructed from the previous completion, not by stepping
+   back.** `.+2d` means "two days after I actually did it", so the date the heading
+   was carrying is the *previous* completion plus two days - which is in the
+   logbook, once today's line has come out of it. Stepping back one interval lands
+   on today, which is right only for a habit ticked off on the day it was due: for
+   one ticked off early it moves the schedule a day, and for an overdue one it
+   erases the fact that it was overdue. `+2d` is exact either way and `++2d` may
+   have taken several steps with nothing in the file to say how many, so those step
+   back. `habituntick_test.go` pins the early, on-time and overdue cases.
+5. **The keyword it had is read off the line being removed.** A habit that does not
+   repeat is sitting on DONE with a `CLOSED:` stamp, and the `from "NEXT"` half of
+   its own state line says what it was - so nothing has to remember it and nothing
+   has to guess which live keyword to pick. The stamp comes off with it.
+
+Everything is a **line edit** confined to the habit's own lines, `ownLinesEnd`
+being what keeps a child heading's logbook out of it - a parent counting its
+child's completions would clear a square nobody pressed. The extent is measured
+again after every edit that changes the line count, for the reason
+`applyStatusChange` gives.
+
+Not byte-identical to before the tick, in one cosmetic way worth knowing before
+diffing: dropping `:LAST_REPEAT:` re-aligns the property drawer through
+`alignDrawer`, which has a minimum width, so a hand-written `:STYLE: habit` comes
+back as `:STYLE:    habit`. That is the same house style `setPropIn` applies, and
+the alternative - leaving the drawer padded for a key that is no longer in it - is
+worse.
+
+### Column view, and the effort rollup
+
+`EFFORT` was read in one place - the gantt plugin, to size a bar - and nowhere
+else. `internal/app/orgs/columns.go` is org's `#+COLUMNS:` as an endpoint
+(`GET /columns`), and the part that makes it more than a table is the **summary
+operator**: `%EFFORT{:}` means a parent shows the total of everything under it,
+so a project says how big it is without anybody maintaining a number. worg's
+Column View tab (`components/Columns.tsx`, model in `src/columns.ts`) draws it
+and lets the cells be edited.
+
+The line in force is the first of: the request's own, the file's `#+COLUMNS:`,
+`columns.default` in the yaml, a built-in. The answer says which in `From`, so
+the view can explain why an expected column is missing. The default is org's
+(`%25ITEM %TODO %3PRIORITY %TAGS`) plus `%EFFORT{:} %CLOCKSUM`, because adding
+effort up is what the view is for and almost no file declares a columns line.
+
+Five things are load-bearing:
+
+1. **A cell carries both what is shown and what is written.** They are the same
+   on a leaf and different on every parent that rolls up. A project showing
+   `8:45` summed from its tasks has `2h` of its own, and an editor pre-filled
+   with the total writes the total onto the parent the first time anybody
+   presses return in it. `Own` is what the editor gets; `Value` is what the
+   table shows.
+2. **The rollup is the children's total *plus* the heading's own value.** Of the
+   two readings of a parent that has an estimate and children with estimates,
+   this is the one that never silently discards a number somebody typed.
+3. **Properties are read off the file's own lines**, not from
+   `Headline.Properties` - which go-org leaves nil for a drawer written in
+   column zero. A column view whose EFFORT column was blank for exactly those
+   headings would read as the properties not being set.
+4. **`%CLOCKSUM` rolls up whether or not an operator was written**, because that
+   is what org means by it. `%EFFORT` does not: the operator is how a file asks
+   for a total, and inventing one would make orgs disagree with org about what
+   the file says.
+5. **Sorting is within each parent**, never across the flat list - a column view
+   is an outline, and sorting it flat moves children away from their parents and
+   turns the indentation into a lie. An empty cell sorts last whichever way
+   round the column is, because "nothing here" is an absence rather than a small
+   value.
+
+`POST /columns/spec` writes the file's own `#+COLUMNS:` line, replacing the one
+it had or joining the `#+KEYWORD:` block at the top.
+
+Two things this turned up. **`POST /property` was a whole-document rewrite**
+(`SetProperty` through `WriteOutOrgFile`), so setting one estimate re-indented
+every drawer in the file, reflowed its tables and ate a space in a `CLOCK:`
+line. Tolerable when a property was something a kanban drag set once; not when
+it is a screen somebody sits in front of filling in estimates. It is
+`setHeadingProperty` in columns.go now - a line edit reaching the heading's own
+drawer and nothing else, with the keys re-aligned inside it the way the record
+editor does. And **`ParseDuration` counts a week as five days** (7200 minutes),
+not org's seven - deliberate for estimating, and worth knowing before comparing
+a total with Emacs. It is shared with the gantt plugin, so changing it would
+move every bar.
 
 ### What DONE does
 

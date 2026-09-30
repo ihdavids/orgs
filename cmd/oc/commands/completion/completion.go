@@ -222,6 +222,27 @@ func (self *Complete) values(core *commands.Core, words []string, prefix string)
 		return savedQueries(core)
 	case "watch":
 		return files(core)
+	case "habits":
+		if pos == 0 {
+			return append([]string{"ls", "show", "done", "untick", "pick", "open"}, habits(core)...)
+		}
+		// A habit's own name after the subcommand - except after the one that
+		// records something. Completing the habit `orgs habits done` is about to
+		// tick off is a way to write, quickly and convincingly, that somebody kept
+		// a habit they did not; the same rule that keeps `orgs rm` from completing
+		// its target.
+		//
+		// `untick` is completed, deliberately. It only ever clears today's square,
+		// it does nothing at all to a habit with nothing recorded today, and
+		// unticking the wrong habit is put right by ticking it off again - so the
+		// reason not to complete a destructive verb does not apply to it.
+		if len(words) > 1 {
+			switch words[1] {
+			case "done", "tick", "do":
+				return nil
+			}
+		}
+		return habits(core)
 	}
 	return nil
 }
@@ -345,6 +366,14 @@ func themes(core *commands.Core) []string {
 	return out
 }
 
+func habits(core *commands.Core) []string {
+	out := []string{}
+	for _, h := range commands.SendReceiveGetOr[common.HabitsResult](core, "habits", nil).Habits {
+		out = append(out, h.Headline)
+	}
+	sort.Strings(out)
+	return out
+}
 func collections(core *commands.Core) []string {
 	out := commands.SendReceiveGetOr[[]string](core, "records/collections", nil)
 	sort.Strings(out)

@@ -1878,7 +1878,6 @@ func SetProperty(n *org.Headline, key string, val string) {
 }
 
 func ChangeProperty(query *common.TodoPropertyChange) (common.Result, error) {
-	didWrite := true
 	hh := common.TodoHash(query.Hash)
 	if !IsPropertyNameValid(&hh, query.Name) {
 		return common.Result{Ok: false}, fmt.Errorf("property name is not valid for this item")
@@ -1886,17 +1885,22 @@ func ChangeProperty(query *common.TodoPropertyChange) (common.Result, error) {
 	if !IsPropertyValueValid(&hh, query.Value) {
 		return common.Result{Ok: false}, fmt.Errorf("property value is not valid for this item")
 	}
-	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
-		// Change the status
-		f := GetDb().ByHashToFile[(string)(query.Hash)]
-		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
-			SetProperty(n, query.Name, query.Value)
-			return *n
-		}); set {
-			didWrite = WriteOutOrgFile(f)
-		}
+	// A line edit rather than a document rewrite - see setHeadingProperty in
+	// columns.go for why, and FindByHash rather than a bare ByHash read because
+	// sections are registered lazily and the map answers with whatever the last
+	// parse left there.
+	sec := GetDb().FindByHash((string)(query.Hash))
+	if sec == nil || sec.Headline == nil {
+		return common.Result{Ok: false}, fmt.Errorf("no heading with that hash")
 	}
-	return common.Result{Ok: didWrite}, nil
+	f := GetDb().ByHashToFile[(string)(query.Hash)]
+	if f == nil {
+		return common.Result{Ok: false}, fmt.Errorf("no file for that heading")
+	}
+	if err := setHeadingProperty(f, sec, query.Name, query.Value); err != nil {
+		return common.Result{Ok: false}, err
+	}
+	return common.Result{Ok: true}, nil
 }
 
 func contains(s []string, str string) bool {

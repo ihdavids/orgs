@@ -51,10 +51,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/file", CreateFile).Methods("POST")
 	api.HandleFunc("/dirs", RequestDirs)
 	api.HandleFunc("/newtemplates", RequestNewTemplates)
-	api.HandleFunc("/file/{type}", RequestFile)               // html etc
-	api.HandleFunc("/filecontents/headings", RequestHeadings) // Get all todos in file
-	api.HandleFunc("/filters", RequestFilters)                // Get all stored filters from the server
-	api.HandleFunc("/html/themes", RequestHtmlThemes)         // The themes the html exporter can render with
+	api.HandleFunc("/file/{type}", RequestFile)                   // html etc
+	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file
+	api.HandleFunc("/filters", RequestFilters)                    // Get all stored filters from the server
+	api.HandleFunc("/html/themes", RequestHtmlThemes)             // The themes the html exporter can render with
 	api.HandleFunc("/exporters", RequestExporters).Methods("GET") // The exporters this server was configured with
 	api.HandleFunc("/taggroups", RequestTagGroups)
 	api.HandleFunc("/grep", RequestGrep)
@@ -93,9 +93,9 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/refilefiles", RequestRefileTargets)
 	api.HandleFunc("/refile", PostRefile).Methods("POST")
 	api.HandleFunc("/archive", PostArchive).Methods("POST")
-	api.HandleFunc("/move", PostMove).Methods("POST")                 // refile, copy or archive, one heading or many
+	api.HandleFunc("/move", PostMove).Methods("POST")                       // refile, copy or archive, one heading or many
 	api.HandleFunc("/refile/targets", RequestRefileTargets2).Methods("GET") // where a heading can go, with hashes
-	api.HandleFunc("/copy", PostCopy).Methods("POST")                 // a refile that leaves the original
+	api.HandleFunc("/copy", PostCopy).Methods("POST")                       // a refile that leaves the original
 	api.HandleFunc("/reformat", PostReformat).Methods("POST")
 	api.HandleFunc("/reformat", RequestReformatCheck).Methods("GET")
 	api.HandleFunc("/setexclusivemarker", PostMarker).Methods("POST")
@@ -111,6 +111,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tableformulainfo", PostFormulaInfo).Methods("POST")
 	api.HandleFunc("/tablerandomget", RequestTableRandomGet)
 	api.HandleFunc("/tablenames", RequestTableNames)
+	api.HandleFunc("/columns", RequestColumns).Methods("GET")       // org column view, with effort rolled up
+	api.HandleFunc("/columns/spec", PostColumnSpec).Methods("POST") // write a file's #+COLUMNS: line
+	api.HandleFunc("/habits", RequestHabits).Methods("GET")
+	api.HandleFunc("/habits/untick", PostHabitUntick).Methods("POST") // clear today's tick         // every habit and how it is going
 	api.HandleFunc("/tables", RequestTables)
 	api.HandleFunc("/table", RequestTable).Methods("GET")
 	api.HandleFunc("/table", PostTable).Methods("POST")
@@ -146,7 +150,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/links", RequestBacklinks).Methods("GET")
 	api.HandleFunc("/links/graph", RequestLinkGraph).Methods("GET")
 	api.HandleFunc("/links/stats", RequestLinkStats).Methods("GET")
-	api.HandleFunc("/links/all", RequestAllLinks).Methods("GET")   // every link, flat
+	api.HandleFunc("/links/all", RequestAllLinks).Methods("GET") // every link, flat
 
 	// The database as a galaxy: every file or heading a star. Not the link
 	// graph - that one only holds the things something links to, and a map has
@@ -158,10 +162,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/reload", PostDndReload).Methods("POST")
 	api.HandleFunc("/dnd/catalog", RequestDndCatalog).Methods("GET")
 	api.HandleFunc("/dnd/characters", RequestDndCharacters).Methods("GET")
-	api.HandleFunc("/dnd/books", RequestDndBooks).Methods("GET")   // files written as a dndbook
+	api.HandleFunc("/dnd/books", RequestDndBooks).Methods("GET")      // files written as a dndbook
 	api.HandleFunc("/files/themes", RequestFileThemes).Methods("GET") // files naming their own html theme
-	api.HandleFunc("/files/search", RequestFileSearch).Methods("GET")  // ripgrep over the text of every file
-	api.HandleFunc("/pdf", RequestPdfView).Methods("GET")          // one file, run through pdflatex
+	api.HandleFunc("/files/search", RequestFileSearch).Methods("GET") // ripgrep over the text of every file
+	api.HandleFunc("/pdf", RequestPdfView).Methods("GET")             // one file, run through pdflatex
 	api.HandleFunc("/dnd/sheet", RequestDndSheet).Methods("GET")
 	api.HandleFunc("/dnd/session", PostDndSession).Methods("POST")
 	api.HandleFunc("/dnd/session/{id}", RequestDndSession).Methods("GET")
@@ -288,21 +292,24 @@ func GetHash(vars map[string]string, name string) (string, error) {
 	}
 }
 
-/* SDOC: API
-* GET /files — List All Org Files
-	Returns a JSON array of absolute file paths for every org file the server is currently tracking.
-	These are the files discovered in the configured =orgDirs= directories. The list updates as the
-	server's file watcher detects new or removed files.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /files — List All Org Files
+	    Returns a JSON array of absolute file paths for every org file the server is currently tracking.
+	    These are the files discovered in the configured =orgDirs= directories. The list updates as the
+	    server's file watcher detects new or removed files.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON array of strings, each being an absolute path to an org file.
-	#+BEGIN_SRC json
-	["/home/user/org/todo.org", "/home/user/org/notes.org"]
-	#+END_SRC
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON array of strings, each being an absolute path to an org file.
+	    #+BEGIN_SRC json
+	    ["/home/user/org/todo.org", "/home/user/org/notes.org"]
+	    #+END_SRC
+	    EDOC
+*/
 func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//key := vars["id"]
@@ -311,23 +318,28 @@ func RequestFiles(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-/* SDOC: API
-* GET /findfile — Locate a File in the Database
-	Searches the server's in-memory file database for a file matching the given filename.
-	Useful for resolving a short or relative filename into the full absolute path that the
-	server knows about. If the file is not tracked by the server, an error is returned.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /findfile — Locate a File in the Database
+	    Searches the server's in-memory file database for a file matching the given filename.
+	    Useful for resolving a short or relative filename into the full absolute path that the
+	    server knows about. If the file is not tracked by the server, an error is returned.
 
-	*Query Parameters:*
-	| Parameter  | Type   | Required | Description                                                         |
-	|------------+--------+----------+---------------------------------------------------------------------|
-	| =filename= | string | yes      | The filename to search for. Can be a basename or a partial path.    |
+	    *Method:* =GET=
 
-	*Response:* A =ResultMsg= JSON object.
-	- On success: ={"status": true, "msg": "/absolute/path/to/file.org"}=
-	- On failure: ={"status": false, "msg": "error description"}=
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter  | Type   | Required | Description                                                         |
+	    |------------+--------+----------+---------------------------------------------------------------------|
+	    | =filename= | string | yes      | The filename to search for. Can be a basename or a partial path.    |
+
+	    *Response:* A =ResultMsg= JSON object.
+
+	  - On success: ={"status": true, "msg": "/absolute/path/to/file.org"}=
+
+	  - On failure: ={"status": false, "msg": "error description"}=
+	    EDOC
+*/
 func RequestFindFileInDb(w http.ResponseWriter, r *http.Request) {
 	fname := r.URL.Query().Get("filename")
 	if res, err := FindFileInDb(fname); err != nil {
@@ -341,26 +353,29 @@ func RequestFindFileInDb(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /grep — Search Across All Org Files
-	Performs a regular-expression search across the raw text of every org file the server
-	is tracking. Results are returned as an array of strings, each containing the filename,
-	line number, and matched line separated by the chosen delimiter (default =:=).
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /grep — Search Across All Org Files
+	    Performs a regular-expression search across the raw text of every org file the server
+	    is tracking. Results are returned as an array of strings, each containing the filename,
+	    line number, and matched line separated by the chosen delimiter (default =:=).
 
-	*Query Parameters:*
-	| Parameter    | Type   | Required | Description                                                            |
-	|--------------+--------+----------+------------------------------------------------------------------------|
-	| =query=      | string | yes      | The regular expression to search for.                                  |
-	| =delimeter=  | string | no       | Separator between filename, line number, and content. Defaults to =:=. |
+	    *Method:* =GET=
 
-	*Response:* A JSON array of match strings.
-	#+BEGIN_SRC json
-	["todo.org:12:TODO Buy groceries", "notes.org:45:Meeting with team"]
-	#+END_SRC
-	On error, returns an empty array.
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter    | Type   | Required | Description                                                            |
+	    |--------------+--------+----------+------------------------------------------------------------------------|
+	    | =query=      | string | yes      | The regular expression to search for.                                  |
+	    | =delimeter=  | string | no       | Separator between filename, line number, and content. Defaults to =:=. |
+
+	    *Response:* A JSON array of match strings.
+	    #+BEGIN_SRC json
+	    ["todo.org:12:TODO Buy groceries", "notes.org:45:Meeting with team"]
+	    #+END_SRC
+	    On error, returns an empty array.
+	    EDOC
+*/
 func RequestGrep(w http.ResponseWriter, r *http.Request) {
 	qry := r.URL.Query().Get("query")
 	del := r.URL.Query().Get("delimeter")
@@ -376,23 +391,28 @@ func RequestGrep(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /orgfile — Read Raw Org File Contents
-	Reads the raw text content of an org file from disk and returns it as a string.
-	This returns the file contents verbatim (not parsed), which is useful for editors
-	that need the original source text.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /orgfile — Read Raw Org File Contents
+	    Reads the raw text content of an org file from disk and returns it as a string.
+	    This returns the file contents verbatim (not parsed), which is useful for editors
+	    that need the original source text.
 
-	*Query Parameters:*
-	| Parameter  | Type   | Required | Description                                       |
-	|------------+--------+----------+---------------------------------------------------|
-	| =filename= | string | yes      | Absolute path to the org file to read.             |
+	    *Method:* =GET=
 
-	*Response:* A =ResultMsg= JSON object.
-	- On success: ={"status": true, "msg": "...raw file contents..."}=
-	- On failure: ={"status": false, "msg": "error description"}=
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter  | Type   | Required | Description                                       |
+	    |------------+--------+----------+---------------------------------------------------|
+	    | =filename= | string | yes      | Absolute path to the org file to read.             |
+
+	    *Response:* A =ResultMsg= JSON object.
+
+	  - On success: ={"status": true, "msg": "...raw file contents..."}=
+
+	  - On failure: ={"status": false, "msg": "error description"}=
+	    EDOC
+*/
 func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	filename := r.URL.Query().Get("filename")
@@ -408,21 +428,24 @@ func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /filecontents/headings — List All Headings in a File
-	Returns every heading (TODO item or otherwise) found in the specified org file.
-	The result is an array of =Todo= objects containing the headline text, status,
-	priority, tags, filename, line position, hash, and other metadata.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /filecontents/headings — List All Headings in a File
+	    Returns every heading (TODO item or otherwise) found in the specified org file.
+	    The result is an array of =Todo= objects containing the headline text, status,
+	    priority, tags, filename, line position, hash, and other metadata.
 
-	*Query Parameters:*
-	| Parameter  | Type   | Required | Description                                      |
-	|------------+--------+----------+--------------------------------------------------|
-	| =filename= | string | yes      | The filename (basename or path) of the org file.  |
+	    *Method:* =GET=
 
-	*Response:* A JSON array of =Todo= objects.
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter  | Type   | Required | Description                                      |
+	    |------------+--------+----------+--------------------------------------------------|
+	    | =filename= | string | yes      | The filename (basename or path) of the org file.  |
+
+	    *Response:* A JSON array of =Todo= objects.
+	    EDOC
+*/
 func RequestHeadings(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	fname := r.URL.Query().Get("filename")
@@ -431,57 +454,66 @@ func RequestHeadings(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-/* SDOC: API
-* GET /taggroups — List Tag Groups
-	Returns the tag groups configured in the server's YAML config. Tag groups are named
-	sets of tags that can be referenced in queries using handlebars syntax (e.g. ={{ WORK }}).
-	A default set is seeded automatically unless =noInternalTagGroups= is set in config.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /taggroups — List Tag Groups
+	    Returns the tag groups configured in the server's YAML config. Tag groups are named
+	    sets of tags that can be referenced in queries using handlebars syntax (e.g. ={{ WORK }}).
+	    A default set is seeded automatically unless =noInternalTagGroups= is set in config.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON object mapping group names to their tag expressions.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON object mapping group names to their tag expressions.
+	    EDOC
+*/
 func RequestTagGroups(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Conf().TagGroups)
 }
 
-/* SDOC: API
-* GET /filters — List Filters
-	Returns the named filters configured in the server's YAML config. Filters are reusable
-	query fragments that can be substituted into search expressions using handlebars syntax
-	(e.g. ={{ AllTasks }}=). A default set (=AllTasks=, =HomeTasks=, =WorkTasks=, etc.) is
-	seeded unless =noInternalFilters= is set.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /filters — List Filters
+	    Returns the named filters configured in the server's YAML config. Filters are reusable
+	    query fragments that can be substituted into search expressions using handlebars syntax
+	    (e.g. ={{ AllTasks }}=). A default set (=AllTasks=, =HomeTasks=, =WorkTasks=, etc.) is
+	    seeded unless =noInternalFilters= is set.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON object mapping filter names to their query expressions.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON object mapping filter names to their query expressions.
+	    EDOC
+*/
 func RequestFilters(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Conf().Filters)
 }
 
-/* SDOC: API
-* GET /html/themes — List Html Export Themes
-	Returns the themes the html exporter can render a file with. A theme is a
-	=<name>_style.css= file in the =html_styles= folder under your template path,
-	optionally paired with an =html_<name>.tpl= template of its own.
+/*
+		SDOC: API
 
-	Any of these names can be given to =/file/html= as =theme=<name>=, which
-	overrides the =#+HTML_THEME:= the file itself asks for. This is how the worg
-	files view renders every file in the theme the reader picked.
+	  - GET /html/themes — List Html Export Themes
+	    Returns the themes the html exporter can render a file with. A theme is a
+	    =<name>_style.css= file in the =html_styles= folder under your template path,
+	    optionally paired with an =html_<name>.tpl= template of its own.
 
-	*Method:* =GET=
+	    Any of these names can be given to =/file/html= as =theme=<name>=, which
+	    overrides the =#+HTML_THEME:= the file itself asks for. This is how the worg
+	    files view renders every file in the theme the reader picked.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* ={"Ok": true, "Themes": ["dark", "default", "dnd", "docs"]}=
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* ={"Ok": true, "Themes": ["dark", "default", "dnd", "docs"]}=
+	    EDOC
+*/
 func RequestHtmlThemes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
@@ -490,7 +522,9 @@ func RequestHtmlThemes(w http.ResponseWriter, r *http.Request) {
 	}{Ok: true, Themes: htmlexp.HtmlThemes()})
 }
 
-/* SDOC: API
+/*
+	SDOC: API
+
 * GET /exporters — What This Server Can Export To
 
 	Answers with the names of the exporters configured under =server.exporters=,
@@ -509,7 +543,8 @@ func RequestHtmlThemes(w http.ResponseWriter, r *http.Request) {
 	|--------+-------+------------------------------------|
 	| =Ok=   | bool  | Always true                        |
 	| =Names=| array | The exporter names, sorted         |
-	EDOC */
+	EDOC
+*/
 func RequestExporters(w http.ResponseWriter, r *http.Request) {
 	names := []string{}
 	for _, e := range Conf().Server.Exporters {
@@ -523,43 +558,48 @@ func RequestExporters(w http.ResponseWriter, r *http.Request) {
 	}{Ok: true, Names: names})
 }
 
-/* SDOC: API
-* GET /file/{type} — Export a File via an Exporter Plugin
-	Runs the named exporter plugin against an org file and returns the exported result.
-	The ={type}= path segment selects the exporter (e.g. =html=, =latex=, =revealjs=,
-	=impressjs=, =gantt=, =mermaid=, =tangle=, etc.). The exporter must be enabled in the
-	server's config under =server.exporters=.
+/*
+		SDOC: API
 
-	By default, the exported content is returned as a string in the response body.
-	When =local=t= is set, the exporter writes to the file specified by =filename=
-	instead and the response reports success/failure.
+	  - GET /file/{type} — Export a File via an Exporter Plugin
+	    Runs the named exporter plugin against an org file and returns the exported result.
+	    The ={type}= path segment selects the exporter (e.g. =html=, =latex=, =revealjs=,
+	    =impressjs=, =gantt=, =mermaid=, =tangle=, etc.). The exporter must be enabled in the
+	    server's config under =server.exporters=.
 
-	*Method:* =GET=
+	    By default, the exported content is returned as a string in the response body.
+	    When =local=t= is set, the exporter writes to the file specified by =filename=
+	    instead and the response reports success/failure.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                            |
-	|-----------+--------+--------------------------------------------------------|
-	| ={type}=  | string | Name of the exporter plugin to use (e.g. =html=).     |
+	    *Method:* =GET=
 
-	*Query Parameters:*
-	| Parameter      | Type   | Required | Description                                                                        |
-	|----------------+--------+----------+------------------------------------------------------------------------------------|
-	| =filename=     | string | no       | Output filename when =local=t=. Ignored otherwise.                                 |
-	| =query=        | string | yes      | The org file to export (basename or path).                                         |
-	| =local=        | string | no       | Set to =t= to write the result to =filename= on disk instead of returning it.     |
-	| =filelinks=    | string | no       | Set to =t= to include file-style links in the export.                              |
-	| =httpslinks=   | string | no       | Set to =t= to convert links to https-style links.                                  |
-	| =parent=       | string | no       | A parent property passed to the exporter (exporter-specific).                      |
-	| =printable=    | string | no       | Set to =t= for an exporter's printer friendly output where it has one.              |
-	| =theme=        | string | no       | Render with this theme instead of the one the file asks for. See =/html/themes=.   |
-	| =backdrop=     | string | no       | Pictures to wash out behind a d&d character sheet: files, folders or urls.          |
-	| =backdropCycle= | string | no      | How long each backdrop stays up ("8m", "4m-12m", "off"), 25 minutes at the most.   |
-	| =backdropOpacity= | string | no    | How strongly the backdrop shows through ("18%"), 14% by default.                   |
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                            |
+	    |-----------+--------+--------------------------------------------------------|
+	    | ={type}=  | string | Name of the exporter plugin to use (e.g. =html=).     |
 
-	*Response:* A =ResultMsg= JSON object.
-	- When =local= is not set: ={"status": true, "msg": "...exported content..."}=
-	- When =local=t=: ={"status": true, "msg": "Success"}= or ={"status": false, "msg": "error"}=
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter      | Type   | Required | Description                                                                        |
+	    |----------------+--------+----------+------------------------------------------------------------------------------------|
+	    | =filename=     | string | no       | Output filename when =local=t=. Ignored otherwise.                                 |
+	    | =query=        | string | yes      | The org file to export (basename or path).                                         |
+	    | =local=        | string | no       | Set to =t= to write the result to =filename= on disk instead of returning it.     |
+	    | =filelinks=    | string | no       | Set to =t= to include file-style links in the export.                              |
+	    | =httpslinks=   | string | no       | Set to =t= to convert links to https-style links.                                  |
+	    | =parent=       | string | no       | A parent property passed to the exporter (exporter-specific).                      |
+	    | =printable=    | string | no       | Set to =t= for an exporter's printer friendly output where it has one.              |
+	    | =theme=        | string | no       | Render with this theme instead of the one the file asks for. See =/html/themes=.   |
+	    | =backdrop=     | string | no       | Pictures to wash out behind a d&d character sheet: files, folders or urls.          |
+	    | =backdropCycle= | string | no      | How long each backdrop stays up ("8m", "4m-12m", "off"), 25 minutes at the most.   |
+	    | =backdropOpacity= | string | no    | How strongly the backdrop shows through ("18%"), 14% by default.                   |
+
+	    *Response:* A =ResultMsg= JSON object.
+
+	  - When =local= is not set: ={"status": true, "msg": "...exported content..."}=
+
+	  - When =local=t=: ={"status": true, "msg": "Success"}= or ={"status": false, "msg": "error"}=
+	    EDOC
+*/
 func RequestFile(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	ptype := vars["type"]
@@ -592,55 +632,60 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-/* SDOC: API
-* GET /tangle — Tangle Source Blocks from an Org File
-	Extracts source code blocks from an org file following Org mode tangle conventions.
-	Source blocks with a =:tangle= header argument are collected, grouped by target file,
-	and their content is assembled. Noweb references (=<<name>>=) are expanded when
-	=:noweb yes= is set on a block.
+/*
+		SDOC: API
 
-	By default, the assembled content is returned in the JSON response *without* writing
-	any files to disk. Set =write=t= to also write the tangled files.
+	  - GET /tangle — Tangle Source Blocks from an Org File
+	    Extracts source code blocks from an org file following Org mode tangle conventions.
+	    Source blocks with a =:tangle= header argument are collected, grouped by target file,
+	    and their content is assembled. Noweb references (=<<name>>=) are expanded when
+	    =:noweb yes= is set on a block.
 
-	*Method:* =GET=
+	    By default, the assembled content is returned in the JSON response *without* writing
+	    any files to disk. Set =write=t= to also write the tangled files.
 
-	*Query Parameters:*
-	| Parameter  | Type   | Required | Description                                                                  |
-	|------------+--------+----------+------------------------------------------------------------------------------|
-	| =filename= | string | yes      | The org file to tangle (basename or path).                                   |
-	| =write=    | string | no       | Set to =t= to write tangled output files to disk in addition to returning.   |
+	    *Method:* =GET=
 
-	*Response:* A JSON object containing an array of tangled files, each with the assembled content:
-	#+BEGIN_SRC json
-	{
-	  "files": [
+	    *Query Parameters:*
+	    | Parameter  | Type   | Required | Description                                                                  |
+	    |------------+--------+----------+------------------------------------------------------------------------------|
+	    | =filename= | string | yes      | The org file to tangle (basename or path).                                   |
+	    | =write=    | string | no       | Set to =t= to write tangled output files to disk in addition to returning.   |
+
+	    *Response:* A JSON object containing an array of tangled files, each with the assembled content:
+	    #+BEGIN_SRC json
 	    {
-	      "filename": "/path/to/output.py",
-	      "content": "#!/usr/bin/env python\nprint('hello')\n",
-	      "lang": "python",
-	      "lines": 2
+	    "files": [
+	    {
+	    "filename": "/path/to/output.py",
+	    "content": "#!/usr/bin/env python\nprint('hello')\n",
+	    "lang": "python",
+	    "lines": 2
 	    }
-	  ]
-	}
-	#+END_SRC
+	    ]
+	    }
+	    #+END_SRC
 
-	*Supported Block Header Arguments:*
-	| Header Arg     | Description                                                                    |
-	|----------------+--------------------------------------------------------------------------------|
-	| =:tangle=      | Output file path (relative to the org file directory, or absolute). =no= to skip. |
-	| =:noweb=       | Set to =yes= to expand =<<name>>= references in the block.                    |
-	| =:noweb-ref=   | Defines this block as a reusable fragment that others can reference.            |
-	| =:noweb-sep=   | Separator when concatenating multiple blocks with the same =:noweb-ref=.       |
-	| =:mkdirp=      | Set to =yes= to create parent directories if they do not exist.                |
-	| =:padline=     | Set to =no= to suppress the blank line inserted between blocks.                |
-	| =:shebang=     | A shebang line (e.g. =#!/bin/bash=) prepended to the output file.              |
-	| =:tangle-mode= | File permissions, e.g. =(identity #o755)= or =0644=.                           |
-	| =:comments=    | Set to =link= or =both= to insert source-link comments.                       |
+	    *Supported Block Header Arguments:*
+	    | Header Arg     | Description                                                                    |
+	    |----------------+--------------------------------------------------------------------------------|
+	    | =:tangle=      | Output file path (relative to the org file directory, or absolute). =no= to skip. |
+	    | =:noweb=       | Set to =yes= to expand =<<name>>= references in the block.                    |
+	    | =:noweb-ref=   | Defines this block as a reusable fragment that others can reference.            |
+	    | =:noweb-sep=   | Separator when concatenating multiple blocks with the same =:noweb-ref=.       |
+	    | =:mkdirp=      | Set to =yes= to create parent directories if they do not exist.                |
+	    | =:padline=     | Set to =no= to suppress the blank line inserted between blocks.                |
+	    | =:shebang=     | A shebang line (e.g. =#!/bin/bash=) prepended to the output file.              |
+	    | =:tangle-mode= | File permissions, e.g. =(identity #o755)= or =0644=.                           |
+	    | =:comments=    | Set to =link= or =both= to insert source-link comments.                       |
 
-	*Errors:*
-	- =400= if =filename= is missing.
-	- =500= if the file is not found or tangling fails.
-	EDOC */
+	    *Errors:*
+
+	  - =400= if =filename= is missing.
+
+	  - =500= if the file is not found or tangling fails.
+	    EDOC
+*/
 func RequestTangle(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("filename")
 	if query == "" {
@@ -659,19 +704,22 @@ func RequestTangle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-/* SDOC: API
-* GET /refilefiles — List Valid Refile Targets
-	Returns a list of headings across all org files that are valid targets for refiling.
-	The set of files considered is controlled by the =refileTargets= config setting,
-	which accepts a list of filename regex patterns (defaults to =.*\\.org=).
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /refilefiles — List Valid Refile Targets
+	    Returns a list of headings across all org files that are valid targets for refiling.
+	    The set of files considered is controlled by the =refileTargets= config setting,
+	    which accepts a list of filename regex patterns (defaults to =.*\\.org=).
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON array of refile target objects, each describing a heading that
-	can receive refiled content.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON array of refile target objects, each describing a heading that
+	    can receive refiled content.
+	    EDOC
+*/
 func RequestRefileTargets(w http.ResponseWriter, r *http.Request) {
 	//vars := mux.Vars(r)
 	//ptype := vars["type"]
@@ -683,21 +731,24 @@ func RequestRefileTargets(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(targets)
 }
 
-/* SDOC: API
-* GET /filehtml/{hash} — Render Full File as HTML
-	Given the base64-URL-encoded hash of any heading in a file, renders the entire
-	containing org file as HTML and returns it. Useful for previewing a full document
-	when you only have a reference to one of its headings.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /filehtml/{hash} — Render Full File as HTML
+	    Given the base64-URL-encoded hash of any heading in a file, renders the entire
+	    containing org file as HTML and returns it. Useful for previewing a full document
+	    when you only have a reference to one of its headings.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                                          |
-	|-----------+--------+----------------------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of a heading in the target file.             |
+	    *Method:* =GET=
 
-	*Response:* The rendered HTML string, or an error object on failure.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                                          |
+	    |-----------+--------+----------------------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of a heading in the target file.             |
+
+	    *Response:* The rendered HTML string, or an error object on failure.
+	    EDOC
+*/
 func RequestFullFileHtml(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -713,32 +764,35 @@ func RequestFullFileHtml(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /todohtml/{hash} — Render a Single Heading as HTML
-	Renders the heading identified by the given hash as HTML. Only the subtree
-	rooted at that heading is rendered, not the full file.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /todohtml/{hash} — Render a Single Heading as HTML
+	    Renders the heading identified by the given hash as HTML. Only the subtree
+	    rooted at that heading is rendered, not the full file.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of the heading to render.        |
+	    *Method:* =GET=
 
-	*Query Parameters:*
-	| Parameter | Type   | Required | Description                                                                 |
-	|-----------+--------+----------+-----------------------------------------------------------------------------|
-	| =theme=   | string | no       | Render through the html exporter with this theme and return its stylesheet.  |
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of the heading to render.        |
 
-	Without =theme= the heading is rendered by go-org's own writer and =style= is
-	empty - a bare fragment. With one, the heading goes through the html
-	exporter instead, so pictures and recordings resolve to urls this server
-	serves, and =style= carries the theme's css for a client that has no
-	document to hang a =<head>= on. See =/html/themes= for the names.
+	    *Query Parameters:*
+	    | Parameter | Type   | Required | Description                                                                 |
+	    |-----------+--------+----------+-----------------------------------------------------------------------------|
+	    | =theme=   | string | no       | Render through the html exporter with this theme and return its stylesheet.  |
 
-	*Response:* A =FullTodo= with the rendered html in =content= (and =style= when
-	a theme was asked for), or an error object on failure.
-	EDOC */
+	    Without =theme= the heading is rendered by go-org's own writer and =style= is
+	    empty - a bare fragment. With one, the heading goes through the html
+	    exporter instead, so pictures and recordings resolve to urls this server
+	    serves, and =style= carries the theme's css for a client that has no
+	    document to hang a =<head>= on. See =/html/themes= for the names.
+
+	    *Response:* A =FullTodo= with the rendered html in =content= (and =style= when
+	    a theme was asked for), or an error object on failure.
+	    EDOC
+*/
 func RequestFullTodoHtml(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -754,21 +808,24 @@ func RequestFullTodoHtml(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /todofull/{hash} — Get Full Heading Data
-	Returns the complete =Todo= data for the heading identified by the given hash.
-	This includes the headline text, status, priority, tags, properties, scheduling
-	timestamps, filename, position, and all other metadata the server tracks.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /todofull/{hash} — Get Full Heading Data
+	    Returns the complete =Todo= data for the heading identified by the given hash.
+	    This includes the headline text, status, priority, tags, properties, scheduling
+	    timestamps, filename, position, and all other metadata the server tracks.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+	    *Method:* =GET=
 
-	*Response:* A full =Todo= JSON object, or an error on failure.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+
+	    *Response:* A full =Todo= JSON object, or an error on failure.
+	    EDOC
+*/
 func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -786,25 +843,30 @@ func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /file — Create a New Org File
-	Creates a new org file on disk, optionally from a template, and adds it to the server's
-	file database. If no title is given, the filename (without extension) is used as the title.
-	Templates are looked up from the =new/= subdirectory of the configured =templatePath=.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /file — Create a New Org File
+	    Creates a new org file on disk, optionally from a template, and adds it to the server's
+	    file database. If no title is given, the filename (without extension) is used as the title.
+	    Templates are looked up from the =new/= subdirectory of the configured =templatePath=.
 
-	*Request Body (JSON):*
-	| Field      | Type   | Required | Description                                                      |
-	|------------+--------+----------+------------------------------------------------------------------|
-	| =filename= | string | yes      | Absolute path where the new org file should be created.           |
-	| =title=    | string | no       | Title for the file. Defaults to the basename without extension.   |
-	| =template= | string | no       | Template name (e.g. =new/journal.tpl=) to use for initial content.|
+	    *Method:* =POST=
 
-	*Response:*
-	- On success (=200=): A JSON array containing the new file's absolute path.
-	- On failure (=400= / =500=): A =ResultMsg= with =status: false=.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field      | Type   | Required | Description                                                      |
+	    |------------+--------+----------+------------------------------------------------------------------|
+	    | =filename= | string | yes      | Absolute path where the new org file should be created.           |
+	    | =title=    | string | no       | Title for the file. Defaults to the basename without extension.   |
+	    | =template= | string | no       | Template name (e.g. =new/journal.tpl=) to use for initial content.|
+
+	    *Response:*
+
+	  - On success (=200=): A JSON array containing the new file's absolute path.
+
+	  - On failure (=400= / =500=): A =ResultMsg= with =status: false=.
+	    EDOC
+*/
 func CreateFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	body, _ := io.ReadAll(r.Body)
@@ -833,18 +895,21 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /dirs — List All Known Directories
-	Returns a deduplicated list of directories that contain org files. This includes
-	the configured =orgDirs= plus the parent directory of every individual file the
-	server is tracking. Useful for file-browser UIs that need to know where org content lives.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /dirs — List All Known Directories
+	    Returns a deduplicated list of directories that contain org files. This includes
+	    the configured =orgDirs= plus the parent directory of every individual file the
+	    server is tracking. Useful for file-browser UIs that need to know where org content lives.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON array of absolute directory paths.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON array of absolute directory paths.
+	    EDOC
+*/
 func RequestDirs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	dirSet := map[string]bool{}
@@ -862,19 +927,22 @@ func RequestDirs(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dirs)
 }
 
-/* SDOC: API
-* GET /newtemplates — List New-File Templates
-	Returns the list of available templates that can be used when creating a new org file
-	via =POST /file=. Templates are =.tpl= files found in the =new/= subdirectory of the
-	configured =templatePath=.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /newtemplates — List New-File Templates
+	    Returns the list of available templates that can be used when creating a new org file
+	    via =POST /file=. Templates are =.tpl= files found in the =new/= subdirectory of the
+	    configured =templatePath=.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON array of template names (e.g. =["new/journal.tpl", "new/project.tpl"]=).
-	Returns an empty array if no templates are found.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON array of template names (e.g. =["new/journal.tpl", "new/project.tpl"]=).
+	    Returns an empty array if no templates are found.
+	    EDOC
+*/
 func RequestNewTemplates(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	newDir := filepath.Join(Conf().Server.TemplatePath, "new")
@@ -892,22 +960,25 @@ func RequestNewTemplates(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(templates)
 }
 
-/* SDOC: API
-* POST /status/change — Change Heading Status
-	Changes the TODO/DONE status keyword of a heading identified by its hash.
-	The new status value must be a valid keyword for the file (as defined by the
-	file's =#+TODO= line or the server's =defaultTodoStates= / =defaultNextStates=).
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /status/change — Change Heading Status
+	    Changes the TODO/DONE status keyword of a heading identified by its hash.
+	    The new status value must be a valid keyword for the file (as defined by the
+	    file's =#+TODO= line or the server's =defaultTodoStates= / =defaultNextStates=).
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                                                  |
-	|---------+--------+----------+--------------------------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.                    |
-	| =Value= | string | yes      | The new status keyword (e.g. =DONE=, =TODO=, =NEXT=, =""=). |
+	    *Method:* =POST=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                                                  |
+	    |---------+--------+----------+--------------------------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.                    |
+	    | =Value= | string | yes      | The new status keyword (e.g. =DONE=, =TODO=, =NEXT=, =""=). |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoItemChange
@@ -925,21 +996,24 @@ func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /headline/change — Rename a Heading
-	Changes the headline text of a heading identified by its hash. The new text
-	replaces the headline title (the part after the status keyword and priority).
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /headline/change — Rename a Heading
+	    Changes the headline text of a heading identified by its hash. The new text
+	    replaces the headline title (the part after the status keyword and priority).
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                              |
-	|---------+--------+----------+------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.|
-	| =Value= | string | yes      | The new headline text.                   |
+	    *Method:* =POST=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                              |
+	    |---------+--------+----------+------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.|
+	    | =Value= | string | yes      | The new headline text.                   |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostRenameHeadline(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoItemChange
@@ -957,21 +1031,24 @@ func PostRenameHeadline(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /body/change — Replace Heading Body Content
-	Replaces the body content (everything below the headline, before the next heading)
-	of a heading identified by its hash. The value should be raw org-mode text.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /body/change — Replace Heading Body Content
+	    Replaces the body content (everything below the headline, before the next heading)
+	    of a heading identified by its hash. The value should be raw org-mode text.
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                                     |
-	|---------+--------+----------+-------------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.        |
-	| =Value= | string | yes      | The new body content (raw org-mode text).        |
+	    *Method:* =POST=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                                     |
+	    |---------+--------+----------+-------------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.        |
+	    | =Value= | string | yes      | The new body content (raw org-mode text).        |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostChangeBody(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoItemChange
@@ -989,22 +1066,25 @@ func PostChangeBody(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /date/change — Set or Change a Date on a Heading
-	Sets or updates a scheduling timestamp on a heading. Supports =SCHEDULED=, =DEADLINE=,
-	=CLOSED=, and =TIMESTAMP= date types. Pass an empty =Value= to clear the date.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /date/change — Set or Change a Date on a Heading
+	    Sets or updates a scheduling timestamp on a heading. Supports =SCHEDULED=, =DEADLINE=,
+	    =CLOSED=, and =TIMESTAMP= date types. Pass an empty =Value= to clear the date.
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                                                                   |
-	|---------+--------+----------+-------------------------------------------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.                                     |
-	| =Name=  | string | yes      | The date type: =SCHEDULED=, =DEADLINE=, =CLOSED=, or =TIMESTAMP=.            |
-	| =Value= | string | yes      | Org date string (e.g. =<2024-01-15 Mon>=) or =""= to clear.                  |
+	    *Method:* =POST=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                                                                   |
+	    |---------+--------+----------+-------------------------------------------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.                                     |
+	    | =Name=  | string | yes      | The date type: =SCHEDULED=, =DEADLINE=, =CLOSED=, or =TIMESTAMP=.            |
+	    | =Value= | string | yes      | Org date string (e.g. =<2024-01-15 Mon>=) or =""= to clear.                  |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostChangeDate(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoDateChange
@@ -1022,21 +1102,24 @@ func PostChangeDate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* DELETE /date/change — Remove a Date from a Heading
-	Removes a scheduling timestamp from a heading. The =Value= field in the request
-	body is ignored; the date identified by =Name= is unconditionally cleared.
+/*
+		SDOC: API
 
-	*Method:* =DELETE=
+	  - DELETE /date/change — Remove a Date from a Heading
+	    Removes a scheduling timestamp from a heading. The =Value= field in the request
+	    body is ignored; the date identified by =Name= is unconditionally cleared.
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                                                          |
-	|---------+--------+----------+----------------------------------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.                            |
-	| =Name=  | string | yes      | The date type to remove: =SCHEDULED=, =DEADLINE=, =CLOSED=, or =TIMESTAMP=. |
+	    *Method:* =DELETE=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                                                          |
+	    |---------+--------+----------+----------------------------------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.                            |
+	    | =Name=  | string | yes      | The date type to remove: =SCHEDULED=, =DEADLINE=, =CLOSED=, or =TIMESTAMP=. |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func DeleteDate(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var args common.TodoDateChange
@@ -1055,23 +1138,26 @@ func DeleteDate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /property — Set or Change a Property on a Heading
-	Sets or updates a property in the property drawer of a heading. If the heading
-	does not have a property drawer, one is created. Common properties include
-	=EFFORT=, =CUSTOM_ID=, =CATEGORY=, etc., but any key/value pair is accepted.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /property — Set or Change a Property on a Heading
+	    Sets or updates a property in the property drawer of a heading. If the heading
+	    does not have a property drawer, one is created. Common properties include
+	    =EFFORT=, =CUSTOM_ID=, =CATEGORY=, etc., but any key/value pair is accepted.
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                                     |
-	|---------+--------+----------+-------------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.        |
-	| =Name=  | string | yes      | The property key (e.g. =EFFORT=, =CUSTOM_ID=).  |
-	| =Value= | string | yes      | The property value.                              |
+	    *Method:* =POST=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                                     |
+	    |---------+--------+----------+-------------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.        |
+	    | =Name=  | string | yes      | The property key (e.g. =EFFORT=, =CUSTOM_ID=).  |
+	    | =Value= | string | yes      | The property value.                              |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostChangeProperty")
 	body, _ := ioutil.ReadAll(r.Body)
@@ -1092,22 +1178,25 @@ func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /tags — Toggle Tags on a Heading
-	Toggles a tag on a heading identified by its hash. If the tag is present, it is
-	removed; if absent, it is added. The =Value= field contains the tag name to toggle
-	(without the surrounding colons).
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /tags — Toggle Tags on a Heading
+	    Toggles a tag on a heading identified by its hash. If the tag is present, it is
+	    removed; if absent, it is added. The =Value= field contains the tag name to toggle
+	    (without the surrounding colons).
 
-	*Request Body (JSON):*
-	| Field   | Type   | Required | Description                                     |
-	|---------+--------+----------+-------------------------------------------------|
-	| =Hash=  | string | yes      | The dynamic hash identifying the heading.        |
-	| =Value= | string | yes      | The tag name to toggle (e.g. =WORK=, =urgent=). |
+	    *Method:* =POST=
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field   | Type   | Required | Description                                     |
+	    |---------+--------+----------+-------------------------------------------------|
+	    | =Hash=  | string | yes      | The dynamic hash identifying the heading.        |
+	    | =Value= | string | yes      | The tag name to toggle (e.g. =WORK=, =urgent=). |
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostToggleTags(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostToggleTags")
 	body, _ := ioutil.ReadAll(r.Body)
@@ -1222,23 +1311,26 @@ func PostReformat(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /search — Search Headings by Query Expression
-	Searches all tracked org files for headings matching the given query expression.
-	The query language supports TODO status filtering, tag matching, property comparisons,
-	and boolean logic. Filters and tag groups defined in config can be referenced with
-	handlebars syntax (e.g. ={{ AllTasks }}=).
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /search — Search Headings by Query Expression
+	    Searches all tracked org files for headings matching the given query expression.
+	    The query language supports TODO status filtering, tag matching, property comparisons,
+	    and boolean logic. Filters and tag groups defined in config can be referenced with
+	    handlebars syntax (e.g. ={{ AllTasks }}=).
 
-	*Query Parameters:*
-	| Parameter | Type   | Required | Description                                              |
-	|-----------+--------+----------+----------------------------------------------------------|
-	| =query=   | string | yes      | The search expression (e.g. =TODO="TODO"+HOME=).         |
+	    *Method:* =GET=
 
-	*Response:* A JSON array of =Todo= objects matching the query. Returns an error
-	object on failure.
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter | Type   | Required | Description                                              |
+	    |-----------+--------+----------+----------------------------------------------------------|
+	    | =query=   | string | yes      | The search expression (e.g. =TODO="TODO"+HOME=).         |
+
+	    *Response:* A JSON array of =Todo= objects matching the query. Returns an error
+	    object on failure.
+	    EDOC
+*/
 func RequestTodosExpr(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	var args common.StringQuery
@@ -1252,22 +1344,25 @@ func RequestTodosExpr(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /lookuphash — Look Up Hash by File Position
-	Given a filename and a line number (row), returns the hash of the heading that
-	contains that position. This is useful for editors that know a cursor position
-	and need to map it to the server's internal hash identifier.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /lookuphash — Look Up Hash by File Position
+	    Given a filename and a line number (row), returns the hash of the heading that
+	    contains that position. This is useful for editors that know a cursor position
+	    and need to map it to the server's internal hash identifier.
 
-	*Query Parameters:*
-	| Parameter  | Type   | Required | Description                                       |
-	|------------+--------+----------+---------------------------------------------------|
-	| =filename= | string | yes      | The org filename (basename or path).               |
-	| =pos=      | int    | yes      | The 1-based line number in the file.               |
+	    *Method:* =GET=
 
-	*Response:* A =Todo= JSON object for the heading at that position, or an error string.
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter  | Type   | Required | Description                                       |
+	    |------------+--------+----------+---------------------------------------------------|
+	    | =filename= | string | yes      | The org filename (basename or path).               |
+	    | =pos=      | int    | yes      | The 1-based line number in the file.               |
+
+	    *Response:* A =Todo= JSON object for the heading at that position, or an error string.
+	    EDOC
+*/
 func RequestHash(w http.ResponseWriter, r *http.Request) {
 	strPos := r.URL.Query().Get("pos")
 	fname := r.URL.Query().Get("filename")
@@ -1285,21 +1380,24 @@ func RequestHash(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /hash/{hash} — Get Heading by Hash
-	Retrieves the =Todo= data for a heading by its dynamic hash. The hash must be
-	base64-URL-encoded in the URL path because it may contain characters that are
-	not URL-safe (such as =/=).
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /hash/{hash} — Get Heading by Hash
+	    Retrieves the =Todo= data for a heading by its dynamic hash. The hash must be
+	    base64-URL-encoded in the URL path because it may contain characters that are
+	    not URL-safe (such as =/=).
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded dynamic hash of the heading.          |
+	    *Method:* =GET=
 
-	*Response:* A =Todo= JSON object, or an error string if not found.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded dynamic hash of the heading.          |
+
+	    *Response:* A =Todo= JSON object, or an error string if not found.
+	    EDOC
+*/
 func RequestByHash(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	w.Header().Set("Content-Type", "application/json")
@@ -1320,21 +1418,24 @@ func RequestByHash(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /id/{id} — Get Heading by ID or CUSTOM_ID
-	Retrieves the =Todo= data for a heading by its =ID= or =CUSTOM_ID= property.
-	The server searches all tracked files for a heading whose property drawer
-	contains a matching =ID= or =CUSTOM_ID= value.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /id/{id} — Get Heading by ID or CUSTOM_ID
+	    Retrieves the =Todo= data for a heading by its =ID= or =CUSTOM_ID= property.
+	    The server searches all tracked files for a heading whose property drawer
+	    contains a matching =ID= or =CUSTOM_ID= value.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={id}=    | string | The =ID= or =CUSTOM_ID= value to search for.            |
+	    *Method:* =GET=
 
-	*Response:* A =Todo= JSON object, or an error string if not found.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={id}=    | string | The =ID= or =CUSTOM_ID= value to search for.            |
+
+	    *Response:* A =Todo= JSON object, or an error string if not found.
+	    EDOC
+*/
 func RequestByAnyId(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var hash common.TodoHash = common.TodoHash(vars["id"])
@@ -1351,21 +1452,26 @@ func RequestByAnyId(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /daypage — Create Today's Day Page
-	Creates a new day page for the current date using the configured =dayPageTemplate=.
-	Day pages are generated in the =dayPagePath= directory. If a day page already exists
-	for today, the existing file is returned. The =dayPageMode= setting controls whether
-	pages are created daily or weekly.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /daypage — Create Today's Day Page
+	    Creates a new day page for the current date using the configured =dayPageTemplate=.
+	    Day pages are generated in the =dayPagePath= directory. If a day page already exists
+	    for today, the existing file is returned. The =dayPageMode= setting controls whether
+	    pages are created daily or weekly.
 
-	*Request Body:* Empty (no body required).
+	    *Method:* =POST=
 
-	*Response:*
-	- On success (=200=): A JSON object with the day page file path.
-	- On failure (=400=): An error string.
-	EDOC */
+	    *Request Body:* Empty (no body required).
+
+	    *Response:*
+
+	  - On success (=200=): A JSON object with the day page file path.
+
+	  - On failure (=400=): An error string.
+	    EDOC
+*/
 func PostCreateDayPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	res, err := CreateDayPage()
@@ -1381,20 +1487,23 @@ func PostCreateDayPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /daypage/{date} — Get Day Page at a Specific Date
-	Returns the day page file corresponding to the given date. The date format is
-	=YYYY-DD-MM=. If no day page exists for that date, the response includes an error.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /daypage/{date} — Get Day Page at a Specific Date
+	    Returns the day page file corresponding to the given date. The date format is
+	    =YYYY-DD-MM=. If no day page exists for that date, the response includes an error.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={date}=  | string | Date in =YYYY-DD-MM= format.                            |
+	    *Method:* =GET=
 
-	*Response:* A JSON object with the day page data, or an error string.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={date}=  | string | Date in =YYYY-DD-MM= format.                            |
+
+	    *Response:* A JSON object with the day page data, or an error string.
+	    EDOC
+*/
 func RequestDayPageAt(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var args common.Date = common.Date(vars["date"])
@@ -1409,18 +1518,21 @@ func RequestDayPageAt(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /daypage/increment — Get Day Page Increment
-	Returns the number of days between day pages. When =dayPageMode= is =week=,
-	returns =7=; otherwise returns =1=. Clients use this to calculate the next/previous
-	day page dates for navigation.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /daypage/increment — Get Day Page Increment
+	    Returns the number of days between day pages. When =dayPageMode= is =week=,
+	    returns =7=; otherwise returns =1=. Clients use this to calculate the next/previous
+	    day page dates for navigation.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON integer (=1= or =7=).
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON integer (=1= or =7=).
+	    EDOC
+*/
 func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 	if Conf().Server.DayPageMode == "week" {
 		fmt.Fprintln(os.Stderr, "DAYPAGE INC: 7")
@@ -1431,29 +1543,32 @@ func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /capture/templates — List Capture Templates
-	Returns the list of capture templates available to the authenticated user. This merges
-	templates defined in the server config (=captureTemplates=) with any per-user templates
-	stored in the extensions file. Templates define the target location, heading type, and
-	template text used by the capture system.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /capture/templates — List Capture Templates
+	    Returns the list of capture templates available to the authenticated user. This merges
+	    templates defined in the server config (=captureTemplates=) with any per-user templates
+	    stored in the extensions file. Templates define the target location, heading type, and
+	    template text used by the capture system.
 
-	*Parameters:* None (user identity is derived from the auth token).
+	    *Method:* =GET=
 
-	*Response:* A JSON array of =CaptureTemplate= objects:
-	#+BEGIN_SRC json
-	[
-	  {
+	    *Parameters:* None (user identity is derived from the auth token).
+
+	    *Response:* A JSON array of =CaptureTemplate= objects:
+	    #+BEGIN_SRC json
+	    [
+	    {
 	    "name": "Todo",
 	    "type": "entry",
 	    "target": {"Filename": "todo.org", "Id": "Tasks", "Type": "file+headline"},
 	    "template": "* TODO %?"
-	  }
-	]
-	#+END_SRC
-	EDOC */
+	    }
+	    ]
+	    #+END_SRC
+	    EDOC
+*/
 func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	res, err := QueryCaptureTemplates(username)
@@ -1470,25 +1585,30 @@ func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /capture — Capture a New Entry
-	Creates a new heading or entry using the capture template system. The template
-	is expanded with the provided data, and the result is inserted at the target
-	location defined by the template. This is the server-side equivalent of
-	=org-capture= in Emacs.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /capture — Capture a New Entry
+	    Creates a new heading or entry using the capture template system. The template
+	    is expanded with the provided data, and the result is inserted at the target
+	    location defined by the template. This is the server-side equivalent of
+	    =org-capture= in Emacs.
 
-	*Request Body (JSON):*
-	| Field      | Type      | Required | Description                                              |
-	|------------+-----------+----------+----------------------------------------------------------|
-	| =Template= | string    | yes      | Name of the capture template to use.                     |
-	| =NewNode=  | NewNode   | yes      | Object containing the data for the new entry.            |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	- ={"status": true, "msg": "..."}= on success.
-	- An error on failure.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field      | Type      | Required | Description                                              |
+	    |------------+-----------+----------+----------------------------------------------------------|
+	    | =Template= | string    | yes      | Name of the capture template to use.                     |
+	    | =NewNode=  | NewNode   | yes      | Object containing the data for the new entry.            |
+
+	    *Response:* A =ResultMsg= JSON object.
+
+	  - ={"status": true, "msg": "..."}= on success.
+
+	  - An error on failure.
+	    EDOC
+*/
 func PostCapture(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostCapture")
 	username := GetUsername(r)
@@ -1511,22 +1631,25 @@ func PostCapture(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /exclusivemarker — Get Exclusive Marker
-	Retrieves the heading that currently holds the named exclusive marker tag. Exclusive
-	markers are tags that can only be present on one heading at a time across all files,
-	acting as named bookmarks (e.g. =:NOW:=, =:FOCUS:=).
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /exclusivemarker — Get Exclusive Marker
+	    Retrieves the heading that currently holds the named exclusive marker tag. Exclusive
+	    markers are tags that can only be present on one heading at a time across all files,
+	    acting as named bookmarks (e.g. =:NOW:=, =:FOCUS:=).
 
-	*Query Parameters:*
-	| Parameter | Type   | Required | Description                        |
-	|-----------+--------+----------+------------------------------------|
-	| =name=    | string | yes      | The marker tag name (e.g. =NOW=).  |
+	    *Method:* =GET=
 
-	*Response:* The =Todo= object of the heading holding the marker, or an error string
-	if no heading has the marker.
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter | Type   | Required | Description                        |
+	    |-----------+--------+----------+------------------------------------|
+	    | =name=    | string | yes      | The marker tag name (e.g. =NOW=).  |
+
+	    *Response:* The =Todo= object of the heading holding the marker, or an error string
+	    if no heading has the marker.
+	    EDOC
+*/
 func RequestMarker(w http.ResponseWriter, r *http.Request) {
 	// This a parameter rather than path
 	args := r.URL.Query().Get("name")
@@ -1544,25 +1667,28 @@ func RequestMarker(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /setexclusivemarker — Set Exclusive Marker
-	Moves an exclusive marker tag to a new heading. The tag is first removed from
-	whatever heading currently holds it (if any), then applied to the target heading.
-	This ensures at most one heading in the entire database has the marker at any time.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /setexclusivemarker — Set Exclusive Marker
+	    Moves an exclusive marker tag to a new heading. The tag is first removed from
+	    whatever heading currently holds it (if any), then applied to the target heading.
+	    This ensures at most one heading in the entire database has the marker at any time.
 
-	*Request Body (JSON):*
-	| Field  | Type   | Required | Description                                                   |
-	|--------+--------+----------+---------------------------------------------------------------|
-	| =Name= | string | yes      | The marker tag name (e.g. =NOW=, =FOCUS=).                   |
-	| =ToId= | Target | yes      | A =Target= identifying the heading to receive the marker.     |
+	    *Method:* =POST=
 
-	The =Target= object has fields: =Filename=, =Id=, =Type= (one of =file+headline=,
-	=id=, =customid=, =hash=, =file+line=), and optionally =Lvl=.
+	    *Request Body (JSON):*
+	    | Field  | Type   | Required | Description                                                   |
+	    |--------+--------+----------+---------------------------------------------------------------|
+	    | =Name= | string | yes      | The marker tag name (e.g. =NOW=, =FOCUS=).                   |
+	    | =ToId= | Target | yes      | A =Target= identifying the heading to receive the marker.     |
 
-	*Response:* A =Result= JSON object with ={"status": true}= on success.
-	EDOC */
+	    The =Target= object has fields: =Filename=, =Id=, =Type= (one of =file+headline=,
+	    =id=, =customid=, =hash=, =file+line=), and optionally =Lvl=.
+
+	    *Response:* A =Result= JSON object with ={"status": true}= on success.
+	    EDOC
+*/
 func PostMarker(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostMarker")
 	body, _ := io.ReadAll(r.Body)
@@ -1584,24 +1710,27 @@ func PostMarker(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /delete — Delete a Heading
-	Removes the heading (and its entire subtree) identified by the target from the org file.
-	The file is re-saved to disk after the deletion. This operation is destructive and
-	cannot be undone through the API.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /delete — Delete a Heading
+	    Removes the heading (and its entire subtree) identified by the target from the org file.
+	    The file is re-saved to disk after the deletion. This operation is destructive and
+	    cannot be undone through the API.
 
-	*Request Body (JSON):* A =Target= object identifying the heading to delete.
-	| Field      | Type   | Required | Description                                                      |
-	|------------+--------+----------+------------------------------------------------------------------|
-	| =Filename= | string | varies   | The org filename (used with =file+headline= and =file+line=).    |
-	| =Id=       | string | varies   | The identifier (headline text, hash, id, or line number).        |
-	| =Type=     | string | yes      | One of =file+headline=, =id=, =customid=, =hash=, =file+line=.  |
-	| =Lvl=      | int    | no       | If non-zero, only match headings at this level.                  |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body (JSON):* A =Target= object identifying the heading to delete.
+	    | Field      | Type   | Required | Description                                                      |
+	    |------------+--------+----------+------------------------------------------------------------------|
+	    | =Filename= | string | varies   | The org filename (used with =file+headline= and =file+line=).    |
+	    | =Id=       | string | varies   | The identifier (headline text, hash, id, or line number).        |
+	    | =Type=     | string | yes      | One of =file+headline=, =id=, =customid=, =hash=, =file+line=.  |
+	    | =Lvl=      | int    | no       | If non-zero, only match headings at this level.                  |
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostDelete(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostDelete")
 	body, _ := io.ReadAll(r.Body)
@@ -1623,23 +1752,26 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /update — Run an Updater Plugin on a Heading
-	Invokes a named updater plugin against the heading identified by the target.
-	Updater plugins perform external synchronization (e.g. the =jira= updater pushes
-	changes to Jira). The updater must be enabled in the server's config under
-	=server.updaters=.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /update — Run an Updater Plugin on a Heading
+	    Invokes a named updater plugin against the heading identified by the target.
+	    Updater plugins perform external synchronization (e.g. the =jira= updater pushes
+	    changes to Jira). The updater must be enabled in the server's config under
+	    =server.updaters=.
 
-	*Request Body (JSON):*
-	| Field    | Type   | Required | Description                                               |
-	|----------+--------+----------+-----------------------------------------------------------|
-	| =Name=   | string | yes      | The updater plugin name (e.g. =jira=).                    |
-	| =Target= | Target | yes      | A =Target= identifying the heading to update.             |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field    | Type   | Required | Description                                               |
+	    |----------+--------+----------+-----------------------------------------------------------|
+	    | =Name=   | string | yes      | The updater plugin name (e.g. =jira=).                    |
+	    | =Target= | Target | yes      | A =Target= identifying the heading to update.             |
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostUpdate(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostUpdate")
 	body, _ := io.ReadAll(r.Body)
@@ -1661,22 +1793,25 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /refile — Refile a Heading to a New Location
-	Moves a heading (and its subtree) from its current location to a new target.
-	The heading is removed from the source file and inserted as a child of the
-	target heading. Both files are re-saved to disk.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /refile — Refile a Heading to a New Location
+	    Moves a heading (and its subtree) from its current location to a new target.
+	    The heading is removed from the source file and inserted as a child of the
+	    target heading. Both files are re-saved to disk.
 
-	*Request Body (JSON):*
-	| Field    | Type   | Required | Description                                              |
-	|----------+--------+----------+----------------------------------------------------------|
-	| =FromId= | Target | yes      | A =Target= identifying the heading to move.              |
-	| =ToId=   | Target | yes      | A =Target= identifying the destination heading.          |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field    | Type   | Required | Description                                              |
+	    |----------+--------+----------+----------------------------------------------------------|
+	    | =FromId= | Target | yes      | A =Target= identifying the heading to move.              |
+	    | =ToId=   | Target | yes      | A =Target= identifying the destination heading.          |
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostRefile(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostRefile")
 	body, _ := io.ReadAll(r.Body)
@@ -1698,7 +1833,9 @@ func PostRefile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
+/*
+	SDOC: API
+
 * POST /move — Refile, Copy or Archive, One Heading or Many
 
 	The one endpoint for moving headings about. =Op= is =refile=, =copy= or
@@ -1730,7 +1867,8 @@ func PostRefile(w http.ResponseWriter, r *http.Request) {
 
 	*Response:* A =MoveResponse=: =Ok= only when everything worked, =Results= one
 	per heading either way, and =Done= / =Failed= / =Skipped= counts.
-	EDOC */
+	EDOC
+*/
 func PostMove(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var args common.MoveRequest
@@ -1746,7 +1884,9 @@ func PostMove(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reply)
 }
 
-/* SDOC: API
+/*
+	SDOC: API
+
 * POST /copy — Copy a Heading Somewhere Else
 
 	A refile that leaves the original where it is. Same request body as
@@ -1762,7 +1902,8 @@ func PostMove(w http.ResponseWriter, r *http.Request) {
 	*Request Body (JSON):* A =Refile= object: =FromId= and =ToId=.
 
 	*Response:* A =ResultMsg=.
-	EDOC */
+	EDOC
+*/
 func PostCopy(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var args common.Refile
@@ -1778,7 +1919,9 @@ func PostCopy(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(reply)
 }
 
-/* SDOC: API
+/*
+	SDOC: API
+
 * GET /refile/targets — Where a Heading Can Go
 
 	Every place a heading could be refiled or copied to: each file, and each
@@ -1802,7 +1945,8 @@ func PostCopy(w http.ResponseWriter, r *http.Request) {
 
 	*Response:* A =RefileTargetList=. =Files= is how many files were looked at,
 	and =Truncated= says the walk stopped early.
-	EDOC */
+	EDOC
+*/
 func RequestRefileTargets2(w http.ResponseWriter, r *http.Request) {
 	depth := 0
 	fmt.Sscanf(r.URL.Query().Get("depth"), "%d", &depth)
@@ -1811,23 +1955,26 @@ func RequestRefileTargets2(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(RefileTargets(files, depth))
 }
 
-/* SDOC: API
-* POST /archive — Archive a Heading
-	Archives the heading identified by the target. The heading is moved from its current
-	file into the corresponding =_archive= file (e.g. =todo.org_archive=) following
-	standard Org mode archiving conventions. The original file is re-saved.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /archive — Archive a Heading
+	    Archives the heading identified by the target. The heading is moved from its current
+	    file into the corresponding =_archive= file (e.g. =todo.org_archive=) following
+	    standard Org mode archiving conventions. The original file is re-saved.
 
-	*Request Body (JSON):* A =Target= object identifying the heading to archive.
-	| Field      | Type   | Required | Description                                                      |
-	|------------+--------+----------+------------------------------------------------------------------|
-	| =Filename= | string | varies   | The org filename.                                                |
-	| =Id=       | string | varies   | The identifier.                                                  |
-	| =Type=     | string | yes      | One of =file+headline=, =id=, =customid=, =hash=, =file+line=.  |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body (JSON):* A =Target= object identifying the heading to archive.
+	    | Field      | Type   | Required | Description                                                      |
+	    |------------+--------+----------+------------------------------------------------------------------|
+	    | =Filename= | string | varies   | The org filename.                                                |
+	    | =Id=       | string | varies   | The identifier.                                                  |
+	    | =Type=     | string | yes      | One of =file+headline=, =id=, =customid=, =hash=, =file+line=.  |
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostArchive(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostArchive")
 	body, _ := io.ReadAll(r.Body)
@@ -1849,25 +1996,28 @@ func PostArchive(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /clock — Get Current Clock Status
-	Returns the current clocking state. If a heading is actively being clocked,
-	the response includes the start time, the target heading, and =Active: true=.
-	If no clock is running, =Active= is =false=.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /clock — Get Current Clock Status
+	    Returns the current clocking state. If a heading is actively being clocked,
+	    the response includes the start time, the target heading, and =Active: true=.
+	    If no clock is running, =Active= is =false=.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON object:
-	#+BEGIN_SRC json
-	{
-	  "Active": true,
-	  "Time": { "start": "...", "end": "..." },
-	  "Target": { "Filename": "...", "Id": "...", "Type": "..." }
-	}
-	#+END_SRC
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON object:
+	    #+BEGIN_SRC json
+	    {
+	    "Active": true,
+	    "Time": { "start": "...", "end": "..." },
+	    "Target": { "Filename": "...", "Id": "...", "Type": "..." }
+	    }
+	    #+END_SRC
+	    EDOC
+*/
 func RequestClock(w http.ResponseWriter, r *http.Request) {
 	type ClockData struct {
 		Active bool
@@ -1884,23 +2034,26 @@ func RequestClock(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(data)
 }
 
-/* SDOC: API
-* POST /clockin — Clock In to a Heading
-	Starts a clock on the heading identified by the target. If another heading is
-	currently clocked in, it is automatically clocked out first. A =CLOCK:= entry
-	with the start time is added to the heading's logbook drawer.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /clockin — Clock In to a Heading
+	    Starts a clock on the heading identified by the target. If another heading is
+	    currently clocked in, it is automatically clocked out first. A =CLOCK:= entry
+	    with the start time is added to the heading's logbook drawer.
 
-	*Request Body (JSON):* A =Target= object identifying the heading to clock into.
-	| Field      | Type   | Required | Description                                                      |
-	|------------+--------+----------+------------------------------------------------------------------|
-	| =Filename= | string | varies   | The org filename.                                                |
-	| =Id=       | string | varies   | The identifier.                                                  |
-	| =Type=     | string | yes      | One of =file+headline=, =id=, =customid=, =hash=, =file+line=.  |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body (JSON):* A =Target= object identifying the heading to clock into.
+	    | Field      | Type   | Required | Description                                                      |
+	    |------------+--------+----------+------------------------------------------------------------------|
+	    | =Filename= | string | varies   | The org filename.                                                |
+	    | =Id=       | string | varies   | The identifier.                                                  |
+	    | =Type=     | string | yes      | One of =file+headline=, =id=, =customid=, =hash=, =file+line=.  |
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostClockIn(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostClockIn")
 	body, _ := io.ReadAll(r.Body)
@@ -1927,17 +2080,20 @@ func PostClockIn(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /clockout — Clock Out
-	Stops the currently active clock. The end time is recorded on the open =CLOCK:=
-	entry and the duration is calculated. If no clock is active, this is a no-op.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /clockout — Clock Out
+	    Stops the currently active clock. The end time is recorded on the open =CLOCK:=
+	    entry and the duration is calculated. If no clock is active, this is a no-op.
 
-	*Request Body:* Ignored (body is read but not used).
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body:* Ignored (body is read but not used).
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostClockOut(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostClockOut")
 	body, err := io.ReadAll(r.Body)
@@ -1959,21 +2115,24 @@ func PostClockOut(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /clockreport — Generate a Clock Report
-	Generates a summary of clocked time across all headings for the specified time block.
-	Supports blocks like =today=, =yesterday=, =thisweek=, =lastweek=, =thismonth=, etc.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /clockreport — Generate a Clock Report
+	    Generates a summary of clocked time across all headings for the specified time block.
+	    Supports blocks like =today=, =yesterday=, =thisweek=, =lastweek=, =thismonth=, etc.
 
-	*Query Parameters:*
-	| Parameter | Type   | Required | Description                                                  |
-	|-----------+--------+----------+--------------------------------------------------------------|
-	| =block=   | string | no       | Time block to report on. Defaults to =today=.                |
+	    *Method:* =GET=
 
-	*Response:* A JSON array of =ClockEntry= objects, each containing =headline=,
-	=filename=, =level=, and =mins= (total minutes clocked).
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter | Type   | Required | Description                                                  |
+	    |-----------+--------+----------+--------------------------------------------------------------|
+	    | =block=   | string | no       | Time block to report on. Defaults to =today=.                |
+
+	    *Response:* A JSON array of =ClockEntry= objects, each containing =headline=,
+	    =filename=, =level=, and =mins= (total minutes clocked).
+	    EDOC
+*/
 func RequestClockReport(w http.ResponseWriter, r *http.Request) {
 	block := r.URL.Query().Get("block")
 	if block == "" {
@@ -1984,29 +2143,32 @@ func RequestClockReport(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(report)
 }
 
-/* SDOC: API
-* GET /logbook/{hash} — Get Logbook Entries for a Heading
-	Returns the LOGBOOK clock entries for a heading identified by its hash. Each entry
-	contains the start time, end time (if clocked out), and duration in minutes.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /logbook/{hash} — Get Logbook Entries for a Heading
+	    Returns the LOGBOOK clock entries for a heading identified by its hash. Each entry
+	    contains the start time, end time (if clocked out), and duration in minutes.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+	    *Method:* =GET=
 
-	*Response:* A =Logbook= JSON object:
-	#+BEGIN_SRC json
-	{
-	  "entries": [
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+
+	    *Response:* A =Logbook= JSON object:
+	    #+BEGIN_SRC json
+	    {
+	    "entries": [
 	    {"start": "2024-01-15T09:00:00Z", "end": "2024-01-15T10:30:00Z", "mins": 90}
-	  ],
-	  "totalMin": 90
-	}
-	#+END_SRC
-	Returns =404= if the hash is not found, =400= on invalid hash encoding.
-	EDOC */
+	    ],
+	    "totalMin": 90
+	    }
+	    #+END_SRC
+	    Returns =404= if the hash is not found, =400= on invalid hash encoding.
+	    EDOC
+*/
 func RequestLogbook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -2042,23 +2204,26 @@ func RequestLogbook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /execb — Execute a Source Block
-	Executes the source block at the specified position in an org file. The block is
-	identified by a =PreciseTarget= which combines a =Target= (to find the heading)
-	with a =Row= offset (to locate the specific block within the heading's body).
-	The block is executed according to its language and the result is returned.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /execb — Execute a Source Block
+	    Executes the source block at the specified position in an org file. The block is
+	    identified by a =PreciseTarget= which combines a =Target= (to find the heading)
+	    with a =Row= offset (to locate the specific block within the heading's body).
+	    The block is executed according to its language and the result is returned.
 
-	*Request Body (JSON):*
-	| Field          | Type    | Required | Description                                                |
-	|----------------+---------+----------+------------------------------------------------------------|
-	| =Target=       | Target  | yes      | Identifies the heading containing the block.               |
-	| =Row=          | int     | yes      | Line offset within the heading to locate the block.        |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object. On success, =msg= contains the execution result.
-	EDOC */
+	    *Request Body (JSON):*
+	    | Field          | Type    | Required | Description                                                |
+	    |----------------+---------+----------+------------------------------------------------------------|
+	    | =Target=       | Target  | yes      | Identifies the heading containing the block.               |
+	    | =Row=          | int     | yes      | Line offset within the heading to locate the block.        |
+
+	    *Response:* A =ResultMsg= JSON object. On success, =msg= contains the execution result.
+	    EDOC
+*/
 func PostExecb(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostExecb")
 	body, err := io.ReadAll(r.Body)
@@ -2084,21 +2249,24 @@ func PostExecb(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /tablerandomget — Get a Random Row from a Named Table
-	Selects a random row from a named table (one that has a =#+NAME:= keyword above it)
-	and returns it as a pipe-delimited org table row string. Useful for flashcard-style
-	random selection from data tables.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /tablerandomget — Get a Random Row from a Named Table
+	    Selects a random row from a named table (one that has a =#+NAME:= keyword above it)
+	    and returns it as a pipe-delimited org table row string. Useful for flashcard-style
+	    random selection from data tables.
 
-	*Query Parameters:*
-	| Parameter | Type   | Required | Description                                             |
-	|-----------+--------+----------+---------------------------------------------------------|
-	| =name=    | string | yes      | The =#+NAME:= of the table to select from.              |
+	    *Method:* =GET=
 
-	*Response:* A =ResultMsg= JSON object. On success, =msg= contains a row like =| col1 | col2 |=.
-	EDOC */
+	    *Query Parameters:*
+	    | Parameter | Type   | Required | Description                                             |
+	    |-----------+--------+----------+---------------------------------------------------------|
+	    | =name=    | string | yes      | The =#+NAME:= of the table to select from.              |
+
+	    *Response:* A =ResultMsg= JSON object. On success, =msg= contains a row like =| col1 | col2 |=.
+	    EDOC
+*/
 func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "RequestTableRandomGet")
 	/*
@@ -2138,21 +2306,24 @@ func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 	//json.NewEncoder(w).Encode(data)
 }
 
-/* SDOC: API
-* GET /tablenames — List All Named Tables
-	Returns the names of all tables across all org files that have a =#+NAME:= keyword.
-	These names can be used with other table endpoints like =/tablerandomget=.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /tablenames — List All Named Tables
+	    Returns the names of all tables across all org files that have a =#+NAME:= keyword.
+	    These names can be used with other table endpoints like =/tablerandomget=.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON object:
-	#+BEGIN_SRC json
-	{"Ok": true, "NamedTables": ["vocabulary", "contacts", "inventory"]}
-	#+END_SRC
-	Returns ={"Ok": false, "NamedTables": null}= if no named tables exist.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON object:
+	    #+BEGIN_SRC json
+	    {"Ok": true, "NamedTables": ["vocabulary", "contacts", "inventory"]}
+	    #+END_SRC
+	    Returns ={"Ok": false, "NamedTables": null}= if no named tables exist.
+	    EDOC
+*/
 func RequestTableNames(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "RequestTableNames")
 	/*
@@ -2176,23 +2347,26 @@ func RequestTableNames(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(rep)
 }
 
-/* SDOC: API
-* POST /tableformulainfo — Get Table Formula Details
-	Returns detailed information about the table and its formulas at the specified position
-	in an org file. This includes the table structure, cell references, and any =#+TBLFM:=
-	formula lines attached to the table.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /tableformulainfo — Get Table Formula Details
+	    Returns detailed information about the table and its formulas at the specified position
+	    in an org file. This includes the table structure, cell references, and any =#+TBLFM:=
+	    formula lines attached to the table.
 
-	*Request Body (JSON):* A =PreciseTarget= object.
-	| Field    | Type   | Required | Description                                            |
-	|----------+--------+----------+--------------------------------------------------------|
-	| =Target= | Target | yes      | Identifies the heading containing the table.           |
-	| =Row=    | int    | yes      | Line offset within the heading to locate the table.    |
+	    *Method:* =POST=
 
-	*Response:* A =ResultTableDetailsMsg= JSON object on success, or a =ResultMsg=
-	with ={"status": false}= on failure.
-	EDOC */
+	    *Request Body (JSON):* A =PreciseTarget= object.
+	    | Field    | Type   | Required | Description                                            |
+	    |----------+--------+----------+--------------------------------------------------------|
+	    | =Target= | Target | yes      | Identifies the heading containing the table.           |
+	    | =Row=    | int    | yes      | Line offset within the heading to locate the table.    |
+
+	    *Response:* A =ResultTableDetailsMsg= JSON object on success, or a =ResultMsg=
+	    with ={"status": false}= on failure.
+	    EDOC
+*/
 func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostFormulaInfo")
 	body, err := io.ReadAll(r.Body)
@@ -2221,22 +2395,25 @@ func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /exectable — Execute Table Formulas
-	Evaluates the =#+TBLFM:= formulas on the table at the specified position in an
-	org file and updates the table cells with the computed results. The file is
-	re-saved to disk after the update.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /exectable — Execute Table Formulas
+	    Evaluates the =#+TBLFM:= formulas on the table at the specified position in an
+	    org file and updates the table cells with the computed results. The file is
+	    re-saved to disk after the update.
 
-	*Request Body (JSON):* A =PreciseTarget= object.
-	| Field    | Type   | Required | Description                                            |
-	|----------+--------+----------+--------------------------------------------------------|
-	| =Target= | Target | yes      | Identifies the heading containing the table.           |
-	| =Row=    | int    | yes      | Line offset within the heading to locate the table.    |
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object.
-	EDOC */
+	    *Request Body (JSON):* A =PreciseTarget= object.
+	    | Field    | Type   | Required | Description                                            |
+	    |----------+--------+----------+--------------------------------------------------------|
+	    | =Target= | Target | yes      | Identifies the heading containing the table.           |
+	    | =Row=    | int    | yes      | Line offset within the heading to locate the table.    |
+
+	    *Response:* A =ResultMsg= JSON object.
+	    EDOC
+*/
 func PostExect(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostExecT")
 	body, err := io.ReadAll(r.Body)
@@ -2264,21 +2441,24 @@ func PostExect(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* POST /execalltables — Execute All Table Formulas in a File
-	Evaluates =#+TBLFM:= formulas on every table in the specified org file and updates
-	all table cells with the computed results. The file is re-saved to disk after the update.
+/*
+		SDOC: API
 
-	*Method:* =POST=
+	  - POST /execalltables — Execute All Table Formulas in a File
+	    Evaluates =#+TBLFM:= formulas on every table in the specified org file and updates
+	    all table cells with the computed results. The file is re-saved to disk after the update.
 
-	*Request Body (JSON):* A JSON string containing the org filename.
-	#+BEGIN_SRC json
-	"todo.org"
-	#+END_SRC
+	    *Method:* =POST=
 
-	*Response:* A =ResultMsg= JSON object on success, or a =ResultMsg= with
-	={"status": false}= containing concatenated error messages on failure.
-	EDOC */
+	    *Request Body (JSON):* A JSON string containing the org filename.
+	    #+BEGIN_SRC json
+	    "todo.org"
+	    #+END_SRC
+
+	    *Response:* A =ResultMsg= JSON object on success, or a =ResultMsg= with
+	    ={"status": false}= containing concatenated error messages on failure.
+	    EDOC
+*/
 func PostExecAllT(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(os.Stderr, "PostExecAllT")
 	body, err := io.ReadAll(r.Body)
@@ -2367,21 +2547,24 @@ func RequestValidStatus(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /next/{hash} — Get Next Sibling Heading
-	Returns the =Todo= data for the next sibling heading (the heading at the same level
-	immediately following the given heading). Returns an error string if there is no
-	next sibling.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /next/{hash} — Get Next Sibling Heading
+	    Returns the =Todo= data for the next sibling heading (the heading at the same level
+	    immediately following the given heading). Returns an error string if there is no
+	    next sibling.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+	    *Method:* =GET=
 
-	*Response:* A =Todo= JSON object, or an error string.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+
+	    *Response:* A =Todo= JSON object, or an error string.
+	    EDOC
+*/
 func RequestNextSibling(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -2397,21 +2580,24 @@ func RequestNextSibling(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /prev/{hash} — Get Previous Sibling Heading
-	Returns the =Todo= data for the previous sibling heading (the heading at the same level
-	immediately before the given heading). Returns an error string if there is no
-	previous sibling.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /prev/{hash} — Get Previous Sibling Heading
+	    Returns the =Todo= data for the previous sibling heading (the heading at the same level
+	    immediately before the given heading). Returns an error string if there is no
+	    previous sibling.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+	    *Method:* =GET=
 
-	*Response:* A =Todo= JSON object, or an error string.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of the heading.                  |
+
+	    *Response:* A =Todo= JSON object, or an error string.
+	    EDOC
+*/
 func RequestPrevSibling(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -2427,20 +2613,23 @@ func RequestPrevSibling(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /child/{hash} — Get Last Child Heading
-	Returns the =Todo= data for the last child heading of the given heading.
-	Returns an error string if the heading has no children.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /child/{hash} — Get Last Child Heading
+	    Returns the =Todo= data for the last child heading of the given heading.
+	    Returns an error string if the heading has no children.
 
-	*Path Parameters:*
-	| Parameter | Type   | Description                                              |
-	|-----------+--------+----------------------------------------------------------|
-	| ={hash}=  | string | Base64-URL-encoded hash of the parent heading.           |
+	    *Method:* =GET=
 
-	*Response:* A =Todo= JSON object, or an error string.
-	EDOC */
+	    *Path Parameters:*
+	    | Parameter | Type   | Description                                              |
+	    |-----------+--------+----------------------------------------------------------|
+	    | ={hash}=  | string | Base64-URL-encoded hash of the parent heading.           |
+
+	    *Response:* A =Todo= JSON object, or an error string.
+	    EDOC
+*/
 func RequestLastChild(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
@@ -2456,18 +2645,21 @@ func RequestLastChild(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/* SDOC: API
-* GET /alltags — List All Tags
-	Returns a deduplicated list of every tag found across all headings in all tracked
-	org files. Useful for building tag-completion UIs.
+/*
+		SDOC: API
 
-	*Method:* =GET=
+	  - GET /alltags — List All Tags
+	    Returns a deduplicated list of every tag found across all headings in all tracked
+	    org files. Useful for building tag-completion UIs.
 
-	*Parameters:* None.
+	    *Method:* =GET=
 
-	*Response:* A JSON array of tag strings (e.g. =["WORK", "HOME", "urgent", "PROJECT"]=),
-	or an error string if the tag list cannot be retrieved.
-	EDOC */
+	    *Parameters:* None.
+
+	    *Response:* A JSON array of tag strings (e.g. =["WORK", "HOME", "urgent", "PROJECT"]=),
+	    or an error string if the tag list cannot be retrieved.
+	    EDOC
+*/
 func RequestTags(w http.ResponseWriter, r *http.Request) {
 	res := GetDb().GetAllTags()
 	if res == nil {

@@ -148,6 +148,9 @@ func pickLine(l common.LinkEntry) string {
 // ---------------------------------------------------------------------------
 
 func (self *Links) preview(core *commands.Core) {
+	// Drawn for fzf rather than for a terminal, so the colour has to be said
+	// explicitly - stdout here is a pipe.
+	commands.PickerOutput()
 	rows := self.rows(core)
 	if self.At < 0 || self.At >= len(rows) {
 		fmt.Printf("%sthat link is not in the list any more%s\n",

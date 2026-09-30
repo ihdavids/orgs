@@ -426,6 +426,26 @@ type ServerSettings struct {
 		EDOC */
 	Log LogSettings `yaml:"log"`
 	/* SDOC: Settings
+	* Column View
+
+		=#+COLUMNS:= is org's way of saying "show me these properties as a table",
+		and the part that makes it more than a table is that a column may ask for
+		a total: =%EFFORT{:}= makes a project heading show the effort of
+		everything under it.
+
+		#+BEGIN_SRC yaml
+		columns:
+		  default: "%25ITEM %TODO %3PRIORITY %TAGS %EFFORT{:} %CLOCKSUM"
+		#+END_SRC
+
+		This is used only for a file that does not declare a =#+COLUMNS:= line of
+		its own; one that does gets exactly what it asked for. The built-in
+		default is org's own (=%25ITEM %TODO %3PRIORITY %TAGS=) with
+		=%EFFORT{:} %CLOCKSUM= added, because adding effort up is the thing this
+		view exists for and nearly no file declares a columns line.
+		EDOC */
+	Columns ColumnSettings `yaml:"columns"`
+	/* SDOC: Settings
 	* Running Source Blocks
 
 		Orgs can run the =#+BEGIN_SRC= blocks in your files and hand the result

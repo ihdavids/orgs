@@ -20,6 +20,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/find"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/gitorg"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/grep"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/habits"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/help"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/initconfig"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/links"

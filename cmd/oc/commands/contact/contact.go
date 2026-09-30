@@ -210,6 +210,9 @@ func (self *Contact) pick(core *commands.Core, q string) {
 }
 
 func (self *Contact) preview(core *commands.Core) {
+	// Drawn for fzf rather than for a terminal, so the colour has to be said
+	// explicitly - stdout here is a pipe.
+	commands.PickerOutput()
 	if self.Hash == "" {
 		commands.Fail("orgs contact preview: -hash says which contact")
 	}

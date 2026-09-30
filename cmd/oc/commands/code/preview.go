@@ -206,6 +206,9 @@ func (self *Code) offerRun(core *commands.Core, b common.CodeBlock) {
 // ---------------------------------------------------------------------------
 
 func (self *Code) preview(core *commands.Core) {
+	// Drawn for fzf rather than for a terminal, so the colour has to be said
+	// explicitly - stdout here is a pipe.
+	commands.PickerOutput()
 	if self.File == "" || self.Id < 0 {
 		commands.Fail("orgs code preview: -file and -id say which block")
 	}

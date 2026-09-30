@@ -200,6 +200,9 @@ func (self *Rec) sayNothing(q string) {
 
 // The pane fzf asked for.
 func (self *Rec) preview(core *commands.Core) {
+	// Drawn for fzf rather than for a terminal, so the colour has to be said
+	// explicitly - stdout here is a pipe.
+	commands.PickerOutput()
 	if self.Hash == "" {
 		commands.Fail("orgs %s preview: -hash says which record", self.name())
 	}

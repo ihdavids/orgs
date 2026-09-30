@@ -41,7 +41,33 @@ var (
 	DryRun bool
 	// Never emit ansi, whatever the terminal says.
 	NoColor bool
+	// Always emit ansi, whatever stdout turns out to be. Set by a command whose
+	// output is going somewhere that renders it - see PickerOutput.
+	forceColour bool
 )
+
+// PickerOutput says that this run's stdout is fzf's rather than a terminal's,
+// and that ansi in it will be rendered rather than shown.
+//
+// A preview pane and a picker's own list are drawn by a *second run of this
+// binary*, which fzf starts with a pipe for stdout - so `term.IsTerminal` is
+// false and every one of these commands was quietly drawing in black and white.
+// The panes have been monochrome since the first of them; it showed up as
+// something visibly wrong only when `orgs habits` grew a key that reloads the
+// list, because then a coloured list drawn by the parent was replaced by an
+// uncoloured one drawn by a child, in front of somebody watching.
+//
+// This is the same thing `bat --color=always` is for, and it is why every
+// fzf preview command in the world passes that flag.
+//
+// -no-color still wins: the child is told it as well, and somebody who does not
+// want ansi does not want it in the pane either.
+func PickerOutput() {
+	if NoColor || os.Getenv("NO_COLOR") != "" {
+		return
+	}
+	forceColour = true
+}
 
 // AddGlobalFlags gives one command the flags every command has. Each is only
 // defined when the command has not already taken the name - flag panics on a
@@ -71,6 +97,9 @@ func Machine() bool { return JsonOut || FormatOut != "" }
 func Colour() bool {
 	if NoColor || Machine() || os.Getenv("NO_COLOR") != "" {
 		return false
+	}
+	if forceColour {
+		return true
 	}
 	return term.IsTerminal(int(os.Stdout.Fd()))
 }

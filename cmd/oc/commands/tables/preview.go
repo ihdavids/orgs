@@ -134,6 +134,9 @@ func pickLine(t common.TableInfo) string {
 // ---------------------------------------------------------------------------
 
 func (self *Tables) preview(core *commands.Core) {
+	// Drawn for fzf rather than for a terminal, so the colour has to be said
+	// explicitly - stdout here is a pipe.
+	commands.PickerOutput()
 	if self.File == "" || self.Id < 0 {
 		commands.Fail("orgs tables preview: -file and -id say which table")
 	}
