@@ -1,0 +1,69 @@
+/* Lowlands — a low-poly field running away to the horizon, coming towards you.
+ *
+ * Flat-shaded triangles, no gradients anywhere, which is what makes low poly
+ * look low poly. The rows bunch up towards the horizon rather than being evenly
+ * spaced, because a field this deep spends most of its triangles on three
+ * inches of horizon otherwise; and each triangle is stroked in its own colour,
+ * because adjacent antialiased fills leave a hairline of the page showing
+ * through every shared edge and a field with a bright crack round each face is
+ * not low poly, it is a net.
+ *
+ * Dusk colours, and the land is a different material in the hollows from on the
+ * ridges. The quietest of these at the top of the screen, where the text is,
+ * which is why it is the one to reach for for a long deck.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: lowpoly
+ */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #120d28;
+  --slide-bg-soft: #1e1640;
+  --slide-bg-image: linear-gradient(175deg, #2a1c4e 0%, #120d28 48%);
+  --slide-ink: #e4dcf2;
+  --slide-ink-soft: #a497c4;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #ffb37a;
+  --slide-accent-soft: rgba(255, 179, 122, 0.13);
+  --slide-link: #ffcba4;
+  --slide-rule: rgba(228, 220, 242, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Sora', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.025em;
+  --slide-line: 1.5;
+  --slide-title-size: 3em;
+  --slide-bullet: "\25B4";
+
+  --slide-code-bg: rgba(12, 8, 28, 0.72);
+  --slide-code-ink: #e2daf4;
+  --slide-code-border: 1px solid rgba(255, 179, 122, 0.2);
+  --slide-radius: 12px;
+  --slide-shadow: 0 24px 60px rgba(5, 2, 16, 0.6);
+  --slide-card-bg: rgba(30, 22, 64, 0.78);
+  --slide-card-rule: 1px solid rgba(255, 179, 122, 0.18);
+  --slide-table-stripe: rgba(255, 179, 122, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Hollows first, ridges second: the field mixes between the two by height, so
+   * this pair is read as a material rather than as a palette. */
+  --backdrop-colors: #3c2f78 #b3609f;
+  --backdrop-fog: #120d28;
+  --backdrop-glow: #ffd3a6;
+  --backdrop-veil: rgba(18, 13, 40, 0.2);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.7;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(255, 179, 122, 0.24);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(255, 179, 122, 0));
+  box-shadow: 0 0 18px rgba(255, 179, 122, 0.35);
+}

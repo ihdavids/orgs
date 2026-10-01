@@ -501,6 +501,68 @@ A third, which has bitten twice: **a board setting that is not a field of `Kanba
 
 The board that made it necessary is worg's Kanban tab, which writes a heading's property when a card is dropped in a column. That exposed a nil dereference in `SetProperty` (`todo.go`): a heading with no `:PROPERTIES:` drawer has `Headline.Properties == nil`, and the old `if props == nil` check could never fire, having taken the address of a field first. It now creates the drawer, which the org writer prints directly under the headline - so anything setting a property from outside the editor works on a heading that has never had one.
 
+### Users, and the keystore
+
+`internal/common/keystore.go` is the credential store; `orgs user` (`cmd/oc/commands/user/`) writes it and `internal/app/orgs/user.go` is the server's half. It is in `internal/common` because a CLI command package cannot import the server package, and both halves have to agree about what a password is.
+
+Before this, **the `keystore:` setting was documented and never read**: `DefaultKeystore()` was the only thing that ever assigned `currentKeystore`, so every server anywhere had exactly one account, `admin`/`default`, and there was no way to add another. `LoadKeystore()` now runs in `StartServer` right after `Conf()` - it cannot run before, and `DefaultKeystore()` still exists as the pre-config bootstrap because the config load can fail and a nil keystore turns that into a panic rather than a message.
+
+**Passwords are never sent to the server.** A client asks `GET /salt?user=<name>`, hashes with `common.ClientHash`, and sends that; the server hashes what it received again with its own `orgSalt` (`common.StoredHash`) before comparing. So the file holds one value, the wire carries another, and neither is the password:
+
+- a **stolen keystore is not a set of logins** - what is in it is not what `/login` accepts;
+- a **captured hash still is** a login, so this is not a substitute for TLS. It protects the password, which is reused elsewhere and outlives any session. `requireHashedLogin: true` refuses a cleartext login outright; it is off by default because a client older than the hashing would be locked out, and every such login is named in the log until it is turned on.
+
+Six things are load-bearing:
+
+1. **`common.ClientHash` is said again in `worg/src/clienthash.ts`**, because a browser cannot ask the server to do the one thing whose point is that it does not travel. The prefix, the separators and the order of the parts must match exactly, and nothing at build time would notice if they stopped - `TestClientHashVector` and `clienthash.test.ts` pin the **same vector** on both sides. Change one and change both, and run both.
+2. **`crypto.subtle` does not exist outside a secure context**, so a worg served over plain http from another machine *cannot* hash and says so in the console rather than sending something that looks like a hash. https, or localhost.
+3. **`GET /salt` answers for a user who does not exist** as readily as for one who does, with a stable decoy derived from `orgSalt` - it is the one thing a login page can ask before it has any credentials, so telling the two apart would be a way to ask the server for a list of its users.
+4. **Both legacy directions are folded into one comparison** (`credMatches`): a cleartext password from an old client, and a cleartext entry in a keystore somebody typed by hand. Whatever arrives, what is compared is a hash of fixed length, in constant time. A hand-written `password: hunter2` keeps working, and `orgs user passwd` is how to convert one.
+5. **A username is part of its own hash**, so the same password on two accounts is not the same value on the wire. That also means a rename invalidates the password, which is why there is no rename - remove the account and add it again.
+6. **`orgs user` writes a file rather than calling an endpoint.** The keystore decides who may talk to the server at all, so an endpoint that wrote it would be an endpoint that grants access, reachable by anybody who already has some. The consequence is the one to know: it runs on the server's own machine, and the server reads the file on startup, so a change needs a restart. It is `commands.Offline` - the machine being set up for the first time is exactly the one with no server to authenticate to.
+
+Point 6 has one exception, and it is `orgs adduser` (`cmd/oc/commands/adduser/`,
+`internal/app/orgs/adduser.go`, `POST /users/add`). Adding an account over the
+wire is exactly the endpoint that comment argues against, and what makes it
+safe enough to have is that "anybody who already has some access" is not
+enough: a `Cred` now carries `Admin`, and only an account marked `admin: true`
+may add another. Where the first administrator comes from is the whole of it -
+the built-in `admin` account is one, and `orgs user admin <name>` is the only
+way to make another, on the server's own machine, which is deliberately *not*
+reachable over the wire. An administrator who could promote an account could
+promote one they had just added, and being an administrator would then be one
+call away from being granted rather than something somebody decided.
+
+Five things about it:
+
+1. **The password still does not travel.** The client makes a salt for the new
+   user and sends `ClientHash(name, salt, password)` under it, exactly as a
+   login does; the server hashes that again with its own `orgSalt` on the way
+   into the file. `AddUser` refuses anything that is not a client hash - unlike
+   `/login`, which has to take a cleartext password because clients older than
+   the hashing exist, and nothing is older than this endpoint.
+2. **The account works at once**, because the server writes the keystore it is
+   already holding rather than a file it will read next time. That is the whole
+   difference from `orgs user add`, which still says "restart the server".
+3. **Three refusals, each with a reason rather than a 403 and silence**: the
+   caller is not an administrator; `noAuth: true` is set, so there is no
+   authenticated user to be an administrator and an account written then would
+   outlive the setting; and the server is running on the built-in keystore,
+   which has no file behind it, so `Save` is a no-op and the account would
+   vanish at the next restart. Each names the command that fixes it.
+4. **An add never replaces.** Quietly resetting an existing account's password
+   would be a way to take it over, so a name that is taken is a refusal.
+5. **`SetPassword` keeps the `Admin` flag.** It used to replace the whole
+   `Cred`, which would have made changing a password a way to silently demote
+   somebody. `TestPasswordChangeKeepsAdmin` pins it.
+
+`YamlKeystore` grew a mutex while this was built. It was already being mutated
+from request handlers - every successful login records a time and saves - and
+adding a second writer made two goroutines writing the same map a matter of two
+requests arriving together rather than of bad luck.
+
+`WarnOnInsecureCredentials` prints a block, not a line, when any account still has the default password, when any is stored as cleartext, or when `noAuth` is set. What it is competing with is three hundred lines of plugin and watcher chatter scrolling past on startup, and the state it describes - a server on a network with a published password - is one somebody has to find out about from their own logs rather than from somebody else. It names the accounts and the three commands that fix it. A keystore that is configured but absent, unreadable, or empty falls back to the built-in account rather than refusing to start (a server that would not start could not be set up), and the fallback is always said out loud in the block as `Why:`.
+
 ### Backlinks and the link graph
 
 `internal/app/orgs/links.go` walks every `[[target][description]]` link out of every parsed file, resolves it against the database, and indexes it from both ends. It serves `/links` (backlinks for one file), `/links/graph` (the graph around a file, or the whole database, at file or heading granularity) and `/links/stats` (per-file counts). Wire types are in `internal/common/links.go`; the worg client is `components/Files.tsx` plus the plain-svg force layout in `components/LinkGraph.tsx`.
@@ -1037,6 +1099,188 @@ None of the four owned views (`sheet`, `book`, `pdf`, `theme`) is ever written t
 
 The theme a file names is reported **as the file wrote it**, whether or not this server has a stylesheet by that name - `/html/themes` is the list of the ones it has, and answering with only those would swallow a typo silently.
 
+### The three documentation themes
+
+`docs`, `rtd` and `furo` are **one application in three dresses**. The
+application is `templates/html_docs_app.js`, included by all three
+templates with `{% include %}` rather than copied into each of them - the
+contents rail, the fuzzy search with its arrow-key preview, the folding,
+the anchors, the code copy and the scroll spy are the same code on all
+three pages. A theme is a **shell** (`html_<name>.tpl`) and a
+**stylesheet** (`html_styles/<name>_style.css`), and nothing else:
+
+- **`docs`** - a masthead across the top, a contents rail down the left,
+  the document in one column. Written first; the other two are drawings
+  of it.
+- **`rtd`** - sphinx_rtd_theme: a dark rail the full height of the window
+  with a blue search block at the top of it, breadcrumbs over the page,
+  the document on white in an 800px column.
+- **`furo`** - the Furo theme, which is what diataxis.fr is read in:
+  three columns, almost no rules, one blue. Contents left, document
+  middle at a 46rem measure, "On this page" right.
+
+Nothing in the exporter knows there are three. `HtmlThemes()` lists every
+`*_style.css` it finds and `GetTemplate` picks up `html_<theme>.tpl` when
+one exists, so a fourth is two files and no Go.
+
+**The script asks the page for ids, never for a layout**, which is the
+whole of what makes one application wear three shells. A shell must
+provide `#sidebar`, `#navbar`, `#searchfield`, `#searchresults`,
+`#searchform`, `#rail-expand`, `#rail-collapse`, `#rail-toggle`,
+`#theme-toggle`, a `.doc-body` around the document, and
+`[data-sticky-header]` on whatever stands over the top of the page. Two
+things in the script used to be the docs theme's own and are now asked
+rather than assumed, because the three disagree about both:
+
+1. **`headerHeight()` measures `[data-sticky-header]`**, and answers zero
+   when there is none. It named `.header-container` and defaulted to 52px
+   - which is right for a masthead on every width and wrong for a bar that
+   exists only on a narrow screen, where it would have left 52px of dead
+   space above every jump on the desktop.
+2. **`closeRail()` asks whether `#rail-toggle` is on screen** rather than
+   testing `innerWidth <= 950`. The toggle is drawn only where the rail is
+   over the page rather than beside it, so that one media query in each
+   stylesheet is the whole definition of "narrow" for that theme - 950px
+   for docs, 768 for rtd, 820 for furo.
+
+And two things it now says out loud for a shell to use, both no-ops in a
+theme that styles nothing for them: **`docs:current`**, a `CustomEvent`
+carrying the heading the spy has settled on - rtd's last breadcrumb and
+furo's right hand column are both drawn from it, rather than either
+watching the scroll a second time and disagreeing at the edges - and
+**`.is-branch`** on the rail rows from the root down to that heading,
+which is what rtd's open-section band is drawn from.
+
+Three decisions the two new themes share:
+
+- **The light/dark key is `docsTheme` in all three.** They are the same
+  documentation read three ways; choosing dark in one and finding light in
+  another reads as a bug rather than as a separate setting.
+- **`{{fontfamily}}` is the display face only** - the brand and the
+  headings - and the prose is the reader's own UI stack. It is a *server*
+  setting (`exporters: - name: html / props: fontfamily:`), so putting it
+  in front of the one stack Furo sets everything in meant every Furo page
+  came out in whatever that happened to say, which is the opposite of
+  asking for the Furo theme. A file's own `#+HTML_FONTFAMILY:` still wins,
+  in the place a theme has for a face of its own.
+- **The rail is a pinned head and a scrolling body**, not one box that
+  scrolls. `overflow-y: auto` forces the other axis to `auto` too, so a
+  results panel wider than the rail is clipped at its edge however it is
+  positioned - and a result is a heading, the outline path above it and a
+  line of the prose it was found in, which is three ellipses in 300px.
+
+`#+SUBTITLE:` is read by the exporter for these: rtd puts it where that
+theme puts a version, furo under the project name. A file that names none
+writes no line anywhere.
+
+Offering a theme means naming it, and worg named it by capitalising it -
+which gets "Rtd". `htmlThemeLabel` in **`worg/src/settings.ts`** is the
+label table plus that fallback, and it is there rather than beside either
+caller because there are two of them: the settings menu, where a theme is
+being chosen, and the file view's button for the theme a file asked for.
+The same theme reading two ways in one application is two themes as far as
+the reader is concerned. A stylesheet added to the server still needs no
+change there - a name goes in the table only when capitalising it gets it
+wrong, or when the name alone does not say what the page will look like.
+
+While building them: **`#+TITLE:` had never reached the html template.**
+`ExportToString` wrote it into the caller's `props` map and the template
+is rendered from `self.Props`, so every exported page was titled
+"Schedule" - `ValidateMap`'s default, and a leftover from the agenda. It
+is now set on `self.Props` on every export (the exporter is shared between
+requests, so a title set only when a file names one would keep the last
+page's), and a file naming no title is named **after itself** rather than
+after the agenda. That matters more here than elsewhere: in these two
+themes the title is the name at the head of the rail.
+
+#### The `docs` theme
+
+`#+HTML_THEME: docs` is the one theme that was an *application* rather than
+a stylesheet first:
+`templates/html_docs.tpl` plus `templates/html_styles/docs_style.css`.
+It is a masthead, a contents rail built from the heading tree the exporter
+already walks out of the document (`nodes_json`), and the document itself in
+one column. The page carries no jQuery - it had been carrying it for the tree
+and the search box and nothing else.
+
+What it is built on is `OrgHtmlWriter.WriteHeadline`'s own ids: every heading
+is a `heading-wrapper` with a `-title`, a `-content` and a `-text` inside it,
+and `nodes_json` names them. Six things are load-bearing:
+
+1. **Clicking a heading in the rail goes to the heading.** The old tree
+   *hid every other heading* and showed that one, which is why it read as the
+   link being broken - nothing moved, and the page you were looking at
+   vanished. Now the whole document is on the page and the rail scrolls to it,
+   unfolding whatever it is inside on the way.
+2. **A heading is addressed by a slug, not by its uuid.** `WriteHeadline`
+   makes a fresh `uuid.New()` per heading per export, so a link copied out of
+   the page was dead the next time the docs were built. The slug is made from
+   the heading's own name at load, deduplicated, and put on the title element,
+   which is what the anchor button copies and what `location.hash` is read
+   against.
+3. **Everything is reached by `getElementById`, never by a selector.** Those
+   uuids start with a digit about half the time, and `#1bfeb…` is not a valid
+   CSS id selector - so anything written as `querySelector('#' + id)` works
+   for one heading and throws for the next.
+4. **The search is fuzzy, and it is `internal/common/dnd/fuzzy.go` said a
+   third time** - `worg/src/fuzzy.ts` says it a second. A term matches a
+   heading's own name loosely and the prose only on a whole word, which is
+   what keeps a filter from matching half the document. Change one and change
+   all three. What the old box did was `new RegExp(what you typed)` against
+   each heading's `innerHTML`, which found nothing on a half-typed pattern and
+   put `<mark>` inside tags when it did find something.
+5. **Marking a hit walks text nodes**, for that reason: a replace over markup
+   lands inside a tag as readily as inside a sentence.
+6. **A long jump does not animate.** The page is a hundred thousand pixels
+   tall and `scroll-behavior: smooth` across all of it is a second of blur
+   that says nothing about where you landed. Anything past three screens is a
+   cut.
+7. **Arrowing through the hits takes the page to each one, and that is a
+   *look* rather than a move.** A one-line snippet cannot say whether a hit
+   is the one you meant, so the preview is the whole of what the search is
+   for; what makes the arrow keys safe to press is that Escape puts back
+   everything the look changed - where the page was, which sections were
+   unfolded on the way in, which row the rail called current - and Enter
+   keeps it. Four things follow. A preview **cuts rather than animates**
+   whatever the distance, because arrow keys repeat and a queued smooth
+   scroll arrives after the key that asked for it. The **first** arrow press
+   shows what is already selected instead of stepping past it, or the top
+   hit - the one the search thinks you meant - is the one result you can
+   never look at first. **Editing the query ends the look**, since the result
+   being previewed is about to stop existing. And the heading is dropped
+   **below the results panel** when the two actually overlap, which is only
+   on a narrow screen: elsewhere the panel is over the margin and the preview
+   lands under the masthead like any other jump.
+
+Two things the theme needed from the exporter, and both were bugs on their
+own:
+
+- **`HighlightCodeBlock` threw the block's language away.** It wrote
+  `<pre><code  >` whatever the block declared, so highlight.js guessed from
+  the text - and a short block of json guesses css as readily as json. The
+  class is written now (`language-<lang>`), and the docs page maps the aliases
+  org uses (`sh`, `emacs-lisp`) and calls a language hljs has never heard of
+  `plaintext` rather than letting it guess. It also registers a small `org`
+  grammar, since nineteen blocks in docs.org are org and hljs has no org.
+- **`#+HTML_HIGHLIGHT_STYLE:` had never worked.** `ExportToString` wrote the
+  value to `hljsstyle`; every template reads `hljs_style`. Worse, writing the
+  first key stopped `ValidateMap` filling in the second, so a file naming its
+  own highlight style came out with **no** stylesheet rather than the wrong
+  one. `hljs_style_default` was added beside it so a theme can tell "nobody
+  asked" from "this one was asked for" - the docs theme loads github and
+  github-dark together and switches them with the page, and gets out of the
+  way entirely when the file named one.
+
+The stylesheet is read by `GetStylesheet`, which rewrites every `url(...)` in
+it to point at `http://localhost:8010/` - so **docs_style.css must contain no
+`url()`**; the disclosure chevrons and the fold markers are drawn from borders
+for that reason as much as for the look of them. `{{fontfamily}}` is
+substituted by the same pass and is the display face: the masthead and the
+first two heading levels. The prose is set in the reader's own UI stack, and
+the palette is custom properties defined three times - bare `:root` for light,
+`:root:not([data-theme="light"])` under `prefers-color-scheme: dark`, and
+`:root[data-theme="dark"]` so the masthead's switch wins in both directions.
+
 ### Searching the text of every file
 
 The files tab has two boxes. The first filters by what files are *called*; the second (`/files/search`, `internal/app/orgs/filesearch.go`) is a regular expression over what is *in* them, and turns the panel into the list of lines that matched - emacs' swiper, over the whole database. The arrow keys walk it from the box, Enter and a click do the same thing, and moving **opens** rather than merely highlighting, because reading a hit list is looking at the lines one after another.
@@ -1069,7 +1313,27 @@ While in there: the Headline column's sort arrow was sorting on `id`, which a se
 
 `c` anywhere in worg, or the pencil on the rail, opens the capture dialog (`worg/src/components/Capture.tsx`). It asks `/capture/templates` which templates exist, puts one up as a form, and posts to `/capture` - the same two endpoints `orgs cap` uses from the terminal.
 
-The thing to understand before changing it is **where the template language lives**. A `CaptureTemplate` carries a `template:` string and the server does nothing with it - `common.CaptureTemplate` says so in its own comment. It is a form for the client to put up, and `worg/src/capture.ts` is the only implementation of it there is: `{{CONTENT}}` is the body, `{{name}}` is a value to fill in, `{{name|prompt}}` is the same asked for in your own words, and a dozen names (`now`, `today`, `date`, `week`…) fill themselves in and stay editable. `capture.test.ts` pins all of it, and the SDOC block in `capture.go` documents it for whoever writes a template.
+The thing to understand before changing it is **where the template language lives**, and it is now in three places that share one definition. **`internal/common/captemplate.go` is the grammar** - the pattern, the self-answering names, `CapFields`, `CapSubstitute`, `FillCapTemplate` - and it is in `internal/common` precisely so the end that expands a template and the end that fills it in cannot have private understandings of the same string. `internal/app/orgs/capturefill.go` is the server's wiring, `worg/src/capture.ts` the browser's, `cmd/oc/commands/capture/` the terminal's.
+
+Four spellings, the last two written by the *server* rather than by whoever wrote the template:
+
+```
+{{name}}                   a value to fill in, labelled from the name
+{{name|prompt}}            the same, asked for in your own words
+{{name|=default}}          pre-filled with a default, still editable
+{{name|prompt|=default}}   both
+{{CONTENT}}                the body
+```
+
+**A name that answers itself is answered on the way out of `/capture/templates`** - `{{uuid}}`/`{{guid}}`, `{{username}}`, `{{now}}`, `{{today}}`, `{{tomorrow}}`, `{{week}}`, `{{hostname}}` and the rest of `CapAutoValue` - and the answer goes in as that placeholder's **default, not over the top of it**: `{{uuid}}` comes back as `{{uuid|=f81d4fae-…}}`. That is how a capture gets a `:CUSTOM_ID:` with a GUID in it - `{{uuid}}` and nothing else - and both halves of the shape are load-bearing. A client that knows nothing about it has a usable value in the box already, which is the whole reason to do it server side at all (`crypto.randomUUID` is secure-context only in a browser - the same wall `clienthash.ts` runs into - so for worg over plain http from another machine this is the *only* end that can answer it). And a client that would rather answer the name itself still sees the name, which a substitution would have taken away: a literal value is a value nobody can change, and the timestamp on a capture is very often the one thing somebody does change.
+
+The `|=` marker is why it is a marker and not just the prompt slot. `{{source|Where from?}}` is a question and `{{uuid|=f81d4fae-…}}` is an answer, and a client has to tell them apart **without keeping its own copy of the list of names** - which is exactly the second copy that goes stale (ClientHash, FuzzyScore, HealthLevel all say the same thing). Five rules, pinned by `captemplate_test.go` and `capture.test.ts` on the two sides:
+
+- **A name with no answer is left standing, braces and all.** A client's reading of a template is unchanged by the pass: it sees fewer holes, never different ones, so a server and a worg of different ages still work together.
+- **The expansion is idempotent.** A placeholder that already carries a default is left alone, so a template cannot collect a second answer.
+- **One value per name per template**, aliases counted as one name (`CapCanonName`), so `{{uuid}}` twice is one uuid and a `:CUSTOM_ID:` plus an `id:` link to it agree. Two templates in one answer get two uuids, because they are two captures.
+- **A value that could not be written back out is not written.** A default holding `}` or `|` would be a placeholder that no longer parses, so the name is left bare and the client asks.
+- **They are answered when the list is asked for, not when the capture is made.** worg re-asks on every open of its dialog and `orgs cap` asks once per run, so a uuid is fresh per capture; a client that keeps one list all day and captures twice offers the same uuid twice. `/ext/capture/templates`, the *editing* endpoint for a user's own templates, is deliberately **not** expanded - it hands back the template as written, or saving one back would bake this afternoon into it for ever.
 
 Four things about the rest of it:
 
@@ -1080,6 +1344,28 @@ Four things about the rest of it:
 5. **The preview is `OrgSource` with `openDrawers`**. The file view starts drawers shut because a file of headings is mostly drawer; a four-line preview starts them open, because what is *in* the drawer is exactly what somebody is checking before they press Capture.
 
 `InsertEntryUsingTemplate` used to write the content as one concatenation - indent, the whole string, a newline - which indented only its first line. Every line is indented now, because anything a template produces is several lines and a `:PROPERTIES:` drawer landing at column zero is the go-org trap that hoists the rest of the heading to the top of the document. It writes `NewNode.Tags` as well, which the wire type has always carried and nothing wrote.
+
+### `orgs cap`, the template as the form
+
+`cmd/oc/commands/capture/` used to ask two unlabelled questions - a headline, then a body - whatever the template said, so a template with a property drawer in it worked in worg and did nothing at a prompt. Now the template **is** the form (`form.go`): the entry is drawn as org, coloured as org, with the cursor in whichever hole is being filled in and tab moving to the next. That is org-capture's own idea - what you are editing is a document, not a dialog.
+
+Four things in it are load-bearing:
+
+1. **A hole nobody has filled in is still drawn as a hole** - `{{project}}`, in the colour `orghl` gives a placeholder - rather than as an empty space. An empty space says "this line is finished"; the braces say "this line is waiting", which is true, and is what the same line looks like in an Emacs capture buffer.
+2. **Nothing is dropped while it is being edited.** `FillCapTemplate` drops a line whose only content was an unanswered placeholder, which is right when filing and disastrous while typing - the line you are editing would vanish the moment you cleared it. The editor substitutes everything and keeps every line (`CapSubstitute`, which answers "leave it as written" where `FillCapTemplate` answers "write nothing"); the dropping happens once, on the way out.
+3. **The preview is the entry as it will be filed**, down to the stars and the indent, because `InsertEntryUsingTemplate` writes the headline at the target's level plus one and indents every line of the content under it. A preview of something else is worse than no preview.
+4. **The caret is a span, not a character.** It is pushed into the text as a sentinel, the text is coloured, and the span holding the sentinel is split so the character under the cursor comes out in reverse video *inside* the coloured org. Colouring around a caret instead loses the colour at the join.
+
+The headline and the tags are holes in the same list as the template's own, because somebody filling this in is making one entry and does not care which half of it the template owns. Non-interactively - a pipe, `-json`, a cron job - there is no form: the defaults stand, `-head`, `-cont`, `-tags` and `-set name=value` answer what they answer, and a missing headline on an `entry` is a refusal rather than a prompt nobody can see. `-dry-run` works because every write goes through `SendReceivePost`.
+
+### `orghl`, org colouring for a terminal
+
+`cmd/oc/commands/orghl/` is `worg/src/codehl.ts`'s sibling for the other kind of screen, and a **scanner** for the same reasons: it does not know scope, it cannot tell a multiplication from a pair of bold markers, and it will occasionally give one word the wrong colour - the failure a highlighter is allowed. What it must never do is lose a character, and `TestSpansAreTheLine` pins exactly that: every span of a line, concatenated, is the line.
+
+- It answers in **spans**, not escape codes, so the same walk draws two ways (`ANSI` for a listing, `Tview` for a form) and a caller can do something else with a span entirely - which is what the capture form does to put a cursor inside one.
+- **State is carried per line** (`State`), because a source block and a drawer change what the lines inside them mean. Reading a screenful out of the middle of a file without it starts a block in the wrong place.
+- **The keywords come from the server** (`GET /status`), so a headline typed `TODO buy milk` is coloured as a task and a keyword this server does not have is just words. A server that will not answer is not a reason to refuse to capture, so that read is allowed to fail silently.
+- **Escaping for tview is the part that matters more than the colours.** Org text is full of `[[links]]` and `[2026-09-30 Wed]`, and every one of those is a colour tag to a TextView with dynamic colours on - an unescaped timestamp does not come out the wrong colour, it comes out *missing*.
 
 ### Pictures: pasting one, and filing a chart
 
@@ -1121,6 +1407,48 @@ Three rules are pinned by `chartspec.test.ts`:
 1. **A gap is never a zero.** A missing reading is `null` all the way through, and lines break rather than being drawn across. Radar is the one exception - it has no notion of a missing point - and that is why it is the only place a zero stands in.
 2. **A type that cannot show several series folds them** (`foldToTotals`) rather than drawing the first and dropping the rest silently. Pie, donut, rose and funnel say so in the subtitle when they do it.
 3. **Horizontal bars swap the axes, not the data**, so the tooltip and the legend say the same thing whichever way round the chart is.
+
+### The four presentation exporters
+
+`revealjs`, `impressjs`, `webslides` and `deckjs` are four drawings of one thing: an org file is a deck, a headline is a slide, a property says how that slide behaves. They disagree about the html and about almost nothing else, so everything up to the html is **`internal/app/orgs/plugs/slides`** - which headlines are slides, where the speaker notes are, what a background means, how a file link becomes a url. worg's Presentations tab offers all four over `/file/{exporter}`.
+
+The rule that buys: **a property means the same thing in every framework.** `:BACKGROUND: blue` is a blue slide in all four; `:REVEAL_BACKGROUND:` is a blue slide in reveal only; `#+SLIDE_LEVEL:` works everywhere. Nothing has to be written four times to work four times. `Conf` is that ladder - the slide's own prefixed property, its neutral one, then the document's - and `captemplate`-style drift is avoided by there being one implementation.
+
+**The thing to know before changing any of it: a parsed org document is not reliably a tree.** go-org ends a headline's body at the first drawer or block written in column zero and hoists the rest to the top level, and Emacs writes property drawers in column zero - so for any file that configures a slide, `Headline.Children` is empty and `Headline.Properties` is nil, and some headlines in the same file nest while others do not. `BuildDeck` therefore walks the nodes **in order** and attributes each one to the last headline that started above it, picking up a hoisted property drawer as the properties of the headline it follows - the same rule `links.go` and `code.go` arrived at. Two bugs that had been live for as long as the exporters existed fall out of fixing it: a slide with a property drawer **lost its entire body**, and **no per-slide property was ever read** (`:REVEAL_TRANSITION:` silently did nothing on exactly the slides that asked for it).
+
+Five more things are load-bearing:
+
+1. **Speaker notes are taken out of the body, not styled out of it.** A `:NOTES:` drawer, a `#+BEGIN_NOTES` block and a child heading called Notes all mean the same thing, because people write all three. A deck that put the speaker's crib sheet on the screen behind them is the worst failure this code has available to it, so notes are moved to `Slide.Notes` by the builder rather than left in the body for a writer to skip.
+2. **An excluded heading takes its hoisted body with it.** `:noexport:` is checked on the headline, but by then the body is no longer inside it - the builder keeps skipping until a heading at that level or above.
+3. **Fragments are a property of the slide, plus `#+ATTR_SLIDE: :frag`.** go-org parses exactly three affiliated keywords into a node's metadata, so `#+ATTR_REVEAL:` arrives as a plain `Keyword` node sitting immediately before the thing it was written above; the writers pick it up in `WriteKeyword`, hold it, and spend it on the next element (`slides.Pending`). The class differs per framework - reveal's `fragment`, deck.js' nested `slide`, impress's `substep` - and `FragList` rebuilds the list so the class lands on the `<li>` itself, because every one of these libraries hides the element it is given and hiding a span inside a bullet leaves the bullet behind.
+4. **Only what the file asks for is written into the javascript config** (`slides.JSOpts`). These libraries have good defaults and change them between versions; writing out all forty pins the exporter to the version it was written against.
+5. **`plugs.MediaURL` is the one copy of "where is that picture".** The html exporter had the careful version and the two presentation exporters each had a worse one that assumed the link was relative to the first org directory and that the reader was on the same machine as the server - so every image in a deck under `notes/talks/` pointed at the wrong place, and none of them worked from a phone.
+
+**Themes are one file for four frameworks** (`internal/app/orgs/plugs/slides/theme.go`, `templates/slides_theme_*.css`). reveal ships twelve themes, deck.js three, WebSlides and impress none, all written against their own class names - so "make my deck look like this" was four jobs and three of the answers did not exist. A theme is now two files loaded together: `slides_theme_base.css`, the **mapping**, which says what a heading and a table and a block of code are in each of the four and sets them from a dozen custom properties; and `slides_theme_<name>.css`, which is those properties. A new theme is one file of colours and fonts that works everywhere, and a framework growing a new surface is fixed once.
+
+Four things about it:
+
+- **The mapping loads only when a theme is in use.** Its rules are written to win over the library's own, and on top of reveal's `league` it would be a third thing fighting for the same headings.
+- **The `.org-*` rules are qualified by framework** (`.reveal .org-subtitle, #webslides .org-subtitle, …`). They compete with classes the libraries define themselves - WebSlides' `.text-landing` sets a title size and `.text-subtitle` forces uppercase - and an unqualified rule loses, so a theme's type scale was silently ignored in one framework out of four.
+- **A theme names its own highlight.js style and mermaid theme** (`@hljs:` / `@mermaid:` in its comment header, parsed by `LoadTheme`), because a theme that has chosen its greys cannot have somebody else's monokai dropped into the middle of it, and a mermaid diagram defaults to a white card, which on a dark deck is a hole in the slide.
+- **A slide's own `:BACKGROUND:` can contradict the theme's ink**, and that is the one combination that produces a slide nobody can read - `:BACKGROUND: #102030` under the black-on-white `mono` theme. `slides.ReadInk` measures the ground and the mapping flips the text (`org-on-dark`/`org-on-light`). It is *luminance*, not brightness: the eye is far more sensitive to green than to blue, so an average calls `#0000ff` light and `#00ff00` dark, which is backwards for exactly the saturated colours people reach for. A picture is unknowable and is left alone; `:BACKGROUND_INK: light` says so outright.
+
+`SearchPath` is set from `templatePath:` at startup, because the one thing a theme must not depend on is which directory the server was started in - and `orgs serve` is normally started somewhere else entirely.
+
+**Too much on a slide is shrunk to fit** (`templates/slides_autofit.js`, wrapped by `slides.Fit`). Every one of these frameworks simply does not draw the overflow - reveal clips it, deck.js hides it, impress runs it off the step, WebSlides lets it scroll where nobody will scroll - so the failure is silent and the deck looks finished until it is on a projector. Five rules, all of them learnt from getting it wrong first:
+
+1. **It measures in rendered pixels, from two rectangles.** Everything sits inside one or two outer transforms (reveal scales its whole stage, impress its canvas), and mixing layout pixels with rendered ones is wrong by exactly that factor. Measuring from the wrapper's own top also means whatever sits above it is simply room the content does not have, with nothing to calculate.
+2. **It refines.** The wrapper is laid out at `100% / scale` and scaled back down, so shrinking re-wraps the text to *fewer* lines and the slide gets shorter than the first measurement said - one pass always overshoots. Three passes converge to within a percent.
+3. **The resize observer has a cooldown**, because fitting changes the size of the very element being observed: without it every fit schedules another and a slide re-lays itself out for as long as it is on screen.
+4. **A background tab never gets an animation frame**, so every trigger has a timer behind it and a `visibilitychange` listener in front of it.
+5. **It only shrinks, and it stops at 45%.** Scaling a thin slide up makes a deck with uneven type; past the floor the slide is not overfull, it is a document, and you want to notice that while writing rather than while presenting. `:FIT: grow`, `:FIT: 0.3` and `:FIT: nil` are the escapes. deck.js' own `scale` extension already does this, so there is usually nothing left for the fitter to do there; WebSlides needs `data-fit-box="viewport"` because its sections *grow* with their content and are never found to be overfull otherwise.
+
+Per framework, the things that are its own:
+
+- **reveal.js** - a nested headline is a vertical stack, and the stack wrapper now contains *only* sections (the parent's own heading used to go in the wrapper, where reveal renders it behind the slides). Plugins are script tags plus `plugins: [...]`: the `dependencies: [...]` list the template used was **removed in reveal 4.0**, so the speaker notes, the search and the zoom had quietly not been loading at all. `center: false`, `navigationMode: 'grid'` and `pdfMaxPagesPerSlide: 1` stay the defaults because the template used to hard-code them and a deck exported last week has to look the way it looked.
+- **impress.js** - steps cannot nest (only the direct children of `#impress` are steps), so the tree is flattened; the old exporter wrote a step inside a step for any nested headline and impress.js ignored it, putting the content on the page where nobody could reach it. `#+IMPRESS_LAYOUT:` places the steps - line, grid, spiral, ring, zoom, random - because hand-placing twenty things in space is the reason people try impress once and go back to reveal. `random` is deterministic for the same reason the dnd builder's dice are: a layout that moved on every export could not be rehearsed. The old `:IMPRESS_X: .6` relative spelling still means six tenths of a screen along.
+- **WebSlides** - a page rather than a slide engine: it scrolls, it is responsive, and the deck you present is the file you can send somebody. `:CLASS:` goes straight onto the section, which is how a deck reaches its forty components without this code naming them. It has no notes view, so the `n` panel is ours - and it asks `window.ws.currentSlide_` which slide it is on rather than looking for `.current`, because during a transition *both* slides carry that class and the one the DOM finds first is the one being left behind. WebSlides also **renames every section id** to `section-N`, so `:CUSTOM_ID:` does not survive there.
+- **deck.js** - nesting *is* stepping, which is the one thing it has that the others do not: an outline maps onto it exactly. Centred content is wrapped in `<div class="vcenter">` rather than classed on the section, because all three themes position `.vcenter` absolutely and doing that to the section fights deck.js' own positioning and lands the slide off-screen. jQuery 3 is fine: deck.js only uses `.bind()`, which is deprecated rather than removed.
 
 ### Mind maps
 

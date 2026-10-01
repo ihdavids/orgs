@@ -1,0 +1,144 @@
+/* Getting the four frameworks out of the backdrop's way.
+ *
+ * The scene is one canvas, fixed to the viewport, behind the deck. Which sounds
+ * like one rule and is three, because every one of these libraries paints an
+ * opaque ground of its own somewhere between the body and the text - and a
+ * backdrop behind an opaque sheet is a backdrop nobody will ever see, with
+ * nothing on screen to say why.
+ *
+ * `z-index: 0` with the deck explicitly at `1`, rather than the obvious
+ * `z-index: -1` and nothing else. A negative-z child of the body is painted
+ * *before* the body's own background box, so the moment a theme sets a
+ * background colour on the body - which every one of them does - the canvas
+ * goes under it. Whether it survives at all then comes down to background
+ * propagation to the root, which depends on whether anything has set a
+ * background on `html`. That is a rule nobody should have to know to write a
+ * theme.
+ */
+
+canvas.org-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  /* The slide is underneath: a click, a drag or a swipe is the deck's. */
+  pointer-events: none;
+  display: block;
+  /* Its own layer, so a slide transition does not repaint the scene and the
+   * scene does not repaint the slide. No `contain` on top of that: the canvas
+   * has no contents to contain, and size containment on a fixed element is a
+   * thing browsers have historically disagreed about. */
+  will-change: transform;
+}
+
+/* The ground, said here rather than left to the theme mapping.
+ *
+ * The mapping paints `--slide-bg` onto the body *and* onto each framework's own
+ * container, and the rule below turns the containers off - so the body is the
+ * one left holding it. Except that reveal.js 4 paints the viewport and leaves
+ * the body transparent, which left the deck standing on the browser's default
+ * white with a scene composed for indigo drawn over it. A backdrop that depends
+ * on which element a library happened to choose is a backdrop that will break
+ * on the next one, so this paints the ground itself, under the canvas, and the
+ * question does not arise.
+ */
+html.org-has-backdrop,
+.org-has-backdrop body {
+  background-color: var(--slide-bg, #0b0d1f);
+  background-image: var(--slide-bg-image, none);
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+/* The deck, over the top. Every one of these is the element the library makes
+ * its own stacking decisions inside, so this is the highest place the deck can
+ * be lifted from without getting in the middle of them. */
+.org-has-backdrop .reveal-viewport,
+.org-has-backdrop .deck-container,
+.org-has-backdrop #impress,
+.org-has-backdrop #webslides,
+.org-has-backdrop #wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+/* And the opaque grounds, off. The theme mapping sets these from
+ * `--slide-bg`; with a backdrop the ground belongs to the body, which is
+ * underneath the canvas, and everything above it has to be glass.
+ *
+ * A slide that asked for a ground of its own - `:BACKGROUND:`, or one of
+ * WebSlides' `bg-` classes - keeps it. That is somebody saying "not here", and
+ * is how a deck with a backdrop gets one slide that is a photograph. */
+.org-has-backdrop .reveal-viewport,
+.org-has-backdrop .reveal,
+.org-has-backdrop .reveal .slides > section,
+.org-has-backdrop .reveal .slides > section > section,
+.org-has-backdrop .deck-container,
+.org-has-backdrop .deck-container > .slide,
+.org-has-backdrop #impress,
+.org-has-backdrop #impress .step,
+.org-has-backdrop #webslides,
+.org-has-backdrop #webslides > section:not([class*="bg-"]),
+.org-has-backdrop #webslides .wrap {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* reveal paints its slide backgrounds in a layer of their own, behind the
+ * slides and *inside* the viewport. Left opaque it would be a sheet over the
+ * scene; a slide that actually asked for a background still gets one, because
+ * reveal puts that on the `.slide-background` itself. */
+.org-has-backdrop .reveal .backgrounds {
+  background: transparent;
+}
+
+/* ── Reading over it ──────────────────────────────────────────────────────── */
+/*
+ * The one thing a backdrop can take away. A heading over a facet edge or a
+ * running pulse loses its own edge, and the reader stops reading to look at
+ * what moved. So text on a slide with a backdrop gets a shadow of the deck's
+ * own ground: invisible against the ground, and exactly enough separation
+ * where the scene is behind the letters.
+ *
+ * A theme can turn it off with `--backdrop-ink-shadow: none` - a pale theme
+ * with a quiet scene does not need it and it would only soften the type.
+ */
+.org-has-backdrop .reveal h1, .org-has-backdrop .reveal h2,
+.org-has-backdrop .reveal h3, .org-has-backdrop .reveal h4,
+.org-has-backdrop #webslides h1, .org-has-backdrop #webslides h2,
+.org-has-backdrop #webslides h3, .org-has-backdrop #webslides h4,
+.org-has-backdrop .deck-container h1, .org-has-backdrop .deck-container h2,
+.org-has-backdrop .deck-container h3, .org-has-backdrop .deck-container h4,
+.org-has-backdrop #impress h1, .org-has-backdrop #impress h2,
+.org-has-backdrop #impress h3, .org-has-backdrop #impress h4 {
+  text-shadow: var(--backdrop-head-shadow, 0 2px 24px var(--slide-bg, rgba(0, 0, 0, 0.75)));
+}
+
+.org-has-backdrop .reveal p, .org-has-backdrop .reveal li,
+.org-has-backdrop #webslides p, .org-has-backdrop #webslides li,
+.org-has-backdrop .deck-container p, .org-has-backdrop .deck-container li,
+.org-has-backdrop #impress p, .org-has-backdrop #impress li {
+  text-shadow: var(--backdrop-ink-shadow, 0 1px 10px var(--slide-bg, rgba(0, 0, 0, 0.6)));
+}
+
+/* Anything that is a box rather than words - a code block, a table, impress'
+ * card, a quote - is already a surface, and over a moving scene it should read
+ * as frosted glass rather than as a hole. A theme sets how far it lets the
+ * scene through by giving its `--slide-code-bg` and `--slide-card-bg` an alpha;
+ * the blur is what makes the difference between translucent and smeared. */
+.org-has-backdrop pre,
+.org-has-backdrop .org-src-container,
+.org-has-backdrop table,
+.org-has-backdrop blockquote,
+.org-has-backdrop #impress .step {
+  -webkit-backdrop-filter: var(--backdrop-glass, blur(7px));
+  backdrop-filter: var(--backdrop-glass, blur(7px));
+}
+
+/* A deck being printed, or exported to pdf, has no business carrying a frame of
+ * an animation across every page. */
+@media print {
+  canvas.org-backdrop { display: none !important; }
+}

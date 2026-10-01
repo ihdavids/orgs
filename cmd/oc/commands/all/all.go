@@ -1,6 +1,7 @@
 package all
 
 import (
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/adduser"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/agenda"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/capture"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clockin"
@@ -39,6 +40,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/tables"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/taggroups"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/tui"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/user"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/voice"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/watch"
 )

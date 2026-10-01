@@ -1,0 +1,76 @@
+/* Orrery — a faceted body rippling inside a set of luminous hoops, with debris
+ * tumbling round the whole thing.
+ *
+ * The body is an icosphere with every vertex pushed out along its own direction
+ * by four waves, each finer and weaker than the last. One wave gives a lumpy
+ * sphere and two give a bean; by the fourth there is detail at a scale small
+ * enough that the eye stops looking for the sphere underneath. They run at
+ * different rates, so the form never repeats and never settles.
+ *
+ * The body is lit and the hoops are not: flat facets with one key light and no
+ * highlight at all, against hoops drawn additively with no shading. That is the
+ * whole difference between something solid and something glowing.
+ *
+ * Which means the palette is in two parts, and the order matters: **the first
+ * two colours are the body** - hollows then crests, so the ripple is visible in
+ * the colour as well as in the silhouette - **and the rest are the hoops**. The
+ * one thing in the picture that must not share a colour with the body is the
+ * light going round it.
+ *
+ * For a talk with a middle to it: one thing, and everything that turns around
+ * it.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: orrery
+ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #060a16;
+  --slide-bg-soft: #101832;
+  --slide-bg-image: radial-gradient(90% 80% at 50% 58%, #15203f 0%, #060a16 60%);
+  --slide-ink: #d8e0f2;
+  --slide-ink-soft: #8795b5;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #ffc46b;
+  --slide-accent-soft: rgba(255, 196, 107, 0.13);
+  --slide-link: #ffd9a0;
+  --slide-rule: rgba(216, 224, 242, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Space Grotesk', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.025em;
+  --slide-line: 1.5;
+  --slide-title-size: 2.9em;
+  --slide-bullet: "\2022";
+
+  --slide-code-bg: rgba(4, 7, 16, 0.74);
+  --slide-code-ink: #d8e0f2;
+  --slide-code-border: 1px solid rgba(255, 196, 107, 0.2);
+  --slide-radius: 10px;
+  --slide-shadow: 0 24px 60px rgba(1, 2, 8, 0.62);
+  --slide-card-bg: rgba(16, 24, 50, 0.78);
+  --slide-card-rule: 1px solid rgba(255, 196, 107, 0.18);
+  --slide-table-stripe: rgba(255, 196, 107, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Hollows, crests, then the hoops. */
+  --backdrop-colors: #2f394a #7e93b2 #ffc46b #8ab6ff #c08ae8 #7fd0c8;
+  --backdrop-fog: #060a16;
+  --backdrop-glow: #ffe3b0;
+  --backdrop-veil: rgba(6, 10, 22, 0.1);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.75;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 80px rgba(6, 10, 22, 0.9), 0 0 30px rgba(6, 10, 22, 0.85);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(255, 196, 107, 0));
+  box-shadow: 0 0 18px rgba(255, 196, 107, 0.4);
+}

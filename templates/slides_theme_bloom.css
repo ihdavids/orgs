@@ -1,0 +1,52 @@
+/* Bloom — warm, light, and friendly without being cute.
+ *
+ * A peach-to-rose wash rather than a flat ground, charcoal rather than black,
+ * and Fraunces' soft serif against a geometric sans. For a product talk, a
+ * design review, a demo - anything you want people to feel welcome in.
+ *
+ * @hljs: github
+ * @mermaid: neutral
+ */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Outfit:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #fdf6f1;
+  --slide-bg-soft: #ffffff;
+  --slide-bg-image: linear-gradient(160deg, #fdf1ea 0%, #fdf6f1 42%, #f3f1fb 100%);
+  --slide-ink: #35292b;
+  --slide-ink-soft: #8a7276;
+  --slide-head-ink: #231a1c;
+  --slide-accent: #d2567a;
+  --slide-accent-soft: rgba(210, 86, 122, 0.12);
+  --slide-link: #c0416a;
+  --slide-rule: rgba(53, 41, 43, 0.14);
+
+  --slide-font: 'Outfit', system-ui, sans-serif;
+  --slide-head-font: 'Fraunces', Georgia, serif;
+  --slide-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --slide-head-weight: 600;
+  --slide-head-spacing: -0.015em;
+  --slide-line: 1.5;
+
+  --slide-code-bg: rgba(255, 255, 255, 0.85);
+  --slide-code-ink: #3b2f31;
+  --slide-code-border: 1px solid rgba(53, 41, 43, 0.1);
+  --slide-radius: 16px;
+  --slide-shadow: 0 20px 45px rgba(140, 90, 100, 0.18);
+  --slide-card-bg: #ffffff;
+  --slide-card-rule: 0;
+  --slide-table-stripe: rgba(210, 86, 122, 0.05);
+  --slide-table-head-case: none;
+
+  --slide-head-rule: "";
+  --slide-head-rule-width: 2em;
+  --slide-head-rule-weight: 4px;
+  --slide-bullet: "\25CF";
+  --slide-title-size: 3.1em;
+}
+
+/* Round everything: it is the one decision this theme makes everywhere. */
+.org-slide > h1::after, .org-slide > h2::after { border-radius: 4px; }
+.reveal .org-subtitle, #webslides .org-subtitle, .deck-container .org-subtitle, #impress .org-subtitle { font-family: 'Fraunces', Georgia, serif; font-size: 1.2em; }
+.reveal ul > li::before, #webslides ul > li::before,
+.deck-container ul > li::before, #impress ul > li::before { font-size: 0.55em; top: 0.45em; }

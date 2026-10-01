@@ -88,28 +88,108 @@ package orgs
    is a property drawer that is not a property drawer. Use a block scalar for
    anything longer than one line.
 
-   The syntax is three rules:
+   The syntax is four spellings of one thing:
 
-   | Written                | Means                                             |
-   |------------------------+---------------------------------------------------|
-   | ={{CONTENT}}=          | The body - one big box, and where a dictation or  |
-   |                        | a pasted picture lands                            |
-   | ={{name}}=             | A value to fill in, labelled from the name        |
-   | ={{name\vert prompt}}= | The same, asked for in your own words             |
+   | Written                            | Means                                     |
+   |------------------------------------+-------------------------------------------|
+   | ={{CONTENT}}=                      | The body - one big box, and where a       |
+   |                                    | dictation or a pasted picture lands       |
+   | ={{name}}=                         | A value to fill in, labelled from the     |
+   |                                    | name                                      |
+   | ={{name\vert prompt}}=             | The same, asked for in your own words     |
+   | ={{name\vert =value}}=             | Pre-filled with a default, still editable |
+   | ={{name\vert prompt\vert =value}}= | Both                                      |
 
-   A handful of names fill themselves in, and stay editable - a thing captured
-   today did not necessarily happen today:
+   The last two are written by the *server*, not by whoever writes the
+   template.
 
-   | Name                      | Becomes                  |
-   |---------------------------+--------------------------|
-   | ={{date}}=                | =2026-09-26=             |
-   | ={{time}}=                | =14:05=                  |
-   | ={{datetime}}=            | =2026-09-26 14:05=       |
-   | ={{today}}= / ={{active}}=| =<2026-09-26 Sat>=       |
-   | ={{now}}= / ={{inactive}}=| =[2026-09-26 Sat 14:05]= |
-   | ={{week}}=                | =2026-W39=               |
-   | ={{month}}=               | =2026-09=                |
-   | ={{year}}=                | =2026=                   |
+   *Some names answer themselves, and the server answers them.* A placeholder
+   whose name is in the table below is answered on the way out of
+   =/capture/templates=, and the answer is written in as that placeholder's
+   *default*:
+
+   #+BEGIN_SRC org
+     :CUSTOM_ID: {{uuid}}         ->  :CUSTOM_ID: {{uuid|=f81d4fae-7dec-...}}
+     :CREATED:   {{now}}          ->  :CREATED:   {{now|=[2026-09-29 Tue 14:05]}}
+     :WHEN: {{now|When was it}}   ->  :WHEN: {{now|When was it|=[2026-09-29 ...]}}
+   #+END_SRC
+
+   A default rather than a substitution, because both halves matter:
+
+   - a client that knows nothing about any of this has a usable value in the
+     box already, so =:CUSTOM_ID: {{uuid}}= works without a line of client
+     code - and =crypto.randomUUID= is secure-context only in a browser, so
+     for worg served over plain http from another machine the server is the
+     *only* end that can answer it at all;
+   - a client that would rather answer it itself still sees the name, and can
+     ignore the default - which a substitution would have taken away. A value
+     written in as literal text is a value nobody can change, and the
+     timestamp on a capture is very often the one thing somebody does change:
+     a thing captured today did not necessarily happen today.
+
+   | Name                        | Becomes                                |
+   |-----------------------------+----------------------------------------|
+   | ={{uuid}}= / ={{guid}}=     | =f81d4fae-7dec-11d0-a765-00a0c91e6bf6= |
+   | ={{username}}= / ={{user}}= | =ian= - whoever asked                  |
+   | ={{hostname}}=              | the machine holding the org files      |
+   | ={{date}}=                  | =2026-09-29=                           |
+   | ={{time}}=                  | =14:05=                                |
+   | ={{datetime}}=              | =2026-09-29 14:05=                     |
+   | ={{today}}= / ={{active}}=  | =<2026-09-29 Tue>=                     |
+   | ={{now}}= / ={{inactive}}=  | =[2026-09-29 Tue 14:05]=               |
+   | ={{timestamp}}=             | =[2026-09-29 Tue 14:05]=               |
+   | ={{tomorrow}}=              | =<2026-09-30 Wed>=                     |
+   | ={{yesterday}}=             | =<2026-09-28 Mon>=                     |
+   | ={{week}}=                  | =2026-W40=                             |
+   | ={{month}}=                 | =2026-09=                              |
+   | ={{year}}=                  | =2026=                                 |
+   | ={{day}}=                   | =29=                                   |
+   | ={{weekday}}=               | =Tuesday=                              |
+   | ={{dayname}}=               | =Tue=                                  |
+   | ={{epoch}}= / ={{unix}}=    | =1790690700=                           |
+   | ={{iso}}= / ={{rfc3339}}=   | =2026-09-29T14:05:00Z=                 |
+
+   So a capture that wants an id of its own needs nothing but the property:
+
+   #+BEGIN_SRC yaml
+      - name: "Note"
+        type: "entry"
+        target:
+          type: "file+headline"
+          filename: "notes.org"
+          id: "Inbox"
+        template: |-
+          :PROPERTIES:
+          :CUSTOM_ID: {{uuid}}
+          :CREATED:   {{now}}
+          :AUTHOR:    {{username}}
+          :SOURCE:    {{source|Where did this come from?}}
+          :END:
+          {{CONTENT}}
+   #+END_SRC
+
+   Four things about the answering (=internal/common/captemplate.go= is the
+   grammar, =internal/app/orgs/capturefill.go= the wiring):
+
+   1. *A name with no answer is left standing, braces and all*, so a client's
+      reading of a template is unchanged by this pass: it sees fewer holes,
+      never different ones.
+   2. *One value per name per template*, aliases counted as one name, so
+      ={{uuid}}= written twice in one template is the same uuid both times and
+      a =:CUSTOM_ID:= and an =id:= link to it in the body agree. Two templates
+      in one answer get two uuids, because they are two different captures.
+   3. *It is idempotent.* A placeholder that already carries a default is left
+      alone, so a template cannot collect a second answer however many times it
+      goes past.
+   4. *They are answered when the list is asked for*, not when the capture is
+      made. worg re-asks every time its capture dialog opens and =orgs cap=
+      asks once per run, so a uuid is fresh per capture; a client that holds
+      one list open all day and captures from it twice would offer the same
+      uuid twice.
+
+   =/ext/capture/templates=, which is where a user *edits* their own templates,
+   is deliberately not answered: it hands back the template as written, or
+   saving one back would bake this afternoon into it for ever.
 
    A line whose *only* content was a placeholder nobody filled in is dropped
    rather than written empty, so a template offering three optional properties

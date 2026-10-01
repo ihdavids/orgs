@@ -1,76 +1,59 @@
 //lint:file-ignore ST1006 allow the use of self
 package capture
 
+// orgs cap - a capture, through the template rather than past it.
+//
+// The template string has always been the client's to put up (the server hands
+// it over and files what comes back), and this command used to ignore it
+// completely: two unlabelled text areas, a headline and a body, whatever the
+// template said. So a template with a property drawer in it worked in worg and
+// did nothing at a prompt, which is the wrong way round for the half of this
+// tool that lives in a terminal.
+//
+// Now the template *is* the form. See form.go for what that means on screen.
+// The grammar and the arithmetic are `internal/common/captemplate.go`, shared
+// with the server end that expands it, so there is one understanding of what a
+// placeholder is rather than one per client.
+
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"os"
+	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	"github.com/ihdavids/orgs/cmd/oc/commands/orghl"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/koki-develop/go-fzf"
-	"github.com/rivo/tview"
 )
 
-type TaskPane struct {
-	*tview.Flex
-	list    *tview.List
-	newTask *tview.TextArea
-	app     *tview.Application
-}
-
+// NeedsHeading says whether this kind of capture is a heading of its own. An
+// entry is; an item, a checkitem, a table line and a plain capture all go into
+// somebody else's.
 func NeedsHeading(typeName string) bool {
 	switch typeName {
-	case "entry":
+	case "", "entry":
 		return true
-	case "item":
-		return false
-	case "checkitem":
-		return false
-	case "table-line":
-		return false
-	case "plain":
-		return false
 	}
 	return false
 }
 
-func MakeTaskPane(title string, typeName string, app *tview.Application) *TaskPane {
+type setFlag []string
 
-	placeholder := ""
-	switch typeName {
-	default:
-		placeholder = "+[Capture Text]"
-	}
-	pane := &TaskPane{
-		Flex:    tview.NewFlex().SetDirection(tview.FlexRow),
-		newTask: tview.NewTextArea().SetPlaceholder(placeholder),
-		app:     app,
-	}
-	pane.newTask.SetTitle(title + " [Esc/Ctrl-G]")
-	pane.newTask.SetTitleColor(tcell.ColorDarkCyan)
-	pane.newTask.SetTitleAlign(tview.AlignLeft)
-	pane.newTask.SetBorder(true)
-
-	pane.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEsc || event.Key() == tcell.KeyCtrlG || event.Key() == tcell.KeyCtrlQ {
-			pane.app.Stop()
-			return nil
-		}
-		return event
-	})
-
-	pane.
-		AddItem(pane.newTask, 0, 1, true)
-	return pane
+func (self *setFlag) String() string { return strings.Join(*self, ",") }
+func (self *setFlag) Set(v string) error {
+	*self = append(*self, v)
+	return nil
 }
 
 type Capture struct {
 	Template string
 	Head     string
 	Cont     string
+	Tags     string
+	Set      setFlag
+	NoForm   bool
+	fset     *flag.FlagSet
 }
 
 func (self *Capture) Unmarshal(unmarshal func(interface{}) error) error {
@@ -81,101 +64,231 @@ func (self *Capture) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *Capture) SetupParameters(fset *flag.FlagSet) {
-	//fmt.Printf("CAP CALLED\n")
-	//fset := flag.NewFlagSet("capture", flag.ExitOnError)
-	fset.StringVar(&(self.Template), "temp", "", "template name")
-	fset.StringVar(&(self.Head), "head", "", "heading")
-	fset.StringVar(&(self.Cont), "cont", "", "content")
-	//fset.Parse(args)
+	self.fset = fset
+	fset.StringVar(&(self.Template), "temp", "", "template name (or name it as the first word)")
+	fset.StringVar(&(self.Head), "head", "", "the headline")
+	fset.StringVar(&(self.Cont), "cont", "", "the body")
+	fset.StringVar(&(self.Tags), "tags", "", "tags for the new heading, spaces or commas between them")
+	fset.Var(&(self.Set), "set", "answer one of the template's fields: -set source=email (repeatable)")
+	fset.BoolVar(&(self.NoForm), "no-form", false, "do not open the form: take the defaults and whatever the flags said")
 }
 
 func (self *Capture) Exec(core *commands.Core) {
-	fmt.Printf("Capture called\n")
-	/*
-		fset := flag.NewFlagSet("capture", flag.ExitOnError)
-		fset.StringVar(&self.Template, "temp", "", "template name")
-		fset.StringVar(&self.Head, "head", "", "heading")
-		fset.StringVar(&self.Cont, "cont", "", "content")
-		fset.Parse(args)
-	*/
-	var qry map[string]string = map[string]string{}
-	var rep []common.CaptureTemplate = []common.CaptureTemplate{}
-	commands.SendReceiveGet(core, "capture/templates", qry, &rep)
-	var reply common.ResultMsg = common.ResultMsg{}
-	var capIndex int = 0
-	if len(rep) <= 0 {
-		fmt.Printf(">>> No capture templates defined, cannot capture...\n")
+	// Taken once: FreeArgs consumes the arguments as it parses, so asking the
+	// flag set afterwards gets nothing.
+	words := commands.FreeArgs(self.fset)
+	if self.Template == "" && len(words) > 0 {
+		self.Template = words[0]
+	}
+
+	var temps []common.CaptureTemplate
+	commands.SendReceiveGet(core, "capture/templates", map[string]string{}, &temps)
+	if len(temps) == 0 {
+		commands.Fail("no capture templates - they go under captureTemplates: in your orgs.yaml, or are added per user through /ext/capture/template")
+	}
+
+	tpl, ok := pickTemplate(temps, self.Template)
+	if !ok {
 		return
 	}
-	if self.Template == "" {
-		f, err := fzf.New(
-			fzf.WithNoLimit(true),
-			fzf.WithCountViewEnabled(true),
-			fzf.WithCountView(func(meta fzf.CountViewMeta) string {
-				return fmt.Sprintf("templates: %d, selected: %d", meta.ItemsCount, meta.SelectedCount)
-			}),
-		)
-		if err != nil {
-			log.Fatal(err)
+
+	wantsHead := NeedsHeading(tpl.Type)
+	fields := buildFields(tpl, wantsHead)
+
+	// The flags answer what they answer before anybody is asked, so a run with
+	// every field given on the command line never opens a form, and a run with
+	// some of them opens one with those already filled in.
+	if self.Head != "" {
+		setField(fields, "HEADLINE", self.Head)
+	}
+	if self.Cont != "" {
+		setField(fields, "CONTENT", self.Cont)
+	}
+	if self.Tags != "" {
+		setField(fields, "TAGS", self.Tags)
+	}
+	for _, kv := range self.Set {
+		k, v, found := strings.Cut(kv, "=")
+		if !found {
+			commands.Fail("-set wants name=value, not %q", kv)
 		}
-		var idx []int = []int{}
-		idx, err = f.Find(rep, func(i int) string { return rep[i].Name })
-		if err != nil {
-			log.Fatal(err)
-		}
-		self.Template = rep[idx[0]].Name
-	}
-	for i, r := range rep {
-		temp := r.Name
-		if self.Template == temp {
-			capIndex = i
+		if !setField(fields, strings.TrimSpace(k), v) {
+			commands.Fail("the %s template has no field called %q - it asks for: %s", tpl.Name, k, fieldNames(fields))
 		}
 	}
-	if self.Template == "" {
-		log.Fatal("Cannot capture without a template")
-	}
 
-	needsHeading := NeedsHeading(rep[capIndex].Type)
-	if self.Head == "" && needsHeading {
-		app := tview.NewApplication()
-		p := MakeTaskPane("Enter Heading", rep[capIndex].Type, app)
-
-		if err := app.SetRoot(p, true).EnableMouse(true).Run(); err != nil {
-			panic(err)
+	if commands.Interactive() && !self.NoForm {
+		level := 1
+		if tpl.CapTarget.Lvl > 0 {
+			level = tpl.CapTarget.Lvl + 1
 		}
-		self.Head = p.newTask.GetText()
-	}
-
-	if self.Head == "" && needsHeading {
-		log.Fatal("Heading is required for some templates")
-	}
-
-	if self.Cont == "" {
-		app := tview.NewApplication()
-		p := MakeTaskPane("Enter Content", rep[capIndex].Type, app)
-
-		if err := app.SetRoot(p, true).EnableMouse(true).Run(); err != nil {
-			panic(err)
+		if !runForm(tpl, fields, level, keywordState(core)) {
+			fmt.Fprintf(os.Stderr, "nothing captured\n")
+			return
 		}
-		self.Cont = p.newTask.GetText()
 	}
-	//if _, err := p.Run(); err != nil {
-	//	log.Fatal(err)
-	//}
-	//os.Exit(-1)
 
+	head := fieldValue(fields, "HEADLINE")
+	if wantsHead && strings.TrimSpace(head) == "" {
+		commands.Fail("%s captures a heading, so it needs a headline: pass -head", tpl.Name)
+	}
+
+	values := map[string]string{}
+	for _, f := range fields {
+		if f.Kind == fieldTemplate {
+			values[f.Key] = f.String()
+		}
+	}
 	var query common.Capture
-	query.Template = self.Template
-	query.NewNode.Headline = self.Head
-	query.NewNode.Content = self.Cont
-	fmt.Printf("CAP: %s\n\t%s\n\t%s\n", query.Template, query.NewNode.Headline, query.NewNode.Content)
-	commands.SendReceivePost(core, "capture", &query, &reply)
-	//commands.SendReceiveRpc(core, "Db.Capture", &query, &reply)
-	if reply.Ok {
-		fmt.Printf("OK: %s\n", reply.Msg)
-	} else {
-		fmt.Printf("Err: %s\n", reply.Msg)
+	query.Template = tpl.Name
+	query.NewNode.Headline = strings.TrimSpace(head)
+	query.NewNode.Content = common.FillCapTemplate(tpl.Template, values)
+	query.NewNode.Tags = tagWords(fieldValue(fields, "TAGS"))
+
+	reply, err := commands.SendReceivePostErr[common.Capture, common.ResultMsg](core, "capture", &query)
+	if err == commands.ErrDryRun {
+		return
 	}
+	if err != nil {
+		commands.Fail("%v", err)
+	}
+	if !reply.Ok {
+		commands.Fail("%s", reply.Msg)
+	}
+	commands.RenderOne(reply, func() {
+		fmt.Printf("%sCaptured%s into %s\n", commands.C(commands.AnsiGreen), commands.C(commands.AnsiReset), targetText(tpl))
+	})
+}
+
+// pickTemplate finds the one that was named, or asks. One template is not a
+// choice, so it is taken; with no name and nobody to ask, the refusal says what
+// there was to choose from.
+func pickTemplate(temps []common.CaptureTemplate, name string) (common.CaptureTemplate, bool) {
+	if name != "" {
+		for _, t := range temps {
+			if t.Name == name {
+				return t, true
+			}
+		}
+		for _, t := range temps {
+			if strings.EqualFold(t.Name, name) {
+				return t, true
+			}
+		}
+		commands.Fail("no capture template called %q - this server has: %s", name, templateNames(temps))
+	}
+	if len(temps) == 1 {
+		return temps[0], true
+	}
+	if !commands.Interactive() {
+		commands.Fail("which template? name it, or pass -temp. This server has: %s", templateNames(temps))
+	}
+	f, err := fzf.New(
+		fzf.WithNoLimit(false),
+		fzf.WithCountViewEnabled(true),
+		fzf.WithCountView(func(meta fzf.CountViewMeta) string {
+			return fmt.Sprintf("templates: %d", meta.ItemsCount)
+		}),
+	)
+	if err != nil {
+		commands.Fail("%v", err)
+	}
+	idx, err := f.Find(temps, func(i int) string {
+		return temps[i].Name + "  →  " + targetText(temps[i])
+	})
+	if err != nil || len(idx) == 0 {
+		fmt.Fprintf(os.Stderr, "nothing captured\n")
+		return common.CaptureTemplate{}, false
+	}
+	return temps[idx[0]], true
+}
+
+// keywordState asks the server which keywords it accepts, so a headline typed
+// as "TODO buy milk" is coloured as a task rather than as a word. A server that
+// will not say is not a reason to refuse to capture, so the failure is silent
+// and the heading is drawn without a keyword.
+func keywordState(core *commands.Core) orghl.State {
+	st := commands.SendReceiveGetOr[common.TodoStatesResult](core, "status", nil)
+	return orghl.State{Active: st.Active, Done: st.Done}
+}
+
+func setField(fields []*field, key, value string) bool {
+	for _, f := range fields {
+		if strings.EqualFold(f.Key, key) {
+			f.set(value)
+			return true
+		}
+	}
+	return false
+}
+
+func fieldValue(fields []*field, key string) string {
+	for _, f := range fields {
+		if strings.EqualFold(f.Key, key) {
+			return f.String()
+		}
+	}
+	return ""
+}
+
+func fieldNames(fields []*field) string {
+	names := []string{}
+	for _, f := range fields {
+		names = append(names, f.Key)
+	}
+	return strings.Join(names, ", ")
+}
+
+func templateNames(temps []common.CaptureTemplate) string {
+	names := []string{}
+	for _, t := range temps {
+		names = append(names, t.Name)
+	}
+	return strings.Join(names, ", ")
+}
+
+// tagWords takes tags however somebody wrote them - spaces, commas, or org's
+// own colons - and answers with the words.
+func tagWords(s string) []string {
+	words := strings.FieldsFunc(s, func(r rune) bool {
+		return r == ' ' || r == ',' || r == '\t' || r == ':'
+	})
+	if len(words) == 0 {
+		return nil
+	}
+	return words
+}
+
+// targetText is where a capture made with this template lands, said the way
+// somebody would say it rather than as a target struct.
+func targetText(t common.CaptureTemplate) string {
+	tg := t.CapTarget
+	file := tg.Filename
+	if i := strings.LastIndexAny(file, "/\\"); i >= 0 {
+		file = file[i+1:]
+	}
+	id := strings.ReplaceAll(tg.Id, "::", " › ")
+	switch strings.ToLower(tg.Type) {
+	case "file":
+		if file == "" {
+			return "a file"
+		}
+		return file
+	case "file+datetree", "file+olp+datetree":
+		if id == "" {
+			return file + " › today"
+		}
+		return file + " › " + id + " › today"
+	case "clock":
+		return "wherever the clock is running"
+	}
+	if file == "" {
+		return id
+	}
+	if id == "" {
+		return file
+	}
+	return file + " › " + id
 }
 
 type CaptureTemplate struct {
@@ -191,21 +304,39 @@ func (self *CaptureTemplate) StartPlugin(manager *common.PluginManager) {
 func (self *CaptureTemplate) SetupParameters(*flag.FlagSet) {
 }
 
+// orgs listcap: what there is to capture with, and what each one is going to
+// write. The template is drawn as the org it is, because that is the question
+// somebody runs this to answer - not "what are these called" but "which of
+// these is the one with the drawer in it".
 func (self *CaptureTemplate) Exec(core *commands.Core) {
-	fmt.Printf("Capture templates\n")
-
-	var qry map[string]string = map[string]string{}
-	//var reply common.Result = common.Result{}
-	var reply *[]common.CaptureTemplate = &[]common.CaptureTemplate{}
-	commands.SendReceiveGet(core, "capture/templates", qry, &reply)
-	//commands.SendReceiveRpc(core, "Db.QueryCaptureTemplates", &query, &reply)
-	for _, x := range *reply {
-		b, err := json.MarshalIndent(x, "", "  ")
-		if err != nil {
-			fmt.Println(err)
+	var temps []common.CaptureTemplate
+	commands.SendReceiveGet(core, "capture/templates", map[string]string{}, &temps)
+	if commands.Render(temps, nil) {
+		return
+	}
+	if len(temps) == 0 {
+		fmt.Fprintf(os.Stderr, "no capture templates - they go under captureTemplates: in your orgs.yaml\n")
+		return
+	}
+	for i, t := range temps {
+		if i > 0 {
+			fmt.Printf("\n")
 		}
-		fmt.Print(string(b))
-		//fmt.Printf("%v", x)
+		fmt.Printf("%s%s%s  %s→%s %s%s%s\n",
+			commands.C(commands.AnsiBold), t.Name, commands.C(commands.AnsiReset),
+			commands.C(commands.AnsiDim), commands.C(commands.AnsiReset),
+			commands.C(commands.AnsiCyan), targetText(t), commands.C(commands.AnsiReset))
+		if t.Type != "" && t.Type != "entry" {
+			fmt.Printf("  %s%s%s\n", commands.C(commands.AnsiDim), t.Type, commands.C(commands.AnsiReset))
+		}
+		if strings.TrimSpace(t.Template) == "" {
+			fmt.Printf("  %sa headline and a body%s\n", commands.C(commands.AnsiDim), commands.C(commands.AnsiReset))
+			continue
+		}
+		st := orghl.State{}
+		for _, line := range strings.Split(t.Template, "\n") {
+			fmt.Printf("  %s\n", orghl.ANSI(orghl.Line(line, &st), commands.Colour()))
+		}
 	}
 }
 

@@ -1,0 +1,69 @@
+/* Relay — a lattice of nodes with light running between them.
+ *
+ * The shape of it is Vanta's NET, which is the one of these everybody has seen,
+ * and the reason it reads as a network rather than as a scatter is the
+ * threshold: a line exists only while its two ends are near each other, so the
+ * mesh makes and breaks itself as the points drift. Nothing is laid out; the
+ * connections are a consequence.
+ *
+ * The one for a talk about systems talking to each other - events, queues,
+ * services, anything where the interesting part is between the boxes rather
+ * than in them. Meridian is its cousin for when the between-ness is
+ * geographical.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: net
+ */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #080f1e;
+  --slide-bg-soft: #101b33;
+  --slide-bg-image: radial-gradient(115% 90% at 20% 0%, #14274a 0%, #080f1e 60%);
+  --slide-ink: #d4e1f2;
+  --slide-ink-soft: #8798b8;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #5eead4;
+  --slide-accent-soft: rgba(94, 234, 212, 0.13);
+  --slide-link: #9af2e3;
+  --slide-rule: rgba(212, 225, 242, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Sora', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.02em;
+  --slide-line: 1.5;
+  --slide-title-size: 2.9em;
+  --slide-bullet: "\25CF";
+
+  --slide-code-bg: rgba(6, 12, 24, 0.7);
+  --slide-code-ink: #d2e2f4;
+  --slide-code-border: 1px solid rgba(94, 234, 212, 0.2);
+  --slide-radius: 10px;
+  --slide-shadow: 0 24px 60px rgba(1, 6, 14, 0.6);
+  --slide-card-bg: rgba(16, 27, 51, 0.76);
+  --slide-card-rule: 1px solid rgba(94, 234, 212, 0.18);
+  --slide-table-stripe: rgba(94, 234, 212, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* The first colour is the lines and the second the nodes, which is the one
+   * place in these scenes where the order of the list means something: the
+   * nodes have to be the brighter of the two or the mesh reads as cobweb. */
+  --backdrop-colors: #3b6fd4 #6fa8ff;
+  --backdrop-fog: #080f1e;
+  --backdrop-glow: #7ff0dc;
+  --backdrop-veil: rgba(8, 15, 30, 0.2);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.9;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(94, 234, 212, 0.24);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(94, 234, 212, 0));
+  box-shadow: 0 0 18px rgba(94, 234, 212, 0.35);
+}

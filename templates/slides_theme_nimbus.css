@@ -1,0 +1,66 @@
+/* Nimbus — soft drifting haze, and no geometry at all.
+ *
+ * A dozen great soft lights moving slowly past each other, which is the honest
+ * way to draw fog on a canvas: the alternative is a particle system blurred,
+ * and a blur over the whole viewport every frame costs more than every other
+ * scene put together.
+ *
+ * It is also the gentlest of these behind text - there are no edges in it for
+ * a letter to sit on - so it is the one to reach for when the deck is mostly
+ * words and you only want the page to stop being flat.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: fog
+ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #0a0812;
+  --slide-bg-soft: #16122a;
+  --slide-bg-image: radial-gradient(120% 100% at 30% 10%, #1b1430 0%, #0a0812 62%);
+  --slide-ink: #e5dff0;
+  --slide-ink-soft: #a195b8;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #c58cf5;
+  --slide-accent-soft: rgba(197, 140, 245, 0.13);
+  --slide-link: #d9b0ff;
+  --slide-rule: rgba(229, 223, 240, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Outfit', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 300;
+  --slide-head-spacing: -0.015em;
+  --slide-line: 1.55;
+  --slide-title-size: 3.3em;
+  --slide-bullet: "\00B7";
+
+  --slide-code-bg: rgba(8, 6, 16, 0.7);
+  --slide-code-ink: #e2dcf2;
+  --slide-code-border: 1px solid rgba(197, 140, 245, 0.2);
+  --slide-radius: 14px;
+  --slide-shadow: 0 26px 70px rgba(2, 1, 8, 0.6);
+  --slide-card-bg: rgba(22, 18, 42, 0.74);
+  --slide-card-rule: 1px solid rgba(197, 140, 245, 0.18);
+  --slide-table-stripe: rgba(197, 140, 245, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Four, because haze is layers of different light and two of them crossing
+   * is just a gradient. */
+  --backdrop-colors: #8a52c8 #4166c8 #c85aa8 #4fa0c8;
+  --backdrop-fog: #0a0812;
+  --backdrop-glow: #e8d8ff;
+  --backdrop-veil: none;
+  --backdrop-density: 1;
+  --backdrop-speed: 0.9;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 80px rgba(197, 140, 245, 0.3);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(197, 140, 245, 0));
+  box-shadow: 0 0 18px rgba(197, 140, 245, 0.4);
+}

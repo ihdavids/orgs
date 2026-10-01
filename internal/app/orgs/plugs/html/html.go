@@ -163,11 +163,17 @@ func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
 			cnt += 1
 			return rv
 		} else {
-			//attribStr = "class=\"lanugage-" + lang + "\""
-			if inline {
-				return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
+			// The block says what language it is in; highlight.js is told.
+			// Without the class it guesses from the text, and a short block
+			// of json guesses css as readily as json - so every page of
+			// configuration was coloured as something it was not.
+			if lang != "" {
+				attribStr = strings.TrimSpace(attribStr + " class=\"language-" + html.EscapeString(lang) + "\"")
 			}
-			return fmt.Sprintf("<pre><code %s >%s</code></pre>", attribStr, html.EscapeString(source))
+			if inline {
+				return fmt.Sprintf("<pre><code %s>%s</code></pre>", attribStr, html.EscapeString(source))
+			}
+			return fmt.Sprintf("<pre><code %s>%s</code></pre>", attribStr, html.EscapeString(source))
 		}
 	}
 	return &rw
@@ -194,6 +200,7 @@ func GetPropTag(name, revealName string, h org.Headline, secProps string) string
 	}
 	return secProps
 }
+
 // ---------------------------------------------------------------------------
 // Audio a heading points at
 // ---------------------------------------------------------------------------
@@ -342,62 +349,12 @@ func (w *OrgHtmlWriter) MediaSrc(doc *org.Document, target string) string {
 	if target == "" {
 		return ""
 	}
-	target = w.attachTarget(target)
-	// Anything with a protocol of its own is already fetchable.
-	if strings.Contains(target, "://") || strings.HasPrefix(target, "//") {
-		return target
-	}
-
-	dirs := w.Exp.pm.OrgDirs
-	root := ""
-	if len(dirs) > 0 {
-		root, _ = filepath.Abs(dirs[0])
-	}
-
-	// Resolve against the file that names it, and fall back to the org root.
-	abs := ""
-	if doc != nil && doc.Path != "" && !filepath.IsAbs(target) {
-		abs, _ = filepath.Abs(filepath.Join(filepath.Dir(doc.Path), filepath.FromSlash(target)))
-		if _, err := os.Stat(abs); err != nil {
-			if root != "" {
-				alt, _ := filepath.Abs(filepath.Join(root, filepath.FromSlash(target)))
-				if _, err := os.Stat(alt); err == nil {
-					abs = alt
-				}
-			}
-		}
-	} else if filepath.IsAbs(target) {
-		abs = filepath.FromSlash(target)
-	} else if root != "" {
-		abs, _ = filepath.Abs(filepath.Join(root, filepath.FromSlash(target)))
-	}
-	if abs == "" {
-		return ""
-	}
-
-	if strings.Contains(w.Opts, "filelinks;") {
-		return "file://" + filepath.ToSlash(abs)
-	}
-
-	// Under the file server, which is rooted at the first org directory. A
-	// file outside it cannot be served, and is offered as a file:// link
-	// rather than as a url that would answer 404.
-	rel := ""
-	if root != "" {
-		if r, err := filepath.Rel(root, abs); err == nil && !strings.HasPrefix(r, "..") {
-			rel = filepath.ToSlash(r)
-		}
-	}
-	if rel == "" {
-		return "file://" + filepath.ToSlash(abs)
-	}
-	if strings.Contains(w.Opts, "httpslinks;") {
-		return fmt.Sprintf("https://localhost:%d/images/%s", w.Exp.pm.TLSPort, rel)
-	}
-	if strings.Contains(w.Opts, "httplinks;") {
-		return fmt.Sprintf("http://localhost:%d/images/%s", w.Exp.pm.Port, rel)
-	}
-	return "/images/" + rel
+	// An attachment is named relative to the heading's own attachment folder,
+	// which only this writer knows how to find; after that the sum is the same
+	// one every exporter needs and lives in plugs.MediaURL. It used to live
+	// here, and the presentation exporters each had their own worse version of
+	// it.
+	return plugs.MediaURL(doc, w.Exp.pm, w.Opts, w.attachTarget(target))
 }
 
 // The players for one heading, in the order the properties were written. The
@@ -675,7 +632,7 @@ func (self *OrgHtmlExporter) Unmarshal(unmarshal func(interface{}) error) error 
 }
 
 func (self *OrgHtmlExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Fprintf(os.Stderr, "HTML: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "HTML: Export called [%s] -> [%s] [%s]\n", query, to, opts)
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
@@ -708,10 +665,33 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 
 	if f := db.FindByFile(query); f != nil {
 		fmt.Fprintf(os.Stderr, "File found\n")
+		// The template is rendered from self.Props, so writing the title into
+		// the caller's props map was writing it where nothing reads it: every
+		// page came out titled "Schedule", which is ValidateMap's default and
+		// a leftover from the agenda. A file that names no #+TITLE: is named
+		// after itself rather than after the agenda - it is what the browser
+		// tab says, and what the documentation themes put at the head of the
+		// rail. Set on every export, not only when the file names one: the
+		// exporter is shared between requests and would otherwise keep the
+		// last page's title.
 		title := f.Get("TITLE")
+		if title == "" {
+			name := f.Path
+			if name == "" {
+				name = query
+			}
+			title = strings.TrimSuffix(filepath.Base(name), filepath.Ext(name))
+		}
 		if title != "" {
 			props["title"] = title
+			self.Props["title"] = title
 		}
+		// Org's own keyword for the line under the title. The read-the-docs
+		// theme puts it where that theme puts a version, which is the thing
+		// a reader looks for first on a page of documentation; a theme with
+		// nothing to do with it writes nothing, so a file that does not say
+		// one is not a blank line anywhere.
+		self.Props["subtitle"] = f.Get("SUBTITLE")
 		theme := f.Get("HTML_THEME")
 		// This overrides the theme if present
 		style := f.Get("HTML_STYLE")
@@ -748,9 +728,18 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 			self.Props["showstatus"] = true
 		}
 
+		// The key the template reads is hljs_style; writing hljsstyle here
+		// set a key nothing uses *and* stopped ValidateMap from filling in
+		// the default, so a file naming its own highlight style came out
+		// with no stylesheet at all. hljs_style_default is how a theme can
+		// tell "nobody asked" from "this one was asked for" - the docs
+		// theme uses it to follow the reader's light or dark setting.
 		hlstyle := f.Get("HTML_HIGHLIGHT_STYLE")
+		self.Props["hljs_style_default"] = hlstyle == ""
 		if hlstyle != "" {
-			self.Props["hljsstyle"] = hlstyle
+			self.Props["hljs_style"] = hlstyle
+		} else {
+			self.Props["hljs_style"] = defaultHljsStyle
 		}
 		w := NewOrgHtmlWriter(self)
 		w.Opts = opts
@@ -801,6 +790,7 @@ func NewHtmlExp() *OrgHtmlExporter {
 }
 
 var hljsver = "11.9.0"
+var defaultHljsStyle = "monokai"
 var hljscdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/" + hljsver
 
 // The player's own styling, appended to whatever stylesheet the page uses.
@@ -883,8 +873,14 @@ func ValidateMap(m map[string]interface{}) map[string]interface{} {
 	if _, ok := m["hljscdn"]; !ok {
 		m["hljs_cdn"] = hljscdn
 	}
-	if _, ok := m["hljsstyle"]; !ok {
-		m["hljs_style"] = "monokai"
+	if _, ok := m["hljs_style"]; !ok {
+		m["hljs_style"] = defaultHljsStyle
+	}
+	if _, ok := m["hljs_style_default"]; !ok {
+		m["hljs_style_default"] = true
+	}
+	if _, ok := m["subtitle"]; !ok {
+		m["subtitle"] = ""
 	}
 	if _, ok := m["wordcloud"]; !ok {
 		m["wordcloud"] = false

@@ -14,6 +14,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	htmlexp "github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
+	"github.com/ihdavids/orgs/internal/app/orgs/plugs/slides"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
 	"github.com/ihdavids/orgs/internal/common"
 
@@ -32,6 +33,9 @@ func RestApi(router *mux.Router) {
 
 	// Public routes (no auth required)
 	router.HandleFunc("/login", login).Methods("POST")
+	// The salt a client hashes a password with before sending it. Public
+	// because it is asked for by somebody who is not logged in yet.
+	router.HandleFunc("/salt", salt).Methods("GET")
 
 	// Protected routes - all endpoints below require a valid JWS token
 	api := router.PathPrefix("").Subrouter()
@@ -45,6 +49,9 @@ func RestApi(router *mux.Router) {
 	}
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
+	// Adding an account. Only an administrator may, and only when this server
+	// has a keystore file to write - see adduser.go.
+	api.HandleFunc("/users/add", PostAddUser).Methods("POST")
 	api.HandleFunc("/orgfile", RequestOrgFile)
 	api.HandleFunc("/findfile", RequestFindFileInDb)
 	api.HandleFunc("/files", RequestFiles)
@@ -55,6 +62,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                    // Get all stored filters from the server
 	api.HandleFunc("/html/themes", RequestHtmlThemes)             // The themes the html exporter can render with
+	api.HandleFunc("/slides/themes", RequestSlideThemes)          // The themes the presentation exporters can render with
 	api.HandleFunc("/exporters", RequestExporters).Methods("GET") // The exporters this server was configured with
 	api.HandleFunc("/taggroups", RequestTagGroups)
 	api.HandleFunc("/grep", RequestGrep)
@@ -522,6 +530,36 @@ func RequestHtmlThemes(w http.ResponseWriter, r *http.Request) {
 	}{Ok: true, Themes: htmlexp.HtmlThemes()})
 }
 
+/* SDOC: API
+* GET /slides/themes — List Presentation Themes
+
+	Returns the themes the four presentation exporters can render a deck with. A
+	theme is a =slides_theme_<name>.css= file in your template folder, and the
+	same file works in all four - reveal.js, impress.js, WebSlides and deck.js -
+	because what it sets is a palette and a type scale rather than one library's
+	class names.
+
+	Any of these names can be given to =/file/revealjs= (or =impressjs=,
+	=webslides=, =deckjs=) as =theme=<name>=, which overrides the
+	=#+REVEAL_THEME:= the file itself asks for. A name that is *not* in this list
+	is passed through to the framework, so reveal's own =dracula= and deck.js'
+	=swiss= still work.
+
+	*Method:* =GET=
+
+	*Parameters:* None.
+
+	*Response:* ={"Ok": true, "Themes": ["blueprint", "bloom", "graphite", ...]}=
+	EDOC */
+
+func RequestSlideThemes(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Ok     bool
+		Themes []string
+	}{Ok: true, Themes: slides.ThemeNames()})
+}
+
 /*
 	SDOC: API
 
@@ -615,6 +653,13 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	props["backdrop"] = r.URL.Query().Get("backdrop")
 	props["backdropCycle"] = r.URL.Query().Get("backdropCycle")
 	props["backdropOpacity"] = r.URL.Query().Get("backdropOpacity")
+	// The presentation exporters: a theme, an impress.js layout and a deck.js
+	// transition can be overridden per request. The org file says what it
+	// wants (`#+REVEAL_THEME:` and friends) and these are how somebody looking
+	// at a preview tries another one without editing the file. An empty value
+	// changes nothing.
+	props["layout"] = r.URL.Query().Get("layout")
+	props["transition"] = r.URL.Query().Get("transition")
 	opts := common.ExportToFile{Name: ptype, Filename: fname, Query: query, Opts: "", Props: props}
 	if filelinks == "t" {
 		opts.Opts += "filelinks;"
@@ -1556,6 +1601,15 @@ func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 
 	    *Parameters:* None (user identity is derived from the auth token).
 
+	    Each template's =template= string comes back with its self-answering
+	    placeholders *answered*: ={{uuid}}=, ={{now}}=, ={{username}}= and the
+	    rest of the table in =internal/common/captemplate.go=. The answer is
+	    written in as the placeholder's default rather than over the top of it -
+	    ={{uuid}}= becomes ={{uuid|=f81d4fae-...}}= - so a client that does
+	    nothing about it has a usable value in the box, and one that would
+	    rather answer the name itself still can. A name with no answer is left
+	    exactly as written.
+
 	    *Response:* A JSON array of =CaptureTemplate= objects:
 	    #+BEGIN_SRC json
 	    [
@@ -1572,6 +1626,10 @@ func RequestDayPageIncrement(w http.ResponseWriter, r *http.Request) {
 func RequestCaptureTemplates(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
 	res, err := QueryCaptureTemplates(username)
+	// The placeholders nobody can answer differently - {{now}}, {{uuid}},
+	// {{username}} - are filled in here rather than left for the client. See
+	// capturefill.go: everything a person has to answer is left as written.
+	res = FillCaptureTemplateAutos(res, username)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryCaptureTemplates: %s", err.Error())
 	}

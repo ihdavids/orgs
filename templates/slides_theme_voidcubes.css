@@ -1,0 +1,71 @@
+/* Voidcubes — a field of lit blocks turning slowly through space.
+ *
+ * Muted violet and blue, and *muted* is the whole brief: the cubes are the
+ * first thing in the room and must not be the thing being read. They are lit
+ * from one side, they fade into the ground at both ends of the field, and the
+ * veil takes a third of the lot back off again - which together is the
+ * difference between a deck with depth behind it and a deck with a screensaver
+ * behind it.
+ *
+ * Reach for it when the talk is about something being built: architecture,
+ * infrastructure, anything made of parts.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: cubes
+ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #0a0920;
+  --slide-bg-soft: #151236;
+  --slide-bg-image: radial-gradient(120% 95% at 75% -10%, #221a52 0%, #0a0920 58%);
+  --slide-ink: #dcdcf6;
+  --slide-ink-soft: #9490c6;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #a78bfa;
+  --slide-accent-soft: rgba(167, 139, 250, 0.14);
+  --slide-link: #c4b2ff;
+  --slide-rule: rgba(220, 220, 246, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Space Grotesk', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.025em;
+  --slide-line: 1.5;
+  --slide-title-size: 3em;
+  --slide-bullet: "\25AA";
+
+  /* Translucent, so the scene passes behind a code block instead of stopping
+   * at it - with the blur the mapping asks for, which is what keeps it frosted
+   * rather than smeared. */
+  --slide-code-bg: rgba(10, 9, 32, 0.66);
+  --slide-code-ink: #d6d6f8;
+  --slide-code-border: 1px solid rgba(167, 139, 250, 0.22);
+  --slide-radius: 12px;
+  --slide-shadow: 0 24px 60px rgba(2, 2, 16, 0.6);
+  --slide-card-bg: rgba(21, 18, 54, 0.74);
+  --slide-card-rule: 1px solid rgba(167, 139, 250, 0.2);
+  --slide-table-stripe: rgba(167, 139, 250, 0.06);
+  --slide-table-head-case: uppercase;
+
+  /* The scene. Three hues rather than one, because a field of cubes all the
+   * same colour reads as a pattern - and no more than three, because a fourth
+   * is where it starts to read as confetti. */
+  --backdrop-colors: #8c7dff #4f6ee8 #a985f2;
+  --backdrop-fog: #0a0920;
+  --backdrop-glow: #c3cdff;
+  --backdrop-veil: rgba(10, 9, 32, 0.2);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.75;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(167, 139, 250, 0.3);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(167, 139, 250, 0));
+  box-shadow: 0 0 18px rgba(167, 139, 250, 0.4);
+}

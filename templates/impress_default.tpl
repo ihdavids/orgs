@@ -1,187 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width={{width}}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>{{title}}</title>
+  {%if fontfamily%}<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{fontfamily}}&display=swap">{%endif%}
+  <link rel="stylesheet" href="{{impress_cdn}}/css/impress-common.css">
+  <link rel="stylesheet" href="{{hljs_cdn}}/styles/{{hljs_style}}.min.css">
+  {%if extra_css%}<link rel="stylesheet" href="{{extra_css}}">{%endif%}
   <style>
-	.impress-supported .fallback-message {
-	    display: none;
-	}
-	/*
-    Now let's style the presentation steps.
-
-    We start with basics to make sure it displays correctly in everywhere ...
-
-    width: 900px;
-*/
-
-.step {
-    position: relative;
-    padding: 10px;
-    margin: 10px auto;
-	min-width: 1024px;
-
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing:    border-box;
-    -ms-box-sizing:     border-box;
-    -o-box-sizing:      border-box;
-    box-sizing:         border-box;
-
-    font-family: 'PT Serif', georgia, serif;
-    font-size: 48px;
-    line-height: 1;
-    text-shadow: 0 2px 2px rgba(0, 0, 0, .1);
-}
-
-
-/*
-    ... and we enhance the styles for impress.js.
-
-    Basically we remove the margin and make inactive steps a little bit transparent.
-*/
-.impress-enabled .step {
-    margin: 0;
-    opacity: 0.3;
-
-    -webkit-transition: opacity 1s;
-    -moz-transition:    opacity 1s;
-    -ms-transition:     opacity 1s;
-    -o-transition:      opacity 1s;
-    transition:         opacity 1s;
-}
-
-.impress-enabled .step.active { opacity: 1 }
-
-/*
-    These 'slide' step styles were heavily inspired by HTML5 Slides:
-    http://html5slides.googlecode.com/svn/trunk/styles.css
-
-    ;)
-
-    They cover everything what you see on first three steps of the demo.
-
-    All impress.js steps are wrapped inside a div element of 0 size! This means that relative
-    values for width and height (example: width: 100%) will not work. You need to use pixel
-    values. The pixel values used here correspond to the data-width and data-height given to the
-    #impress root element. When the presentation is viewed on a larger or smaller screen, impress.js
-    will automatically scale the steps to fit the screen.
-*/
-.slide {
-    display: block;
-
-    width: 900px;
-    height: 700px;
-    padding: 40px 60px;
-
-    background-color: white;
-    border: 1px solid rgba(0, 0, 0, .3);
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
-
-    color: rgb(102, 102, 102);
-    text-shadow: 0 2px 2px rgba(0, 0, 0, .1);
-
-    font-family: 'Open Sans', Arial, sans-serif;
-    font-size: 30px;
-    line-height: 36px;
-    letter-spacing: -1px;
-}
-
-.slide q {
-    display: block;
-    font-size: 50px;
-    line-height: 72px;
-
-    margin-top: 100px;
-}
-
-.slide q strong {
-    white-space: nowrap;
-}
-
-  table {
-    border-collapse: collapse;
-    margin: 25px 0;
-    font-size: 0.9em;
-    font-family: sans-serif;
-    min-width: 400px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-	border-collapse:separate;	
-	border-radius: 20px;
-	
-	}
-	thead tr {
-    background-color: #009879;
-    color: #ffffff;
-    text-align: left;
-	border-radius:6px;
-	}
-	th, td {
-	    padding: 12px 15px;
-	}
-	tbody tr {
- 	   border-bottom: 1px solid #dddddd;
-	}
-	tbody tr:nth-of-type(even) {
-	    background-color: #232323;
-	}
-	tbody tr:last-of-type {
- 	   border-bottom: 2px solid #009879;
-	}
-	tbody tr.active-row {
-	    font-weight: bold;
-	    color: #009879;
-	}
-	img {
-  		box-shadow: 5px 5px 15px 0px #aa8;
-		-webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0,0,0,0.0), rgba(0,0,0,0.2));
-	}
-
+  {%autoescape off%}
+  {{stylesheet}}
+  {%endautoescape%}
   </style>
+  {%if autofit%}
+  <!-- A step sizes itself to its content, so there is nothing for the fitter
+       to fit *into* until one is given a height. The deck's own data-height is
+       that height: it is what impress.js scales the canvas by, so a step the
+       size of it is a step the size of the screen. -->
+  <style>
+  #impress .step { height: {{height}}px; overflow: hidden; }
+  </style>
+  {%endif%}
+  <!-- The theme: one of the shared four-framework ones (the mapping and then
+       the theme), or impress's own impress_theme_<name>.css. Either way it
+       comes after the house stylesheet, because a theme is allowed to
+       overrule it. -->
   <style>
   {%autoescape off%}
   {{themedata}}
   {%endautoescape%}
   </style>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family={{fontfamily}}"> 
-  <link rel="stylesheet" href="{{hljs_cdn}}/styles/{{hljs_style}}.min.css">
-  <link rel="stylesheet" href="{{impress_cdn}}/css/impress-common.css">
-  <meta charset="utf-8" />
-    <meta name="viewport" content="width=1024" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+  {%autoescape off%}
+  {{head}}
+  {%endautoescape%}
 </head>
 <body class="impress-not-supported"
-    data-transition-duration="500"
-    data-width="1024"
-    data-height="768"
-    data-max-scale="3"
-    data-min-scale="0"
-    data-perspective="100"
+    data-transition-duration="{{transition_duration}}"
+    data-width="{{width}}"
+    data-height="{{height}}"
+    data-max-scale="{{max_scale}}"
+    data-min-scale="{{min_scale}}"
+    data-perspective="{{perspective}}"
+    {%if autoplay%}data-autoplay="{{autoplay}}"{%endif%}
 >
 <div class="fallback-message">
-    <p>Your browser <b>doesn't support the features required</b> by impress.js, so you are presented with a simplified version of this presentation.</p>
-    <p>For the best experience please use the latest <b>Chrome</b>, <b>Safari</b> or <b>Firefox</b> browser.</p>
+  <p>Your browser <b>doesn't support the features required</b> by impress.js, so you are presented with a simplified version of this presentation.</p>
+  <p>For the best experience please use the latest <b>Chrome</b>, <b>Safari</b> or <b>Firefox</b> browser.</p>
 </div>
-	<div id="impress">
-        {%autoescape off%}
-        {{slide_data}}
-        {%endautoescape%}
-	</div>
-	<div id="impress-toolbar"></div>
-	<div class="impress-progressbar"><div></div></div>
-	<div class="impress-progress"></div>
-	<script>
-	if ("ontouchstart" in document.documentElement) { 
-	    document.querySelector(".hint").innerHTML = "<p>Swipe left or right to navigate</p>";
-	}
-	</script>
-	<script src="{{hljs_cdn}}/highlight.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/headjs@1.0.3/dist/1.0.0/head.min.js"></script>
-	<script src="{{impress_cdn}}/js/impress.js"></script>
-    <script>impress().init();</script>
-	<script>hljs.highlightAll();</script>
-	<script>impress.addPreInitPlugin( rel );</script>
-	<script type="module">
-	  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-	  mermaid.initialize({ startOnLoad: true, maxTextSize: 2000000 });
-	</script>
+
+<div id="impress">
+  {%autoescape off%}
+  {{slide_data}}
+  {%endautoescape%}
+</div>
+
+{%if toolbar%}<div id="impress-toolbar"></div>{%endif%}
+{%if progress%}
+<div class="impress-progressbar"><div></div></div>
+<div class="impress-progress"></div>
+{%endif%}
+{%if hint%}
+<div class="hint"><p>Use a spacebar or arrow keys to navigate. Press <b>N</b> for notes.</p></div>
+{%endif%}
+{%if notes%}
+<div id="impress-notes-panel" aria-live="polite"></div>
+{%endif%}
+
+<script>
+if ("ontouchstart" in document.documentElement) {
+  var hint = document.querySelector(".hint");
+  if (hint) { hint.innerHTML = "<p>Swipe left or right to navigate</p>"; }
+}
+</script>
+<script src="{{hljs_cdn}}/highlight.min.js"></script>
+<script src="{{impress_cdn}}/js/impress.js"></script>
+<script>
+  impress().init();
+  if (window.hljs) { document.querySelectorAll('pre code').forEach(function (b) { hljs.highlightElement(b); }); }
+</script>
+{%if notes%}
+<script>
+(function () {
+  var panel = document.getElementById('impress-notes-panel');
+  if (!panel) { return; }
+  var show = function () {
+    var cur = document.querySelector('#impress .step.active');
+    var notes = cur ? cur.querySelector('.notes') : null;
+    panel.innerHTML = notes ? notes.innerHTML : '<p class="impress-notes-empty">No notes on this step.</p>';
+  };
+  document.addEventListener('impress:stepenter', show);
+  document.addEventListener('keyup', function (e) {
+    var t = e.target || {};
+    if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) { return; }
+    if (e.key === 'n' || e.key === 'N') { panel.classList.toggle('open'); show(); }
+    if (e.key === 'Escape') { panel.classList.remove('open'); }
+  });
+  show();
+})();
+</script>
+{%endif%}
+{%if mermaid%}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: 2000000{%if mermaid_theme%}, theme: '{{mermaid_theme}}'{%endif%} });
+</script>
+{%endif%}
+{%if wordcloud%}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.7/d3.layout.cloud.min.js"></script>
+<script>
+function wordcloud(name, words) {
+  var layout = d3.layout.cloud()
+    .size([800, 600])
+    .words(words.map(function (d) { return { text: d, size: 20 + Math.random() * 70 }; }))
+    .padding(5)
+    .rotate(function () { return ~~(Math.random() * 1.5) * 90; })
+    .font("Impact")
+    .fontSize(function (d) { return d.size; })
+    .on("end", function (words) {
+      d3.select(name)
+        .attr("width", layout.size()[0]).attr("height", layout.size()[1])
+        .append("g")
+        .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+        .selectAll("text").data(words).enter().append("text")
+        .style("font-size", function (d) { return d.size + "px"; })
+        .style("fill", function () { return "hsl(" + Math.random() * 360 + ",72%,70%)"; })
+        .style("font-family", "Impact")
+        .attr("text-anchor", "middle")
+        .attr("transform", function (d) { return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; })
+        .text(function (d) { return d.text; });
+    });
+  layout.start();
+}
+</script>
+{%endif%}
+{%if backdrop%}
+<style>
+{%autoescape off%}
+{{backdrop_css}}
+{%endautoescape%}
+</style>
+<script>
+{%autoescape off%}
+window.ORG_BACKDROP = {{backdrop_config}};
+{{backdrop_js}}
+{%endautoescape%}
+</script>
+{%endif%}
+{%if autofit%}
+<style>
+{%autoescape off%}
+{{autofit_css}}
+{%endautoescape%}
+</style>
+<script>
+{%autoescape off%}
+{{autofit_js}}
+{%endautoescape%}
+</script>
+{%endif%}
 </body>
 </html>

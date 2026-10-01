@@ -1,0 +1,27 @@
+#+TITLE: The drawer-at-column-zero trap
+#+TODO: TODO NEXT | DONE CANCELLED
+
+# go-org ends a headline's body at a drawer written in column zero, which leaves
+# Headline.Properties nil and hoists the rest of the heading to the top level of
+# the document. Both habits below are written the way plenty of real org files
+# are written, and neither of them is a habit as far as the parser is concerned:
+# IsHabit() is false because :STYLE: never reaches Properties, and the LOGBOOK
+# is not among the headline's children to be read.
+#
+# Keep this file if you want the trap covered; delete it if an unstyled habit in
+# the corpus is just noise.
+
+* TODO Sharpen the kitchen knives
+SCHEDULED: <2026-09-26 Sat .+1m/45d>
+:PROPERTIES:
+:STYLE:    habit
+:END:
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2026-08-26 Wed 19:00]
+:END:
+
+* TODO Descale the kettle
+SCHEDULED: <2026-09-22 Tue .+2w/20d>
+:PROPERTIES:
+:STYLE:    habit
+:END:

@@ -1,0 +1,70 @@
+/* Prism — shards of crystal turning in the dark.
+ *
+ * Each shard is drawn two sided and translucent, so the far facets show through
+ * the near ones; that, and the lit edges, is the whole of what makes a solid
+ * read as glass rather than as a rock. The facet colours shift between two hues
+ * with the light, which stands in for refraction - a crystal is never one
+ * colour, and which colour a facet happens to be is what the eye reads as depth.
+ *
+ * The showiest of these, so it is also the slowest: the shards turn about a
+ * degree a second and cross the field in a couple of minutes. Reach for it for
+ * an opening, a product, anything where the deck is allowed to be beautiful.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: crystal
+ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #0d0a1c;
+  --slide-bg-soft: #1a1333;
+  --slide-bg-image: radial-gradient(130% 110% at 15% 10%, #2a1746 0%, #0d0a1c 58%);
+  --slide-ink: #e2dcf4;
+  --slide-ink-soft: #a195c4;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #f0a6d6;
+  --slide-accent-soft: rgba(240, 166, 214, 0.13);
+  --slide-link: #a9d8ff;
+  --slide-rule: rgba(226, 220, 244, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Outfit', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 300;
+  --slide-head-spacing: -0.015em;
+  --slide-line: 1.55;
+  --slide-title-size: 3.2em;
+  --slide-title-spacing: -0.02em;
+  --slide-bullet: "\25C7";
+
+  --slide-code-bg: rgba(10, 7, 24, 0.68);
+  --slide-code-ink: #e0d9f6;
+  --slide-code-border: 1px solid rgba(240, 166, 214, 0.2);
+  --slide-radius: 14px;
+  --slide-shadow: 0 26px 70px rgba(4, 2, 14, 0.62);
+  --slide-card-bg: rgba(26, 19, 51, 0.74);
+  --slide-card-rule: 1px solid rgba(169, 216, 255, 0.2);
+  --slide-table-stripe: rgba(240, 166, 214, 0.05);
+  --slide-table-head-case: uppercase;
+  --slide-table-head-spacing: 0.08em;
+
+  /* Ice and orchid. The two are what a facet mixes between, so they want to be
+   * far enough apart in hue to be telling you something and close enough in
+   * weight that neither one is the colour of the deck. */
+  --backdrop-colors: #8fd2ff #c9a0f5 #f3a4d6;
+  --backdrop-fog: #0d0a1c;
+  --backdrop-glow: #eaf4ff;
+  --backdrop-veil: rgba(13, 10, 28, 0.1);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.6;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 80px rgba(240, 166, 214, 0.28);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, #a9d8ff, rgba(240, 166, 214, 0));
+  box-shadow: 0 0 18px rgba(169, 216, 255, 0.4);
+}

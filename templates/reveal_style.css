@@ -1,0 +1,67 @@
+/* What orgs adds to reveal.js.
+ *
+ * This used to be an inline <style> block in reveal_default.tpl, which meant a
+ * deck could not override it and nobody could read it. It is a file now, so
+ * `#+REVEAL_CSS:` lands after it and wins, and the exporter falls back to
+ * nothing if it is missing.
+ *
+ * The table and image rules are the ones that were in the template, kept as
+ * they were: a deck exported last year should look the way it looked.
+ */
+
+.reveal table {
+  border-collapse: separate;
+  margin: 25px auto;
+  font-size: 0.7em;
+  min-width: 400px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.reveal thead tr {
+  background-color: #009879;
+  color: #ffffff;
+  text-align: left;
+}
+.reveal th, .reveal td { padding: 12px 15px; }
+.reveal tbody tr { border-bottom: 1px solid #dddddd; }
+.reveal tbody tr:nth-of-type(even) { background-color: rgba(35, 35, 35, 0.35); }
+.reveal tbody tr:last-of-type { border-bottom: 2px solid #009879; }
+.reveal tbody tr.active-row { font-weight: bold; color: #009879; }
+.reveal td.align-right, .reveal th.align-right { text-align: right; }
+.reveal td.align-center, .reveal th.align-center { text-align: center; }
+
+.reveal img {
+  box-shadow: 5px 5px 15px 0px #aa8;
+  -webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.2));
+  max-height: 60vh;
+}
+/* A background image is reveal's own and must not be given a shadow and a
+ * reflection: it is the whole slide. */
+.reveal .slide-background img { box-shadow: none; -webkit-box-reflect: none; }
+
+/* Code. The highlight plugin draws the box; reveal's own pre gets out of the
+ * way, and a block of code is left-aligned however the slide is aligned. */
+.reveal pre { box-shadow: none; width: 100%; }
+.reveal pre code {
+  max-height: 70vh;
+  padding: 0.8em 1em;
+  border-radius: 8px;
+  text-align: left;
+  overflow-x: auto;
+}
+
+/* Checkboxes from an org list, drawn as boxes rather than as bullets. */
+.reveal li.unchecked, .reveal li.checked, .reveal li.indeterminate { list-style: none; }
+.reveal li.unchecked::before { content: "\2610  "; }
+.reveal li.checked::before { content: "\2611  "; }
+.reveal li.indeterminate::before { content: "\25FC  "; }
+
+.reveal .reveal-byline { opacity: 0.7; font-size: 0.8em; margin-top: 1.5em; }
+.reveal figcaption { font-size: 0.5em; opacity: 0.7; }
+.org-wordcloud { border: 1px dashed rgba(128, 128, 128, 0.4); border-radius: 10px; max-width: 100%; }
+
+/* A mermaid diagram sizes itself to its container, and reveal's container is
+ * the whole slide, so it needs a ceiling or a tall graph runs off the bottom. */
+.reveal pre.mermaid { max-height: 70vh; display: flex; justify-content: center; }
+.reveal pre.mermaid svg { max-height: 70vh; }

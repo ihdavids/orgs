@@ -1,0 +1,71 @@
+/* Emberline — filaments twisted round an axis, pinched at the waist, flaring
+ * into a crown above and roots below, with light running along them.
+ *
+ * The waist is a catenary rather than a cone, which is not fussiness: a cone
+ * flares in a straight line and reads as a funnel, and the shape the eye knows
+ * here is the one a hanging chain makes - tight through the middle and opening
+ * fast at both ends.
+ *
+ * Black, and the threads barely there. Everything in this one is the *pulses* -
+ * a run of light the length of one filament, then a wait, so at any moment two
+ * or three of forty are lit and the rest are structure. That is why the ground
+ * has no gradient and the filament colour is a steel grey rather than a colour:
+ * the only thing with any brightness in the picture should be the thing that is
+ * moving.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: vortex
+ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #040406;
+  --slide-bg-soft: #101218;
+  --slide-bg-image: none;
+  --slide-ink: #dfe4ee;
+  --slide-ink-soft: #8b93a3;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #9fd8ff;
+  --slide-accent-soft: rgba(159, 216, 255, 0.12);
+  --slide-link: #c2e6ff;
+  --slide-rule: rgba(223, 228, 238, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Outfit', 'Inter', sans-serif;
+  --slide-head-weight: 300;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-spacing: -0.015em;
+  --slide-line: 1.55;
+  --slide-title-size: 3.2em;
+  --slide-bullet: "\203A";
+
+  --slide-code-bg: rgba(8, 9, 12, 0.76);
+  --slide-code-ink: #dfe4ee;
+  --slide-code-border: 1px solid rgba(159, 216, 255, 0.2);
+  --slide-radius: 12px;
+  --slide-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+  --slide-card-bg: rgba(16, 18, 24, 0.8);
+  --slide-card-rule: 1px solid rgba(159, 216, 255, 0.18);
+  --slide-table-stripe: rgba(159, 216, 255, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Steel, not colour. The filaments are the structure the light runs along,
+   * and three greys a shade apart is enough to keep forty of them from reading
+   * as one surface. */
+  --backdrop-colors: #39404e #2a3038 #454d5c;
+  --backdrop-fog: #040406;
+  --backdrop-glow: #eaf6ff;
+  --backdrop-veil: none;
+  --backdrop-density: 1;
+  --backdrop-speed: 0.8;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(4, 4, 6, 0.95), 0 0 28px rgba(4, 4, 6, 0.9);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(159, 216, 255, 0));
+  box-shadow: 0 0 18px rgba(159, 216, 255, 0.4);
+}

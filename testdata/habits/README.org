@@ -1,0 +1,183 @@
+#+TITLE: Habits - the format, the capture template, and a test corpus
+
+*If you are here for the format of a habit heading, or for the capture template
+that writes one, it is [[*Adding a habit, and the format I always forget][the next section]].* The rest of this file is the
+test corpus.
+
+A small org directory of habits, written against <2026-09-29 Tue>, for
+exercising =IsHabit()=, =HabitStreak()=, =MissedHabit()=, the agenda's habit
+graph, and what =ChangeStatus= does to a repeater.
+
+Run it without touching the real database:
+
+#+begin_src sh
+orgs -orgdir ./testdata/habits search 'IsHabit()'
+orgs -orgdir ./testdata/habits search 'IsHabit() && MissedHabit()'
+orgs -orgdir ./testdata/habits search 'IsHabit() && HabitStreak() >= 3' -sort Headline
+orgs -orgdir ./testdata/habits agenda
+#+end_src
+
+* Adding a habit, and the format I always forget
+
+A habit is four things, and it is only a habit if it has all of them:
+
+1. a heading with a *live todo keyword* - TODO, NEXT, whatever the file
+   declares;
+2. a =SCHEDULED:= line *immediately under the headline*, carrying a *repeater*;
+3. a =:STYLE: habit= property, in a drawer that is *not* at column zero;
+4. a =:LOGBOOK:= of =State "DONE"= lines, which you never write yourself -
+   =ChangeStatus= writes one every time the habit is ticked off, and that is
+   what the streaks and the squares are read from.
+
+Written out, with nothing in it that is optional:
+
+#+begin_src org
+  ,** TODO Morning pages
+     SCHEDULED: <2026-09-30 Wed .+1d>
+     :PROPERTIES:
+     :STYLE:    habit
+     :END:
+     Ten minutes, first thing.
+#+end_src
+
+** The capture template
+
+Paste this under =server: captureTemplates:= in =orgs.yaml=. It fills the date
+in for you and asks for the one thing it cannot know, which is how often:
+
+#+begin_src yaml
+  - name: "AddHabit"
+    type: "entry"
+    target:
+      type: "file+headline"
+      filename: "habits.org"
+      id: "Habits"
+    template: |-
+      SCHEDULED: <{{date}} {{repeat|How often? .+1d daily, .+1w/10d weekly with slack}}>
+      :PROPERTIES:
+      :STYLE:    habit
+      :END:
+      {{CONTENT}}
+#+end_src
+
+Then =c= in worg (or the pencil on the rail), pick *AddHabit*, and type the
+headline with its keyword - =TODO Morning pages= - the repeater, and the body.
+=orgs listcap= is how you check the yaml took.
+
+Five things about it, each of which is a way to get a heading that looks like a
+habit and is not one:
+
+- *The keyword goes in the headline you type.* Capture writes =NewNode.Headline=
+  verbatim and the template has no say in it, so =Morning pages= on its own
+  gives a habit that is not a task: it will not be in an agenda and no query
+  asking =IsTask()= will find it. It does still tick off - the first tick gives
+  it the file's first live keyword and logs =from ""= - but that is a repair,
+  not the intent.
+- *=template:= is a sibling of =target:=, not a key inside it.* Indented one
+  level too far it is silently a field of the target, which has no such field,
+  and the template arrives empty.
+- *The =|-= is load-bearing.* A yaml scalar written over several lines without a
+  block scalar folds its newlines into spaces, and a property drawer on one line
+  is not a property drawer.
+- *The drawer must not land at column zero.* It does not, because capture
+  indents every line of the content - but a habit typed by hand into a file, or
+  pasted, can, and then go-org ends the headline's body at the drawer:
+  =:STYLE: habit= never reaches =Headline.Properties= and the heading does not
+  read as a habit at all. That is what =habits-column-zero.org= in this
+  directory is for.
+- *The template string is the client's, not the server's.* worg reads it and
+  puts up the form; =orgs cap= does not expand it, so from a terminal you are
+  typing the =SCHEDULED:= line and the drawer yourself, or using worg.
+
+=<{{date}} .+1d>= comes out as =<2026-09-30 .+1d>=, with no day name. The
+weekday is optional in both org and go-org, and orgs keeps whatever spelling the
+line was written with - it moves the date on without adding one. If you want the
+day name there, type the whole stamp instead:
+=SCHEDULED: {{when|The stamp, e.g. <2026-09-30 Wed .+1d>}}=, at the price of
+filling the date in yourself.
+
+** Which repeater to type
+
+The three spellings are three different sums, and the difference only shows on a
+habit ticked off late:
+
+| Written  | Means                                                              |
+|----------+--------------------------------------------------------------------|
+| =.+2d=   | Two days from *today*. What a habit almost always wants: miss a    |
+|          | week and the next one is due two days from now, not last Tuesday.  |
+| =++2d=   | Two days from the *old date*, repeatedly, until it is in the       |
+|          | future. Keeps the rhythm - every other day since you started.      |
+| =+2d=    | Two days from the old date, *once*, so it can still be overdue.    |
+|          | Right for a deadline, wrong for a habit.                           |
+
+The =/5d= half is org-habit's *slack*: =.+2d/5d= is "every two days, and not
+really late until five". A day inside the slack draws as =·= (in hand) rather
+than =░= (missed), which is the whole difference between a tracker that reads as
+kept and one that reads as failing. There is no reason not to use it on anything
+you do not literally do daily.
+
+Times of day work (=SCHEDULED: <2026-09-30 Wed 09:00 .+1d>=) and =.+= keeps the
+time when it moves the date on, so a 09:00 reminder ticked off at midnight is
+still a 09:00 reminder tomorrow.
+
+** Checking it worked
+
+#+begin_src sh
+  orgs listcap                    # the template is loaded
+  orgs search 'IsHabit()'         # the heading reads as a habit
+  orgs habits                     # it is in the tracker
+  orgs habits done 'Morning pages' # tick it - this is what writes the logbook
+  orgs habits untick 'Morning pages'
+#+end_src
+
+If =orgs search 'IsHabit()'= does not find it, it is the property - the drawer's
+column, or the spelling of =:STYLE:=. If it finds it and =orgs habits= shows it
+with no squares ever filling, it is the logbook: nothing has ticked it off yet,
+or the heading has a =:LOG_INTO_DRAWER:= of its own naming a drawer the
+completion reader is not being pointed at.
+
+* What is in each file
+
+- =habits.org= - the main corpus: every repeater spelling (=+2d=, =++2w=, =.+1d=),
+  slack halves (=.+3d/5d=, =.+1w/10d=, =.+1m/40d=), a habit with a time of day, a
+  kept run, a broken run, a habit never done and overdue, a habit never done and
+  not due yet, a habit with no repeater at all, and three repeating-or-dated
+  tasks that must *not* read as habits.
+- =habits-nodrawer.org= - =#+STARTUP: nologdrawer=, so the =State "DONE"= lines
+  are a plain list in the body. Also the double-tick case: twice on one day is
+  one day's worth.
+- =habits-column-zero.org= - drawers written at column zero. go-org ends the
+  headline body there, so =:STYLE: habit= never reaches =Headline.Properties=
+  and neither heading reads as a habit. Delete this file if you want a corpus
+  where every marked habit is one.
+
+* Expected answers as of <2026-09-29 Tue>
+
+| Heading                            | Schedule       | Streak | Missed |
+|------------------------------------+----------------+--------+--------|
+| Take vitamins                      | .+1d           |      5 | no     |
+| Water the plants                   | .+3d/5d        |      3 | no     |
+| Floss                              | .+1d/2d        |      0 | yes    |
+| Weekly review                      | .+1w/10d       |      4 | no     |
+| Call Mum                           | ++2w           |      3 | no     |
+| Change the furnace filter          | .+1m/40d       |      2 | no     |
+| Learn guitar scales                | .+1d/3d        |      0 | yes    |
+| Start running                      | .+2d/4d        |      0 | no     |
+| Morning meds                       | 09:00 .+1d     |      2 | no     |
+| Empty the dehumidifier             | +2d            |      0 | yes    |
+| Back up the laptop                 | .+1w/9d        |      0 | yes    |
+| Water the tomatoes                 | (no repeater)  |      0 | no     |
+| Morning pages                      | .+1d/2d        |      3 | no     |
+| Stretch                            | .+1d           |      2 | no     |
+| Both planning keywords on one line | .+2d           |      0 | no     |
+
+Two of those are the interesting ones. *Change the furnace filter* is 35 days
+since its last completion on a monthly habit: over the interval, inside the
+slack, so still kept - the case that goes wrong if the interval is used where
+the slack should be. *Back up the laptop* has in fact been kept, and reads as
+missed because the completion reader asks the *file* which drawer the log lives
+in and the habit declares its own =:LOG_INTO_DRAWER: BACKUPS= on the heading.
+
+These numbers are of *today*, so they go stale: a streak that was 5 on the day
+this was written is 0 a fortnight later. Shift every date forward, or read the
+table as the shape of the answers rather than as the answers.

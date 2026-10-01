@@ -1,0 +1,66 @@
+/* Tidecrest — an open swell running away to a cold horizon.
+ *
+ * The same sheet of triangles as Lowlands, told completely differently:
+ * longer wavelengths, a shallower rise, and light handled as reflection rather
+ * than as shading - the faces turned up towards the sky carry a sharp highlight
+ * on top of the soft one, and the crests that are still climbing get a line of
+ * foam. A hillside is lit; water is lit and reflects, and that is the whole
+ * difference.
+ *
+ * Cold blue, because that is the one that leaves white type alone.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: waves
+ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #04121d;
+  --slide-bg-soft: #0a2234;
+  --slide-bg-image: linear-gradient(178deg, #0d3550 0%, #04121d 54%);
+  --slide-ink: #cfe4f0;
+  --slide-ink-soft: #7ea5bc;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #5fd0e8;
+  --slide-accent-soft: rgba(95, 208, 232, 0.14);
+  --slide-link: #97e6f6;
+  --slide-rule: rgba(207, 228, 240, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Manrope', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 800;
+  --slide-head-spacing: -0.03em;
+  --slide-line: 1.5;
+  --slide-title-size: 3em;
+  --slide-bullet: "\25B8";
+
+  --slide-code-bg: rgba(3, 14, 24, 0.72);
+  --slide-code-ink: #cfe4f0;
+  --slide-code-border: 1px solid rgba(95, 208, 232, 0.22);
+  --slide-radius: 10px;
+  --slide-shadow: 0 24px 60px rgba(1, 7, 13, 0.6);
+  --slide-card-bg: rgba(10, 34, 52, 0.76);
+  --slide-card-rule: 1px solid rgba(95, 208, 232, 0.2);
+  --slide-table-stripe: rgba(95, 208, 232, 0.06);
+  --slide-table-head-case: uppercase;
+
+  /* Trough then crest: the swell mixes between the two by height, so the pair
+   * reads as deep water and shallow rather than as two colours. */
+  --backdrop-colors: #123f63 #3a93b8;
+  --backdrop-fog: #04121d;
+  --backdrop-glow: #c8f2ff;
+  --backdrop-veil: rgba(4, 18, 29, 0.14);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.8;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(95, 208, 232, 0.26);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(95, 208, 232, 0));
+  box-shadow: 0 0 18px rgba(95, 208, 232, 0.4);
+}

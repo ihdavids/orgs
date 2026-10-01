@@ -1,0 +1,29 @@
+/* The autofit wrapper.
+ *
+ * `transform` rather than `zoom` or a font-size change: it is composited, it
+ * does not reflow, and it keeps every line break where the author put it.
+ *
+ * The width compensation is the part that is easy to get wrong. A scaled box
+ * still *occupies* its unscaled width, so without `width: calc(100% /
+ * scale)` the content would be laid out in a box narrower than the slide and
+ * then shrunk, wrapping text twice. Scaling from the top centre keeps a
+ * shrunken slide hanging from the same place as a full one, so a deck does not
+ * jump about as it goes.
+ */
+.org-fit {
+  --fit-scale: 1;
+  transform: scale(var(--fit-scale));
+  transform-origin: top center;
+  width: calc(100% / var(--fit-scale));
+  margin-left: calc((100% - 100% / var(--fit-scale)) / 2);
+  will-change: transform;
+}
+/* No transition on the scale itself - a slide that visibly shrinks as it
+ * arrives looks like a bug. */
+.org-fit.org-fitted { transition: none; }
+
+/* A left-aligned deck scales from the left, or the content would drift in from
+ * the side as it shrank. */
+.alignleft .org-fit,
+.deck-align-left .org-fit,
+.org-fit[data-fit-align="left"] { transform-origin: top left; margin-left: 0; }

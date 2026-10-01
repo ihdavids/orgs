@@ -119,6 +119,11 @@ type ServerSettings struct {
 		#+BEGIN_SRC yaml
 	  keystore: "path to yaml file"
 		#+END_SRC
+
+		A relative path is taken relative to this configuration file. Until you
+		set this, the only account that exists is admin/default and the server
+		says so loudly on every startup. Add accounts with =orgs user add=; see
+		"Users and the keystore" for the whole of it.
 		EDOC */
 	Keystore string `yaml:"keystore"`
 
@@ -159,6 +164,12 @@ type ServerSettings struct {
 	AllowHttp         bool   `yaml:"allowHttp"`
 	AllowHttps        bool   `yaml:"allowHttps"`
 	NoAuth            bool   `yaml:"noAuth"`
+	// Refuse a login that arrives as a cleartext password rather than as a
+	// hash. Off by default: a client older than the hashing would be locked
+	// out, and there is no way to know from here what is talking to this
+	// server. Turn it on once everything has been rebuilt - the server names
+	// each cleartext login in its log until then.
+	RequireHashedLogin bool `yaml:"requireHashedLogin"`
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
 	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`

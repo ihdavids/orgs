@@ -20,6 +20,10 @@ import (
 type LoginCmd struct {
 	Username string
 	Password string
+	// Send the password itself, to a server too old to have GET /salt. Off by
+	// default, and named so that turning it on is a decision somebody made
+	// rather than a fallback that happened quietly.
+	Cleartext bool
 }
 
 type loginRequest struct {
@@ -32,6 +36,10 @@ type loginResponse struct {
 	ExpiresAt time.Time `json:"ExpiresAt"`
 }
 
+type saltResponse struct {
+	Salt string `json:"salt"`
+}
+
 func (self *LoginCmd) Unmarshal(unmarshal func(interface{}) error) error {
 	return unmarshal(self)
 }
@@ -42,6 +50,8 @@ func (self *LoginCmd) StartPlugin(manager *common.PluginManager) {
 func (self *LoginCmd) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.Username, "user", "", "username for the orgs server")
 	fset.StringVar(&self.Password, "password", "", "password for the orgs server (prompted if omitted)")
+	fset.BoolVar(&self.Cleartext, "allow-cleartext", false,
+		"send the password itself, for a server too old to answer GET /salt")
 }
 
 func promptUsername() string {
@@ -78,7 +88,28 @@ func (self *LoginCmd) Exec(core *commands.Core) {
 		os.Exit(1)
 	}
 
-	req := loginRequest{Username: user, Password: pass}
+	// What goes over the wire is a hash of the password and the server's salt
+	// for this user, never the password. The server hashes that again with its
+	// own orgSalt before comparing, so neither the wire nor the keystore file
+	// holds anything that can be typed in as a password somewhere else.
+	//
+	// This is not a substitute for https - a hash that logs somebody in can be
+	// replayed by anything that captured it - it is so that the password, which
+	// is reused elsewhere and outlives any session, is not the thing at risk.
+	secret := pass
+	salt := common.RestGet[saltResponse](&core.Rest, "salt", map[string]string{"user": user})
+	if salt.Salt != "" {
+		secret = common.ClientHash(user, salt.Salt, pass)
+	} else if self.Cleartext {
+		fmt.Fprintln(os.Stderr, "login: warning: sending the password as cleartext")
+	} else {
+		fmt.Fprintln(os.Stderr, "login: the server did not answer GET /salt, so the password")
+		fmt.Fprintln(os.Stderr, "       could only be sent as cleartext. It is probably older than")
+		fmt.Fprintln(os.Stderr, "       this client. Re-run with -allow-cleartext to do it anyway.")
+		os.Exit(1)
+	}
+
+	req := loginRequest{Username: user, Password: secret}
 	resp, err := common.RestPost[loginResponse](&core.Rest, "login", &req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "login failed: %s\n", err)

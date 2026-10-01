@@ -1,0 +1,69 @@
+/* Cascade — columns of glyphs falling away into the distance.
+ *
+ * The one everybody knows. What makes it a *field* rather than a screensaver is
+ * that the columns are at different depths: one eight units back is smaller,
+ * dimmer and slower, all three of which fall out of the perspective divide
+ * rather than being faked. Only the head of each column is lit; everything
+ * behind it is coloured and fading, which is what the eye follows.
+ *
+ * Green, because anything else is a different idea wearing this one's clothes -
+ * but a green chosen to sit under white text rather than to be the text, and
+ * the deck's own accent is the paler mint so a link is not competing with the
+ * rain.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: matrix
+ */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #04100a;
+  --slide-bg-soft: #0a2016;
+  --slide-bg-image: radial-gradient(120% 100% at 50% 0%, #0c2a1b 0%, #04100a 60%);
+  --slide-ink: #cfe8d9;
+  --slide-ink-soft: #7fa894;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #6ee7a0;
+  --slide-accent-soft: rgba(110, 231, 160, 0.13);
+  --slide-link: #9af2bf;
+  --slide-rule: rgba(207, 232, 217, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.04em;
+  --slide-line: 1.5;
+  --slide-title-size: 2.7em;
+  --slide-bullet: "\203A";
+
+  --slide-code-bg: rgba(3, 12, 8, 0.74);
+  --slide-code-ink: #cfe8d9;
+  --slide-code-border: 1px solid rgba(110, 231, 160, 0.2);
+  --slide-radius: 6px;
+  --slide-shadow: 0 22px 56px rgba(0, 8, 4, 0.62);
+  --slide-card-bg: rgba(10, 32, 22, 0.78);
+  --slide-card-rule: 1px solid rgba(110, 231, 160, 0.18);
+  --slide-table-stripe: rgba(110, 231, 160, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Three greens for the trails and the accent for the heads. The trails are
+   * deliberately darker than anything on the slide: the rain is behind the
+   * words, and a column as bright as a bullet point is a column being read. */
+  --backdrop-colors: #3cc47c #2b9a5e #55e39a;
+  --backdrop-fog: #04100a;
+  --backdrop-glow: #a8ffd0;
+  --backdrop-veil: rgba(4, 16, 10, 0.22);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.85;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 60px rgba(110, 231, 160, 0.26);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(110, 231, 160, 0));
+  box-shadow: 0 0 16px rgba(110, 231, 160, 0.4);
+}

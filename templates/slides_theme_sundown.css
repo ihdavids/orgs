@@ -1,0 +1,69 @@
+/* Sundown — the same lattice as Relay, at dusk.
+ *
+ * Exactly one thing differs from Relay: the colours. That is the point of the
+ * split between a theme and a scene - "the network one, but warm" is a file of
+ * twelve values rather than a second copy of anything, and if the lattice gets
+ * a better idea next month both of them have it.
+ *
+ * Warm over a violet horizon, which is the hardest of these to keep readable:
+ * an orange node and white type are close enough in weight to fight, so the
+ * nodes are kept well under the text and the ground darkens towards the top of
+ * the screen where the headings are rather than towards the bottom.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: net
+ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #140a24;
+  --slide-bg-soft: #26123c;
+  --slide-bg-image: linear-gradient(185deg, #0e0719 0%, #2d1140 62%, #5b1f49 100%);
+  --slide-ink: #f0e2ea;
+  --slide-ink-soft: #b595ac;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #ff9e6b;
+  --slide-accent-soft: rgba(255, 158, 107, 0.14);
+  --slide-link: #ffc08f;
+  --slide-rule: rgba(240, 226, 234, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Outfit', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.025em;
+  --slide-line: 1.5;
+  --slide-title-size: 3em;
+  --slide-bullet: "\25CF";
+
+  --slide-code-bg: rgba(14, 7, 25, 0.72);
+  --slide-code-ink: #f0e2ea;
+  --slide-code-border: 1px solid rgba(255, 158, 107, 0.22);
+  --slide-radius: 12px;
+  --slide-shadow: 0 24px 60px rgba(8, 2, 16, 0.6);
+  --slide-card-bg: rgba(38, 18, 60, 0.76);
+  --slide-card-rule: 1px solid rgba(255, 158, 107, 0.2);
+  --slide-table-stripe: rgba(255, 158, 107, 0.06);
+  --slide-table-head-case: uppercase;
+
+  /* Lines then nodes, in that order, as the lattice reads them - and the fog is
+   * the *top* of the gradient rather than the ground colour, because the far
+   * end of the field is up by the horizon and has to fade into what is actually
+   * behind it there. */
+  --backdrop-colors: #d9719e #ffc08a;
+  --backdrop-fog: #1b0b2c;
+  --backdrop-glow: #ffd3a0;
+  --backdrop-veil: rgba(20, 10, 36, 0.16);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.85;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(255, 158, 107, 0.26);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(255, 158, 107, 0));
+  box-shadow: 0 0 18px rgba(255, 158, 107, 0.4);
+}

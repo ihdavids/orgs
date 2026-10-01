@@ -2,13 +2,14 @@ package orgs
 
 import (
 	"context"
-	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 type contextKey string
@@ -23,6 +24,31 @@ func GetUsername(r *http.Request) string {
 	return ""
 }
 
+// GET /salt?user=<name>
+//
+// The salt a client needs before it can hash a password, which is why this is
+// a public route: it is asked for by somebody who has no credentials yet.
+//
+// It answers for a name that does not exist exactly as readily as for one that
+// does (see common.YamlKeystore.GetSalt). Nothing here is secret - a salt is
+// not a credential, and the point of a per-user one is that a hash cannot be
+// precomputed, not that the salt cannot be read.
+func salt(w http.ResponseWriter, r *http.Request) {
+	user := r.URL.Query().Get("user")
+	if user == "" {
+		http.Error(w, "salt: a user parameter is required", http.StatusBadRequest)
+		return
+	}
+	s, err := GetKeystore().GetSalt(user)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to get a salt: %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{"salt": s})
+}
+
 func login(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
 	//body, _ := io.ReadAll(r.Body)
@@ -35,20 +61,26 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hsh := sha1.New()
-	hsh.Write([]byte(creds.Password))
+	// A current client hashes the password with the user's salt and sends that
+	// (GET /salt, then common.ClientHash), so the password itself never
+	// reaches this server. One older than that sends the password, which still
+	// works - refusing it outright would lock out every client that has not
+	// been rebuilt - but it is said out loud each time, and a server can turn
+	// it off once nothing it talks to needs it.
+	if !common.IsClientHash(creds.Password) {
+		if Conf().Server != nil && Conf().Server.RequireHashedLogin {
+			fmt.Fprintf(os.Stderr, "Refused a cleartext login for %q: requireHashedLogin is set\n", creds.Username)
+			http.Error(w, "this server does not accept a password sent as cleartext; upgrade the client", http.StatusUnauthorized)
+			return
+		}
+		fmt.Fprintf(os.Stderr, "WARNING: %q sent its password as cleartext. An up to date client asks GET /salt and sends a hash.\n", creds.Username)
+	}
 
 	if ok := GetKeystore().Validate(creds.Username, creds.Password); !ok {
 		fmt.Fprintf(os.Stderr, "Failed validate\n")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	/*
-		if creds.Username != "admin" || creds.Password != "password" {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-	*/
 
 	//fmt.Fprintf(os.Stderr, "Encrypted token gen\n")
 	token, expiresAt, err := GenerateEncryptedToken(creds.Username)

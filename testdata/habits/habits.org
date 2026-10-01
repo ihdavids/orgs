@@ -1,0 +1,197 @@
+#+TITLE: Habit test corpus
+#+TODO: TODO NEXT WAITING | DONE CANCELLED
+#+CATEGORY: habits
+
+# Today, when this file was written, was <2026-09-29 Tue>.
+# Every habit below is a heading with :STYLE: habit and a repeating SCHEDULED
+# line. The LOGBOOK lines are what parseHabitCompletions reads for the graph,
+# HabitStreak() and MissedHabit().
+
+* Habits
+  :PROPERTIES:
+  :CATEGORY: habits
+  :END:
+
+** TODO Take vitamins
+   SCHEDULED: <2026-09-29 Tue .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-09-28 Mon 21:14]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-28 Mon 21:14]
+   - State "DONE"       from "TODO"       [2026-09-27 Sun 20:02]
+   - State "DONE"       from "TODO"       [2026-09-26 Sat 22:31]
+   - State "DONE"       from "TODO"       [2026-09-25 Fri 19:48]
+   - State "DONE"       from "TODO"       [2026-09-24 Thu 20:55]
+   :END:
+   A plain daily habit with no slack, kept without a gap.
+   HabitStreak() == 5, MissedHabit() == false.
+
+** TODO Water the plants
+   SCHEDULED: <2026-09-28 Mon .+3d/5d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-09-25 Fri 08:12]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-25 Fri 08:12]
+   - State "DONE"       from "TODO"       [2026-09-21 Mon 07:58]
+   - State "DONE"       from "TODO"       [2026-09-17 Thu 09:03]
+   :END:
+   Every three days, definitely overdue after five - the slack half is what the
+   streak is judged on, so four-day gaps are still a kept habit.
+   HabitStreak() == 3, MissedHabit() == false (scheduled date is past, so it is
+   *due*, which is not the same as missed).
+
+** TODO Floss
+   SCHEDULED: <2026-09-20 Sun .+1d/2d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-09-19 Sat 22:40]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-19 Sat 22:40]
+   - State "DONE"       from "TODO"       [2026-09-18 Fri 22:52]
+   - State "DONE"       from "TODO"       [2026-09-17 Thu 23:05]
+   :END:
+   A broken run: ten days since the last one against two days of slack.
+   HabitStreak() == 0 (a streak is one you are currently on), MissedHabit() == true.
+
+** NEXT Weekly review
+   SCHEDULED: <2026-09-29 Tue .+1w/10d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-09-22 Tue 17:30]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "NEXT"       [2026-09-22 Tue 17:30]
+   - State "DONE"       from "NEXT"       [2026-09-15 Tue 16:44]
+   - State "DONE"       from "NEXT"       [2026-09-08 Tue 18:10]
+   - State "DONE"       from "NEXT"       [2026-09-01 Tue 17:02]
+   :END:
+   A weekly habit with a week of units rather than days: slack is 10 days.
+   HabitStreak() == 4.
+
+** TODO Call Mum
+   SCHEDULED: <2026-09-29 Tue ++2w>
+   :PROPERTIES:
+   :STYLE:    habit
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-21 Mon 19:20]
+   - State "DONE"       from "TODO"       [2026-09-08 Tue 19:35]
+   - State "DONE"       from "TODO"       [2026-08-25 Tue 20:01]
+   :END:
+   No slack half, so the interval itself is the cadence: 14 days.
+   ++2w counts forward from the old date until it is strictly in the future, so
+   ticking this off late does not put the next one in the past.
+   HabitStreak() == 3.
+
+** TODO Change the furnace filter
+   SCHEDULED: <2026-09-25 Fri .+1m/40d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-08-25 Tue 11:00]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-08-25 Tue 11:00]
+   - State "DONE"       from "TODO"       [2026-07-31 Fri 10:20]
+   :END:
+   Monthly with 40 days of slack. 35 days have gone by: over the interval, inside
+   the slack, so still kept - this is the case that goes wrong if the interval is
+   used where the slack should be.
+   HabitStreak() == 2, MissedHabit() == false.
+
+** TODO Learn guitar scales
+   SCHEDULED: <2026-09-20 Sun .+1d/3d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :END:
+   Never done, and the day it was asked for has gone by.
+   HabitStreak() == 0, MissedHabit() == true.
+
+** TODO Start running
+   SCHEDULED: <2026-10-02 Fri .+2d/4d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :END:
+   Never done, and not asked for yet.
+   HabitStreak() == 0, MissedHabit() == false.
+
+** TODO Morning meds
+   SCHEDULED: <2026-09-29 Tue 09:00 .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-09-28 Mon 09:12]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-28 Mon 09:12]
+   - State "DONE"       from "TODO"       [2026-09-27 Sun 09:40]
+   :END:
+   A habit with a time of day. .+1d counts from today but must keep the 09:00, or
+   ticking it off late walks the reminder round the clock.
+
+** TODO Empty the dehumidifier
+   SCHEDULED: <2026-09-21 Mon +2d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [2026-09-21 Mon 12:00]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-21 Mon 12:00]
+   - State "DONE"       from "TODO"       [2026-09-19 Sat 12:14]
+   :END:
+   A bare + repeater: counts from the old date and may land in the past, so this
+   one stays overdue until it is caught up. Contrast with .+2d above.
+   HabitStreak() == 0, MissedHabit() == true - eight days against two of slack.
+
+** TODO Back up the laptop
+   SCHEDULED: <2026-09-26 Sat .+1w/9d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LOG_INTO_DRAWER: BACKUPS
+   :END:
+   :BACKUPS:
+   - State "DONE"       from "TODO"       [2026-09-19 Sat 14:00]
+   - State "DONE"       from "TODO"       [2026-09-12 Sat 14:20]
+   :END:
+   An edge case worth knowing about: the completion reader asks the *file* which
+   drawer the log goes in, not the heading, so a heading-level :LOG_INTO_DRAWER:
+   leaves this habit with no history at all as far as the graph is concerned.
+   HabitStreak() == 0 today, and MissedHabit() == true, from a habit that has in
+   fact been kept.
+
+** TODO Water the tomatoes
+   SCHEDULED: <2026-09-29 Tue>
+   :PROPERTIES:
+   :STYLE:    habit
+   :END:
+   Marked a habit but with nothing repeating about its schedule, so there is no
+   cadence to judge: slack is 0, MissedHabit() == false whatever happens, and a
+   streak is just however many completions there have ever been (0 here).
+
+* Repeating tasks that are not habits
+  These are the contrast cases - IsHabit() must be false for all of them even
+  though two of them repeat and one has a logbook full of completions.
+
+** TODO Pay the mortgage
+   SCHEDULED: <2026-10-01 Thu .+1m>
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [2026-09-01 Tue 08:00]
+   - State "DONE"       from "TODO"       [2026-08-01 Sat 08:00]
+   :END:
+   Repeats, has a history, no :STYLE: habit - so not a habit.
+
+** TODO Renew the passport
+   DEADLINE: <2026-10-06 Tue>
+   A plain task with a deadline and no repeater.
+
+** TODO Both planning keywords on one line
+   DEADLINE: <2026-10-06 Tue> SCHEDULED: <2026-09-30 Wed .+2d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :END:
+   Org keeps all of a heading's planning on one line and writes them in this
+   order whenever a heading has both. A habit whose deadline gets dropped on the
+   way in is the bug this one is here to catch.

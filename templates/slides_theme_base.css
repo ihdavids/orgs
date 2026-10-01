@@ -1,0 +1,406 @@
+/* The theme mapping: what a heading, a table and a block of code *are* in each
+ * of the four presentation frameworks, set from a dozen custom properties.
+ *
+ * A theme file sets the properties. This says where they land. That split is
+ * the whole point: reveal.js, impress.js, WebSlides and deck.js disagree about
+ * class names and about nothing else, so a theme should not have to be written
+ * four times - and when one of them grows a new surface, it is fixed here once.
+ *
+ * This file is loaded ONLY when a theme is in use. Its rules are written to win
+ * over the library's own, and on top of reveal's `league` it would be a third
+ * thing fighting for the same headings.
+ *
+ * The properties, all of which have a sane fallback so a half-written theme
+ * still renders:
+ *
+ *   --slide-bg          the ground                --slide-font        body type
+ *   --slide-bg-soft     a second ground           --slide-head-font   headings
+ *   --slide-ink         body text                 --slide-mono        code
+ *   --slide-ink-soft    captions, bylines         --slide-head-weight
+ *   --slide-head-ink    headings                  --slide-head-spacing
+ *   --slide-accent      the one colour            --slide-head-case
+ *   --slide-accent-soft a wash of it              --slide-line
+ *   --slide-link        links                     --slide-radius
+ *   --slide-rule        hairlines                 --slide-shadow
+ *   --slide-code-bg     code ground               --slide-card-bg     impress' card
+ *   --slide-code-ink    code text                 --slide-card-rule
+ */
+
+/* ── The ground ──────────────────────────────────────────────────────────── */
+
+body,
+.reveal-viewport,
+.deck-container,
+#impress {
+  background-color: var(--slide-bg, #fff);
+  background-image: var(--slide-bg-image, none);
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+/* WebSlides paints every section white, and a section that asked for one of
+ * its own `bg-` classes has to keep it - hence the :not(). */
+#webslides section:not([class*="bg-"]) {
+  background-color: var(--slide-bg, #fff);
+  background-image: var(--slide-bg-image, none);
+  background-size: cover;
+}
+
+/* ── The size everything else is measured from ───────────────────────────── */
+/*
+ * Every size in this file is an `em`, which is the only way one type scale can
+ * serve four frameworks - and it means the whole scale hangs off one number per
+ * framework that, until now, none of them was setting.
+ *
+ * Each library keeps that number in the theme stylesheet it ships, and a local
+ * theme is loaded *instead of* that stylesheet. So reveal's
+ * `--r-main-font-size`, deck.js' `.deck-container` size and WebSlides' own
+ * scale all went with it, everything fell back to the browser's 16px, and every
+ * local theme rendered at two fifths of the size reveal's own themes do:
+ * `league` put body text at 40px and `nocturne` put the same text at 16px, on
+ * the same slide. It did not look like a bug, it looked like a type scale
+ * somebody had chosen, which is why it survived seven themes.
+ *
+ * The defaults are each framework's own, because switching from `league` to one
+ * of these should change the colours and not the size. impress.js is the one
+ * that was already right - its size is in the exporter's own stylesheet rather
+ * than in a theme - and it is here anyway so that one property moves all four.
+ */
+.reveal { font-size: var(--slide-font-size, 40px); }
+.reveal-viewport { --r-main-font-size: var(--slide-font-size, 40px); }
+.deck-container { font-size: var(--slide-font-size, 28px); }
+#webslides { font-size: var(--slide-font-size, 24px); }
+#impress .step { font-size: var(--slide-font-size, 36px); }
+
+/* ── Body text ───────────────────────────────────────────────────────────── */
+
+.reveal,
+#webslides,
+.deck-container,
+#impress .step {
+  color: var(--slide-ink, #17181c);
+  font-family: var(--slide-font, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  line-height: var(--slide-line, 1.4);
+  font-weight: 400;
+  text-shadow: none;
+}
+
+.reveal p, #webslides p, .deck-container p, #impress p,
+.reveal li, #webslides li, .deck-container li, #impress li {
+  color: inherit;
+}
+
+/* ── Headings ────────────────────────────────────────────────────────────── */
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6,
+#webslides h1, #webslides h2, #webslides h3, #webslides h4, #webslides h5, #webslides h6,
+.deck-container h1, .deck-container h2, .deck-container h3, .deck-container h4,
+#impress h1, #impress h2, #impress h3, #impress h4 {
+  color: var(--slide-head-ink, var(--slide-ink, #17181c));
+  font-family: var(--slide-head-font, var(--slide-font, system-ui, sans-serif));
+  font-weight: var(--slide-head-weight, 700);
+  letter-spacing: var(--slide-head-spacing, -0.01em);
+  text-transform: var(--slide-head-case, none);
+  line-height: 1.1;
+  text-shadow: none;
+  margin-bottom: 0.5em;
+}
+
+/* The first heading on a slide is the slide's title and is allowed to be big;
+ * the ones under it step down rather than competing with it. */
+.reveal h1, #webslides h1, .deck-container h1, #impress h1 { font-size: var(--slide-h1, 2.1em); }
+.reveal h2, #webslides h2, .deck-container h2, #impress h2 { font-size: var(--slide-h2, 1.6em); }
+.reveal h3, #webslides h3, .deck-container h3, #impress h3 { font-size: var(--slide-h3, 1.25em); }
+.reveal h4, #webslides h4, .deck-container h4, #impress h4 { font-size: var(--slide-h4, 1.05em); color: var(--slide-ink-soft, #6b7280); }
+
+/* A theme can ask for a rule under its slide titles. Off unless it does. */
+.reveal .org-slide > h1::after, .reveal .org-slide > h2::after,
+#webslides .org-slide h1::after, #webslides .org-slide h2::after,
+.deck-container .org-slide > h1::after, .deck-container .org-slide > h2::after,
+#impress .org-slide > h1::after, #impress .org-slide > h2::after {
+  content: var(--slide-head-rule, none);
+  display: block;
+  width: var(--slide-head-rule-width, 2.5em);
+  height: var(--slide-head-rule-weight, 3px);
+  margin: 0.45em 0 0.1em;
+  background: var(--slide-accent, currentColor);
+  border-radius: 2px;
+}
+.org-title-slide > h1::after, .org-title-slide h1::after { content: none !important; }
+
+/* The rule has to sit under the words, which means knowing where the words
+ * are - and a block element cannot read text-align. So it follows each
+ * framework's *own* default instead: reveal centres everything, the other
+ * three are left-aligned until a slide says otherwise. */
+.reveal .org-slide > h1::after, .reveal .org-slide > h2::after { margin-left: auto; margin-right: auto; }
+.reveal section.alignleft h1::after, .reveal section.alignleft h2::after { margin-left: 0; margin-right: auto; }
+#webslides section.aligncenter .org-slide h1::after, #webslides section.aligncenter .org-slide h2::after,
+#webslides section.aligncenter h1::after, #webslides section.aligncenter h2::after,
+.deck-container .deck-align-center > h1::after, .deck-container .deck-align-center > h2::after,
+#impress .step[class*="align-center"] > h1::after, #impress .step[class*="align-center"] > h2::after { margin-left: auto; margin-right: auto; }
+
+/* ── Links, emphasis, quotes ─────────────────────────────────────────────── */
+
+.reveal a, #webslides a, .deck-container a, #impress a {
+  color: var(--slide-link, var(--slide-accent, #2563eb));
+  text-decoration-color: color-mix(in srgb, var(--slide-link, var(--slide-accent, #2563eb)) 45%, transparent);
+  text-underline-offset: 0.18em;
+}
+.reveal a:hover, #webslides a:hover, .deck-container a:hover, #impress a:hover {
+  color: var(--slide-accent, #2563eb);
+}
+.reveal strong, #webslides strong, .deck-container strong, #impress strong { color: var(--slide-head-ink, inherit); font-weight: 700; }
+.reveal em, #webslides em, .deck-container em, #impress em { font-style: italic; }
+
+.reveal blockquote, #webslides blockquote, .deck-container blockquote, #impress blockquote {
+  background: none;
+  box-shadow: none;
+  border: 0;
+  border-left: 3px solid var(--slide-accent, currentColor);
+  padding: 0.1em 0 0.1em 1em;
+  margin: 1em auto;
+  color: var(--slide-ink-soft, inherit);
+  font-style: italic;
+  width: auto;
+  max-width: 44ch;
+}
+
+/* ── Code ────────────────────────────────────────────────────────────────── */
+
+.reveal pre, #webslides pre, .deck-container pre, #impress pre {
+  background: none;
+  box-shadow: none;
+  border: 0;
+  text-align: left;
+}
+.reveal pre code, #webslides pre code, .deck-container pre code, #impress pre code {
+  font-family: var(--slide-mono, ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace);
+  background: var(--slide-code-bg, rgba(127, 127, 127, 0.12));
+  color: var(--slide-code-ink, inherit);
+  border: var(--slide-code-border, 0);
+  border-radius: var(--slide-radius, 8px);
+  box-shadow: var(--slide-code-shadow, none);
+  padding: 0.85em 1.1em;
+  line-height: 1.45;
+  tab-size: 2;
+}
+/* Inline code is a word in a sentence, not a box in the middle of it. */
+.reveal :not(pre) > code, #webslides :not(pre) > code,
+.deck-container :not(pre) > code, #impress :not(pre) > code {
+  font-family: var(--slide-mono, ui-monospace, Menlo, monospace);
+  background: var(--slide-code-bg, rgba(127, 127, 127, 0.12));
+  color: var(--slide-code-ink, inherit);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+
+.reveal table, #webslides table, .deck-container table, #impress table {
+  border-collapse: collapse;
+  margin: 1em auto;
+  background: none;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reveal table th, #webslides table th, .deck-container table th, #impress table th {
+  background: none;
+  color: var(--slide-head-ink, inherit);
+  font-family: var(--slide-head-font, inherit);
+  font-weight: 600;
+  text-align: left;
+  text-transform: var(--slide-table-head-case, none);
+  letter-spacing: var(--slide-table-head-spacing, 0.04em);
+  font-size: 0.85em;
+  padding: 0.5em 1em;
+  border: 0;
+  border-bottom: 2px solid var(--slide-accent, var(--slide-rule, currentColor));
+}
+.reveal table td, #webslides table td, .deck-container table td, #impress table td {
+  padding: 0.5em 1em;
+  border: 0;
+  border-bottom: 1px solid var(--slide-rule, rgba(127, 127, 127, 0.25));
+  background: none;
+}
+.reveal table tbody tr:last-child td, #webslides table tbody tr:last-child td,
+.deck-container table tbody tr:last-child td, #impress table tbody tr:last-child td { border-bottom: 0; }
+.reveal table tbody tr:nth-child(even), #webslides table tbody tr:nth-child(even),
+.deck-container table tbody tr:nth-child(even), #impress table tbody tr:nth-child(even) {
+  background: var(--slide-table-stripe, none);
+}
+td.align-right, th.align-right { text-align: right; }
+td.align-center, th.align-center { text-align: center; }
+
+/* ── Pictures ────────────────────────────────────────────────────────────── */
+
+.reveal img, #webslides img, .deck-container img, #impress .step img {
+  border: 0;
+  border-radius: var(--slide-radius, 8px);
+  box-shadow: var(--slide-shadow, none);
+  -webkit-box-reflect: unset;
+  max-width: 100%;
+  height: auto;
+}
+.reveal .slide-background img { box-shadow: none; border-radius: 0; }
+figcaption { color: var(--slide-ink-soft, inherit); font-size: 0.6em; }
+
+/* ── Lists ───────────────────────────────────────────────────────────────── */
+
+/* A list is read down the left, always. reveal centres everything by default,
+ * which leaves the bullet markers pinned to the left of the block and the text
+ * floating in the middle of it - two different left edges on the same line. */
+.reveal ul, #webslides ul, .deck-container ul, #impress ul,
+.reveal ol, #webslides ol, .deck-container ol, #impress ol,
+.reveal dl, #webslides dl, .deck-container dl, #impress dl {
+  text-align: left;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: auto;
+}
+/* Centred only where the slide is centred. reveal centres by default, so its
+ * lists do too; the other three are left-aligned until a slide says otherwise,
+ * and a list floating in the middle of a left-aligned slide has two left edges
+ * on the same page. */
+.reveal ul, .reveal ol, .reveal dl,
+#webslides section.aligncenter ul, #webslides section.aligncenter ol,
+.deck-container .deck-align-center ul, .deck-container .deck-align-center ol {
+  margin-left: auto;
+  margin-right: auto;
+}
+.reveal section.alignleft ul, .reveal section.alignleft ol { margin-left: 0; }
+.reveal ul, #webslides ul, .deck-container ul, #impress ul { list-style: none; padding-left: 1.2em; }
+.reveal ul > li, #webslides ul > li, .deck-container ul > li, #impress ul > li { position: relative; margin: 0.35em 0; }
+.reveal ul > li::before, #webslides ul > li::before, .deck-container ul > li::before, #impress ul > li::before {
+  content: var(--slide-bullet, "\2014");
+  position: absolute;
+  left: -1.2em;
+  color: var(--slide-accent, currentColor);
+  font-weight: 700;
+}
+/* A checkbox is a box, and it has drawn its own marker already. */
+li.unchecked::before, li.checked::before, li.indeterminate::before { content: none !important; }
+li.unchecked, li.checked, li.indeterminate { list-style: none; }
+.reveal ol, #webslides ol, .deck-container ol, #impress ol { padding-left: 1.4em; }
+.reveal ol > li::marker, #webslides ol > li::marker, .deck-container ol > li::marker, #impress ol > li::marker {
+  color: var(--slide-accent, currentColor);
+  font-weight: 700;
+}
+
+/* ── The title slide, and the bits orgs writes itself ────────────────────── */
+
+/* Qualified by the framework on purpose. These compete with classes the
+ * libraries define themselves - WebSlides' own `.text-landing` sets a title
+ * size and `.text-subtitle` forces uppercase - and an unqualified `.org-*`
+ * rule loses to them, so a theme's type scale would be silently ignored in one
+ * framework out of four. */
+.org-title-slide { text-align: center; }
+.reveal .org-title-slide h1,
+#webslides .org-title-slide h1,
+.deck-container .org-title-slide h1,
+#impress .org-title-slide h1 {
+  font-size: var(--slide-title-size, 2.6em);
+  letter-spacing: var(--slide-title-spacing, var(--slide-head-spacing, -0.02em));
+  line-height: 1.02;
+  margin-bottom: 0.25em;
+}
+.reveal .org-subtitle,
+#webslides .org-subtitle,
+.deck-container .org-subtitle,
+#impress .org-subtitle {
+  color: var(--slide-ink-soft, inherit);
+  font-family: var(--slide-head-font, inherit);
+  font-weight: var(--slide-subtitle-weight, 400);
+  font-size: var(--slide-subtitle-size, 1.1em);
+  letter-spacing: 0.02em;
+  text-transform: var(--slide-subtitle-case, none);
+  margin: 0 0 1.2em;
+}
+.reveal .org-byline,
+#webslides .org-byline,
+.deck-container .org-byline,
+#impress .org-byline {
+  color: var(--slide-ink-soft, inherit);
+  font-family: var(--slide-font, inherit);
+  font-size: 0.72em;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 2em;
+}
+.org-wordcloud { border-color: var(--slide-rule, rgba(127, 127, 127, 0.3)); }
+
+/* impress.js' card. A theme that wants steps to float on the canvas with no
+ * card at all sets --slide-card-bg: transparent. */
+#impress .slide {
+  background-color: var(--slide-card-bg, var(--slide-bg-soft, #fff));
+  border: var(--slide-card-rule, 1px solid rgba(127, 127, 127, 0.25));
+  border-radius: var(--slide-radius, 10px);
+  box-shadow: var(--slide-shadow, 0 2px 6px rgba(0, 0, 0, 0.08));
+  color: inherit;
+  font-family: inherit;
+}
+
+/* ── The framework's own furniture ───────────────────────────────────────── */
+
+.reveal .controls { color: var(--slide-accent, currentColor); }
+.reveal .progress { color: var(--slide-accent, currentColor); background: var(--slide-rule, rgba(127, 127, 127, 0.2)); height: 4px; }
+.reveal .slide-number { background: none; color: var(--slide-ink-soft, inherit); font-family: var(--slide-mono, monospace); }
+
+.deck-container .deck-status { color: var(--slide-ink-soft, inherit); font-family: var(--slide-mono, monospace); }
+.deck-container .deck-prev-link, .deck-container .deck-next-link {
+  background: var(--slide-accent, currentColor);
+  color: var(--slide-bg, #fff);
+  border: 0;
+  text-shadow: none;
+  opacity: 0.85;
+}
+
+.impress-progressbar div { background: var(--slide-accent, currentColor); }
+.impress-progress { color: var(--slide-ink-soft, inherit); font-family: var(--slide-mono, monospace); }
+#impress-toolbar { border-color: var(--slide-rule, rgba(127, 127, 127, 0.25)); }
+
+#webslides #counter, #webslides .counter { color: var(--slide-ink-soft, inherit); }
+
+
+/* ── When a slide's own ground contradicts the theme's ink ───────────────── */
+/*
+ * `:BACKGROUND: #102030` on a light theme is black text on navy, which reads
+ * as a broken theme rather than as a deck asking for something odd. The server
+ * measures the ground (slides.ReadInk) and says which way round the text has
+ * to go; this is that. A theme can set the two colours it flips to.
+ */
+.org-on-dark,
+.org-on-dark p, .org-on-dark li, .org-on-dark td, .org-on-dark th,
+.org-on-dark blockquote {
+  color: var(--slide-on-dark-ink, #f4f4f6);
+}
+.org-on-dark h1, .org-on-dark h2, .org-on-dark h3,
+.org-on-dark h4, .org-on-dark h5, .org-on-dark h6,
+.org-on-dark strong {
+  color: var(--slide-on-dark-head, #ffffff);
+}
+.org-on-dark a { color: var(--slide-on-dark-link, var(--slide-accent, #8ecbff)); }
+.org-on-dark td, .org-on-dark th { border-color: rgba(255, 255, 255, 0.28); }
+.org-on-dark .org-subtitle, .org-on-dark .org-byline,
+.org-on-dark figcaption { color: rgba(255, 255, 255, 0.72); }
+
+.org-on-light,
+.org-on-light p, .org-on-light li, .org-on-light td, .org-on-light th,
+.org-on-light blockquote {
+  color: var(--slide-on-light-ink, #17181c);
+}
+.org-on-light h1, .org-on-light h2, .org-on-light h3,
+.org-on-light h4, .org-on-light h5, .org-on-light h6,
+.org-on-light strong {
+  color: var(--slide-on-light-head, #000000);
+}
+.org-on-light a { color: var(--slide-on-light-link, var(--slide-accent, #1d4ed8)); }
+.org-on-light td, .org-on-light th { border-color: rgba(0, 0, 0, 0.22); }
+.org-on-light .org-subtitle, .org-on-light .org-byline,
+.org-on-light figcaption { color: rgba(0, 0, 0, 0.6); }

@@ -1,0 +1,55 @@
+/* Linen — paper, ink, and a wide margin.
+ *
+ * The editorial one: a warm off-white that is not white, a near-black that is
+ * not black, and Playfair's high contrast against a quiet humanist sans. For a
+ * keynote, a lecture, anything where the audience should feel they are being
+ * read to rather than presented at.
+ *
+ * @hljs: atom-one-light
+ * @mermaid: neutral
+ */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #faf7f1;
+  --slide-bg-soft: #f2ede3;
+  --slide-ink: #221e19;
+  --slide-ink-soft: #7d7468;
+  --slide-head-ink: #14110d;
+  --slide-accent: #a8431f;
+  --slide-accent-soft: rgba(168, 67, 31, 0.1);
+  --slide-link: #8e3a1b;
+  --slide-rule: rgba(34, 30, 25, 0.16);
+
+  --slide-font: 'Source Sans 3', system-ui, sans-serif;
+  --slide-head-font: 'Playfair Display', Georgia, serif;
+  --slide-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --slide-head-weight: 600;
+  --slide-head-spacing: -0.012em;
+  --slide-line: 1.5;
+
+  --slide-code-bg: #f1ece2;
+  --slide-code-ink: #2c2721;
+  --slide-code-border: 1px solid rgba(34, 30, 25, 0.1);
+  --slide-radius: 6px;
+  --slide-shadow: 0 14px 36px rgba(60, 45, 30, 0.14);
+  --slide-card-bg: #fffdf9;
+  --slide-card-rule: 1px solid rgba(34, 30, 25, 0.12);
+  --slide-table-head-case: none;
+  --slide-table-head-spacing: 0.02em;
+
+  --slide-head-rule: "";
+  --slide-head-rule-width: 1.8em;
+  --slide-head-rule-weight: 2px;
+  --slide-bullet: "\2014";
+  --slide-title-size: 3em;
+  --slide-title-spacing: -0.02em;
+}
+
+/* An italic subtitle under a serif title: the one typographic move this theme
+ * is really for. */
+.reveal .org-subtitle, #webslides .org-subtitle, .deck-container .org-subtitle, #impress .org-subtitle { font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: 1.25em; }
+.reveal .org-byline, #webslides .org-byline, .deck-container .org-byline, #impress .org-byline { letter-spacing: 0.18em; font-size: 0.7em; }
+/* Quotes are set in the display face, because in a deck like this they are the
+ * point of the slide rather than a decoration on it. */
+blockquote { font-family: 'Playfair Display', Georgia, serif; font-size: 1.15em; font-style: italic; border-left-width: 2px; }

@@ -56,7 +56,7 @@ var groups = []struct {
 	{"Files and code", []string{"files", "fmt", "tangle", "code", "tables", "export", "links"}},
 	{"Records", []string{"rec", "record", "contact"}},
 	{"Watching", []string{"watch"}},
-	{"The server", []string{"serve", "login", "initconfig", "doctor", "completion", "help"}},
+	{"The server", []string{"serve", "login", "user", "adduser", "initconfig", "doctor", "completion", "help"}},
 	{"Dungeons & Dragons", []string{"dnd"}},
 	{"For other programs", []string{"mcp"}},
 }

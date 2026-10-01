@@ -1,0 +1,69 @@
+/* Lattice — wireframe solids tumbling slowly, and nothing else.
+ *
+ * No faces at all, which is honest rather than cheap: a wireframe you can see
+ * the back of is what a wireframe is *for*, and the shapes read as volumes
+ * precisely because both sides of them are drawn. The thin ones carry a node at
+ * every vertex and the rest do not, because all of them beaded is a bag of
+ * beads and none of them is a set of shapes with no joints.
+ *
+ * Headings are in the code face. It is the technical one of these - a
+ * specification, a protocol, a deck with a lot of names in it.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: wireframe
+ */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #06070f;
+  --slide-bg-soft: #0e1122;
+  --slide-bg-image: radial-gradient(120% 100% at 80% 100%, #121a3a 0%, #06070f 62%);
+  --slide-ink: #cfd6e8;
+  --slide-ink-soft: #7e87a6;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #6ee7ff;
+  --slide-accent-soft: rgba(110, 231, 255, 0.12);
+  --slide-link: #9beeff;
+  --slide-rule: rgba(207, 214, 232, 0.15);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.04em;
+  --slide-line: 1.5;
+  --slide-title-size: 2.6em;
+  --slide-subtitle-case: uppercase;
+  --slide-subtitle-weight: 500;
+  --slide-bullet: "\2013";
+
+  --slide-code-bg: rgba(4, 5, 12, 0.72);
+  --slide-code-ink: #cfdcf0;
+  --slide-code-border: 1px solid rgba(110, 231, 255, 0.2);
+  --slide-radius: 6px;
+  --slide-shadow: 0 22px 56px rgba(0, 2, 8, 0.62);
+  --slide-card-bg: rgba(14, 17, 34, 0.78);
+  --slide-card-rule: 1px solid rgba(110, 231, 255, 0.18);
+  --slide-table-stripe: rgba(110, 231, 255, 0.05);
+  --slide-table-head-case: uppercase;
+  --slide-table-head-spacing: 0.1em;
+
+  /* One colour per shape, taken round the list in turn - so a screen with five
+   * solids on it has five, and no two neighbours are the same. */
+  --backdrop-colors: #3d6bff #7a5cff #22c8e0;
+  --backdrop-fog: #06070f;
+  --backdrop-glow: #9ff0ff;
+  --backdrop-veil: rgba(6, 7, 15, 0.18);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.7;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 60px rgba(110, 231, 255, 0.26);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(110, 231, 255, 0));
+  box-shadow: 0 0 16px rgba(110, 231, 255, 0.45);
+}

@@ -1,0 +1,57 @@
+/* Blueprint — for the talk with architecture diagrams in it.
+ *
+ * Slate, a faint drafting grid, and cyan. Headings are set in the same
+ * monospace as the code, which is the joke and also the reason it works: in an
+ * engineering talk the headings and the code are the same material.
+ *
+ * @hljs: tokyo-night-dark
+ * @mermaid: dark
+ */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #0c1a24;
+  --slide-bg-soft: #112533;
+  /* The grid. Two hairlines, ten percent opaque, forty pixels apart: felt
+   * rather than read, which is the whole trick with a background pattern. */
+  --slide-bg-image:
+    linear-gradient(rgba(76, 201, 240, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 201, 240, 0.07) 1px, transparent 1px),
+    radial-gradient(110% 90% at 50% 0%, #143041 0%, #0c1a24 60%);
+  --slide-ink: #cfe3ee;
+  --slide-ink-soft: #7fa3b8;
+  --slide-head-ink: #eaf6fd;
+  --slide-accent: #4cc9f0;
+  --slide-accent-soft: rgba(76, 201, 240, 0.14);
+  --slide-link: #79d8f5;
+  --slide-rule: rgba(207, 227, 238, 0.18);
+
+  --slide-font: 'IBM Plex Sans', system-ui, sans-serif;
+  --slide-head-font: 'JetBrains Mono', ui-monospace, monospace;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.03em;
+  --slide-line: 1.5;
+
+  --slide-code-bg: rgba(5, 16, 23, 0.8);
+  --slide-code-ink: #d6e9f4;
+  --slide-code-border: 1px solid rgba(76, 201, 240, 0.3);
+  --slide-radius: 4px;
+  --slide-shadow: 0 20px 48px rgba(0, 8, 14, 0.6);
+  --slide-card-bg: rgba(17, 37, 51, 0.92);
+  --slide-card-rule: 1px solid rgba(76, 201, 240, 0.35);
+  --slide-table-head-case: uppercase;
+  --slide-table-stripe: rgba(76, 201, 240, 0.05);
+
+  --slide-head-rule: "";
+  --slide-head-rule-width: 100%;
+  --slide-head-rule-weight: 1px;
+  --slide-bullet: "\203A";
+  --slide-title-size: 2.6em;
+}
+
+body, .reveal-viewport, .deck-container, #impress { background-size: 40px 40px, 40px 40px, cover; }
+/* A heading is a label on a drawing: the rule runs the width of the slide. */
+.org-slide > h1::after, .org-slide > h2::after { opacity: 0.55; }
+.reveal .org-title-slide h1, #webslides .org-title-slide h1, .deck-container .org-title-slide h1, #impress .org-title-slide h1 { text-transform: none; }
+.reveal .org-byline, #webslides .org-byline, .deck-container .org-byline, #impress .org-byline { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }

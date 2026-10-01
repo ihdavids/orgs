@@ -1,0 +1,68 @@
+/* Erosion — contour lines over ground that will not hold still.
+ *
+ * Marching squares over a scalar field: for each cell and each level, the one
+ * or two segments where that level crosses it. Two things make it read as a map
+ * rather than as interference - the levels are evenly spaced, so the lines
+ * crowd where the ground is steep exactly as they do on a real sheet, and every
+ * fourth one is drawn heavier, which is the index contour an Ordnance Survey
+ * map has for the same reason: a wall of identical hairlines cannot be counted.
+ *
+ * Sand on charcoal rather than another blue, and the only one of these that is
+ * line work all the way through - so it is the one that sits well under
+ * diagrams.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: topology
+ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #12100d;
+  --slide-bg-soft: #201c16;
+  --slide-bg-image: radial-gradient(130% 100% at 70% 0%, #2a2319 0%, #12100d 60%);
+  --slide-ink: #ece3d4;
+  --slide-ink-soft: #a89a85;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #e0a35c;
+  --slide-accent-soft: rgba(224, 163, 92, 0.13);
+  --slide-link: #f0c48d;
+  --slide-rule: rgba(236, 227, 212, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Space Grotesk', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.025em;
+  --slide-line: 1.5;
+  --slide-title-size: 2.9em;
+  --slide-bullet: "\2014";
+
+  --slide-code-bg: rgba(10, 9, 7, 0.74);
+  --slide-code-ink: #ece3d4;
+  --slide-code-border: 1px solid rgba(224, 163, 92, 0.22);
+  --slide-radius: 8px;
+  --slide-shadow: 0 22px 56px rgba(4, 3, 2, 0.6);
+  --slide-card-bg: rgba(32, 28, 22, 0.78);
+  --slide-card-rule: 1px solid rgba(224, 163, 92, 0.2);
+  --slide-table-stripe: rgba(224, 163, 92, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Low ground to high ground. The contour colour is taken across this pair by
+   * level, so the lowest lines are one material and the summits another. */
+  --backdrop-colors: #6b4f2e #b8834a;
+  --backdrop-fog: #12100d;
+  --backdrop-glow: #ffd9a0;
+  --backdrop-veil: rgba(18, 16, 13, 0.1);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.7;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 60px rgba(224, 163, 92, 0.24);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(224, 163, 92, 0));
+  box-shadow: 0 0 16px rgba(224, 163, 92, 0.35);
+}

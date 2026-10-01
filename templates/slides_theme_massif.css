@@ -1,0 +1,74 @@
+/* Massif — a landscape of contour ridges running away to a horizon, with smoke
+ * rising behind it.
+ *
+ * Every ridge is a line of real terrain at its own distance, sampling one
+ * height field, drawn through the camera - so perspective does the work: the
+ * near ones are wide and far apart, the far ones compress towards the horizon,
+ * and they read as one piece of country rather than as cut-outs that happen to
+ * be stacked. Enough of them and that is a contour map: lines across one
+ * surface, crowding where the ground is steep.
+ *
+ * The camera is lifted so the horizon sits below the middle of the slide and
+ * you are looking down into the valleys rather than along them - which is also
+ * what keeps the whole picture in the lower half, where a title is not.
+ *
+ * Nearly monochrome, which is the point: it is the one to use when the slides
+ * have photographs or charts on them and anything with a palette of its own
+ * would argue with them.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: plume
+ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #0c0e12;
+  --slide-bg-soft: #171b22;
+  --slide-bg-image: linear-gradient(180deg, #141922 0%, #0c0e12 58%);
+  --slide-ink: #dfe3ea;
+  --slide-ink-soft: #8d94a3;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #9fb4cc;
+  --slide-accent-soft: rgba(159, 180, 204, 0.13);
+  --slide-link: #c2d2e6;
+  --slide-rule: rgba(223, 227, 234, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Space Grotesk', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.03em;
+  --slide-line: 1.5;
+  --slide-title-size: 3em;
+  --slide-bullet: "\2014";
+
+  --slide-code-bg: rgba(8, 10, 14, 0.74);
+  --slide-code-ink: #dfe3ea;
+  --slide-code-border: 1px solid rgba(159, 180, 204, 0.22);
+  --slide-radius: 8px;
+  --slide-shadow: 0 22px 56px rgba(2, 3, 5, 0.6);
+  --slide-card-bg: rgba(23, 27, 34, 0.8);
+  --slide-card-rule: 1px solid rgba(159, 180, 204, 0.2);
+  --slide-table-stripe: rgba(159, 180, 204, 0.05);
+  --slide-table-head-case: uppercase;
+
+  /* Far ridge to near ridge. Close together on purpose - a monochrome
+   * engraving separates its layers by the lit line along each crest, not by
+   * colour, and two hues far apart would undo that. */
+  --backdrop-colors: #2b3340 #4a5668;
+  --backdrop-fog: #0c0e12;
+  --backdrop-glow: #c8d6e8;
+  --backdrop-veil: rgba(12, 14, 18, 0.1);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.9;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 60px rgba(12, 14, 18, 0.9);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(159, 180, 204, 0));
+  box-shadow: 0 0 14px rgba(159, 180, 204, 0.3);
+}

@@ -1,0 +1,1078 @@
+/* ------------------------------------------------------------------ *
+ * rtd theme
+ *
+ * The documentation read the way sphinx_rtd_theme draws it: a dark rail
+ * down the left the full height of the window, a blue block at the top of
+ * it holding the project name and the search box, breadcrumbs over the
+ * page, and the document in a column on white.
+ *
+ * It is the docs theme's sibling and shares its whole application
+ * (html_docs_app.js) - the same contents tree, the same fuzzy search with
+ * its preview, the same folding, anchors and code copy. What differs is
+ * this file and the shell in html_rtd.tpl. So the class names here are
+ * the ones that script writes: .tv-item / .tv-row / .tv-label for the
+ * tree, .sr-item for a search result, .fold-btn, .anchor-btn, .copy-btn,
+ * .table-scroll, .doc-hit.
+ *
+ * Three things to know before editing:
+ *
+ * 1. It is read by GetStylesheet(), which rewrites every url(...) in it
+ *    to point at http://localhost:8010/ - so this file must contain no
+ *    url(). The rail's carets and the admonition marks are drawn from
+ *    borders and glyphs for that reason.
+ * 2. {{fontfamily}} is substituted by the same pass, and sits at the
+ *    front of the display stack so a file naming #+HTML_FONTFAMILY wins
+ *    over Roboto Slab without losing the fallback.
+ * 3. The rail is dark in both light and dark modes, because it is dark in
+ *    the theme this is a drawing of. Dark mode is the *page* going dark,
+ *    not the rail going darker - so the palette below has two groups:
+ *    the rail colours, which barely move, and the page colours, which do.
+ * ------------------------------------------------------------------ */
+
+:root {
+  --font-display: '{{fontfamily}}', 'Roboto Slab', 'ff-tisa-web-pro', Georgia, Arial, sans-serif;
+  --font-ui: Lato, proxima-nova, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, Menlo, 'Liberation Mono', 'Courier New', monospace;
+
+  /* The rail. Read the Docs' own greys and blue. */
+  --side:        #343131;
+  --side-2:      #2f2c2c;
+  --side-ink:    #d9d9d9;
+  --side-ink-2:  #b3b3b3;
+  --side-hover:  #4e4a4a;
+  --side-top:    #4e4a4a;
+  --side-bottom: #383838;
+  --brand:       #2980b9;
+  --brand-2:     #2472a4;
+  --caption:     #55a5d9;
+
+  /* The page. */
+  --bg:        #fcfcfc;
+  --page:      #ffffff;
+  --ink:       #404040;
+  --ink-2:     #404040;
+  --ink-3:     #666666;
+  --ink-4:     #8a8a8a;
+  --rule:      #e1e4e5;
+  --rule-soft: #f3f6f6;
+  /* Two of this theme's own colours do not quite carry on white: the link
+     blue #2980b9 measures 4.30:1 against it and the inline-code red
+     #e74c3c measures 3.82:1, both of which are small text under 4.5. They
+     are darkened to the next shades along in Read the Docs' own palette
+     rather than to colours of our own - #2471a3 is its link hover and
+     #c0392b its danger red - so the page still reads as this theme and
+     the words in it can be read. The brand blue is untouched: it is a
+     ground with large white text on it, not a text colour. */
+  --accent:    #2471a3;
+  --accent-2:  #1f5f8b;
+  --accent-bg: #e7f2fa;
+  --visited:   #8e44ad;
+  --code-bg:   #f8f8f8;
+  --code-ink:  #c0392b;
+  --quote-bg:  #fcfcfc;
+  --mark:      #fbe54e;
+  --mark-ink:  #404040;
+  --shadow:    0 1px 2px rgba(0, 0, 0, .08), 0 8px 24px rgba(0, 0, 0, .12);
+
+  --rail-w:    300px;
+  --measure:   800px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --side:        #2b2929;
+    --side-2:      #262424;
+    --side-ink:    #cfcfcf;
+    --side-ink-2:  #a5a5a5;
+    --side-hover:  #403d3d;
+    --side-top:    #403d3d;
+    --side-bottom: #2f2d2d;
+    --brand:       #246c99;
+    --brand-2:     #1f5e85;
+    --caption:     #5fa9d8;
+
+    --bg:        #17191a;
+    --page:      #1d2021;
+    --ink:       #d4d7d9;
+    --ink-2:     #c2c6c9;
+    --ink-3:     #9aa0a4;
+    --ink-4:     #7b8186;
+    --rule:      #343a3d;
+    --rule-soft: #222628;
+    --accent:    #56a8df;
+    --accent-2:  #7bbce8;
+    --accent-bg: #16303f;
+    --visited:   #b57fd0;
+    --code-bg:   #15181a;
+    --code-ink:  #ef8f83;
+    --quote-bg:  #1a1d1f;
+    --mark:      #6b5a10;
+    --mark-ink:  #ffe9a8;
+    --shadow:    0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .3);
+  }
+}
+
+:root[data-theme="dark"] {
+  --side:        #2b2929;
+  --side-2:      #262424;
+  --side-ink:    #cfcfcf;
+  --side-ink-2:  #a5a5a5;
+  --side-hover:  #403d3d;
+  --side-top:    #403d3d;
+  --side-bottom: #2f2d2d;
+  --brand:       #246c99;
+  --brand-2:     #1f5e85;
+  --caption:     #5fa9d8;
+
+  --bg:        #17191a;
+  --page:      #1d2021;
+  --ink:       #d4d7d9;
+  --ink-2:     #c2c6c9;
+  --ink-3:     #9aa0a4;
+  --ink-4:     #7b8186;
+  --rule:      #343a3d;
+  --rule-soft: #222628;
+  --accent:    #56a8df;
+  --accent-2:  #7bbce8;
+  --accent-bg: #16303f;
+  --visited:   #b57fd0;
+  --code-bg:   #15181a;
+  --code-ink:  #ef8f83;
+  --quote-bg:  #1a1d1f;
+  --mark:      #6b5a10;
+  --mark-ink:  #ffe9a8;
+  --shadow:    0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px rgba(0, 0, 0, .3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------------ *
+ * The rail
+ *
+ * Fixed, the full height of the window, and scrolling inside itself.
+ * That is the shape of this theme: the contents do not go away when the
+ * document is scrolled, which is the thing it was built to fix.
+ * ------------------------------------------------------------------ */
+
+/* A column with a pinned head and a scrolling body rather than one box
+   that scrolls as a whole. The search block staying put is worth having
+   on its own, but what forced it is the results panel: `overflow-y: auto`
+   makes the other axis `auto` too, so a panel wider than the rail is
+   clipped at its edge however it is positioned - and a search result is a
+   heading, the outline path above it and a line of the prose it was found
+   in, which is three ellipses in 300px. */
+.rtd-side {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--rail-w);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--side);
+  color: var(--side-ink);
+  font-size: .9rem;
+}
+
+.rtd-side-search {
+  flex: none;
+  background: var(--brand);
+  padding: 1rem .8rem .8rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.rtd-brand {
+  display: block;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-decoration: none;
+  word-wrap: break-word;
+}
+
+.rtd-brand:hover { text-decoration: none; opacity: .9; }
+
+.rtd-brand-sub {
+  color: rgba(255, 255, 255, .55);
+  font-size: .8rem;
+  margin-top: .15rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * The search box, and the panel of results under it
+ *
+ * The panel hangs off the search block and spills to the right over the
+ * top of the page, because a result is a heading plus the outline path
+ * above it plus a line of the prose it was found in and the rail is
+ * 300px. It covers the top of the document and nothing else: what the
+ * arrow keys preview is further down, which is what makes previewing
+ * from a panel pinned to the top corner worth having at all.
+ * ------------------------------------------------------------------ */
+
+.search { position: relative; margin-top: .7rem; }
+
+.search-field {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #fff;
+  border-radius: 50px;
+  padding: 0 .9rem;
+}
+
+.search-field:focus-within { box-shadow: 0 0 0 3px rgba(255, 255, 255, .35); }
+
+#searchfield {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #404040;
+  font: inherit;
+  font-size: .85rem;
+  padding: .42rem 0;
+}
+
+#searchfield::placeholder { color: #999; }
+#searchfield::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -.3rem;
+  width: max(100% + .6rem, 26rem);
+  max-width: calc(100vw - 2rem);
+  max-height: min(30rem, calc(100vh - 11rem));
+  overflow-y: auto;
+  text-align: left;
+  background: var(--page);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: .3rem;
+  display: none;
+  z-index: 50;
+}
+
+.search-results[data-open="1"] { display: block; }
+
+.search-results .sr-empty {
+  padding: .6rem .7rem;
+  color: var(--ink-3);
+  font-size: .82rem;
+}
+
+.search-results .sr-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .6rem;
+  padding: .4rem .7rem .3rem;
+  color: var(--ink-4);
+  font-size: .7rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+/* What the arrow keys do is not guessable from a list that has never
+   moved the page before, and it is the whole of the feature. Said once,
+   quietly, beside the count - and dropped when the rail is narrow enough
+   that there is no room for it. */
+.search-results .sr-keys {
+  letter-spacing: .04em;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.search-results .sr-keys kbd {
+  font: inherit;
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  background: var(--rule-soft);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 0 .25em;
+}
+
+.sr-item {
+  display: block;
+  padding: .45rem .6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sr-item:hover { background: var(--rule-soft); text-decoration: none; }
+.sr-item[aria-selected="true"] { background: var(--accent-bg); }
+
+.sr-name {
+  font-size: .86rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-name code { background: none; border: 0; padding: 0; font-size: .95em; color: inherit; }
+
+.sr-path {
+  display: block;
+  font-size: .72rem;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-snip {
+  display: block;
+  font-size: .75rem;
+  color: var(--ink-3);
+  margin-top: .12rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sr-item mark, .sr-name b, .sr-snip b {
+  background: none;
+  color: var(--accent);
+  font-weight: 700;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ * The contents tree
+ *
+ * Level one is a row of its own with a rule above and below it, the way
+ * this theme draws a toctree; the branch the reader is in turns the
+ * colour of the page and opens, which is the one piece of state the rail
+ * carries. .is-branch is the chain from the root down to the current
+ * heading, marked by the shared script.
+ * ------------------------------------------------------------------ */
+
+.rtd-side-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-bottom: 3rem;
+}
+
+.rtd-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: 1rem 1.2rem .35rem;
+  color: var(--caption);
+  font-family: var(--font-display);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.rtd-caption-tools { display: flex; gap: .5rem; }
+
+.rtd-caption-tools button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--side-ink-2);
+  font: inherit;
+  font-size: .68rem;
+  letter-spacing: .04em;
+  text-transform: lowercase;
+}
+
+.rtd-caption-tools button:hover { color: #fff; }
+
+.treeviewul, .treeviewul ul { list-style: none; margin: 0; padding: 0; }
+
+.tv-item[data-open="0"] > ul { display: none; }
+
+.tv-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .2rem;
+  position: relative;
+}
+
+/* Level one: a band with a hairline above and below, which is what gives
+   the rail its ruled look. Deeper levels are plain rows inside the open
+   band, so the eye reads one block per section rather than a ladder. */
+.tv-item.depth-0 > .tv-row {
+  border-top: 1px solid var(--side-top);
+  border-bottom: 1px solid var(--side-bottom);
+  background: var(--side-2);
+}
+
+.tv-item.depth-0:first-child > .tv-row { border-top: 0; }
+
+.tv-row:hover { background: var(--side-hover); }
+
+.tv-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  padding: .4rem 1.2rem .4rem 0;
+  color: var(--side-ink);
+  font-size: .85rem;
+  line-height: 1.35;
+  text-decoration: none;
+  word-wrap: break-word;
+}
+
+.tv-label:hover { color: #fff; text-decoration: none; }
+.tv-label code { background: none; border: 0; padding: 0; font-size: .95em; color: inherit; }
+
+.tv-item.depth-0 > .tv-row > .tv-label { padding-left: 0; font-weight: 700; }
+.tv-item.depth-1 > .tv-row > .tv-label { padding-left: .9rem; }
+.tv-item.depth-2 > .tv-row > .tv-label { padding-left: 1.7rem; font-size: .82rem; }
+.tv-item.depth-3 > .tv-row > .tv-label { padding-left: 2.5rem; font-size: .82rem; }
+.tv-item.depth-4 > .tv-row > .tv-label,
+.tv-item.depth-5 > .tv-row > .tv-label { padding-left: 3.3rem; font-size: .8rem; }
+
+/* The caret. Drawn from borders rather than from a glyph, because this
+   file may contain no url() and a rotated triangle reads at any size. */
+.tv-twist {
+  flex: none;
+  width: 1.2rem;
+  align-self: stretch;
+  min-height: 1.9rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--side-ink-2);
+  position: relative;
+}
+
+.tv-twist:hover { color: #fff; }
+
+.tv-twist::before {
+  content: '';
+  position: absolute;
+  top: .95rem;
+  left: .42rem;
+  width: 0;
+  height: 0;
+  margin-top: -.22rem;
+  border-left: .3rem solid currentColor;
+  border-top: .22rem solid transparent;
+  border-bottom: .22rem solid transparent;
+  transition: transform .12s ease;
+}
+
+.tv-item[data-open="1"] > .tv-row > .tv-twist::before { transform: rotate(90deg); }
+
+.tv-twist.is-leaf { cursor: default; }
+.tv-twist.is-leaf::before {
+  border-left: 0;
+  border-top: 0;
+  border-bottom: 0;
+  width: .22rem;
+  height: .22rem;
+  margin-top: -.11rem;
+  left: .5rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .35;
+}
+
+/* The branch the reader is in goes the colour of the page, the way this
+   theme marks the open toctree entry. It is the one thing in the rail
+   that is not a shade of grey, so it is findable at a glance from the
+   other end of a long contents list. */
+.tv-item.depth-0.is-branch > .tv-row,
+.tv-item.depth-0.is-branch > ul {
+  background: var(--bg);
+}
+
+.tv-item.depth-0.is-branch > .tv-row > .tv-label,
+.tv-item.depth-0.is-branch > .tv-row > .tv-twist { color: var(--ink); }
+
+.tv-item.depth-0.is-branch > .tv-row:hover,
+.tv-item.depth-0.is-branch ul .tv-row:hover { background: var(--rule-soft); }
+
+.tv-item.depth-0.is-branch ul .tv-label { color: var(--ink-2); }
+.tv-item.depth-0.is-branch ul .tv-twist { color: var(--ink-4); }
+
+.tv-row.is-current > .tv-label { color: var(--accent); font-weight: 700; }
+.tv-item.depth-0.is-branch .tv-row.is-current { background: var(--accent-bg); }
+
+.tv-item.is-hidden { display: none; }
+
+/* ------------------------------------------------------------------ *
+ * The page beside the rail
+ * ------------------------------------------------------------------ */
+
+.rtd-main {
+  margin-left: var(--rail-w);
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* Breadcrumbs. Sticky, because the last crumb follows the reader down the
+   document and a trail that has scrolled away cannot say where they are. */
+.rtd-breadcrumbs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: .9rem 3.2rem .6rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--rule);
+}
+
+.rtd-crumbs {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  font-size: .82rem;
+  color: var(--ink-3);
+}
+
+.rtd-crumbs a { color: var(--accent); text-decoration: none; }
+.rtd-crumbs a:hover { text-decoration: underline; }
+.rtd-crumb-sep { color: var(--ink-4); }
+
+.rtd-crumb-here {
+  color: var(--ink-3);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rtd-crumb-here code { background: none; border: 0; padding: 0; color: inherit; font-size: .95em; }
+
+.icon-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--page);
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.icon-btn svg { width: 15px; height: 15px; }
+.icon-btn .when-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon-btn .when-light { display: none; }
+  :root:not([data-theme="light"]) .icon-btn .when-dark { display: block; }
+}
+
+:root[data-theme="dark"] .icon-btn .when-light { display: none; }
+:root[data-theme="dark"] .icon-btn .when-dark { display: block; }
+:root[data-theme="light"] .icon-btn .when-light { display: block; }
+:root[data-theme="light"] .icon-btn .when-dark { display: none; }
+
+.rtd-content {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 1.6rem 3.2rem 3rem;
+  background: var(--page);
+  min-height: calc(100vh - 3rem);
+}
+
+.doc-body { }
+
+/* ------------------------------------------------------------------ *
+ * The bar that only exists on a narrow screen
+ * ------------------------------------------------------------------ */
+
+.rtd-top {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  align-items: center;
+  gap: .6rem;
+  height: 46px;
+  padding: 0 .8rem;
+  background: var(--brand);
+  color: #fff;
+}
+
+.rtd-top-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.rtd-top-menu:hover { background: rgba(255, 255, 255, .18); }
+.rtd-top-menu svg { width: 18px; height: 18px; }
+
+.rtd-top-title {
+  font-weight: 700;
+  font-size: .95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Headings
+ * ------------------------------------------------------------------ */
+
+.heading-wrapper { scroll-margin-top: 4rem; }
+
+.heading-title-wrapper {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: .35rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.title-level-1 { margin: 0 0 1.1rem; }
+.title-level-2 { margin: 2.2rem 0 .8rem; }
+.title-level-3 { margin: 1.8rem 0 .6rem; }
+.title-level-4 { margin: 1.4rem 0 .45rem; }
+.title-level-5, .title-level-6 { margin: 1.1rem 0 .35rem; }
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.1rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: .95rem; color: var(--ink-3); }
+
+/* The fold caret and the anchor, both kept off the page until the heading
+   is hovered - this theme's own permalink behaves exactly that way, and a
+   row of controls beside every heading is a page that looks like a form. */
+.fold-btn {
+  flex: none;
+  order: -1;
+  width: 1rem;
+  height: 1rem;
+  align-self: center;
+  margin-left: -1.15rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ink-4);
+  opacity: 0;
+  position: relative;
+  transition: opacity .12s ease;
+}
+
+.heading-title-wrapper:hover > .fold-btn,
+.fold-btn:focus-visible { opacity: 1; }
+.fold-btn:hover { color: var(--accent); }
+
+.fold-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: .15rem;
+  width: 0;
+  height: 0;
+  margin-top: -.19rem;
+  border-top: .3rem solid currentColor;
+  border-left: .26rem solid transparent;
+  border-right: .26rem solid transparent;
+}
+
+.is-folded > .heading-title-wrapper > .fold-btn { opacity: 1; color: var(--ink-3); }
+.is-folded > .heading-title-wrapper > .fold-btn::before {
+  border-top: .26rem solid transparent;
+  border-bottom: .26rem solid transparent;
+  border-left: .3rem solid currentColor;
+  border-right: 0;
+  margin-top: -.26rem;
+}
+
+.is-folded > .heading-content-wrapper { display: none; }
+
+.anchor-btn {
+  flex: none;
+  background: none;
+  border: 0;
+  padding: 0 .2rem;
+  cursor: pointer;
+  color: var(--accent);
+  opacity: 0;
+  align-self: center;
+  transition: opacity .12s ease;
+}
+
+.heading-title-wrapper:hover > .anchor-btn,
+.anchor-btn:focus-visible { opacity: 1; }
+.anchor-btn:hover { color: var(--accent-2); }
+.anchor-btn svg { width: 13px; height: 13px; display: block; }
+
+.just-landed > .heading-title-wrapper {
+  animation: rtd-landed 1.6s ease-out;
+  border-radius: 3px;
+}
+
+@keyframes rtd-landed {
+  0%   { background: var(--accent-bg); }
+  100% { background: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .just-landed > .heading-title-wrapper { animation: none; }
+}
+
+/* ------------------------------------------------------------------ *
+ * Prose
+ * ------------------------------------------------------------------ */
+
+p { margin: 0 0 1.1rem; color: var(--ink-2); }
+.heading-content-text > p:first-child { margin-top: .3rem; }
+
+a { color: var(--accent); text-decoration: none; }
+a:visited { color: var(--visited); }
+a:hover, a:focus, a:active { text-decoration: underline; }
+
+ol, ul { margin: 0 0 1.1rem 1.5rem; color: var(--ink-2); }
+ol li, ul li { margin: .25rem 0; line-height: 1.5; }
+ol li > ol, ol li > ul, ul li > ol, ul li > ul { margin: .25rem 0 .25rem 1.4rem; }
+li > p { margin: .25rem 0; }
+li::marker { color: var(--ink-4); }
+
+strong, b { font-weight: 700; color: var(--ink); }
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: 1.5rem 0; }
+
+blockquote {
+  margin: 1.1rem 0 1.1rem 1.5rem;
+  padding: .1rem 0 .1rem 1rem;
+  border-left: 4px solid var(--rule);
+  color: var(--ink-3);
+  font-size: .95rem;
+}
+
+blockquote p:first-child { margin-top: 0; }
+blockquote p:last-child { margin-bottom: 0; }
+
+figure { margin: 1.3rem 0; }
+
+figcaption {
+  margin-top: .4rem;
+  color: var(--ink-3);
+  font-size: .8rem;
+  font-style: italic;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+dl { margin: 0 0 1.1rem; }
+dl > dt { font-weight: 700; color: var(--ink); margin-top: .7rem; }
+dl > dd { margin: .2rem 0 .2rem 1.5rem; color: var(--ink-2); }
+
+/* ------------------------------------------------------------------ *
+ * Code
+ *
+ * This theme's inline code is the loud one - a red word in a white box -
+ * and that is deliberate on its part: an identifier in a sentence is
+ * meant to be picked out without being read. Blocks are the quiet one.
+ * ------------------------------------------------------------------ */
+
+code, pre, kbd, samp { font-family: var(--font-mono); }
+
+code {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: .8em;
+  color: var(--code-ink);
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+a code { color: var(--accent); }
+h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
+  font-size: .85em;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: .75rem .9rem;
+  margin: 0 0 1.1rem;
+  overflow-x: auto;
+  line-height: 1.45;
+}
+
+pre > code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: .8rem;
+  color: var(--ink);
+  white-space: pre;
+  display: block;
+}
+
+pre.example { color: var(--ink-2); }
+
+pre.mermaid {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.code-wrap { position: relative; }
+
+.copy-btn {
+  position: absolute;
+  top: .4rem;
+  right: .4rem;
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: .1rem .4rem;
+  font: inherit;
+  font-size: .68rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+
+.code-wrap:hover .copy-btn, .copy-btn:focus-visible { opacity: 1; }
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* The highlight sheets paint their own ground, which would sit as a
+   rectangle of the wrong colour inside the block's box. */
+.hljs { background: transparent !important; }
+
+/* ------------------------------------------------------------------ *
+ * Tables
+ *
+ * Ruled and striped, this theme's own way round: a white header with a
+ * heavy rule under it, and every other body row tinted.
+ * ------------------------------------------------------------------ */
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 0 1.1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  border-collapse: collapse;
+  width: auto;
+  max-width: 100%;
+  font-size: .88rem;
+  border: 1px solid var(--rule);
+}
+
+thead tr { background: var(--page); }
+
+th {
+  text-align: left;
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 2px solid var(--rule);
+  white-space: nowrap;
+}
+
+th, td {
+  padding: .5rem 1rem;
+  border-left: 1px solid var(--rule);
+  vertical-align: top;
+  color: var(--ink-2);
+}
+
+th:first-child, td:first-child { border-left: 0; }
+
+tbody tr:nth-child(2n-1) { background: var(--rule-soft); }
+tbody tr:hover td { background: var(--accent-bg); }
+tbody tr.active-row { font-weight: 700; color: var(--accent); }
+
+caption { padding: .5rem; color: var(--ink-4); font-size: .78rem; }
+
+/* ------------------------------------------------------------------ *
+ * Org's own furniture
+ * ------------------------------------------------------------------ */
+
+.title { font-size: 1.9rem; font-family: var(--font-display); font-weight: 700; }
+.subtitle { font-weight: 400; font-size: .9rem; color: var(--ink-3); }
+
+.todo, .priority, .tags {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .04em;
+}
+
+.todo { color: #e74c3c; }
+.priority { color: #b7791f; }
+.tags { color: var(--ink-4); }
+
+.status {
+  font-family: var(--font-mono);
+  font-size: .62em;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 0 .35em;
+  margin-right: .3em;
+}
+
+.timestamp {
+  font-family: var(--font-mono);
+  font-size: .8em;
+  color: var(--ink-3);
+}
+
+.footnote-definition { margin: .6rem 0; font-size: .85rem; }
+.footnote-definition sup { float: left; margin-right: .4rem; color: var(--accent); }
+.footnote-definition .footnote-body { overflow: hidden; color: var(--ink-3); }
+.footnote-definition .footnote-body p:only-child { margin: .2rem 0; }
+
+.align-left   { text-align: left;   }
+.align-center { text-align: center; }
+.align-right  { text-align: right;  }
+
+mark, .doc-hit { background: var(--mark); color: var(--mark-ink); border-radius: 2px; padding: 0 .1em; }
+
+/* ------------------------------------------------------------------ *
+ * The footer
+ * ------------------------------------------------------------------ */
+
+.rtd-footer { margin-top: 2.5rem; }
+.rtd-footer hr { margin: 0 0 1rem; }
+
+.rtd-footer-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  color: var(--ink-4);
+  font-size: .8rem;
+}
+
+.rtd-top-link { color: var(--accent); }
+
+/* ------------------------------------------------------------------ *
+ * Narrow screens
+ *
+ * The rail slides over the page rather than squeezing it, and the blue
+ * bar at the top is the only thing that can open it again. The script
+ * asks whether #rail-toggle is on screen rather than naming a width, so
+ * this breakpoint is the whole of the definition of "narrow" here.
+ * ------------------------------------------------------------------ */
+
+@media (max-width: 1100px) {
+  .rtd-breadcrumbs, .rtd-content { padding-left: 2rem; padding-right: 2rem; }
+}
+
+@media (max-width: 768px) {
+  .rtd-top { display: flex; }
+
+  .rtd-side {
+    transform: translateX(-102%);
+    transition: transform .18s ease;
+    box-shadow: var(--shadow);
+  }
+
+  body[data-rail="open"] .rtd-side { transform: translateX(0); }
+
+  .rtd-main { margin-left: 0; padding-top: 46px; }
+
+  .rtd-breadcrumbs { top: 46px; padding: .7rem 1.1rem .5rem; }
+  .rtd-content { padding: 1.2rem 1.1rem 2.5rem; }
+
+  .search-results { max-height: min(24rem, calc(100vh - 12rem)); }
+  .search-results .sr-keys { display: none; }
+
+  .fold-btn { opacity: 1; margin-left: 0; }
+  .anchor-btn { opacity: 1; }
+  .copy-btn { opacity: 1; }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.12rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rtd-side { transition: none; }
+}

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
+	"github.com/ihdavids/orgs/internal/app/orgs/plugs/slides"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/worg"
 	"github.com/rs/cors"
@@ -234,11 +235,19 @@ var unicorn5 string = `
 var db *Db = &Db{}
 
 func StartServer(sets *common.ServerSettings) {
+	// Where the presentation themes are. The template path is config, and a
+	// theme that could only be found when the server was started in the right
+	// directory would be a theme nobody could rely on.
+	slides.SearchPath = sets.TemplatePath
 	log.Printf("%s\n", unicorn4)
 	log.Printf("[STARTING SERVER]\n")
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
+	// The configured users, now that there is a configuration to read the
+	// path out of - and then, unmissably, whether they are any good.
+	LoadKeystore()
+	WarnOnInsecureCredentials()
 	// Settle the dnd module search path from the config before anything can
 	// touch the ruleset library, so an export is never served off a library
 	// that was built without the configured dndPaths on it.

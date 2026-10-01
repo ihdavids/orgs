@@ -1,0 +1,33 @@
+#+TITLE: Habits whose log is not in a drawer
+#+TODO: TODO NEXT | DONE CANCELLED
+#+STARTUP: nologdrawer lognotedone
+
+# With nologdrawer, org writes the State lines into the body as a plain list
+# instead of into LOGBOOK. The completion reader falls back to reading lists for
+# exactly this case, so these habits must still have a history.
+
+* TODO Morning pages
+  SCHEDULED: <2026-09-29 Tue .+1d/2d>
+  :PROPERTIES:
+  :STYLE:    habit
+  :LAST_REPEAT: [2026-09-28 Mon 07:05]
+  :END:
+  - State "DONE"       from "TODO"       [2026-09-28 Mon 07:05]
+  - State "DONE"       from "TODO"       [2026-09-27 Sun 07:20]
+  - State "DONE"       from "TODO"       [2026-09-26 Sat 07:11]
+
+  Three days' worth in the body rather than in a drawer.
+  HabitStreak() == 3.
+
+* TODO Stretch
+  SCHEDULED: <2026-09-29 Tue .+1d>
+  :PROPERTIES:
+  :STYLE:    habit
+  :END:
+  - State "DONE"       from "TODO"       [2026-09-28 Mon 18:00]
+  - State "DONE"       from "TODO"       [2026-09-28 Mon 21:30]
+  - State "DONE"       from "TODO"       [2026-09-27 Sun 18:02]
+
+  Done twice on the 28th. A day is the unit, so that is one day's worth and the
+  streak is 2, not 3 - which is also what makes a double click on a kanban card
+  harmless.

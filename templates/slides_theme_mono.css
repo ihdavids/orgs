@@ -1,0 +1,66 @@
+/* Mono — black on white, nothing else, type doing all the work.
+ *
+ * The Swiss one. No colour but a single red hairline, headings tight and
+ * uppercase, everything aligned left. It is the hardest of these to hide a
+ * weak slide in, which is rather the point: with nothing to look at but the
+ * words, the words have to be right.
+ *
+ * @hljs: github
+ * @mermaid: neutral
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;900&display=swap');
+
+:root {
+  --slide-bg: #ffffff;
+  --slide-bg-soft: #f2f2f2;
+  --slide-ink: #111111;
+  --slide-ink-soft: #767676;
+  --slide-head-ink: #000000;
+  --slide-accent: #e1261c;
+  --slide-accent-soft: rgba(225, 38, 28, 0.1);
+  --slide-link: #111111;
+  --slide-rule: rgba(17, 17, 17, 0.22);
+
+  --slide-font: 'Inter Tight', Helvetica, Arial, sans-serif;
+  --slide-head-font: 'Inter Tight', Helvetica, Arial, sans-serif;
+  --slide-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --slide-head-weight: 900;
+  --slide-head-spacing: -0.045em;
+  --slide-line: 1.35;
+
+  --slide-code-bg: #f2f2f2;
+  --slide-code-ink: #111111;
+  --slide-code-border: 0;
+  --slide-radius: 0;
+  --slide-shadow: none;
+  --slide-card-bg: #ffffff;
+  --slide-card-rule: 2px solid #111111;
+  --slide-table-head-case: uppercase;
+  --slide-table-head-spacing: 0.08em;
+
+  --slide-head-rule: none;
+  --slide-bullet: "\2014";
+  --slide-h1: 2.4em;
+  --slide-h2: 1.8em;
+  --slide-title-size: 3.6em;
+  --slide-title-spacing: -0.055em;
+}
+
+/* Everything hangs off the left margin, which is what makes this look Swiss
+ * rather than merely plain. The title slide keeps that, instead of centring. */
+.org-title-slide { text-align: left; }
+.reveal .org-title-slide h1, #webslides .org-title-slide h1, .deck-container .org-title-slide h1, #impress .org-title-slide h1 { line-height: 0.95; text-transform: uppercase; }
+.reveal .org-subtitle, #webslides .org-subtitle, .deck-container .org-subtitle, #impress .org-subtitle { font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.95em; }
+.reveal .org-byline, #webslides .org-byline, .deck-container .org-byline, #impress .org-byline { color: var(--slide-accent); }
+/* The one piece of colour in the whole deck: a rule across the top of the
+ * title. */
+.reveal .org-title-slide h1, #webslides .org-title-slide h1, .deck-container .org-title-slide h1, #impress .org-title-slide h1 { border-top: 6px solid var(--slide-accent); padding-top: 0.3em; display: inline-block; }
+.reveal h1, .reveal h2, #webslides h1, #webslides h2,
+.deck-container h1, .deck-container h2, #impress h1, #impress h2 { text-transform: uppercase; }
+/* Links are underlined rather than coloured, because there is no second
+ * colour to spend. */
+.reveal a, #webslides a, .deck-container a, #impress a {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--slide-accent);
+}

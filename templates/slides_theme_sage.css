@@ -1,0 +1,49 @@
+/* Sage — quiet, green, unhurried.
+ *
+ * A muted eucalyptus ground with ink that is brown rather than black, and
+ * Lora's bookish serif for headings. The calm one: a workshop, a retrospective,
+ * a long technical talk where the deck should lower everybody's heart rate
+ * rather than raise it.
+ *
+ * @hljs: base16/gruvbox-light-soft
+ * @mermaid: forest
+ */
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Karla:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #eef1e9;
+  --slide-bg-soft: #f7f9f3;
+  --slide-bg-image: linear-gradient(170deg, #f1f4ec 0%, #e7ece1 100%);
+  --slide-ink: #2e332c;
+  --slide-ink-soft: #77806f;
+  --slide-head-ink: #1f2a22;
+  --slide-accent: #4f7d5c;
+  --slide-accent-soft: rgba(79, 125, 92, 0.12);
+  --slide-link: #3f6a4b;
+  --slide-rule: rgba(46, 51, 44, 0.16);
+
+  --slide-font: 'Karla', system-ui, sans-serif;
+  --slide-head-font: 'Lora', Georgia, serif;
+  --slide-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --slide-head-weight: 600;
+  --slide-head-spacing: -0.008em;
+  --slide-line: 1.55;
+
+  --slide-code-bg: #f7f9f3;
+  --slide-code-ink: #2e332c;
+  --slide-code-border: 1px solid rgba(46, 51, 44, 0.12);
+  --slide-radius: 8px;
+  --slide-shadow: 0 14px 34px rgba(40, 60, 45, 0.12);
+  --slide-card-bg: #f7f9f3;
+  --slide-card-rule: 1px solid rgba(79, 125, 92, 0.3);
+  --slide-table-stripe: rgba(79, 125, 92, 0.06);
+
+  --slide-head-rule: "";
+  --slide-head-rule-width: 1.6em;
+  --slide-head-rule-weight: 2px;
+  --slide-bullet: "\2022";
+  --slide-title-size: 2.9em;
+}
+
+.reveal .org-subtitle, #webslides .org-subtitle, .deck-container .org-subtitle, #impress .org-subtitle { font-family: 'Lora', Georgia, serif; font-style: italic; font-size: 1.15em; }
+blockquote { font-family: 'Lora', Georgia, serif; }

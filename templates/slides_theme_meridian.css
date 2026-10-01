@@ -1,0 +1,68 @@
+/* Meridian — the world as dots, turning, with light running between its cities.
+ *
+ * The one for a talk about somewhere else: rollouts, regions, latency, people
+ * in other time zones. The globe sits in the middle distance and the routes
+ * pulse perhaps twice a minute each, which is slow enough to be noticed only
+ * when nothing is being said.
+ *
+ * The land is deliberately coarse - a 5° grid, which is the resolution at which
+ * continents read as themselves and no detail is claimed that is not there. The
+ * cities are real places, because a line between two of them reads as a route
+ * and a line between two arbitrary dots reads as a mistake.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ * @backdrop: globe
+ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #05131f;
+  --slide-bg-soft: #0a2033;
+  --slide-bg-image: linear-gradient(170deg, #0b2a40 0%, #05131f 62%);
+  --slide-ink: #cfe2ee;
+  --slide-ink-soft: #7fa3b8;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #4fd6e0;
+  --slide-accent-soft: rgba(79, 214, 224, 0.14);
+  --slide-link: #8ce9f2;
+  --slide-rule: rgba(207, 226, 238, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Manrope', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 800;
+  --slide-head-spacing: -0.03em;
+  --slide-line: 1.5;
+  --slide-title-size: 2.9em;
+  --slide-bullet: "\25B8";
+
+  --slide-code-bg: rgba(4, 16, 26, 0.7);
+  --slide-code-ink: #cfe6f2;
+  --slide-code-border: 1px solid rgba(79, 214, 224, 0.22);
+  --slide-radius: 10px;
+  --slide-shadow: 0 24px 60px rgba(1, 8, 14, 0.62);
+  --slide-card-bg: rgba(10, 32, 51, 0.76);
+  --slide-card-rule: 1px solid rgba(79, 214, 224, 0.2);
+  --slide-table-stripe: rgba(79, 214, 224, 0.06);
+  --slide-table-head-case: uppercase;
+
+  /* Two blues for the land, graded by latitude, and the accent for the traffic.
+   * The land is dimmer than the routes on purpose: the map is where, and the
+   * light is what is happening. */
+  --backdrop-colors: #2d7fa6 #3fc0cc;
+  --backdrop-fog: #05131f;
+  --backdrop-glow: #7df2ff;
+  --backdrop-veil: rgba(5, 19, 31, 0.22);
+  --backdrop-density: 1;
+  --backdrop-speed: 0.85;
+}
+
+.reveal .org-title-slide h1, #webslides .org-title-slide h1,
+.deck-container .org-title-slide h1, #impress .org-title-slide h1 {
+  text-shadow: 0 0 70px rgba(79, 214, 224, 0.28);
+}
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(79, 214, 224, 0));
+  box-shadow: 0 0 18px rgba(79, 214, 224, 0.4);
+}

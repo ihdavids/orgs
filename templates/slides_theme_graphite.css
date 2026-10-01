@@ -1,0 +1,58 @@
+/* Graphite — the one to reach for when the talk matters more than the slides.
+ *
+ * Near-black, warm white, and one colour: a dull brass that reads as
+ * considered rather than corporate. Inter throughout, because a deck read from
+ * the back of a room wants a face drawn for screens and nothing else.
+ *
+ * @hljs: atom-one-dark
+ * @mermaid: dark
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root {
+  --slide-bg: #121316;
+  --slide-bg-soft: #1b1d21;
+  --slide-bg-image: radial-gradient(120% 90% at 50% -10%, #1d1f24 0%, #121316 60%);
+  --slide-ink: #e6e3dd;
+  --slide-ink-soft: #9a968e;
+  --slide-head-ink: #f6f4f0;
+  --slide-accent: #c89b4a;
+  --slide-accent-soft: rgba(200, 155, 74, 0.16);
+  --slide-link: #d8b36a;
+  --slide-rule: rgba(230, 227, 221, 0.14);
+
+  --slide-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --slide-head-font: 'Inter', system-ui, sans-serif;
+  --slide-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --slide-head-weight: 600;
+  --slide-head-spacing: -0.022em;
+  --slide-line: 1.45;
+
+  --slide-code-bg: #1b1d21;
+  --slide-code-ink: #dcd8d1;
+  --slide-code-border: 1px solid rgba(230, 227, 221, 0.10);
+  --slide-radius: 10px;
+  --slide-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  --slide-card-bg: #1b1d21;
+  --slide-card-rule: 1px solid rgba(230, 227, 221, 0.12);
+  --slide-table-stripe: rgba(255, 255, 255, 0.025);
+  --slide-table-head-case: uppercase;
+
+  --slide-head-rule: "";
+  --slide-head-rule-width: 2.2em;
+  --slide-head-rule-weight: 2px;
+  --slide-bullet: "\2022";
+  --slide-title-size: 2.8em;
+}
+
+/* The title slide gets the brass as a hairline over the title rather than a
+ * rule under it: the deck opens with the colour, then spends it sparingly. */
+.reveal .org-title-slide h1, #webslides .org-title-slide h1, .deck-container .org-title-slide h1, #impress .org-title-slide h1 { padding-top: 0.5em; position: relative; }
+.reveal .org-title-slide h1::before, #webslides .org-title-slide h1::before, .deck-container .org-title-slide h1::before, #impress .org-title-slide h1::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 3.5em; height: 2px;
+  background: var(--slide-accent);
+}

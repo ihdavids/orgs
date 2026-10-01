@@ -1,0 +1,136 @@
+/* What orgs adds to impress.js.
+ *
+ * impress-common.css positions the canvas and nothing else - everything a step
+ * looks like is the deck's own. This was an inline <style> block in
+ * impress_default.tpl; it is a file now so a theme can override it and
+ * `#+IMPRESS_CSS:` lands after both.
+ */
+
+.impress-supported .fallback-message { display: none; }
+
+.step {
+  position: relative;
+  padding: 40px 60px;
+  margin: 10px auto;
+  width: 900px;
+  box-sizing: border-box;
+  font-family: 'PT Serif', Georgia, serif;
+  font-size: 36px;
+  line-height: 1.3;
+  text-shadow: 0 2px 2px rgba(0, 0, 0, .1);
+}
+
+/* An inactive step is faded, which is what gives impress its depth - you can
+ * see where you are going. */
+.impress-enabled .step {
+  margin: 0;
+  opacity: 0.3;
+  transition: opacity 1s;
+}
+.impress-enabled .step.active { opacity: 1 }
+
+/* The card a step is drawn on. `.slide` is impress.js' own name for it. */
+.slide {
+  display: block;
+  width: 900px;
+  height: 700px;
+  padding: 40px 60px;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, .3);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
+  color: rgb(102, 102, 102);
+  font-family: 'Open Sans', Arial, sans-serif;
+  font-size: 30px;
+  line-height: 36px;
+}
+.slide q { display: block; font-size: 50px; line-height: 72px; margin-top: 100px; }
+.slide q strong { white-space: nowrap; }
+
+/* A substep: one bullet, or one block, arriving on its own. */
+.step .substep { opacity: 0; transition: opacity 0.4s; }
+.step .substep.substep-visible { opacity: 1; }
+
+/* Backgrounds. impress.js has no notion of one, so they are css - except the
+ * two that are elements, and the dimmed picture that needs a layer of its
+ * own because fading a step's background fades the words with it. */
+.impress-bg-video,
+.impress-bg-iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: 0;
+  object-fit: cover;
+  z-index: -1;
+}
+.step.impress-bg-dim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--impress-bg-image);
+  background-size: var(--impress-bg-size, cover);
+  background-position: var(--impress-bg-position, center);
+  background-repeat: var(--impress-bg-repeat, no-repeat);
+  opacity: var(--impress-bg-opacity, 1);
+}
+
+table {
+  border-collapse: separate;
+  margin: 25px auto;
+  font-size: 0.8em;
+  min-width: 400px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+}
+thead tr { background-color: #009879; color: #ffffff; text-align: left; }
+th, td { padding: 12px 15px; }
+tbody tr { border-bottom: 1px solid #dddddd; }
+tbody tr:nth-of-type(even) { background-color: rgba(35, 35, 35, 0.1); }
+tbody tr:last-of-type { border-bottom: 2px solid #009879; }
+td.align-right, th.align-right { text-align: right; }
+td.align-center, th.align-center { text-align: center; }
+
+.step img {
+  max-width: 100%;
+  box-shadow: 5px 5px 15px 0px #aa8;
+  -webkit-box-reflect: below 0px linear-gradient(to bottom, rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.2));
+}
+.step pre { text-align: left; font-size: 0.6em; }
+.step pre code { display: block; border-radius: 8px; padding: 0.8em 1em; overflow-x: auto; }
+.step figcaption { font-size: 0.5em; opacity: 0.7; }
+.impress-byline { opacity: 0.7; font-size: 0.7em; margin-top: 1.2em; }
+
+.step li.unchecked, .step li.checked, .step li.indeterminate { list-style: none; }
+.step li.unchecked::before { content: "\2610  "; }
+.step li.checked::before { content: "\2611  "; }
+.step li.indeterminate::before { content: "\25FC  "; }
+
+.org-wordcloud { border: 1px dashed rgba(128, 128, 128, 0.4); border-radius: 10px; max-width: 100%; }
+
+/* Speaker notes: never on the canvas, and when asked for, over everything.
+ * `.notes` is impress.js' own name for them, so the impress console sees them
+ * as well. */
+#impress .notes { display: none; }
+#impress-notes-panel {
+  position: fixed;
+  right: 1.5rem; bottom: 1.5rem;
+  width: min(32rem, 40vw);
+  max-height: 45vh;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: rgba(16, 16, 20, 0.94);
+  color: #f3f3f3;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-family: system-ui, sans-serif;
+  text-shadow: none;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  display: none;
+}
+#impress-notes-panel.open { display: block; }
+#impress-notes-panel p { margin: 0 0 0.6em; }
+#impress-notes-panel .impress-notes-empty { opacity: 0.55; font-style: italic; }

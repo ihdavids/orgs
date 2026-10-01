@@ -1,0 +1,54 @@
+/* Nocturne — deep blue, late evening, a little light at the edges.
+ *
+ * The modern-tech one without the neon: indigo rather than black, so code and
+ * diagrams sit on something warmer than a void, and a single cool accent that
+ * survives a projector with its contrast turned down.
+ *
+ * @hljs: night-owl
+ * @mermaid: dark
+ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --slide-bg: #0e1130;
+  --slide-bg-soft: #161a42;
+  --slide-bg-image: radial-gradient(130% 100% at 85% 0%, #1d2256 0%, #0e1130 55%);
+  --slide-ink: #d7dcf5;
+  --slide-ink-soft: #8d95c4;
+  --slide-head-ink: #ffffff;
+  --slide-accent: #7cdcf0;
+  --slide-accent-soft: rgba(124, 220, 240, 0.14);
+  --slide-link: #9ee7f7;
+  --slide-rule: rgba(215, 220, 245, 0.16);
+
+  --slide-font: 'Inter', system-ui, sans-serif;
+  --slide-head-font: 'Space Grotesk', 'Inter', sans-serif;
+  --slide-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --slide-head-weight: 700;
+  --slide-head-spacing: -0.025em;
+  --slide-line: 1.5;
+
+  --slide-code-bg: rgba(8, 10, 32, 0.75);
+  --slide-code-ink: #cfd6f7;
+  --slide-code-border: 1px solid rgba(124, 220, 240, 0.22);
+  --slide-radius: 12px;
+  --slide-shadow: 0 24px 60px rgba(2, 4, 20, 0.6);
+  --slide-card-bg: #161a42;
+  --slide-card-rule: 1px solid rgba(124, 220, 240, 0.2);
+  --slide-table-stripe: rgba(124, 220, 240, 0.05);
+  --slide-table-head-case: uppercase;
+
+  --slide-head-rule: "";
+  --slide-head-rule-width: 2.4em;
+  --slide-head-rule-weight: 3px;
+  --slide-bullet: "\25B8";
+  --slide-title-size: 3em;
+}
+
+/* The accent as a glow rather than a block - the one thing a dark deck can do
+ * that a light one cannot. */
+.reveal .org-title-slide h1, #webslides .org-title-slide h1, .deck-container .org-title-slide h1, #impress .org-title-slide h1 { text-shadow: 0 0 60px rgba(124, 220, 240, 0.22); }
+.org-slide > h1::after, .org-slide > h2::after {
+  background: linear-gradient(90deg, var(--slide-accent), rgba(124, 220, 240, 0));
+  box-shadow: 0 0 18px rgba(124, 220, 240, 0.4);
+}
