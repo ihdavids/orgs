@@ -79,6 +79,25 @@ func Address(line string, n int) ([]string, bool) {
 // writer goroutine and this one are otherwise racing over the slice: reading it
 // straight after `fzf.Run` sometimes gave an empty selection on a fast machine.
 func Pick(opts PickOpts) []string {
+	return runPick(opts, nil)
+}
+
+// PickKey is Pick that also says which key closed it: "" for enter, or one of
+// keys (fzf's --expect). For a list where enter does one thing and another key
+// does another, and the other thing needs the picker gone first - an editor
+// in the same terminal, say.
+func PickKey(opts PickOpts, keys ...string) (string, []string) {
+	if len(keys) == 0 {
+		return "", Pick(opts)
+	}
+	out := runPick(opts, []string{"--expect", strings.Join(keys, ",")})
+	if len(out) == 0 {
+		return "", nil
+	}
+	return out[0], out[1:]
+}
+
+func runPick(opts PickOpts, more []string) []string {
 	if len(opts.Lines) == 0 {
 		return nil
 	}
@@ -102,6 +121,7 @@ func Pick(opts PickOpts) []string {
 			"--preview-window", "right,62%,border-left,~2")
 	}
 	args = append(args, opts.Extra...)
+	args = append(args, more...)
 
 	inputChan := make(chan string)
 	go func() {

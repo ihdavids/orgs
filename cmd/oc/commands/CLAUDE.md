@@ -101,6 +101,12 @@ The pane answers "is this the one I meant", mostly by **where the link was writt
 
 go-org gives every inline node the position of the node it was parsed in, so `fixLinkLines` in `links.go` finds each link's real line in the file (history in `docs/claude/bug-history.md`).
 
+### `orgs go` and `orgs gocap`
+
+`cmd/oc/commands/golink/` (`go` is a Go keyword). `orgs go <name>`: case-insensitive prefix match on link **descriptions** over `/links/all`; one target (duplicates of the same `Raw` count as one, and an exact description wins) is followed, more opens the picker. Its pane is `links.RenderPane`; the child is `orgs go -pane-at N <name>` - a flag, not a subcommand word, so a link called "preview" still resolves. Enter follows; **ctrl-e uses `commands.PickKey` (fzf `--expect`)** so the picker is closed before the editor starts - `execute-silent` would leave a terminal editor fighting fzf for the screen.
+
+`orgs gocap [link] [description]` files through `/capture` with the built-in **`GoLink`** template (`builtinCaptureTemplates` in `internal/app/orgs/capture.go`, target from `server.goLinksFile`/`goLinksHeading`). A user template named `GoLink` replaces it.
+
 ### The records pane
 
 `orgs rec` and `orgs contact` draw everything (list line, card, bindings) via **`cmd/oc/commands/recview`**, separate because neither command owns the other and copies would drift. It knows no specific collection: a record is a name, server-typed fields, notes and history.

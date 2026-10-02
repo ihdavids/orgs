@@ -233,3 +233,73 @@ func TestFillCapTemplateWithNoTemplate(t *testing.T) {
 		t.Errorf("got %q", got)
 	}
 }
+
+var shortRe = regexp.MustCompile(`^[a-z2-7]{8}$`)
+
+func TestCapShortUid(t *testing.T) {
+	a, ok := CapAutoValue("shortuid", capNow, "")
+	b, _ := CapAutoValue("shortuid", capNow, "")
+	if !ok || !shortRe.MatchString(a) {
+		t.Fatalf("shortuid should be 8 lowercase base32 characters, got %q", a)
+	}
+	if a == b {
+		t.Errorf("two shortuids came out the same: %q", a)
+	}
+	// One per template, like uuid.
+	got := CapExpandAutos("{{shortuid}} {{shortuid}}", capNow, "")
+	parts := strings.Fields(got)
+	if parts[0] != parts[1] {
+		t.Errorf("one template, two shortuids: %s", got)
+	}
+}
+
+// {{daypage}} is answered by whatever hook the server sets, and is left for
+// somebody to answer when there is none.
+func TestCapDayPage(t *testing.T) {
+	old := CapDayPage
+	defer func() { CapDayPage = old }()
+
+	CapDayPage = nil
+	if _, ok := CapAutoValue("daypage", capNow, ""); ok {
+		t.Errorf("daypage with no hook should have no value")
+	}
+	if !IsCapAutoName("daypage") {
+		t.Errorf("daypage is an auto name whether or not the hook is set")
+	}
+	CapDayPage = func(now time.Time) (string, bool) { return "worklog/Mon_2026_09_28.org", true }
+	if got := CapExpandAutos("[[file:{{daypage}}][this week]]", capNow, ""); got != "[[file:{{daypage|=worklog/Mon_2026_09_28.org}}][this week]]" {
+		t.Errorf("daypage in a template: %q", got)
+	}
+	// A path in a filename keeps its separators.
+	if got, err := CapExpandFilename("{{daypage}}", capNow, ""); err != nil || got != "worklog/Mon_2026_09_28.org" {
+		t.Errorf("daypage in a filename: %q %v", got, err)
+	}
+}
+
+func TestCapExpandFilename(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"links.org", "links.org"},
+		{"notes/{{date}}.org", "notes/2026-09-29.org"},
+		{"{{time}}.org", "14-05.org"},
+		{"{{datetime}}.org", "2026-09-29_14-05.org"},
+		{"{{now}}.org", "2026-09-29_Tue_14-05.org"},
+		{"{{today}}.org", "2026-09-29_Tue.org"},
+		{"{{iso}}.org", "2026-09-29T14-05-00Z.org"},
+		{"{{week}}/{{weekday}}.org", "2026-W40/Tuesday.org"},
+		{"{{kind|=meeting notes}}.org", "meeting_notes.org"},
+	}
+	for _, c := range cases {
+		got, err := CapExpandFilename(c.in, capNow, "ian")
+		if err != nil || got != c.want {
+			t.Errorf("%q: got %q (%v) want %q", c.in, got, err, c.want)
+		}
+	}
+	got, err := CapExpandFilename("tmp/{{date}}-{{shortuid}}-{{guid}}.org", capNow, "")
+	if err != nil || !regexp.MustCompile(`^tmp/2026-09-29-[a-z2-7]{8}-[0-9a-f-]{36}\.org$`).MatchString(got) {
+		t.Errorf("uuids in a filename: %q %v", got, err)
+	}
+	// Nobody is there to answer a question in a filename.
+	if got, err := CapExpandFilename("{{project}}.org", capNow, ""); err == nil {
+		t.Errorf("a question in a filename should be an error, got %q", got)
+	}
+}

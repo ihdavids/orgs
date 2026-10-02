@@ -260,6 +260,13 @@ type Config struct {
 	// When a command is called we configure it and add it
 	// to the list to avoid having to redo that
 	ConfigedCommands []commands.PluginDef
+	// The file the configuration was actually read from, after the orgc.yaml
+	// fallback, so a reload reads the same one. Empty when there was none.
+	loadedFrom string
+	// The server settings as the file had them, before any flag overrode
+	// them, so a reload compares the file with the file: -port on the command
+	// line is not a change somebody made to the yaml.
+	loadedServer common.ServerSettings
 }
 
 func (self *Config) Defaults() {
@@ -379,10 +386,14 @@ func (self *Config) ParseConfig() {
 		yamlFile, err = ioutil.ReadFile(filename)
 	}
 	if err == nil {
+		self.loadedFrom = filename
 		err = yaml.Unmarshal(yamlFile, self)
 		if err != nil {
 			err2 := fmt.Errorf("loading plugin: %s we experienced the following error during unmarshal: %s", filename, err)
 			panic(err2)
+		}
+		if self.Server != nil {
+			self.loadedServer = *self.Server
 		}
 	}
 	manager.HomeDir = filepath.Dir(self.HomeDir)

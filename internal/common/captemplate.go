@@ -42,6 +42,9 @@ package common
 // private understanding of the grammar.
 
 import (
+	"crypto/rand"
+	"encoding/base32"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -164,6 +167,23 @@ func CapAutoValue(name string, now time.Time, username string) (string, bool) {
 	// server side is not only tidier, it is the only place it works everywhere.
 	case "uuid":
 		return uuid.New().String(), true
+	// Eight characters out of the hat: enough to keep two temporary files from
+	// colliding without a 36 character name. Lowercase base32 (a-z, 2-7), so it
+	// is safe in a filename and on a filesystem that ignores case.
+	case "shortuid":
+		var b [5]byte
+		if _, err := rand.Read(b[:]); err != nil {
+			return "", false
+		}
+		return strings.ToLower(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(b[:])), true
+	// Where the current day page lives, relative to the first org directory.
+	// Only the server knows where that is, so it is answered through a hook the
+	// server fills in; with no hook it is left for somebody to answer.
+	case "daypage":
+		if CapDayPage == nil {
+			return "", false
+		}
+		return CapDayPage(now)
 	// Whoever asked. Empty where there is no request to read a username off,
 	// and then left for somebody to answer rather than filled blank.
 	case "username":
@@ -187,11 +207,83 @@ func CapAutoValue(name string, now time.Time, username string) (string, bool) {
 func IsCapAutoName(name string) bool {
 	// A username there is nobody to answer is still an auto name - the question
 	// is what kind of placeholder this is, not whether today's answer exists.
-	if CapCanonName(name) == "username" {
+	if k := CapCanonName(name); k == "username" || k == "daypage" {
 		return true
 	}
 	_, ok := CapAutoValue(name, time.Now(), "")
 	return ok
+}
+
+// CapDayPage answers {{daypage}}: the day page in force at that moment, as a
+// path relative to the first org directory. It is set by the server, which is
+// the end that knows dayPagePath and the day page mode.
+var CapDayPage func(now time.Time) (string, bool)
+
+// CapUsesName reports whether a template has a placeholder of that name,
+// aliases counted as the name.
+func CapUsesName(template, name string) bool {
+	want := CapCanonName(name)
+	for _, m := range capPlaceholder.FindAllStringSubmatch(template, -1) {
+		if CapCanonName(m[1]) == want {
+			return true
+		}
+	}
+	return false
+}
+
+// CapExpandFilename answers every placeholder in a capture target's filename.
+//
+// There is nobody to ask at this point - the filename is resolved when the
+// capture is made, not put up as a form - so every placeholder must answer
+// itself or carry a default, and one that does neither is an error rather than
+// a file called {{project}}.org.
+//
+// Each value is made safe for a filename on the way in: brackets go, spaces
+// become _ and colons become -, so {{now}} is 2026-09-29_Tue_14-05 rather than
+// [2026-09-29 Tue 14:05]. {{daypage}} is the exception, because it is a path
+// and its separators are the point of it.
+func CapExpandFilename(filename string, now time.Time, username string) (string, error) {
+	if !strings.Contains(filename, "{{") {
+		return filename, nil
+	}
+	var missing []string
+	memo := map[string]string{}
+	out := capPlaceholder.ReplaceAllStringFunc(filename, func(m string) string {
+		sub := capPlaceholder.FindStringSubmatch(m)
+		if sub == nil {
+			return m
+		}
+		name := strings.TrimSpace(sub[1])
+		key := CapCanonName(name)
+		if v, ok := memo[key]; ok {
+			return v
+		}
+		v, ok := CapAutoValue(name, now, username)
+		if !ok {
+			_, def, hasDef := capSplitRest(sub[2])
+			if !hasDef || def == "" {
+				missing = append(missing, name)
+				return m
+			}
+			v = def
+		}
+		if key != "daypage" {
+			v = CapFileSafe(v)
+		}
+		memo[key] = v
+		return v
+	})
+	if len(missing) > 0 {
+		return "", fmt.Errorf("capture filename %q: no value for {{%s}}", filename, strings.Join(missing, "}}, {{"))
+	}
+	return out, nil
+}
+
+// CapFileSafe is a value made fit to be part of a filename: org's timestamp
+// brackets dropped, spaces to _, and anything a filesystem objects to to -.
+func CapFileSafe(v string) string {
+	v = strings.NewReplacer("[", "", "]", "", "<", "", ">", "").Replace(strings.TrimSpace(v))
+	return strings.NewReplacer(" ", "_", ":", "-", "/", "-", "\\", "-", "*", "-", "?", "-", "\"", "-", "|", "-").Replace(v)
 }
 
 func pad2(n int) string {

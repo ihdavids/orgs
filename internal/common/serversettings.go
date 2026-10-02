@@ -250,6 +250,24 @@ type ServerSettings struct {
 	// These specify a valid set of org files that can be searched for valid
 	// refile targets
 	RefileTargets []string `yaml:"refileTargets"`
+
+	/* SDOC: Settings
+	* Go Links
+		Where =orgs gocap= files a link, and the heading it goes under. Both
+		are optional; these are the defaults.
+
+		#+BEGIN_SRC yaml
+		server:
+		  goLinksFile:    "links.org"
+		  goLinksHeading: "Links"
+		#+END_SRC
+
+		The file is relative to the first of the orgDirs. It is the built in
+		=GoLink= capture template's target, so a capture template of your own
+		called =GoLink= replaces the whole thing.
+	EDOC */
+	GoLinksFile    string `yaml:"goLinksFile"`
+	GoLinksHeading string `yaml:"goLinksHeading"`
 	/* SDOC: Settings
 	* Voice Notes
 		Recording and transcription. Orgs does not transcribe anything itself -
@@ -576,6 +594,8 @@ func (self *ServerSettings) Init() {
 	self.DayPagePath = "./daypages"
 	self.DayPageMode = "week"
 	self.DayPageModeWeekDay = "Monday"
+	self.GoLinksFile = "links.org"
+	self.GoLinksHeading = "Links"
 	self.DayPageMaxSearchBack = 30 // How many weeks back should we look to pull last weeks tasks from.
 	self.UseTagForProjects = true
 	self.CaptureTemplates = []CaptureTemplate{}

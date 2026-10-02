@@ -130,6 +130,10 @@ package orgs
    | Name                        | Becomes                                |
    |-----------------------------+----------------------------------------|
    | ={{uuid}}= / ={{guid}}=     | =f81d4fae-7dec-11d0-a765-00a0c91e6bf6= |
+   | ={{shortuid}}=              | =js3xiyiy= - 8 characters, a-z and 2-7 |
+   | ={{daypage}}=               | =worklog/Mon_2026_09_28.org= - the     |
+   |                             | current day page, relative to the      |
+   |                             | first org directory                    |
    | ={{username}}= / ={{user}}= | =ian= - whoever asked                  |
    | ={{hostname}}=              | the machine holding the org files      |
    | ={{date}}=                  | =2026-09-29=                           |
@@ -197,6 +201,40 @@ package orgs
 
    A template with no string at all asks for a headline and a body, which is
    what every example above is.
+
+** Placeholders in the target filename
+
+   The same names work in =target: filename:=, answered when the capture is
+   made. There is nobody to ask at that point, so a name that does not answer
+   itself (and has no =|== default) refuses the capture rather than make a
+   file called ={{project}}.org=.
+
+   #+BEGIN_SRC yaml
+      - name: "DayLink"
+        type: "entry"
+        target:
+          type: "file+headline"
+          filename: "{{daypage}}"
+          id: "Inbox"
+      - name: "Scratch"
+        type: "entry"
+        target:
+          type: "file+headline"
+          filename: "tmp/{{date}}_{{time}}_{{shortuid}}.org"
+          id: "Notes"
+   #+END_SRC
+
+   In a filename every value is made filename safe: brackets dropped, spaces
+   to =_=, colons to =-=. So ={{now}}= is =2026-09-29_Tue_14-05= and
+   ={{time}}= is =14-05=. ={{daypage}}= keeps its =/=, being a path. A missing
+   folder is created.
+
+   A filename that comes out as the current day page, when that page does not
+   exist yet, is created the way =orgs daypage= creates it - from the day page
+   template, with last week's open tasks - rather than as an empty file.
+
+   The filename is answered separately from the template body, so a
+   ={{uuid}}= in both is two different uuids.
 EDOC */
 
 import (
@@ -204,6 +242,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
@@ -241,6 +280,12 @@ func FindCaptureTemplate(name string, username string) *common.CaptureTemplate {
 // snippets go somewhere other than snippets.org.
 const SnippetTemplate = "Snippet"
 
+// GoLinkTemplate is the template `orgs gocap` files a link through: a heading
+// named by the description, stamped with when it was added, holding the link,
+// so `orgs go` finds it by that description. Target from goLinksFile and
+// goLinksHeading.
+const GoLinkTemplate = "GoLink"
+
 // builtinCaptureTemplates are the templates a server has without being told:
 // only the snippet one, because a command line is the thing most worth saving
 // before it scrolls away, and having to configure somewhere to put it first is
@@ -251,7 +296,26 @@ func builtinCaptureTemplates() []common.CaptureTemplate {
 		Type:      "entry",
 		CapTarget: common.Target{Type: "file+headline", Filename: "snippets.org", Id: "Snippets"},
 		Template:  "#+begin_src {{shell|Shell|=sh}}\n{{CONTENT}}\n#+end_src",
+	}, {
+		Name:      GoLinkTemplate,
+		Type:      "entry",
+		CapTarget: common.Target{Type: "file+headline", Filename: goLinksFile(), Id: goLinksHeading()},
+		Template:  ":PROPERTIES:\n:ADDED:    {{now}}\n:END:\n[[{{url|URL}}][{{name|Description}}]]",
 	}}
+}
+
+func goLinksFile() string {
+	if s := Conf().Server; s != nil && s.GoLinksFile != "" {
+		return s.GoLinksFile
+	}
+	return "links.org"
+}
+
+func goLinksHeading() string {
+	if s := Conf().Server; s != nil && s.GoLinksHeading != "" {
+		return s.GoLinksHeading
+	}
+	return "Links"
 }
 
 // Drill down to find the lowest child of the last child, this is where we will append?
@@ -598,9 +662,14 @@ func Capture(db common.ODb, args *common.Capture, username string) (common.Resul
 	res.Ok = false
 	res.Msg = "Capture: unknown failure, did not capture"
 	if temp != nil {
-		file, secs := db.GetFromTarget(&temp.CapTarget, true)
+		target, err := captureTarget(temp.CapTarget, username)
+		if err != nil {
+			res.Msg = "Capture: " + err.Error()
+			return res, nil
+		}
+		file, secs := db.GetFromTarget(&target, true)
 		if file == nil || secs == nil {
-			res.Msg = fmt.Sprintf("Capture: could not find target [%s]", temp.CapTarget.Type)
+			res.Msg = fmt.Sprintf("Capture: could not find target [%s]", target.Type)
 			res.Ok = false
 			return res, nil
 		}
@@ -626,6 +695,35 @@ func Capture(db common.ODb, args *common.Capture, username string) (common.Resul
 		res.Ok = false
 		return res, nil
 	}
+}
+
+// captureTarget is a template's target with its filename answered:
+// {{daypage}}, {{date}}, {{shortuid}} and the rest, made safe for a filename
+// (see common.CapExpandFilename). It is answered here, when the capture is
+// made, so a {{uuid}} in the filename is not the one the client was offered in
+// the template body.
+//
+// A filename that comes out as today's day page, and does not exist yet, is
+// made by the day page code, so it gets the day page template and last week's
+// open tasks rather than an empty new file.
+func captureTarget(t common.Target, username string) (common.Target, error) {
+	if !strings.Contains(t.Filename, "{{") {
+		return t, nil
+	}
+	now := time.Now()
+	fn, err := common.CapExpandFilename(t.Filename, now, username)
+	if err != nil {
+		return t, err
+	}
+	t.Filename = fn
+	if isCurrentDayPage(GetDb().GetFilepath(fn), now) {
+		if _, err := os.Stat(GetDb().GetFilepath(fn)); err != nil {
+			if _, err := CreateDayPage(); err != nil {
+				return t, err
+			}
+		}
+	}
+	return t, nil
 }
 
 func QueryCaptureTemplates(username string) ([]common.CaptureTemplate, error) {

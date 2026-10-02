@@ -75,6 +75,44 @@ func getDayPageFilename(from time.Time) (string, string) {
 	return filename, title
 }
 
+// dayPageRelPath answers {{daypage}} in a capture template: the day page in
+// force at that moment, relative to the first org directory, with / for a
+// separator so it also reads as an org file: link. A day page outside every org
+// directory comes back absolute.
+func dayPageRelPath(now time.Time) (string, bool) {
+	if Conf().Server == nil || len(Conf().Server.OrgDirs) == 0 {
+		return "", false
+	}
+	filename, _ := getDayPageFilename(now)
+	abs, err := filepath.Abs(filename)
+	if err != nil {
+		return "", false
+	}
+	root, err := filepath.Abs(Conf().Server.OrgDirs[0])
+	if err != nil {
+		return filepath.ToSlash(abs), true
+	}
+	rel, err := filepath.Rel(root, abs)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return filepath.ToSlash(abs), true
+	}
+	return filepath.ToSlash(rel), true
+}
+
+// isCurrentDayPage reports whether a file is the day page for now, so a
+// capture into it creates it from the day page template rather than a blank
+// new file.
+func isCurrentDayPage(fname string, now time.Time) bool {
+	dp, _ := getDayPageFilename(now)
+	a, err1 := filepath.Abs(fname)
+	b, err2 := filepath.Abs(dp)
+	return err1 == nil && err2 == nil && a == b
+}
+
+func init() {
+	common.CapDayPage = dayPageRelPath
+}
+
 func getPreviousDayPage(dt time.Time) (string, string) {
 	offset := -1
 	if Conf().Server.DayPageMode == "week" {

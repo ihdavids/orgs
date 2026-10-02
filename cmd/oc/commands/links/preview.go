@@ -157,10 +157,13 @@ func (self *Links) preview(core *commands.Core) {
 			commands.C(commands.AnsiDim), commands.C(commands.AnsiReset))
 		return
 	}
-	renderPane(core, rows[self.At], commands.PaneWidth())
+	RenderPane(core, rows[self.At], commands.PaneWidth())
 }
 
-func renderPane(core *commands.Core, l common.LinkEntry, width int) {
+// RenderPane draws one link the way the `orgs links` pane does: what it says,
+// the lines it was written among, and the far end. Exported for `orgs go`,
+// whose pane is the same question.
+func RenderPane(core *commands.Core, l common.LinkEntry, width int) {
 	// ---- what it says, and what it is
 	desc := l.Desc
 	if desc == "" {

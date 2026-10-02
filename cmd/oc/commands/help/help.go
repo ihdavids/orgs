@@ -53,7 +53,7 @@ var groups = []struct {
 		"note", "check", "archive", "rm", "ref", "cap", "listcap", "new", "daypage"}},
 	{"The clock", []string{"clockin", "clockout", "clocks", "clocktable"}},
 	{"Habits", []string{"habits"}},
-	{"Files and code", []string{"files", "fmt", "tangle", "code", "tables", "export", "links"}},
+	{"Files and code", []string{"files", "fmt", "tangle", "code", "tables", "export", "links", "go"}},
 	{"Records", []string{"rec", "record", "contact"}},
 	{"Watching", []string{"watch"}},
 	{"The server", []string{"serve", "login", "user", "adduser", "initconfig", "doctor", "completion", "help"}},

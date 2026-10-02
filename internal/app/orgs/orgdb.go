@@ -776,6 +776,9 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		context["author"] = Conf().Author
 		data := Conf().PlugManager.Tempo.RenderTemplate(template, context)
 		fmt.Fprintf(os.Stderr, "WRITING ORG FILE %s\n", fname)
+		// A capture filename may name a folder that is not there yet
+		// (tmp/{{shortuid}}.org).
+		os.MkdirAll(filepath.Dir(fname), 0755)
 		ioutil.WriteFile(fname, []byte(data), fs.ModePerm)
 		return self.ReloadFile(fname)
 	} else {

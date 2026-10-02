@@ -49,6 +49,7 @@ func RestApi(router *mux.Router) {
 	}
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
+	api.HandleFunc("/reloadconfig", PostReloadConfig).Methods("POST") // re-read the yaml: capture templates, filters, ... (reload.go)
 	// Adding an account. Only an administrator may, and only when this server
 	// has a keystore file to write - see adduser.go.
 	api.HandleFunc("/users/add", PostAddUser).Methods("POST")
