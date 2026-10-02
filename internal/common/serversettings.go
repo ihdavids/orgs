@@ -269,6 +269,41 @@ type ServerSettings struct {
 	GoLinksFile    string `yaml:"goLinksFile"`
 	GoLinksHeading string `yaml:"goLinksHeading"`
 	/* SDOC: Settings
+	* Link Protocols
+		Teach orgs your own link protocols. A link written =[[jira:ABC-123]]=
+		(or =jira://ABC-123=) is then followed wherever you say: either to a
+		real url, or by running a tool of yours on it.
+
+		#+BEGIN_SRC yaml
+		server:
+		  linkProtocols:
+		    jira:
+		      urlPrefix: "https://mycompany.atlassian.net/browse/"
+		    wiki:
+		      url: "https://wiki.me.com/pages/{{path}}/view"
+		    rdar:
+		      cmd: "mytool --open {{link}}"
+		    ticket:
+		      cmd: "tkt show"
+		      withProtocol: true
+		#+END_SRC
+
+		- =urlPrefix= replaces the protocol: =jira:ABC-123= becomes
+		  =https://mycompany.atlassian.net/browse/ABC-123=.
+		- =url= splices the link into a url, for when it does not go at the end.
+		- =cmd= is a command line to run. ={{link}}= is the whole link,
+		  protocol included; ={{path}}= is what comes after the protocol. With
+		  neither, the path is added as the last argument, or the whole link
+		  when =withProtocol= is set.
+
+		The server works out where a link goes and hands it back
+		(=GET /links/resolve=, and =Open= / =Command= on =/links/all=); a
+		command is run by the client following the link, never by the server.
+		=orgs go= follows them, and =orgs go jira:ABC-123= follows a link typed
+		straight in.
+	EDOC */
+	LinkProtocols map[string]LinkProtocol `yaml:"linkProtocols"`
+	/* SDOC: Settings
 	* Voice Notes
 		Recording and transcription. Orgs does not transcribe anything itself -
 		it runs a [[https://github.com/mutablelogic/go-whisper][go-whisper]]

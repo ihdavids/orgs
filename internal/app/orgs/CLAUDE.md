@@ -223,6 +223,8 @@ Decided server side:
 3. **A `file:` link is grouped by its protocol, not as "external"**, or pasted screenshots mix with things genuinely elsewhere.
 4. **A link to a file on disk is resolved to something showable** - `mediaURL` plus `mediaKindOf`, as for a source block's result file and a kanban card's picture - so the tab shows the picture, not the path.
 
+5. **`server.linkProtocols`** (`jira:` → url, or → a command) is applied here (`userLinkProtocol`) and by `GET /links/resolve`; a url one also sets `Host`, so it groups under that service. The html exporter writes url protocols as their url (via `PluginManager.LinkProtocols`); command ones stay as written and worg's Files click handler asks `/links/resolve`, opening the tab *before* the await (popup blocker) and showing the command line, since a browser cannot run it.
+
 Client: `worg/src/links.ts` (pure, tested; separate because of the **regex**) and `components/Links.tsx`. A half-typed pattern that does not compile is normal: the box says why and **keeps matching everything**. The pattern runs over `linkHay` (target, description, host, service, heading, file, where it lands), because people search by any of these.
 
 The right pane shows the far end: http(s) in a sandboxed frame, an org target via `ThemedHtml`, or a picture, player or pdf. **Pages may refuse framing** undetectably, so "open it in a tab" sits above the frame from the start.

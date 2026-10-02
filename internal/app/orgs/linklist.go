@@ -240,6 +240,15 @@ func RequestAllLinks(w http.ResponseWriter, r *http.Request) {
 		}
 		if l.Kind == "external" {
 			e.Scheme, e.Host = linkSchemeHost(l.Raw)
+			if res, ok := userLinkProtocol(l.Raw); ok && res.Ok {
+				e.Open, e.Command, e.CommandLine = res.Url, res.Command, res.CommandLine
+				// A jira: link is grouped with the Jira urls it stands for.
+				if e.Host == "" && res.Url != "" {
+					if u, err := url.Parse(res.Url); err == nil {
+						e.Host = strings.ToLower(u.Hostname())
+					}
+				}
+			}
 			e.Service = serviceOf(e.Host)
 			if e.Scheme == "" {
 				// Something with a protocol the resolver does not follow -
@@ -315,4 +324,56 @@ func RequestAllLinks(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(out)
+}
+
+// The yaml's definition for this link's protocol applied, when it has one.
+func userLinkProtocol(raw string) (common.LinkResolution, bool) {
+	sets := Conf().Server
+	if sets == nil || len(sets.LinkProtocols) == 0 {
+		return common.LinkResolution{}, false
+	}
+	return common.ResolveLinkProtocol(sets.LinkProtocols, raw)
+}
+
+/* SDOC: API
+* GET /links/resolve — Where a Link Goes
+
+	Applies the =linkProtocols= from the server's yaml to one link and says
+	where it goes: a url, or a command line for the caller to run. The server
+	never runs the command itself; it may not be the machine doing the
+	following.
+
+	*Method:* =GET=
+
+	*Query Parameters:*
+	| Parameter | Type   | Required | Description                     |
+	|-----------+--------+----------+---------------------------------|
+	| =link=    | string | yes      | The link as written: =jira:X-1= |
+
+	*Response:* A =LinkResolution= JSON object.
+	| Field         | Type   | Description                                    |
+	|---------------+--------+------------------------------------------------|
+	| =Ok=          | bool   | False when the protocol is not defined         |
+	| =Msg=         | string | Why not                                        |
+	| =Raw=         | string | The link                                       |
+	| =Protocol=    | string | Its protocol, lower cased                      |
+	| =Url=         | string | Where it goes, for a url protocol              |
+	| =Command=     | array  | The arguments to run, for a cmd protocol       |
+	| =CommandLine= | string | The same, quoted for a shell                   |
+EDOC */
+func RequestResolveLink(w http.ResponseWriter, r *http.Request) {
+	AccessControl(&w)
+	raw := strings.TrimSpace(r.URL.Query().Get("link"))
+	res, ok := userLinkProtocol(raw)
+	if !ok {
+		proto, _ := common.SplitLinkProtocol(raw)
+		res = common.LinkResolution{Raw: raw, Protocol: proto}
+		if proto == "" {
+			res.Msg = "the link has no protocol"
+		} else {
+			res.Msg = "no linkProtocols entry for " + proto
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
 }

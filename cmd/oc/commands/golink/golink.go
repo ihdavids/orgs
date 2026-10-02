@@ -21,11 +21,17 @@ package golink
 // (browser, mail client), a link into the org files goes to the editor at that
 // heading, a `file:` link to a file on this machine goes to whatever opens
 // that kind of file. Package golink because `go` is a keyword.
+//
+// A protocol defined under `linkProtocols` in the yaml (`jira:ABC-123`) goes
+// where the yaml says: its url to the desktop's opener, or its command run
+// here, in this terminal. A link like that can also be typed straight in -
+// `orgs go jira:ABC-123` - without it being written in any org file.
 
 import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -56,6 +62,9 @@ func (self *Go) SetupParameters(fset *flag.FlagSet) {
 
 func (self *Go) Exec(core *commands.Core) {
 	name := strings.TrimSpace(strings.Join(commands.FreeArgs(self.fset), " "))
+	if self.PaneAt < 0 && self.direct(core, name) {
+		return
+	}
 	rows := matches(core, name)
 
 	switch {
@@ -204,6 +213,11 @@ func (self *Go) follow(core *commands.Core, l common.LinkEntry) {
 		return
 	}
 	switch {
+	// A protocol the yaml defines: its command, or its url.
+	case len(l.Command) > 0:
+		run(l.Command)
+	case l.Open != "":
+		commands.OpenInBrowser(l.Open)
 	// Into the org files: the editor, at the heading.
 	case l.ToHash != "":
 		t := commands.TodoByHash(core, l.ToHash)
@@ -228,6 +242,10 @@ func (self *Go) follow(core *commands.Core, l common.LinkEntry) {
 
 func destination(core *commands.Core, l common.LinkEntry) string {
 	switch {
+	case l.CommandLine != "":
+		return l.CommandLine
+	case l.Open != "":
+		return l.Open
 	case l.ToHash != "" || l.ToFilename != "":
 		if l.ToFilename != "" {
 			return l.ToFilename
@@ -239,6 +257,40 @@ func destination(core *commands.Core, l common.LinkEntry) string {
 		return serverUrl(core, l.Url)
 	}
 	return l.Raw
+}
+
+// direct follows a link typed in rather than named: `orgs go jira:ABC-123`,
+// when the yaml defines jira. Anything else is a name to look up as before, so
+// a description that happens to contain a colon still works.
+func (self *Go) direct(core *commands.Core, name string) bool {
+	if proto, _ := common.SplitLinkProtocol(name); proto == "" || strings.ContainsAny(name, " \t") {
+		return false
+	}
+	params := map[string]string{"link": name}
+	res, err := commands.SendReceiveGetErr[common.LinkResolution](core, "links/resolve", params)
+	if err != nil || !res.Ok {
+		return false
+	}
+	l := common.LinkEntry{Raw: res.Raw, Desc: res.Raw, Kind: "external", Open: res.Url, Command: res.Command, CommandLine: res.CommandLine}
+	if commands.JsonOut || commands.FormatOut != "" {
+		commands.RenderOne(res, nil)
+		return true
+	}
+	self.follow(core, l)
+	return true
+}
+
+// run starts a linkProtocols command here, attached to this terminal so a tool
+// that wants it (a tui, a prompt) gets it, and waits for it.
+func run(argv []string) {
+	if commands.Wrote("run "+common.ShellJoin(argv), nil) {
+		return
+	}
+	cmd := exec.Command(argv[0], argv[1:]...)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		commands.Fail("orgs go: %s: %v", common.ShellJoin(argv), err)
+	}
 }
 
 // localFile is the file a `file:` link names, if it is on this machine. It is

@@ -105,6 +105,8 @@ go-org gives every inline node the position of the node it was parsed in, so `fi
 
 `cmd/oc/commands/golink/` (`go` is a Go keyword). `orgs go <name>`: case-insensitive prefix match on link **descriptions** over `/links/all`; one target (duplicates of the same `Raw` count as one, and an exact description wins) is followed, more opens the picker. Its pane is `links.RenderPane`; the child is `orgs go -pane-at N <name>` - a flag, not a subcommand word, so a link called "preview" still resolves. Enter follows; **ctrl-e uses `commands.PickKey` (fzf `--expect`)** so the picker is closed before the editor starts - `execute-silent` would leave a terminal editor fighting fzf for the screen.
 
+**User link protocols** (`server.linkProtocols`, `internal/common/linkprotocols.go`): `/links/all` carries `Open` (url) or `Command`/`CommandLine` per link, and `orgs go` follows those first - a command runs **here**, attached to the terminal, never on the server (it may be another machine). `orgs go jira:ABC-1` (a link typed in, no spaces) asks `/links/resolve` before the description search; an undefined protocol falls through to the search. A `cmd` is split into words *before* the link is substituted, so link text is always one argument and never reaches a shell.
+
 `orgs gocap [link] [description]` files through `/capture` with the built-in **`GoLink`** template (`builtinCaptureTemplates` in `internal/app/orgs/capture.go`, target from `server.goLinksFile`/`goLinksHeading`). A user template named `GoLink` replaces it.
 
 ### The records pane

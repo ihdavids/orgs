@@ -133,6 +133,13 @@ type LinkEntry struct {
 	// it, and the client knows neither that directory nor the org roots.
 	Url   string
 	Media string
+
+	// For a link whose protocol is defined under linkProtocols in the yaml:
+	// the url it maps to, or the command that follows it (argv, and the same
+	// quoted as one line). Run by the client, never by the server.
+	Open        string
+	Command     []string
+	CommandLine string
 }
 
 // One service, and how many links point at it - the filter strip the links tab

@@ -482,6 +482,16 @@ func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
 			w.WriteString(fmt.Sprintf(`<a href="%s"><img src="%s" alt="%s" /></a>`, l.URL, fname, description))
 		}
 	} else {
+		// A protocol of the user's that maps to a url is written as that url,
+		// so the page can be followed by anything. One that maps to a command
+		// is left as written: only a client that can run things follows it.
+		if res, ok := common.ResolveLinkProtocol(w.Exp.pm.LinkProtocols, l.URL); ok && res.Url != "" {
+			if l.Description == nil {
+				l.Description = []org.Node{org.Text{Content: l.URL}}
+			}
+			l.URL = res.Url
+			l.Protocol, _ = common.SplitLinkProtocol(res.Url)
+		}
 		w.HTMLWriter.WriteRegularLink(l)
 	}
 }

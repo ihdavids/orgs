@@ -49,6 +49,9 @@ type PluginManager struct {
 	// to turn `[[attachment:report.pdf]]` into something a reader can open, and
 	// an exporter cannot ask the server - the server imports the exporters.
 	Attach AttachSettings
+	// The yaml's own link protocols (`jira:` to a url), so an exporter writes
+	// the real url into the page rather than a link nothing can follow.
+	LinkProtocols map[string]LinkProtocol
 }
 
 // Updating plugins are called with a target

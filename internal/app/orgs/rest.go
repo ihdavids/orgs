@@ -162,6 +162,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/links/graph", RequestLinkGraph).Methods("GET")
 	api.HandleFunc("/links/stats", RequestLinkStats).Methods("GET")
 	api.HandleFunc("/links/all", RequestAllLinks).Methods("GET") // every link, flat
+	api.HandleFunc("/links/resolve", RequestResolveLink).Methods("GET")
 
 	// The database as a galaxy: every file or heading a star. Not the link
 	// graph - that one only holds the things something links to, and a map has

@@ -407,6 +407,7 @@ func (self *Config) ParseConfig() {
 		manager.TLSPort = self.Server.TLSPort
 		manager.OrgDirs = self.Server.OrgDirs
 		manager.Attach = self.Server.Attach
+		manager.LinkProtocols = self.Server.LinkProtocols
 	}
 	config.PlugManager = manager
 	if self.Server != nil {
