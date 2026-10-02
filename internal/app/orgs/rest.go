@@ -52,6 +52,8 @@ func RestApi(router *mux.Router) {
 	// Adding an account. Only an administrator may, and only when this server
 	// has a keystore file to write - see adduser.go.
 	api.HandleFunc("/users/add", PostAddUser).Methods("POST")
+	api.HandleFunc("/editor/help", RequestEditorHelp).Methods("GET") // worg's file editor: keys and snippets, from docs/editor.org
+	api.HandleFunc("/orgfile", PostOrgFile).Methods("POST") // the files tab's editor saving; before the GET, which takes any method
 	api.HandleFunc("/orgfile", RequestOrgFile)
 	api.HandleFunc("/findfile", RequestFindFileInDb)
 	api.HandleFunc("/files", RequestFiles)

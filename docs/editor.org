@@ -1,0 +1,151 @@
+#+TITLE: Editing org files in worg
+
+The Files tab's *Org* view is read only until you press *Edit*. The editor
+takes vim keys (the default) or emacs keys; pick them under *Editor keys* in
+the settings menu. The org commands below work the same way in both. =M-= is
+Alt / Option, =S-= is Shift, =C-= is Control and =SPC= is the space bar in vim's
+normal mode. Open this page with =F1=, the *Keys* button under the editor,
+=SPC ?= or =:help= in vim.
+
+* Snippets
+Type the snippet at the start of a line (nothing but indentation before the
+=<=) and press =TAB=. A snippet with blanks to fill in highlights them in
+turn: =TAB= goes to the next one, =S-TAB= back, and =TAB= off the last one
+finishes. =ESC= finishes too, except in a capture, where it takes the whole
+capture back out.
+
+| Type      | You get                                                          |
+|-----------+------------------------------------------------------------------|
+| =<s=      | =#+BEGIN_SRC= block: language, then the code                     |
+| =<e=      | =#+BEGIN_EXAMPLE= block                                          |
+| =<q=      | =#+BEGIN_QUOTE= block                                            |
+| =<v=      | =#+BEGIN_VERSE= block                                            |
+| =<C=      | =#+BEGIN_CENTER= block                                           |
+| =<x=      | =#+BEGIN_EXPORT= block: format, then the text                    |
+| =<h=      | =#+BEGIN_EXPORT html= block                                      |
+| =<l=      | =#+BEGIN_EXPORT latex= block                                     |
+| =<a=      | =#+BEGIN_EXPORT ascii= block                                     |
+| =<I=      | =#+INCLUDE:= line                                                |
+| =<n=      | =#+NAME:= line                                                   |
+| =<tb=     | a two-column table with a header rule                            |
+| =<cb=     | a checkbox item, =- [ ]=                                         |
+| =<p=      | a property on the heading, in its drawer (made if it has none)   |
+| =<sch=    | =SCHEDULED:= today on the heading's planning line                |
+| =<dl=     | =DEADLINE:= today on the heading's planning line                 |
+| =<t=      | an active timestamp of today, =<2026-10-02 Fri>=                 |
+| =<i=      | an inactive timestamp of now, =[2026-10-02 Fri 09:30]=           |
+| =<c=      | a capture template, picked from a menu and filled in right here  |
+
+=<p=, =<sch= and =<dl= go where org keeps those things rather than where you
+typed them, and the line you typed them on goes too if nothing else is on it.
+A property whose name you leave empty is taken out again when you finish,
+along with the drawer if that leaves it empty.
+
+** Capture templates: =<c=
+=<c= =TAB= opens a menu of the server's capture templates. Type to filter,
+use the arrows or =1=-=9=, and =Enter= to pick one. The template is written in
+place (it is not filed where the template would file it), as blanks to fill:
+an entry is a heading one level under the heading you are in, with a blank
+for its tags; dates and values the template answers itself are written in
+already. Lines that were only a blank you left empty are dropped when you
+finish, and the tags are written =:like:this:=. =ESC= takes the whole capture
+back out, =<c= included.
+
+* Structure
+| Keys                  | vim normal also | What it does                                                         |
+|-----------------------+-----------------+----------------------------------------------------------------------|
+| =M-Up= / =M-Down=     | =M-k= / =M-j=   | move the heading (with its subtree) or list item past its sibling    |
+| =M-Left= / =M-Right=  | =M-h= / =M-l=   | promote / demote the heading; dedent / indent the list item          |
+| =M-S-Left= / =M-S-Right= | =M-H= / =M-L= | promote / demote the heading and its whole subtree                   |
+| =M-Enter=             | =SPC n=         | the next thing: a new list item after this one (keeping its bullet, its checkbox and its numbering), or a new heading at this level after the subtree |
+| =M-S-Enter=           | =SPC N=         | the same as a =TODO= heading, or a checkbox item                     |
+| =C-Enter=             | =SPC h=         | a new heading after the subtree, even inside a list                  |
+| =TAB= on a heading    | =TAB=, =za=     | fold / unfold it (=zc= =zo= =zM= =zR= in vim)                        |
+| =TAB= on an empty item |                | indent it                                                            |
+
+A heading moves with everything under it and never out from under its parent.
+A list item moves with the lines indented under it. A numbered list is
+renumbered when an item is added.
+
+* Todo, priority, checkboxes and statistics
+| Keys                    | vim normal | What it does                                                                         |
+|-------------------------+------------+--------------------------------------------------------------------------------------|
+| =S-Left= / =S-Right= on a heading | =SPC T= / =SPC t= | cycle the todo keyword (back / forward, and off the end to none)       |
+| =C-c C-t=               | =SPC t=    | next todo keyword, from anywhere in the entry                                        |
+| =S-Up= / =S-Down= on a heading |     | raise / lower the priority: =[#A]= =[#B]= =[#C]= none                               |
+| =C-c ,=                 | =SPC ,=    | cycle the priority                                                                   |
+| =C-c C-c= on a checkbox | =SPC x=    | tick / untick it, and everything under it                                            |
+| =C-c C-c= elsewhere     | =SPC x=    | recount the section's statistics; on a timestamp, put its day name right             |
+| =C-c C-x C-b=           | =SPC X=    | give the item a checkbox, or take it away                                            |
+
+The keywords cycled are the file's own first =#+TODO:= line, or the server's
+defaults when the file has none.
+
+Ticking a box keeps its parents and their counts right, as org does: a parent
+item with a box is =[X]= when all its children are, =[-]= when some are, and
+=[ ]= when none are. A =[n/m]= or =[%]= cookie on an item counts its direct
+children; on a heading it counts the section's top-level checkboxes, or, when
+there are none, its child headings that carry a todo keyword (so cycling a
+keyword updates its parent's cookie). Put an empty =[/]= or =[%]= where you
+want one and =C-c C-c= fills it in.
+
+* Dates, planning and properties
+| Keys                 | vim normal | What it does                                                                 |
+|----------------------+------------+------------------------------------------------------------------------------|
+| =C-c .=              | =SPC .=    | an active timestamp of today; on a timestamp, select its date                |
+| =C-c !=              | =SPC != | an inactive timestamp of now                                                     |
+| =C-c C-s=            | =SPC s=    | =SCHEDULED:= on the heading: added, or the existing one selected             |
+| =C-c C-d=            | =SPC d=    | =DEADLINE:= on the heading: added, or the existing one selected              |
+| =S-Up= / =S-Down= on a timestamp |  | change the part under the cursor: year, month, day (or the day name), hour, minute (in 5s) |
+| =S-Left= / =S-Right= on a timestamp | | a day earlier / later                                                     |
+| =C-c C-x p=          | =SPC p=    | set a property: a new line in the heading's drawer, or a new drawer           |
+
+A date that goes in is left selected, so you can type over it or move it with
+the shifted arrows straight away, then =TAB= or =ESC=. The day name is always
+recomputed, and a time range keeps its length. Scheduling a heading with a
+deadline puts both on one planning line. A planning line or drawer that goes in
+takes the indentation the heading's body already has.
+
+* Vim
+=SPC= in normal mode is the leader: the status line shows =SPC-= and the next
+key runs one of the org commands above (=SPC ?= opens this page).
+
+| Keys         | What it does                                                      |
+|--------------+-------------------------------------------------------------------|
+| =jk=, =jj=   | leave insert mode, when typed quickly (within 200ms)              |
+| =:w=         | save                                                              |
+| =:wq=, =:x=  | save and close                                                    |
+| =:q=         | close (asks if there are unsaved changes)                         |
+| =:q!=        | close, throwing the changes away                                  |
+| =:help=      | this page                                                         |
+
+The rest is vim: motions, operators, text objects, registers, visual modes,
+=/= search, =:s= substitution, macros. The mode is shown under the editor:
+NORMAL, INSERT, VISUAL, V-LINE, V-BLOCK, REPLACE. Leaving insert mode with
+=jk= or =jj= while filling in a snippet finishes it, keeping what is there.
+
+* Emacs
+| Keys                      | What it does                                   |
+|---------------------------+------------------------------------------------|
+| =C-f= =C-b= =C-n= =C-p=   | forward, back, down, up                        |
+| =C-a= =C-e=               | start, end of line                             |
+| =M-f= =M-b=               | forward, back a word                           |
+| =C-v= =M-v=               | page down, up                                  |
+| =M-<= =M->=               | start, end of the file                         |
+| =C-SPC=, =C-g=            | set the mark (select as you move), cancel      |
+| =C-k=                     | kill to the end of the line                    |
+| =C-w= =M-w= =C-y=         | kill, copy, yank the region                    |
+| =C-d= =M-d= =M-DEL=       | delete a character, a word forward, back       |
+| =C-t= =C-o=               | transpose characters, open a line              |
+| =C-/= =C-_= =C-x u=       | undo                                           |
+| =C-s=                     | search                                         |
+| =C-x C-s=                 | save                                           |
+| =C-x C-c=                 | close                                          |
+| =F1=                      | this page                                      |
+
+* Saving
+=⌘S= saves in either key set, and so does =C-s= in vim (in emacs =C-s= is
+search, so use =C-x C-s=). A save is refused when the file has changed on disk since you
+started editing - a capture, a kanban drag, Emacs - and you are offered to
+overwrite it or to throw your edit away and reload. Leaving the editor, the
+file or the Org view with unsaved changes asks first.
