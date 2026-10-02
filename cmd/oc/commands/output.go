@@ -283,11 +283,24 @@ func FreeArgs(fset *flag.FlagSet) []string {
 		// `--` is the shell's own way of saying "no more flags", and a re-parse
 		// that did not honour it would read the words after it as flags again -
 		// which is exactly what somebody writing it was protecting against.
+		//
+		// The words before it still get the flags-anywhere treatment: in
+		// `orgs snip new -d 'what it does' -- cmd`, -d comes after a word.
 		if i := indexOf(args, "--"); i >= 0 {
-			if err := fset.Parse(args[:i]); err == nil {
-				words = append(words, fset.Args()...)
+			rest := args[i+1:]
+			args = args[:i]
+			for {
+				if err := fset.Parse(args); err != nil {
+					break
+				}
+				left := fset.Args()
+				if len(left) == 0 {
+					break
+				}
+				words = append(words, left[0])
+				args = left[1:]
 			}
-			return append(words, args[i+1:]...)
+			return append(words, rest...)
 		}
 		if err := fset.Parse(args); err != nil {
 			return words

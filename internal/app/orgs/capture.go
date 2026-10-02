@@ -226,7 +226,32 @@ func FindCaptureTemplate(name string, username string) *common.CaptureTemplate {
 			return &cap
 		}
 	}
+	// And to the ones every server has, unless configured otherwise above.
+	for _, cap := range builtinCaptureTemplates() {
+		if cap.Name == name {
+			return &cap
+		}
+	}
 	return nil
+}
+
+// SnippetTemplate is the capture template `orgs snip new` files through, and
+// the one worg's capture dialog and `orgs cap` offer for saving a command line.
+// A server or user template of the same name replaces it, which is how the
+// snippets go somewhere other than snippets.org.
+const SnippetTemplate = "Snippet"
+
+// builtinCaptureTemplates are the templates a server has without being told:
+// only the snippet one, because a command line is the thing most worth saving
+// before it scrolls away, and having to configure somewhere to put it first is
+// how it scrolls away.
+func builtinCaptureTemplates() []common.CaptureTemplate {
+	return []common.CaptureTemplate{{
+		Name:      SnippetTemplate,
+		Type:      "entry",
+		CapTarget: common.Target{Type: "file+headline", Filename: "snippets.org", Id: "Snippets"},
+		Template:  "#+begin_src {{shell|Shell|=sh}}\n{{CONTENT}}\n#+end_src",
+	}}
 }
 
 // Drill down to find the lowest child of the last child, this is where we will append?
@@ -626,8 +651,16 @@ func QueryCaptureTemplates(username string) ([]common.CaptureTemplate, error) {
 			}
 		}
 	}
-	if len(res) > 0 {
-		return res, nil
+	for _, b := range builtinCaptureTemplates() {
+		found := false
+		for i := range res {
+			if res[i].Name == b.Name {
+				found = true
+			}
+		}
+		if !found {
+			res = append(res, b)
+		}
 	}
-	return []common.CaptureTemplate{}, fmt.Errorf("Capture: failed to find any capture templates")
+	return res, nil
 }

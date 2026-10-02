@@ -86,3 +86,15 @@ All three get one tree, built in `worg/src/mindmap.ts` from the query's own rows
 4. Every node knows **which root branch it hangs from** (`branch`), because colouring is by branch, not depth; that is what makes a wide map readable.
 
 Nothing an engine does is written back. Dragging in mind-elixir rearranges the drawing, not the outline, because a drag that silently refiled a heading is not what someone rearranging a map expects.
+
+## The Flashcards tab (Drill)
+
+`components/Drill.tsx`, session logic in `src/drill.ts` (pure, tested by `drill.test.ts`); server in `internal/app/orgs/drill.go` (the algorithms) and `drillcards.go` (reading cards, writing ratings). User guide: `docs/drill.org`. It mirrors Emacs org-drill: same properties, spellings, algorithms and session rules, so a card can be drilled in either.
+
+- **A deck is a query** (or a saved search), stored per user in extensions like kanban boards (`DrillDeck` in Go; a TS-only field is dropped on save, see **Per-user extensions**). A found heading under a found card is part of that card, and a found heading with no body over found headings is a grouping heading: queries match inherited tags, so `HasTags("spanish")` finds the parent as well as the words.
+- **What is written lives on the server, what is chosen lives in the browser.** Scheduling, properties, SCHEDULED and leech are server-side (one request per rating). Queue order, the again pile, limits, which clozes hide and which side is asked are `drill.ts`, chosen afresh each showing as org-drill does.
+- **Clozes are wrapped server-side** in `<span class="drill-cloze" data-n data-hint data-len>` via `@@html:` export snippets, then `clozeHtml` rewrites them per phase. Own-body clozes are numbered from 1; title and side clozes are 0 (always hidden in the question). A cloze left showing in the question is plain text, or it would mark where the answers are.
+- **The "+N days" on a rating button is the interval written**: the server computes `next[0..5]` with noise seeded from hash + day + repeats, so preview and write agree.
+- **The session survives leaving the tab** (module-level `live`), which is how `e` (edit in the Files tab) and quit work like org-drill-resume.
+- Cram writes nothing and counts nothing, as in org-drill.
+- `orgs drill` (`cmd/oc/commands/drill/`) is the terminal client of the same endpoints; its session logic is a Go copy of `drill.ts` (keep the two in step), and it reads cards with `format=org`.

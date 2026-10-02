@@ -62,6 +62,9 @@ type CodeBlock struct {
 	// The hash of that heading, for jumping to it. Empty for a block above the
 	// first heading.
 	Hash string
+	// That heading's tags and the tags it inherits, its own first: what a
+	// snippet is filtered by (`orgs snip -t docker`).
+	Tags []string
 
 	// The #+BEGIN_SRC line and the #+END_SRC line, zero based.
 	Line    int

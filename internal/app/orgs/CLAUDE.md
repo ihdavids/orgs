@@ -379,3 +379,14 @@ Gantt edits go through the existing endpoints, and three of them were fixed for 
 Three bugs that corrupted files through the old `/refile` are fixed and pinned by `refile_test.go`: subtrees written once per level, the delete measured before the insert, and archive's `file+heading` typo. See `docs/claude/bug-history.md`.
 
 Client: `worg/src/move.ts` (pure, tested), `MoveDialog.tsx` (one dialog for all three) and `FileMove.tsx` (the file view's outline picker), reached from the search tab's row menu and bulk bar, the kanban card's back, and the files tab's toolbar.
+
+## Flashcards: org-drill over a query
+
+`drill.go` is org-drill's arithmetic (SM5, SM2, Simple8, statuses, property formatting), pinned against org-drill's own worked numbers in `drill_test.go`; `drillcards.go` reads cards and writes ratings. Notes on the worg side are in `docs/claude/worg.md`; user guide `docs/drill.org`.
+
+1. **Cards are read off the file's lines**, never `Headline.Children` (every card with drill data has a drawer, see **Traps: column-zero drawers**).
+2. **Writes are line edits of the card's own lines**: properties via `ensurePropertyDrawer`/`setPropIn` at the drawer's own indent (Emacs writes drawers in column zero), SCHEDULED via `setScheduled` on the planning line, `leech` via `addHeadlineTag`. Never `ChangeDate` (it calls `WriteOutOrgFile`).
+3. **Floats are written as Emacs prints them** (`lispFloat`: `4.0`, not `4`), so a file drilled here diffs cleanly with one drilled in Emacs.
+4. **The SM5 matrix is keyed by ease rounded to 3 places** (deliberately not org-drill, whose float keys never match what is read back) and saved per user in extensions after every rating.
+5. **Quirks kept on purpose**: the EF floor is applied before the change; Simple8 does not count a failure in the total; the stored interval is the hypothetical one the button showed (org-drill's smart reschedule).
+6. Test the review endpoint with `Content-Type: application/json`: without it the form-parsing middleware eats the body and the hash comes through empty ("no heading with that hash").

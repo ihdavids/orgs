@@ -4,6 +4,8 @@ Loaded when working in this directory. References like **Traps: line edits** poi
 
 ## The four presentation exporters
 
+(A fifth renderer, `orgs pres`, draws the same `Deck` in a terminal; see `cmd/oc/commands/pres/CLAUDE.md`.)
+
 `revealjs`, `impressjs`, `webslides` and `deckjs`: file = deck, headline = slide, properties = behaviour. Everything before html is shared in **`internal/app/orgs/plugs/slides`** (which headlines are slides, speaker notes, backgrounds, file link → url). worg's Presentations tab uses `/file/{exporter}`.
 
 **A property means the same in every framework**: `:BACKGROUND: blue` everywhere, `:REVEAL_BACKGROUND:` reveal only, `#+SLIDE_LEVEL:` everywhere. `Conf` is the ladder: slide's prefixed property → its neutral one → the document's.

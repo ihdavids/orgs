@@ -125,6 +125,11 @@ type UserExt struct {
 	StoredQueries    []StoredQuery            `yaml:"storedQueries" json:"storedQueries"`
 	CaptureTemplates []common.CaptureTemplate `yaml:"captureTemplates" json:"captureTemplates"`
 	KanbanBoards     []KanbanBoard            `yaml:"kanbanBoards" json:"kanbanBoards"`
+	// Flashcard decks, and what SM5 has learnt about how this person forgets
+	// (see drill.go). The matrix is per person, not per deck, as in org-drill:
+	// it describes a memory, not a subject.
+	DrillDecks  []DrillDeck `yaml:"drillDecks" json:"drillDecks"`
+	DrillMatrix DrillMatrix `yaml:"drillMatrix,omitempty" json:"drillMatrix,omitempty"`
 }
 
 // ExtensionsConfig is the root of the per-user extensions YAML file.

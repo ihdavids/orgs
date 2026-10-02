@@ -917,6 +917,19 @@ func (self *OrgHtmlExporter) RenderFragment(nodes ...org.Node) string {
 	return w.String()
 }
 
+// RenderFragmentIn is RenderFragment for nodes parsed out of a document of
+// their own - a flashcard's question, say - so that a picture named relative to
+// the org file is found relative to that file and not to the org root.
+func (self *OrgHtmlExporter) RenderFragmentIn(doc *org.Document, nodes ...org.Node) string {
+	self.Props = ValidateMap(self.Props)
+	w := NewOrgHtmlWriter(self)
+	if doc != nil {
+		w.Document = doc
+	}
+	org.WriteNodes(w, nodes...)
+	return w.String()
+}
+
 // ThemeStyle is the stylesheet a named theme renders with, for a caller showing
 // a fragment that has no document of its own to hang a <head> on. An empty name
 // is the default theme, and a name no theme answers to falls back to it too.

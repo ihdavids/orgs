@@ -80,6 +80,7 @@ Each of these comes up in several features below. They are stated once here, and
   - capture template grammar: `internal/common/captemplate.go` ↔ `worg/src/capture.ts`
   - code block header order: `headerLine` in Go ↔ `headerLine` in `worg/src/code.ts`
   - note line breaks: `orgBreakLines`/`orgStripBreaks` ↔ the sheet's `orgToHtml`
+  - flashcard sessions: `worg/src/drill.ts` ↔ `cmd/oc/commands/drill/session.go` (same scenarios in `drill.test.ts` and `session_test.go`)
 
 ### Where the rest of the notes live
 
@@ -90,6 +91,9 @@ Feature notes sit in `CLAUDE.md` files beside the code and load when you work th
 - `cmd/oc/commands/habits/CLAUDE.md`: `orgs habits`
 - `cmd/oc/commands/mcp/CLAUDE.md`: `orgs mcp`
 - `cmd/oc/commands/orghl/CLAUDE.md`: `orghl`
+- `cmd/oc/commands/pres/CLAUDE.md`: `orgs pres`, the terminal slideshow
+- `cmd/oc/commands/drill/CLAUDE.md`: `orgs drill`, flashcards in the terminal
+- `cmd/oc/commands/snip/CLAUDE.md`: `orgs snip`, command-line snippets (pet over source blocks)
 - `docs/claude/worg.md`: the worg frontend
 - `internal/app/orgs/CLAUDE.md`: the server (`internal/app/orgs`)
 - `internal/app/orgs/plugs/html/CLAUDE.md`: the html exporter

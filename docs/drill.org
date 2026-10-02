@@ -1,0 +1,297 @@
+#+TITLE: Flashcards — drilling your notes, org-drill style
+#+OPTIONS: toc:2 num:nil
+
+* What it is
+
+  worg's *Flashcards* tab is spaced repetition over your org files. Any heading
+  can be a card: its body is the question and its child headings are the
+  answer. You rate how well you remembered it, from 0 to 5, and the card is
+  scheduled again: soon if it was hard, much later if it was easy.
+
+  The tab follows Emacs [[https://gitlab.com/phillord/org-drill][org-drill]] closely.
+  It uses the same card types, the same =[cloze]= syntax, the SM5, SM2 and
+  Simple8 algorithms with the same constants, the same =DRILL_*= properties
+  written the same way, and the same session rules. A card can be drilled here
+  on Monday and with =M-x org-drill= on Tuesday, and each picks up where the
+  other left off.
+
+  The difference is how cards are chosen. org-drill uses every heading tagged
+  =:drill:=. Here, a *deck* is a query of your own, so you can keep as many
+  decks as you like, spread across the same notes:
+
+  | Deck      | Query                                          |
+  |-----------+------------------------------------------------|
+  | Spanish   | =HasTags("spanish")=                           |
+  | Chemistry | =HasTags("chem") && IsInFile("school.org")=    |
+  | Drill     | =HasTags("drill")= (org-drill's own cards)     |
+  | Hard ones | a saved search, edited in the Saved Queries tab |
+
+* Making cards
+
+** A simple card
+
+   #+BEGIN_SRC org
+   ,* What is the capital of France?                          :geography:
+   ,** Answer
+   Paris
+   #+END_SRC
+
+   The question is the heading and its body. The child headings (here,
+   /Answer/) are folded while you think and opened when you ask for the answer.
+
+** Clozes
+
+   Square brackets hide part of the text. Two bars add a hint.
+
+   #+BEGIN_SRC org
+   ,* Spain                                                   :geography:
+   The capital of Spain is [Madrid||starts with M], on the [Manzanares].
+   #+END_SRC
+
+   In the question this reads "The capital of Spain is [starts with M...], on
+   the [...]". The answer shows both words, highlighted.
+
+   A cloze must fit on one line. Checkboxes (=[X]=), progress cookies
+   (=[1/3]=, =[50%]=), dates (=[2026-10-01 Thu]=), footnote references
+   (=[fn:1]=), links and =code= are never treated as clozes. org-drill does
+   hide those; that is the one place this deliberately differs.
+
+** Card types
+
+   Set a type with the =DRILL_CARD_TYPE= property. It is inherited, so putting
+   it on a parent heading sets the type for every card below it.
+
+   | Type                       | What is asked                                                        |
+   |----------------------------+----------------------------------------------------------------------|
+   | =simple= (the default)     | the body, with every cloze hidden                                    |
+   | =twosided=                 | one of the first two child headings is shown and the other is asked  |
+   | =multisided=               | one child heading, chosen at random, is shown and the rest are asked |
+   | =hide1cloze=, =multicloze= | one cloze is hidden at random and the others are shown               |
+   | =hide2cloze=               | two clozes are hidden                                                |
+   | =show1cloze=, =show2cloze= | one or two clozes are shown and the rest are hidden                  |
+   | =hidefirst=, =hidelast=    | only the first cloze, or only the last, is hidden                    |
+   | =hide1_firstmore=          | usually the first cloze is hidden; every fourth review, another one  |
+   | =show1_lastmore=           | usually only the last cloze is shown                                 |
+   | =show1_firstless=          | usually one cloze other than the first is shown                      |
+   | =conjugate=                | built from =VERB_INFINITIVE=, =VERB_TRANSLATION=, =VERB_TENSE=, =VERB_MOOD= |
+   | =decline_noun=             | built from =NOUN=, =NOUN_GENDER=, =NOUN_TRANSLATION=, =DECLINE_DEFINITE=, =DECLINE_PLURAL= |
+   | =spanish_verb=             | children named /Infinitive/ and /English/, asked in a given tense    |
+
+   A two-sided card:
+
+   #+BEGIN_SRC org
+   ,** Dog                                                      :spanish:
+   :PROPERTIES:
+   :DRILL_CARD_TYPE: twosided
+   :END:
+   ,*** English
+   dog
+   ,*** Spanish
+   el perro
+   #+END_SRC
+
+** Which headings are cards
+
+   - A heading the query finds is a card.
+   - A heading found *underneath* a card belongs to that card, as an answer or
+     a side. Tags are inherited in queries, so this is what happens to a
+     card's children.
+   - A found heading with no text of its own, with found headings below it,
+     only groups them. With =* Vocabulary :spanish:= over twenty words, the
+     words are the cards and /Vocabulary/ is not.
+   - A card with nothing to ask (no body, and not a =twosided= or
+     =multisided= card) and a card with an unknown type are left out. The deck
+     lists them under "left out", as org-drill reports them.
+
+** More
+
+   - =:DRILL_CARD_WEIGHT: 2= makes a card come round about twice as often.
+   - A heading tagged =:explain:= above some cards adds its text to their
+     answers.
+   - A child heading that has been drilled as a card in its own right stays
+     folded in its parent's answer.
+   - A card failed more times than the deck's leech threshold (15) is tagged
+     =leech=. By default a deck then skips it: a card you keep failing needs
+     rewriting, not more drilling.
+
+* Decks
+
+  =+= in the deck list makes a deck. A deck has:
+
+  - a *name* and an optional *description*;
+  - the *query* that picks its cards, or the name of a *saved search*. With a
+    saved search, editing that search changes the deck. *Check the query*
+    counts the cards before you save;
+  - the *algorithm*:
+    - =SM5= (the default) learns how quickly /you/ forget, and keeps what it
+      learns per person, not per deck;
+    - =SM2= is the classic one day, six days, then multiplying by the card's ease;
+    - =Simple8= works from your average rating alone;
+  - org-drill's settings, each defaulting to org-drill's own value:
+
+  | Setting                    | Default | Meaning                                                    |
+  |----------------------------+---------+------------------------------------------------------------|
+  | Cards per session          |      30 | stop once this many have been passed (-1: no limit)        |
+  | Minutes per session        |      20 | stop after this long (-1: no limit)                        |
+  | Failure quality            |       2 | a rating at or below this is a failure                     |
+  | Learn fraction             |     0.5 | how fast intervals grow; lower means more reviews          |
+  | Leech after failures       |      15 | when a card becomes a leech                                |
+  | Leeches                    |    skip | skip them, ask with a warning, or ask as usual             |
+  | Days before old            |      10 | a longer interval counts the card as old rather than young |
+  | Overdue factor             |     1.2 | how late, relative to the interval, counts as overdue      |
+  | Forgetting index           |      10 | warn when more than this % of a session was failed         |
+  | Cram hours                 |      12 | cram asks what has not been seen in this many hours        |
+  | Spread reviews out         |     off | a little randomness on every interval                      |
+  | Forget very overdue cards  |     off | a card over 90 days overdue is treated as forgotten        |
+  | Hide headings              |     off | for cards whose heading gives the answer away              |
+  | Type the answer            |     off | type before you look; your answer is shown beside the real one |
+  | Clozes show their length   |     off | =[......]= with one dot per hidden letter                  |
+
+  Decks are kept per user, beside the server's configuration (in
+  =orgs_extensions.yaml=), with your saved searches and kanban boards. A deck
+  holds no cards: the cards and their history stay in your files.
+
+  Each deck shows how many cards are due now, new, failed, overdue, young, old,
+  not yet due, and due tomorrow. *Browse* lists every card with its status, next
+  review, ease and failures, and a button to open the card in its file.
+
+* Drilling
+
+  *Drill* starts a session.
+
+  The line above the card shows:
+  - the time so far;
+  - the card's status letter: =N= new, =Y= young, =o= old, =!= overdue,
+    =F= failed, =C= cram;
+  - four counts: cards done, failed, mature (young, old and overdue) and new
+    still waiting.
+
+  | Key        | Question                    | Answer                  |
+  |------------+-----------------------------+-------------------------|
+  | any key, ⏎ | show the answer             |                         |
+  | =0=-=5=    |                             | rate it                 |
+  | =e=        | edit the card in its file   | edit the card           |
+  | =s=        | skip it (nothing is saved)  |                         |
+  | =?=        |                             | what the ratings mean   |
+  | =q=, esc   | stop                        | stop                    |
+
+  The ratings:
+
+  | Rating | Meaning                                                       |
+  |--------+---------------------------------------------------------------|
+  |      0 | Completely forgot.                                            |
+  |      1 | Even after seeing the answer, it still took a bit to sink in. |
+  |      2 | After seeing the answer, you remembered it.                   |
+  |      3 | It took you awhile, but you finally remembered.               |
+  |      4 | After a little bit of thought you remembered.                 |
+  |      5 | You remembered the item really easily.                        |
+
+  Each button shows when the card would come back after that rating.
+
+  - *0-2 is a failure.* The card comes back later in the same session, and
+    keeps coming back until you pass it. Its schedule is taken off, so it
+    starts the next session as failed.
+  - *3-5 is a pass*, scheduled further away the easier it was.
+
+** The order cards come in
+
+   Cards are asked in org-drill's order:
+   1. those failed last time;
+   2. overdue ones, most overdue first;
+   3. young ones;
+   4. new and old ones mixed together, in proportion to how many of each are
+      waiting;
+   5. last, the cards failed during this session. These keep coming even after
+      a limit is reached, because a failed card must be passed before you stop.
+
+** Stopping, resuming, and the report
+
+   - *q* stops. Every rating you gave is already in your files. The session
+     waits in the deck list as *Resume session*. Editing a card with *e*
+     leaves it waiting the same way.
+   - When the cards run out or a limit is reached, the report shows:
+     - how many cards you reviewed, and for how long;
+     - how your ratings divided up;
+     - what share you recalled;
+     - what is still waiting, and how many cards fall due tomorrow.
+   - If you failed more than the forgetting index allows, a warning follows,
+     as org-drill gives one.
+   - *Keep going* starts again on the cards still waiting, with a fresh clock.
+
+** Cram
+
+   *Cram* asks every card not seen in the last 12 hours, with no limits, and
+   writes nothing: no ratings, no schedules. It is for the night before an
+   exam, not for remembering.
+
+* At the command line
+
+  =orgs drill= drills the same decks in a terminal, with the same rules and
+  the same writes. It reads your deck list from the server.
+
+  #+BEGIN_SRC bash
+  orgs drill                        # pick a deck
+  orgs drill Spanish                # or name it
+  orgs drill Spanish -cram
+  orgs drill -q 'HasTags("drill")'  # a query, without saving a deck
+  orgs drill -resume                # after q
+  orgs drill ls                     # what each deck has due
+  orgs drill cards Spanish          # the Browse table
+  #+END_SRC
+
+  The keys are the tab's: any key shows the answer, =0=-=5= rates it, =e=
+  edits the card in =$EDITOR=, =s= skips, =?= explains the ratings, =q=
+  stops. Cards are drawn like slides in =orgs pres=, so a table, code or a
+  picture on a card shows as it is written; =-theme= picks the colours.
+
+  A session stopped with =q= can be picked up with =orgs drill -resume=, the
+  terminal's equivalent of org-drill-resume.
+
+* What is written to a card
+
+  After each rating the card's own lines change, and nothing else in the file:
+
+  #+BEGIN_SRC org
+  ,** Capital                                                  :spanish:
+     SCHEDULED: <2026-10-05 Mon>
+     :PROPERTIES:
+     :DRILL_LAST_INTERVAL:  4.0
+     :DRILL_REPEATS_SINCE_FAIL: 2
+     :DRILL_TOTAL_REPEATS:  1
+     :DRILL_FAILURE_COUNT:  0
+     :DRILL_AVERAGE_QUALITY: 4.0
+     :DRILL_EASE:           2.5
+     :DRILL_LAST_QUALITY:   4
+     :DRILL_LAST_REVIEWED:  [2026-10-01 Thu 23:04]
+     :END:
+  #+END_SRC
+
+  These are org-drill's properties, written in its spellings: =4.0=, not =4=.
+  An old =LEARN_DATA= property is read and replaced. A failure takes
+  =SCHEDULED= off. A card that becomes a leech gets the =leech= tag.
+
+* Differences from org-drill
+
+  - *Cards come from a query*, not the =:drill:= tag. Use =HasTags("drill")=
+    to drill org-drill's own cards.
+  - *Brackets that are not clozes are left alone*: checkboxes, cookies, dates
+    and footnotes (see Clozes).
+  - *The SM5 matrix is stored with each ease rounded to three places.*
+    org-drill stores it with a float that never matches the value read back
+    from the property, so its SM5 rarely learns. The matrix is saved after
+    every rating rather than only at the end of a session.
+  - *Spreading reviews out* is repeatable within a day, so the interval a
+    button promises is the one it writes.
+  - org-drill also writes an =ID= on every card it scans. This does not.
+  - =t= (edit tags) during a drill is not offered; use =e= to edit the card.
+  - Typed answers are shown beside the real one for you to judge, as in
+    org-drill; they are not marked.
+
+* The API
+
+  - =GET /drill/cards?deck=NAME= returns a deck's cards, drawn as html, with
+    their status and the interval each rating would give.
+  - =POST /drill/review= records one rating.
+  - =GET= and =POST /ext/drill/decks= read and replace the deck list.
+
+  The full API reference documents each one.

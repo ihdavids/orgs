@@ -527,6 +527,18 @@ func readBlock(ref *blockRef, names map[string]namedKind) common.CodeBlock {
 		if out.Heading != "" {
 			out.Olp = strings.Split(out.Heading, "/")
 		}
+		seen := map[string]bool{}
+		for s := ref.Sec; s != nil; s = s.Parent {
+			if s.Headline == nil {
+				continue
+			}
+			for _, t := range s.Headline.Tags {
+				if !seen[t] {
+					seen[t] = true
+					out.Tags = append(out.Tags, t)
+				}
+			}
+		}
 	}
 	return out
 }

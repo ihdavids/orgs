@@ -913,7 +913,14 @@ func (self *OrgDb) GetOrCreateFile(target *common.Target, allowCreate bool) *com
 	file := self.FindByFile(target.Filename)
 	if file == nil && allowCreate {
 		fname := self.GetFilepath(target.Filename)
-		file = self.CreateOrgFile(fname, "")
+		// Titled after its name - snippets.org is "Snippets" - rather than
+		// left with an empty #+TITLE: nobody will come back to fill in.
+		base := strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname))
+		title := strings.ReplaceAll(strings.ReplaceAll(base, "_", " "), "-", " ")
+		if title != "" {
+			title = strings.ToUpper(title[:1]) + title[1:]
+		}
+		file = self.CreateOrgFile(fname, title)
 	}
 	return file
 }

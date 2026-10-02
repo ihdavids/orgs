@@ -268,6 +268,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/voice/whisper/restart", PostWhisperRestart).Methods("POST")
 
 	// Per-user extensions: kanban boards
+	api.HandleFunc("/ext/drill/decks", RequestDrillDecks).Methods("GET")
+	api.HandleFunc("/ext/drill/decks", PostDrillDecks).Methods("POST")
+	api.HandleFunc("/drill/cards", RequestDrillCards).Methods("GET")
+	api.HandleFunc("/drill/review", PostDrillReview).Methods("POST")
 	api.HandleFunc("/ext/kanban/boards", RequestKanbanBoards).Methods("GET")
 	api.HandleFunc("/ext/kanban/boards", PostKanbanBoards).Methods("POST")
 	api.HandleFunc("/ext/kanban/board", PostKanbanBoard).Methods("POST")
