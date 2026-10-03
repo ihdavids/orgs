@@ -130,6 +130,8 @@ type UserExt struct {
 	// it describes a memory, not a subject.
 	DrillDecks  []DrillDeck `yaml:"drillDecks" json:"drillDecks"`
 	DrillMatrix DrillMatrix `yaml:"drillMatrix,omitempty" json:"drillMatrix,omitempty"`
+	// Saved gantt chart setups (see ganttviews.go).
+	GanttViews []GanttView `yaml:"ganttViews,omitempty" json:"ganttViews,omitempty"`
 }
 
 // ExtensionsConfig is the root of the per-user extensions YAML file.

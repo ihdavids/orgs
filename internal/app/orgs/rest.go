@@ -277,6 +277,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/ext/drill/decks", PostDrillDecks).Methods("POST")
 	api.HandleFunc("/drill/cards", RequestDrillCards).Methods("GET")
 	api.HandleFunc("/drill/review", PostDrillReview).Methods("POST")
+	api.HandleFunc("/ext/gantt/views", RequestGanttViews).Methods("GET")
+	api.HandleFunc("/ext/gantt/views", PostGanttViews).Methods("POST")
 	api.HandleFunc("/ext/kanban/boards", RequestKanbanBoards).Methods("GET")
 	api.HandleFunc("/ext/kanban/boards", PostKanbanBoards).Methods("POST")
 	api.HandleFunc("/ext/kanban/board", PostKanbanBoard).Methods("POST")
