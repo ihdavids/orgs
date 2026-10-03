@@ -88,6 +88,7 @@ func ReloadConfig() (common.ReloadResult, error) {
 
 	// Top level.
 	cur.Author = fresh.Author
+	cur.Email = fresh.Email
 	cur.NewFileTemplate = fresh.NewFileTemplate
 	cur.ArchiveDefaultTarget = fresh.ArchiveDefaultTarget
 	cur.ArchiveSaveContextInfo = fresh.ArchiveSaveContextInfo
@@ -135,11 +136,12 @@ func ReloadConfig() (common.ReloadResult, error) {
 		m.TagGroups = cur.TagGroups
 		if m.Tempo != nil {
 			m.Tempo.TemplatePath = o.TemplatePath
+			cur.setTemplateIdentity(m.Tempo)
 		}
 	}
 
 	res.Reloaded = []string{
-		"author", "newFileTemplate", "archive*", "dateTree*", "clockIntoDrawer",
+		"author", "email", "newFileTemplate", "archive*", "dateTree*", "clockIntoDrawer",
 		"templateImagesPath", "templateFontPath", "filters", "tagGroups", "aliases", "editorTemplate",
 		"server.captureTemplates", "server.refileTargets", "server.goLinks*", "server.defaultTodoStates",
 		"server.defaultNextStates", "server.useProjectTag", "server.templatePath", "server.dayPage*",

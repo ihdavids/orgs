@@ -1,4 +1,5 @@
 #+TITLE: Editing org files in worg
+#+DOC_SECTION: Editing
 
 The Files tab's *Org* view is read only until you press *Edit*. The editor
 takes vim keys (the default) or emacs keys; pick them under *Editor keys* in

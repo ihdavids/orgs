@@ -1,4 +1,5 @@
 #+TITLE: Flashcards — drilling your notes, org-drill style
+#+DOC_SECTION: Commands::Drill
 #+OPTIONS: toc:2 num:nil
 
 * What it is

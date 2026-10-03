@@ -42,16 +42,12 @@ package common
 // private understanding of the grammar.
 
 import (
-	"crypto/rand"
-	"encoding/base32"
 	"fmt"
-	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/ihdavids/orgs/internal/templates"
 )
 
 // {{name}}, {{name|prompt}}, {{name|=default}}, {{name|prompt|=default}}.
@@ -63,10 +59,6 @@ var capPlaceholder = regexp.MustCompile(`\{\{\s*([^}|]+?)\s*(?:\|([^}]*?))?\}\}`
 // A line that was nothing but a placeholder, now that the placeholder is empty:
 // a blank line, or a property with nothing after its name.
 var capEmptyProp = regexp.MustCompile(`^\s*:[^:\s]+:\s*$`)
-
-// Org's own spelling of a day: the date plus the abbreviated day name, which is
-// what goes inside <> and [] and what every timestamp in the database carries.
-const capOrgDay = "2006-01-02 Mon"
 
 // CapField is one thing to fill in before the capture can be made.
 type CapField struct {
@@ -86,28 +78,12 @@ type CapField struct {
 	Content bool
 }
 
-// The spellings that mean the same name. Every one of these would answer
-// identically anyway - they are all read off the same clock - except uuid and
-// guid, which would otherwise be two numbers out of the hat in one template.
-var capNameAliases = map[string]string{
-	"guid":      "uuid",
-	"user":      "username",
-	"active":    "today",
-	"inactive":  "now",
-	"timestamp": "now",
-	"unix":      "epoch",
-	"rfc3339":   "iso",
-}
-
 // CapCanonName is the name a value is remembered under while one template is
 // being expanded. Names are matched trimmed and case folded, so {{ NOW }} and
-// {{now}} are the same name.
+// {{now}} are the same name. The names and their aliases are shared with file
+// templates, in internal/templates/values.go.
 func CapCanonName(name string) string {
-	k := strings.ToLower(strings.TrimSpace(name))
-	if c, ok := capNameAliases[k]; ok {
-		return c
-	}
-	return k
+	return templates.CanonName(name)
 }
 
 // IsCapContentKey reports whether this is the body rather than a line.
@@ -119,63 +95,7 @@ func IsCapContentKey(key string) bool {
 // at all. The false return is load-bearing: it means "leave this for somebody
 // to answer", not "answer it with nothing".
 func CapAutoValue(name string, now time.Time, username string) (string, bool) {
-	switch CapCanonName(name) {
-
-	// ── The clock ────────────────────────────────────────────────────────
-	case "date":
-		return now.Format("2006-01-02"), true
-	case "time":
-		return now.Format("15:04"), true
-	case "datetime":
-		return now.Format("2006-01-02 15:04"), true
-	// The two org timestamps, named the way org names them: active is the one
-	// that shows up on the agenda, inactive is the one that does not.
-	case "today":
-		return "<" + now.Format(capOrgDay) + ">", true
-	case "now":
-		return "[" + now.Format(capOrgDay+" 15:04") + "]", true
-	// Active, because a date written on a capture is nearly always something to
-	// be reminded of: {{tomorrow}} is what a SCHEDULED line wants.
-	case "tomorrow":
-		return "<" + now.AddDate(0, 0, 1).Format(capOrgDay) + ">", true
-	case "yesterday":
-		return "<" + now.AddDate(0, 0, -1).Format(capOrgDay) + ">", true
-	case "week":
-		y, w := now.ISOWeek()
-		return strconv.Itoa(y) + "-W" + pad2(w), true
-	case "month":
-		return now.Format("2006-01"), true
-	case "year":
-		return now.Format("2006"), true
-	case "day":
-		return now.Format("02"), true
-	case "weekday":
-		return now.Format("Monday"), true
-	case "dayname":
-		return now.Format("Mon"), true
-	// For anything that is going to be read by a program rather than a person:
-	// a sort key, a filename, a field some other tool parses.
-	case "epoch":
-		return strconv.FormatInt(now.Unix(), 10), true
-	case "iso":
-		return now.Format(time.RFC3339), true
-
-	// ── Who and where ────────────────────────────────────────────────────
-	// A fresh v4 uuid. This is the one that cannot be done in a browser served
-	// over plain http from another machine - crypto.randomUUID is secure
-	// context only, the same wall clienthash.ts runs into - so answering it
-	// server side is not only tidier, it is the only place it works everywhere.
-	case "uuid":
-		return uuid.New().String(), true
-	// Eight characters out of the hat: enough to keep two temporary files from
-	// colliding without a 36 character name. Lowercase base32 (a-z, 2-7), so it
-	// is safe in a filename and on a filesystem that ignores case.
-	case "shortuid":
-		var b [5]byte
-		if _, err := rand.Read(b[:]); err != nil {
-			return "", false
-		}
-		return strings.ToLower(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(b[:])), true
+	switch k := CapCanonName(name); k {
 	// Where the current day page lives, relative to the first org directory.
 	// Only the server knows where that is, so it is answered through a hook the
 	// server fills in; with no hook it is left for somebody to answer.
@@ -191,14 +111,11 @@ func CapAutoValue(name string, now time.Time, username string) (string, bool) {
 			return "", false
 		}
 		return username, true
-	case "hostname":
-		h, err := os.Hostname()
-		if err != nil || h == "" {
-			return "", false
-		}
-		return h, true
+	default:
+		// The clock, the ids and the machine: the names every template
+		// answers, capture or file.
+		return templates.AutoValue(k, now)
 	}
-	return "", false
 }
 
 // IsCapAutoName reports whether this name answers itself. It asks CapAutoValue
@@ -284,14 +201,6 @@ func CapExpandFilename(filename string, now time.Time, username string) (string,
 func CapFileSafe(v string) string {
 	v = strings.NewReplacer("[", "", "]", "", "<", "", ">", "").Replace(strings.TrimSpace(v))
 	return strings.NewReplacer(" ", "_", ":", "-", "/", "-", "\\", "-", "*", "-", "?", "-", "\"", "-", "|", "-").Replace(v)
-}
-
-func pad2(n int) string {
-	s := strconv.Itoa(n)
-	if len(s) < 2 {
-		return "0" + s
-	}
-	return s
 }
 
 // capSplitRest takes everything after the name apart: the prompt somebody

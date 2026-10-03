@@ -1,4 +1,5 @@
 #+TITLE: Records — the contact book, and everything else worth a list
+#+DOC_SECTION: Records
 #+OPTIONS: toc:2 num:nil
 
 * What a record is

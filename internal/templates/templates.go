@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ekalinin/go-textwrap"
 	"github.com/flosch/pongo2/v5"
+	"github.com/ihdavids/orgs/internal/orgdate"
 	"github.com/muesli/reflow/wordwrap"
 )
 
@@ -171,6 +174,11 @@ func MathConstants(prefix string) map[string]float64 {
 
 type TemplateManager struct {
 	TemplatePath string
+	// Who and where, for {{author}}, {{email}} and {{orgdir}}. Set from the
+	// config by the server (and again on a reload); empty is allowed.
+	Author string
+	Email  string
+	OrgDir string
 }
 
 // func fuzzyAge(start string) (string, error) {
@@ -399,27 +407,91 @@ table.SetAutoFormatHeaders(false)
 headers := []string{}
 cells := [][]string{}
 */
+// standardContext is what every file template can use without being handed
+// it: the shared names in values.go, who is running this, and when().
+//
+// The values are marked safe, as resolveTemplate marks a caller's: most of
+// these templates write org, where pongo2's html escaping would turn the <>
+// of every timestamp into &lt;&gt;. An html template that puts one on a page
+// says {{ today|escape|safe }} (escape alone escapes twice).
 func (self *TemplateManager) standardContext(context *pongo2.Context) {
-	dt := time.Now()
-	userStr := ""
-	username := ""
-	username = os.Getenv("USERNAME")
-	userStr = username
-	/*
-		if usr, ok := user.Current(); ok == nil {
-			username = usr.Username
-			userStr = usr.Name
+	now := time.Now()
+	ctx := *context
+	for _, name := range AutoNames {
+		if v, ok := AutoValue(name, now); ok {
+			ctx[name] = pongo2.AsSafeValue(v)
 		}
-	*/
-	(*context)["weekday"] = dt.Format("Mon")
-	(*context)["day"] = fmt.Sprintf("%d", dt.Day())
-	(*context)["month"] = fmt.Sprintf("%d", dt.Month())
-	(*context)["year"] = fmt.Sprintf("%d", dt.Year())
-	(*context)["user"] = userStr
-	(*context)["username"] = username
-	(*context)["date"] = dt.Format("2006-02-01")
-	(*context)["datetime"] = dt.Format("2006-02-01 Mon 15:04")
-	(*context)["env"] = orgEnv
+	}
+	login, fullName := currentUser()
+	ctx["username"] = pongo2.AsSafeValue(login)
+	for alias, name := range Aliases {
+		if v, ok := ctx[name]; ok {
+			ctx[alias] = v
+		}
+	}
+	author := self.Author
+	if author == "" {
+		author = fullName
+	}
+	if author == "" {
+		author = login
+	}
+	ctx["author"] = pongo2.AsSafeValue(author)
+	ctx["email"] = pongo2.AsSafeValue(self.Email)
+	ctx["orgdir"] = pongo2.AsSafeValue(self.OrgDir)
+	ctx["env"] = orgEnv
+	w := when(now)
+	ctx["when"] = func(spec string, as ...string) *pongo2.Value {
+		return pongo2.AsSafeValue(w(spec, as...))
+	}
+}
+
+// currentUser is the account running the server: its login, and its full name
+// where the system has one. $USERNAME is only set on Windows, so it is the
+// fallback rather than the answer.
+func currentUser() (login, name string) {
+	if u, err := user.Current(); err == nil {
+		login, name = u.Username, strings.TrimSpace(u.Name)
+	}
+	if login == "" {
+		login = os.Getenv("USER")
+	}
+	if login == "" {
+		login = os.Getenv("USERNAME")
+	}
+	return login, name
+}
+
+// when is a date written the way `orgs sched` reads one - "tomorrow", "+2w",
+// "fri", "fri 14:00", "2026-10-15" - as an org timestamp:
+//
+//	{{ when("+1w") }}          <2026-10-10 Sat>
+//	{{ when("fri 14:00") }}    <2026-10-09 Fri 14:00>
+//	{{ when("mon", "date") }}  2026-10-05
+//
+// The second argument is any clock name (date, today, now, week, iso, ...)
+// to write it as that instead. A date it cannot read is written into the
+// output as the complaint, rather than failing the template: a failed
+// template is an empty file.
+func when(now time.Time) func(string, ...string) string {
+	return func(spec string, as ...string) string {
+		d, set, err := orgdate.ParseDate(spec, now)
+		if err == nil && !set {
+			err = fmt.Errorf("no date in %q", spec)
+		}
+		if err != nil {
+			return "when(" + strconv.Quote(spec) + "): " + err.Error()
+		}
+		if len(as) == 0 || d.Raw != "" {
+			return d.String()
+		}
+		k := CanonName(as[0])
+		v, ok := AutoValue(k, d.Day)
+		if !ok || k == "uuid" || k == "shortuid" || k == "hostname" {
+			return "when(" + strconv.Quote(spec) + ", " + strconv.Quote(as[0]) + "): not a date format"
+		}
+		return v
+	}
 }
 
 func (self *TemplateManager) GetStandardContext() *pongo2.Context {

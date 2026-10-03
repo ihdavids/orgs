@@ -112,7 +112,8 @@ Feature notes sit in `CLAUDE.md` files beside the code and load when you work th
 - `internal/app/orgs/plugs/` — server plugins (exporters, pollers, updaters) like `html`, `revealjs`, `latex`, `jira`, `todoist`, `googlecal`, `notify`; each self-registers in `init()`.
 - `internal/app/orgs/plugs/all/all.go` — blank-imports every server plugin, same reason.
 - `internal/common/` — shared client/server code: `restclient.go` (`RestGet[T]` / `RestPost[T]`), `serversettings.go`, `plugs.go` (`Exporter` / `Poller` / `Updater` interfaces and `PluginManager`), wire data types.
-- `internal/templates/` — pongo2 template manager for exporters and capture templates.
+- `internal/templates/` — pongo2 template manager for exporters and capture templates. `values.go` is the one list of names every template answers (`{{date}}`, `{{today}}`, `{{week_start}}`, `{{uuid}}`…): file templates get them from `standardContext`, capture templates through `common.CapAutoValue`. Add a name there, not in either caller. Standard values are marked safe, so `<…>` timestamps aren't html-escaped.
+- `internal/orgdate/` — reads a date the way a person types it (`tomorrow`, `+2w`, `fri 14:00`). Shared by `orgs sched`/`deadline`/`close` (through `commands.ParseDate`) and the template function `when()`, so the two can't disagree.
 - `templates/`, `web/`, `webfonts/` — static assets served by the HTTP file server beside the REST API.
 
 ### Server request flow
@@ -192,6 +193,8 @@ The `PluginManager` passed to plugins carries the shared templates, filter map, 
 ### Documentation extraction (SDOC / EDOC)
 
 `cmd/docex` extracts comment blocks fenced with `SDOC: <section>` and `EDOC` in the Go sources into Org documentation. Preserve the markers and section names when editing such comments; the doc build depends on them.
+
+It also merges the hand-written guides in `docs/*.org` (not subdirectories; `-guides` changes the directory, `-guides -` turns it off). Each guide names its section with `#+DOC_SECTION: Tables` (`::` nests, as SDOC does), goes first in that section under its `#+TITLE`, and has its headings pushed down to fit. A guide with no `#+DOC_SECTION` becomes its own top-level section. `docs/overview.org` is the `-start` intro instead. Build with `tools/builddocs.sh`.
 
 **Do not run `gofmt` on a file whose SDOC block sits directly above a declaration** (all the `/dnd/*` and `/records/*` endpoint files). Go 1.19+ reformats doc comments: re-indents the block, turns `* Heading` into `- Heading`, and reflows org tables. Two breakages are invisible in a diff, because `docex` matches both markers as whole lines:
 

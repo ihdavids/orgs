@@ -150,11 +150,11 @@ func CreateDayPage() (common.FileList, error) {
 	filename, title := getDayPageFilename(dt)
 	if _, err := os.Stat(filename); err != nil {
 		var context map[string]interface{} = make(map[string]interface{})
+		// The clock names (date, weekday, week_start ...) come from the standard
+		// context, which reads the same clock dt was taken from.
 		context["day_page_title"] = title
-		context["weekday"] = dt.Format("Mon")
-		context["day"] = fmt.Sprintf("%d", dt.Day())
-		context["month"] = fmt.Sprintf("%d", dt.Month())
-		context["year"] = fmt.Sprintf("%d", dt.Year())
+		context["filename"] = filename
+		context["basename"] = strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
 
 		var nodes []*org.Section
 		oldFn, _ := getPreviousDayPage(dt)

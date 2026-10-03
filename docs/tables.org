@@ -1,4 +1,5 @@
 #+TITLE: Table formulas — a spreadsheet in an org table
+#+DOC_SECTION: Tables::Details
 #+OPTIONS: toc:2 num:nil
 
 * What this is

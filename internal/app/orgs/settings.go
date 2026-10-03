@@ -46,6 +46,8 @@ type Config struct {
 	LocalDirs string
 	Server    *common.ServerSettings `yaml:"server"`
 	Author    string                 `yaml:"author"`
+	// {{email}} in a template. Nothing else reads it.
+	Email string `yaml:"email"`
 	// What template file to render when generating a new org file
 	// This is a file found in the templatePath option
 	NewFileTemplate string `yaml:"newFileTemplate"`
@@ -269,6 +271,17 @@ type Config struct {
 	loadedServer common.ServerSettings
 }
 
+// setTemplateIdentity hands the template manager what {{author}}, {{email}}
+// and {{orgdir}} answer with. Called at load and again on a reload.
+func (self *Config) setTemplateIdentity(t *templates.TemplateManager) {
+	t.Author = self.Author
+	t.Email = self.Email
+	t.OrgDir = ""
+	if self.Server != nil && len(self.Server.OrgDirs) > 0 {
+		t.OrgDir = self.Server.OrgDirs[0]
+	}
+}
+
 func (self *Config) Defaults() {
 	self.Server.Init()
 	// That said, you SHOULD NOT USE THIS!
@@ -401,6 +414,7 @@ func (self *Config) ParseConfig() {
 	if self.Server != nil {
 		manager.Tempo = &templates.TemplateManager{TemplatePath: config.Server.TemplatePath}
 		manager.Tempo.Initialize()
+		self.setTemplateIdentity(manager.Tempo)
 	}
 	if self.Server != nil {
 		manager.Port = self.Server.Port

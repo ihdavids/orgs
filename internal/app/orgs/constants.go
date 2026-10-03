@@ -3,8 +3,19 @@ package orgs
 
 /* SDOC: Editing
 * Constants
-  
-  TODO: Fill in information on constants
+
+  Constants are names a table formula can use. They are not template
+  values; for those see *Template values*.
+
+  - =#+CONSTANTS: vat=0.2 shop=Corner= anywhere in the file makes =$vat=
+    and =$shop= available to every table in it.
+  - The properties of the heading a table sits under are there as
+    =$PROP_NAME=: =:RATE: 40= is =$PROP_RATE=.
+  - =pi=, =t=, =f=, =True= and =False= are always defined.
+
+  Constants are text, not numbers: wrap one in =value()= to calculate with
+  it, as in =$2=$1*(1+value($vat))=. The table formula guide (Tables) has
+  the full story.
 EDOC */
 
 import (

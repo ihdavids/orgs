@@ -147,6 +147,10 @@ func startLocalServer(core *commands.Core) string {
 		fmt.Fprintln(os.Stderr, "-local: no org directories - pass -orgdir ./notes")
 		os.Exit(1)
 	}
+	// {{orgdir}} in a template is the directory this run reads, not the yaml's.
+	if m := orgs.Conf().PlugManager; m != nil && m.Tempo != nil {
+		m.Tempo.OrgDir = sets.OrgDirs[0]
+	}
 
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

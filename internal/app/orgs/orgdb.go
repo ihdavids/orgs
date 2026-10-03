@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -762,18 +761,12 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		if template == "" {
 			template = Conf().NewFileTemplate
 		}
+		// {{author}}, the clock and the rest come from the standard context.
 		var context map[string]interface{} = make(map[string]interface{})
-		username := ""
-		if usr, ok := user.Current(); ok == nil {
-			username = usr.Username
-		}
-		author := Conf().Author
-		if author == "" {
-			author = username
-		}
 		context["day_page_title"] = title
 		context["title"] = title
-		context["author"] = Conf().Author
+		context["filename"] = fname
+		context["basename"] = strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname))
 		data := Conf().PlugManager.Tempo.RenderTemplate(template, context)
 		fmt.Fprintf(os.Stderr, "WRITING ORG FILE %s\n", fname)
 		// A capture filename may name a folder that is not there yet

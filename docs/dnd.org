@@ -1,4 +1,5 @@
 #+TITLE: The Dungeons & Dragons Module
+#+DOC_SECTION: DnD
 #+AUTHOR: orgs
 
 * Introduction
