@@ -1942,6 +1942,41 @@ button.tl-dot:focus-visible {
   grid-column: 3; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase;
   color: #6f6754;
 }
+/* Across: the spine lies down. The clock sits above it, the dot on it and
+   the card hangs below, one column per moment, and the strip scrolls
+   sideways. The spine is drawn by each column rather than by the strip,
+   because a line on a scrolling box only spans the part that is showing. */
+.tl.tl-across {
+  display: flex; align-items: flex-start; overflow-x: auto;
+  padding: 4px 4px 10px; overscroll-behavior-x: contain;
+}
+.tl.tl-across::before { display: none; }
+.tl-across > .tl-row, .tl-across > .tl-gap, .tl-across > .tl-end {
+  position: relative; flex: 0 0 auto; margin: 0; padding-right: 14px;
+}
+.tl-across > .tl-row::after, .tl-across > .tl-gap::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 32px; height: 2px;
+  background: rgba(184,134,11,.45);
+}
+.tl-across > .tl-row:first-child::after {
+  background: linear-gradient(90deg, rgba(184,134,11,0), rgba(184,134,11,.45) 40px);
+}
+.tl-across > .tl-row {
+  width: 270px; grid-template-columns: 1fr; grid-template-rows: 18px 22px auto;
+  gap: 4px 0;
+}
+.tl-across > .tl-row > time { text-align: left; padding: 0 0 0 1px; line-height: 18px; }
+.tl-across > .tl-row > .tl-dot { margin-top: 0; }
+.tl-across .tl-card { margin-top: 6px; }
+.tl-across > .tl-gap { display: block; width: 92px; padding-top: 0; }
+.tl-across > .tl-gap::after {
+  background: repeating-linear-gradient(90deg, rgba(184,134,11,.4) 0 5px, transparent 5px 9px);
+}
+.tl-across > .tl-gap span {
+  display: block; border-top: 0; padding: 0; line-height: 18px; white-space: nowrap;
+}
+.tl-across > .tl-end { display: block; padding-top: 25px; }
+.tl-across > .tl-end span { white-space: nowrap; }
 
 /* --- the tools on a card, the fold, the search and the annotations ---
    The tools sit in the head and stay out of the way until the card is under
@@ -13865,7 +13900,22 @@ them up.">Temp</button>
              // from the toolbar, for a moment that has no block of its own.
              editing: '', draft: null, asking: '',
              // What one press of Undo would take back in this session.
-             undo: null, shape: null };
+             undo: null, shape: null,
+             // Which way the evening runs: 'down' (oldest at the top),
+             // 'up' (newest at the top) or 'across' (oldest at the left).
+             // A way of reading, so it is the page's own; see TL_DIR_KEY.
+             dir: 'down' };
+
+  // The direction is remembered per browser, like the combat tracker, and
+  // only as a convenience: losing it puts the timeline back the way it was.
+  var TL_DIR_KEY = 'orgs.dnd.timeline.dir';
+  var TL_DIRS = ['down', 'up', 'across'];
+  var TL_DIR_LABEL = { down: '&darr; Top down', up: '&uarr; Bottom up',
+                       across: '&rarr; Across' };
+  try {
+    var tlDirSaved = localStorage.getItem(TL_DIR_KEY);
+    if (TL_DIRS.indexOf(tlDirSaved) >= 0) { TL.dir = tlDirSaved; }
+  } catch (e) { /* private browsing */ }
 
   // A fight is rolls no further apart than this, and it takes at least this
   // many of them before a flurry counts as one.
@@ -14360,6 +14410,11 @@ them up.">Temp</button>
     if (!pane || !el) { return; }
     pane.scrollTop += el.getBoundingClientRect().top -
       pane.getBoundingClientRect().top - 72;
+    var strip = el.closest('.tl.across');
+    if (strip) {
+      strip.scrollLeft += el.getBoundingClientRect().left -
+        strip.getBoundingClientRect().left - 24;
+    }
   }
 
   // Stepping through what the search found, which is the whole point of the
@@ -14413,6 +14468,13 @@ them up.">Temp</button>
     }
     var fold = drawer.querySelector('#tl-fold');
     if (fold) { fold.textContent = TL.foldAll ? 'Open all' : 'Fold all'; }
+    var dirBtn = drawer.querySelector('#tl-dir');
+    if (dirBtn) {
+      var next = TL_DIRS[(TL_DIRS.indexOf(TL.dir) + 1) % TL_DIRS.length];
+      dirBtn.innerHTML = TL_DIR_LABEL[TL.dir];
+      dirBtn.title = 'Which way the evening runs. Press for ' +
+        { down: 'top down', up: 'bottom up', across: 'left to right' }[next] + '.';
+    }
 
     TL.hits = [];
     if (TL.error) {
@@ -14447,21 +14509,26 @@ them up.">Temp</button>
       return;
     }
 
-    var prev = null, shown = 0;
-    var out = shape.events.map(function (ev) {
-      if (!tlMatches(ev)) { return ''; }
+    // Built in time order whichever way it is drawn, so the gaps measure the
+    // same quiet; bottom up is then the same pieces read backwards, the
+    // search hits included, so Enter still steps down the page.
+    var prev = null, shown = 0, parts = [];
+    shape.events.forEach(function (ev) {
+      if (!tlMatches(ev)) { return; }
       TL.hits.push(ev.key);
-      var gap = '';
       // The "later" rule reads off what is actually on the page. While a
       // search is filtering it, the quiet between two hits is not quiet at
       // the table, so nothing is said about it.
       if (!TL.q && prev !== null && ev.abs - prev >= TL_SCENE) {
-        gap = '<div class="tl-gap"><span>' + tlWhen(ev.abs - prev) + ' later</span></div>';
+        parts.push('<div class="tl-gap"><span>' + tlWhen(ev.abs - prev) +
+          (TL.dir === 'up' ? ' earlier' : ' later') + '</span></div>');
       }
       prev = ev.kind === 'fight' ? ev.until : ev.abs;
       shown++;
-      return gap + tlCard(ev);
-    }).join('');
+      parts.push(tlCard(ev));
+    });
+    if (TL.dir === 'up') { parts.reverse(); TL.hits.reverse(); }
+    var out = parts.join('');
 
     if (TL.at >= TL.hits.length) { TL.at = -1; }
     if (!shown) {
@@ -14470,7 +14537,7 @@ them up.">Temp</button>
       tlCount();
       return;
     }
-    body.innerHTML = head + fresh + '<div class="tl">' + out +
+    body.innerHTML = head + fresh + '<div class="tl tl-' + TL.dir + '">' + out +
       '<div class="tl-end"><span>' + shown + ' ' +
       (shown === 1 ? 'moment' : 'moments') +
       (TL.q ? ' of ' + shape.events.length : '') + '</span></div></div>';
@@ -15666,6 +15733,7 @@ them up.">Temp</button>
               'Enter steps through them.">' +
             '<span class="tl-count" id="tl-count"></span>' +
             '<button type="button" class="dt-btn" id="tl-fold">Fold all</button>' +
+            '<button type="button" class="dt-btn" id="tl-dir">&darr; Top down</button>' +
             '<button type="button" class="dt-btn" id="tl-annotate">Annotate</button>' +
             '<button type="button" class="dt-btn" id="tl-refresh">Refresh</button>' +
             '<label class="tl-opt"><input type="checkbox" id="tl-all"> ' +
@@ -15798,6 +15866,11 @@ them up.">Temp</button>
     drawer.querySelector('#tl-fold').addEventListener('click', function () {
       TL.foldAll = !TL.foldAll;
       TL.folded = {};
+      renderTimeline();
+    });
+    drawer.querySelector('#tl-dir').addEventListener('click', function () {
+      TL.dir = TL_DIRS[(TL_DIRS.indexOf(TL.dir) + 1) % TL_DIRS.length];
+      try { localStorage.setItem(TL_DIR_KEY, TL.dir); } catch (e) { /* private */ }
       renderTimeline();
     });
     drawer.querySelector('#tl-annotate').addEventListener('click', function () {

@@ -540,6 +540,52 @@ type Expr struct {
 	// The parameter map handed to Evaluate, reused across sections. See
 	// EvalString.
 	params map[string]interface{}
+	// The first bad call to a query function: the wrong number or kind of
+	// arguments. It is the query's fault, so it is the same on every heading
+	// and is reported once as the query's error. See guardQueryFunctions.
+	callErr error
+}
+
+// guardQueryFunctions makes a query function's bad call an error rather than
+// a panic.
+//
+// The functions read their arguments as args[0].(string) and so on, which
+// panics on MatchProperty() or MatchProperty("X") - and worg searches as you
+// type, so the half-written call reaches the server on every keystroke and
+// each one took a request down. Recovering here covers every function,
+// including ones written later, rather than an arity check in each.
+func guardQueryFunctions(exp *Expr, functions map[string]govaluate.ExpressionFunction) {
+	for name, fn := range functions {
+		name, fn := name, fn
+		functions[name] = func(args ...interface{}) (res interface{}, err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					res, err = false, fmt.Errorf("%s: wrong arguments (%v)", name, r)
+				}
+				if err != nil && exp.callErr == nil {
+					exp.callErr = err
+				}
+			}()
+			return fn(args...)
+		}
+	}
+}
+
+// stringArgs reads a function's arguments as the n strings it needs, or says
+// what it wanted in usage.
+func stringArgs(args []interface{}, n int, usage string) ([]string, error) {
+	if len(args) < n {
+		return nil, fmt.Errorf("%s", usage)
+	}
+	out := make([]string, n)
+	for i := 0; i < n; i++ {
+		v, ok := args[i].(string)
+		if !ok {
+			return nil, fmt.Errorf("%s", usage)
+		}
+		out[i] = v
+	}
+	return out, nil
 }
 
 func ParseString(expString *common.StringQuery) (*Expr, error) {
@@ -808,11 +854,12 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		// MatchProperty(NAME, REGEX)
 		// returns true if the property value matches the implied regex
 		"MatchProperty": func(args ...interface{}) (interface{}, error) {
-			p := exp.Sec
-			name := args[0].(string)
-			test := args[1].(string)
-			if val, ok := p.Headline.Properties.Get(name); ok {
-				if ok, err := regexp.MatchString(test, val); err == nil && ok {
+			a, err := stringArgs(args, 2, `MatchProperty needs a property name and a pattern: MatchProperty("CUSTOM_ID", "^abc")`)
+			if err != nil {
+				return false, err
+			}
+			if val, ok := exp.Sec.Headline.Properties.Get(a[0]); ok {
+				if ok, err := regexp.MatchString(a[1], val); err == nil && ok {
 					return true, nil
 				}
 			}
@@ -925,6 +972,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			return IsIn(p, start, now), nil
 		},
 	}
+	guardQueryFunctions(exp, functions)
 	//expString := "strlen('someReallyLongInputString') <= 16"
 	var err error
 	exp.Expression, err = govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
@@ -1322,6 +1370,9 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 		}
 		for _, v := range f.Doc.Outline.Children {
 			todos, _ = ProcessNode(exp, v, f, todos)
+		}
+		if exp.callErr != nil {
+			return &todos, exp.callErr
 		}
 	}
 	return &todos, nil

@@ -60,3 +60,4 @@ Rules:
     - A card folds by **its spine dot** (`tlDot`), not a chevron among the tools: the eye scans the dots, and the right-hand tools are the two that change the session file (name, delete), so a view-only button there read as one of them.
     - *Fold all* clears per-card overrides (an old open card staying open is not what it says).
     - Search matches **everything a card holds** (`tlHay`), not what is shown, or folding hides the spell being searched for.
+    - Direction (`TL.dir`: down / up / across, `#tl-dir`, kept in `localStorage`) only changes drawing: events and gaps are built in time order and reversed for *up* (hits too, so Enter still steps down the page). *Across* draws the spine per column, since a line on a scrolling box spans only its visible part.

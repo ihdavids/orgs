@@ -280,6 +280,15 @@ func RestGetErr[T any](self *Rest, api string, ps map[string]string) (T, error) 
 		return data, fmt.Errorf("%s: %s", http.StatusText(status), msg)
 	}
 	if err := json.Unmarshal(body, &data); err != nil {
+		// A handler that fails answers {Ok: false, Msg} with a 200, which is
+		// json, just not the shape asked for. Say what it said.
+		var fail struct {
+			Ok  bool
+			Msg string
+		}
+		if json.Unmarshal(body, &fail) == nil && !fail.Ok && fail.Msg != "" {
+			return data, fmt.Errorf("%s", fail.Msg)
+		}
 		return data, fmt.Errorf("%s answered with something that is not json: %v", api, err)
 	}
 	return data, nil

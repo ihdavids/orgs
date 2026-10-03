@@ -1391,11 +1391,21 @@ func RequestTodosExpr(w http.ResponseWriter, r *http.Request) {
 	args.Query = query
 	reply, err := QueryStringTodos(&args)
 	w.Header().Set("Content-Type", "application/json")
-	if err == nil {
-		json.NewEncoder(w).Encode(reply)
-	} else {
-		json.NewEncoder(w).Encode(err)
+	if err != nil {
+		// Was Encode(err), which for govaluate's errors is `{}` - an object
+		// that said something went wrong and nothing about what. Still an
+		// object, so a client that checks for a list behaves as before.
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: err.Error()})
+		return
 	}
+	// No matches is `[]`, not `null`: a nil list encodes as null, and worg
+	// read that as "not a list" and reported a parse error for a query that
+	// had simply found nothing.
+	if reply == nil || *reply == nil {
+		w.Write([]byte("[]\n"))
+		return
+	}
+	json.NewEncoder(w).Encode(reply)
 }
 
 /*
