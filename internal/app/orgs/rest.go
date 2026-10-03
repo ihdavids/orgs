@@ -68,6 +68,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/slides/themes", RequestSlideThemes)          // The themes the presentation exporters can render with
 	api.HandleFunc("/exporters", RequestExporters).Methods("GET") // The exporters this server was configured with
 	api.HandleFunc("/taggroups", RequestTagGroups)
+	api.HandleFunc("/properties", RequestProperties).Methods("GET") // property names in use, for the query box (propnames.go)
 	api.HandleFunc("/grep", RequestGrep)
 	api.HandleFunc("/search", RequestTodosExpr)
 	api.HandleFunc("/lookuphash", RequestHash)
