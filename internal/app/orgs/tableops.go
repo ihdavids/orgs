@@ -141,6 +141,22 @@ func (s *RangeIter) OpGen(name string, left interface{}, right interface{}, para
 			case *RangeIter:
 				le := v.NextVal()
 				ri := r.NextVal()
+				// An empty cell beside a number counts as 0, as it does
+				// beside a literal: $1*$2 on a row missing $2 used to fail
+				// the whole table with "multiply not defined on strings".
+				// Two empty cells give 0 too, so a total row with nothing in
+				// it does not stop the table.
+				_, lnum := le.(float64)
+				_, rnum := ri.(float64)
+				lempty, rempty := le == "", ri == ""
+				if (lnum || lempty) && (rnum || rempty) {
+					if lempty {
+						le = 0.0
+					}
+					if rempty {
+						ri = 0.0
+					}
+				}
 				if a, ok := le.(float64); ok {
 					if b, ok2 := ri.(float64); ok2 {
 						return numOp(a, b)

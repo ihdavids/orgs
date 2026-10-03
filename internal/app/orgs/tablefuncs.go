@@ -30,7 +30,7 @@ import (
   | Monster Name | Start Health | Total Damage | %Alive | AC | Initiative |
   |--------------+--------------+--------------+--------+----+------------|
   | M1           |           44 |            0 |  100.0 |    |            |
-  #+TBLFM:$4=(($2-$3)/$2)*100.0;%.1f::$3=remote('FightHistory',$4) if remote('FightHistory',$2)==$1 else 0 
+  #+TBLFM:$4=(($2-$3)/$2)*100.0;%.1f::$3=lookuplast($1,remote(FightHistory,$2),remote(FightHistory,$4))
   #+END_SRC
 
   Looking at the first operation (up to the ::)
@@ -46,9 +46,32 @@ import (
   Then there is that funny %.1f which tells the system to only keep one decimal place
   becase more would be tedious to look at.
 
-  Next $3 pulls the value from the 4th column of the FightHistory table if the 2nd column has my Monster Name in it, otherwise 0
-  This means I can update the fight history table and have this table auto update from it. (The last row in the fight history that has our monster in it
-  will end up in the Total Damage block.
+  Next $3 finds the last row of the FightHistory table whose 2nd column holds my Monster Name,
+  and pulls the value from its 4th column. This means I can update the fight history table and have
+  this table auto update from it. To total every hit instead of taking the last one:
+
+  #+BEGIN_SRC org
+  	$3=vsumif(remote(FightHistory,$2),$1,remote(FightHistory,$4))
+  #+END_SRC
+
+  The full guide, with a worked example for every function (each one run by
+  the test suite), is docs/tables.org. What follows is the short reference.
+
+** How functions read their arguments
+
+   A range argument is expanded in full: in vsum($2) or vcountif($2,'>3'), $2 is the whole
+   column (the header row is skipped). A value argument reads one cell: in sqrt($2) or the
+   first argument of lookup($1,...), $2 is the cell in the current row.
+
+   Strings may use single or double quotes. A cell reference inside a string is still
+   replaced, so a literal like '$1' cannot be written.
+
+   A function returning a list (sort, rsort, rdup, rev, lookupall) can only be the last
+   argument of another function: join(',', sort($1)) works, index(sort($1), 2) does not.
+
+   Criteria (the vsumif / vcountif family) are a value meaning "equal to", or a string
+   starting with an operator: '>10', '<=2026-01-01', '<>done', '=' (empty), '<>' (not empty).
+   Text compares without regard to case, and * and ? are wildcards: 'app*'.
 
 ** Table Function Reference
 
@@ -120,7 +143,84 @@ import (
    - yearday
    - duration
   
-  TODO: Fill in information on table functions
+   - date(year, month, day) :: also takes the three parts; Feb 30 rolls over to Mar 2
+   - today() :: today's date with no time
+   - days(end, start) :: calendar days from start to end
+   - datedif(start, end, unit) :: unit 'd' days, 'w' weeks, 'm' complete months, 'y' complete years
+   - adddays(date, n), addmonths(date, n), addyears(date, n) :: addmonths keeps month ends: Jan 31 + 1 is Feb 28. edate is addmonths
+   - addtime(date, duration) :: '2h', '1d 3h', '1:30' or a duration value
+   - eomonth(date [, n]) :: last day of the month, n months on
+   - weeknum(date), quarter(date) :: ISO week number, quarter 1 to 4
+   - workday(date, n) :: n working days (Monday to Friday) on, or back when n is negative
+   - networkdays(start, end) :: working days from start to end, both counted
+   - datefmt(date, pattern) :: strftime verbs as org uses them: %Y %m %d %H %M %S %a %A %b %B %j %V %%
+
+   Dates in cells may be written <2026-10-02 Fri>, <2026-10-02 Fri 09:30>, [2026-10-02 Fri] or 2026-10-02.
+   A date result is written <2026-10-02 Fri>, with the time only when it is not midnight.
+
+   Conditional aggregates
+
+   - vsumif(range, criteria [, values]) :: sum of values (or of range) where range meets criteria
+   - vcountif(range, criteria) :: count of cells meeting criteria
+   - vmeanif, vmaxif, vminif (range, criteria [, values]) :: as vsumif
+   - vsumifs(values, range1, criteria1, range2, criteria2, ...) :: sum where every criterion holds
+   - vmeanifs(values, range1, criteria1, ...), vcountifs(range1, criteria1, ...) :: as vsumifs
+   - vcounta(range) :: non-empty cells
+   - vcountblank(range) :: empty cells
+
+   Lookups
+
+   - lookup(value, keys [, results]) :: the result beside the first key equal to value, empty when none; lookupfirst is the same
+   - lookuplast(value, keys [, results]) :: the last match instead
+   - lookupall(value, keys [, results]) :: every match, as a list: join(', ', lookupall($1, ...))
+   - index(range, n) :: the nth cell from 1; -1 is the last
+   - match(value, range) :: position of the first equal cell from 1, 0 when none
+
+   With no results range, lookups return the matching key, as org-lookup-first does.
+
+   Statistics
+
+   - vsdev, vvar :: sample standard deviation and variance
+   - vpsdev, vpvar :: population standard deviation and variance
+   - vprod :: product
+   - vmode :: most frequent number
+   - vpercentile(range, p) :: p from 0 to 1 (or 0 to 100), interpolated like PERCENTILE.INC
+   - vquartile(range, q) :: q from 0 to 4
+   - vrank(value, range [, ascending]) :: 1 for the largest, or the smallest when ascending
+
+   Logic
+
+   - if(condition, then [, else])
+   - and(...), or(...), xor(...), not(x)
+   - iferror(value, fallback) :: fallback when value is not a number (0/0), infinite (1/0) or missing.
+     A function that fails outright still stops the formula, because arguments are evaluated first.
+   - isblank(x), isnumber(x), istext(x), isdate(x)
+
+   Text
+
+   - concat(...) :: the values joined with nothing between
+   - join(sep, ...) :: the non-empty values joined with sep
+   - len, upper, lower :: length in characters, case
+   - trim(text) :: ends trimmed, inner runs of spaces squeezed to one
+   - left(text [, n]), right(text [, n]), mid(text, start, n) :: n characters, start counting from 1
+   - substitute(text, old, new), rept(text, n)
+   - contains(text, part), startswith(text, part), endswith(text, part) :: ignoring case
+   - value(text) :: the first number in text: 'USD 1,234.50' is 1234.5
+   - fmt(pattern, ...) :: printf: fmt('%.2f kg', $2), fmt('%03d', $1)
+
+   Rounding
+
+   - round(x [, places]), roundup(x [, places]), rounddown(x [, places]) :: roundup goes away from zero, rounddown toward it
+   - sign(x), clamp(x, low, high), randint(low, high)
+
+   Finance, with the spreadsheet sign convention: money paid out is negative. rate is per
+   period; type is 1 for payments at the start of each period, 0 (default) at the end.
+
+   - pmt(rate, nper, pv [, fv [, type]]) :: payment per period: pmt(0.05/12, 360, 200000) is -1073.64
+   - pv(rate, nper, pmt [, fv [, type]]), fv(rate, nper, pmt [, pv [, type]])
+   - nper(rate, pmt, pv [, fv [, type]])
+   - npv(rate, values...) :: values at the end of periods 1, 2, ...
+   - irr(values...) :: values from period 0; needs a change of sign
 EDOC */
 
 // Additional functions
@@ -194,6 +294,104 @@ var functions map[string]govaluate.ExpressionFunction = map[string]govaluate.Exp
 	"weekdayname": tblWeekdayName,
 	"yearday":     tblYearday,
 	"duration":    tblDuration,
+	"today":       tblToday,
+	"days":        tblDays,
+	"datedif":     tblDateDif,
+	"adddays":     tblAddDays,
+	"addmonths":   tblAddMonths,
+	"edate":       tblAddMonths,
+	"addyears":    tblAddYears,
+	"addtime":     tblAddTime,
+	"eomonth":     tblEOMonth,
+	"weeknum":     tblWeekNum,
+	"quarter":     tblQuarter,
+	"workday":     tblWorkday,
+	"networkdays": tblNetworkDays,
+	"datefmt":     tblDateFmt,
+	// Conditional aggregates (tablefuncs_range.go)
+	"vsumif":      vsumif,
+	"vcountif":    vcountif,
+	"vmeanif":     vmeanif,
+	"vmaxif":      vmaxif,
+	"vminif":      vminif,
+	"vsumifs":     vsumifs,
+	"vmeanifs":    vmeanifs,
+	"vcountifs":   vcountifs,
+	"vcounta":     vcounta,
+	"vcountblank": vcountblank,
+	// Lookups
+	"lookup":      tblLookupFirst,
+	"lookupfirst": tblLookupFirst,
+	"lookuplast":  tblLookupLast,
+	"lookupall":   tblLookupAll,
+	"index":       tblIndex,
+	"match":       tblMatch,
+	// Statistics
+	"vsdev":       vsdev,
+	"vpsdev":      vpsdev,
+	"vvar":        vvar,
+	"vpvar":       vpvar,
+	"vprod":       vprod,
+	"vmode":       vmode,
+	"vpercentile": vpercentile,
+	"vquartile":   vquartile,
+	"vrank":       vrank,
+	// Logic (tablefuncs_misc.go)
+	"if":       tblIf,
+	"and":      tblAnd,
+	"or":       tblOr,
+	"xor":      tblXor,
+	"not":      tblNot,
+	"iferror":  tblIfError,
+	"isblank":  tblIsBlank,
+	"isnumber": tblIsNumber,
+	"istext":   tblIsText,
+	"isdate":   tblIsDate,
+	// Text
+	"concat":     tblConcat,
+	"join":       tblJoin,
+	"len":        tblLen,
+	"upper":      tblUpper,
+	"lower":      tblLower,
+	"trim":       tblTrim,
+	"left":       tblLeft,
+	"right":      tblRight,
+	"mid":        tblMid,
+	"substitute": tblSubstitute,
+	"rept":       tblRept,
+	"contains":   tblContains,
+	"startswith": tblStartsWith,
+	"endswith":   tblEndsWith,
+	"value":      tblValue,
+	"fmt":        tblFmt,
+	// Rounding
+	"roundup":   tblRoundUp,
+	"rounddown": tblRoundDown,
+	"sign":      tblSign,
+	"clamp":     tblClamp,
+	"randint":   tblRandInt,
+	// Finance (tablefuncs_finance.go)
+	"pmt":  tblPmt,
+	"pv":   tblPv,
+	"fv":   tblFv,
+	"nper": tblNper,
+	"npv":  tblNpv,
+	"irr":  tblIrr,
+}
+
+// govaluate's own operators take only float64, so a function answering an int
+// could not be added to or compared with: len($1)+1 failed with "it is not a
+// number". Every int answer is handed on as a float64, which is written the same.
+func init() {
+	for name, fn := range functions {
+		functions[name] = func(args ...interface{}) (interface{}, error) {
+			r, err := fn(args...)
+			if i, ok := r.(int); ok {
+				return float64(i), err
+			}
+			return r, err
+		}
+	}
 }
 
 // Table cells are expanded from a range iterator in entirety for V* functions
@@ -349,64 +547,21 @@ func vmean(args ...interface{}) (interface{}, error) {
 	return 0, nil
 }
 
+// vmax and vmin of a range with no numbers are 0, not the float limits.
 func vmax(args ...interface{}) (interface{}, error) {
-	m := -1.7e+308
-	for _, a := range args {
-		var err error
-		if a, err = fullyexpandrange(a); err != nil {
-			return nil, err
-		}
-		switch v := a.(type) {
-		case int:
-			m = max(m, float64(v))
-		case float64:
-			m = max(m, v)
-		case []float64:
-			for _, val := range v {
-				m = max(m, val)
-			}
-		case []interface{}:
-			for _, val := range v {
-				switch x := val.(type) {
-				case int:
-					m = max(m, float64(x))
-				case float64:
-					m = max(m, x)
-				}
-			}
-		}
+	xs := []interface{}{}
+	for _, x := range numbers(args...) {
+		xs = append(xs, x)
 	}
-	return m, nil
+	return extremeOf(xs, 1), nil
 }
 
 func vmin(args ...interface{}) (interface{}, error) {
-	m := 1.7e+308
-	for _, a := range args {
-		var err error
-		if a, err = fullyexpandrange(a); err != nil {
-			return nil, err
-		}
-		switch v := a.(type) {
-		case int:
-			m = min(m, float64(v))
-		case float64:
-			m = min(m, v)
-		case []float64:
-			for _, val := range v {
-				m = min(m, val)
-			}
-		case []interface{}:
-			for _, val := range v {
-				switch x := val.(type) {
-				case int:
-					m = min(m, float64(x))
-				case float64:
-					m = min(m, x)
-				}
-			}
-		}
+	xs := []interface{}{}
+	for _, x := range numbers(args...) {
+		xs = append(xs, x)
 	}
-	return m, nil
+	return extremeOf(xs, -1), nil
 }
 
 type Op func(v float64) float64
@@ -595,10 +750,6 @@ func tblRemainder(args ...interface{}) (interface{}, error) {
 	return do2N(math.Remainder, args...)
 }
 
-func tblRound(args ...interface{}) (interface{}, error) {
-	return doN(math.Round, args...)
-}
-
 func tblTrunc(args ...interface{}) (interface{}, error) {
 	return doN(math.Trunc, args...)
 }
@@ -751,35 +902,14 @@ func removeDuplicate(sliceList []interface{}) []interface{} {
 	return list
 }
 
+// tblBuildList flattens the arguments into one list, expanding ranges the way
+// the v* functions do.
 func tblBuildList(args ...interface{}) []interface{} {
-	params := []interface{}{}
-	for _, a := range args {
-		switch v := a.(type) {
-		case int:
-			params = append(params, v)
-		case float64:
-			params = append(params, v)
-		case string:
-			params = append(params, v)
-		case []float64:
-			for _, val := range v {
-				params = append(params, val)
-			}
-		case []int:
-			for _, val := range v {
-				params = append(params, val)
-			}
-		case []string:
-			for _, val := range v {
-				params = append(params, val)
-			}
-		}
-	}
-	return params
+	return argList(args...)
 }
 
 func tblRDup(args ...interface{}) (interface{}, error) {
-	params := tblBuildList(args)
+	params := tblBuildList(args...)
 	if len(params) > 0 {
 		m := removeDuplicate(params)
 		return m, nil
@@ -788,7 +918,7 @@ func tblRDup(args ...interface{}) (interface{}, error) {
 }
 
 func tblSort(args ...interface{}) (interface{}, error) {
-	params := tblBuildList(args)
+	params := tblBuildList(args...)
 	if len(params) < 1 {
 		return params, nil
 	}
@@ -831,7 +961,7 @@ func tblSort(args ...interface{}) (interface{}, error) {
 }
 
 func tblRSort(args ...interface{}) (interface{}, error) {
-	params := tblBuildList(args)
+	params := tblBuildList(args...)
 	if len(params) < 1 {
 		return params, nil
 	}
@@ -880,7 +1010,7 @@ func ReverseSlice[T any](s []T) {
 }
 
 func tblRev(args ...interface{}) (interface{}, error) {
-	params := tblBuildList(args)
+	params := tblBuildList(args...)
 	if len(params) < 1 {
 		return params, nil
 	}
@@ -891,7 +1021,7 @@ func tblRev(args ...interface{}) (interface{}, error) {
 func tblNeg(args ...interface{}) (interface{}, error) {
 	return doN(func(v float64) float64 {
 		return -v
-	}, args)
+	}, args...)
 }
 
 func tblRemote(fname string, args ...interface{}) (interface{}, error) {
@@ -906,6 +1036,9 @@ func tblRemote(fname string, args ...interface{}) (interface{}, error) {
 		it := &RangeIter{}
 		it.Form = *rng
 		it.Tbl = tbl.Table
+		// Without a calc state, expanding the range (vsum(remote(...))) read
+		// cells through a nil pointer.
+		it.Mode = defaultCalc
 		it.Reset()
 		return it, nil
 	} else {
@@ -941,7 +1074,7 @@ func tblPassed(args ...interface{}) (interface{}, error) {
 	}
 	if len(args) == 2 {
 		p1 := args[0]
-		p2 := args[0]
+		p2 := args[1]
 		//fmt.Printf("PASSED: 2 Argument: [%v] vs [%v]\n", p1, p2)
 		if t, ok := p1.(*RangeIter); ok {
 			p1 = t.NextVal()
@@ -1034,6 +1167,16 @@ func tblNow(args ...interface{}) (interface{}, error) {
 }
 
 func tblDate(args ...interface{}) (interface{}, error) {
+	// date(year, month, day); out of range parts roll over, as in a spreadsheet.
+	if len(args) == 3 {
+		y, ok1 := cellInt(args[0])
+		m, ok2 := cellInt(args[1])
+		d, ok3 := cellInt(args[2])
+		if ok1 && ok2 && ok3 {
+			return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.Local), nil
+		}
+		return nil, fmt.Errorf("date expects (year, month, day) as numbers")
+	}
 	if len(args) == 1 {
 		p := args[0]
 		if t, ok := p.(*RangeIter); ok {
@@ -1065,17 +1208,10 @@ func timeOp(name string, fun TimeFun, args ...interface{}) (interface{}, error) 
 		if t, ok := p.(*RangeIter); ok {
 			p = t.NextVal()
 		}
-		switch n := p.(type) {
-		case int:
-			if n > 0 {
-				return fun(time.Unix(int64(n), 0))
-			}
-		case string:
-			if tm, err := common.ParseDateString(n); err == nil {
-				return fun(tm)
-			}
-		case time.Time:
-			return fun(n)
+		// toTime also reads a date literal, which govaluate hands over as
+		// Unix seconds: monthname('2026-01-05') used to fail.
+		if tm, ok := toTime(p); ok {
+			return fun(tm)
 		}
 	}
 	return nil, fmt.Errorf("failed to parse %s from cell", name)

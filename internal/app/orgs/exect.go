@@ -160,6 +160,11 @@ func makelistfromrange(tbl *org.Table, mode *CalcState, it org.ColRefIterator) (
 		if ref == nil {
 			break
 		}
+		// With E nothing is skipped above, and a column runs one row past
+		// the end of a table with separators: vcount counted a phantom cell.
+		if !isDataRow(tbl, ref) {
+			continue
+		}
 		v := mode.GetCell(tbl, ref)
 		res = append(res, v)
 	}
@@ -220,7 +225,8 @@ var RE_TARGET_A = regexp.MustCompile(rowColRe)
 var RE_REMOTE = regexp.MustCompile(`remote\(\s*(?P<tblnm>[a-zA-Z][a-zA-Z0-9]*)\s*,(?P<range>` + rowColRe + `\s*)\)`)
 var RE_ROW_TOKEN = regexp.MustCompile(`[@][#]`)
 var RE_COL_TOKEN = regexp.MustCompile(`[$][#]`)
-var RE_SYMBOL_OR_CELL_NAME = regexp.MustCompile(`[$](?P<name>[a-zA-Z][a-zA-Z0-9_-]*)`)
+var RE_OP_BEFORE_NAME = regexp.MustCompile(`([-+*/%=!&|^]|[^@]<|[^@]>)\$([A-Za-z])`)
+var RE_SYMBOL_OR_CELL_NAME =regexp.MustCompile(`[$](?P<name>[a-zA-Z][a-zA-Z0-9_-]*)`)
 
 type RangeIter struct {
 	It   org.ColRefIterator
@@ -472,10 +478,15 @@ func (s *CalcState) SetCell(tbl *org.Table, tgt *org.RowColRef, val interface{})
 		format = "$" + format
 	}
 	if d, ok := val.(time.Time); ok {
-		val = fmt.Sprintf("<%s>", d.Format("2006-01-02 Mon 15:04"))
+		val = orgTimestamp(d)
 	}
 	if d, ok := val.(common.OrgDuration); ok {
 		val = d.ToString()
+	}
+	// Answers are float64, so ;%d wrote %!d(float64=4.5). An integer verb
+	// gets the whole number, the fraction dropped as Emacs' format does.
+	if f, ok := val.(float64); ok && strings.ContainsAny(format[len(format)-1:], "dxXobc") {
+		val = int64(f)
 	}
 	tbl.SetValRef(tgt, fmt.Sprintf(format, val))
 }
@@ -524,7 +535,11 @@ func ReplaceRemoteRanges(expr string) (string, error) {
 	// Process REMOTE() function calls
 	ms := common.ReMatch(RE_REMOTE, expr)
 	if len(ms) > 0 {
-		for _, m := range ms {
+		// Splice from the last match back: the offsets are into the original
+		// text, so splicing the first one moved every later remote() out
+		// from under its offsets.
+		for i := len(ms) - 1; i >= 0; i-- {
+			m := ms[i]
 			if rng, ok := m["range"]; ok && rng.Have() {
 				var r1 *common.Match = nil
 				var r2 *common.Match = nil
@@ -717,6 +732,11 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 			if row == -1 || ShouldSkipAdvancedRow(tbl.Rows[row].IsAdvanced) {
 				continue
 			}
+			// The header is never written, so it is not evaluated either:
+			// $4=$2*$3 used to multiply the column titles and fail the table.
+			if calcState.SkipHeader && TableHasHeader(tbl) && tgt.Row == 1 {
+				continue
+			}
 
 			oldexpr := frml.Expr
 			// Sub in the $# markers first
@@ -732,6 +752,9 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 			//fmt.Fprintf(os.Stderr, "%v\n", ms)
 			//fmt.Fprintf(os.Stderr, "XXXXXXXXXXXXXXXXXXXXXXx\n")
 			frml.Expr = ReplaceAllNamedColsAndCells(frml.Expr, tbl)
+			// The lexer reads a run of symbols as one operator, so in $2*$rate
+			// the operator was "*$". A space keeps the parameter a name.
+			frml.Expr = RE_OP_BEFORE_NAME.ReplaceAllString(frml.Expr, "${1} $$${2}")
 			rngCnt := 0
 			frml.Expr = string(RE_TARGET_A.ReplaceAllFunc([]byte(frml.Expr), func(in []byte) []byte {
 				name := fmt.Sprintf("rng_%d", rngCnt)
@@ -774,9 +797,7 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 					result = r.Next()
 				}
 
-				if !(calcState.SkipHeader && TableHasHeader(tbl) && tgt.Row == 1) {
-					calcState.SetCell(tbl, tgt, result)
-				}
+				calcState.SetCell(tbl, tgt, result)
 				//fmt.Fprintf(os.Stderr, "---> Setting value\n")
 			} else {
 				fmt.Fprintf(os.Stderr, "HAD ERR: %v\n", err)

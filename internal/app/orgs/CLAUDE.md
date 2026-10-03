@@ -392,3 +392,16 @@ Client: `worg/src/move.ts` (pure, tested), `MoveDialog.tsx` (one dialog for all 
 4. **The SM5 matrix is keyed by ease rounded to 3 places** (deliberately not org-drill, whose float keys never match what is read back) and saved per user in extensions after every rating.
 5. **Quirks kept on purpose**: the EF floor is applied before the change; Simple8 does not count a failure in the total; the stored interval is the hypothetical one the button showed (org-drill's smart reschedule).
 6. Test the review endpoint with `Content-Type: application/json`: without it the form-parsing middleware eats the body and the hash comes through empty ("no heading with that hash").
+
+## Table formula functions
+
+`functions` in `tablefuncs.go` is the `#+TBLFM` function map (the query language has its own, local to `todo.go`); implementations are split over `tablefuncs_range.go` (conditional aggregates, lookups, statistics, argument helpers), `tablefuncs_misc.go` (logic, text, rounding), `tablefuncs_dates.go` and `tablefuncs_finance.go`. The user guide is `docs/tables.org`; the SDOC block at the top of `tablefuncs.go` is the short reference. Keep both in step with the map. `TestTablesGuideExamples` (`tablesguide_test.go`) runs every `#+BEGIN_SRC org` table in the guide with its formula targets blanked and requires the shown answers back, so a wrong example (or a behaviour change) fails the tests. Other tests run real `#+TBLFM` lines through `ExecuteFormula` (`tablefuncs_test.go`, `evalOrgTable`).
+
+1. **Every cell reference arrives as a `*RangeIter`**, and the function decides what it means: a range parameter expands it (`argList`, or `argCells` to keep empty cells so two ranges stay aligned) and `$2` is then the whole column; a value parameter reads it with `argVal` and `$2` is the current row's cell.
+2. **A column iterator runs one row past the end** of a table with separators. Anything walking a range must check `isDataRow` (`makelistfromrange` and `walkCells` do); before it did, `vcount($1);E` counted a phantom cell.
+3. **govaluate splats a lone list argument and appends later arguments onto a list-valued first one**, so a list result (`sort`, `lookupall`) works only as the last argument.
+4. **Arguments are evaluated before the call**, so `if` evaluates both branches and `iferror` can only catch NaN, infinity and nil, never a function's error.
+5. **Cell references are replaced inside string literals too** (`'$1'` becomes a range), and `remote(Name, range)` needs an unquoted name to be rewritten.
+6. **govaluate's own operators take only float64.** A function answering an `int` could not be added to or compared, so an `init` in `tablefuncs.go` wraps every function in the map to hand an `int` on as a `float64`. Date literals (`'2026-03-01'`) arrive as Unix seconds (float64); `toTime` reads them.
+7. **The lexer reads a run of symbols as one operator**, so `$2*$rate` was `*$`. `ExecuteFormula` spaces an operator from a following `$name` (`RE_OP_BEFORE_NAME`); `@>$3`/`@<$3` are excluded.
+8. **The header row is skipped before evaluating, not just before writing**: `$4=$2*$3` used to multiply the column titles and fail. Arithmetic between two cells treats an empty cell as 0 (`OpGen` in `tableops.go`), as arithmetic with a literal already did.

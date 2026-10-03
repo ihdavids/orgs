@@ -133,6 +133,12 @@ func ParseDateString(p string) (time.Time, error) {
 	if tm, err = time.Parse("<2006-01-02 Mon 15:04>", p); err == nil {
 		return tm, nil
 	}
+	// The other ways org writes a date: no time, inactive, or bare.
+	for _, layout := range []string{"<2006-01-02 Mon>", "[2006-01-02 Mon 15:04]", "[2006-01-02 Mon]", "2006-01-02 15:04", "2006-01-02"} {
+		if tm, err = time.Parse(layout, p); err == nil {
+			return tm, nil
+		}
+	}
 	// RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
 	if tm, err = time.Parse(time.RFC1123, p); err == nil {
 		return tm, nil

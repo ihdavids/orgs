@@ -1,0 +1,714 @@
+#+TITLE: Table formulas — a spreadsheet in an org table
+#+OPTIONS: toc:2 num:nil
+
+* What this is
+
+  An org table can carry formulas on a =#+TBLFM:= line under it. The server
+  works them out and writes the answers back into the table's cells, so a
+  table of expenses can total itself, a reading list can count what is
+  finished, and an order sheet can look prices up in another table.
+
+  This is not Emacs' table engine. Emacs hands formulas to Calc or Lisp, which
+  a server cannot run, so orgs has its own expression language with the same
+  cell references (=$3=, =@2$3=, =@2$1..@>$1=) and its own function library.
+  Plain arithmetic formulas usually work in both; anything using the
+  functions below works only here.
+
+  Every example in this guide is run by the test suite
+  (=internal/app/orgs/tablesguide_test.go=): the tables are shown with the
+  answers the evaluator really produces.
+
+** Running the formulas
+
+   Nothing is recalculated as you type. Formulas run when you ask:
+
+   - terminal: =orgs tables eval NAME= (=orgs tables= lists the tables and their names)
+   - worg: the Tables tab, saving a table with evaluation on
+   - VS Code: *Org: Execute Table* with the cursor in the table, or *Org: Execute All Tables In File*
+
+   The table is rewritten in place, realigned, with the formula line kept.
+   If a formula fails, nothing is written and the error names the formula.
+
+* Anatomy of a formula
+
+  #+BEGIN_SRC org
+  | item   | qty | price | total |
+  |--------+-----+-------+-------|
+  | apples |   3 |  0.50 |  1.50 |
+  | pears  |   2 |  1.25 |  2.50 |
+  | plums  |  10 |  0.20 |  2.00 |
+  |--------+-----+-------+-------|
+  | total  |  15 |       |  6.00 |
+  #+TBLFM: $4=$2*$3;%.2f::@>$2=vsum(@2$2..@4$2)::@>$4=vsum(@2$4..@4$4);%.2f
+  #+END_SRC
+
+  The =#+TBLFM:= line holds any number of formulas separated by =::=, run
+  left to right, so a later formula sees what an earlier one wrote. Each is
+
+  #+BEGIN_EXAMPLE
+  target=expression;format
+  #+END_EXAMPLE
+
+  Here =$4=$2*$3= fills every row of column 4 with quantity times price.
+  It runs on the total row too (giving 0, since that row has no price), and
+  then =@>$4=...= overwrites that one cell with the sum.
+
+** Naming cells: rows and columns
+
+   | Reference      | Means                                                            |
+   |----------------+------------------------------------------------------------------|
+   | =$3=           | column 3. As a target: every row but the header                  |
+   | =@2$3=         | row 2, column 3                                                  |
+   | =@>$3=         | the last row, column 3. =@<= is the first row                    |
+   | =@2$1..@4$3=   | a rectangle of cells, read row by row                            |
+   | =@-1$3=        | one row up from the row being filled (=@+1= down)                |
+   | =@#=, =$#=     | the number of the row or column being filled                     |
+   | =remote(Name, $2)= | column 2 of the table named =Name= (see [[*Other tables: remote][Other tables]]) |
+
+   *Rows are counted without the separator lines*: =@1= is the header,
+   =@2= the first row under the first line, and a second line further down
+   adds nothing to the count. In the example above the total row is =@5=.
+
+   When a table has a header (a separator line after its first row), the
+   header is never written to and is left out of column ranges.
+
+** The format after the semicolon
+
+   Everything after =;= says how the answer is written and how cells are read.
+
+   | Part   | Effect                                                                                  |
+   |--------+-----------------------------------------------------------------------------------------|
+   | =%.2f= | a printf pattern for the answer: =%.2f= two decimals, =%5.1f= padded to 5 characters    |
+   | =%d=   | a whole number; the fraction is dropped, not rounded: 4.5 is written 4 (as Emacs does)  |
+   | =N=    | read every cell as a number: text counts as 0, =true= as 1, a lone empty cell as 0      |
+   | =E=    | keep empty cells in ranges; without it =vsum=, =vmean=, =vcount= skip them              |
+   | =$=    | money: =$= is stripped from cells when reading and put in front of the answer            |
+   | =H=    | include the header row in column ranges                                                  |
+
+   They combine: =;%.2f$= writes =$12.50=.
+
+   #+BEGIN_SRC org
+   | item   | price | qty |   cost |
+   |--------+-------+-----+--------|
+   | tea    | $2.50 |   2 |  $5.00 |
+   | coffee | $4.25 |   3 | $12.75 |
+   #+TBLFM: $4=$2*$3;%.2f$
+   #+END_SRC
+
+   =E= and =N= in action; column 1 has an empty cell and a word:
+
+   #+BEGIN_SRC org
+   | x   | counted | counted, E | mean | mean, N |
+   |-----+---------+------------+------+---------|
+   | 4   |       3 |          4 |    6 |       4 |
+   |     |         |            |      |         |
+   | 8   |         |            |      |         |
+   | n/a |         |            |      |         |
+   #+TBLFM: @2$2=vcount($1)::@2$3=vcount($1);E::@2$4=vmean($1)::@2$5=vmean($1);N
+   #+END_SRC
+
+   =vcount= counts the three filled cells, or all four with =E=. =vmean=
+   averages the numbers and passes over the text: (4+8)/2. With =N= the
+   text =n/a= becomes a 0, so it is (4+8+0)/3; the empty cell is still
+   left out, because leaving empty cells out is what =E= changes, not =N=.
+
+** Named columns, named cells and parameters
+
+   A table whose first column is a marker column can name things, as in
+   Emacs. The marker in the first cell says what the row is:
+
+   | Marker | Row holds                                                                   |
+   |--------+-----------------------------------------------------------------------------|
+   | =!=    | column names: =$qty= then means =$3= (the marker column is column 1)        |
+   | =^=    | names for the cells just above it: =$subtotal= means that cell             |
+   | =_=    | names for the cells just below it                                           |
+   | =$=    | parameters, written =name=value=: =$rate= is that value                     |
+
+   Rows with a marker are never written to by formulas.
+
+   #+BEGIN_SRC org
+   |   | item | qty | price | total |
+   |---+------+-----+-------+-------|
+   | ! | item | qty | price | total |
+   |   | tea  |   2 |   2.5 |     5 |
+   |   | jam  |   1 |     4 |     4 |
+   #+TBLFM: $5=$qty*$price
+   #+END_SRC
+
+   #+BEGIN_SRC org
+   |   |  net | tax |
+   |---+------+-----|
+   |   |  100 |  20 |
+   |   |   50 |  10 |
+   | $ | rate=0.2 |     |
+   #+TBLFM: $3=$2*$rate
+   #+END_SRC
+
+   A parameter is read like a cell, so =rate=0.2= is the number 0.2. The
+   =$= row is a row of the table like any other, so a whole-column range
+   (=vsum($2)=) would take its cell in too.
+
+** Constants
+
+   =#+CONSTANTS: vat=0.2 shop=Corner= in the file makes =$vat= and =$shop=
+   available to every table in it, and a heading's properties are there as
+   =$PROP_NAME=. *Constants are text, not numbers*: wrap them in =value()=
+   to calculate with them.
+
+   #+BEGIN_SRC org
+   #+CONSTANTS: vat=0.2
+   | net | with vat |
+   |-----+----------|
+   | 100 |      120 |
+   |  50 |       60 |
+   #+TBLFM: $2=$1*(1+value($vat))
+   #+END_SRC
+
+* What a cell's value is
+
+  Before a formula sees a cell, its text is read as the first of these that fits:
+
+  1. empty: an empty value (0 with =N=)
+  2. a number: =42=, =-3.5=, =1e3= (with =$=, =$12.50= too)
+  3. a date: =<2026-10-02 Fri>=, =<2026-10-02 Fri 09:30>=, =[2026-10-02 Fri]=, =2026-10-02=, =2026-10-02 09:30=
+  4. a duration: =1:30=, =2h=, =1d 4h=, =3w= (a week is five days, as for effort estimates)
+  5. true or false: =t=, =true=, =TRUE=, =True= and =f=, =false= ...
+  6. otherwise text
+
+  #+BEGIN_SRC org
+  | cell             | number | date  | text  | blank |
+  |------------------+--------+-------+-------+-------|
+  | 42               | true   | false | false | false |
+  | <2026-10-02 Fri> | false  | true  | false | false |
+  | hello            | false  | false | true  | false |
+  | TRUE             | false  | false | false | false |
+  |                  | false  | false | false | true  |
+  #+TBLFM: $2=isnumber($1)::$3=isdate($1)::$4=istext($1)::$5=isblank($1)
+  #+END_SRC
+
+  An answer is written as: numbers as short as they can be (=3=, not
+  =3.000000=, unless a format says otherwise); dates as =<2026-10-02 Fri>=,
+  with the time only when it is not midnight; durations as =1d 2h 30mins=;
+  true and false as =true= and =false=; a list as =[1 2 3]= (use =join= to
+  write one nicely).
+
+  In a formula, text goes in quotes, single or double: ='fruit'=, ="fruit"=.
+  =true=, =false=, =t=, =f= and =pi= are names you can use directly.
+
+* How a function reads its arguments
+
+  *This is the rule to remember.* A cell reference means one of two things,
+  and which one depends on the function, not on how you wrote it:
+
+  - where a function wants a *range* (=vsum= and the other =v= functions,
+    =vsumif= and the criteria functions, the ranges of a lookup, =join=,
+    =sort=), =$2= is the *whole column*, header left out;
+  - where a function wants a *value* (=sqrt=, =round=, =upper=, =concat=,
+    =if=, =and=, the dates, the value a lookup searches for), =$2= is the
+    cell *in the row being filled*.
+
+  Each function's table below says which of its arguments are ranges: they
+  are the ones named =range=, =keys=, =results= or =values=.
+
+  #+BEGIN_SRC org
+  | x | root | share |
+  |---+------+-------|
+  | 4 | 2.00 |  0.20 |
+  | 9 | 3.00 |  0.45 |
+  | 7 | 2.65 |  0.35 |
+  #+TBLFM: $2=sqrt($1);%.2f::$3=$1/vsum($1);%.2f
+  #+END_SRC
+
+  In =$1/vsum($1)= the first =$1= is this row's x and the second is every x:
+  each row's share of the total. A rectangle like =@2$1..@4$1= is always a range.
+
+  Arithmetic and comparisons (=+ - * / % **=, =< <= > >= == !==, =&& || !=,
+  =cond ? a : b=) work on the current row's cells.
+
+* Matching cells: criteria
+
+  The =if= family of functions (=vsumif=, =vcountif= ...) take a *criteria*
+  argument saying which cells count:
+
+  | Criteria          | Matches                                                  |
+  |-------------------+----------------------------------------------------------|
+  | ='fruit'=         | cells equal to fruit, ignoring case: Fruit, FRUIT        |
+  | =5= or ='5'=      | cells equal to the number 5                              |
+  | ='>10'=           | numbers over 10; also =>==, =<=, =<==                    |
+  | ='<>done'=        | anything but done, including empty cells; =!== also works |
+  | ='>=2026-01-01'=  | dates on or after the first of January 2026              |
+  | ='app*'=          | text starting app; =*= is any run of characters          |
+  | ='?ale'=          | four letters ending ale; =?= is any one character        |
+  | =''= or ='='=     | empty cells                                              |
+  | ='<>'=            | cells that are not empty                                 |
+  | =$1=              | cells equal to this row's cell in column 1               |
+
+  A number never equals text, and =>= or =<= between a number and text is
+  false. Text is ordered alphabetically, ignoring case.
+
+* Conditional totals: the =if= functions
+
+  | Function                                       | Gives                                                           |
+  |------------------------------------------------+-----------------------------------------------------------------|
+  | =vsumif(range, criteria)=                      | the sum of the numbers in range that match                      |
+  | =vsumif(range, criteria, values)=              | the sum of values on the rows where range matches               |
+  | =vcountif(range, criteria)=                    | how many cells in range match                                   |
+  | =vmeanif(range, criteria [, values])=          | the mean, as vsumif; 0 when nothing matches                     |
+  | =vmaxif=, =vminif(range, criteria [, values])= | the largest or smallest, as vsumif; 0 when nothing matches      |
+  | =vsumifs(values, range1, crit1, range2, crit2, ...)= | the sum of values on rows where *every* criterion matches |
+  | =vmeanifs(values, range1, crit1, ...)=         | the mean, as vsumifs                                            |
+  | =vcountifs(range1, crit1, range2, crit2, ...)= | rows where every criterion matches                              |
+  | =vcounta(range)=                               | cells that are not empty, whatever is in them                   |
+  | =vcountblank(range)=                           | empty cells                                                     |
+
+  The ranges are walked side by side, so =range= and =values= should be the
+  same height: row 3 of one goes with row 3 of the other. Empty cells are
+  kept in place for this (unlike =vsum=), and text in =values= is ignored.
+
+  Note the argument order: =vsumif= puts the values *last* (optional), the
+  =ifs= forms put them *first* (required), as spreadsheets do.
+
+  #+BEGIN_SRC org
+  | name          | kind  | qty | price |
+  |---------------+-------+-----+-------|
+  | apple         | fruit |   3 |   1.5 |
+  | pear          | fruit |   5 |     2 |
+  | kale          | veg   |   2 |     4 |
+  | beet          | veg   |     |     1 |
+  |---------------+-------+-----+-------|
+  | fruit qty     |       |   8 |       |
+  | veg rows      |       |   2 |       |
+  | qty over 2    |       |   8 |       |
+  | names p...    |       |   1 |       |
+  | fruit price   |       |     |  1.75 |
+  | dear fruit    |       |   5 |       |
+  | qty filled in |       |   3 |       |
+  | qty missing   |       |   1 |       |
+  #+TBLFM: @6$3=vsumif(@2$2..@5$2,'fruit',@2$3..@5$3)::@7$3=vcountif(@2$2..@5$2,'veg')::@8$3=vsumif(@2$3..@5$3,'>2')::@9$3=vcountif(@2$1..@5$1,'p*')::@10$4=vmeanif(@2$2..@5$2,'fruit',@2$4..@5$4)::@11$3=vsumifs(@2$3..@5$3,@2$2..@5$2,'fruit',@2$4..@5$4,'>1.5')::@12$3=vcounta(@2$3..@5$3)::@13$3=vcountblank(@2$3..@5$3)
+  #+END_SRC
+
+  The summary rows sit in the same columns as the data, so these formulas
+  use explicit rectangles (=@2$3..@5$3=). A whole column (=$3=) would take
+  the summary rows in too.
+
+* Looking things up
+
+  | Function                               | Gives                                                                  |
+  |----------------------------------------+------------------------------------------------------------------------|
+  | =lookup(value, keys, results)=         | the cell of results beside the *first* key equal to value              |
+  | =lookupfirst(value, keys, results)=    | the same as lookup                                                     |
+  | =lookuplast(value, keys, results)=     | beside the *last* equal key                                            |
+  | =lookupall(value, keys, results)=      | every match, as a list                                                 |
+  | =index(range, n)=                      | the nth cell of range, from 1; =-1= is the last, =-2= the one before   |
+  | =match(value, range)=                  | the position of the first cell equal to value, from 1; 0 when there is none |
+
+  - With no =results=, a lookup gives the matching key itself, as Emacs'
+    =org-lookup-first= does (useful to ask "is it there?").
+  - When nothing matches, =lookup= and =lookuplast= give an empty cell
+    rather than an error, so one missing key doesn't stop the whole table.
+  - Equal means as in criteria without an operator: numbers by value, text
+    ignoring case, dates by date. Wildcards and operators are *not* used.
+  - =index= past either end is an error, which stops the formula.
+
+  The common case, a price list kept in its own table:
+
+  #+BEGIN_SRC org
+  #+NAME: Prices
+  | item   | price |
+  |--------+-------|
+  | tea    |   2.5 |
+  | coffee |     4 |
+  | jam    |   3.2 |
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  | item   | qty | price | cost |
+  |--------+-----+-------+------|
+  | coffee |   2 |     4 |    8 |
+  | tea    |   3 |   2.5 |  7.5 |
+  | bread  |   1 |       |    0 |
+  #+TBLFM: $3=lookup($1,remote(Prices,$1),remote(Prices,$2))::$4=$2*$3
+  #+END_SRC
+
+  Here =$1= is read as a value (this row's item) and the two =remote(...)=
+  as whole columns of =Prices=. Bread is not in the price list, so its price
+  is left empty, and an empty cell counts as 0 in the arithmetic.
+
+  The others, over one table:
+
+  #+BEGIN_SRC org
+  | day | who  | hours |
+  |-----+------+-------|
+  | mon | ann  |     3 |
+  | tue | bob  |     5 |
+  | wed | ann  |     2 |
+  |-----+------+-------|
+  | ann first   |   |     3 |
+  | ann last    |   |     2 |
+  | ann all     |   |   3,2 |
+  | bob is at   |   |     2 |
+  | second day  |   |   tue |
+  | last hours  |   |     2 |
+  #+TBLFM: @5$3=lookup('ann',@2$2..@4$2,@2$3..@4$3)::@6$3=lookuplast('ann',@2$2..@4$2,@2$3..@4$3)::@7$3=join(',',lookupall('ann',@2$2..@4$2,@2$3..@4$3))::@8$3=match('bob',@2$2..@4$2)::@9$3=index(@2$1..@4$1,2)::@10$3=index(@2$3..@4$3,-1)
+  #+END_SRC
+
+  A lookup's value can also be this row's cell, so each row can find
+  something about itself: =$4=lookuplast($2,$2,$3)= puts, beside every row,
+  the hours of the last row for the same person.
+
+* Statistics
+
+  | Function                     | Gives                                                                            |
+  |------------------------------+----------------------------------------------------------------------------------|
+  | =vsum=, =vmean=, =vmedian=   | total, average, middle value                                                     |
+  | =vmin=, =vmax=               | smallest and largest; 0 when there are no numbers                                |
+  | =vcount= (or =vlen=)         | how many cells are filled in (numbers, text, anything)                           |
+  | =vprod=                      | all the numbers multiplied together; 0 when there are none                       |
+  | =vsdev=, =vvar=              | standard deviation and variance of a *sample* (divides by n-1), like STDEV, VAR  |
+  | =vpsdev=, =vpvar=            | of a whole *population* (divides by n), like STDEV.P, VAR.P                      |
+  | =vmode=                      | the number that occurs most often; on a tie, the one that comes first            |
+  | =vpercentile(range, p)=      | the value p of the way up: p from 0 to 1, or 0 to 100; interpolates like PERCENTILE.INC |
+  | =vquartile(range, q)=        | q = 0 smallest, 1 first quartile, 2 median, 3 third quartile, 4 largest          |
+  | =vrank(value, range)=        | 1 for the largest number in range, 2 for the next ...; equal numbers share a rank |
+  | =vrank(value, range, true)=  | 1 for the smallest instead                                                       |
+
+  All of these use only the numbers in their ranges: text and empty cells
+  are passed over. They take any number of ranges and values: =vsum($2, $4, 10)=.
+
+  #+BEGIN_SRC org
+  | student | score | rank |
+  |---------+-------+------|
+  | ann     |    72 |    4 |
+  | bob     |    95 |    1 |
+  | cy      |    88 |    2 |
+  | dee     |    72 |    4 |
+  | eve     |    81 |    3 |
+  #+TBLFM: $3=vrank($2,$2)
+  #+END_SRC
+
+  Ann and Dee share 4th place, and nobody is 5th: as in a spreadsheet.
+
+  #+BEGIN_SRC org
+  | x     |      |
+  |-------+------|
+  | 2     |      |
+  | 4     |      |
+  | 4     |      |
+  | 4     |      |
+  | 5     |      |
+  | 5     |      |
+  | 7     |      |
+  | 9     |      |
+  |-------+------|
+  | mean  |    5 |
+  | sdev  | 2.14 |
+  | psdev |    2 |
+  | mode  |    4 |
+  | p90   | 7.60 |
+  | q1    |    4 |
+  #+TBLFM: @10$2=vmean(@2$1..@9$1)::@11$2=vsdev(@2$1..@9$1);%.2f::@12$2=vpsdev(@2$1..@9$1)::@13$2=vmode(@2$1..@9$1)::@14$2=vpercentile(@2$1..@9$1,0.9);%.2f::@15$2=vquartile(@2$1..@9$1,1)
+  #+END_SRC
+
+* Choosing: if, and, or
+
+  | Function                      | Gives                                                                    |
+  |-------------------------------+--------------------------------------------------------------------------|
+  | =if(condition, then, else)=   | then when condition is true, else otherwise; with no else, an empty cell |
+  | =and(...)=, =or(...)=         | true when every / any argument is true                                   |
+  | =xor(...)=                    | true when an odd number of arguments are true                            |
+  | =not(x)=                      | the opposite                                                             |
+  | =iferror(value, fallback)=    | fallback when value is not a usable number (see below), else value       |
+  | =isblank(x)=                  | true for an empty cell                                                   |
+  | =isnumber(x)=, =istext(x)=, =isdate(x)= | what the cell was read as (see [[*What a cell's value is][What a cell's value is]]) |
+
+  True is: =true=, a number other than 0, or the text =t=/=true=. Anything
+  else, an empty cell included, is false. =and= and =or= given a range
+  (=and(@2$5..@9$5)=) look at every cell in it.
+
+  #+BEGIN_SRC org
+  | name | score | grade | passed | note         |
+  |------+-------+-------+--------+--------------|
+  | ann  |    93 | A     | true   | top marks    |
+  | bob  |    81 | B     | true   |              |
+  | cy   |    58 | C     | false  | needs resit  |
+  #+TBLFM: $3=if($2>=90,'A',if($2>=80,'B','C'))::$4=$2>=60::$5=if($2>=90,'top marks',if($2<60,'needs resit'))
+  #+END_SRC
+
+  Two things that differ from a spreadsheet:
+
+  - *Both branches of =if= are worked out*, then one is kept. So
+    =if($2>0, 10/$2, 0)= still divides by zero when =$2= is 0 (harmlessly:
+    the answer is infinity, and the 0 is kept), but a branch that is an
+    *error*, like =index= past the end, stops the formula even when it is
+    not the branch chosen.
+  - *=iferror= only catches bad numbers*: not-a-number (=0/0=, =sqrt(-1)=),
+    infinity (=1/0=) and a missing value. A function that fails (a date
+    that cannot be read, =index= out of range) stops the formula before
+    =iferror= is reached.
+
+  #+BEGIN_SRC org
+  | spent | budget | used | used, safe |
+  |-------+--------+------+------------|
+  |    50 |    200 | 0.25 |       0.25 |
+  |    10 |      0 | +Inf |          - |
+  #+TBLFM: $3=$1/$2::$4=iferror($1/$2,'-')
+  #+END_SRC
+
+* Text
+
+  | Function                          | Gives                                                                      |
+  |-----------------------------------+----------------------------------------------------------------------------|
+  | =concat(a, b, ...)=               | this row's values joined with nothing between: =concat($1, '-', $2)=; a rectangle (=@2$1..@4$1=) gives all its cells |
+  | =join(sep, values, ...)=          | the non-empty values joined with sep between; =$1= is the whole column: =join(', ', $1)= |
+  | =len(text)=                       | the number of characters                                                   |
+  | =upper(text)=, =lower(text)=      | in capitals, in small letters                                              |
+  | =trim(text)=                      | spaces taken off both ends, and runs of spaces inside squeezed to one      |
+  | =left(text, n)=, =right(text, n)= | the first or last n characters; n defaults to 1                            |
+  | =mid(text, start, n)=             | n characters from start, counting the first character as 1                 |
+  | =substitute(text, old, new)=      | every old replaced by new                                                  |
+  | =rept(text, n)=                   | text n times: =rept('*', $2)= draws a bar                                  |
+  | =contains(text, part)=            | true when part is in text, ignoring case                                   |
+  | =startswith(text, part)=, =endswith(text, part)= | ignoring case                                               |
+  | =value(text)=                     | the first number in text, commas ignored: ='USD 1,234.50'= is 1234.5; 0 if none |
+  | =fmt(pattern, a, b, ...)=         | printf: =fmt('%.1f%%', $2)=, =fmt('%03d', $1)=, =fmt('%s: %d', $1, $2)=    |
+
+  Numbers in text come out short (=3=, =2.5=); dates as =<2026-10-02 Fri>=.
+  In =fmt=, =%d=, =%x=, =%o=, =%b= and =%c= are given a whole number, so =%d=
+  of 3.0 is =3=.
+
+  #+BEGIN_SRC org
+  | first | last     | code | bar  | label         | t?    |
+  |-------+----------+------+------+---------------+-------|
+  | Ada   | Lovelace | ALOV | ***  | Lovelace, Ada | false |
+  | alan  | turing   | ATUR | **** | Turing, Alan  | true  |
+  #+TBLFM: $3=upper(concat(left($1),left($2,3)))::$4=rept('*',len($1))::$5=concat(upper(left($2)),mid($2,2,99),', ',upper(left($1)),mid($1,2,99))::$6=startswith($2,'T')
+  #+END_SRC
+
+* Rounding and numbers
+
+  | Function                    | Gives                                                                    |
+  |-----------------------------+--------------------------------------------------------------------------|
+  | =round(x)=, =round(x, places)= | to the nearest; halves go away from zero. places may be negative: =round(1234,-2)= is 1200 |
+  | =roundup(x [, places])=     | away from zero: =roundup(2.01)= is 3, =roundup(-2.01)= is -3            |
+  | =rounddown(x [, places])=   | toward zero: =rounddown(2.99)= is 2, =rounddown(-2.99)= is -2           |
+  | =floor(x)=, =ceil(x)=       | down, up (=floor(-2.5)= is -3)                                           |
+  | =trunc(x)=, =int(x)=        | the fraction dropped                                                     |
+  | =abs(x)=, =neg(x)=, =sign(x)= | size, negated, -1 / 0 / 1                                               |
+  | =clamp(x, low, high)=       | x, but no lower than low and no higher than high                         |
+  | =mod(a, b)=                 | what is left of a after taking out bs; keeps a's sign: =mod(-7,3)= is -1 |
+  | =rem(a, b)=                 | IEEE remainder, to the *nearest* multiple: =rem(7,4)= is -1 (use =mod=)  |
+  | =pow(a, b)=, =sqrt(x)=, =exp(x)=, =log(x)= (natural), =log10=, =log2=, =pow10(n)=, =exp2(n)= | |
+  | =sin=, =cos=, =tan=, =asin=, =acos=, =atan=, and the =h= forms | in radians; =radians(deg)= and =degrees(rad)= convert |
+  | =rand()=, =randint(low, high)= | a fraction from 0 to 1; a whole number from low to high, both possible |
+
+  Rounding is of the number itself; the =;%.2f= format only changes how it
+  is written. Rounding to places works in binary, so a value like 2.345
+  (stored as 2.34499...) rounds to 2.34, as it does in most languages.
+
+  #+BEGIN_SRC org
+  | x     | round | 1 place | up   | down | clamp |
+  |-------+-------+---------+------+------+-------|
+  | 2.375 |     2 |     2.4 |    3 |    2 | 2.375 |
+  | -1.25 |    -1 |    -1.3 |   -2 |   -1 |     0 |
+  | 17    |    17 |      17 |   17 |   17 |    10 |
+  #+TBLFM: $2=round($1)::$3=round($1,1)::$4=roundup($1)::$5=rounddown($1)::$6=clamp($1,0,10)
+  #+END_SRC
+
+* Dates
+
+  | Function                      | Gives                                                                   |
+  |-------------------------------+-------------------------------------------------------------------------|
+  | =today()=                     | today's date, no time                                                   |
+  | =now()=                       | this moment                                                             |
+  | =date(text)=                  | the date written in text                                                |
+  | =date(year, month, day)=      | that date; too large a day or month rolls on: =date(2026,2,30)= is 2 March |
+  | =days(end, start)=            | the number of days from start to end (end first, like DAYS)             |
+  | =datedif(start, end, unit)=   | the time between, in unit: ='d'= days, ='w'= whole weeks, ='m'= whole months, ='y'= whole years. Negative when end is first |
+  | =adddays(date, n)=            | n days on (back when negative)                                          |
+  | =addmonths(date, n)=          | n months on, on the same day; on a shorter month, its last day: 31 Jan + 1 is 28 Feb. =edate= is the same |
+  | =addyears(date, n)=           | n years on; 29 Feb becomes 28 Feb                                       |
+  | =addtime(date, duration)=     | a duration on: ='2h'=, ='1d 4h'=, ='1:30'=, a duration cell, or a number of minutes |
+  | =eomonth(date [, n])=         | the last day of the month, n months on                                  |
+  | =workday(date, n)=            | n working days on (Monday to Friday); back when n is negative. Holidays are not known |
+  | =networkdays(start, end)=     | working days from start to end, both counted                            |
+  | =year=, =month=, =day=, =hour=, =minute= (date) | the part as a number                              |
+  | =monthname(date)=, =weekdayname(date)= | =January=, =Monday=                                         |
+  | =weekday(date)=               | 0 for Sunday to 6 for Saturday                                          |
+  | =yearday(date)=               | 1 to 366                                                                |
+  | =weeknum(date)=               | the ISO week: weeks start on Monday, week 1 holds the first Thursday    |
+  | =quarter(date)=               | 1 to 4                                                                  |
+  | =datefmt(date, pattern)=      | the date written your way (below)                                       |
+  | =duration(text)=              | the text read as a duration                                             |
+
+  Days are counted by the calendar: from 23:00 one day to 01:00 the next is
+  one day. A date argument can be a date cell, a text date (='2026-10-02'=),
+  or a number of seconds since 1970.
+
+  =datefmt= uses the codes Emacs' =format-time-string= uses:
+
+  | Code | Gives       | Code | Gives                  |
+  |------+-------------+------+------------------------|
+  | =%Y= | 2026        | =%H= | hour 00-23             |
+  | =%y= | 26          | =%I= | hour 01-12             |
+  | =%m= | 10          | =%M= | minutes                |
+  | =%d= | 02          | =%S= | seconds                |
+  | =%e= | 2 (padded)  | =%p= | AM or PM               |
+  | =%b= | Oct         | =%a= | Fri                    |
+  | =%B= | October     | =%A= | Friday                 |
+  | =%j= | day of year | =%V= | ISO week               |
+  | =%%= | a % sign    | =%Z=, =%z= | time zone        |
+
+  #+BEGIN_SRC org
+  | task   | start            | due        | days | workdays | month end        | label      |
+  |--------+------------------+------------+------+----------+------------------+------------|
+  | report | <2026-01-30 Fri> | 2026-02-13 |   14 |       11 | <2026-02-28 Sat> | Fri 13 Feb |
+  | audit  | <2026-01-31 Sat> | 2026-03-31 |   59 |       42 | <2026-03-31 Tue> | Tue 31 Mar |
+  #+TBLFM: $4=days($3,$2)::$5=networkdays($2,$3)::$6=eomonth($3)::$7=datefmt($3,'%a %d %b')
+  #+END_SRC
+
+  More:
+
+  #+BEGIN_SRC org
+  | date             | answer                 | how                      |
+  |------------------+------------------------+--------------------------|
+  | <2026-01-31 Sat> | <2026-02-28 Sat>       | one month on             |
+  | <2026-01-31 Sat> | <2026-02-02 Mon>       | next working day         |
+  | <2026-01-31 Sat> | <2026-01-31 Sat 02:30> | two and a half hours on  |
+  | <2026-01-31 Sat> | 5                      | ISO week                 |
+  | <2026-01-31 Sat> | 1                      | whole months to 1 March  |
+  #+TBLFM: @2$2=addmonths(@2$1,1)::@3$2=workday(@3$1,1)::@4$2=addtime(@4$1,'2:30')::@5$2=weeknum(@5$1)::@6$2=datedif(@6$1,'2026-03-01','m')
+  #+END_SRC
+
+* Money
+
+  These follow the spreadsheet convention: *money you pay out is negative,
+  money you receive is positive*. A loan of 200000 that you receive gives a
+  negative payment. =rate= is per period: a yearly 5% paid monthly is
+  =0.05/12=, with the number of periods in months. The optional =type= is 1
+  when payments are made at the *start* of each period, 0 (the default) at
+  the end.
+
+  | Function                          | Gives                                                      |
+  |-----------------------------------+------------------------------------------------------------|
+  | =pmt(rate, nper, pv [, fv [, type]])= | the payment each period that turns pv into fv (default 0) |
+  | =pv(rate, nper, pmt [, fv [, type]])= | what a run of payments is worth today                  |
+  | =fv(rate, nper, pmt [, pv [, type]])= | what you will have after nper periods                  |
+  | =nper(rate, pmt, pv [, fv [, type]])= | how many periods it takes                              |
+  | =npv(rate, v1, v2, ...)=          | today's value of amounts arriving at the *end* of periods 1, 2, ... |
+  | =irr(v0, v1, v2, ...)=            | the rate at which those amounts, the first one *now*, are worth nothing today; needs both a negative and a positive amount |
+
+  #+BEGIN_SRC org
+  | loan   | yearly rate | years | monthly  | total paid |  interest |
+  |--------+-------------+-------+----------+------------+-----------|
+  | 200000 |        0.05 |    30 | -1073.64 | -386511.57 | 186511.57 |
+  |  15000 |        0.07 |     5 |  -297.02 |  -17821.08 |   2821.08 |
+  #+TBLFM: $4=pmt($2/12,$3*12,$1);%.2f::$5=pmt($2/12,$3*12,$1)*$3*12;%.2f::$6=-$5-$1;%.2f
+  #+END_SRC
+
+  The total is worked out from the payment itself, not from the rounded
+  =-297.02= in the cell: =$5=$4*$3*12= would read back the rounded text
+  and give =-17821.20=.
+
+  #+BEGIN_SRC org
+  | question                                  |    answer |
+  |-------------------------------------------+-----------|
+  | save 200 a month for 10 months at 6%      |   2045.61 |
+  | months to save 10000 at 100 a month, 12%  |     69.66 |
+  | 500 a month for 20 years at 8%, worth now | -59777.15 |
+  | npv at 10%: -10000 then 3000, 4200, 6800  |   1188.44 |
+  | irr of -70000 then 12000 ... 26000, in %  |      8.66 |
+  #+TBLFM: @2$2=fv(0.06/12,10,-200);%.2f::@3$2=nper(0.12/12,-100,0,10000);%.2f::@4$2=pv(0.08/12,12*20,500);%.2f::@5$2=npv(0.1,-10000,3000,4200,6800);%.2f::@6$2=irr(-70000,12000,15000,18000,21000,26000)*100;%.2f
+  #+END_SRC
+
+* Lists
+
+  A few functions give a list of values rather than one: =sort=, =rsort=
+  (largest first), =rdup= (repeats removed, first kept), =rev= (reversed)
+  and =lookupall=. A list written into a cell looks like =[1 2 3]=, so they
+  are usually wrapped in =join=, or given to a function that takes a range.
+
+  #+BEGIN_SRC org
+  | x | sorted  | unique | total of unique |
+  |---+---------+--------+-----------------|
+  | 3 | 1 2 3 3 | 3 1 2  |               6 |
+  | 1 |         |        |                 |
+  | 3 |         |        |                 |
+  | 2 |         |        |                 |
+  #+TBLFM: @2$2=join(' ',sort($1))::@2$3=join(' ',rdup($1))::@2$4=vsum(rdup($1))
+  #+END_SRC
+
+  *A list can only be the last argument of a function.* The expression
+  parser flattens a list that comes first into the arguments after it:
+  =join(' ', sort($1))= is fine, =index(sort($1), 2)= is not (the 2 becomes
+  one more list item, and index sees five arguments).
+
+* Other tables: remote
+
+  =remote(Name, ref)= reads from the table named =Name= (by =#+NAME:= above
+  it), looked for in the same file first and then in every other file. =ref=
+  is any reference: =$2= a column, =@3$2= one cell, =@2$1..@>$3= a block.
+
+  #+BEGIN_SRC org
+  #+NAME: Hits
+  | who | damage |
+  |-----+--------|
+  | orc |      5 |
+  | elf |      7 |
+  | orc |     12 |
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  | monster | total damage | last hit | hits |
+  |---------+--------------+----------+------|
+  | orc     |           17 |       12 |    2 |
+  | elf     |            7 |        7 |    1 |
+  #+TBLFM: $2=vsumif(remote(Hits,$1),$1,remote(Hits,$2))::$3=lookuplast($1,remote(Hits,$1),remote(Hits,$2))::$4=vcountif(remote(Hits,$1),$1)
+  #+END_SRC
+
+  Write the name *without quotes*. =remote('Hits', $2)= is not recognised and
+  the formula fails.
+
+* Spreadsheet names
+
+  For finding the function you would have used in a spreadsheet:
+
+  | Spreadsheet                  | Here                         | Spreadsheet          | Here                     |
+  |------------------------------+------------------------------+----------------------+--------------------------|
+  | SUM, AVERAGE, MEDIAN         | vsum, vmean, vmedian         | IF, AND, OR, NOT     | if, and, or, not         |
+  | MIN, MAX, COUNT, COUNTA      | vmin, vmax, vcount, vcounta  | IFERROR              | iferror (numbers only)   |
+  | COUNTBLANK, PRODUCT          | vcountblank, vprod           | ISBLANK, ISNUMBER    | isblank, isnumber        |
+  | SUMIF, COUNTIF, AVERAGEIF    | vsumif, vcountif, vmeanif    | CONCAT, TEXTJOIN     | concat, join             |
+  | SUMIFS, COUNTIFS, AVERAGEIFS | vsumifs, vcountifs, vmeanifs | LEN, UPPER, LOWER    | len, upper, lower        |
+  | MAXIFS, MINIFS               | vmaxif, vminif (one criterion) | LEFT, RIGHT, MID   | left, right, mid         |
+  | VLOOKUP, XLOOKUP             | lookup                       | TRIM, SUBSTITUTE     | trim, substitute         |
+  | INDEX, MATCH                 | index, match                 | REPT, VALUE, TEXT    | rept, value, fmt / datefmt |
+  | STDEV, STDEV.P, VAR, VAR.P   | vsdev, vpsdev, vvar, vpvar   | SEARCH (as a test)   | contains                 |
+  | MODE, PERCENTILE, QUARTILE   | vmode, vpercentile, vquartile | TODAY, NOW, DATE    | today, now, date         |
+  | RANK                         | vrank                        | DAYS, DATEDIF        | days, datedif            |
+  | ROUND, ROUNDUP, ROUNDDOWN    | round, roundup, rounddown    | EDATE, EOMONTH       | addmonths, eomonth       |
+  | INT, ABS, SIGN, MOD          | floor, abs, sign, mod        | WORKDAY, NETWORKDAYS | workday, networkdays     |
+  | RAND, RANDBETWEEN            | rand, randint                | WEEKNUM, WEEKDAY     | weeknum (ISO), weekday   |
+  | PMT, PV, FV, NPER, NPV, IRR  | the same, in small letters   | YEAR, MONTH, DAY     | year, month, day         |
+
+  Spreadsheet INT rounds down, which is =floor= here; =int= here drops the
+  fraction, which differs for negative numbers.
+
+* Things that catch you out
+
+  - *=$2= is a column or a cell depending on the function.* Ranges for
+    =vsum= and friends, one cell for =sqrt= and friends. See
+    [[*How a function reads its arguments][How a function reads its arguments]].
+  - *A whole column includes everything under the header*, summary rows
+    too. Under a total row, use =@2$3..@5$3= rather than =$3=.
+  - *Rows are counted without separator lines.*
+  - *Both branches of =if= are worked out.* An error in either stops the formula.
+  - *=iferror= catches bad numbers, not errors.*
+  - *A list can only be the last argument.* =join(',', sort($1))=, never =index(sort($1), 1)=.
+  - *Cell references are found inside quotes too.* ='$1'= in a formula
+    becomes a reference to column 1, so it cannot be written as text (=value('USD 1,234')=
+    works; =value('$1,234')= does not).
+  - *=remote= takes the table name without quotes.*
+  - *Constants are text*: =value($vat)=, not =$vat=.
+  - *A week is five days* in a duration (=1w= is =5d=), as for effort estimates.
+  - *=rem= is not =mod=*: =rem(7,4)= is -1.
+  - *Formulas don't run on their own.* Run them with =orgs tables eval=, worg or VS Code.
