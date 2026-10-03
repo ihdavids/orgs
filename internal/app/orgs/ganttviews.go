@@ -26,6 +26,24 @@ type GanttMarkers struct {
 	Color string  `yaml:"color,omitempty" json:"color,omitempty"`
 	Style string  `yaml:"style,omitempty" json:"style,omitempty"`
 	Width float64 `yaml:"width,omitempty" json:"width,omitempty"`
+	// The symbol drawn on a marker's line when no rule says otherwise:
+	// none, diamond, circle, square, triangle or star.
+	Shape string `yaml:"shape,omitempty" json:"shape,omitempty"`
+	// Rules giving a marker a shape (and optionally a colour of its own) from
+	// what its heading says. The first that matches wins.
+	Rules []GanttMarkerRule `yaml:"rules,omitempty" json:"rules,omitempty"`
+}
+
+// GanttMarkerRule matches a marker's heading by a property's value (When
+// "value", Key and Value), by a property being there at all ("has", Key), or
+// by a tag ("tag", Key is the tag).
+type GanttMarkerRule struct {
+	When  string `yaml:"when" json:"when"`
+	Key   string `yaml:"key" json:"key"`
+	Value string `yaml:"value,omitempty" json:"value,omitempty"`
+	Shape string `yaml:"shape" json:"shape"`
+	// Empty keeps the markers' own colour.
+	Color string `yaml:"color,omitempty" json:"color,omitempty"`
 }
 
 // GanttView is a gantt chart as somebody set it up: the query it draws and
@@ -56,6 +74,28 @@ type GanttView struct {
 	Colors    map[string]string `yaml:"colors,omitempty" json:"colors,omitempty"`
 	ShutLanes []string          `yaml:"shutLanes,omitempty" json:"shutLanes,omitempty"`
 	Markers   *GanttMarkers     `yaml:"markers,omitempty" json:"markers,omitempty"`
+	// How the bars of the headings each rule matches are drawn: outline,
+	// fill and shape, each decided by the first matching rule that sets it.
+	BarRules []GanttBarRule `yaml:"barRules,omitempty" json:"barRules,omitempty"`
+	// What BarRules were called while they could only outline. Kept so a
+	// view saved then still reads; worg reads it when BarRules is empty and
+	// writes BarRules from then on.
+	Outlines []GanttBarRule `yaml:"outlines,omitempty" json:"outlines,omitempty"`
+}
+
+// GanttBarRule matches a bar's heading the way GanttMarkerRule matches a
+// marker's (When "value", "has" or "tag"). Each part is optional: Color
+// outlines it Width pixels wide (zero is two); Fill is solid, hatched,
+// crosshatch, dotted, striped or hollow; Shape is bar, pill, wavy, diamond,
+// circle or star.
+type GanttBarRule struct {
+	When  string  `yaml:"when" json:"when"`
+	Key   string  `yaml:"key" json:"key"`
+	Value string  `yaml:"value,omitempty" json:"value,omitempty"`
+	Color string  `yaml:"color,omitempty" json:"color,omitempty"`
+	Width float64 `yaml:"width,omitempty" json:"width,omitempty"`
+	Fill  string  `yaml:"fill,omitempty" json:"fill,omitempty"`
+	Shape string  `yaml:"shape,omitempty" json:"shape,omitempty"`
 }
 
 func (self *ExtensionsConfig) GetGanttViews(username string) []GanttView {
