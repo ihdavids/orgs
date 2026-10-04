@@ -1025,7 +1025,7 @@ func EvalString(exp *Expr, v *org.Section, f *common.OrgFile) bool {
 
 func QueryFullTodo(query *common.TodoHash) (common.FullTodo, error) {
 	var td common.FullTodo
-	if s, ok := GetDb().ByHash[(string)(*query)]; ok {
+	if s := GetDb().FindByHash((string)(*query)); s != nil {
 		var title string
 		for _, n := range s.Headline.Title {
 			title += n.String()
@@ -1087,7 +1087,7 @@ func QueryFullTodoHtml(query *common.TodoHash) (common.FullTodo, error) {
 // bare fragment every other caller already expects.
 func QueryFullTodoHtmlThemed(query *common.TodoHash, theme string) (common.FullTodo, error) {
 	var td common.FullTodo
-	if s, ok := GetDb().ByHash[(string)(*query)]; ok {
+	if s := GetDb().FindByHash((string)(*query)); s != nil {
 		var title string
 		for _, n := range s.Headline.Title {
 			title += n.String()
@@ -1648,23 +1648,39 @@ func statusChangeMessage(res StatusChangeResult, asked string) string {
 	return ""
 }
 
+// RenameHeadline changes a heading's title as an edit of its headline line
+// alone (see Traps: line edits). It used to look the hash up in the raw
+// ByHash map - which misses straight after any write to the file, the
+// registry being dropped for it - and then answer Ok without having done
+// anything, because the result started out true; when it did find the
+// heading it rewrote the whole file through WriteOutOrgFile.
 func RenameHeadline(query *common.TodoItemChange) (common.Result, error) {
-	didWrite := true
-	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
-		f := GetDb().ByHashToFile[(string)(query.Hash)]
-		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
-			n.Title = []org.Node{org.Text{Content: query.Value}}
-			return *n
-		}); set {
-			didWrite = WriteOutOrgFile(f)
-		}
+	title := strings.TrimSpace(query.Value)
+	if title == "" {
+		return common.Result{Ok: false, Msg: "a heading needs a title"}, nil
 	}
-	return common.Result{Ok: didWrite}, nil
+	sec := GetDb().FindByHash(string(query.Hash))
+	if sec == nil || sec.Headline == nil {
+		return common.Result{Ok: false, Msg: "no heading with that hash - it may have moved; refresh and try again"}, nil
+	}
+	f := GetDb().FileFromSection(sec)
+	if f == nil {
+		return common.Result{Ok: false, Msg: "could not find the file that heading is in"}, nil
+	}
+	lines, from, _, ok := recordLines(f.Doc.Path, sec)
+	if !ok {
+		return common.Result{Ok: false, Msg: "could not read " + f.Doc.Path}, nil
+	}
+	lines[from] = setHeadlineTitle(lines[from], sec.Headline.Status, title)
+	if err := writeLines(f.Doc.Path, lines); err != nil {
+		return common.Result{Ok: false, Msg: err.Error()}, nil
+	}
+	return common.Result{Ok: true}, nil
 }
 
 func ChangeBody(query *common.TodoItemChange) (common.Result, error) {
 	didWrite := true
-	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+	if s := GetDb().FindByHash((string)(query.Hash)); s != nil {
 		f := GetDb().ByHashToFile[(string)(query.Hash)]
 		// Parse the new body content as org-mode text
 		bodyDoc := org.New().Parse(strings.NewReader(query.Value), "./")
@@ -1907,9 +1923,9 @@ func remove(slice []string, s string) []string {
 func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
 	fmt.Fprintf(os.Stderr, "TOGGLE TAG CALLED: %s\n", query.Value)
 	didWrite := true
-	if s, ok := GetDb().ByHash[(string)(query.Hash)]; ok {
+	if s := GetDb().FindByHash((string)(query.Hash)); s != nil {
 		// Change a tag
-		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		f := GetDb().FileFromSection(s)
 		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
 			if contains(n.Tags, query.Value) {
 				n.Tags = remove(n.Tags, query.Value)
@@ -1999,8 +2015,8 @@ func NextStatusFromFile(f *common.OrgFile) ([]string, []string) {
 func ValidStatus(query *common.TodoHash) (common.TodoStatesResult, error) {
 	var active []string
 	var done []string
-	if _, ok := GetDb().ByHash[(string)(*query)]; ok {
-		f := GetDb().ByHashToFile[(string)(*query)]
+	if s := GetDb().FindByHash((string)(*query)); s != nil {
+		f := GetDb().FileFromSection(s)
 		if f != nil {
 			active, done = ValidStatusFromFile(f)
 		}

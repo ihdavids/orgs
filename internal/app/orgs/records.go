@@ -1047,8 +1047,8 @@ func AddRecord(req *common.RecordNew) (common.Record, error) {
 
 	var lines []string
 	if parent != "" {
-		sec, ok := GetDb().ByHash[parent]
-		if !ok || sec == nil || sec.Headline == nil {
+		sec := GetDb().FindByHash(parent)
+		if sec == nil || sec.Headline == nil {
 			return common.Record{}, fmt.Errorf("no heading with that hash")
 		}
 		f := GetDb().FileFromSection(sec)
@@ -1105,8 +1105,8 @@ func AddRecord(req *common.RecordNew) (common.Record, error) {
 // there, and writing the parsed document back would reformat all of it to
 // change one phone number.
 func UpdateRecord(req *common.RecordUpdate) (common.Result, error) {
-	sec, ok := GetDb().ByHash[req.Hash]
-	if !ok || sec == nil || sec.Headline == nil {
+	sec := GetDb().FindByHash(req.Hash)
+	if sec == nil || sec.Headline == nil {
 		return common.Result{Ok: false}, fmt.Errorf("no heading with that hash")
 	}
 	f := GetDb().FileFromSection(sec)
@@ -1256,7 +1256,17 @@ func writeLines(filename string, lines []string) error {
 	if !strings.HasSuffix(body, "\n") {
 		body += "\n"
 	}
-	return os.WriteFile(filename, []byte(body), 0644)
+	if err := os.WriteFile(filename, []byte(body), 0644); err != nil {
+		return err
+	}
+	// Read the file back into the database before answering, so a client
+	// that asks again straight after the write sees it. Left to the file
+	// watcher, a rename followed by a read of the column view raced it and
+	// drew the old title over a file that already had the new one.
+	if db := odb; db != nil && db.FindByFile(filename) != nil {
+		db.ReloadFile(filename)
+	}
+	return nil
 }
 
 // prependLogbook writes one history line, newest first the way org writes a
@@ -1312,8 +1322,8 @@ func replaceHeadlineTitle(line, title string) string {
 // identical logbook lines is noise rather than history.
 func UpdateCollection(req *common.RecordCollectionUpdate) (common.RecordCollectionUpdateResult, error) {
 	res := common.RecordCollectionUpdateResult{}
-	sec, ok := GetDb().ByHash[req.Hash]
-	if !ok || sec == nil || sec.Headline == nil {
+	sec := GetDb().FindByHash(req.Hash)
+	if sec == nil || sec.Headline == nil {
 		return res, fmt.Errorf("no heading with that hash")
 	}
 	oldType := CollectionTypeOf(sec)
@@ -1513,8 +1523,8 @@ func AddCollection(req *common.RecordCollectionNew) (common.RecordCollection, er
 	var row, lvl int
 	var lines []string
 	if req.ParentHash != "" {
-		sec, ok := GetDb().ByHash[req.ParentHash]
-		if !ok || sec == nil || sec.Headline == nil {
+		sec := GetDb().FindByHash(req.ParentHash)
+		if sec == nil || sec.Headline == nil {
 			return common.RecordCollection{}, fmt.Errorf("no heading with that hash")
 		}
 		f := GetDb().FileFromSection(sec)
@@ -1780,14 +1790,10 @@ func RequestRecord(w http.ResponseWriter, r *http.Request) {
 		recordErr(w, err)
 		return
 	}
-	sec, ok := GetDb().ByHash[hash]
-	if !ok || sec == nil {
-		// A heading nothing has walked yet is not in the registry; walking
-		// every file puts it there.
-		allRecords("", false)
-		sec, ok = GetDb().ByHash[hash]
-	}
-	if !ok || sec == nil {
+	// FindByHash walks every file into the registry on a miss, which is what
+	// a heading nothing has walked yet needs.
+	sec := GetDb().FindByHash(hash)
+	if sec == nil {
 		recordErr(w, fmt.Errorf("no heading with that hash"))
 		return
 	}

@@ -9,6 +9,9 @@ import (
 	"log"
 	mrand "math/rand"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -109,6 +112,17 @@ type ServerSettings struct {
 	OrgJWS      string `yaml:"orgJWS"`
 	OrgJWE      string `yaml:"orgJWE"`
 	OrgSalt     string `yaml:"orgSalt"`
+	/* SDOC: Settings
+	* Login Lifetime
+		How long a login lasts before it has to be renewed. A Go duration,
+		plus d for days and w for weeks; one hour when not set.
+		#+BEGIN_SRC yaml
+	  tokenExpiry: "8h"     # or "30m", "7d", "2w", "1d12h"
+		#+END_SRC
+		The command line renews its token on its own while the old one is still
+		good, so this is mostly how long a token copied somewhere else stays
+		useful - and how long a stolen one would.
+	EDOC */
 	TokenExpiry string `yaml:"tokenExpiry"`
 
 	/* SDOC: Settings
@@ -559,14 +573,44 @@ type ServerSettings struct {
 }
 
 func (self *ServerSettings) GetTokenExpiry() time.Duration {
-	if self.TokenExpiry == "" {
+	if strings.TrimSpace(self.TokenExpiry) == "" {
 		return 1 * time.Hour
 	}
-	if d, err := time.ParseDuration(self.TokenExpiry); err == nil {
+	if d, err := ParseLongDuration(self.TokenExpiry); err == nil && d > 0 {
 		return d
 	}
 	log.Default().Printf("WARNING: Invalid tokenExpiry %q, using default 1h\n", self.TokenExpiry)
 	return 1 * time.Hour
+}
+
+var longDurationRe = regexp.MustCompile(`(\d+(?:\.\d+)?)([dw])`)
+
+// ParseLongDuration is time.ParseDuration that also takes d (days) and w
+// (weeks), which a login lifetime is usually counted in: "7d", "2w", "1d12h".
+func ParseLongDuration(s string) (time.Duration, error) {
+	s = strings.TrimSpace(s)
+	var extra time.Duration
+	rest := longDurationRe.ReplaceAllStringFunc(s, func(m string) string {
+		p := longDurationRe.FindStringSubmatch(m)
+		n, _ := strconv.ParseFloat(p[1], 64)
+		unit := 24 * time.Hour
+		if p[2] == "w" {
+			unit *= 7
+		}
+		extra += time.Duration(n * float64(unit))
+		return ""
+	})
+	if rest == "" {
+		if extra == 0 {
+			return 0, fmt.Errorf("not a duration: %q", s)
+		}
+		return extra, nil
+	}
+	d, err := time.ParseDuration(rest)
+	if err != nil {
+		return 0, err
+	}
+	return d + extra, nil
 }
 
 func (self *ServerSettings) Validate() {

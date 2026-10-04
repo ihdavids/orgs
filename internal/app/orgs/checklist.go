@@ -273,7 +273,7 @@ func RequestTodoBody(w http.ResponseWriter, r *http.Request) {
 	res.Text = strings.Join(lines[from:to+1], "\n")
 
 	props := map[string]string{}
-	if sec, ok := GetDb().ByHash[string(h)]; ok && sec != nil && sec.Headline != nil &&
+	if sec := GetDb().FindByHash(string(h)); sec != nil && sec != nil && sec.Headline != nil &&
 		sec.Headline.Properties != nil {
 		for _, p := range sec.Headline.Properties.Properties {
 			if len(p) >= 2 {

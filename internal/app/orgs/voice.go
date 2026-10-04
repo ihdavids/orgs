@@ -495,11 +495,8 @@ func insertLinesAt(filename string, row int, add []string) (int, error) {
 	out = append(out, add...)
 	out = append(out, lines[at:]...)
 
-	body := strings.Join(out, "\n")
-	if !strings.HasSuffix(body, "\n") {
-		body += "\n"
-	}
-	if err := os.WriteFile(filename, []byte(body), 0644); err != nil {
+	// writeLines, so the database has the new lines before the reply goes.
+	if err := writeLines(filename, out); err != nil {
 		return 0, err
 	}
 	return at + 1, nil

@@ -181,8 +181,8 @@ func PostImagePaste(w http.ResponseWriter, r *http.Request) {
 			imageJson(w, res)
 			return
 		}
-		sec, ok := GetDb().ByHash[hash]
-		if !ok || sec == nil || sec.Headline == nil {
+		sec := GetDb().FindByHash(hash)
+		if sec == nil || sec.Headline == nil {
 			res.Msg = "no heading with that hash"
 			imageJson(w, res)
 			return

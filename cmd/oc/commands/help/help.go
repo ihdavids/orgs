@@ -48,7 +48,7 @@ var groups = []struct {
 	Cmds []string
 }{
 	{"Finding things", []string{"search", "q", "find", "grep", "agenda", "tui", "outline",
-		"projects", "filter", "filters", "tags", "taggroups", "show", "log"}},
+		"projects", "gantt", "kanban", "cols", "filter", "filters", "tags", "taggroups", "show", "log"}},
 	{"Changing a heading", []string{"todo", "sched", "deadline", "tag", "prop", "rename",
 		"note", "check", "archive", "rm", "ref", "cap", "listcap", "new", "daypage"}},
 	{"The clock", []string{"clockin", "clockout", "clocks", "clocktable"}},

@@ -38,7 +38,7 @@ func ganttDateStr(t org.OrgDate) string {
 // dragging the bar should write back to. A heading with neither gets
 // "SCHEDULED", because that is what org means by "this is when I will do it".
 func ganttDateKind(hash string) string {
-	if sec, ok := GetDb().ByHash[hash]; ok && sec != nil && sec.Headline != nil {
+	if sec := GetDb().FindByHash(hash); sec != nil && sec != nil && sec.Headline != nil {
 		if sec.Headline.Timestamp != nil {
 			return "TIMESTAMP"
 		}
@@ -281,8 +281,8 @@ func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 	if args.AfterHash != "" {
 		// A sibling, straight after the heading and its subtree: what the
 		// column view's N and the chart's N mean by "a new one after this".
-		sec, ok := GetDb().ByHash[args.AfterHash]
-		if !ok || sec == nil || sec.Headline == nil {
+		sec := GetDb().FindByHash(args.AfterHash)
+		if sec == nil || sec.Headline == nil {
 			res.Msg = "gantt add: no heading with that hash to go after"
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(res)
@@ -312,8 +312,8 @@ func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 			row--
 		}
 	} else if args.ParentHash != "" {
-		sec, ok := GetDb().ByHash[args.ParentHash]
-		if !ok || sec == nil || sec.Headline == nil {
+		sec := GetDb().FindByHash(args.ParentHash)
+		if sec == nil || sec.Headline == nil {
 			res.Msg = "gantt add: no heading with that hash"
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(res)

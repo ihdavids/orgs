@@ -36,6 +36,16 @@ type HeadingParts struct {
 // kept as the keyword rather than read as title. Tags that were right-aligned
 // stay ending at the column they ended at.
 func setHeadlineParts(line, status string, prio *string, tags *[]string) string {
+	return setHeadline(line, status, prio, tags, nil)
+}
+
+// setHeadlineTitle is the headline line with a new title, everything else -
+// stars, keyword, priority, tags and where they sat - kept as written.
+func setHeadlineTitle(line, status, title string) string {
+	return setHeadline(line, status, nil, nil, &title)
+}
+
+func setHeadline(line, status string, prio *string, tags *[]string, newTitle *string) string {
 	m := headlineHeadRe.FindStringSubmatch(line)
 	if m == nil {
 		return line
@@ -75,6 +85,9 @@ func setHeadlineParts(line, status string, prio *string, tags *[]string) string 
 		p = strings.ToUpper(strings.TrimSpace(*prio))
 	}
 	title := strings.TrimRight(rest, " \t")
+	if newTitle != nil {
+		title = strings.TrimSpace(*newTitle)
+	}
 
 	out := stars
 	if kw != "" {

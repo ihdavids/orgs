@@ -87,8 +87,8 @@ func PostVoiceAppend(w http.ResponseWriter, r *http.Request) {
 	voiceLock.Lock()
 	defer voiceLock.Unlock()
 
-	sec, ok := GetDb().ByHash[req.Hash]
-	if !ok || sec == nil || sec.Headline == nil {
+	sec := GetDb().FindByHash(req.Hash)
+	if sec == nil || sec.Headline == nil {
 		res.Msg = "no heading with that hash"
 		voiceAppendJson(w, res)
 		return

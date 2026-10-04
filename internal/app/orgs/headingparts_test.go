@@ -30,3 +30,20 @@ func TestSetHeadlineParts(t *testing.T) {
 		}
 	}
 }
+
+// A rename touches the title and nothing else on the line: the keyword, the
+// priority cookie and the tags - right-aligned or not - stay as written.
+func TestSetHeadlineTitle(t *testing.T) {
+	cases := []struct{ line, status, title, want string }{
+		{"*** DONE [#A] Pick cabinets                                       :shopping:", "DONE", "Pick cabinets and handles",
+			"*** DONE [#A] Pick cabinets and handles                           :shopping:"},
+		{"** TODO Docs  :work:", "TODO", "Write the docs", "** TODO Write the docs  :work:"},
+		{"* Plain heading", "", "  Renamed  ", "* Renamed"},
+		{"** TODOS for later", "", "Later", "** Later"},
+	}
+	for _, c := range cases {
+		if got := setHeadlineTitle(c.line, c.status, c.title); got != c.want {
+			t.Errorf("%q:\n got %q\nwant %q", c.line, got, c.want)
+		}
+	}
+}

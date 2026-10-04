@@ -1000,7 +1000,11 @@ func (self *OrgDb) GetFromTarget(target *common.Target, allowCreate bool) (*comm
 		}
 		return file, file.Doc.Outline.Section
 	case "hash":
-		if f, ok := self.ByHash[target.Id]; ok {
+		// FindByHash rather than the raw map: the registry fills lazily and is
+		// dropped for a file when it is written, so straight after a write
+		// (clocking out puts a CLOCK line in) the map misses a heading that is
+		// there - and clocking back in failed with "could not convert target".
+		if f := self.FindByHash(target.Id); f != nil {
 			return self.FileFromSection(f), f
 		}
 		return nil, nil

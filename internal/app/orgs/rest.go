@@ -2259,7 +2259,7 @@ func RequestLogbook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	if h, err := GetHash(vars, "hash"); err == nil {
 		hash := string(h)
-		if s, ok := GetDb().ByHash[hash]; ok {
+		if s := GetDb().FindByHash(hash); s != nil {
 			var logbook common.Logbook
 			drawer := s.Headline.FindDrawer(Conf().ClockIntoDrawer)
 			if drawer != nil && drawer.Children != nil {
