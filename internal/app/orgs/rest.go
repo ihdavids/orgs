@@ -98,6 +98,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/property", PostChangeProperty).Methods("POST")
 	api.HandleFunc("/alltags", RequestTags)
 	api.HandleFunc("/tags", PostToggleTags).Methods("POST")
+	api.HandleFunc("/heading/parts", PostHeadingParts).Methods("POST") // set tags and/or priority as a line edit
 	api.HandleFunc("/capture", PostCapture).Methods("POST")
 	api.HandleFunc("/capture/templates", RequestCaptureTemplates)
 	api.HandleFunc("/voice/link", RequestVoiceLink).Methods("GET")
@@ -143,6 +144,10 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/gantt/tasks", RequestGanttTasks).Methods("GET")
 	api.HandleFunc("/gantt/add", PostGanttAdd).Methods("POST")
 	api.HandleFunc("/gantt/marker", PostGanttMarker).Methods("POST")
+
+	// A file's git history and the file at a revision, for worg's Diff tab (filehistory.go)
+	api.HandleFunc("/history", RequestHistory).Methods("GET")
+	api.HandleFunc("/history/text", RequestHistoryText).Methods("GET")
 
 	// Records and collections: the contact book, and everything else somebody
 	// wants to keep a list of.

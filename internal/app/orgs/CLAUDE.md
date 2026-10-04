@@ -159,13 +159,15 @@ Not byte-identical afterwards: dropping `:LAST_REPEAT:` re-aligns the drawer via
 
 `internal/app/orgs/columns.go` is org's `#+COLUMNS:` as `GET /columns` (before it, only the gantt plugin read `EFFORT`, to size bars). The point is the **summary operator**: `%EFFORT{:}` makes a parent show the total under it, so nobody maintains a project's size. worg: `components/Columns.tsx`, model `src/columns.ts`; cells are editable.
 
-The line in force is the first of: the request's, the file's `#+COLUMNS:`, `columns.default` in yaml, a built-in; `From` says which, so the view can explain a missing column. Built-in: org's `%25ITEM %TODO %3PRIORITY %TAGS` plus `%EFFORT{:} %CLOCKSUM`, because summing effort is the view's purpose and few files declare a columns line.
+The line in force is the first of: the request's, the file's `#+COLUMNS:`, `columns.default` in yaml, a built-in; `From` says which, so the view can explain a missing column. Built-in: org's `ITEM TODO PRIORITY TAGS` (without org's terminal character widths, so worg can share the screen between them) plus `%EFFORT{:} %CLOCKSUM`, because summing effort is the view's purpose and few files declare a columns line.
 
 1. **A cell carries `Value` (shown) and `Own` (written).** They differ on rolled-up parents (`8:45` summed, `2h` own). The editor gets `Own`, or the first return writes the total onto the parent.
 2. **Rollup = children's total *plus* the heading's own value**, so no typed number is silently discarded.
 3. **Properties are read off the file's lines** (see **Traps: column-zero drawers**), or EFFORT looks unset for those headings.
 4. **`%CLOCKSUM` always rolls up** (org's meaning); `%EFFORT` only with an operator, because inventing one would disagree with org about the file.
 5. **Sort within each parent**, never flat (it is an outline; flat sorting separates children from parents). Empty cells sort last either direction (absence, not a small value).
+
+`POST /heading/parts` (`headingparts.go`, tested) sets a heading's tags (the whole list) and/or priority as an edit of the headline line alone - stars, keyword and title kept as written, tags right-aligned to where they ended if they were (a run of spaces before them), else the gap they had. The older `POST /tags` toggle goes through `WriteOutOrgFile` (see **Traps: line edits**) and should not be used for new code.
 
 `GET /columns/values` (`columnvalues.go`, tested on a parsed document) lists every property a file's headings use with each value and its count, most used first; the keyword, tags and priority come in as TODO, TAGS and PRIORITY. It feeds worg's value listing, its type-ahead in cell editors and its property-name suggestions in the columns line.
 
@@ -413,3 +415,12 @@ Client: `worg/src/move.ts` (pure, tested), `MoveDialog.tsx` (one dialog for all 
 6. **govaluate's own operators take only float64.** A function answering an `int` could not be added to or compared, so an `init` in `tablefuncs.go` wraps every function in the map to hand an `int` on as a `float64`. Date literals (`'2026-03-01'`) arrive as Unix seconds (float64); `toTime` reads them.
 7. **The lexer reads a run of symbols as one operator**, so `$2*$rate` was `*$`. `ExecuteFormula` spaces an operator from a following `$name` (`RE_OP_BEFORE_NAME`); `@>$3`/`@<$3` are excluded.
 8. **The header row is skipped before evaluating, not just before writing**: `$4=$2*$3` used to multiply the column titles and fail. Arithmetic between two cells treats an empty cell as 0 (`OpGen` in `tableops.go`), as arithmetic with a literal already did.
+
+## A file's git history
+
+`filehistory.go`: `GET /history` (commits touching a file, parents rewritten by `git log --parents -- file` so it draws as a graph; staged/modified state with line counts; `Last`, the newest commit from HEAD that touched it, which the uncommitted copies sit on) and `GET /history/text` (the file at a commit, `INDEX` or `WORKING`). For worg's Diff tab; the diffing is done in the browser.
+
+- Only files the OrgDb knows (`FindByFile`); a revision must match `revPattern`, never start with `-`, and never contain `..`.
+- A commit from before the file existed answers `Ok` with `Missing`, not an error.
+- `repoOf` resolves symlinks on both the file and the toplevel (macOS `/tmp` is `/private/tmp`), or the relative path comes out as `../..`.
+- Merge commits have no numstat (git prints none for merges by default), so they show no line counts.

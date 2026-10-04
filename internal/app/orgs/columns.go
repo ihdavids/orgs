@@ -60,7 +60,12 @@ import (
 // leave every file that has not declared a `#+COLUMNS:` line - which is nearly
 // all of them - showing the one thing somebody opened this view to avoid
 // looking for. A file that declares its own line still gets exactly that line.
-const defaultColumns = "%25ITEM %TODO %3PRIORITY %TAGS %EFFORT{:} %CLOCKSUM"
+//
+// Without org's character widths (`%25ITEM %3PRIORITY`): those are for a
+// terminal, and in worg a column with no width shares the screen - the item
+// taking a good part of it - where a fixed 25 characters left the item the
+// narrowest column on a wide screen.
+const defaultColumns = "%ITEM %TODO %PRIORITY %TAGS %EFFORT{:} %CLOCKSUM"
 
 // The special property names org understands, and what kind of cell each is.
 //
@@ -74,7 +79,9 @@ var specialColumns = map[string]string{
 	"ALLTAGS":    "derived",
 	"CLOCKSUM":   "derived",
 	"CLOCKSUM_T": "derived",
-	"CATEGORY":   "derived",
+	// A heading's own CATEGORY property, written like any property; what
+	// is shown falls back to the file's #+CATEGORY.
+	"CATEGORY":   "property",
 	"FILE":       "derived",
 	"DEADLINE":   "derived",
 	"SCHEDULED":  "derived",
@@ -404,6 +411,11 @@ func ownCell(f *common.OrgFile, s *org.Section, props map[string]string, spec co
 		cell.Value = propOf(props, spec.Property)
 	}
 	cell.Own = cell.Value
+	if spec.Property == "CATEGORY" {
+		// The file's #+CATEGORY is shown but is not the heading's own, and an
+		// editor offering it would write it onto the heading.
+		cell.Own = propOf(props, "CATEGORY")
+	}
 	if spec.Numbers != "" {
 		if n, ok := cellNumber(cell.Value, spec.Numbers); ok {
 			cell.Number = n

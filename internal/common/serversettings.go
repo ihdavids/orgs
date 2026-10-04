@@ -499,12 +499,13 @@ type ServerSettings struct {
 
 		#+BEGIN_SRC yaml
 		columns:
-		  default: "%25ITEM %TODO %3PRIORITY %TAGS %EFFORT{:} %CLOCKSUM"
+		  default: "%ITEM %TODO %PRIORITY %TAGS %EFFORT{:} %CLOCKSUM"
 		#+END_SRC
 
 		This is used only for a file that does not declare a =#+COLUMNS:= line of
 		its own; one that does gets exactly what it asked for. The built-in
-		default is org's own (=%25ITEM %TODO %3PRIORITY %TAGS=) with
+		default is org's own columns (=%ITEM %TODO %PRIORITY %TAGS=, without
+		org's terminal widths so worg shares the screen between them) with
 		=%EFFORT{:} %CLOCKSUM= added, because adding effort up is the thing this
 		view exists for and nearly no file declares a columns line.
 		EDOC */
