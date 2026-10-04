@@ -330,8 +330,15 @@ func ensurePropertyDrawer(lines []string, from, to int, ind string) (out []strin
 	return lines, at, at + 1, to + 2
 }
 
-// Set one property inside a drawer that is known to exist.
+// Set one property inside a drawer that is known to exist. A new line takes
+// the indent of the drawer it goes into, not the one the caller would have
+// used for a drawer of its own: Emacs (since org 9.5) writes drawers in column
+// zero, and a property indented by heading depth inside one of those reads as
+// a stray. ind is only used when the drawer's own line cannot be read.
 func setPropIn(lines []string, ps, pe int, ind, key, val string) (out []string, newPe int) {
+	if ps >= 0 && ps < len(lines) {
+		ind = lines[ps][:len(lines[ps])-len(strings.TrimLeft(lines[ps], " \t"))]
+	}
 	for i := ps + 1; i < pe && i < len(lines); i++ {
 		if m := propLineRe.FindStringSubmatch(lines[i]); m != nil && strings.EqualFold(m[2], key) {
 			lines[i] = propLine(m[1], m[2], val, 0)

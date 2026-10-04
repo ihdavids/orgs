@@ -16,8 +16,10 @@ import (
 // say "the release", "the offsite", "code freeze" - moments the plan has to
 // be read against rather than tasks in it.
 type GanttMarkers struct {
-	// The saved query whose headings become lines.
+	// The saved query whose headings become lines, or a query written for
+	// the markers (Query wins when both are set).
 	StoredQuery string `yaml:"storedQuery,omitempty" json:"storedQuery,omitempty"`
+	Query       string `yaml:"query,omitempty" json:"query,omitempty"`
 	// Which of a heading's dates the line is drawn at: scheduled (its
 	// SCHEDULED or plain timestamp), deadline, or either (scheduled first).
 	DateKind string `yaml:"dateKind,omitempty" json:"dateKind,omitempty"`
@@ -35,8 +37,12 @@ type GanttMarkers struct {
 }
 
 // GanttMarkerRule matches a marker's heading by a property's value (When
-// "value", Key and Value), by a property being there at all ("has", Key), or
-// by a tag ("tag", Key is the tag).
+// "value", Key and Value), by a property being there at all ("has", Key), by a
+// tag ("tag", Key is the tag), by a tag pattern ("tagmatch", Key a regular
+// expression), by todo keyword ("status", Key one or more keywords, comma
+// separated), or with no key by having no date of its own ("unscheduled") or
+// being finished ("done"). Matching lives in worg (ruleMatches in gantt.ts);
+// the server only keeps the rules.
 type GanttMarkerRule struct {
 	When  string `yaml:"when" json:"when"`
 	Key   string `yaml:"key" json:"key"`
@@ -53,6 +59,16 @@ type GanttMarkerRule struct {
 type GanttView struct {
 	Name        string `yaml:"name" json:"name"`
 	StoredQuery string `yaml:"storedQuery" json:"storedQuery"`
+	// The query as edited on the chart, when it differs from the saved one;
+	// wins over StoredQuery. A view needs one or the other.
+	Query string `yaml:"query,omitempty" json:"query,omitempty"`
+	// A second query: only the rows it also finds are drawn.
+	Filter string `yaml:"filter,omitempty" json:"filter,omitempty"`
+	// Overdue and slipping work highlighted.
+	Health bool `yaml:"health,omitempty" json:"health,omitempty"`
+	// Snapshots of the plan's dates, and the one drawn under the bars.
+	Baselines []GanttBaseline `yaml:"baselines,omitempty" json:"baselines,omitempty"`
+	Baseline  string          `yaml:"baseline,omitempty" json:"baseline,omitempty"`
 	Renderer    string `yaml:"renderer,omitempty" json:"renderer,omitempty"`
 	Title       string `yaml:"title,omitempty" json:"title,omitempty"`
 	ColorBy     string `yaml:"colorBy,omitempty" json:"colorBy,omitempty"`
@@ -84,10 +100,26 @@ type GanttView struct {
 }
 
 // GanttBarRule matches a bar's heading the way GanttMarkerRule matches a
-// marker's (When "value", "has" or "tag"). Each part is optional: Color
+// marker's (any of the same tests). Each part is optional: Color
 // outlines it Width pixels wide (zero is two); Fill is solid, hatched,
 // crosshatch, dotted, striped or hollow; Shape is bar, pill, wavy, diamond,
 // circle or star.
+// GanttBaseline is the plan's dates written down at a moment. Tasks are found
+// again by hash, or by file and headline when the hash has moved.
+type GanttBaseline struct {
+	Name  string              `yaml:"name" json:"name"`
+	Taken string              `yaml:"taken" json:"taken"`
+	Tasks []GanttBaselineTask `yaml:"tasks" json:"tasks"`
+}
+
+type GanttBaselineTask struct {
+	Hash     string `yaml:"hash" json:"hash"`
+	Headline string `yaml:"headline" json:"headline"`
+	Filename string `yaml:"filename" json:"filename"`
+	Start    string `yaml:"start" json:"start"`
+	End      string `yaml:"end" json:"end"`
+}
+
 type GanttBarRule struct {
 	When  string  `yaml:"when" json:"when"`
 	Key   string  `yaml:"key" json:"key"`
@@ -96,6 +128,8 @@ type GanttBarRule struct {
 	Width float64 `yaml:"width,omitempty" json:"width,omitempty"`
 	Fill  string  `yaml:"fill,omitempty" json:"fill,omitempty"`
 	Shape string  `yaml:"shape,omitempty" json:"shape,omitempty"`
+	// The preset that added this rule, so turning it off takes it back.
+	Preset string `yaml:"preset,omitempty" json:"preset,omitempty"`
 }
 
 func (self *ExtensionsConfig) GetGanttViews(username string) []GanttView {
@@ -146,7 +180,7 @@ func RequestGanttViews(w http.ResponseWriter, r *http.Request) {
 	*Request Body (JSON):* An array of =GanttView= objects.
 
 	*Response:* A =ResultMsg=. Refused when a view has no name, two share one,
-	or a view names no saved query.
+	or a view has neither a saved query nor a query of its own.
 	EDOC */
 func PostGanttViews(w http.ResponseWriter, r *http.Request) {
 	username := GetUsername(r)
@@ -170,7 +204,7 @@ func PostGanttViews(w http.ResponseWriter, r *http.Request) {
 			msg = "every view needs a name"
 		case seen[v.Name]:
 			msg = fmt.Sprintf("two views named %q", v.Name)
-		case strings.TrimSpace(v.StoredQuery) == "":
+		case strings.TrimSpace(v.StoredQuery) == "" && strings.TrimSpace(v.Query) == "":
 			msg = fmt.Sprintf("view %q has no query", v.Name)
 		}
 		if msg != "" {

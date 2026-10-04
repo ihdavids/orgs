@@ -49,6 +49,7 @@ package orgs
   - *HasAStatus* - returns true if a node has a valid status
   - *IsPartOfProject* - returns true if a task is a subnode of a project node
   - *HasTags* - returns true if a node has any tags
+  - *HasTagMatching* - returns true if any tag on the node, its parents or the file matches a regular expression: HasTagMatching("^M[0-9]+$")
   - *NoTags* - returns true if a node does not have any tags on it
   - *InTagGroup* - cheat, returns true if any tags in a tag group are applied to a node
   - *IsStatus* - returns true if a node has a given status
@@ -674,6 +675,28 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 				}
 			}
 			return ok, nil
+		},
+		// HasTagMatching("^M[0-9]+$") is true when any tag on the heading, its
+		// parents or the file matches the regular expression - for families of
+		// tags (M1, M2, ...) that HasTags would have to name one by one. A
+		// pattern that does not compile is an error rather than a quiet false.
+		"HasTagMatching": func(args ...interface{}) (interface{}, error) {
+			if len(args) == 0 {
+				return false, fmt.Errorf("HasTagMatching needs a pattern")
+			}
+			for _, a := range args {
+				pat, ok := a.(string)
+				if !ok {
+					return false, fmt.Errorf("HasTagMatching takes text patterns")
+				}
+				if _, err := regexp.Compile(pat); err != nil {
+					return false, fmt.Errorf("HasTagMatching: %v", err)
+				}
+				if HasTagRegex(pat, exp.Sec, exp.Doc) {
+					return true, nil
+				}
+			}
+			return false, nil
 		},
 		"InTagGroup": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec

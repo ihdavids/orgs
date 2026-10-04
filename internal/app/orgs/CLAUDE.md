@@ -367,6 +367,10 @@ A heading's **lane** (`GetSection`) is the first of these that is set; nesting a
 
 Otherwise the client draws it in lane `main` (`DEFAULT_SECTION` in worg's `gantt.ts`). The **resource** (`GetResource`) is a separate ladder: `:ASSIGNED:`, `:RID:`, `:RESOURCEID:`, then the *headline* of a parent tagged `:project:`, which is why an unassigned task is coloured by its project when colouring by assignee. Dates are **not laid out** server side: a task says when it starts or what it follows and the client resolves the chain (the same split the exporter has with mermaid's renderer). A task the query did not find, but that a found task comes after, is included with `Implied: true` so the chain reads end to end.
 
+Saved chart setups are `GET/POST /ext/gantt/views` (`ganttviews.go`, `ganttViews` in the extensions yaml, the whole list per write). The server only keeps them - rule matching, presets and baselines are worg's - but **every field worg saves needs a Go field** or it is dropped on save (as with kanban boards). Baselines live inside a view. A view needs a saved query or a query of its own.
+
+`setPropIn` (attach.go) indents a new property like the drawer it joins, not by heading depth: Emacs writes drawers in column zero, and the old indent left a three-space stray in them (seen on every gantt reorder). Every property writer goes through it.
+
 Gantt edits go through the existing endpoints, and three of them were fixed for it: `subtreeEndRow` takes a subtree's end from the file's own lines; `SetProperty` with an empty value removes the property, and the drawer too if it ends up empty; with `noAuth: true` everything runs as user `local`. Details in `docs/claude/bug-history.md`.
 
 ## Moving headings: refile, copy and archive
