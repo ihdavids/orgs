@@ -141,6 +141,7 @@ func RestApi(router *mux.Router) {
 	// The gantt chart: the schedule behind one, and adding a task to it
 	api.HandleFunc("/gantt/tasks", RequestGanttTasks).Methods("GET")
 	api.HandleFunc("/gantt/add", PostGanttAdd).Methods("POST")
+	api.HandleFunc("/gantt/marker", PostGanttMarker).Methods("POST")
 
 	// Records and collections: the contact book, and everything else somebody
 	// wants to keep a list of.

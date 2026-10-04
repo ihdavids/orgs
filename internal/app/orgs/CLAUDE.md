@@ -369,6 +369,8 @@ Otherwise the client draws it in lane `main` (`DEFAULT_SECTION` in worg's `gantt
 
 Saved chart setups are `GET/POST /ext/gantt/views` (`ganttviews.go`, `ganttViews` in the extensions yaml, the whole list per write). The server only keeps them - rule matching, presets and baselines are worg's - but **every field worg saves needs a Go field** or it is dropped on save (as with kanban boards). Baselines live inside a view. A view needs a saved query or a query of its own.
 
+`POST /gantt/marker` (`ganttmarker.go`, pinned by `ganttmarker_test.go`) adds, changes or deletes a marker heading with line edits. Its date is the heading's own timestamp - the first active stamp in its own lines outside the planning line and drawers, which is what go-org reads as `Headline.Timestamp` - or its DEADLINE. A single day on a heading dated only by SCHEDULED moves the SCHEDULED; a range cannot live in SCHEDULED, so it is taken off and the range written as the heading's own stamp. Headline edits keep the stars, keyword and priority cookie; a child's stamp is never touched (`ownLinesEnd`).
+
 `setPropIn` (attach.go) indents a new property like the drawer it joins, not by heading depth: Emacs writes drawers in column zero, and the old indent left a three-space stray in them (seen on every gantt reorder). Every property writer goes through it.
 
 Gantt edits go through the existing endpoints, and three of them were fixed for it: `subtreeEndRow` takes a subtree's end from the file's own lines; `SetProperty` with an empty value removes the property, and the drawer too if it ends up empty; with `noAuth: true` everything runs as user `local`. Details in `docs/claude/bug-history.md`.

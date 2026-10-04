@@ -98,3 +98,37 @@ type GanttAdd struct {
 	Tags     []string
 	Props    map[string]string
 }
+
+// GanttMarkerDay is one end of a marker's date: a day, and optionally a time,
+// and optionally the time a span of that day ends (10:00-11:00).
+type GanttMarkerDay struct {
+	Date  string // YYYY-MM-DD
+	Time  string // HH:MM, or empty for the whole day
+	Until string // HH:MM, the end of a span within the day, or empty
+}
+
+// GanttMarkerEdit adds, changes or deletes a marker: a heading whose date the
+// gantt chart draws as a line (one day) or a band (a range of days).
+//
+// Hash names the marker to change or delete; without it a new one is added
+// under ParentHash, or at the end of Filename. Kind says which of the
+// heading's dates is the marker's: "date" (its own timestamp, or SCHEDULED
+// when that is all it has) or "deadline". A range is always written as the
+// heading's own timestamp, <a>--<b>, which is the only place org keeps one.
+type GanttMarkerEdit struct {
+	Hash       string
+	ParentHash string
+	Filename   string
+	Delete     bool
+
+	Headline string
+	// Tags replace the heading's own tags when SetTags is true (so an edit
+	// that does not mention tags leaves them alone).
+	Tags    []string
+	SetTags bool
+
+	Kind  string
+	Start GanttMarkerDay
+	// Set for a range; nil for a single day.
+	End *GanttMarkerDay
+}
