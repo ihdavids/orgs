@@ -3118,6 +3118,150 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   .backdrop { transition: none; }
 }
 
+/* ---------------- the phone layout ----------------
+   On a phone the three columns become one, and one column of everything is
+   five screens of scrolling to find a saving throw. So, as D&D Beyond's own
+   mobile sheet does, the sheet is cut into pages: a strip that stays at the
+   top of the screen carries the numbers asked for every round (hit points,
+   armor class, initiative, speed) and a row of tabs, and only the page picked
+   there is drawn. A swipe sideways turns to the next page.
+
+   All of it hangs off html.m, which the script sets only on a phone-shaped
+   screen (the same test worg's useIsMobile makes), and only on screen: a
+   desktop sheet, and every printed one, never sees any of this. Which page a
+   section belongs on is its data-page; .m-on marks the sections of the page
+   being shown and .m-empty a box with none of them in it. */
+.m-only, .m-bar, .m-spf { display: none; }
+@media screen {
+  html.m .m-only { display: block; }
+  html.m .page { padding: 8px 10px 92px; box-shadow: none; }
+
+  /* the header shrinks to a line of portrait and name, with the facts as a
+     strip under it that scrolls sideways rather than wrapping into a block */
+  html.m header.sheet-head {
+    display: grid; grid-template-columns: auto minmax(0, 1fr);
+    align-items: center; gap: 6px 12px;
+    padding-bottom: 8px; margin-bottom: 0;
+  }
+  html.m header.sheet-head:not(.has-portrait) { grid-template-columns: minmax(0, 1fr); }
+  html.m .portrait { width: 78px; height: 78px; }
+  html.m .portrait-ring text { display: none; }
+  html.m .char-name { font-size: 1.45rem; line-height: 1.1; }
+  html.m .char-name.sr-only {
+    position: static; width: auto; height: auto; margin: 0;
+    overflow: visible; clip: auto; clip-path: none; white-space: normal;
+  }
+  html.m .has-portrait .char-title, html.m .char-title { font-size: 1rem; margin-top: 2px; }
+  html.m .char-sub { font-size: .85rem; }
+  html.m .head-facts {
+    grid-column: 1 / -1;
+    flex-wrap: nowrap; gap: 6px;
+    overflow-x: auto; scrollbar-width: none;
+    margin: 0 -10px; padding: 2px 10px 4px;
+  }
+  html.m .head-facts::-webkit-scrollbar { display: none; }
+  html.m .fact { flex: 0 0 auto; min-width: 0; padding: 3px 9px; }
+  html.m .fact .label { font-size: .56rem; }
+  html.m .fact .value { font-size: .9rem; white-space: nowrap; }
+  html.m .fact.insp { padding: 0; }
+  html.m .insp-btn { padding: 3px 9px; }
+
+  /* the strip that stays put */
+  html.m .m-bar {
+    display: block;
+    position: sticky; top: 0; z-index: 30;
+    margin: 0 -10px 10px; padding: 6px 10px 0;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 10px -6px rgba(28,26,23,.35);
+  }
+  .m-stats { display: flex; gap: 6px; align-items: stretch; }
+  .m-stat {
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 3px 2px 4px; font: inherit; color: var(--ink);
+  }
+  button.m-stat { cursor: pointer; }
+  .m-stat .m-lbl {
+    font: 700 .52rem/1.1 Cinzel, "Trajan Pro", Georgia, serif;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  }
+  .m-stat b { font-size: 1.12rem; line-height: 1.15; font-weight: 700; }
+  .m-stat.m-hp { flex: 2.1 1 0; }
+  .m-hp .m-hpn b { font-size: 1.12rem; }
+  .m-hp .m-hpn span { color: var(--muted); font-size: .85rem; }
+  .m-hp .m-hpn i { font-style: normal; color: #3a6ea5; font-size: .8rem; margin-left: 3px; }
+  .m-hpbar {
+    display: block; width: 88%; height: 4px; margin-top: 2px;
+    background: rgba(28,26,23,.14); border-radius: 2px; overflow: hidden;
+  }
+  .m-hpbar > .hp-fill { display: block; transition: width .4s ease; }
+  .m-tool {
+    flex: 0 0 38px; display: grid; place-items: center;
+    background: linear-gradient(180deg, #2c2620, #1a1713); color: var(--accent-2);
+    border: 1px solid rgba(184,134,11,.55); border-radius: 6px; padding: 0; cursor: pointer;
+  }
+  .m-tool svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
+  .m-tool.ready { color: #f6e3a4; box-shadow: 0 0 10px rgba(212,168,60,.55); }
+  .m-tabs {
+    display: flex; gap: 2px; margin: 6px -10px 0; padding: 0 10px;
+    overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity;
+  }
+  .m-tabs::-webkit-scrollbar { display: none; }
+  .m-tab {
+    flex: 0 0 auto; scroll-snap-align: start;
+    font: 700 .66rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+    letter-spacing: .06em; text-transform: uppercase;
+    background: none; border: 0; border-bottom: 3px solid transparent;
+    color: var(--muted); padding: 9px 9px 8px; cursor: pointer;
+  }
+  .m-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* one column of the boxes on the page being shown */
+  html.m .columns { display: flex; flex-direction: column; gap: 12px; flex: 0 0 auto; }
+  html.m .col { display: contents; }
+  html.m .page [data-page]:not(.m-on), html.m .box.m-empty { display: none !important; }
+  html.m .box.has-tabs > .tabbar { display: none; }
+  html.m .box.has-tabs > .tabpane { display: block; }
+  html.m .box.has-tabs > .tabpane > h2 { display: block; }
+  html.m .box.has-tabs > .tabpane.m-on ~ .tabpane.m-on { margin-top: 16px; }
+  html.m .box.grow, html.m .box.grow > .tabpane {
+    display: block; flex: 0 0 auto; min-height: 0; overflow: visible; padding-right: 0;
+  }
+  html.m .sheet-warn { margin-top: 12px !important; }
+  html.m .sheet-foot { display: none; }
+  /* the spell page filtered to one level at a time, as D&D Beyond's is */
+  html.m .m-spf {
+    display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none;
+    margin: 8px -12px 8px; padding: 0 12px 2px;
+  }
+  html.m .m-spf::-webkit-scrollbar { display: none; }
+  .m-spf button {
+    flex: 0 0 auto; font: 600 .78rem/1 "EB Garamond", Palatino, Georgia, serif;
+    background: var(--paper); color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; cursor: pointer;
+  }
+  .m-spf button.on { background: var(--accent); border-color: var(--accent); color: #f8f1e2; }
+  html.m .spell-level.m-off { display: none; }
+  /* saving throws two to a row, the way the paper sheet sets them */
+  html.m .saves .rows { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
+
+  /* Rows and buttons sized for a thumb. */
+  html.m .rows .row { min-height: 30px; align-items: center; }
+  html.m .tabbtn, html.m .hpb { min-height: 34px; }
+
+  /* The rolls and level tabs live in the strip; the ones on the edge of the
+     screen come back only as the handle of a drawer that is open, which is
+     how a drawer is shut again. */
+  html.m #dice-tab:not(.shifted), html.m #lvl-tab:not(.shifted) { display: none; }
+  html.m #dice-tab span, html.m #lvl-tab span { display: none; }
+  html.m #dice-tab, html.m #lvl-tab { padding: 12px 6px; }
+  html.m #notes-tab { left: 10px; }
+  html.m #dice-dock { right: 12px; bottom: 12px; }
+  html.m #dice-fab { width: 48px; height: 48px; }
+}
+
 @media print {
   /* the margin an ordinary desktop printer can reach, whatever the paper */
   @page { margin: 0.45in; }
@@ -3328,7 +3472,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
       <div class="fact"><span class="label">Level</span><span class="value">{{ sheet.level }}</span></div>
       <div class="fact"><span class="label">Proficiency</span><span class="value">{{ sheet.proficiencyStr }}</span></div>
       {% if sheet.alignment %}<div class="fact"><span class="label">Alignment</span><span class="value">{{ sheet.alignment }}</span></div>{% endif %}
-      {% if not sheet.imageSrc %}<div class="fact"><span class="label">Experience</span><span class="value">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span></div>{% endif %}
+      <div class="fact{% if sheet.imageSrc %} m-only{% endif %}"><span class="label">Experience</span><span class="value">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span></div>
       {% if sheet.player %}<div class="fact"><span class="label">Player</span><span class="value">{{ sheet.player }}</span></div>{% endif %}
       <!-- Inspiration is a button, not a reading: pressing it posts to the
            server, which rewrites DND_INSPIRATION in the character's own org
@@ -3356,7 +3500,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 
     <!-- =============== left column =============== -->
     <div class="col">
-      <div class="box">
+      <div class="box" data-page="abilities">
         <h2>Ability Scores</h2>
         <div class="abilities">
           {% for a in sheet.abilities %}
@@ -3372,7 +3516,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
         </div>
       </div>
 
-      <div class="box">
+      <div class="box saves" data-page="abilities">
         <h2>Saving Throws</h2>
         <div class="rows">
           {% for a in sheet.abilities %}
@@ -3387,7 +3531,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
         </div>
       </div>
 
-      <div class="box">
+      <div class="box" data-page="skills">
         <h2>Skills</h2>
         <div class="rows">
           {% for s in sheet.skills %}
@@ -3403,7 +3547,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
         </div>
       </div>
 
-      <div class="box">
+      <div class="box" data-page="abilities">
         <h2>Passive Senses</h2>
         <div class="rows">
           <div class="row"><span class="nm">Passive Perception</span><span class="val">{{ sheet.passivePerception }}</span></div>
@@ -3413,7 +3557,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
         </div>
       </div>
 
-      <div class="box">
+      <div class="box" data-page="about">
         <h2>Proficiencies &amp; Languages</h2>
         <div class="rows">
           <div class="row"><span class="nm"><strong>Armor</strong> {% if sheet.armorProficiencies %}{{ sheet.armorProficiencies|join:", " }}{% else %}none{% endif %}</span></div>
@@ -3432,7 +3576,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
            stacked, so a sheet with no script - or a printed one - still
            shows both. -->
       <div class="box tabbed" data-tabs="combat">
-        <div class="tabpane">
+        <div class="tabpane" data-page="combat">
           <h2>Combat</h2>
           <div class="combat">
             <div class="tile shield">
@@ -3546,7 +3690,7 @@ them up.">Temp</button>
              stored on the character and written into the org file. The panel
              is live; what is rendered here is what a sheet with no script -
              or no server - still shows. -->
-        <div class="tabpane" id="defenses" data-tab="Defenses">
+        <div class="tabpane" id="defenses" data-tab="Defenses" data-page="combat">
           <h2>Defenses</h2>
           <div id="def-live">
             <h3 class="subhead">Resistances, Immunities &amp; Vulnerabilities</h3>
@@ -3587,7 +3731,7 @@ them up.">Temp</button>
            under the other - and the bar of tabs is built from the heading
            each section already carries. -->
       <div class="box tabbed grow" data-tabs="play">
-        <div class="tabpane">
+        <div class="tabpane" data-page="attacks">
           <h2>Attacks</h2>
           <div class="table-wrap">
           <table>
@@ -3620,7 +3764,7 @@ them up.">Temp</button>
              the same inventory the server computed, and every change is written
              back to the org character sheet. What is rendered here is what a
              sheet with no script - or no server - still shows. -->
-        <div class="tabpane" id="inventory">
+        <div class="tabpane" id="inventory" data-page="inventory">
           <h2>Inventory</h2>
           <div class="enc" id="inv-enc">
             <div class="enc-line">
@@ -3675,7 +3819,7 @@ them up.">Temp</button>
              changing coin up is written back to the org character sheet. What
              is rendered here is what a sheet with no script - or no server -
              still shows. -->
-        <div class="tabpane" id="coins" data-tab="Coins">
+        <div class="tabpane" id="coins" data-tab="Coins" data-page="inventory">
           <h2>Coins</h2>
           <div id="coin-live">
             <div class="coin-head">
@@ -3712,7 +3856,7 @@ them up.">Temp</button>
              personality to show; a character with nothing but a description
              gets a section called Appearance rather than a misnamed one. -->
         {% if sheet.personality or sheet.ideals or sheet.bonds or sheet.flaws or sheet.age or sheet.height or sheet.weightStr or sheet.eyes or sheet.skin or sheet.hair or sheet.appearance %}
-        <div class="tabpane">
+        <div class="tabpane" data-page="about">
           {% if sheet.personality or sheet.ideals or sheet.bonds or sheet.flaws %}
           <h2>Personality</h2>
           {% if sheet.personality %}<p class="quote"><span class="label">Traits</span>{{ sheet.personality }}</p>{% endif %}
@@ -3752,7 +3896,7 @@ them up.">Temp</button>
              or preparing a spell is written into the org character sheet. What
              is rendered here is what a sheet with no script - or no server -
              still shows. -->
-        <div class="tabpane" id="spellcasting">
+        <div class="tabpane" id="spellcasting" data-page="spells">
           <h2>Spellcasting</h2>
           <div class="spell-head">
             <div class="tile"><span class="tile-label">Ability</span><div class="big" style="font-size:1rem">{{ sheet.castingAbility }}</div></div>
@@ -3871,7 +4015,7 @@ them up.">Temp</button>
              from each feature's own text, or off the class level table for
              the resources printed there rather than written out - rage, ki,
              sorcery points. -->
-        <div class="tabpane">
+        <div class="tabpane" data-page="features">
           <h2>Features &amp; Traits</h2>
           <div class="scroller" id="feature-live">
             {% for t in sheet.traits %}
@@ -3901,7 +4045,7 @@ them up.">Temp</button>
       </div>
 
       {% if sheet.backstory or sheet.allies or sheet.treasure or sheet.notes %}
-      <div class="box">
+      <div class="box" data-page="about">
         <h2>Journal</h2>
         {% if sheet.backstory %}<p class="quote"><span class="label">Backstory</span>{{ sheet.backstory }}</p>{% endif %}
         {% if sheet.allies %}<p class="quote"><span class="label">Allies &amp; Organizations</span>{{ sheet.allies }}</p>{% endif %}
@@ -3913,7 +4057,7 @@ them up.">Temp</button>
   </div>
 
   {% if sheet.warnings %}
-  <div class="box" style="margin-top:16px">
+  <div class="box sheet-warn" style="margin-top:16px" data-page="about">
     <h2>Sheet Warnings</h2>
     {% for w in sheet.warnings %}<div class="warn">{{ w }}</div>{% endfor %}
   </div>
@@ -22091,6 +22235,7 @@ them up.">Temp</button>
   function palFocusHp(which) {
     var amt = document.getElementById('hp-amount');
     if (!amt) { return; }
+    mReveal(amt);
     amt.scrollIntoView({ block: 'center', behavior: 'smooth' });
     amt.focus();
     amt.select();
@@ -22296,6 +22441,7 @@ them up.">Temp</button>
     buildConcentrationUi();
     buildInspirationUi();
     buildSectionTabs();
+    buildPhoneLayout();
     // The mood reads the hit points and the conditions, so it goes last: both
     // panels have seeded themselves from the export by now.
     buildMood();
@@ -22440,6 +22586,291 @@ them up.">Temp</button>
       box.insertBefore(bar, box.firstChild);
       box.classList.add('has-tabs');
       show(open);
+    });
+  }
+
+  // ------------------------------------------------------------ phone layout
+  //
+  // On a phone the sheet is cut into pages, the way D&D Beyond's mobile sheet
+  // is, so that nothing is five screens down: see "the phone layout" in the
+  // stylesheet. Every section says which page it is on with data-page; this
+  // builds the strip that stays at the top (the numbers asked for every
+  // round, and the row of page tabs), and turns the pages.
+  //
+  // Whether it is a phone is the question worg asks (useIsMobile in
+  // worg/src/mobile.ts): narrower than 900px, or a finger on anything up to
+  // 1024px. Inside worg the sheet is a srcdoc frame and shares worg's
+  // storage, so worg's layout setting - forced phone or forced desktop - is
+  // honoured here too. An exported sheet opened on its own has no such
+  // setting and just asks the screen.
+  var M_QUERY = '(max-width: 899.95px), ((pointer: coarse) and (max-width: 1023.95px))';
+  var M_PAGE_KEY = 'orgs.dnd.mpage';
+  var M_PAGES = [
+    ['abilities', 'Abilities'], ['skills', 'Skills'], ['combat', 'Combat'],
+    ['attacks', 'Attacks'], ['spells', 'Spells'], ['inventory', 'Inventory'],
+    ['features', 'Features'], ['about', 'About']
+  ];
+  var mPage = '';
+  var mTabs = null;
+
+  function mLayoutSetting() {
+    try {
+      var all = JSON.parse(localStorage.getItem('worg.settings') || '{}');
+      return (all && all.layout) || 'auto';
+    } catch (e) { return 'auto'; }
+  }
+
+  function mIsPhone(mql) {
+    var mode = mLayoutSetting();
+    if (mode === 'mobile') { return true; }
+    if (mode === 'desktop') { return false; }
+    return !!(mql && mql.matches);
+  }
+
+  // Shows one page: its sections get .m-on, and a box none of whose sections
+  // are on it gets .m-empty, so it does not stand there as an empty frame.
+  // Both classes mean nothing without html.m, so this can run in any layout.
+  function mShow(name, keepScroll) {
+    if (!name) { return; }
+    mPage = name;
+    Array.prototype.forEach.call(document.querySelectorAll('.page [data-page]'), function (el) {
+      el.classList.toggle('m-on', el.getAttribute('data-page') === name);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.page .box'), function (box) {
+      if (box.hasAttribute('data-page')) { box.classList.remove('m-empty'); return; }
+      var parts = box.querySelectorAll('[data-page]');
+      if (!parts.length) { return; }
+      box.classList.toggle('m-empty', !box.querySelector('[data-page].m-on'));
+    });
+    if (mTabs) {
+      Array.prototype.forEach.call(mTabs.children, function (btn) {
+        var on = btn.getAttribute('data-goto') === name;
+        btn.classList.toggle('on', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        if (on && btn.scrollIntoView && document.documentElement.classList.contains('m')) {
+          // keep the picked tab in view without moving the page itself
+          var row = mTabs, l = btn.offsetLeft - row.offsetLeft;
+          if (l < row.scrollLeft || l + btn.offsetWidth > row.scrollLeft + row.clientWidth) {
+            row.scrollLeft = Math.max(0, l - 24);
+          }
+        }
+      });
+    }
+    try { localStorage.setItem(M_PAGE_KEY, name); } catch (e) { /* nothing to do */ }
+    // A new page starts at its top, just under the strip, rather than
+    // wherever the last one had been scrolled to.
+    if (!keepScroll && document.documentElement.classList.contains('m')) {
+      var bar = document.getElementById('m-bar');
+      if (bar) {
+        var top = bar.parentNode.querySelector('.columns');
+        var y = top ? top.getBoundingClientRect().top + window.pageYOffset - bar.offsetHeight - 10 : 0;
+        if (window.pageYOffset > y) { window.scrollTo(0, Math.max(0, y)); }
+      }
+    }
+  }
+
+  // Turns to whichever page holds el, so something asked for by name (the
+  // palette's hit point commands) is on screen before it is focused.
+  function mReveal(el) {
+    if (!el || !document.documentElement.classList.contains('m')) { return; }
+    var host = el.closest ? el.closest('[data-page]') : null;
+    if (host && !host.classList.contains('m-on')) { mShow(host.getAttribute('data-page'), true); }
+  }
+
+  function mPagesPresent() {
+    return M_PAGES.filter(function (p) {
+      return document.querySelector('.page [data-page="' + p[0] + '"]');
+    });
+  }
+
+  function buildPhoneLayout() {
+    var head = document.querySelector('header.sheet-head');
+    if (!head) { return; }
+    var pages = mPagesPresent();
+    if (!pages.length) { return; }
+
+    var bar = document.createElement('div');
+    bar.className = 'm-bar';
+    bar.id = 'm-bar';
+    var DICE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 20.5 7.3v9.4L12 21.5 3.5 16.7V7.3Z"/><path d="M12 2.5 7.6 14.6h8.8Z M3.5 7.3l4.1 7.3M20.5 7.3l-4.1 7.3M7.6 14.6 12 21.5l4.4-6.9"/></svg>';
+    var LVL_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M5 11l7-7 7 7"/></svg>';
+    bar.innerHTML =
+      '<div class="m-stats">' +
+        '<button type="button" class="m-stat m-hp" data-go="combat" title="Hit points: open the Combat page">' +
+          '<span class="m-lbl">Hit Points</span>' +
+          '<span class="m-hpn"><b id="m-hp-now"></b><span id="m-hp-max"></span><i id="m-hp-temp"></i></span>' +
+          '<span class="m-hpbar"><span class="hp-fill" id="m-hp-fill"></span></span>' +
+        '</button>' +
+        '<div class="m-stat"><span class="m-lbl">AC</span><b id="m-ac"></b></div>' +
+        '<button type="button" class="m-stat" id="m-init" title="Roll initiative"><span class="m-lbl">Init</span><b id="m-init-val"></b></button>' +
+        '<div class="m-stat"><span class="m-lbl">Speed</span><b id="m-speed"></b></div>' +
+        '<button type="button" class="m-tool" id="m-dice" aria-label="Rolls">' + DICE_SVG + '</button>' +
+        (document.getElementById('lvl-tab')
+          ? '<button type="button" class="m-tool" id="m-lvl" aria-label="Level up">' + LVL_SVG + '</button>' : '') +
+      '</div>' +
+      '<nav class="m-tabs" role="tablist" aria-label="Sheet pages"></nav>';
+    head.parentNode.insertBefore(bar, head.nextSibling);
+
+    mTabs = bar.querySelector('.m-tabs');
+    pages.forEach(function (p) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'm-tab';
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('data-goto', p[0]);
+      btn.textContent = p[1];
+      btn.addEventListener('click', function () { mShow(p[0]); });
+      mTabs.appendChild(btn);
+    });
+
+    // The strip's numbers are read off the sheet rather than worked out
+    // again, and read again whenever the sheet redraws them, so a blow taken
+    // on the Combat page is on the strip the moment the bar moves.
+    var initTile = document.querySelector('.combat .rollable[data-label="Initiative"]');
+    var speedTile = null;
+    Array.prototype.forEach.call(document.querySelectorAll('.combat .tile'), function (t) {
+      var l = t.querySelector('.tile-label');
+      if (l && /speed/i.test(l.textContent)) { speedTile = t; }
+    });
+    function text(id) { var el = document.getElementById(id); return el ? el.textContent.trim() : ''; }
+    function sync() {
+      document.getElementById('m-hp-now').textContent = text('hp-now');
+      document.getElementById('m-hp-max').textContent = ' / ' + text('hp-max');
+      var tv = document.getElementById('hp-temp-val');
+      var temp = tv && !tv.classList.contains('none') ? tv.textContent.trim() : '';
+      document.getElementById('m-hp-temp').textContent = temp && temp !== '0' ? '+' + temp : '';
+      var fill = document.getElementById('hp-fill'), mf = document.getElementById('m-hp-fill');
+      if (fill && mf) { mf.className = fill.className.replace(/\bhp-fill\b/, '').trim() + ' hp-fill'; mf.style.width = fill.style.width; }
+      document.getElementById('m-ac').textContent = text('ac-value');
+      var iv = initTile && initTile.querySelector('.big');
+      document.getElementById('m-init-val').textContent = iv ? iv.textContent.trim() : '';
+      var sv = speedTile && speedTile.querySelector('.big');
+      document.getElementById('m-speed').textContent = sv ? sv.textContent.trim() : '';
+      var lt = document.getElementById('lvl-tab'), ml = document.getElementById('m-lvl');
+      if (lt && ml) { ml.classList.toggle('ready', lt.classList.contains('ready')); }
+    }
+    sync();
+    var pending = 0;
+    var watch = new MutationObserver(function () {
+      if (pending) { return; }
+      pending = setTimeout(function () { pending = 0; sync(); }, 30);
+    });
+    ['hp-now', 'hp-max', 'hp-fill', 'hp-temp-val', 'ac-value', 'lvl-tab'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) { watch.observe(el, { childList: true, characterData: true, subtree: true, attributes: true }); }
+    });
+
+    bar.querySelector('.m-hp').addEventListener('click', function () { mShow('combat'); });
+    // The tile itself may be on a hidden page, so the dice are thrown from
+    // where the finger was rather than from a box with no size.
+    document.getElementById('m-init').addEventListener('click', function (e) {
+      if (!initTile) { return; }
+      var r = e.currentTarget.getBoundingClientRect();
+      initTile.dispatchEvent(new MouseEvent('click', {
+        bubbles: true, cancelable: true,
+        clientX: e.clientX || r.left + r.width / 2, clientY: e.clientY || r.top + r.height / 2
+      }));
+    });
+    // The drawers keep their own tabs; these only press them.
+    document.getElementById('m-dice').addEventListener('click', function () {
+      var t = document.getElementById('dice-tab'); if (t) { t.click(); }
+    });
+    var ml = document.getElementById('m-lvl');
+    if (ml) {
+      ml.addEventListener('click', function () {
+        var t = document.getElementById('lvl-tab'); if (t) { t.click(); }
+      });
+    }
+
+    // A swipe sideways over the page turns it, as on D&D Beyond. Not one
+    // that starts in something that scrolls sideways itself (a wide table,
+    // the tab row) or in a field, and not one that is mostly a scroll down.
+    var cols = document.querySelector('.page .columns');
+    var sx = 0, sy = 0, st = 0, track = false;
+    if (cols) {
+      cols.addEventListener('touchstart', function (e) {
+        track = false;
+        if (!document.documentElement.classList.contains('m') || e.touches.length !== 1) { return; }
+        var t = e.target;
+        if (t.closest && t.closest('input, select, textarea, [contenteditable], .table-wrap, .hp-gauge')) { return; }
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now(); track = true;
+      }, { passive: true });
+      cols.addEventListener('touchend', function (e) {
+        if (!track) { return; }
+        track = false;
+        var t = e.changedTouches[0];
+        var dx = t.clientX - sx, dy = t.clientY - sy;
+        if (Math.abs(dx) < 70 || Math.abs(dx) < 2 * Math.abs(dy) || Date.now() - st > 700) { return; }
+        var names = pages.map(function (p) { return p[0]; });
+        var at = names.indexOf(mPage);
+        var next = at + (dx < 0 ? 1 : -1);
+        if (at < 0 || next < 0 || next >= names.length) { return; }
+        mShow(names[next]);
+      }, { passive: true });
+    }
+
+    // The spell page, one level at a time: a row of chips over the list,
+    // rebuilt whenever the list is redrawn (learning or preparing a spell
+    // redraws all of it), and keeping the level picked if it is still there.
+    var spellLive = document.getElementById('spell-live');
+    if (spellLive) {
+      var spf = document.createElement('div');
+      spf.className = 'm-spf';
+      spf.setAttribute('role', 'toolbar');
+      spf.setAttribute('aria-label', 'Spell level');
+      spellLive.parentNode.insertBefore(spf, spellLive);
+      var spLevel = '';
+      var spLabel = function (lvl) {
+        var h = lvl.querySelector('h3');
+        return h ? h.textContent.replace(/\s*\(.*$/, '').replace(/\s+level$/i, '').trim() : '';
+      };
+      var spApply = function () {
+        var levels = spellLive.querySelectorAll('.spell-level');
+        var names = Array.prototype.map.call(levels, spLabel);
+        if (names.indexOf(spLevel) < 0) { spLevel = ''; }
+        Array.prototype.forEach.call(levels, function (lvl, i) {
+          lvl.classList.toggle('m-off', spLevel !== '' && names[i] !== spLevel);
+        });
+        spf.innerHTML = '';
+        if (names.length < 2) { return; }
+        [''].concat(names).forEach(function (n) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = n || 'All';
+          b.className = n === spLevel ? 'on' : '';
+          b.setAttribute('aria-pressed', n === spLevel ? 'true' : 'false');
+          b.addEventListener('click', function () { spLevel = n; spApply(); });
+          spf.appendChild(b);
+        });
+      };
+      spApply();
+      new MutationObserver(function (recs) {
+        // only the list being replaced, not a spell opened or a level dimmed
+        for (var i = 0; i < recs.length; i++) {
+          if (recs[i].target === spellLive) { spApply(); return; }
+        }
+      }).observe(spellLive, { childList: true });
+    }
+
+    var saved = '';
+    try { saved = localStorage.getItem(M_PAGE_KEY) || ''; } catch (e) { /* none */ }
+    var names = pages.map(function (p) { return p[0]; });
+    mShow(names.indexOf(saved) >= 0 ? saved : names[0], true);
+
+    // The layout follows the screen as it turns, and worg's layout setting
+    // as it is changed in another part of the app.
+    var mql = window.matchMedia ? window.matchMedia(M_QUERY) : null;
+    function apply() {
+      document.documentElement.classList.toggle('m', mIsPhone(mql));
+      sync();
+    }
+    apply();
+    if (mql) {
+      if (mql.addEventListener) { mql.addEventListener('change', apply); }
+      else if (mql.addListener) { mql.addListener(apply); }
+    }
+    window.addEventListener('storage', function (e) {
+      if (!e.key || e.key === 'worg.settings') { apply(); }
     });
   }
 

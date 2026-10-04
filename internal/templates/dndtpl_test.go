@@ -2,6 +2,8 @@ package templates
 
 import (
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/flosch/pongo2/v5"
@@ -21,6 +23,37 @@ func TestCharacterSheetTemplatesParse(t *testing.T) {
 		}
 		if _, err := pongo2.FromBytes(data); err != nil {
 			t.Errorf("%s: %v", f, err)
+		}
+	}
+}
+
+// On a phone the html sheet shows one page at a time, and the tabs that turn
+// the pages come from M_PAGES in the sheet's script. A section given a
+// data-page that list does not name is still hidden with the rest, but no tab
+// ever shows it: on a phone it would simply be gone. Nothing at export time
+// notices, so this does.
+func TestCharacterSheetPhonePagesHaveTabs(t *testing.T) {
+	data, err := os.ReadFile("../../templates/dnd_character_html.tpl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(data)
+	at := strings.Index(s, "var M_PAGES = [")
+	if at < 0 {
+		t.Fatal("no M_PAGES in the sheet's script")
+	}
+	end := strings.Index(s[at:], "];")
+	tabs := map[string]bool{}
+	for _, m := range regexp.MustCompile(`\['([a-z]+)',`).FindAllStringSubmatch(s[at:at+end], -1) {
+		tabs[m[1]] = true
+	}
+	used := regexp.MustCompile(`data-page="([a-z]+)"`).FindAllStringSubmatch(s, -1)
+	if len(used) == 0 {
+		t.Fatal("no section of the sheet carries a data-page")
+	}
+	for _, m := range used {
+		if !tabs[m[1]] {
+			t.Errorf("data-page=%q has no tab in M_PAGES", m[1])
 		}
 	}
 }
