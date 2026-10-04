@@ -157,14 +157,15 @@ func setMarkerDate(lines []string, from, own int, ind, kind, date string, isRang
 		if i == planning {
 			continue
 		}
-		if drawerOpenRe.MatchString(lines[i]) {
-			inDrawer = true
-			continue
-		}
+		// The end first: `:END:` also reads as a drawer opening.
 		if inDrawer {
 			if drawerEndRe.MatchString(lines[i]) {
 				inDrawer = false
 			}
+			continue
+		}
+		if drawerOpenRe.MatchString(lines[i]) {
+			inDrawer = true
 			continue
 		}
 		if loc := markerStampRe.FindStringIndex(lines[i]); loc != nil {
