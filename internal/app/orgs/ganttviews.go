@@ -16,6 +16,12 @@ import (
 // say "the release", "the offsite", "code freeze" - moments the plan has to
 // be read against rather than tasks in it.
 type GanttMarkers struct {
+	// A marker set's name and whether it is drawn. The main markers have
+	// neither; sets (GanttView.MarkerSets) are extra queries drawn their own
+	// way, often generated one per tag or property value.
+	Label  string `yaml:"label,omitempty" json:"label,omitempty"`
+	Hidden bool   `yaml:"hidden,omitempty" json:"hidden,omitempty"`
+
 	// The saved query whose headings become lines, or a query written for
 	// the markers (Query wins when both are set).
 	StoredQuery string `yaml:"storedQuery,omitempty" json:"storedQuery,omitempty"`
@@ -90,6 +96,8 @@ type GanttView struct {
 	Colors    map[string]string `yaml:"colors,omitempty" json:"colors,omitempty"`
 	ShutLanes []string          `yaml:"shutLanes,omitempty" json:"shutLanes,omitempty"`
 	Markers   *GanttMarkers     `yaml:"markers,omitempty" json:"markers,omitempty"`
+	// More marker queries, each with its own look.
+	MarkerSets []GanttMarkers `yaml:"markerSets,omitempty" json:"markerSets,omitempty"`
 	// How the bars of the headings each rule matches are drawn: outline,
 	// fill and shape, each decided by the first matching rule that sets it.
 	BarRules []GanttBarRule `yaml:"barRules,omitempty" json:"barRules,omitempty"`

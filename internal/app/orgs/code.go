@@ -487,6 +487,9 @@ func readBlock(ref *blockRef, names map[string]namedKind) common.CodeBlock {
 	}
 
 	lang, switches, args, rawVars := splitArgs(b.Parameters)
+	// go-org reads the switches of a block (-n, -r...) into Block.Switches;
+	// they used to come through stuck to the language in Parameters[0].
+	switches = append(switches, b.Switches...)
 	// Header lines first, so that an argument repeated on the block itself is
 	// the one that ends up last - which is the one a reader takes as final.
 	for _, extra := range headerArgs(b) {

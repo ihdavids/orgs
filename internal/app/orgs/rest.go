@@ -125,6 +125,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/tablenames", RequestTableNames)
 	api.HandleFunc("/columns", RequestColumns).Methods("GET")       // org column view, with effort rolled up
 	api.HandleFunc("/columns/spec", PostColumnSpec).Methods("POST") // write a file's #+COLUMNS: line
+	api.HandleFunc("/columns/values", RequestColumnValues).Methods("GET") // every property in a file, with its values
 	api.HandleFunc("/habits", RequestHabits).Methods("GET")
 	api.HandleFunc("/habits/untick", PostHabitUntick).Methods("POST") // clear today's tick         // every habit and how it is going
 	api.HandleFunc("/tables", RequestTables)

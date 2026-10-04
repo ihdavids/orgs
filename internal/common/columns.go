@@ -93,3 +93,27 @@ type ColumnSettings struct {
 	// The `#+COLUMNS:` line used for a file that does not declare one.
 	Default string `yaml:"default"`
 }
+
+// One value a property takes in a file, and on how many headings.
+type ColumnValueCount struct {
+	Value string
+	Count int
+}
+
+// One property used in a file: on how many headings, and its values.
+type ColumnPropValues struct {
+	Name   string
+	Count  int
+	Values []ColumnValueCount
+}
+
+// The answer to GET /columns/values: every property the file's headings use,
+// with the values each takes - for listing a property's values, for offering
+// the values already in use while one is typed, and for suggesting property
+// names while a columns line is written.
+type ColumnValuesResult struct {
+	Ok    bool
+	Msg   string
+	File  string
+	Props []ColumnPropValues
+}

@@ -167,6 +167,8 @@ The line in force is the first of: the request's, the file's `#+COLUMNS:`, `colu
 4. **`%CLOCKSUM` always rolls up** (org's meaning); `%EFFORT` only with an operator, because inventing one would disagree with org about the file.
 5. **Sort within each parent**, never flat (it is an outline; flat sorting separates children from parents). Empty cells sort last either direction (absence, not a small value).
 
+`GET /columns/values` (`columnvalues.go`, tested on a parsed document) lists every property a file's headings use with each value and its count, most used first; the keyword, tags and priority come in as TODO, TAGS and PRIORITY. It feeds worg's value listing, its type-ahead in cell editors and its property-name suggestions in the columns line.
+
 `POST /columns/spec` writes the file's `#+COLUMNS:`, replacing it or joining the `#+KEYWORD:` block at the top.
 
 - **`POST /property` is a line edit**: `setHeadingProperty` in columns.go touches only the heading's drawer and re-aligns its keys like the record editor. It was `SetProperty` via `WriteOutOrgFile` (see **Traps: line edits**; it also ate a space in a `CLOCK:` line) - unacceptable for filling in estimates one after another.
