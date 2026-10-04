@@ -72,6 +72,12 @@ type GanttView struct {
 	Filter string `yaml:"filter,omitempty" json:"filter,omitempty"`
 	// Overdue and slipping work highlighted.
 	Health bool `yaml:"health,omitempty" json:"health,omitempty"`
+	// How far each task could slip, drawn as a tail after its bar.
+	Slack bool `yaml:"slack,omitempty" json:"slack,omitempty"`
+	// Each person's load per day, drawn under the chart, and the property
+	// that names the person (ASSIGNED when empty).
+	Workload     bool   `yaml:"workload,omitempty" json:"workload,omitempty"`
+	WorkloadProp string `yaml:"workloadProp,omitempty" json:"workloadProp,omitempty"`
 	// Snapshots of the plan's dates, and the one drawn under the bars.
 	Baselines []GanttBaseline `yaml:"baselines,omitempty" json:"baselines,omitempty"`
 	Baseline  string          `yaml:"baseline,omitempty" json:"baseline,omitempty"`

@@ -83,6 +83,7 @@ Each of these comes up in several features below. They are stated once here, and
   - note line breaks: `orgBreakLines`/`orgStripBreaks` ↔ the sheet's `orgToHtml`
   - query functions: the map in `internal/app/orgs/todo.go` ↔ `QUERY_FUNCTIONS` in `worg/src/orgquery.ts` (a function missing there still works, it just is never suggested)
   - flashcard sessions: `worg/src/drill.ts` ↔ `cmd/oc/commands/drill/session.go` (same scenarios in `drill.test.ts` and `session_test.go`)
+  - typed dates (`tomorrow`, `fri` - today counts -, `+2w`): `internal/orgdate` ↔ `parseWhen` in `worg/src/ganttquick.ts` (the gantt and column view quick add)
 
 ### Where the rest of the notes live
 

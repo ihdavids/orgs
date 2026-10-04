@@ -83,8 +83,10 @@ type GanttData struct {
 
 // A new heading, written under a parent or at the end of a file.
 type GanttAdd struct {
-	// One of these says where it goes. ParentHash puts it under that heading;
-	// Filename puts it at the end of that file.
+	// One of these says where it goes. AfterHash puts it straight after that
+	// heading (and everything under it), at the same level; ParentHash puts
+	// it under that heading, last; Filename puts it at the end of that file.
+	AfterHash  string
 	ParentHash string
 	Filename   string
 

@@ -245,6 +245,7 @@ func ganttNewLines(lvl int, a *common.GanttAdd) []string {
 	*Request Body:* A =GanttAdd= object.
 	| Field        | Type   | Description                                            |
 	|--------------+--------+--------------------------------------------------------|
+	| =AfterHash=  | string | Put it straight after this heading and its subtree.    |
 	| =ParentHash= | string | Put the new heading under this one, as its last child.  |
 	| =Filename=   | string | Or: put it at the end of this file, at level one.       |
 	| =Headline=   | string | The title.                                             |
@@ -277,7 +278,40 @@ func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 	var filename string
 	var row int
 	var lvl int
-	if args.ParentHash != "" {
+	if args.AfterHash != "" {
+		// A sibling, straight after the heading and its subtree: what the
+		// column view's N and the chart's N mean by "a new one after this".
+		sec, ok := GetDb().ByHash[args.AfterHash]
+		if !ok || sec == nil || sec.Headline == nil {
+			res.Msg = "gantt add: no heading with that hash to go after"
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+		f := GetDb().FileFromSection(sec)
+		if f == nil {
+			res.Msg = "gantt add: could not find the file that heading is in"
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+		filename = f.Doc.Path
+		lvl = sec.Headline.Lvl
+		lines, lerr := ganttFileLines(filename)
+		if lerr != nil {
+			res.Msg = "gantt add: " + lerr.Error()
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(res)
+			return
+		}
+		row = subtreeEndRow(lines, sec.Headline.Pos.Row, sec.Headline.Lvl, sec.Headline.Pos.Row)
+		// Not after the blank lines that close the subtree: the new heading
+		// goes against the last of its text, and the gap stays before the
+		// next one.
+		for row > sec.Headline.Pos.Row && strings.TrimSpace(lines[row]) == "" {
+			row--
+		}
+	} else if args.ParentHash != "" {
 		sec, ok := GetDb().ByHash[args.ParentHash]
 		if !ok || sec == nil || sec.Headline == nil {
 			res.Msg = "gantt add: no heading with that hash"
