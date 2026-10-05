@@ -100,6 +100,7 @@ want one and =C-c C-c= fills it in.
 | =S-Up= / =S-Down= on a timestamp |  | change the part under the cursor: year, month, day (or the day name), hour, minute (in 5s) |
 | =S-Left= / =S-Right= on a timestamp | | a day earlier / later                                                     |
 | =C-c C-x p=          | =SPC p=    | set a property: a new line in the heading's drawer, or a new drawer           |
+| =C-c \vert{}=          | =SPC \vert{}=    | the paragraph into a table (split on tabs, commas or spaces); a blank line starts one |
 
 A date that goes in is left selected, so you can type over it or move it with
 the shifted arrows straight away, then =TAB= or =ESC=. The day name is always
