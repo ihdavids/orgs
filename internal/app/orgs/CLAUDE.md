@@ -426,3 +426,35 @@ Client: `worg/src/move.ts` (pure, tested), `MoveDialog.tsx` (one dialog for all 
 - A commit from before the file existed answers `Ok` with `Missing`, not an error.
 - `repoOf` resolves symlinks on both the file and the toplevel (macOS `/tmp` is `/private/tmp`), or the relative path comes out as `../..`.
 - Merge commits have no numstat (git prints none for merges by default), so they show no line counts.
+
+## Dynamic blocks
+
+`dynblock.go`: `#+BEGIN: name :params` … `#+END:`, refreshed by `POST /dblocks/update` (one block by line, a file, or every file) and listed by `GET /dblocks`. Built in: `clocktable` (in `clocktable.go`, org's layout: a time column per level, bold total, a File column when several files), `columnview` (over `BuildColumnView`, so rollups match the Columns tab), `query` (an orgs query as a table, rows built with `ownRow`) and `insertdatetime`; any other name falls back to `PlugManager.BlockExec`. Clients: `orgs dblock`, `/execb` (vscode).
+
+1. **Line splice between the BEGIN and END lines only**; every block's text is worked out against the file as it stands, then spliced bottom up so the rows stay true (see **Traps: re-measure**). The file is reloaded first so the rows the database attributes blocks by are the disk's. A block that comes out the same leaves the file unwritten.
+2. **A `#+BEGIN:` inside a SRC/EXAMPLE/EXPORT/COMMENT block is not a block** - every guide showing one has such a line.
+3. **The heading a block is under is the last one starting above it** (`sectionAtRow`), as for links and code blocks.
+4. **An unknown block is reported, never emptied**, and the blocks beside it still refresh.
+5. A column view's `#+TBLFM:` lines are kept and run again over the new rows (`applyTableFormulas`).
+
+Clock ranges are `clockBlockRange` (`:block`) and `clockRangeOf` (`:tstart`/`:tend` through `internal/orgdate`): half open, weeks from Monday, and a clock is clipped to the range (`clockMinsIn`); a running clock counts to now. `/clockreport` uses the same, carries each entry's `Sessions`, and answers `Error` for a range it cannot read.
+
+## Babel: results, calls, inline code, pictures, ledgers
+
+`babelexec.go` holds the engine; `babel.go` the runners and bindings. Everything runs a `babelJob` (`runJob`): a block (`jobForBlock`), a `#+CALL:` (`callJob`: the named block, the call's arguments over its `:var`s, the call's header arguments over its own) or inline `src_lang[…]{…}` / `call_name(…)`. `POST /babel/exec` runs what is at a line or everything in a file; `POST /code/run` writes too with `Write`.
+
+1. **A named block is found in its own file first, then any file** (`findNamedSrc`) - a file of blocks is the library of babel.
+2. **`:var` naming a block runs it first** (depth capped at 8), naming a `#+RESULTS:` reads it; table rows are passed to the binder (`bind(name, v, rows)`), never through shared state.
+3. **Results are a line splice under the END line or the call** (`placeResult`): blank line then `#+RESULTS:` (with the block's name) when there is none, otherwise only what is under the existing header is replaced. `resultExtent` ends a result where its element ends - not at the next blank line.
+4. **`:eval no`/`never` never runs**; `:results silent` runs and writes nothing.
+5. **Run-all re-reads the file after every write and takes the next item by its place in the order**, not its row (see **Traps: re-measure**).
+6. **Pictures** (`dot`, `plantuml`, `ditaa`, `mermaid`, `gnuplot`) need `:file`; the path is made absolute before the program sees it, because the program runs in the file's directory. gnuplot tables go to temp data files bound by name, as org does.
+7. **`:cmdline`** goes after the code's file, split by `shellWords` (quotes, no shell). `beancount` runs `bean-query -f csv` (csv back as a table), `ledger` runs `ledger -f`.
+
+## Small additions from the orgextended pass
+
+- `POST /table/import` (`tableimport.go`): csv/tsv/semicolon text as an aligned table, under a heading, after a line, or at the end; separator guessed from the first line, a comma losing ties.
+- Query functions `IsDone()` (a finished keyword by the heading's own file) and `InFile(re)` (matches the absolute path too); `IsPartOfProject()` takes no argument now. Built-in filters gained OrgExtended's views: `Projects`, `ActiveProjects`, `StuckProjects`, `LooseTasks`, `NextTasks`, `DoneTasks`, `Clocked`, `Phone`, `Meetings`, `Notes`.
+- `GET /gantt/tasks` carries each task's own `Clocked` spans (worg's Actual time).
+- `GET /pandoc?filename=&to=docx` answers with bytes (like `/pdf`), through the `pandoc` exporter's settings when one is configured; the `trello` poller mirrors boards into files.
+- `#+HTML_THEME: readtheorg` / a `theme-readtheorg.setup` SETUPFILE pick `rtd` (`themeAlias` in the html exporter); bigblow picks `docs`.

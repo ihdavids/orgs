@@ -543,6 +543,31 @@ func (self *Config) AddInternalFilters() {
 	if _, ok := self.Filters["WorkProjects"]; !ok {
 		self.Filters["WorkProjects"] = "IsProject() && !IsArchived() && !InTagGroup('HOME')"
 	}
+
+	// The GTD views OrgExtended shipped, each one query. A name the yaml
+	// already uses is left as the yaml has it.
+	views := map[string]string{
+		// Every live project, and the two halves of a weekly review: projects
+		// with a NEXT action, and stuck ones without.
+		"Projects":       "IsProject() && !IsArchived()",
+		"ActiveProjects": "IsProject() && !IsBlockedProject() && !IsArchived()",
+		"StuckProjects":  "IsBlockedProject() && !IsArchived()",
+		// Work that belongs to no project, which is where things get lost.
+		"LooseTasks": "{{ AllTasks }} && !IsPartOfProject()",
+		"NextTasks":  "IsNextTask() && !IsArchived()",
+		// Finished but not yet archived: what `orgs archive -done` would take.
+		"DoneTasks": "IsDone() && !IsArchived()",
+		"Clocked":   "HasClock() && !IsArchived()",
+		// Keywords some GTD setups use for things that are not tasks.
+		"Phone":    "IsStatus('PHONE') && !IsArchived()",
+		"Meetings": "IsStatus('MEETING') && !IsArchived()",
+		"Notes":    "IsStatus('NOTE') && !IsArchived()",
+	}
+	for name, q := range views {
+		if _, ok := self.Filters[name]; !ok {
+			self.Filters[name] = q
+		}
+	}
 }
 
 /*

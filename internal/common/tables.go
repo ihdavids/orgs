@@ -64,3 +64,21 @@ type TableEdit struct {
 	SetName  bool       // Only touch the #+NAME: line when this is set
 	Eval     bool       // Run the tables formulas after saving
 }
+
+// POST /table/import: delimited text written into a file as an org table.
+// Where it goes: under the heading Hash (at the end of the heading's own
+// text), after the zero based line AfterLine, or at the end of Filename when
+// neither is given (AfterLine -1).
+type TableImport struct {
+	Filename  string
+	Hash      string
+	AfterLine int
+	// The text, as a csv or tsv file has it.
+	Text string
+	// "," ";" "\t" or "|"; empty means worked out from the first line.
+	Separator string
+	// Draw a rule under the first row, making it the table's header.
+	Header bool
+	// A #+NAME: for the table, so a formula or a source block can use it.
+	Name string
+}

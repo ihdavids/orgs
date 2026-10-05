@@ -113,6 +113,39 @@ type CodeRun struct {
 	// and making somebody save first to find out is the wrong order.
 	Code    string
 	SetCode bool
+	// Write the result into the file under the block as #+RESULTS:, as org's
+	// C-c C-c does. Off by default, so a client trying an edit changes nothing.
+	Write bool
+}
+
+// Running whatever is at a line of a file: the source block holding it, a
+// #+CALL: line, or the src_/call_ snippets written in a paragraph - or, with
+// All, every one of those in the file, top to bottom.
+type BabelExec struct {
+	Filename string
+	// Zero based.
+	Line int
+	All  bool
+	// Run without writing the results into the file.
+	NoWrite bool
+}
+
+// One thing that ran.
+type BabelRan struct {
+	// "block", "call" or "inline".
+	Kind string
+	// The block's name, or the name a call called. Empty for an unnamed block.
+	Name string
+	// Zero based, as the file was before anything was written.
+	Line    int
+	Result  CodeResult
+	Written bool
+}
+
+type BabelExecResult struct {
+	Ok  bool
+	Msg string
+	Ran []BabelRan
 }
 
 // What came back from running it.
@@ -164,6 +197,8 @@ type CodeResult struct {
 	// The language to colour Text as, from the file's extension: "python",
 	// "json", "mermaid". Empty when there is nothing sensible to say.
 	TextLang string
+	// Whether the result was written into the file as #+RESULTS:.
+	Written bool
 }
 
 // Changing a block in the file it lives in.

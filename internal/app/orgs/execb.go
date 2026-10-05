@@ -16,7 +16,7 @@ import (
 
 func ExecBlock(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	res := common.ResultMsg{Ok: false, Msg: "Unknown block exec error"}
-	ofile, sec, block := db.GetFromPreciseTarget(t, org.BlockNode)
+	ofile, _, block := db.GetFromPreciseTarget(t, org.BlockNode)
 	if block != nil {
 		blk := block.(*org.Block)
 		if blk.Name == "SRC" {
@@ -26,20 +26,18 @@ func ExecBlock(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error)
 				fmt.Fprintf(os.Stderr, "Running language: %s\n", lang)
 			}
 		} else if blk.Name == "DYN" {
-			Log().Infof("Dynamic Block Execution\n")
-			if lang, ok := blk.ParameterMap()[":lang"]; ok {
-				fmt.Fprintf(os.Stderr, "Function name: %s\n", lang)
-				if blockExec, ok := Conf().PlugManager.BlockExec[lang]; ok {
-					fmt.Fprintf(os.Stderr, "Have function\n")
-					res = *blockExec(ofile, sec, blk)
-					if res.Ok {
-						blk.Children = []org.Node{org.Text{Content: res.Msg}}
-						WriteOutOrgFile(ofile)
-					}
-				}
+			// Rewritten as lines between BEGIN and END (dynblock.go). This
+			// used to put the result in the parsed block and write the whole
+			// document back, re-indenting every drawer in the file.
+			out, err := RefreshDynBlockAt(ofile.Doc.Path, blk.Pos.Row)
+			if err != nil {
+				return common.ResultMsg{Ok: false, Msg: err.Error()}, nil
 			}
-			for k, v := range blk.ParameterMap() {
-				fmt.Fprintf(os.Stderr, "KEY: %s VAL: %v\n", k, v)
+			res = common.ResultMsg{Ok: true, Msg: "refreshed"}
+			for _, b := range out.Blocks {
+				if !b.Ok {
+					res = common.ResultMsg{Ok: false, Msg: b.Msg}
+				}
 			}
 		}
 	}

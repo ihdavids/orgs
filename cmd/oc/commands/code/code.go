@@ -9,6 +9,11 @@ package code
 //	orgs code run monthly-report      run it and print what it produced
 //	orgs code run notes.org:3         run the fourth block in that file
 //	orgs code run -pick               choose one and run it
+//	orgs code run -w chart            run it and write #+RESULTS: under it
+//	orgs code at notes.org:42         run what is at line 42 - a block, a
+//	                                  #+CALL: or inline src_/call_ - and
+//	                                  write its result, as C-c C-c does
+//	orgs code all notes.org           everything in the file, top to bottom
 //	orgs code ls -json | jq '.[].Lang'
 //
 // A block is worth an endpoint rather than a grep because of its *variables*.
@@ -52,6 +57,8 @@ type Code struct {
 	Raw     bool
 	Verbose bool
 	Limit   int
+	Write   bool
+	NoWrite bool
 }
 
 func (self *Code) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -72,6 +79,8 @@ func (self *Code) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Raw, "raw", false, "print what the program printed rather than the shaped result")
 	fset.BoolVar(&self.Verbose, "v", false, "show stderr and how long it took, even on success")
 	fset.IntVar(&self.Limit, "limit", 0, "keep only the first n")
+	fset.BoolVar(&self.Write, "w", false, "run: write the result into the file as #+RESULTS:")
+	fset.BoolVar(&self.NoWrite, "no-write", false, "at, all: run without writing results into the file")
 }
 
 func (self *Code) Exec(core *commands.Core) {
@@ -100,6 +109,10 @@ func (self *Code) Exec(core *commands.Core) {
 		self.show(core, firstNonEmpty(free, self.Query))
 	case "run", "exec", "eval":
 		self.run(core, firstNonEmpty(free, self.Query))
+	case "at":
+		self.at(core, words, false)
+	case "all":
+		self.at(core, words, true)
 	case "preview":
 		// What fzf shells out to. Harmless to run by hand, and the easiest way
 		// to see what the pane is doing when it is doing the wrong thing.
@@ -399,7 +412,7 @@ func (self *Code) run(core *commands.Core, sel string) {
 // Run one block that has already been found. Split out from `run` for the same
 // reason `detail` is: the picker has the block in its hand.
 func (self *Code) runBlock(core *commands.Core, b common.CodeBlock) {
-	req := common.CodeRun{Filename: b.Filename, Id: b.Id}
+	req := common.CodeRun{Filename: b.Filename, Id: b.Id, Write: self.Write}
 
 	// Running a block is a write as far as anybody watching is concerned: it
 	// executes a program, and it may put a #+RESULTS: under the block. A dry
@@ -459,6 +472,81 @@ func (self *Code) runBlock(core *commands.Core, b common.CodeBlock) {
 	}
 	if self.Verbose {
 		fmt.Fprintf(os.Stderr, "%s%.2fs%s\n", commands.C(commands.AnsiDim), res.Seconds, commands.C(commands.AnsiReset))
+	}
+}
+
+// ---------------------------------------------------------------------------
+// at, all
+// ---------------------------------------------------------------------------
+
+// What C-c C-c does: run what is at a line - a block, a #+CALL:, or the inline
+// code in a paragraph - and write what it produced into the file. With all,
+// everything in the file, top to bottom.
+func (self *Code) at(core *commands.Core, words []string, all bool) {
+	if len(words) == 0 {
+		commands.Fail("say which file%s:\n\n  orgs code at notes.org:42\n  orgs code all notes.org",
+			map[bool]string{true: "", false: " and line"}[all])
+	}
+	file, line := words[0], ""
+	if i := strings.LastIndex(file, ":"); i > 0 {
+		if _, err := strconv.Atoi(file[i+1:]); err == nil {
+			file, line = file[:i], file[i+1:]
+		}
+	}
+	if len(words) > 1 {
+		line = words[1]
+	}
+	req := common.BabelExec{Filename: commands.ResolveOrgFile(core, file), All: all, NoWrite: self.NoWrite}
+	if !all {
+		n, err := strconv.Atoi(line)
+		if err != nil || n < 1 {
+			commands.Fail("say which line: orgs code at %s:42", file)
+		}
+		req.Line = n - 1
+	}
+	res, err := commands.SendReceivePostErr[common.BabelExec, common.BabelExecResult](core, "babel/exec", &req)
+	if err == commands.ErrDryRun {
+		return
+	}
+	if err != nil {
+		commands.Fail("orgs code: %v", err)
+	}
+	commands.RenderOne(res, func() {
+		for _, r := range res.Ran {
+			what := r.Kind
+			if r.Name != "" {
+				what += " " + r.Name
+			}
+			if !r.Result.Ok {
+				fmt.Printf("%s✗%s %d %s  %s\n", commands.C(commands.AnsiRed), commands.C(commands.AnsiReset),
+					r.Line+1, what, r.Result.Msg)
+				if s := strings.TrimSpace(r.Result.Stderr); s != "" {
+					fmt.Fprintf(os.Stderr, "%s%s%s\n", commands.C(commands.AnsiGold), s, commands.C(commands.AnsiReset))
+				}
+				continue
+			}
+			mark := "ran"
+			if r.Written {
+				mark = "written"
+			}
+			fmt.Printf("%s✓%s %d %s %s(%s)%s\n", commands.C(commands.AnsiGreen), commands.C(commands.AnsiReset),
+				r.Line+1, what, commands.C(commands.AnsiDim), mark, commands.C(commands.AnsiReset))
+			if !all {
+				out := r.Result.Result
+				if self.Raw || out == "" {
+					out = r.Result.Raw
+				}
+				if strings.TrimSpace(out) != "" {
+					fmt.Println(strings.TrimRight(out, "\n"))
+				}
+			}
+		}
+		if len(res.Ran) == 0 && res.Msg != "" {
+			fmt.Fprintln(os.Stderr, res.Msg)
+		}
+	})
+	if !res.Ok {
+		os.Exit(1)
 	}
 }
 

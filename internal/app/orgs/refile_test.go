@@ -244,3 +244,36 @@ func TestMoveBatchSkipsADescendantOfAnotherSource(t *testing.T) {
 		t.Errorf("Gamma child appears %d times, want 1:\n%s", n, got)
 	}
 }
+
+// An archive file sits beside the file it came out of, whatever name that
+// file was loaded by. %s used to be filled in with the whole path, so a file
+// loaded as arch/a.org archived into arch/arch/a.org_archive.
+func TestTheArchiveFileIsBesideItsFile(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "arch"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "arch", "a.org"), []byte("* DONE One\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	was, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(was)
+	old := Conf().ArchiveDefaultTarget
+	Conf().ArchiveDefaultTarget = "%s_archive::"
+	defer func() { Conf().ArchiveDefaultTarget = old }()
+
+	fresh := NewOrgDb()
+	odb = fresh
+	fresh.LoadFile("arch/a.org", true)
+	got := FindArchiveTarget(db, &common.Target{Type: "file+olp", Filename: "arch/a.org", Id: "One"})
+	if got == nil {
+		t.Fatal("no archive target")
+	}
+	want, _ := filepath.Abs(filepath.Join("arch", "a.org_archive"))
+	if got.Filename != want {
+		t.Errorf("archive file: got %s, want %s", got.Filename, want)
+	}
+}

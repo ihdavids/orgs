@@ -8,6 +8,8 @@ package tables
 //	orgs tables show expenses         one table, drawn
 //	orgs tables eval expenses         run its formulas and write the result back
 //	orgs tables ls -json              for a program to read
+//	orgs tables import data.csv notes.org -header -name sales
+//	                                  a csv (or tsv, or - for stdin) as a table
 //
 // This is worg's Tables tab as a picker. What makes a table worth a view of its
 // own rather than a grep is the same thing that makes a source block worth one:
@@ -19,6 +21,7 @@ package tables
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -39,6 +42,13 @@ type Tables struct {
 	Formula bool
 	Eval    bool
 	Open    bool
+
+	// import
+	Header bool
+	Name   string
+	Sep    string
+	At     int
+	Under  string
 }
 
 func (self *Tables) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -54,6 +64,11 @@ func (self *Tables) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Formula, "formulas", false, "show each table's formulas in the listing")
 	fset.BoolVar(&self.Eval, "eval", false, "run the formulas and write the values back")
 	fset.BoolVar(&self.Open, "open", false, "open what was picked in your editor instead")
+	fset.BoolVar(&self.Header, "header", false, "import: the first row is the header, with a rule under it")
+	fset.StringVar(&self.Name, "name", "", "import: a #+NAME: for the new table")
+	fset.StringVar(&self.Sep, "sep", "", "import: the separator (, ; | tab); guessed when not given")
+	fset.IntVar(&self.At, "at", 0, "import: put the table after this line (1 based) rather than at the end")
+	fset.StringVar(&self.Under, "under", "", "import: put the table under the heading with this hash")
 }
 
 func (self *Tables) Exec(core *commands.Core) {
@@ -63,7 +78,7 @@ func (self *Tables) Exec(core *commands.Core) {
 	sub := ""
 	if len(words) > 0 {
 		switch strings.ToLower(words[0]) {
-		case "ls", "list", "pick", "show", "cat", "eval", "exec", "preview":
+		case "ls", "list", "pick", "show", "cat", "eval", "exec", "preview", "import":
 			sub = strings.ToLower(words[0])
 			words = words[1:]
 		}
@@ -79,11 +94,53 @@ func (self *Tables) Exec(core *commands.Core) {
 		self.evaluate(core, firstNonEmpty(free, self.Query))
 	case "preview":
 		self.preview(core)
+	case "import":
+		self.importCsv(core, words)
 	default:
 		// Bare `orgs tables` is the picker. `orgs tables budget` narrows it,
 		// the way `orgs code python` does.
 		self.pick(core, firstNonEmpty(free, self.Query))
 	}
+}
+
+// ---------------------------------------------------------------------------
+// import
+// ---------------------------------------------------------------------------
+
+// A delimited file read here and written into an org file there as a table.
+// The text travels rather than the path, because the server may be another
+// machine and the csv is usually in Downloads.
+func (self *Tables) importCsv(core *commands.Core, words []string) {
+	if len(words) < 1 || (len(words) < 2 && self.Under == "") {
+		commands.Fail("orgs tables import data.csv notes.org  (or - for stdin; -under HASH for a heading)")
+	}
+	var data []byte
+	var err error
+	if words[0] == "-" {
+		data, err = io.ReadAll(os.Stdin)
+	} else {
+		data, err = os.ReadFile(words[0])
+	}
+	if err != nil {
+		commands.Fail("could not read %s: %v", words[0], err)
+	}
+	req := common.TableImport{Text: string(data), Header: self.Header, Name: self.Name,
+		Separator: self.Sep, AfterLine: -1, Hash: self.Under}
+	if len(words) > 1 {
+		req.Filename = commands.ResolveOrgFile(core, words[1])
+	}
+	if self.At > 0 {
+		req.AfterLine = self.At - 1
+	}
+	var reply common.ResultMsg
+	commands.SendReceivePost(core, "table/import", &req, &reply)
+	if commands.DryRun {
+		return
+	}
+	if !reply.Ok {
+		commands.Fail("%s", reply.Msg)
+	}
+	commands.RenderOne(reply, func() { fmt.Println(reply.Msg) })
 }
 
 // ---------------------------------------------------------------------------

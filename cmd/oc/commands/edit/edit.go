@@ -37,6 +37,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -979,6 +980,8 @@ func askBox(t common.Todo, boxes []checkBox) []checkBox {
 
 type Remove struct {
 	tf commands.TargetFlags
+	// orgs archive -done: every finished heading, in the files named or all.
+	Done bool
 	// Which endpoint: "archive" moves the subtree to the archive file, "delete"
 	// does not.
 	How     string
@@ -989,6 +992,10 @@ func (self *Remove) Unmarshal(u func(interface{}) error) error { return u(self) 
 func (self *Remove) StartPlugin(m *common.PluginManager)       {}
 
 func (self *Remove) SetupParameters(fset *flag.FlagSet) {
+	if self.How == "archive" {
+		fset.BoolVar(&self.Done, "done", false,
+			"every heading on a finished keyword (DONE, CANCELLED...), in the files named or in all of them")
+	}
 	commands.AddTargetFlags(fset, &self.tf)
 }
 
@@ -1003,6 +1010,20 @@ func (self *Remove) label() string {
 
 func (self *Remove) Exec(core *commands.Core) {
 	words := commands.FreeArgs(commands.Find(self.cmdName).Flags)
+
+	// org's archive-all-done: the words name files, and the query is ours.
+	if self.Done {
+		q := "IsDone() && !IsArchived()"
+		if len(words) > 0 {
+			files := []string{}
+			for _, f := range commands.ResolveOrgFiles(core, words) {
+				files = append(files, `InFile("^`+regexp.QuoteMeta(f)+`$")`)
+			}
+			q += " && (" + strings.Join(files, " || ") + ")"
+		}
+		words = []string{q}
+		self.tf.All = true
+	}
 
 	todos := commands.Resolve(core, &self.tf, words, commands.TargetOpts{
 		Prompt: self.label() + "> ",
@@ -1026,6 +1047,44 @@ func (self *Remove) Exec(core *commands.Core) {
 			commands.Fail("nothing was %sd", what)
 		}
 	}
+
+	// Several archives are one /move: an edit to a file can change the hash
+	// of every heading after it, so the server resolves them all first.
+	if self.How == "archive" && len(todos) > 1 {
+		req := common.MoveRequest{Op: common.MoveArchive}
+		for _, t := range todos {
+			req.From = append(req.From, common.Target{Id: t.Hash, Type: "hash"})
+		}
+		var reply common.MoveResponse
+		commands.SendReceivePost(core, "move", &req, &reply)
+		if commands.DryRun {
+			return
+		}
+		lines := []string{}
+		for _, r := range reply.Results {
+			switch {
+			case r.Skipped:
+				lines = append(lines, r.Headline+" (went with its parent)")
+			case !r.Ok:
+				fmt.Fprintf(os.Stderr, "could not archive %s: %s\n", r.Headline, r.Msg)
+			default:
+				lines = append(lines, r.Headline)
+			}
+		}
+		commands.Ok(reply.Done, "archived", lines)
+		if !reply.Ok {
+			os.Exit(1)
+		}
+		return
+	}
+	// Deleted from the bottom of each file up, which leaves the hashes of the
+	// headings above each deletion as they were.
+	sort.SliceStable(todos, func(a, b int) bool {
+		if todos[a].Filename != todos[b].Filename {
+			return todos[a].Filename < todos[b].Filename
+		}
+		return todos[a].LineNum > todos[b].LineNum
+	})
 
 	lines := []string{}
 	for _, t := range todos {

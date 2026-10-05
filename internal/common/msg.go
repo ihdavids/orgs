@@ -18,6 +18,9 @@ type ClockEntry struct {
 	Filename string  `json:"filename"`
 	Level    int     `json:"level"`
 	Mins     float64 `json:"mins"`
+	// Each clock line's part of the range, oldest first: what a timesheet
+	// gantt draws.
+	Sessions []ClockSpan `json:"sessions,omitempty"`
 }
 
 type LogbookEntry struct {
@@ -35,6 +38,9 @@ type ClockReport struct {
 	Entries  []ClockEntry `json:"entries"`
 	TotalMin float64      `json:"totalMin"`
 	Block    string       `json:"block"`
+	// Why there is no report: a range nobody can read. Without it a typo in
+	// the range read as a week with nothing clocked.
+	Error string `json:"error,omitempty"`
 }
 
 type FileList []string

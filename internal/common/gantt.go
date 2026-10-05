@@ -71,6 +71,17 @@ type GanttTask struct {
 	// the query did find comes after it. It is drawn so the chain reads, but it
 	// is not part of the answer to the question that was asked.
 	Implied bool
+
+	// The time actually clocked on this heading itself, one entry per CLOCK
+	// line, oldest first: what was done, to draw against what was planned.
+	Clocked []ClockSpan
+}
+
+// One stretch of clocked time. End is empty while the clock is still running.
+type ClockSpan struct {
+	Start string // YYYY-MM-DDTHH:MM, local time
+	End   string
+	Mins  float64
 }
 
 // The answer to /gantt/tasks.

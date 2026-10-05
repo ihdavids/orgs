@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -290,33 +291,128 @@ func (self *Fmt) check(core *commands.Core, files []string) {
 // against what the server is watching, so `orgs fmt todo.org` works from any
 // directory.
 func (self *Fmt) resolve(core *commands.Core, words []string) []string {
-	known := commands.SendReceiveGetOr[common.FileList](core, "files", nil)
-	out := []string{}
-	for _, w := range words {
-		if abs, err := filepath.Abs(w); err == nil {
-			if _, err := os.Stat(abs); err == nil {
-				out = append(out, abs)
-				continue
-			}
-		}
-		hit := false
-		for _, k := range known {
-			if k == w || filepath.Base(k) == w || strings.HasSuffix(k, "/"+w) {
-				out = append(out, k)
-				hit = true
-			}
-		}
-		if !hit {
-			commands.Fail("no org file called %s", w)
-		}
-	}
-	return out
+	return commands.ResolveOrgFiles(core, words)
 }
 
 const fmtUsage = `  orgs fmt todo.org                normalise one file
   orgs fmt -all                    every file the server watches
   orgs fmt -check -all             write nothing, exit 1 if any would change
   orgs fmt -check todo.org         what a pre-commit hook wants`
+
+// ---------------------------------------------------------------------------
+// orgs dblock
+// ---------------------------------------------------------------------------
+
+// DBlock refreshes dynamic blocks: the clock tables, column views and query
+// tables a file asks the server to write into it.
+type DBlock struct {
+	All  bool
+	Name string
+}
+
+func (self *DBlock) Unmarshal(u func(interface{}) error) error { return u(self) }
+func (self *DBlock) StartPlugin(m *common.PluginManager)       {}
+
+func (self *DBlock) SetupParameters(fset *flag.FlagSet) {
+	fset.BoolVar(&self.All, "all", false, "every block in every file the server watches")
+	fset.StringVar(&self.Name, "name", "", "only blocks of this kind (clocktable, columnview, query, ...)")
+}
+
+func (self *DBlock) Exec(core *commands.Core) {
+	words := commands.FreeArgs(commands.Find("dblock").Flags)
+	if len(words) > 0 && (words[0] == "ls" || words[0] == "list") {
+		self.list(core, words[1:])
+		return
+	}
+
+	req := common.DynBlockRequest{All: true, Name: self.Name}
+	switch {
+	case len(words) == 0 && self.All:
+	case len(words) == 0:
+		commands.Fail("orgs dblock: say which file.\n\n%s", dblockUsage)
+	default:
+		// notes.org:12 and notes.org 12 both name the block holding line 12.
+		file, line := words[0], ""
+		if i := strings.LastIndex(file, ":"); i > 0 {
+			if _, err := strconv.Atoi(file[i+1:]); err == nil {
+				file, line = file[:i], file[i+1:]
+			}
+		}
+		if len(words) > 1 {
+			line = words[1]
+		}
+		req.Filename = self.resolveOne(core, file)
+		if line != "" {
+			n, err := strconv.Atoi(line)
+			if err != nil || n < 1 {
+				commands.Fail("%q is not a line number", line)
+			}
+			req.All, req.Line = false, n-1
+		}
+	}
+
+	var reply common.DynBlocksResult
+	commands.SendReceivePost(core, "dblocks/update", &req, &reply)
+	if commands.DryRun {
+		return
+	}
+	commands.RenderOne(reply, func() {
+		for _, f := range reply.Files {
+			for _, b := range f.Blocks {
+				mark, note := commands.C(commands.AnsiGreen)+"✓", ""
+				if !b.Ok {
+					mark, note = commands.C(commands.AnsiRed)+"✗", "  "+b.Msg
+				}
+				fmt.Printf("%s%s %s:%d %s%s\n", mark, commands.C(commands.AnsiReset),
+					filepath.Base(f.File), b.Line+1, b.Name, note)
+			}
+		}
+		if len(reply.Files) == 0 && reply.Ok {
+			fmt.Println("no dynamic blocks found")
+		} else if reply.Ok {
+			fmt.Fprintln(os.Stderr, reply.Msg)
+		}
+	})
+	if !reply.Ok {
+		if len(reply.Files) == 0 {
+			commands.Fail("%s", reply.Msg)
+		}
+		os.Exit(1)
+	}
+}
+
+func (self *DBlock) list(core *commands.Core, words []string) {
+	params := map[string]string{}
+	if len(words) > 0 {
+		params["file"] = self.resolveOne(core, words[0])
+	}
+	var reply common.DynBlocksResult
+	commands.SendReceiveGet(core, "dblocks", params, &reply)
+	if !reply.Ok {
+		commands.Fail("%s", reply.Msg)
+	}
+	commands.RenderOne(reply, func() {
+		for _, f := range reply.Files {
+			for _, b := range f.Blocks {
+				where := ""
+				if b.Heading != "" {
+					where = "  (under " + b.Heading + ")"
+				}
+				fmt.Printf("%s:%d\t%s %s%s\n", f.File, b.Line+1, b.Name, b.Header, where)
+			}
+		}
+	})
+}
+
+func (self *DBlock) resolveOne(core *commands.Core, word string) string {
+	return commands.ResolveOrgFile(core, word)
+}
+
+const dblockUsage = `  orgs dblock notes.org            every block in the file
+  orgs dblock notes.org:12         the block holding line 12
+  orgs dblock -all                 every block anywhere
+  orgs dblock -all -name clocktable
+  orgs dblock ls [notes.org]       where the blocks are`
 
 // ---------------------------------------------------------------------------
 // orgs tags
@@ -686,6 +782,8 @@ func max(a, b int) int {
 func init() {
 	commands.AddCmd("tangle", "write a file's source blocks out as files",
 		func() commands.Cmd { return &Tangle{} })
+	commands.AddCmd("dblock", "refresh the #+BEGIN: blocks (clocktable, columnview, query) in a file",
+		func() commands.Cmd { return &DBlock{} })
 	commands.AddCmd("fmt", "normalise org files, or check that they already are",
 		func() commands.Cmd { return &Fmt{} })
 	commands.AddCmd("tags", "every tag in the database",

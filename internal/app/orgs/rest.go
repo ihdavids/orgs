@@ -62,6 +62,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dirs", RequestDirs)
 	api.HandleFunc("/newtemplates", RequestNewTemplates)
 	api.HandleFunc("/file/{type}", RequestFile)                   // html etc
+	api.HandleFunc("/pandoc", RequestPandoc).Methods("GET")
 	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                    // Get all stored filters from the server
 	api.HandleFunc("/html/themes", RequestHtmlThemes)             // The themes the html exporter can render with
@@ -119,6 +120,9 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/clock", RequestClock)
 	api.HandleFunc("/clockreport", RequestClockReport)
 	api.HandleFunc("/execb", PostExecb).Methods("POST")
+	api.HandleFunc("/babel/exec", PostBabelExec).Methods("POST")
+	api.HandleFunc("/dblocks", RequestDynBlocks).Methods("GET")
+	api.HandleFunc("/dblocks/update", PostDynBlocksUpdate).Methods("POST")
 	api.HandleFunc("/exectable", PostExect).Methods("POST")
 	api.HandleFunc("/execalltables", PostExecAllT).Methods("POST")
 	api.HandleFunc("/tableformulainfo", PostFormulaInfo).Methods("POST")
@@ -133,6 +137,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/table", RequestTable).Methods("GET")
 	api.HandleFunc("/table", PostTable).Methods("POST")
 	api.HandleFunc("/table/eval", PostTableEval).Methods("POST")
+	api.HandleFunc("/table/import", PostTableImport).Methods("POST")
 	api.HandleFunc("/tangle", RequestTangle)
 
 	// Every source block in the database, read rather than merely located.
@@ -668,6 +673,7 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	props["parent"] = r.URL.Query().Get("parent")
 	props["printable"] = r.URL.Query().Get("printable")
 	props["theme"] = r.URL.Query().Get("theme")
+	props["to"] = r.URL.Query().Get("to")
 	props["backdrop"] = r.URL.Query().Get("backdrop")
 	props["backdropCycle"] = r.URL.Query().Get("backdropCycle")
 	props["backdropOpacity"] = r.URL.Query().Get("backdropOpacity")

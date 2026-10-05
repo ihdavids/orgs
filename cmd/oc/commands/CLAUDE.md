@@ -150,3 +150,13 @@ Query and filter are separate on purpose: the **query** costs a request and can 
 1. **The filter's haystack is the file's base name, never its path**: fuzzy matching ignores letter distance, so a long shared absolute path matches nearly anything (under `/Users/someone/dev/notes`, `mig` found every heading). The base name is also what people mean.
 2. **The keyword menu asks `/status/{hash}`** on open, not the last query's keywords, because the heading's file may have its own `#+TODO:` and a keyword it lacks will not read back. Same rule as worg's kanban.
 3. **Opening an editor suspends the app** (`app.Suspend`): editor and tview both want the terminal and the loser draws over the other.
+
+## Commands from the orgextended pass
+
+- **`orgs dblock FILE[:LINE]`**, `-all`, `-name clocktable`, `ls` - `/dblocks/update`, `/dblocks`.
+- **`orgs code at FILE:LINE`** (block, `#+CALL:` or inline code, written as C-c C-c would) and **`orgs code all FILE`** - `/babel/exec`; `-no-write` runs without writing. `orgs code run -w` writes a block's result.
+- **`orgs tables import data.csv notes.org`** (`-header`, `-name`, `-sep`, `-at LINE`, `-under HASH`, `-` for stdin) - the text travels, not the path, because the server may be another machine.
+- **`orgs archive -done [files]`** - `IsDone() && !IsArchived()`, narrowed by `InFile`. Several archives are **one `/move`**; `orgs rm` deletes bottom-up (see **Traps: hashes**).
+- **`orgs clocktable -mermaid`** - a mermaid gantt, a bar per clocked sitting. `-block` takes org's whole range grammar now.
+- **`orgs export -f docx|odt|epub|rst|…`** - any format in `pandocFormats` goes to `/pandoc` (or `-f pandoc -to X`); a binary format with no `-out` is named after the file rather than dumped on the terminal.
+- `commands.ResolveOrgFiles`/`ResolveOrgFile` (`orgfiles.go`) turn typed names into the server's files; `orgs fmt`, `dblock`, `code at`, `tables import` share them.

@@ -86,6 +86,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -615,9 +616,16 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			return strings.TrimSpace(p.Headline.Status) != "", nil
 		},
 		"IsPartOfProject": func(args ...interface{}) (interface{}, error) {
-			p := exp.Sec
-			//p := args[0].(*org.Section)
-			return IsPartOfProject(p, args[0].(string), exp.File), nil
+			// Without an argument: part of any project. It used to index
+			// args[0] regardless and panic, so `IsPartOfProject()` answered
+			// nothing at all.
+			re := ""
+			if len(args) > 0 {
+				if s, ok := args[0].(string); ok {
+					re = s
+				}
+			}
+			return IsPartOfProject(exp.Sec, re, exp.File), nil
 		},
 		"IsBlockedProject": func(args ...interface{}) (interface{}, error) {
 			// The argument is optional. It was required, and unused - so
@@ -732,6 +740,34 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"IsTask": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			return (!IsArchived(p, exp.Doc) && !IsProject(p, exp.File) && IsTodoStatus(p, exp.File)), nil
+		},
+		// A heading on one of its file's finished keywords (DONE, CANCELLED,
+		// what #+TODO puts after the bar): what an archive sweep looks for.
+		"IsDone": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			if p == nil || p.Headline == nil || p.Headline.Status == "" {
+				return false, nil
+			}
+			_, done := ValidStatusFromFile(exp.File)
+			return contains(done, p.Headline.Status), nil
+		},
+		// InFile("work") - the heading's file's path matches the expression,
+		// so a sweep can be kept to one file.
+		"InFile": func(args ...interface{}) (interface{}, error) {
+			if len(args) < 1 || exp.File == nil {
+				return false, nil
+			}
+			re, err := regexp.Compile(fmt.Sprint(args[0]))
+			if err != nil {
+				return false, err
+			}
+			if re.MatchString(exp.File.Filename) {
+				return true, nil
+			}
+			// A file loaded by a relative name is still that file to somebody
+			// who names it by its absolute path.
+			abs, err := filepath.Abs(exp.File.Filename)
+			return err == nil && re.MatchString(abs), nil
 		},
 		// Check if a headline is in the archived state or not
 		"IsArchived": func(args ...interface{}) (interface{}, error) {

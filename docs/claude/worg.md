@@ -125,3 +125,9 @@ The Org view has an **Edit** button (offered in no other view) that swaps `OrgSo
 - **The Outline view** (`outlineDiff`) matches headings by ID, then by place (outline path), then by unique title elsewhere (refiled), then by likeness under the same parent (renamed), and reports each change in org terms (keyword with a tone: completed/reopened; priority; tags; SCHEDULED/DEADLINE/CLOSED; properties; body and logbook line counts; refile; promote/demote). Removed headings are put back where they stood. Clicking a heading opens the text view at it, opening the fold that hides it.
 - Colours come from the reader's **org theme** (`diffColors`), like the Org view.
 - Joy's `ToggleButtonGroup` reads `value` off its **direct children**: a `Tooltip` around a button silently breaks the toggle. Use `title` instead.
+
+## Actual time on the gantt, and C-c |
+
+- The Gantt tab's Options has **Actual time** (React renderer): a mark under each bar per clocked sitting, at its own times, from `/gantt/tasks`' `Clocked` (`clockedSpans`/`clockedSummary` in `gantt.ts`, tested in `ganttplan.test.ts`). Stamps are read as local time - `new Date('2026-10-04')` is UTC and moves evening work a day. Marks are clipped to the chart, which is laid out from the plan. Saved with the view as `actual` (Go field `Actual` in `ganttviews.go`, or it is dropped on save).
+- The editor's **C-c |** / `SPC |` is `tableFromText` in `orgcmds.ts`: with no region (the editor commands get a cursor, not a selection) it turns the paragraph at the cursor into a table, split as org splits - tabs if every line has one, commas if every line has one, else spaces; a blank line starts an empty table. Listed in `docs/editor.org`.
+- `IsDone` and `InFile` were added to `QUERY_FUNCTIONS` (see **Traps: logic said twice**).

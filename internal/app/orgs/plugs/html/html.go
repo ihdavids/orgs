@@ -702,7 +702,7 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 		// nothing to do with it writes nothing, so a file that does not say
 		// one is not a blank line anywhere.
 		self.Props["subtitle"] = f.Get("SUBTITLE")
-		theme := f.Get("HTML_THEME")
+		theme := themeAlias(f.Get("HTML_THEME"), f.Get("SETUPFILE"))
 		// This overrides the theme if present
 		style := f.Get("HTML_STYLE")
 		// A caller can ask for a theme of its own, which wins over what the file
@@ -951,4 +951,32 @@ func (self *OrgHtmlExporter) ThemeStyle(theme string) string {
 	}
 	fontfamily, _ := self.Props["fontfamily"].(string)
 	return GetStylesheet(name, fontfamily)
+}
+
+// The org-html-themes names (fniessen's, which Emacs users pick with a
+// #+SETUPFILE: line) and what orgs has that looks like each. ReadTheOrg is the
+// read-the-docs theme ported to org, which is what rtd is; bigblow is a
+// contents rail beside the document, which is docs.
+var themeAliases = map[string]string{
+	"readtheorg": "rtd", "readtheorg_inline": "rtd", "readthedocs": "rtd",
+	"bigblow": "docs", "bigblow_inline": "docs",
+}
+
+var setupThemeRe = regexp.MustCompile(`theme-([A-Za-z_]+)\.setup`)
+
+// The theme a file asks for, by name or by the setup file Emacs would use.
+func themeAlias(theme, setupfile string) string {
+	t := strings.ToLower(strings.TrimSpace(theme))
+	if t == "" {
+		if m := setupThemeRe.FindStringSubmatch(setupfile); m != nil {
+			t = strings.ToLower(m[1])
+		}
+	}
+	if a, ok := themeAliases[t]; ok {
+		return a
+	}
+	if t == "" {
+		return strings.TrimSpace(theme)
+	}
+	return t
 }

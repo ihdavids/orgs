@@ -4,6 +4,7 @@ package orgs
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -39,7 +40,29 @@ func FindArchiveTarget(db common.ODb, tgt *common.Target) *common.Target {
 		fname := ""
 		isSameFile := false
 		if fname_temp != "" {
-			fname = fmt.Sprintf(fname_temp, fromFile.Filename)
+			// As org reads it: %s is the file's name without its directory, and
+			// a relative result is beside the file. Filling in the whole path
+			// put a file loaded as notes/a.org into notes/notes/a.org_archive.
+			src := fromFile.Filename
+			if abs, err := filepath.Abs(src); err == nil {
+				src = abs
+			}
+			if strings.Contains(fname_temp, "%s") {
+				fname = fmt.Sprintf(fname_temp, filepath.Base(src))
+			} else {
+				fname = fname_temp
+			}
+			if strings.HasPrefix(fname, "~/") {
+				if home, err := os.UserHomeDir(); err == nil {
+					fname = filepath.Join(home, fname[2:])
+				}
+			}
+			if !filepath.IsAbs(fname) {
+				fname = filepath.Join(filepath.Dir(src), fname)
+			}
+			if fname == src {
+				isSameFile = true
+			}
 		} else {
 			fname = fromFile.Filename
 			isSameFile = true

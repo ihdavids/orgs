@@ -20,6 +20,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -105,7 +106,29 @@ func ganttTaskFrom(d common.ODb, have map[string]*common.Todo, td *common.Todo, 
 			t.HasOrder = true
 		}
 	}
+	if sec := GetDb().FindByHash(td.Hash); sec != nil && sec.Headline != nil {
+		t.Clocked = clockSpans(sec.Headline)
+	}
 	return t
+}
+
+// A heading's own clock lines as spans, oldest first.
+func clockSpans(h *org.Headline) []common.ClockSpan {
+	out := []common.ClockSpan{}
+	now := time.Now()
+	for _, c := range h.Clocks {
+		if c == nil || c.Date == nil || c.Date.Start.IsZero() {
+			continue
+		}
+		span := common.ClockSpan{Start: c.Date.Start.Format("2006-01-02T15:04")}
+		if !c.Date.End.IsZero() {
+			span.End = c.Date.End.Format("2006-01-02T15:04")
+		}
+		span.Mins = clockMinsIn(c, clockRange{}, now)
+		out = append(out, span)
+	}
+	sort.SliceStable(out, func(a, b int) bool { return out[a].Start < out[b].Start })
+	return out
 }
 
 /* SDOC: API

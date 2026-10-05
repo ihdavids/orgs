@@ -49,6 +49,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -72,13 +73,41 @@ type runner struct {
 	// path is appended to the command instead of being piped in.
 	ext string
 	// How to write a variable binding. Nil means this language is run without
-	// its variables; see the doc block.
-	bind func(name string, v common.CodeVar, names map[string]*common.CodeBlock) string
+	// its variables; see the doc block. rows is the table the variable names,
+	// nil when it names none.
+	bind func(name string, v common.CodeVar, rows [][]string) string
 	// Whether `:results value` needs the body wrapped so the return can be
 	// printed.
 	wrapValue func(code string) string
 	// What this language does when nothing says otherwise.
 	defaultCollect string
+	// Set for a language whose program draws a picture (dot, plantuml,
+	// gnuplot...). Its result is the picture, written where :file says.
+	picture *picture
+	// What :cmdline is when the block does not say: the query for a ledger.
+	defaultCmdline string
+	// The program prints csv, which comes back as a table.
+	csvOut bool
+}
+
+// How a drawing language is told where to draw.
+type picture struct {
+	// Arguments put after the command, given the file the code was written to
+	// (empty when it is piped in) and the picture's path.
+	args func(in, out string) []string
+	// The program writes the picture to standard output rather than to a path.
+	toStdout bool
+	// The code rewritten to say where to draw, for a language that says it in
+	// the program rather than on the command line.
+	prepare func(code, out string) string
+}
+
+// The picture format a :file name asks for: png for plot.png.
+func pictureFormat(out string) string {
+	if e := strings.TrimPrefix(strings.ToLower(filepath.Ext(out)), "."); e != "" {
+		return e
+	}
+	return "png"
 }
 
 var runners = map[string]runner{
@@ -100,6 +129,47 @@ var runners = map[string]runner{
 	// they run without their variables rather than pretending.
 	"go":   {cmd: []string{"go", "run"}, ext: ".go", defaultCollect: "output"},
 	"lisp": {cmd: []string{"emacs", "-Q", "--batch", "--script"}, ext: ".el", defaultCollect: "output"},
+	"powershell": {
+		cmd: []string{"pwsh", "-NoProfile", "-NonInteractive", "-Command", "-"},
+		bind: bindPowershell, defaultCollect: "output",
+	},
+
+	// The ones that draw. Each needs :file, which is where the picture goes and
+	// what the result links to.
+	"dot": {cmd: []string{"dot"}, defaultCollect: "output", picture: &picture{
+		args: func(in, out string) []string { return []string{"-T" + pictureFormat(out), "-o", out} },
+	}},
+	"plantuml": {cmd: []string{"plantuml"}, defaultCollect: "output", picture: &picture{
+		args:     func(in, out string) []string { return []string{"-pipe", "-t" + pictureFormat(out)} },
+		toStdout: true,
+		// Org adds the start and end lines when the block leaves them out.
+		prepare: func(code, out string) string {
+			if strings.Contains(code, "@start") {
+				return code
+			}
+			return "@startuml\n" + code + "\n@enduml\n"
+		},
+	}},
+	"ditaa": {cmd: []string{"ditaa"}, ext: ".txt", defaultCollect: "output", picture: &picture{
+		args: func(in, out string) []string { return []string{in, out, "-o"} },
+	}},
+	"mermaid": {cmd: []string{"mmdc"}, ext: ".mmd", defaultCollect: "output", picture: &picture{
+		args: func(in, out string) []string { return []string{"-i", in, "-o", out} },
+	}},
+	// Ledgers, as ob-ledger runs them: the block is the journal, :cmdline
+	// is what to ask of it.
+	"beancount": {cmd: []string{"bean-query", "-f", "csv"}, ext: ".beancount", defaultCollect: "output",
+		defaultCmdline: "BALANCES", csvOut: true},
+	"ledger": {cmd: []string{"ledger", "-f"}, ext: ".ledger", defaultCollect: "output", defaultCmdline: "bal"},
+	"gnuplot": {cmd: []string{"gnuplot"}, bind: bindGnuplot, defaultCollect: "output", picture: &picture{
+		prepare: func(code, out string) string {
+			term := map[string]string{"svg": "svg", "pdf": "pdfcairo", "eps": "postscript eps", "jpg": "jpeg", "jpeg": "jpeg", "gif": "gif"}[pictureFormat(out)]
+			if term == "" {
+				term = "png"
+			}
+			return "set terminal " + term + "\nset output " + quoteDouble(out) + "\n" + code
+		},
+	}},
 }
 
 // The names people write, and the runner each one means. Shares the highlighter's
@@ -110,6 +180,9 @@ var runnerAliases = map[string]string{
 	"js": "javascript", "node": "javascript",
 	"rb": "ruby", "elisp": "lisp", "emacs-lisp": "lisp", "golang": "go",
 	"rscript": "r",
+	"pwsh": "powershell", "ps1": "powershell", "posh": "powershell",
+	"graphviz": "dot", "mmd": "mermaid", "puml": "plantuml",
+	"bean": "beancount", "hledger": "ledger",
 }
 
 func runnerFor(lang string) (runner, string, bool) {
@@ -233,28 +306,27 @@ func quoteSingle(s string) string {
 	return `'` + strings.ReplaceAll(s, `'`, `'\''`) + `'`
 }
 
-func bindPython(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	return name + " = " + literalOf(v, varRows(v), quoteDouble, "[", "]", ", ")
+func bindPython(name string, v common.CodeVar, rows [][]string) string {
+	return name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ")
 }
 
-func bindJs(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	return "const " + name + " = " + literalOf(v, varRows(v), quoteDouble, "[", "]", ", ") + ";"
+func bindJs(name string, v common.CodeVar, rows [][]string) string {
+	return "const " + name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ") + ";"
 }
 
-func bindRuby(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	return name + " = " + literalOf(v, varRows(v), quoteDouble, "[", "]", ", ")
+func bindRuby(name string, v common.CodeVar, rows [][]string) string {
+	return name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ")
 }
 
-func bindLua(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	return "local " + name + " = " + literalOf(v, varRows(v), quoteDouble, "{", "}", ", ")
+func bindLua(name string, v common.CodeVar, rows [][]string) string {
+	return "local " + name + " = " + literalOf(v, rows, quoteDouble, "{", "}", ", ")
 }
 
-func bindPerl(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	return "my $" + name + " = " + literalOf(v, varRows(v), quoteDouble, "[", "]", ", ") + ";"
+func bindPerl(name string, v common.CodeVar, rows [][]string) string {
+	return "my $" + name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ") + ";"
 }
 
-func bindR(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	rows := varRows(v)
+func bindR(name string, v common.CodeVar, rows [][]string) string {
 	if rows == nil {
 		return name + " <- " + literalOf(v, nil, quoteDouble, "c(", ")", ", ")
 	}
@@ -269,10 +341,23 @@ func bindR(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string
 	return name + " <- list(" + strings.Join(cols, ", ") + ")"
 }
 
+func bindPowershell(name string, v common.CodeVar, rows [][]string) string {
+	if rows == nil {
+		return "$" + name + " = " + literalOf(v, nil, quoteDouble, "", "", "")
+	}
+	return "$" + name + " = " + literalOf(v, rows, quoteDouble, "@(", ")", ", ")
+}
+
+// gnuplot reads a table from a file, so a table variable arrives here already
+// written to one (runJob does it) and is bound as the file's name - which is
+// what org does, and what makes `plot data using 1:2` work.
+func bindGnuplot(name string, v common.CodeVar, rows [][]string) string {
+	return name + " = " + literalOf(v, nil, quoteDouble, "", "", "")
+}
+
 // A shell gets scalars as variables and a table as tab separated text, which
 // is the shape every tool in a pipeline already reads.
-func bindShell(name string, v common.CodeVar, _ map[string]*common.CodeBlock) string {
-	rows := varRows(v)
+func bindShell(name string, v common.CodeVar, rows [][]string) string {
 	if rows == nil {
 		return name + "=" + quoteSingle(strings.Trim(strings.TrimSpace(v.Value), `"'`))
 	}
@@ -281,18 +366,6 @@ func bindShell(name string, v common.CodeVar, _ map[string]*common.CodeBlock) st
 		lines = append(lines, strings.Join(row, "\t"))
 	}
 	return name + "=" + quoteSingle(strings.Join(lines, "\n"))
-}
-
-// The rows of the table a variable points at, or nil when it does not point at
-// one. Held on the variable by the run request so that the same walk that
-// resolved the reference is the one that reads it.
-var varTables = map[string][][]string{}
-
-func varRows(v common.CodeVar) [][]string {
-	if v.RefKind != "table" {
-		return nil
-	}
-	return varTables[v.RefFile+"#"+v.Ref]
 }
 
 // ----------------------------------------------------------------------------
@@ -322,31 +395,40 @@ type babelOutcome struct {
 	took   time.Duration
 }
 
-func runProgram(r runner, program string, dir string, timeout time.Duration) (babelOutcome, error) {
-	out := babelOutcome{}
+// runProgram runs a program. out is the picture's path for a language that
+// draws, and empty otherwise.
+func runProgram(r runner, program string, dir string, timeout time.Duration, out string, extra ...string) (babelOutcome, error) {
+	res := babelOutcome{}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	args := append([]string{}, r.cmd[1:]...)
-	var tmp string
+	in := ""
 	if r.ext != "" {
 		d, err := os.MkdirTemp("", "orgsbabel")
 		if err != nil {
-			return out, err
+			return res, err
 		}
 		defer os.RemoveAll(d)
-		tmp = filepath.Join(d, "block"+r.ext)
-		if err := os.WriteFile(tmp, []byte(program), 0600); err != nil {
-			return out, err
+		in = filepath.Join(d, "block"+r.ext)
+		if err := os.WriteFile(in, []byte(program), 0600); err != nil {
+			return res, err
 		}
-		args = append(args, tmp)
 	}
+	switch {
+	case r.picture != nil && r.picture.args != nil:
+		args = append(args, r.picture.args(in, out)...)
+	case in != "":
+		args = append(args, in)
+	}
+	// :cmdline, after the code's file the way org puts it.
+	args = append(args, extra...)
 
 	cmd := exec.CommandContext(ctx, r.cmd[0], args...)
 	if dir != "" {
 		cmd.Dir = dir
 	}
-	if r.ext == "" {
+	if in == "" {
 		cmd.Stdin = strings.NewReader(program)
 	}
 	var so, se bytes.Buffer
@@ -355,22 +437,32 @@ func runProgram(r runner, program string, dir string, timeout time.Duration) (ba
 
 	start := time.Now()
 	err := cmd.Run()
-	out.took = time.Since(start)
-	out.stdout = so.String()
-	out.stderr = se.String()
+	res.took = time.Since(start)
+	res.stdout = so.String()
+	res.stderr = se.String()
 
 	if ctx.Err() == context.DeadlineExceeded {
-		out.code = -1
-		return out, fmt.Errorf("it was still running after %s and was stopped", timeout)
+		res.code = -1
+		return res, fmt.Errorf("it was still running after %s and was stopped", timeout)
 	}
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok {
-			out.code = ee.ExitCode()
-			return out, nil
+			res.code = ee.ExitCode()
+			return res, nil
 		}
-		return out, err
+		if errors.Is(err, exec.ErrNotFound) {
+			return res, fmt.Errorf("%s is not installed here (or not on the server's PATH). "+
+				"Say where it is in orgs.yaml:\n\n  babel:\n    commands:\n      <language>: [\"/path/to/%s\"]", r.cmd[0], r.cmd[0])
+		}
+		return res, err
 	}
-	return out, nil
+	if r.picture != nil && r.picture.toStdout {
+		if err := os.WriteFile(out, so.Bytes(), 0644); err != nil {
+			return res, err
+		}
+		res.stdout = ""
+	}
+	return res, nil
 }
 
 // ----------------------------------------------------------------------------
@@ -603,125 +695,28 @@ func orgTableText(rows [][]string) string {
 // The endpoint
 // ----------------------------------------------------------------------------
 
-// RunBlock runs one block and reads what came back.
+// RunBlock runs one block and reads what came back, writing it into the file
+// under the block when asked to.
 func RunBlock(req *common.CodeRun) (common.CodeResult, error) {
-	res := common.CodeResult{}
 	block, f, err := findCodeBlock(req.Filename, req.Id)
 	if err != nil {
-		return res, err
+		return common.CodeResult{}, err
 	}
-	code := block.Code
+	job := jobForBlock(block, f)
 	if req.SetCode {
 		// Running what is in the editor, before it has been saved. A run is
 		// the fastest way to find out whether an edit works, and making
 		// somebody save first to find out is the wrong order.
-		code = req.Code
+		job.Code = req.Code
 	}
-
-	r, err := babelAllows(block.Lang)
-	if err != nil {
+	res, err := runJob(job)
+	if err != nil || !req.Write || !res.Ok {
 		return res, err
 	}
-
-	// The tables the variables point at, read now so the bindings can be
-	// written from them.
-	loadVarTables(block, f)
-
-	want := []string{}
-	for _, a := range block.Args {
-		if a.Key == "results" {
-			want = append(want, strings.Fields(strings.ToLower(a.Value))...)
-		}
+	if err := writeBlockResult(block, job, &res); err != nil {
+		res.Msg = "ran, but the result could not be written: " + err.Error()
 	}
-	collect := r.defaultCollect
-	for _, w := range want {
-		if w == "output" || w == "value" {
-			collect = w
-		}
-	}
-
-	program := code
-	if collect == "value" && r.wrapValue != nil {
-		program = r.wrapValue(program)
-	}
-	if r.bind != nil && len(block.Vars) > 0 {
-		pre := []string{}
-		for _, v := range block.Vars {
-			if v.Name == "" {
-				continue
-			}
-			pre = append(pre, r.bind(v.Name, v, nil))
-		}
-		if len(pre) > 0 {
-			program = strings.Join(pre, "\n") + "\n" + program
-		}
-	}
-
-	timeout := time.Duration(Conf().Server.Babel.Timeout) * time.Second
-	if timeout <= 0 {
-		timeout = 30 * time.Second
-	}
-	// Run it beside the file it came out of, so a relative path in the code
-	// means what it means when the file is read.
-	dir := filepath.Dir(block.Filename)
-
-	out, rerr := runProgram(r, program, dir, timeout)
-	res.Seconds = out.took.Seconds()
-	res.Stderr = strings.TrimRight(out.stderr, "\n")
-	res.Code = out.code
-	if rerr != nil {
-		res.Msg = rerr.Error()
-		return res, nil
-	}
-
-	text := out.stdout
-	if strings.TrimSpace(text) == "" && out.code != 0 {
-		// Nothing on stdout and a non-zero exit: what there is to show is what
-		// went wrong.
-		res.Ok = false
-		res.Kind = "text"
-		res.Result = ""
-		res.Msg = fmt.Sprintf("exit %d", out.code)
-		return res, nil
-	}
-	res.Ok = out.code == 0
-	if !res.Ok {
-		res.Msg = fmt.Sprintf("exit %d", out.code)
-	}
-	res.Kind = babelShape(want, text)
-	res.Result = babelFormat(res.Kind, text)
-	res.Raw = strings.TrimRight(text, "\n")
-	// A result that names a file is only half an answer until somebody can see
-	// what is in it.
-	describeResultFile(&res, block.Filename)
 	return res, nil
-}
-
-// The tables this block's variables name, read out of the file they live in.
-func loadVarTables(block *common.CodeBlock, f *common.OrgFile) {
-	varTables = map[string][][]string{}
-	if f == nil || f.Doc == nil {
-		return
-	}
-	for _, v := range block.Vars {
-		if v.RefKind != "table" || v.Ref == "" {
-			continue
-		}
-		for _, ref := range collectFileTables(f) {
-			if ref.Name != v.Ref {
-				continue
-			}
-			rows := [][]string{}
-			for _, row := range tableRows(ref.Table) {
-				if row.Kind == "sep" {
-					continue
-				}
-				rows = append(rows, row.Cells)
-			}
-			varTables[v.RefFile+"#"+v.Ref] = rows
-			break
-		}
-	}
 }
 
 // findCodeBlock is the block a request names: a file and the ordinal /code

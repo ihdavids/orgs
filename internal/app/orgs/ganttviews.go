@@ -78,6 +78,8 @@ type GanttView struct {
 	// that names the person (ASSIGNED when empty).
 	Workload     bool   `yaml:"workload,omitempty" json:"workload,omitempty"`
 	WorkloadProp string `yaml:"workloadProp,omitempty" json:"workloadProp,omitempty"`
+	// The time clocked on each task, drawn under its bar.
+	Actual bool `yaml:"actual,omitempty" json:"actual,omitempty"`
 	// Snapshots of the plan's dates, and the one drawn under the bars.
 	Baselines []GanttBaseline `yaml:"baselines,omitempty" json:"baselines,omitempty"`
 	Baseline  string          `yaml:"baseline,omitempty" json:"baseline,omitempty"`

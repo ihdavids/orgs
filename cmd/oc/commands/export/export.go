@@ -28,9 +28,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	"github.com/ihdavids/orgs/internal/app/orgs/plugs/pandoc"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -50,6 +52,7 @@ type Export struct {
 	HttpsLinks bool
 	List       bool
 	ListThemes bool
+	To         string
 }
 
 func (self *Export) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -70,6 +73,7 @@ func (self *Export) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.HttpsLinks, "httpslinks", false, "write links as https urls to this server")
 	fset.BoolVar(&self.List, "list", false, "what this server can export to")
 	fset.BoolVar(&self.ListThemes, "list-themes", false, "what the html exporter can wear")
+	fset.StringVar(&self.To, "to", "", "with -f pandoc: the format pandoc writes (docx, odt, epub, rst, ...)")
 }
 
 func (self *Export) Exec(core *commands.Core) {
@@ -89,6 +93,10 @@ func (self *Export) Exec(core *commands.Core) {
 	}
 	if strings.EqualFold(self.Format, "pdf") {
 		self.pdf(core)
+		return
+	}
+	if to := self.pandocFormat(); to != "" {
+		self.pandoc(core, to)
 		return
 	}
 	self.run(core)
@@ -209,6 +217,50 @@ func (self *Export) pdf(core *commands.Core) {
 	self.deliver(body)
 }
 
+// The formats that are pandoc's rather than an exporter of orgs' own.
+var pandocFormats = map[string]bool{
+	"docx": true, "word": true, "odt": true, "epub": true, "epub2": true, "epub3": true, "pptx": true,
+	"rtf": true, "rst": true, "mediawiki": true, "wiki": true, "asciidoc": true, "adoc": true,
+	"plain": true, "txt": true, "textile": true, "dokuwiki": true, "jira": true, "man": true,
+	"typst": true, "docbook": true, "icml": true, "opml": true, "commonmark": true, "gfm": true,
+	"ipynb": true, "texinfo": true, "fb2": true,
+}
+
+// What pandoc should write, or "" when this export is not pandoc's.
+func (self *Export) pandocFormat() string {
+	f := strings.ToLower(self.Format)
+	if f == "pandoc" {
+		if self.To == "" {
+			commands.Fail("orgs export -f pandoc: say which format with -to (docx, odt, epub, rst, ...)")
+		}
+		return self.To
+	}
+	if pandocFormats[f] {
+		return f
+	}
+	return ""
+}
+
+// pandoc answers with bytes, as a pdf does, so it has its own endpoint.
+func (self *Export) pandoc(core *commands.Core, to string) {
+	if self.Local {
+		commands.Fail("orgs export -f %s: -local is not supported for pandoc formats; -out writes here", to)
+	}
+	if self.Filename == "" && pandoc.IsBinary(to) {
+		// A docx on a terminal is noise; one named after the file is what was meant.
+		base := filepath.Base(self.Query)
+		self.Filename = strings.TrimSuffix(base, filepath.Ext(base)) + "." + pandoc.Extension(to)
+	}
+	body, _, status, err := core.Rest.GetRaw("pandoc", map[string]string{"filename": self.Query, "to": to})
+	if err != nil {
+		commands.Fail("orgs export: %v", err)
+	}
+	if status >= 400 {
+		commands.Fail("orgs export -f %s: %s", to, strings.TrimSpace(string(body)))
+	}
+	self.deliver(body)
+}
+
 // Where the bytes end up: a file when -out was given, stdout otherwise, and
 // both when -stdout was asked for as well.
 func (self *Export) deliver(body []byte) {
@@ -242,6 +294,7 @@ func has(vs []string, want string) bool {
 const usage = `  orgs export -f html notes.org -out notes.html
   orgs export -f html notes.org -theme docs        (to stdout)
   orgs export -f pdf  adventure.org -out book.pdf
+  orgs export -f docx notes.org                    (pandoc: docx, odt, epub, rst, ...)
   orgs export -f mermaid -query 'IsTask()' -out plan.mmd
   orgs export -list          what this server can export to
   orgs export -list-themes   what the html exporter can wear

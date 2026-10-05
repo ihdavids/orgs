@@ -24,7 +24,8 @@ var blockChoices = []string{
 }
 
 type ClockTable struct {
-	Block string
+	Block   string
+	Mermaid bool
 }
 
 func (self *ClockTable) Unmarshal(unmarshal func(interface{}) error) error {
@@ -35,7 +36,9 @@ func (self *ClockTable) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *ClockTable) SetupParameters(fset *flag.FlagSet) {
-	fset.StringVar(&self.Block, "block", "", "time range (today, yesterday, thisweek, lastweek, thismonth, lastmonth)")
+	fset.StringVar(&self.Block, "block", "", "time range (today, yesterday, thisweek, lastweek, thismonth, lastmonth,\n"+
+		"thisyear, today-3, thisweek-2, untilnow, 2026-10-04, 2026-10, 2026-W40, 2026-Q3, 2026)")
+	fset.BoolVar(&self.Mermaid, "mermaid", false, "print the time as a mermaid gantt chart: a bar for every time something was clocked")
 }
 
 func fmtDuration(mins float64) string {
@@ -71,6 +74,13 @@ func (self *ClockTable) Exec(core *commands.Core) {
 	// The whole report rather than the rows: the totals are the point of a
 	// clock table and a caller reading json should not have to add them up.
 	if commands.RenderOne(report, nil) {
+		return
+	}
+	if report.Error != "" {
+		commands.Fail("%s", report.Error)
+	}
+	if self.Mermaid {
+		fmt.Print(timesheetMermaid(report, block))
 		return
 	}
 	if len(report.Entries) == 0 {
@@ -145,6 +155,47 @@ func (self *ClockTable) Exec(core *commands.Core) {
 		fmt.Println(divider)
 	}
 	fmt.Println()
+}
+
+// A timesheet as a mermaid gantt chart: a section per file and a bar per
+// sitting, at the time it happened. Paste it into a #+BEGIN_SRC mermaid block,
+// or anywhere else mermaid is drawn.
+func timesheetMermaid(report common.ClockReport, block string) string {
+	var b strings.Builder
+	b.WriteString("gantt\n")
+	b.WriteString("    title Time clocked: " + block + "\n")
+	b.WriteString("    dateFormat YYYY-MM-DD HH:mm\n")
+	b.WriteString("    axisFormat %a %d\n")
+	byFile := map[string][]common.ClockEntry{}
+	files := []string{}
+	for _, e := range report.Entries {
+		if _, ok := byFile[e.Filename]; !ok {
+			files = append(files, e.Filename)
+		}
+		byFile[e.Filename] = append(byFile[e.Filename], e)
+	}
+	sort.Strings(files)
+	// Mermaid reads a colon as the start of the task's data, and a hash as a
+	// comment.
+	clean := strings.NewReplacer(":", " ", "#", "", ";", ",")
+	for _, f := range files {
+		b.WriteString("    section " + clean.Replace(strings.TrimSuffix(filepath.Base(f), ".org")) + "\n")
+		for _, e := range byFile[f] {
+			for _, s := range e.Sessions {
+				mins := int(math.Round(s.Mins))
+				if mins < 1 {
+					mins = 1
+				}
+				state := "done, "
+				if s.End == "" {
+					state = "active, "
+				}
+				b.WriteString(fmt.Sprintf("    %s :%s%s, %dm\n", clean.Replace(e.Headline), state,
+					strings.Replace(s.Start, "T", " ", 1), mins))
+			}
+		}
+	}
+	return b.String()
 }
 
 // init function is called at boot
