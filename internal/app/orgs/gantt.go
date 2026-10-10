@@ -50,7 +50,31 @@ func ganttDateKind(hash string) string {
 	return ""
 }
 
-func ganttTaskFrom(d common.ODb, have map[string]*common.Todo, td *common.Todo, implied bool) common.GanttTask {
+// maps a depdency to the hash the query result set carries for it,
+// so an AFTER/ORDERED arrow always points at the bar the chart actually drew,
+// The dependency resolver reaches a heading through the id/hash indexes, which
+// fill in lazily and survive reload, so the hash it hands back can be stale;
+// the id and custom-id a task was found under do not drift, so they are what
+// re-anchor it. Without this a heading the query *did* find whowed up a second time
+// as Implied
+func canonHash(canon map[string]string, dep *common.Todo) string {
+	if h, ok := canon[dep.Hash]; ok {
+		return h
+	}
+	if id := dep.Props["ID"]; id != "" {
+		if h, ok := canon[id]; ok {
+			return h
+		}
+	}
+	if cid := dep.Props["CUSTOM_ID"]; cid != "" {
+		if h, ok := canon[cid]; ok {
+			return h
+		}
+	}
+	return dep.Hash
+}
+
+func ganttTaskFrom(d common.ODb, have map[string]*common.Todo, cannon map[string]string, td *common.Todo, implied bool) common.GanttTask {
 	t := common.GanttTask{
 		Hash: td.Hash, Headline: strings.TrimSpace(td.Headline), Filename: td.Filename,
 		LineNum: td.LineNum, Level: td.Level, Parent: td.Parent, Status: td.Status,
@@ -77,7 +101,7 @@ func ganttTaskFrom(d common.ODb, have map[string]*common.Todo, td *common.Todo, 
 	}
 
 	if dep := mermaid.After(have, d, td); dep != nil && dep.Hash != td.Hash {
-		t.After = dep.Hash
+		t.After = canonHash(cannon, dep)
 	}
 	t.AfterId = td.Props["AFTER"]
 	_, t.Ordered = td.Props["ORDERED"]
@@ -131,7 +155,9 @@ func clockSpans(h *org.Headline) []common.ClockSpan {
 	return out
 }
 
-/* SDOC: API
+/*
+	SDOC: API
+
 * GET /gantt/tasks — The Schedule Behind a Gantt Chart
 
 	Every heading a query finds, with the things a gantt chart needs to draw it
@@ -155,7 +181,9 @@ func clockSpans(h *org.Headline) []common.ClockSpan {
 
 	A task the query did not find but something it did find comes =after= is
 	included with ="Implied": true=, so the chain reads end to end.
-EDOC */
+
+EDOC
+*/
 func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 	res := common.GanttData{Ok: false, Query: query, Tasks: []common.GanttTask{}}
@@ -174,26 +202,59 @@ func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 	for i := range tds {
 		have[tds[i].Hash] = &tds[i]
 	}
+	// Every way an AFTER/ORDERED chain can make a heading the query found,
+	// mapped to the one hash that heading's bar is drawn under, so a dependency
+	// resolved through a stale index is re-anchored rather than mistake for a
+	// task from outside the query
+	canon := map[string]string{}
+	for i := range tds {
+		td := &tds[i]
+		canon[td.Hash] = td.Hash
+		if id := td.Props["ID"]; id != "" {
+			canon[id] = td.Hash
+		}
+		if cid := td.Props["CUSTOM_ID"]; cid != "" {
+			canon[cid] = td.Hash
+		}
+	}
 	seen := map[string]bool{}
+	// Every heading the query found first, so an AFTER reference to any of them
+	// - earlier or later in the list - resolves against the whole set and none is
+	// pulled in a second time as implied
 	for i := range tds {
 		td := &tds[i]
 		if seen[td.Hash] {
 			continue
 		}
 		seen[td.Hash] = true
-		t := ganttTaskFrom(db, have, td, false)
-		res.Tasks = append(res.Tasks, t)
-		// Walk the chain back so a task that waits on something outside the
-		// query still has something to be drawn after.
-		for dep := t.After; dep != "" && !seen[dep]; {
-			d := db.FindByHash(dep)
-			if d == nil || d.Hash == "" {
-				break
-			}
-			seen[dep] = true
-			dt := ganttTaskFrom(db, have, d, true)
-			res.Tasks = append(res.Tasks, dt)
-			dep = dt.After
+		res.Tasks = append(res.Tasks, ganttTaskFrom(db, have, canon, td, false))
+	}
+	// Then pull in anything a found task comes after that the query did not
+	// find, following each chain to its end so it reads end to end. A found
+	// tasks's After is already canonicalizsed, so a dependency that is itself in
+	// the query is marked seen and skipped here.
+	queue := []string{}
+	for i := range res.Tasks {
+		if a := res.Tasks[i].After; a != "" {
+			queue = append(queue, a)
+		}
+	}
+	for len(queue) > 0 {
+		dep := queue[0]
+		queue = queue[1:]
+		if dep == "" || seen[dep] {
+			continue
+		}
+		seen[dep] = true
+		d := db.FindByHash(dep)
+		if d == nil || d.Hash == "" {
+			continue
+		}
+		seen[d.Hash] = true
+		dt := ganttTaskFrom(db, have, canon, d, true)
+		res.Tasks = append(res.Tasks, dt)
+		if dt.After != "" {
+			queue = append(queue, dt.After)
 		}
 	}
 	res.Ok = true
@@ -255,7 +316,9 @@ func ganttNewLines(lvl int, a *common.GanttAdd) []string {
 	return lines
 }
 
-/* SDOC: API
+/*
+	SDOC: API
+
 * POST /gantt/add — Add a Task to a Schedule
 
 	Writes a new heading, either under a heading given by hash or at the end of
@@ -280,7 +343,9 @@ func ganttNewLines(lvl int, a *common.GanttAdd) []string {
 	| =Props=      | map    | Extra properties, written into the drawer.              |
 
 	*Response:* A =ResultMsg=.
-EDOC */
+
+EDOC
+*/
 func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var args common.GanttAdd
