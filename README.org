@@ -19,3 +19,23 @@
                        refer to these tools when they think of Org Mode.
 
     
+* What it looks like
+
+  =orgs= is a server that watches a directory of org files, a command line
+  that talks to it, and worg, a web front end the server hands out itself.
+
+  #+CAPTION: worg's agenda: habits, the day as a planner, and the tasks still to place
+  [[file:docs/images/worg-agenda.png]]
+
+  #+CAPTION: The same notes as a kanban board, in worg and in a terminal
+  [[file:docs/images/worg-kanban.png]]
+
+  [[file:docs/images/cli-kanban.png]]
+
+  #+CAPTION: A saved query as a gantt chart
+  [[file:docs/images/worg-gantt.png]]
+
+  #+CAPTION: orgs gantt
+  [[file:docs/images/cli-gantt.png]]
+
+  More in [[file:docs/worg.org][worg, in pictures]] and [[file:docs/cli.org][the command line, in pictures]].
