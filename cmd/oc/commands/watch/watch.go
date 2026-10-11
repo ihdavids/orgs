@@ -47,7 +47,7 @@ func (self *Watch) StartPlugin(m *common.PluginManager)       {}
 
 func (self *Watch) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.Kinds, "kinds", "",
-		"only these events, comma separated: reload, clockin, clockout")
+		"only these events, comma separated: reload, clockin, clockout, querymatch")
 	fset.StringVar(&self.OnEach, "exec", "",
 		"run this shell command on each change; {} becomes the file that changed")
 	fset.StringVar(&self.File, "file", "",
@@ -138,7 +138,10 @@ func (self *Watch) report(e common.OrgEvent) {
 		at = t.Format("15:04:05")
 	}
 	what := e.File
-	if what == "" {
+	if e.Kind == "querymatch" {
+		// A watched query (orgs q watch): which one, and what it found.
+		what = e.Label + " · " + e.Msg
+	} else if what == "" {
 		what = e.Msg
 	} else {
 		what = commands.BaseName(what)
@@ -183,6 +186,8 @@ func kindInk(kind string) string {
 		return commands.AnsiGreen
 	case "clockout":
 		return commands.AnsiGold
+	case "querymatch":
+		return commands.AnsiPurple
 	}
 	return commands.AnsiDim
 }

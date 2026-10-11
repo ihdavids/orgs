@@ -424,6 +424,7 @@ func (self *Config) ParseConfig() {
 		manager.LinkProtocols = self.Server.LinkProtocols
 	}
 	config.PlugManager = manager
+	installPluginHooks(manager) // plughooks.go: status changes and line writes for pollers
 	if self.Server != nil {
 		for _, pd := range self.Server.Plugins {
 			plugOpts := common.PluginOpts{}

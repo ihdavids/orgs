@@ -280,7 +280,16 @@ var functions map[string]govaluate.ExpressionFunction = map[string]govaluate.Exp
 	"vcount":    vcount,
 	"rand":      tblRand,
 	"passed":    tblPassed,
-	"highlight": tblHighlight, // Only exists for compatibilty with sublime text
+	"highlight": tblHighlight,
+	"gradient":  tblGradient,
+	"red":       tblColor("red"),
+	"green":     tblColor("green"),
+	"yellow":    tblColor("yellow"),
+	"blue":      tblColor("blue"),
+	"cyan":      tblColor("cyan"),
+	"purple":    tblColor("purple"),
+	"orange":    tblColor("orange"),
+	"pink":      tblColor("pink"),
 	// Date methods
 	"now":         tblNow,
 	"date":        tblDate,
@@ -1151,15 +1160,64 @@ func tblRand(args ...interface{}) (interface{}, error) {
 	return rand.Float64(), nil
 }
 
-// This does nothing at the moment!
-// It exists for compatibility with sublime text at the moment.
-// Some day we might have it export ascii character codes for console highlight
-// or something.
+// A value with a colour for its cell: what highlight() and its friends
+// answer. ExecuteFormula writes the value and keeps the colour for whoever asked
+// for the table to be worked out - an editor showing it, say.
+type cellColor struct {
+	Value interface{}
+	Color string
+}
+
+// highlight(cell, color[, value]): the cell's value, or value, shown in color.
+// The first argument is only there so formulas written for sublime still read.
 func tblHighlight(args ...interface{}) (interface{}, error) {
-	if len(args) >= 3 {
-		return args[2], nil
+	if len(args) < 2 {
+		return nil, fmt.Errorf("highlight expects (cell, color[, value])")
 	}
-	return "", nil
+	val := args[0]
+	if len(args) >= 3 {
+		val = args[2]
+	}
+	return cellColor{Value: val, Color: fmt.Sprint(args[1])}, nil
+}
+
+// red(cell[, value]) and the rest: highlight with the colour in the name.
+func tblColor(color string) govaluate.ExpressionFunction {
+	return func(args ...interface{}) (interface{}, error) {
+		if len(args) < 1 {
+			return nil, fmt.Errorf("%s expects (cell[, value])", color)
+		}
+		val := args[0]
+		if len(args) >= 2 {
+			val = args[1]
+		}
+		return cellColor{Value: val, Color: color}, nil
+	}
+}
+
+// gradient(cell, progress, colors...): progress from 0 to 100 picks a colour
+// along the list, so a column of percentages reads at a glance.
+func tblGradient(args ...interface{}) (interface{}, error) {
+	if len(args) < 3 {
+		return nil, fmt.Errorf("gradient expects (cell, progress, color, color...)")
+	}
+	p := args[1]
+	if t, ok := p.(*RangeIter); ok {
+		p = t.NextVal()
+	}
+	progress, ok := cellFloat(p)
+	if !ok {
+		return args[0], nil
+	}
+	colors := args[2:]
+	idx := int(progress / 100.0 * float64(len(colors)))
+	if idx >= len(colors) {
+		idx = len(colors) - 1
+	}
+	if idx < 0 {
+		idx = 0
+	}
+	return cellColor{Value: args[0], Color: fmt.Sprint(colors[idx])}, nil
 }
 
 func tblNow(args ...interface{}) (interface{}, error) {

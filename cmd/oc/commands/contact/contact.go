@@ -9,6 +9,7 @@ package contact
 //	orgs contact edit jane           change a field on one
 //	orgs contact birthdays           who is next, and how long
 //	orgs contact collections         what else is being kept
+//	orgs contact import a.vcf        people from Apple, Google or Outlook
 //
 // Contacts are records of type "contact" and nothing else, so every one of
 // these takes -type to work on another collection: `orgs contact find -type
@@ -56,6 +57,7 @@ type Contact struct {
 	Notes  bool
 	Plain  bool
 	Open   bool
+	Mode   string
 	Fields stringList
 }
 
@@ -87,6 +89,7 @@ func (self *Contact) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Plain, "plain", false, "no colour, one record per line, for piping")
 	fset.BoolVar(&self.Open, "open", false, "open the record in your editor")
 	fset.Var(&self.Fields, "set", "NAME=value to write when adding (repeatable)")
+	fset.StringVar(&self.Mode, "mode", "merge", "import: merge (fill in what is missing), skip (leave known people alone) or overwrite")
 }
 
 func (self *Contact) Exec(core *commands.Core) {
@@ -137,6 +140,8 @@ func (self *Contact) Exec(core *commands.Core) {
 		self.birthdays(core)
 	case "collections", "types":
 		self.collections(core)
+	case "import":
+		self.importCards(core, words)
 	default:
 		fmt.Printf("orgs contact: no subcommand %q\n\n", sub)
 		fmt.Print(usage)
@@ -150,10 +155,14 @@ const usage = `  orgs contact [list]              everybody, one line each
   orgs contact edit <text>         change a field on one
   orgs contact birthdays           who is next
   orgs contact collections         what else is being kept
+  orgs contact import <a.vcf>...   people from a vCard file (Apple, Google, Outlook)
 
   -type <name>   work on another collection (equipment, wine, ...)
   -all           show every field rather than the useful ones
   -plain         no colour, one record per line
+  -mode <m>      import: merge (default), skip or overwrite
+  -file <f.org>  where new people go when the collection has no home
+  -dry-run       import: show what would change and write nothing
 `
 
 func firstNonEmpty(vals ...string) string {

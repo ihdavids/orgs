@@ -32,11 +32,22 @@ package tui
 // last query happened to turn up: a heading's own file may declare its own
 // `#+TODO:`, and offering a keyword that file does not have is offering to
 // write something org will not read back. Same rule worg's kanban follows.
+//
+// ---------------------------------------------------------------------------
+// Encrypted headings
+//
+// A heading whose body is org-crypt ciphertext shows a lock instead of forty
+// lines of base64. `x` reveals it into the body pane - asking for the
+// passphrase in a masked box unless the server is holding one - and `x` again
+// hides it. The plaintext lives in one field of this struct and nowhere else:
+// moving to another row, `L` (lock), or a few minutes untouched drops it, and
+// nothing is ever written to disk. `E` encrypts the heading under the cursor.
 
 import (
 	"flag"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/cmd/oc/commands"
@@ -67,6 +78,16 @@ type Tui struct {
 	filter  string
 	showing bool // is the preview pane up
 	err     string
+
+	crypt  common.CryptState
+	secret *revealed // the one heading revealed right now, if any
+}
+
+// What a reveal handed back, held only while it is on screen.
+type revealed struct {
+	hash  string
+	text  string
+	timer *time.Timer
 }
 
 func (self *Tui) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -85,6 +106,11 @@ func (self *Tui) Exec(core *commands.Core) {
 		commands.Fail("orgs tui is a screen, not an answer — use `orgs search` for -json and -format")
 	}
 	self.core = core
+	// Which tag marks a secret and whether the server holds passphrases. A
+	// server too old to say is treated as having no crypt at all.
+	if st, err := commands.SendReceiveGetErr[common.CryptState](core, "crypt/state", nil); err == nil && st.Ok {
+		self.crypt = st
+	}
 	self.build()
 	self.reload()
 	if err := self.app.SetRoot(self.pages, true).EnableMouse(true).Run(); err != nil {
@@ -105,7 +131,14 @@ func (self *Tui) build() {
 	self.preview.SetBorder(true).SetTitle(" body ")
 
 	self.table = tview.NewTable().SetSelectable(true, false).SetFixed(1, 0)
-	self.table.SetSelectionChangedFunc(func(row, col int) { self.refreshPreview() })
+	self.table.SetSelectionChangedFunc(func(row, col int) {
+		// A secret is shown for the heading it was revealed for and no other:
+		// moving off it is putting it away.
+		if t, ok := self.current(); self.secret != nil && (!ok || t.Hash != self.secret.hash) {
+			self.hide()
+		}
+		self.refreshPreview()
+	})
 
 	// The input sits under the header and is only given a height when it is
 	// being typed into. A box that is always there is a box that is always
@@ -141,7 +174,8 @@ func (self *Tui) drawHead() {
 func (self *Tui) drawStatus() {
 	self.status.SetText(
 		" [darkcyan]enter[-] open  [darkcyan]t[-] keyword  [darkcyan]/[-] filter  " +
-			"[darkcyan]:[-] query  [darkcyan]v[-] body  [darkcyan]r[-] reload  [darkcyan]q[-] quit")
+			"[darkcyan]:[-] query  [darkcyan]v[-] body  [darkcyan]x[-] reveal  [darkcyan]E[-] encrypt  [darkcyan]L[-] lock  " +
+			"[darkcyan]r[-] reload  [darkcyan]q[-] quit")
 }
 
 // ---------------------------------------------------------------------------
@@ -200,7 +234,11 @@ func (self *Tui) fill() {
 			pri = "#" + t.Priority
 		}
 		self.table.SetCell(i, 1, cell(pri, tcell.ColorOrangeRed).SetMaxWidth(3))
-		self.table.SetCell(i, 2, cell(t.Headline, tcell.ColorWhite).SetExpansion(1))
+		head := t.Headline
+		if self.isCrypt(t) {
+			head = "🔒 " + head
+		}
+		self.table.SetCell(i, 2, cell(head, tcell.ColorWhite).SetExpansion(1))
 		tags := ""
 		if len(t.Tags) > 0 {
 			tags = ":" + strings.Join(t.Tags, ":") + ":"
@@ -282,10 +320,25 @@ func (self *Tui) refreshPreview() {
 		self.preview.SetText("[red]" + tview.Escape(err.Error()) + "[-]")
 	case !res.Ok && res.Msg != "":
 		self.preview.SetText("[red]" + tview.Escape(res.Msg) + "[-]")
+	case encrypted(res.Text):
+		head, _, _ := splitSecret(res.Text)
+		lead := tview.Escape(head)
+		if lead != "" {
+			lead += "\n\n"
+		}
+		if self.secret != nil && self.secret.hash == t.Hash {
+			self.preview.SetText(lead + "[yellow::b]🔓 revealed[-::-] [gray]x hides it[-]\n\n" + tview.Escape(self.secret.text))
+		} else {
+			self.preview.SetText(lead + "[yellow::b]🔒 Encrypted[-::-] [gray]— x reveals it[-]")
+		}
 	case strings.TrimSpace(res.Text) == "":
 		self.preview.SetText("[gray](nothing written under this heading)[-]")
 	default:
-		self.preview.SetText(tview.Escape(res.Text))
+		text := tview.Escape(res.Text)
+		if self.isCrypt(t) {
+			text = "[orange]tagged :" + self.crypt.Tag + ": but in the clear — E encrypts it[-]\n\n" + text
+		}
+		self.preview.SetText(text)
 	}
 	self.preview.ScrollToBeginning()
 }
@@ -342,6 +395,12 @@ func (self *Tui) keys(ev *tcell.EventKey) *tcell.EventKey {
 		self.togglePreview()
 	case 'r':
 		self.reload()
+	case 'x':
+		self.toggleReveal()
+	case 'E':
+		self.encrypt()
+	case 'L':
+		self.lock()
 	case 'g':
 		if len(self.rows) > 0 {
 			self.table.Select(0, 0)

@@ -332,6 +332,37 @@
   Deleting a record is =/delete= with its hash, like any other heading: a
   record is a heading and nothing about it needs a delete of its own.
 
+* Importing contacts from Apple, Google or Outlook
+
+  Export a vCard (=.vcf=) file - Apple Contacts: select the people, File →
+  Export → Export vCard; Google Contacts: Export → vCard - and import it:
+
+  #+BEGIN_EXAMPLE
+  orgs contact import contacts.vcf -dry-run     what would happen, nothing written
+  orgs contact import contacts.vcf              add the new, fill in the known
+  orgs contact import contacts.vcf -mode skip   leave people already here alone
+  orgs contact import old.vcf -mode overwrite   the card wins where they differ
+  #+END_EXAMPLE
+
+  or use the *Import* button on worg's Contacts tab, which shows the same plan
+  before anything is written.
+
+  A person is recognised by the card's UID (kept as =VCARD_UID=), then by any
+  email address, then by name. The default, /merge/, never changes a value you
+  have: it adds what is missing, files a second email beside the first
+  (=EMAIL_WORK_2=), and tells you about a birthday or company that differs
+  rather than writing it. Notes are appended only when they are new, so
+  importing the same file again changes nothing. Photos are saved in
+  =images/contacts/= beside the org file and linked from =IMAGE=, and each
+  record's history says the change came from the import.
+
+  The card's fields become =EMAIL=, =EMAIL_WORK=, =PHONE_MOBILE=, =PHONE_HOME=,
+  =FAX_WORK=, =ADDRESS_HOME=, =BIRTHDAY= (=--05-15= when the year is not
+  known), =ANNIVERSARY=, =COMPANY=, =DEPARTMENT=, =TITLE=, =NICKNAME=,
+  =WEBSITE=, =LINKEDIN= / =TWITTER= / =GITHUB= and the other networks,
+  =IM_SKYPE=, =RELATED_SPOUSE=, and a custom label becomes the field's label
+  (=EMAIL_OLD_WORK=). Categories become tags.
+
 * How the writing works, and why
 
   Every write here is a *line edit* on the file rather than a rewrite of the

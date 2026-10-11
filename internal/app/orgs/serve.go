@@ -244,6 +244,15 @@ func StartServer(sets *common.ServerSettings) {
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
+	// The ports actually served. The plugin manager copied them when the yaml
+	// was read, before `-port` had its say, and a notification's link to worg
+	// then pointed at a port nothing was listening on.
+	if m := Conf().PlugManager; m != nil {
+		m.Port, m.TLSPort = sets.Port, sets.TLSPort
+	}
+	if Conf().Server != nil && Conf().Server != sets {
+		Conf().Server.Port, Conf().Server.TLSPort = sets.Port, sets.TLSPort
+	}
 	// The configured users, now that there is a configuration to read the
 	// path out of - and then, unmissably, whether they are any good.
 	LoadKeystore()
@@ -380,6 +389,7 @@ func StartServer(sets *common.ServerSettings) {
 	}
 	StopWhisper()
 	StopTrigramIndex()
+	StopBabelSessions()
 	stopPlugins(sets)
 }
 

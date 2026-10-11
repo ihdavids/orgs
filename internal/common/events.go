@@ -31,6 +31,19 @@ type OrgEvent struct {
 	Msg      string `json:"msg,omitempty"`
 	Index    uint64 `json:"index"`
 	At       string `json:"at"`
+	// A `querymatch` (see querywatch.go).
+	Watch    string       `json:"watch,omitempty"`
+	Label    string       `json:"label,omitempty"`
+	Count    int          `json:"count,omitempty"`
+	Notice   string       `json:"notice,omitempty"`
+	Headings []WatchMatch `json:"headings,omitempty"`
+	Left     []WatchMatch `json:"left,omitempty"`
+	// A `notify`: a notification ready to show (Msg is its body).
+	Title   string `json:"title,omitempty"`
+	URL     string `json:"url,omitempty"`
+	Group   string `json:"group,omitempty"`
+	Urgency string `json:"urgency,omitempty"`
+	Sound   bool   `json:"sound,omitempty"`
 }
 
 // EventOpts is what to watch and how loudly to complain about losing it.

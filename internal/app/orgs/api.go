@@ -4,6 +4,7 @@ package orgs
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ihdavids/orgs/internal/common"
 )
@@ -33,6 +34,11 @@ func (s *Db) QueryTodosExpr(args string) (common.Todos, error) {
 	var reply common.Todos = nil
 	err := db.QueryTodosExp(&query, &reply)
 	return reply, err
+}
+
+func (s *Db) Agenda(from, to, today time.Time, query string) (common.AgendaResult, error) {
+	r := agendaRules{From: agendaDayNum(from), To: agendaDayNum(to), Today: agendaDayNum(today), WarnDays: agendaWarnDays()}
+	return buildAgenda(expandQueryFilters(query), r, time.Now())
 }
 
 func (s *Db) QueryFullTodo(args *common.TodoHash, reply *common.FullTodo) error {

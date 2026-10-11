@@ -54,10 +54,18 @@ func (self *OrgsClock) GetTime() *org.OrgDate {
 }
 
 func (self *OrgsClock) ClockOut() (common.ResultMsg, error) {
+	return self.ClockOutAt(time.Now())
+}
+
+// ClockOutAt stops the clock as of a given moment rather than now. The focus
+// timer knows exactly when a work phase ended - and after a server restart
+// that can be some time ago - so its CLOCK line says 0:25, not however long
+// the server happened to be down.
+func (self *OrgsClock) ClockOutAt(end time.Time) (common.ResultMsg, error) {
 	if self.IsClockActive() {
 		var msg common.ResultMsg
 		if ofile, sec := GetDb().GetFromTarget(self.Target, false); sec != nil && ofile != nil {
-			if err := writeClockLine(ofile, sec, self.Time.Start, time.Now()); err != nil {
+			if err := writeClockLine(ofile, sec, self.Time.Start, end); err != nil {
 				msg = common.ResultMsg{Ok: false, Msg: "Clocked out, but the clock line was not written: " + err.Error()}
 			}
 		}

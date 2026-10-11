@@ -564,6 +564,43 @@ type ServerSettings struct {
 	EDOC */
 	Babel BabelSettings `yaml:"babel"`
 	/* SDOC: Settings
+	* The Agenda
+
+		=GET /agenda= works out what lands on each day (repeaters, ranges,
+		overdue items carried to today, deadline warnings). A deadline starts
+		showing on today this many days before it is due, unless its stamp
+		names its own warning period (=<2026-10-20 Tue -3d>=):
+
+		#+BEGIN_SRC yaml
+		agenda:
+		  deadlineWarningDays: 14
+		#+END_SRC
+
+		Unset is org's own 14. =0= shows a deadline only on its day (and as
+		overdue after it).
+	EDOC */
+	Agenda AgendaSettings `yaml:"agenda"`
+	/* SDOC: Settings
+	* Inbox Triage and the Weekly Review
+
+		What =orgs triage=, =orgs review week= and worg's Inbox and Weekly
+		Review tabs treat as the inbox, as someday, and as waiting:
+
+		#+BEGIN_SRC yaml
+		review:
+		  inbox: 'InFile("(^|/)inbox[.]org$") && !IsArchived() && !IsDone()'
+		  somedayKeywords: [SOMEDAY, MAYBE]
+		  somedayTags: [someday, maybe]
+		  waiting: 'IsStatus("WAITING") && !IsArchived()'
+		  waitingDays: 7
+		#+END_SRC
+
+		Every key may be left out; the values above are the defaults. Only the
+		outermost heading a query finds is an item - the headings under it go
+		wherever it goes.
+	EDOC */
+	Review ReviewSettings `yaml:"review"`
+	/* SDOC: Settings
 	* Default Author
 		Default author parameter to use when generating new templates
 		#+BEGIN_SRC yaml
@@ -701,6 +738,13 @@ func (self *ServerSettings) Init() {
 		MaxMb:    64,
 		Tags:     []string{"voice"},
 	}
+}
+
+// The agenda's settings (GET /agenda, agenda.go).
+type AgendaSettings struct {
+	// Days before a deadline it warns on today, when its stamp names no -Nd.
+	// nil is org's default, 14.
+	DeadlineWarningDays *int `yaml:"deadlineWarningDays"`
 }
 
 // What orgs may do about running a source block.

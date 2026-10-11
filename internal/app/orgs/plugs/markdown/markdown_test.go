@@ -3,6 +3,7 @@ package markdown
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
@@ -19,6 +20,9 @@ type fakeDb struct {
 }
 
 func (self *fakeDb) QueryTodosExpr(query string) (common.Todos, error) { return nil, nil }
+func (self *fakeDb) Agenda(from, to, today time.Time, query string) (common.AgendaResult, error) {
+	return common.AgendaResult{}, nil
+}
 func (self *fakeDb) FindByAnyId(id string) *common.Todo                { return self.byId[id] }
 func (self *fakeDb) FindByHash(hash string) *common.Todo               { return self.byId[hash] }
 func (self *fakeDb) FindNextSibling(hash string) *common.Todo          { return nil }

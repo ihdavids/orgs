@@ -6,6 +6,7 @@ package review
 //	orgs review                 everything that wants a decision
 //	orgs review stale           just that check
 //	orgs review -fix            walk them, and change them as you go
+//	orgs review week            the weekly review wizard (week.go)
 //	orgs stats                  keywords, tags, files, clocked time
 //	orgs stats -by tag
 //
@@ -114,6 +115,10 @@ type Review struct {
 	Fix   bool
 	Only  string
 	Limit int
+	// orgs review week: waiting items older than this many days, and start
+	// again rather than resume.
+	Days    int
+	Restart bool
 }
 
 func (self *Review) Unmarshal(u func(interface{}) error) error { return u(self) }
@@ -122,6 +127,8 @@ func (self *Review) StartPlugin(m *common.PluginManager)       {}
 func (self *Review) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Fix, "fix", false, "walk the findings and change them as you go")
 	fset.IntVar(&self.Limit, "limit", 8, "at most this many headings per check; 0 for all")
+	fset.IntVar(&self.Days, "days", 0, "review week: waiting items older than this many days (the server's waitingDays when 0)")
+	fset.BoolVar(&self.Restart, "restart", false, "review week: start from the first step, not where the last review was left")
 }
 
 // One check's findings, which is also what -json prints.
@@ -140,6 +147,10 @@ type Finding struct {
 
 func (self *Review) Exec(core *commands.Core) {
 	words := commands.FreeArgs(commands.Find("review").Flags)
+	if len(words) > 0 && (words[0] == "week" || words[0] == "weekly") {
+		self.week(core)
+		return
+	}
 	want := map[string]bool{}
 	for _, w := range words {
 		want[w] = true

@@ -150,14 +150,26 @@ func relock() {
 }
 
 // The passphrase to use: the one sent with the request, or the one held if the
-// configuration allows holding one. A request that carries one refreshes it.
+// configuration allows holding one.
+//
+// Choosing one no longer holds it. It used to, before gpg had said whether it
+// was right, so a mistyped passphrase replaced a good held one and every
+// request after it failed until somebody typed it again. A handler calls
+// holdAfter once the passphrase has done its job.
 func passFor(sent string) string {
 	if sent != "" {
-		unlockFor(sent)
 		return sent
 	}
 	held, _ := unlocked()
 	return held
+}
+
+// Hold a passphrase that has just worked, if one was sent and the
+// configuration allows holding one. A request that carries one refreshes it.
+func holdAfter(sent string) {
+	if sent != "" {
+		unlockFor(sent)
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -512,52 +524,87 @@ func decryptHeadingInPlace(sec *org.Section, f *common.OrgFile, text string) err
 	return nil
 }
 
+// Put an armoured message where a heading's secret goes, replacing whatever
+// is there. The armour must already have been checked; this only writes.
+//
+// Called with cryptLock held.
+func spliceArmor(sec *org.Section, f *common.OrgFile, armor string) error {
+	filename := f.Doc.Path
+	lines, from, to, ok := recordLines(filename, sec)
+	if !ok {
+		return fmt.Errorf("could not read %s", filename)
+	}
+	start, end := cryptRange(lines, from, to)
+	if end >= len(lines) {
+		end = len(lines) - 1
+	}
+	out := append([]string{}, lines[:start]...)
+	out = append(out, strings.Split(armor, "\n")...)
+	out = append(out, "")
+	if end+1 < len(lines) {
+		out = append(out, lines[end+1:]...)
+	}
+	if err := writeFileAtomic(filename, out); err != nil {
+		return err
+	}
+	GetDb().ReloadFile(filename)
+	return nil
+}
+
 // Every heading carrying the tag.
 func cryptHeadings() []common.CryptHeading {
 	out := []common.CryptHeading{}
 	db := GetDb()
 	for _, fname := range db.GetFiles() {
-		f := db.FindByFile(fname)
-		if f == nil || f.Doc == nil {
+		out = append(out, cryptHeadingsOf(fname)...)
+	}
+	return out
+}
+
+// The headings carrying the tag in one file, in the order they are written.
+func cryptHeadingsOf(fname string) []common.CryptHeading {
+	out := []common.CryptHeading{}
+	db := GetDb()
+	f := db.FindByFile(fname)
+	if f == nil || f.Doc == nil {
+		return out
+	}
+	var lines []string
+	for _, sec := range flattenSections(f) {
+		if sec == nil || sec.Headline == nil || !isCrypt(sec) {
 			continue
 		}
-		var lines []string
-		for _, sec := range flattenSections(f) {
-			if sec == nil || sec.Headline == nil || !isCrypt(sec) {
-				continue
+		db.RegisterSection(sec.Hash, sec, f)
+		if lines == nil {
+			b, err := os.ReadFile(fname)
+			if err != nil {
+				break
 			}
-			db.RegisterSection(sec.Hash, sec, f)
-			if lines == nil {
-				b, err := os.ReadFile(fname)
-				if err != nil {
-					break
-				}
-				lines = strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
-			}
-			from := sec.Headline.Pos.Row
-			if from < 0 || from >= len(lines) {
-				continue
-			}
-			to := subtreeEndRow(lines, from, sec.Headline.Lvl, from)
-			if to >= len(lines) {
-				to = len(lines) - 1
-			}
-			start, end := cryptRange(lines, from, to)
-			body := []string{}
-			if start <= end && start < len(lines) {
-				body = lines[start : end+1]
-			}
-			out = append(out, common.CryptHeading{
-				Hash:      sec.Hash,
-				Headline:  sectionTitle(sec),
-				Filename:  fname,
-				Olp:       outlinePath(sec),
-				Line:      from,
-				Encrypted: isArmored(body),
-				Key:       strings.TrimSpace(GetProp(sec, "CRYPTKEY", "CryptKey", "cryptkey")),
-				Lines:     end - start + 1,
-			})
+			lines = strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
 		}
+		from := sec.Headline.Pos.Row
+		if from < 0 || from >= len(lines) {
+			continue
+		}
+		to := subtreeEndRow(lines, from, sec.Headline.Lvl, from)
+		if to >= len(lines) {
+			to = len(lines) - 1
+		}
+		start, end := cryptRange(lines, from, to)
+		body := []string{}
+		if start <= end && start < len(lines) {
+			body = lines[start : end+1]
+		}
+		out = append(out, common.CryptHeading{
+			Hash:      sec.Hash,
+			Headline:  sectionTitle(sec),
+			Filename:  fname,
+			Olp:       outlinePath(sec),
+			Line:      from,
+			Encrypted: isArmored(body),
+			Key:       strings.TrimSpace(GetProp(sec, "CRYPTKEY", "CryptKey", "cryptkey")),
+			Lines:     end - start + 1,
+		})
 	}
 	return out
 }
@@ -753,6 +800,7 @@ func PostCryptEncrypt(w http.ResponseWriter, r *http.Request) {
 		cryptJson(w, res)
 		return
 	}
+	holdAfter(req.Passphrase)
 	res.Ok = true
 	res.Encrypted = true
 	if changed {
@@ -808,6 +856,7 @@ func PostCryptDecrypt(w http.ResponseWriter, r *http.Request) {
 		cryptJson(w, res)
 		return
 	}
+	holdAfter(req.Passphrase)
 	res.Ok = true
 	res.Text = text
 	res.Msg = "decrypted"
@@ -873,30 +922,12 @@ func PostCryptUpdate(w http.ResponseWriter, r *http.Request) {
 		cryptJson(w, res)
 		return
 	}
-
-	filename := f.Doc.Path
-	lines, from, to, ok := recordLines(filename, sec)
-	if !ok {
-		res.Msg = "could not read " + filename
-		cryptJson(w, res)
-		return
-	}
-	start, end := cryptRange(lines, from, to)
-	if end >= len(lines) {
-		end = len(lines) - 1
-	}
-	out := append([]string{}, lines[:start]...)
-	out = append(out, strings.Split(armor, "\n")...)
-	out = append(out, "")
-	if end+1 < len(lines) {
-		out = append(out, lines[end+1:]...)
-	}
-	if err := writeFileAtomic(filename, out); err != nil {
+	if err := spliceArmor(sec, f, armor); err != nil {
 		res.Msg = err.Error()
 		cryptJson(w, res)
 		return
 	}
-	GetDb().ReloadFile(filename)
+	holdAfter(req.Passphrase)
 	res.Ok = true
 	res.Encrypted = true
 	res.Msg = "written"
@@ -1006,6 +1037,9 @@ func PostCryptSweep(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if res.Encrypted > 0 {
+		holdAfter(req.Passphrase)
+	}
 	for p := range written {
 		res.Files = append(res.Files, p)
 	}

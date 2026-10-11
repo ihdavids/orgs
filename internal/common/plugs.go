@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/common/desktop"
 	"github.com/ihdavids/orgs/internal/templates"
 	"github.com/tmc/keyring"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -52,6 +53,24 @@ type PluginManager struct {
 	// The yaml's own link protocols (`jira:` to a url), so an exporter writes
 	// the real url into the page rather than a link nothing can follow.
 	LinkProtocols map[string]LinkProtocol
+	// Org's own state change for a plugin that mirrors something into a file:
+	// keyword, CLOSED stamp, logbook entry, a repeating date moved on - one line
+	// edit of the heading whose headline is at row (0-based) of filename. A
+	// plugin cannot call the server's code itself (the server imports the
+	// plugins), and a keyword swapped by hand would skip everything the file's
+	// logging settings ask for. Answers with the keyword actually written.
+	// Set by the server; nil in a plugin's own tests.
+	ChangeStatus func(filename string, row int, to string) (string, error)
+	// The server's line writer: writes the file and reads it back into the
+	// database before returning, so a ChangeStatus straight after measures the
+	// new lines rather than racing the file watcher. Nil outside a server.
+	WriteLines func(filename string, lines []string) error
+	// The server's one way of saying something worth a desktop notification:
+	// published as a `notify` event (so a listener on another machine shows
+	// it too) and popped here when a notify plugin is configured to, outside
+	// its quiet hours. file/hash/headline say what it is about, if anything.
+	// Nil outside a server.
+	Deliver func(n desktop.Note, file, hash, headline string)
 }
 
 // Updating plugins are called with a target
@@ -177,6 +196,10 @@ type Poller interface {
 
 type ODb interface {
 	QueryTodosExpr(query string) (Todos, error)
+	// What lands on each day from `from` to `to` (inclusive), today being
+	// `today`: the same answer as GET /agenda, for plugins that need dates
+	// worked out (repeats, ranges) rather than raw stamps.
+	Agenda(from, to, today time.Time, query string) (AgendaResult, error)
 	FindByAnyId(id string) *Todo
 	FindByHash(hash string) *Todo
 	FindNextSibling(hash string) *Todo

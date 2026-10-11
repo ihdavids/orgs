@@ -699,15 +699,30 @@ func FormulaDetailsAt(db common.ODb, t *common.PreciseTarget) (common.ResultTabl
 }
 
 func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl *org.Table) error {
+	_, err := ExecuteFormulaColors(db, sec, ofile, tbl)
+	return err
+}
+
+// A colour a formula gave a cell (highlight(), red(), gradient()...): the
+// cell's row and column as a formula counts them, @Row$Col.
+type CellColor struct {
+	Row   int
+	Col   int
+	Color string
+}
+
+// ExecuteFormula, keeping the colours formulas asked for. The last colour a
+// cell is given wins, as the last value written to it does.
+func ExecuteFormulaColors(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl *org.Table) (colors []CellColor, err error) {
 	if tbl.Formulas == nil {
 		fmt.Fprintf(os.Stderr, "Table does not have any formulas, skipping")
-		return nil
+		return nil, nil
 	}
 	parameters := BuildParameters(ofile, sec, tbl)
 	tbl.Formulas.Process(tbl)
 	for idx, frml := range tbl.Formulas.Formulas {
 		if frml == nil || frml.Expr == "" {
-			return fmt.Errorf("missing formula in slot %d", idx)
+			return colors, fmt.Errorf("missing formula in slot %d", idx)
 		}
 		fmt.Fprintf(os.Stderr, "[%d] TABLE =============================\n", idx)
 		out := frml.Target.CreateIterator(tbl)
@@ -745,7 +760,7 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 			if rexpr, err := ReplaceRemoteRanges(frml.Expr); err == nil {
 				frml.Expr = rexpr
 			} else {
-				return err
+				return colors, err
 			}
 			// Replace other ranges with RangeIters
 			//fmt.Fprintf(os.Stderr, "XXXXXXXXXXXXXXXXXXXXXXx\n")
@@ -777,7 +792,7 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 			//       For now this gets us operational
 			expr, err := ParseTableFormula(tbl, frml, sec, ofile)
 			if err != nil {
-				return fmt.Errorf("Failed parsing formula [%s][%d](%s)", frml.Keyword.Value, idx, frml.Expr)
+				return colors, fmt.Errorf("Failed parsing formula [%s][%d](%s)", frml.Keyword.Value, idx, frml.Expr)
 			}
 
 			//fmt.Fprintf(os.Stderr, "GOT SLOT: %d %d\n", tgt.Row, tgt.Col)
@@ -790,6 +805,10 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 			//fmt.Fprintf(os.Stderr, "   RESULT: %s => %v %s ON: [%d,%d..%d,%d]\n     >> %s", frml.Expr, result, eout, frml.Target.Start.Row, frml.Target.Start.Col, frml.Target.End.Row, frml.Target.End.Col, tbl.Formulas.Keywords[0].Value)
 			fmt.Fprintf(os.Stderr, "   RESULT: %s => %v %s ON: [%d,%d..%d,%d]\n", frml.Expr, result, eout, frml.Target.Start.Row, frml.Target.Start.Col, frml.Target.End.Row, frml.Target.End.Col)
 			if result != nil && err == nil {
+				if c, ok := result.(cellColor); ok {
+					colors = append(colors, CellColor{Row: tgt.Row, Col: tgt.Col, Color: c.Color})
+					result = c.Value
+				}
 				switch r := result.(type) {
 				case *org.RowColRef:
 					result = tbl.GetValRef(r)
@@ -801,11 +820,11 @@ func ExecuteFormula(db common.ODb, sec *org.Section, ofile *common.OrgFile, tbl 
 				//fmt.Fprintf(os.Stderr, "---> Setting value\n")
 			} else {
 				fmt.Fprintf(os.Stderr, "HAD ERR: %v\n", err)
-				return fmt.Errorf("formula execution error: [%s]", err.Error())
+				return colors, fmt.Errorf("formula execution error: [%s]", err.Error())
 			}
 			frml.Expr = oldexpr
 		}
 	}
 
-	return nil
+	return colors, nil
 }

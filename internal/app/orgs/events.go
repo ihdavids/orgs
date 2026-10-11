@@ -36,6 +36,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 // Event is one thing that happened. Kind is what to switch on; the rest is
@@ -53,6 +55,26 @@ type Event struct {
 	// whether anything it cached is still good.
 	Index uint64 `json:"index"`
 	At    string `json:"at"`
+	// A `querymatch`: which watch, how many it matches now, the notification's
+	// id, and the headings it gained or lost (see querywatch.go).
+	Watch    string              `json:"watch,omitempty"`
+	Label    string              `json:"label,omitempty"`
+	Count    int                 `json:"count,omitempty"`
+	Notice   string              `json:"notice,omitempty"`
+	Headings []common.WatchMatch `json:"headings,omitempty"`
+	Left     []common.WatchMatch `json:"left,omitempty"`
+	// A `notify`: something worth a desktop notification - a reminder, the
+	// deadline digest, a watch's match, a focus phase ending - with the
+	// words to show and where a click goes (see notifydeliver.go). Msg is the
+	// body. `orgs notify listen` pops these on another machine.
+	Title   string `json:"title,omitempty"`
+	URL     string `json:"url,omitempty"`
+	Group   string `json:"group,omitempty"`
+	Urgency string `json:"urgency,omitempty"`
+	Sound   bool   `json:"sound,omitempty"`
+	// Only this user's streams get the event; everybody's when empty. Not
+	// sent: a watch is somebody's, and the stream is shared by every login.
+	User string `json:"-"`
 }
 
 // The kinds an event can be. A client switches on these, so they are a promise:
@@ -178,6 +200,9 @@ func Subscribers() int {
 	| =reload=   | An org file was re-read; anything from it may have moved. |
 	| =clockin=  | A clock was started on a heading.                    |
 	| =clockout= | The running clock was stopped.                       |
+	| =focusstart=, =focusend=, =breakstart=, =breakend=, =focusstop=, =focusextend= | A focus session moved on; see =/focus/start=. |
+	| =querymatch= | A watched query gained (or lost) headings; =watch=, =label=, =count=, =notice=, =headings=, =left=. Only to the watch's owner. See =/watches=. |
+	| =notify= | A notification ready to show: =title=, =msg= (the body), =url= (where a click goes), =group= (replaces the last of its group), =urgency= (low, normal, critical), =sound=. Reminders, the deadline digest, watches with =desktop=, focus phases. |
 
 	*Response:* =text/event-stream=. Each event is a =data:= line holding one
 	JSON object, followed by a blank line. A =:= comment line arrives every
@@ -213,9 +238,13 @@ func RequestEvents(w http.ResponseWriter, r *http.Request) {
 
 	ch := subscribe()
 	defer unsubscribe(ch)
+	user := GetUsername(r)
 
 	send := func(e Event) bool {
 		if len(want) > 0 && !want[e.Kind] {
+			return true
+		}
+		if e.User != "" && e.User != user {
 			return true
 		}
 		b, err := json.Marshal(e)

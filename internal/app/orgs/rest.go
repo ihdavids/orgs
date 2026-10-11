@@ -74,6 +74,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/properties", RequestProperties).Methods("GET") // property names in use, for the query box (propnames.go)
 	api.HandleFunc("/grep", RequestGrep)
 	api.HandleFunc("/search", RequestTodosExpr)
+	api.HandleFunc("/agenda", RequestAgenda).Methods("GET")            // what lands on each day (agenda.go)
+	api.HandleFunc("/agenda/nodes", RequestAgendaNodes).Methods("GET") // a query's headings with their agenda facts
 	api.HandleFunc("/lookuphash", RequestHash)
 	api.HandleFunc("/todohtml/{hash}", RequestFullTodoHtml)
 	api.HandleFunc("/logbook/{hash}", RequestLogbook)
@@ -139,6 +141,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/table", RequestTable).Methods("GET")
 	api.HandleFunc("/table", PostTable).Methods("POST")
 	api.HandleFunc("/table/eval", PostTableEval).Methods("POST")
+	api.HandleFunc("/table/calc", PostTableCalc).Methods("POST") // run a table sent as text, write nothing (tablecalc.go)
 	api.HandleFunc("/table/import", PostTableImport).Methods("POST")
 	api.HandleFunc("/tangle", RequestTangle)
 
@@ -178,6 +181,20 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/links/stats", RequestLinkStats).Methods("GET")
 	api.HandleFunc("/links/all", RequestAllLinks).Methods("GET") // every link, flat
 	api.HandleFunc("/links/resolve", RequestResolveLink).Methods("GET")
+	// Features with their routes in their own files.
+	registerReviewRoutes(api)  // review_wizard.go: weekly review, inbox triage, someday sweep
+	registerMentionRoutes(api) // mentions.go: heading backlinks, unlinked mentions
+	registerFocusRoutes(api)   // focus.go: focus / pomodoro sessions
+	registerPlannerRoutes(api)    // planner.go: time-blocking, the day planner
+	registerInsightRoutes(api)    // insights.go: effort vs actual, dependency health
+	registerQueryWatchRoutes(api) // querywatch.go: saved-query notifications
+	registerRefactorRoutes(api)   // refactor.go: tag rename, split, merge, list to headings
+	registerCryptRoutes(api)      // cryptui.go: revealing encrypted headings
+	registerNotifyRoutes(api)     // notifydeliver.go: notification status and a test
+	registerImportRoutes(api)  // ipynbimport.go: Jupyter notebooks into org files
+	registerBabelSessionRoutes(api) // babelsession.go: python :session list and stop
+	registerForgeRoutes(api)   // forge.go: github / gitlab poll now, token check
+	registerContactImportRoutes(api) // vcardimport.go: vCard files into the contact records
 
 	// The database as a galaxy: every file or heading a star. Not the link
 	// graph - that one only holds the things something links to, and a map has

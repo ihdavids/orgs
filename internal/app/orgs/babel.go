@@ -710,7 +710,9 @@ func RunBlock(req *common.CodeRun) (common.CodeResult, error) {
 		job.Code = req.Code
 	}
 	res, err := runJob(job)
-	if err != nil || !req.Write || !res.Ok {
+	// A session's failed run (Kind "error") is written too: its traceback is
+	// what a notebook shows in place of the output.
+	if err != nil || !req.Write || !(res.Ok || res.Kind == "error") {
 		return res, err
 	}
 	if err := writeBlockResult(block, job, &res); err != nil {

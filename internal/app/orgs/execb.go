@@ -17,8 +17,9 @@ import (
 func ExecBlock(db common.ODb, t *common.PreciseTarget) (common.ResultMsg, error) {
 	res := common.ResultMsg{Ok: false, Msg: "Unknown block exec error"}
 	ofile, _, block := db.GetFromPreciseTarget(t, org.BlockNode)
-	if block != nil {
-		blk := block.(*org.Block)
+	// The node at the row is not always a block: a heading line, or a row the
+	// file has moved out from under, comes back as whatever is there.
+	if blk, ok := block.(*org.Block); ok {
 		if blk.Name == "SRC" {
 			Log().Infof("Babel Block Execution\n")
 			// TODO Babel by name

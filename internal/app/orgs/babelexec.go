@@ -96,6 +96,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -121,6 +122,8 @@ type babelJob struct {
 	// How many blocks deep this run is, so blocks that name each other as
 	// variables cannot run forever.
 	depth int
+	// Where the code is, "notes.org:12", for a session's tracebacks.
+	Where string
 }
 
 // The last value given for a header argument.
@@ -158,9 +161,88 @@ func hasWord(words []string, w ...string) bool {
 
 // A block, ready to run.
 func jobForBlock(b *common.CodeBlock, f *common.OrgFile) babelJob {
-	j := babelJob{Lang: b.Lang, Code: b.Code, Vars: b.Vars, Args: b.Args, File: f, OrgPath: b.Filename}
+	args := append(inheritedArgs(b.Filename, b.Lang, b.Hash), b.Args...)
+	j := babelJob{Lang: b.Lang, Code: b.Code, Vars: b.Vars, Args: args, File: f, OrgPath: b.Filename,
+		Where: fmt.Sprintf("%s:%d", filepath.Base(b.Filename), b.Line+1)}
 	j.Dir = j.runDir()
 	return j
+}
+
+var propertyHeaderRe = regexp.MustCompile(`(?i)^\s*#\+PROPERTY:\s+header-args(:[^\s+]+)?\+?\s+(.*)$`)
+
+// The header arguments a block inherits, as org gives them: the file's
+// #+PROPERTY: header-args lines, then the header-args properties of the
+// headings above it, outermost first - so that, with the block's own after
+// them, the nearest one is the one that counts. Both the plain form and the
+// language's own (header-args:python) apply, the language's after.
+//
+// This is how a notebook's blocks share a session without each saying so:
+// one line at the top of the file.
+func inheritedArgs(path, lang, hash string) []common.CodeArg {
+	out := []common.CodeArg{}
+	if path == "" {
+		return out
+	}
+	_, key, _ := runnerFor(lang)
+	if key == "" {
+		key = strings.ToLower(lang)
+	}
+	sameLang := func(l string) bool {
+		_, k, _ := runnerFor(l)
+		return strings.EqualFold(l, lang) || (k != "" && k == key)
+	}
+	add := func(text string) {
+		_, _, args, _ := splitArgs(splitParametersLike(" " + text))
+		out = append(out, args...)
+	}
+	if data, err := os.ReadFile(path); err == nil {
+		general, specific := []string{}, []string{}
+		for _, l := range strings.Split(string(data), "\n") {
+			m := propertyHeaderRe.FindStringSubmatch(l)
+			if m == nil {
+				continue
+			}
+			if m[1] == "" {
+				general = append(general, m[2])
+			} else if sameLang(m[1][1:]) {
+				specific = append(specific, m[2])
+			}
+		}
+		for _, t := range append(general, specific...) {
+			add(t)
+		}
+	}
+	if hash == "" || GetDb() == nil {
+		return out
+	}
+	chain := []*org.Section{}
+	for s := GetDb().FindByHash(hash); s != nil; s = s.Parent {
+		chain = append([]*org.Section{s}, chain...)
+	}
+	for _, s := range chain {
+		if s.Headline == nil || s.Headline.Properties == nil {
+			continue
+		}
+		for _, kv := range s.Headline.Properties.Properties {
+			if len(kv) < 2 {
+				continue
+			}
+			k := strings.ToLower(strings.TrimSuffix(kv[0], "+"))
+			if k == "header-args" {
+				add(kv[1])
+			}
+		}
+		for _, kv := range s.Headline.Properties.Properties {
+			if len(kv) < 2 {
+				continue
+			}
+			k := strings.ToLower(strings.TrimSuffix(kv[0], "+"))
+			if strings.HasPrefix(k, "header-args:") && sameLang(k[len("header-args:"):]) {
+				add(kv[1])
+			}
+		}
+	}
+	return out
 }
 
 // :dir, relative to the org file, or the org file's own directory.
@@ -220,6 +302,16 @@ func runJob(j babelJob) (common.CodeResult, error) {
 			collect = w
 		}
 	}
+	// Only python has sessions. Any other language with a :session runs on
+	// its own, as it always has.
+	_, key, _ := runnerFor(j.Lang)
+	session := ""
+	if key == "python" {
+		session = j.sessionName()
+		if p, ok := j.arg("python"); ok && strings.TrimSpace(p) != "" && session == "" {
+			r.cmd = shellWords(p)
+		}
+	}
 
 	program := j.Code
 	written, out, hasFile := j.fileArg()
@@ -234,7 +326,7 @@ func runJob(j babelJob) (common.CodeResult, error) {
 			program = r.picture.prepare(program, out)
 		}
 	}
-	if collect == "value" && r.wrapValue != nil {
+	if collect == "value" && r.wrapValue != nil && session == "" {
 		program = r.wrapValue(program)
 	}
 
@@ -282,6 +374,9 @@ func runJob(j babelJob) (common.CodeResult, error) {
 	timeout := time.Duration(Conf().Server.Babel.Timeout) * time.Second
 	if timeout <= 0 {
 		timeout = 30 * time.Second
+	}
+	if session != "" {
+		return runInSession(j, r, session, program, collect, timeout)
 	}
 	cmdline := r.defaultCmdline
 	if c, ok := j.arg("cmdline"); ok {
@@ -620,6 +715,10 @@ func resultBody(res *common.CodeResult, want []string, lang string) []string {
 		if text != "" {
 			body = strings.Split(text, "\n")
 		}
+	case res.Kind == "drawer" || strings.HasPrefix(text, ":results:\n"):
+		// Several outputs already gathered in their drawer (a session's text
+		// and figures, a notebook cell's outputs): written as they stand.
+		return strings.Split(text, "\n")
 	case hasWord(want, "raw") || hasWord(want, "drawer"):
 		if text != "" {
 			body = strings.Split(text, "\n")
@@ -679,6 +778,15 @@ func escapeBlockLines(text string) []string {
 	return out
 }
 
+// Whether a #+RESULTS: follows the line at row after, past blank lines.
+func hasResultAfter(lines []string, after int) bool {
+	i := after + 1
+	for i < len(lines) && strings.TrimSpace(lines[i]) == "" {
+		i++
+	}
+	return i < len(lines) && resultsLineRe.MatchString(lines[i])
+}
+
 // Writes a block's result under it in its file.
 func writeBlockResult(block *common.CodeBlock, job babelJob, res *common.CodeResult) error {
 	want := job.results()
@@ -694,7 +802,14 @@ func writeBlockResult(block *common.CodeBlock, job babelJob, res *common.CodeRes
 		return fmt.Errorf("the block is not where the database thinks it is - reload and try again")
 	}
 	indent := blockIndent(lines[block.Line])
-	lines = placeResult(lines, end, block.Name, indent, resultBody(res, want, block.Lang), want)
+	body := resultBody(res, want, block.Lang)
+	if len(body) == 0 && !hasResultAfter(lines, end) {
+		// Nothing to say and nothing said before: a bare #+RESULTS: under a
+		// block that only defines things is noise, and a notebook imported
+		// without one would change on its first run.
+		return nil
+	}
+	lines = placeResult(lines, end, block.Name, indent, body, want)
 	if err := writeLines(block.Filename, lines); err != nil {
 		return err
 	}
@@ -929,7 +1044,9 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			if err != nil {
 				res = common.CodeResult{Msg: err.Error()}
 			}
-			if res.Ok && write {
+			// A session's failed run is written too: its traceback is what a
+			// notebook shows in place of the output.
+			if (res.Ok || res.Kind == "error") && write {
 				if err := writeBlockResult(&block, job, &res); err != nil {
 					res.Ok, res.Msg = false, "ran, but the result could not be written: "+err.Error()
 				}
@@ -951,7 +1068,7 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			res = common.CodeResult{Msg: err.Error()}
 		}
 		want := job.results()
-		if res.Ok && write && !hasWord(want, "silent", "none", "discard") {
+		if (res.Ok || res.Kind == "error") && write && !hasWord(want, "silent", "none", "discard") {
 			lines = placeResult(lines, it.row, blockName(lines, it.row), m[1], resultBody(&res, want, job.Lang), want)
 			if err := writeLines(path, lines); err != nil {
 				res.Ok, res.Msg = false, "ran, but the result could not be written: "+err.Error()
@@ -977,7 +1094,9 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			} else {
 				_, _, args, vars := splitArgs(splitParametersLike(" " + c.head))
 				names := namedKinds(f)
-				job = babelJob{Lang: strings.ToLower(c.lang), Code: c.body, Args: args, File: f, OrgPath: path}
+				args = append(inheritedArgs(path, c.lang, ""), args...)
+				job = babelJob{Lang: strings.ToLower(c.lang), Code: c.body, Args: args, File: f, OrgPath: path,
+					Where: fmt.Sprintf("%s:%d", filepath.Base(path), it.row+1)}
 				for _, raw := range vars {
 					job.Vars = append(job.Vars, readVar(raw, names, path))
 				}

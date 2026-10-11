@@ -128,3 +128,67 @@ type CryptSweepResult struct {
 	// The files that were written.
 	Files []string
 }
+
+// Whether a passphrase is being held right now, and what the server is
+// allowed to hold. Cheap enough to ask every few seconds: no gpg is run and no
+// file is read, which is what a lock indicator polling it needs.
+type CryptState struct {
+	Ok   bool
+	Msg  string
+	Mode string
+	Tag  string
+	// Held right now, and for how many more seconds.
+	Unlocked bool
+	UnlockIn int
+	// crypt.unlockSeconds: how long a passphrase may be held at all. Zero
+	// means never, and a client should not offer "keep it unlocked".
+	UnlockSeconds int
+}
+
+// One request about one heading, for reveal, seal and edit.
+//
+// A heading is named by hash, or by its file and the zero based row its
+// headline is on. The row has to be the headline's own: a row inside the
+// body is refused rather than taken to mean the heading above it, because a
+// reveal hands over plaintext and must land on exactly what was asked for.
+type CryptOp struct {
+	Hash     string `json:"hash"`
+	Filename string `json:"filename"`
+	Line     int    `json:"line"`
+	// Never stored unless Keep is set and the server allows holding one.
+	Passphrase string `json:"passphrase"`
+	// Hold the passphrase for crypt.unlockSeconds once it has worked.
+	Keep bool `json:"keep"`
+	// For a reveal: also render the plaintext with the html exporter.
+	Html bool `json:"html"`
+	// For an edit: the new body in the clear, and Base, the sha256 of the
+	// plaintext the edit started from, so an edit made elsewhere since then
+	// is refused rather than overwritten.
+	Text string `json:"text"`
+	Base string `json:"base"`
+}
+
+// What happened to one heading through reveal, seal or edit.
+type CryptOpResult struct {
+	Ok  bool
+	Msg string
+	// Nothing was tried: no passphrase was sent and none is held. Asking for
+	// one is the client's next move, not an error to show.
+	NeedPassphrase bool
+	// The passphrase was tried and gpg refused it.
+	WrongPassphrase bool
+
+	Hash      string
+	Headline  string
+	Filename  string
+	Line      int
+	Encrypted bool
+	// The plaintext and, when asked for, its rendering. Only from a reveal.
+	Text string
+	Html string
+	// sha256 of Text, hex: what an edit of it sends back as its Base.
+	Base string
+	// The unlock state after this request.
+	Unlocked bool
+	UnlockIn int
+}

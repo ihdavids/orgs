@@ -87,6 +87,10 @@ Each of these comes up in several features below. They are stated once here, and
   - kanban boards (which column a card lands in, colours and the `autoSwatch` hash - UTF-16 units, 32-bit wrap -, manual order arithmetic, default status columns): `worg/src/kanban.ts` ↔ `cmd/oc/commands/kanban/model.go` (same scenarios in `kanban.test.ts` and `model_test.go`); checklist counting: `checklistOf`/`bodyLines` in `worg/src/orgbody.ts` ↔ `kanban/draw.go` ↔ `checkItem` in `internal/app/orgs/checklist.go`
   - column view (folding, sorting within parents, the `#+COLUMNS:` line edits, value filter, subtree totals, completions): `worg/src/columns.ts` ↔ `cmd/oc/commands/cols/model.go` (same scenarios in `columns.test.ts` and `model_test.go`); quick add: `parseQuickAdd` in `worg/src/ganttquick.ts` ↔ `ParseQuick` in `cols/model.go`
   - typed dates (`tomorrow`, `fri` - today counts -, `+2w`): `internal/orgdate` ↔ `parseWhen` in `worg/src/ganttquick.ts` (the gantt and column view quick add)
+  - who a task is for: `assigneeOf` in `internal/app/orgs/insights.go` ↔ `assigneeOf`/`ASSIGNEE_PROPS` in `worg/src/ganttplan.ts`
+  - day planner load, overlaps and first free slot: `planLoad`/`planOverlaps`/`planFreeSlot` in `internal/app/orgs/planner.go` ↔ `dayLoad`/`overlapPairs`/`freeSlot` in `worg/src/planner.ts` (same cases in `planner_test.go` and `planner.test.ts`)
+  - the triage walk (which item is next, "3 of 12", keep place by file + outline path) and tally names: `Walker.Walk`/`tallyName` in `cmd/oc/commands/triage/triage.go` ↔ `nextUnseen`/`tallyName` in `worg/src/review.ts`
+  - focus countdown and status wording (`🍅 12:31 Write the report`, `☕ 4:59 break`): `cmd/oc/commands/focus/format.go` ↔ `worg/src/focus.ts`
 
 ### Where the rest of the notes live
 

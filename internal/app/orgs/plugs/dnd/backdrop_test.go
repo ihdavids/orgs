@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
@@ -23,6 +24,9 @@ import (
 type stubDb struct{}
 
 func (stubDb) QueryTodosExpr(string) (common.Todos, error) { return common.Todos{}, nil }
+func (stubDb) Agenda(time.Time, time.Time, time.Time, string) (common.AgendaResult, error) {
+	return common.AgendaResult{}, nil
+}
 func (stubDb) FindByAnyId(string) *common.Todo             { return nil }
 func (stubDb) FindByHash(string) *common.Todo              { return nil }
 func (stubDb) FindNextSibling(string) *common.Todo         { return nil }

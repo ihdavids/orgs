@@ -143,6 +143,15 @@ The Org view has an **Edit** button (offered in no other view) that swaps `OrgSo
 - **Where the task editor lives** is the `ganttEditorMode` setting, switched from the editor's own header: `side` (sticky beside the chart), `lightbox` (Joy Modal), `inline` (a Popper on a virtual anchor that re-measures the selected bar each time it is asked: `[data-gantt-bar=hash]` in React, `.vis-item.vis-selected` in Vis, the last press on the chart for Google, so it survives the redraw after a write), `bottom` (full width under the chart, fields in a grid of columns).
 - **Undated tasks follow what they wait on, however old.** A task with no date of its own starts when its AFTER ends, so linking a current task into a chain that starts at a years-old SCHEDULED moves it years back, off the visible part of the chart. It looks like it vanished. Seen with a 2022 worklog chain.
 
+## Importing contacts (vCard)
+
+The Contacts tab's **Import** button opens `components/ContactImport.tsx`; pure helpers and wire types in `src/vcardImport.ts` (tested by `vcardImport.test.ts`); the request goes through `ODb.doPost` from the component, not a new `db.ts` method. Server: `POST /contacts/import` (`internal/app/orgs/vcardimport.go`, notes in `internal/app/orgs/CLAUDE.md`).
+
+- **The plan shown is the server's dry run of the same request**, re-asked whenever the files or the mode change (numbered, so a slow answer to an old choice cannot land on a new one). The browser does no matching or merging, so the dialog and `orgs contact import` cannot disagree about a file.
+- **Files are read as bytes and decoded here** (`vcfText`: UTF-8 when valid, else Windows-1252), because an old Outlook export in 8 bit would reach the server through JSON as question marks. Several files are joined into one text (`joinVcfTexts`); `countCards` gives the per-file count shown before anything is sent.
+- New people, updates (chips: `+ KEY` added, amber replaced, outlined "keeps KEY" with both values in its title) and unchanged people (folded) are listed separately; each row unfolds to its values. The button says what will be written ("Add 3, update 2") and is disabled when nothing would be.
+- **After a write the browser is remounted** (`key={generation}` on `RecordBrowser` in `Contacts.tsx`) and the birthday strip re-asked, rather than editing `RecordBrowser.tsx`, which the Collections tab shares.
+
 ## Starmap: colour by expression
 
 `starmap/rules.ts` (tested). Each rule is an org query and a colour; the server answers the query (`/search`, no base filter), and every star it finds is drawn in that colour, first matching rule first, ahead of the constellation/keyword colour. A file star is lit by its headings only in file scope; in a heading sky it is a hub. Saved as `colorRules` in the `starmap` setting. Queries are re-asked 450ms after typing stops and on every reload.
@@ -155,6 +164,95 @@ The Org view has an **Edit** button (offered in no other view) that swaps `OrgSo
 - **Task names** are cut by measured width (`fitText`, canvas `measureText` in the drawn font, cached) to stop short of the row's grip. They used to be cut at 30 characters, so wide letters ran over it.
 - **The filter** (Filter panel) is a second org query. Only rows both queries find are drawn, but dates and arrows still come from the whole plan (`filterModel`), so nothing moves. Lanes left empty go.
 
+## The Inbox and Weekly Review tabs
+
+`components/Inbox.tsx` (inbox / someday toggle, kept in localStorage `worg.inboxMode`), `components/Triage.tsx` (the one-at-a-time walk, shared by both tabs), `components/TriageParts.tsx` (the big item card, key legend, refile/date/tag pickers, `useReviewActs`), `components/WeeklyReview.tsx` (the seven-step wizard). Logic in `src/review.ts` (pure, `review.test.ts`), calls in `src/reviewApi.ts`; `src/reviewtabs.test.tsx` renders both tabs against a stand-in api. Server notes: `internal/app/orgs/CLAUDE.md`, "Inbox triage".
+
+- **Keys**: inbox `r` refile (fuzzy picker over `/refile/targets`, matched by `move.ts`'s `filterTargets`), `s` schedule (typed through `parseWhen`, previewed, sent as an org stamp; what it cannot read - a time - is sent as typed and read by the server's `internal/orgdate`), `t` tag (chips plus known tags from `/alltags`), `a` archive, `d` done; someday `k` keep, `p` promote (then `n` NEXT / `t` TODO), `s` schedule, `a` drop. Always `n`/`→` next, `←` back, `u` undo, `o` open in Files. Every key is also a button. Keys are ignored while typing, with a modifier, or while a picker is open (`isShortcut`).
+- **The list is fetched again after every decision, never patched** (hashes shift; see **Traps: hashes**). The walk keeps its place by `itemKey` (file + outline path + title) in a module-level set, so the Files tab round trip (`nav.toFile` with a way back) returns to the same item. A decision that ends the item (refile, archive, done, promote) moves on; one that only changes it (date, tags) keeps it on screen, because the next thing is usually to refile it. The same rule is `orgs triage`'s `Walker.Walk` - keep them in step.
+- **Undo** is the server's (`POST /review/undo` with the token `/review/act` handed back); the stack is module-level per list, so it survives leaving the tab.
+- **The wizard** keeps its step and running tally on the server (`/review/step`), so it resumes where it was left in either client; steps 1 and 6 embed `Triage`, 2/3/5 are lists with inline actions, 4 is a table with clocked/planned bars (`timeBar`), 7 records it (`/review/done`). The waiting threshold is `worg.weeklyReviewWaitingDays` in localStorage, defaulting to the server's.
+
 ## New org file
 
 The rail's note-add button and the palette's "New org file" open `components/NewFileDialog.tsx`. Logic is in `src/newfile.ts` (tested): `rootsOf`/`dirLabel` (folders shown from the org directory's own name down), `rankDirs` (fuzzy, a match on the folder's own name counts double, shallowest first when nothing is typed), `matchPositions` for fzf-style highlighting, `nameError`, `newFilePath`. Server: `GET /newtemplates` (the `new/*.tpl` under the template path), `GET /dirs?all=t` (every folder under the orgDirs, hidden and node_modules skipped), `POST /file`. `/file` now only writes `.org` files inside an org directory (`insideOrgDirs`), only takes `new/*.tpl` templates, and with `mustBeNew` answers 409 rather than reloading an existing file. A new folder is just part of the path: `CreateOrgFileFromTemplate` makes the folders on the way. The last folder and template used are remembered in localStorage.
+
+## Focus (pomodoro)
+
+`components/Focus.tsx` (the tab), `components/FocusStatus.tsx` (the header chip: desktop breadcrumb row, and `compact` in the phone `Header`), logic in `src/focus.ts` (tested by `focus.test.ts`), requests and live state in `src/focusApi.ts`. Server: `internal/app/orgs/focus.go` (see its section in `internal/app/orgs/CLAUDE.md`); `orgs focus` is the terminal client.
+
+- **One store for every view** (`focusApi.ts`'s `store`, `useFocus()`): the chip, the phone chip and the tab share one EventSource, one poller and one notification. The stream opens with the first subscriber and closes with the last.
+- **EventSource sends no Authorization header**: it rests on the `orgstoken` cookie. Across origins it is opened credentialed; one that fails before ever opening is retried without credentials (enough under noAuth), then left to polling (30s with the stream up, 10s without, and on tab visibility).
+- **The countdown is local**: the end is `now + Remaining` when an answer arrives, not the server's `Ends`, so a skewed laptop clock does not skew the timer. A one-second tick runs only while a phase does, and passing zero asks the server at once rather than waiting for the event.
+- `document.title` shows the countdown while running and is put back when idle. Notifications fire only for transitions the session made itself (`transitionNotice`: work→break, break→idle/work), not for a stop; permission is asked only from the tab's "Notify me" switch (`focusNotify` in localStorage).
+- The chip sits outside `NavContext`'s provider, so "Open task" / "Focus tab" dispatch a `worg:focus-nav` window event that `App` turns into `nav.toFile` or a panel switch.
+- The tab: task list from `ODb.activeTodos()`, recent tasks (from `/focus/history?days=14`) first, `fuzzy.ts` over the headline and the file's base name once typed (recency only nudges). Presets 25/5, 50/10, 90/20 or custom; lengths are seeded from the server's last-used settings. Keys (not while typing, no modifiers): space start / skip a break, `s` stop, `+` five more, `/` the filter.
+
+## The Agenda's day view is a planner (time-blocking)
+
+`components/DayPlanner.tsx` (grid, drags, load bar), `components/PlannerList.tsx` (tasks to place), logic in `src/planner.ts` (pinned by `planner.test.ts`), requests in `src/plannerApi.ts`. Server: `internal/app/orgs/planner.go` (its section in `internal/app/orgs/CLAUDE.md`); `orgs plan` is the terminal client. The old read-only `DayView` and its `/search`-based day fetch are gone; week and month views are unchanged.
+
+- **Three ways onto the day**: drag a task from the list onto an hour (HTML5 drag; the ghost shows where and how long, sized by EFFORT else 60 min, snapped to 15); click a task then click an hour (the phone's way, list items cannot be dragged on touch); Enter (or double click, or the row's ↵) puts it in the first free gap from now. A block's body drags to move, its bottom edge to resize, back onto the list (which lights up) or its × to unplan. Blocks are pointer events with capture (`touch-action: none` on movable ones), so they move on a phone too.
+- **Keys**: in the list ↑/↓, Enter places, space picks, `o` opens; in the filter ↓ into the list, Enter places the best match. On a focused block ↑/↓ move 15 min, shift+↑/↓ move its end, Delete unplans, Enter opens. `/` the filter, `p` the list, Esc cancels.
+- **Optimistic, in order**: every change is drawn at once (`placeLocally`/`unplanLocally`, which also recompute load and overlaps) and written through a promise queue so a burst of arrow presses lands in order. A refused write restores the day as it was before that change and shows why; reads started before a write are discarded (`fetchSeq`), and the day is re-read after the last write, because the server is the truth.
+- **Overlaps** are drawn side by side (`layoutLanes`) with a red edge and a warning icon; the header says planned / free / double-booked within the working day and the backlog's EFFORT. Fixed blocks (appointments, plain stamps) are hatched and only open; deadlines are a dashed line.
+- Per browser (`worg.planner` in localStorage): working hours (header selects), the list's query (default `IsTask()` on the server, any saved query, or a typed one), list shown or hidden.
+- Not done: planning inside the week view (still read-only).
+
+## Backlinks and unlinked mentions (the links panel)
+
+`components/LinksPanel.tsx` (logic in `src/mentions.ts`, pinned by `mentions.test.ts`; requests in `src/mentionsApi.ts`) shows, for the heading being read or the whole file: **Linked from** (each with its line, the link itself marked), **Links out**, and **Unlinked mentions** grouped by file and heading, the match marked, a Link button each and **Link all**. Server side is `internal/app/orgs/mentions.go`.
+
+- **Files tab**: the link icon beside the Links button toggles it as a column *beside* the page (an overlay on a phone); open/closed is `worg.linksPanel` in localStorage. It follows the reader: the source view reports its top visible row (OrgSource rows carry `data-line`; a throttled `onScrollCapture` halves over them) and the clicked row; the editor reports its cursor (`onCursorLine`); the rendered view reports the last `h1`-`h6` above the top of the frame plus how many same-text headings precede it (`headingForRendered` maps that onto `/filecontents/headings`). The panel waits 250ms after the reader stops before asking.
+- **Following an entry pins the panel** (the pin in its header), because going to a mention scrolls the page to another heading and the panel would otherwise switch to that heading's list mid-task. Within the page being read in a rendered view the frame is scrolled rather than the file reopened (a same-file open would not reload the frame, so it would not scroll).
+- **The target is sent as file + headline line, not hash**: linking a mention in a headline changes hashes, and the id drawer is written below the target's headline, so its line survives the panel's own writes. After a write the file is read again where the reader was (source view: `pendingLine`; rendered: `keepScroll` restores the frame's `scrollY`), and the outline and link counts are re-asked.
+- **Search tab**: the inspect dialog embeds the same panel for the row's heading; following an entry goes to the Files tab with the way back to the search page.
+
+## Importing a Jupyter notebook
+
+The new-file dialog (`components/NewFileDialog.tsx`) has a second mode, **Notebook** (toggle in its header; dropping a `.ipynb` on the dialog in either mode switches to it). Drop or pick the file, see what is in it, pick the folder with the same fzf-style picker, and **Import and open** posts `/import/ipynb` (`src/ipynbimport.ts`, via `ODb.doPost`) and opens the result in the Files tab through the dialog's `onCreated`.
+
+- **The notebook is read in the browser first** (`src/ipynb.ts`, pure, `ipynb.test.ts`): title and where it came from (metadata, first heading, file name - the server's rule), language, cells by kind, pictures, errors - so "is this the one I meant" is answered before anything is sent. It only counts; the conversion is the server's.
+- The file name defaults to the notebook's (`orgNameFor`: characters `nameError` refuses dropped, spaces as dashes), and the preview says where pictures will go (`<name>_files/`).
+- No template and no title field in this mode: the notebook carries its title. "Replace it if it is there" is the endpoint's `Overwrite`; without it an existing file is a refusal whose message is shown.
+- The dialog takes an optional `mode` prop for opening straight into the import; nothing passes it yet (the palette and App were left alone).
+
+## Watched queries and the notification bell
+
+Server side in `internal/app/orgs/CLAUDE.md` (**Saved-query notifications**). Pure logic `src/querywatch.ts` (`querywatch.test.ts`), endpoints and the shared store `src/querywatchApi.ts`, the stream helper `src/eventStream.ts` (focusApi.ts's EventSource fallback - credentialed, then not, then polling - factored out; focusApi.ts keeps its own copy).
+
+- **One store** (`watchStore`, `useWatches()`) feeds the bell twice (breadcrumb row, `compact` in the phone header) and the Saved Queries tab: one `/events?kinds=querymatch` stream, polling every 60s live / 20s not, and on tab return. A `querymatch` is folded in at once (`withNotice`, deduped by id) and then the list is re-read.
+- **`components/NotificationBell.tsx`** renders nothing until something is watched or found (like the focus chip). Unread notices are tinted; each gained heading opens in the Files tab through `focusNavigate` (the header is outside NavContext - the focus chip's window event, reused); headings that left are struck through. Mark all read, Clear, Manage watches (to the Saved Queries tab), and a Browser alerts switch (permission asked only from that click; off by default, key `watchNotify`).
+- **`components/WatchToggle.tsx`** is the bell on each saved query row: one click watches with defaults (silent baseline on the server); on a watched query it opens options (left, desktop popup - says when the server has no notify plugin -, paused, label, stop). Renaming a saved query moves its watch; deleting one removes it.
+
+## The Insights tab
+
+`components/Insights.tsx`, model `src/insights.ts` (pure, `insights.test.ts`), calls `src/insightsApi.ts`; server notes under **Insights** in `internal/app/orgs/CLAUDE.md`. Two sections, the one last used remembered (`worg.insightsSection`); the estimate controls are remembered too (`worg.insightsAsk`).
+
+- **Estimates**: range (presets are `from=-90d` or a clock-table block, or two dates), group by, a day of effort (24h org / 8h), include open tasks, an optional query (sent on Enter or blur - a half-typed query is a parse error). Tiles, the overall sentence, then a row per group: ratio chip, the weekly review's estimate-against-actual bar (`timeBar` from `review.ts`, so the two pages draw time the same way) and the spread on a log scale centred on 1× (`spreadSpan`: twice as long and half as long are the same size of miss). A row opens to its sentence and worst three. Worst over/under lists and the "not measured" counts open headings in the Files tab with a way back.
+- **Dependencies**: problems grouped by kind (`groupProblems`: errors first), each a card folded to its title except errors. The chain is drawn in work order, each heading opening the file; a link that can be taken away (`canUnlink`: an AFTER, or an ORDERED chain NOBLOCKING would end; never in `ordered-stuck`, whose chain is the steps, not a wait to remove) gets a button running **ganttops' `unlinkOp`** on the heading read as a task (`asGanttTask`), with one Undo (`op.revert`). The page is re-asked after every write, because hashes after the edit change (see **Traps: hashes**).
+- The server answers both; nothing is computed here that `orgs estimates`/`orgs deps` would print differently.
+
+## Encrypted headings (org-crypt)
+
+`src/crypt.ts` (pure, `crypt.test.ts`), `src/cryptApi.ts` (requests, the shared unlock state, the lock bus), `src/cryptFrame.ts` (the rendered view's DOM), `components/CryptReveal.tsx` (the block and the reveal/seal/save flows), `CryptDialog.tsx` (the passphrase), `CryptLockChip.tsx` (the toolbar lock). Server side: **Encrypted headings** in `internal/app/orgs/CLAUDE.md`.
+
+- **Ciphertext is never drawn.** Source view: `OrgSource`'s `decor` prop replaces the armoured rows (from `cryptLines`, which must find the same rows as crypt.go's `cryptRange`/`isArmored`) with a locked `CryptReveal`, line numbers kept. Rendered view and the theme/book views: the armour is swapped in the html string before `srcDoc` (`replaceArmorHtml` - the exporter writes `—–BEGIN…` as two paragraphs, pinned with real output), and `wireCryptFrame` makes the placeholders clickable; a placeholder is matched to its heading by order, else by the heading above it, else refused. Search: the inspect dialog strips it and draws `CryptReveal` under the heading; the hover popup shows a padlock.
+- **Click to reveal**: straight away when the server holds a passphrase (or is in key mode), else the dialog. The dialog's "keep unlocked for N min" appears only when `crypt.unlockSeconds` > 0, is off by default, and the passphrase is sent with `keep` only then; a wrong one keeps the dialog open with the reason. Passphrases go in POST bodies, never urls, in fields marked against autofill.
+- **Plaintext lives in the revealing component's state only** (never localStorage, a parent, or a cache) and is dropped on Hide, on any lock (`lockNow`/`announceLock`, and the poll seeing the server's window close), when the browser tab is hidden, and after `revealIdleMs` untouched (the unlock window, else five minutes). An edit in progress is closed only by a lock.
+- **Encrypt**: a faint lock on every heading line of the source view when hovered, and a loud "in the clear · encrypt" on one tagged `:crypt:` but still plain (also in inspect). Always asks for the passphrase twice in symmetric mode, even when one is held - which passphrase a note is under is worth saying. `/crypt/seal` tags it.
+- **Edit** a revealed heading in place: saved through `/crypt/edit` with the revealed text's `Base`, so the server refuses a stale edit or a passphrase that does not open what is there. The text editor shows the armour as text, with a warning pointing at this instead.
+- The toolbar's lock chip shows while a passphrase is held (with time left) or something is revealed; one click locks and hides everything.
+
+## Refactor (tag rename, split, merge, list to headings)
+
+`components/Refactor.tsx`, logic in `src/refactor.ts` (pure, `refactor.test.ts`), requests in `src/refactorApi.ts`. Server notes: **Structural refactors** in `internal/app/orgs/CLAUDE.md`.
+
+- Four operation cards (the last used remembered, `worg.refactor.last`), one form each, **Preview**, then the plan: summary, warnings, the saved queries/filters/tag groups that name a renamed tag (reported, never changed), a chip per file and **the Diff tab's `DiffView`** on that file's `Before`/`After` (a new file is drawn against a missing side). Apply sends `applyRequest` - the request again with the preview's `Token`, each file's `Hash` as `Expect`, and a split's `NewId`. A stale refusal says which file changed and offers to preview again. ⌘/Ctrl-Enter previews, then applies.
+- Any change to an input throws the preview away: a plan is only ever of the inputs on screen.
+- Pickers are fzf-style lists under the box (↑↓, Enter): tags from `/refactor/tags` ranked with `fuzzy.ts` and their use counts shown; headings asked of the server loosely (`headingQuery`: each term's letters in order) and ranked here (`rankHeadings`); the split's folder reuses `newfile.ts`'s `rankDirs`/`dirLabel` (the file name defaults to `slugOf(title)`, which repeats the server's naming only to show it).
+- **The palette** has an action per operation (`REFACTOR_OPS`, built in `Palette.tsx`): `requestRefactorOp` leaves the op in localStorage for the tab about to mount and fires `worg:refactor-op` for one already open.
+
+## Opening on a heading from the url
+
+`?open=<file>&line=<0-based>&heading=<text>` (`initialOpen` in `embed.ts`) starts on the Files tab jumped to that heading - what a click on a server notification sends (`common.HeadingLink`). It sets the initial `jump` state in `App.tsx`; `?app=` still picks the tab otherwise.

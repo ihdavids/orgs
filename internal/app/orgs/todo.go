@@ -74,10 +74,10 @@ package orgs
   - *HasBrokenLinks* - returns true when a link under this heading resolves to nothing
   - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
   - *MatchHeadline* - Run an RE against each headline and check for a match
-  - *OnDate* - Check if a todo is targetting a specific date
+  - *OnDate* - OnDate("2026 30 01") (year, day, month) is true when the heading lands on that day in the agenda: a timestamp, SCHEDULED or DEADLINE on it, a repeat of one, a range spanning it, and on today also an overdue SCHEDULED and a DEADLINE inside its warning period or past it (the rules of GET /agenda)
   - *Today* - returns true if a node is scheduled for today
   - *Yesterday* - returns true if a node is scheduled for yesterday
-  - *ThisWeek* - returns true if a node is scheduled for sometime this week
+  - *ThisWeek* - returns true if a node lands in the agenda on any day of the last seven, today included
 EDOC */
 
 import (
@@ -285,56 +285,8 @@ func AWeekAgoFrom(from time.Time) time.Time {
 	return from.AddDate(0, 0, -7)
 }
 
-func IsOn(p *org.Section, t time.Time) bool {
-	if p != nil && p.Headline != nil {
-		// If we are closed we do not show up after the close date
-		if p.Headline.HasClosed() {
-			fmt.Fprintf(os.Stderr, "*** HAVE CLOSED %v vs %v %s", t, p.Headline.Timestamp.Time, p.Headline.Title[0])
-			if t.After(p.Headline.Closed.Date.Start) {
-				return false
-			}
-		}
-
-		if p.Headline.HasScheduled() && p.Headline.Scheduled.Date.Before(t) {
-			return true
-		}
-
-		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.OnDay(t) {
-			return true
-		}
-
-		// TODO: Handle deadlines in here properly.
-	}
-	return false
-}
-
-func IsIn(p *org.Section, start time.Time, end time.Time) bool {
-	if p != nil && p.Headline != nil {
-		// If we are closed we do not show up after the close date
-		if p.Headline.HasClosed() && end.After(p.Headline.Closed.Date.Start) {
-			end = p.Headline.Closed.Date.Start
-		}
-		// Handle end before we start case
-		if end.Before(start) {
-			return false
-		}
-		// If we closed before we started
-		if p.Headline.HasClosed() && start.After(p.Headline.Closed.Date.Start) {
-			return false
-		}
-
-		if p.Headline.HasScheduled() && p.Headline.Scheduled.Date.Start.Before(end) {
-			return true
-		}
-
-		if p.Headline.HasTimestamp() && p.Headline.Timestamp.Time.After(start) && p.Headline.Timestamp.Time.Before(end) {
-			return true
-		}
-
-		// TODO: Handle deadlines in here properly.
-	}
-	return false
-}
+// IsOn and IsIn are in agenda.go: they answer from the agenda engine, so a
+// day view built from OnDate() and GET /agenda cannot disagree.
 
 func IsTodoStatus(n *org.Section, f *common.OrgFile) bool {
 	if n != nil && n.Headline != nil {
@@ -953,7 +905,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 				return false, err
 			}
 
-			return IsOn(p, now), nil
+			return IsOn(p, exp.File, now), nil
 		},
 		// The planning lines, as questions rather than as values.
 		//
@@ -988,6 +940,10 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		"ScheduledPast": func(args ...interface{}) (interface{}, error) {
 			return datePast(sdcDate(exp.Sec, "SCHEDULED")), nil
 		},
+		// Due from today to n days ahead, in calendar days - what a watch
+		// asking "deadline within 2 days" needs (querywatch.go).
+		"DeadlineWithin":  withinFunc(exp, "DEADLINE"),
+		"ScheduledWithin": withinFunc(exp, "SCHEDULED"),
 		// Whether time has ever been booked against this heading, which is what
 		// tells "still open and worked on" from "still open and forgotten".
 		"HasClock": func(args ...interface{}) (interface{}, error) {
@@ -1015,20 +971,21 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			now := Today()
-			return IsOn(p, now), nil
+			return IsOn(p, exp.File, now), nil
 		},
 		"Yesterday": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
 			now := Yesterday()
-			return IsOn(p, now), nil
+			return IsOn(p, exp.File, now), nil
 		},
 		"ThisWeek": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			//p := args[0].(*org.Section)
-			start := AWeekAgo()
+			// The seven days ending today (IsIn's end is exclusive).
+			start := GetBeginOfDay(time.Now().AddDate(0, 0, -6))
 			now := EndOfToday()
-			return IsIn(p, start, now), nil
+			return IsIn(p, exp.File, start, now), nil
 		},
 	}
 	guardQueryFunctions(exp, functions)
@@ -1248,7 +1205,12 @@ func SectionToTodo(v *org.Section, f *common.OrgFile) *common.Todo {
 	if v.Headline.Scheduled != nil {
 		date = v.Headline.Scheduled.Date
 	}
-	if v.Headline.Timestamp != nil {
+	// The heading's first own active stamp: Headline.Timestamp is the last
+	// one seen and counts a drawer's, so a heading with <10-10 09:00> and a
+	// later stamp in its body used to report the later one.
+	if len(v.Headline.Timestamps) > 0 && v.Headline.Timestamps[0].Time != nil {
+		date = v.Headline.Timestamps[0].Time
+	} else if v.Headline.Timestamp != nil {
 		date = v.Headline.Timestamp.Time
 	}
 	props := map[string]string{}
@@ -1393,20 +1355,35 @@ func QueryStringNodesOnFile(query string, file *common.OrgFile) ([]*org.Section,
 
 func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	var todos common.Todos
+	err := queryEachSection(query, func(v *org.Section, f *common.OrgFile) {
+		if t := SectionToTodo(v, f); t != nil {
+			todos = append(todos, *t)
+		}
+	})
+	return &todos, err
+}
 
+// The one path a query takes over the database: /search, and the agenda
+// (agenda.go), which needs the sections rather than Todos. visit is called for
+// every heading the query matches, in file order, files in database order.
+func queryEachSection(query *common.StringQuery, visit func(*org.Section, *common.OrgFile)) error {
 	// Render {{ FILTER }} in our template
-	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
 	before := query.Query
-	query.Query = Conf().PlugManager.Tempo.ExecuteTemplateString(query.Query, ctx)
+	query.Query = expandQueryFilters(query.Query)
 	// Said once, and only where a filter actually expanded into something else.
 	// It used to be two lines per query whatever happened, which on a client
 	// that queries as you type is two lines of log per keystroke.
 	if query.Query != before {
 		fmt.Fprintf(os.Stderr, "    > QUERY: %s -> %s\n", before, query.Query)
 	}
-	exp, err := ParseString(query)
+	return evalEachSection(query.Query, visit)
+}
+
+// queryEachSection with the filters already expanded.
+func evalEachSection(query string, visit func(*org.Section, *common.OrgFile)) error {
+	exp, err := ParseString(&common.StringQuery{Query: query})
 	if err != nil {
-		return &todos, err
+		return err
 	}
 
 	// Every section is registered into the hash index once per version of its
@@ -1421,20 +1398,29 @@ func QueryStringTodos(query *common.StringQuery) (*common.Todos, error) {
 	// The files this query could possibly match. A query that demands a keyword
 	// or a tag skips every file whose summary says it has none; anything else
 	// gets the whole database, exactly as before. See queryindex.go.
-	files, _ := filesForQuery(query.Query)
+	files, _ := filesForQuery(query)
+	var walk func(v *org.Section, f *common.OrgFile)
+	walk = func(v *org.Section, f *common.OrgFile) {
+		if EvalString(exp, v, f) {
+			visit(v, f)
+		}
+		for _, c := range v.Children {
+			walk(c, f)
+		}
+	}
 	for _, file := range files {
 		f := GetDb().GetFile(file)
 		if f == nil || f.Doc == nil {
 			continue
 		}
 		for _, v := range f.Doc.Outline.Children {
-			todos, _ = ProcessNode(exp, v, f, todos)
+			walk(v, f)
 		}
 		if exp.callErr != nil {
-			return &todos, exp.callErr
+			return exp.callErr
 		}
 	}
-	return &todos, nil
+	return nil
 }
 
 // Registration, done once per version of each file.

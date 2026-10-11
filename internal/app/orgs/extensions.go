@@ -132,6 +132,11 @@ type UserExt struct {
 	DrillMatrix DrillMatrix `yaml:"drillMatrix,omitempty" json:"drillMatrix,omitempty"`
 	// Saved gantt chart setups (see ganttviews.go).
 	GanttViews []GanttView `yaml:"ganttViews,omitempty" json:"ganttViews,omitempty"`
+	// When the weekly review was last finished, and the step one in progress
+	// was left on (see review_wizard.go).
+	Review *common.ReviewState `yaml:"review,omitempty" json:"review,omitempty"`
+	// Saved queries being watched for new matches (see querywatch.go).
+	QueryWatches []common.QueryWatch `yaml:"queryWatches,omitempty" json:"queryWatches,omitempty"`
 }
 
 // ExtensionsConfig is the root of the per-user extensions YAML file.

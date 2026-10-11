@@ -8,6 +8,9 @@ package savedq
 //	orgs q save stale 'IsStatus("NEXT") && OlderThan("30d")'
 //	orgs q rm stale
 //	orgs q edit stale           change it in $EDITOR
+//	orgs q watch stale          say when it finds something new (watch.go)
+//	orgs q unwatch stale
+//	orgs q watches              what is being watched
 //
 // These are the same stored queries worg's search tab keeps, over the same
 // per-user endpoints - which is the point of the command rather than an
@@ -35,6 +38,10 @@ type Q struct {
 	Show  bool
 	Limit int
 	Sort  string
+	// For `orgs q watch`.
+	Label   string
+	Left    bool
+	Desktop bool
 }
 
 // StoredQuery is the wire shape of one. Restated rather than imported, for the
@@ -51,6 +58,9 @@ func (self *Q) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Show, "show", false, "print the query rather than running it")
 	fset.IntVar(&self.Limit, "limit", 0, "at most this many results")
 	fset.StringVar(&self.Sort, "sort", "", "order the results: date, deadline, priority, file, status")
+	fset.StringVar(&self.Label, "label", "", "watch: what its notifications are called")
+	fset.BoolVar(&self.Left, "left", false, "watch: also say when a heading stops matching")
+	fset.BoolVar(&self.Desktop, "desktop", false, "watch: also pop up on the server's desktop (the notify plugin)")
 }
 
 func (self *Q) Exec(core *commands.Core) {
@@ -73,6 +83,12 @@ func (self *Q) Exec(core *commands.Core) {
 		self.remove(core, words[1:])
 	case "edit":
 		self.edit(core, words[1:])
+	case "watch":
+		self.watch(core, words[1:])
+	case "unwatch":
+		self.unwatch(core, words[1:])
+	case "watches":
+		self.watches(core)
 	case "":
 		self.pick(core)
 	default:
@@ -349,6 +365,10 @@ const usage = `  orgs q                           pick one and run it
   orgs q save stale 'IsStatus("NEXT")'
   orgs q edit stale                change it in $EDITOR
   orgs q rm stale
+  orgs q watch stale [-left] [-desktop] [-label L]   say when it finds something new
+  orgs q watch soon 'DeadlineWithin(2) && IsTodo()'   watch an expression of its own
+  orgs q unwatch stale
+  orgs q watches                   what is being watched; orgs notifications for what they found
 
   These are the same saved queries worg's search tab keeps.`
 

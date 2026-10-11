@@ -9,6 +9,7 @@ Terminal halves of records, links, code, file search and babel. Each is one requ
 - **`orgs search '<expr>'`** — `/search`, the query language. `-sort`, `-limit`, `-count`, `-group`, `-open`.
 - **`orgs find '<re>'`** — `/files/search`, regex over raw text. Unlike `orgs grep`'s unsplittable `"file|line|text"` strings, matches carry offsets, so colouring needs no second regex run in another engine.
 - **`orgs links`** — `/links/all`, `/links`, `/links/stats`. Bare: a picker with the far end drawn beside it; `ls` is the listing. See **The pickers**.
+- **`orgs backlinks [heading|file]`**, **`orgs mentions [heading|file]`** (`cmd/oc/commands/mentions/`) — `/links/heading`, `/mentions`, `/mentions/link`. The heading goes through `commands.Resolve` (hash, query, stdin, picker); plain words with no `(`/operator become `MatchHeadline("(?i)words")`, one word ending `.org` (or `-file F [-line N]`) is a file. `-link` opens an fzf multi-select (ctrl-a all, pane = `-pane-at N` reading the local file around the mention); `-only 1,3` and `-yes` link without a picker, and a pipe refuses rather than linking everything. `-common` searches a title the server's guard calls too common. `-json` is the whole answer, `-format` runs per mention (or per link row with a `Dir` of in/out).
 - **`orgs tables`** — `/tables`, `/table`, `/table/eval`. The Tables tab as a picker (grid with `@n`/`$n` rulers and formulas). See **The pickers**.
 - **`orgs code`** — fzf picker with the block drawn beside it; `ls`, `show`, `run` name one outright. See **The pickers**.
 - **`orgs rec`** — record endpoints over *every* collection. `orgs contact` (same engine, address-book defaults) is unchanged. `record` is now an alias for `rec`, not `contact` (a contact default was wrong for the general name).
@@ -42,9 +43,14 @@ Load-bearing rules:
 - **900ms timeout** (`Rest.Timeout`), degrading to no suggestions - an unresponsive prompt is worse than an empty one.
 - **Never completes the target of a destructive verb** (e.g. the heading `orgs rm` will delete) - it would make deleting the wrong thing quick.
 
+## `orgs estimates` and `orgs deps`
+
+`insights/` - worg's Insights tab, one request each (`/insights/estimates`, `/insights/deps`; rules in `internal/app/orgs/CLAUDE.md`). `estimates [query] -by tag|project|file|person -from -to -block -day 8 -open -n 5`: a table with the weekly review's bar (solid within the estimate, `░` estimate unused, red - `▓` without colour - over it), the overall sentence and only the group sentences worth acting on (outside 0.9-1.1×). `deps [query] -min 3 -kind cycle,dangling -check`: chains drawn `A → B ⇢ C` in work order (`⇢` is an ORDERED link), then `file:line` of each heading; `-check` exits 1 on an error (a cycle) for a hook. `-json` is the whole answer; `-format` runs per group / per problem.
+
 ## `orgs review`, `orgs diff`, `orgs blame`, `orgs doctor`
 
 - **`review`**: ten named checks, each only a query and a sentence (own code would duplicate the query language). An empty check prints a green line, not silence - its most valuable output. `-fix` walks findings into the editor, not a menu of automatic repairs: "no next action" needs a decision.
+- **`triage`** (`triage/`): the inbox one heading at a time from `/review/inbox` (`-someday`: `/review/someday`), single keypresses read in raw mode (`golang.org/x/term`; a line's first letter where raw mode is refused), refile through the fzf picker, every write one undoable `POST /review/act`. `-json`/`-format` list the items, a pipe gets one line each. Its `Walker`/`Deck` is exported and **`review week`** (`review/week.go`; plain `orgs review` is untouched) walks stuck projects (digits make a task NEXT), waiting items (`c` chase) and stale ones with it, prints last week's time as a table, and keeps its step and tally on the server, so `-restart` aside it resumes where it (or worg) was left. The walk rule (keep place by file+outline path, re-fetch after each write) is repeated in worg's `review.ts`.
 - **`diff` and `blame`** (`gitorg/`) report which headings changed and how, not lines. Both revisions are parsed **locally**, so they work in a pre-commit hook and on any checkout. Traps: nested headings are `*org.Headline` (see **Traps: pointer trap**); go-org's default keyword list is only `TODO | DONE`, so in a file without `#+TODO` every other keyword was read as headline text and NEXT→DONE looked like a rename.
 - **`doctor`** checks everything at once, because "server down", "token expired" and "exporter not in the yaml" all surface as "could not". Marked `NeedsNoServer` so startup checks cannot block it.
 
@@ -61,7 +67,7 @@ Load-bearing rules:
 - **`orgs tangle`**: by default says what blocks would write; `-w` writes on the server's disk; `-o DIR` writes here (the `orgs export` distinction). Under `-o`, paths are taken **relative to the org file**, because the server answers with its own absolute paths.
 - **`orgs fmt -check`** writes nothing, exits non-zero (pre-commit contract). `POST /reformat` always writes, so it uses **`GET /reformat`** (what the writer *would* produce, and whether the file matches); the server compares since the file may not be local.
 - **`orgs outline -match`**: sparse tree - query hits plus ancestors to locate them, which `orgs search` cannot show.
-- **`orgs q`**: worg's stored queries; runs `/search` with the stored text, so every `search` feature applies.
+- **`orgs q`**: worg's stored queries; runs `/search` with the stored text, so every `search` feature applies. `orgs q watch <name> [-left] [-desktop] [-label L]` (or `watch <name> '<expr>'`), `unwatch`, `watches` are `/watches` (`savedq/watch.go`); what they find is **`orgs notifications`** (`notifications/`: `-unread`, `-read`, `-clear`, `-follow [-exec]`).
 - **`orgs gantt [name|query]`**: worg's gantt drawn in the terminal from `/gantt/tasks`. Bare = picker over the saved queries, with the chart in the pane (`-pane`, a flag, so a query called "preview" still works). A word that is not a saved query's name is the query itself. The server hands back what each heading knows; the dates are worked out client side by a port of worg's scheduler (see **Traps: logic said twice**). Bars are background-coloured cells so they can carry text (`40%`, `3d`); partly covered cells get eighth blocks. Truecolor when the terminal says so (`COLORTERM`, `TERM_PROGRAM`), otherwise the nearest xterm-256.
 - **`orgs kanban [board]`**: worg's kanban boards in a tcell screen (`cmd/oc/commands/kanban/`). The boards are the per-user `/ext/kanban/boards`, so anything changed here (fold, sort, layout, hidden sections, the yaml from `S`) is changed in worg. The model is a port of `kanban.ts` (see **Traps: logic said twice**); every write is the endpoint worg uses. `-print` (and a pipe) draws the same screen once through a `tcell.SimulationScreen` and dumps the cells; `-json` is the columns with their cards.
   - **A keyword column writes the spelling the heading's file takes** (`spellingFor`): default columns come from the server's states (`INPROGRESS`), and a file whose `#+TODO` says `IN-PROGRESS` refuses the other spelling. worg writes the column's own value and fails there.
@@ -150,6 +156,11 @@ Query and filter are separate on purpose: the **query** costs a request and can 
 1. **The filter's haystack is the file's base name, never its path**: fuzzy matching ignores letter distance, so a long shared absolute path matches nearly anything (under `/Users/someone/dev/notes`, `mig` found every heading). The base name is also what people mean.
 2. **The keyword menu asks `/status/{hash}`** on open, not the last query's keywords, because the heading's file may have its own `#+TODO:` and a keyword it lacks will not read back. Same rule as worg's kanban.
 3. **Opening an editor suspends the app** (`app.Suspend`): editor and tview both want the terminal and the loser draws over the other.
+4. **Encrypted headings** (`tui/crypt.go`): a `:crypt:` row has a lock; the body pane shows the drawers and "🔒 Encrypted" instead of the armour. `x` reveals (masked tview box, "keep unlocked" only when the server allows it; no box when a passphrase is held) and hides; moving off the row, `L` (lock) or the idle timeout drop the text. `E` encrypts the row's heading (twice-typed passphrase). Crypt requests go through `common.RestPost`, not `SendReceivePost`, whose `-dry-run` echo would print the passphrase.
+
+## `orgs crypt`
+
+`cmd/oc/commands/crypt/`: `ls [-plain]`, `status`, `show`, `encrypt`, `sweep`, `lock`, over `/crypt/*`. Headings by `commands.Resolve` (plain words become `MatchHeadline`, as in `orgs mentions`). The passphrase is never a flag: asked without echo, or `-passphrase-stdin`. `show` refuses to print plaintext when stdout is not a terminal unless `-force` or `-json`, checked **before** asking for the passphrase. `-dry-run` says what it would do and stops before a passphrase is asked for (same echo problem). `-keep` holds it on the server when `unlockSeconds` allows.
 
 ## Commands from the orgextended pass
 
@@ -160,3 +171,32 @@ Query and filter are separate on purpose: the **query** costs a request and can 
 - **`orgs clocktable -mermaid`** - a mermaid gantt, a bar per clocked sitting. `-block` takes org's whole range grammar now.
 - **`orgs export -f docx|odt|epub|rst|…`** - any format in `pandocFormats` goes to `/pandoc` (or `-f pandoc -to X`); a binary format with no `-out` is named after the file rather than dumped on the terminal.
 - `commands.ResolveOrgFiles`/`ResolveOrgFile` (`orgfiles.go`) turn typed names into the server's files; `orgs fmt`, `dblock`, `code at`, `tables import` share them.
+
+## `orgs plan`
+
+`cmd/oc/commands/plan/` (`plan.go`, `draw.go`, `plan_test.go`): the day planner over `/plan/day`, `/plan/block`, `/plan/unblock`. Bare: a bar of the working day (one cell a quarter hour; █ planned, ▓ double-booked, ▏ deadline, ▒ past), the blocks in time order with the free gaps between, then the tasks to place. `-date` (anything `orgs sched` reads), `-hours 9-17`, `-query`, `-for 45m`, `-keep-date`.
+
+- **The time is the last word that reads as one** (`ParseSlot`: `10:00`, `9`, `2pm`, `10:00-11:30`, `2-4pm`, `next`); the rest names the task. A bare number counts as an hour only up to 24, so a year is never a time.
+- **Plain words are matched against the day's own lists** (tasks to place and movable blocks, every word in the headline), because `/search` would read `report` as an unknown name. A hash, a query or `-` go through `commands.Resolve`. Several matches: a picker, or under a pipe a refusal with the count (`-at N`).
+- `unblock`/`unplan`/`off` names only blocks already on the day. Writes go through `SendReceivePostErr`, so `-dry-run` prints the request.
+
+## `orgs import`
+
+`cmd/oc/commands/importcmd/` (`import` is a Go keyword). `orgs import nb.ipynb [-o dir/name.org] [-overwrite] [-run] [-print] [-open] [-as ipynb]`, `-` reads stdin. The file is read here and its text sent (`/import/ipynb`), as `tables import` does. The extension picks an `Importer` (`Register`), so another format - the vCard importer, say, as `.vcf` - is one more registration, not another command.
+
+- **`-print` and `-dry-run` ask the server for a dry run** (`DryRun: true`, called through `common.RestPost`, not `SendReceivePost`): the server converts and writes nothing, which says more than echoing a request that is mostly the notebook in base64. A clash with an existing file is a warning there, not a refusal.
+- `-run` follows the import with `/babel/exec` `All` (needs `babel.enable`); a failing cell is reported on stderr, not as a failed import.
+
+## `orgs retag`, `split`, `merge`, `list2headings`
+
+`cmd/oc/commands/refactor/`: the terminal half of `/refactor/*` (server notes under **Structural refactors** in `internal/app/orgs/CLAUDE.md`). `retag old new` (`-delete`, `-query`, `-file a.org,b.org`), `split <heading> [-to path|folder/]`, `merge <into> <from>`, `list2headings <heading> [-line N]`.
+
+- Each previews through `common.RestPost` (a preview writes nothing, so `-dry-run` must not stop it), prints the server's `Patch` coloured on stdout and the summary/warnings on stderr, asks (`-yes` skips), then applies through `SendReceivePostErr` with the preview's token. `-dry-run` is the diff and nothing else; `-json` prints the plan (with `-dry-run`) or the apply's answer.
+- Headings are named as the write verbs name them (`commands.Resolve`; plain words are a title, as in `orgs mentions`). `merge` takes one word per heading - quote a multi-word title - and asks with a picker for a missing one. `list2headings` asks which list when a heading has several and somebody is there to answer.
+
+## `orgs notify`
+
+`notifycmd/` (named apart from the server plugin package `plugs/notify`). `status` (server: reminders, digest, quiet hours, how its machine pops; here: this machine's notifier), `test [msg]` (through the server's own path; `-here` pops locally, no server), `listen` (follows `notify` events and shows each with *this* machine's notifier, for a server elsewhere; `-quiet`, `-no-sound`, `-open`).
+
+- `listen` moves a link the server made for itself (`localhost`) onto the address this client reaches it at, or `-open` (`rebase`), so a click opens the server's worg.
+- A lost server is said once and "back" once, not on every retry of `common.Events`.

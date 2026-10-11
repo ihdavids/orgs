@@ -7,6 +7,7 @@ import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/dnd"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/gantt"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/git"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/github"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/googlecal"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/ics"

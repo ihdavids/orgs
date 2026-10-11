@@ -1192,7 +1192,7 @@ func UpdateRecord(req *common.RecordUpdate) (common.Result, error) {
 		}
 		if len(changed) > 0 {
 			alignDrawer(lines, ps, pe)
-			lines = prependLogbook(lines, from, to, ind, "Updated", now, strings.Join(changed, ", "))
+			lines = prependLogbook(lines, from, to, ind, "Updated", now, strings.TrimSpace(strings.Join(changed, ", ")+" "+req.Via))
 			lines, from, to = reread(lines, from, lvl)
 		}
 	}

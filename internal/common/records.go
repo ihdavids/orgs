@@ -134,6 +134,9 @@ type RecordUpdate struct {
 	// a thing somebody might mean.
 	SetNotes bool
 	SetName  bool
+	// Where the change came from, written after the fields on the history
+	// line: "from vCard import". Empty for an edit by hand.
+	Via string
 }
 
 // Starting a collection: a container heading in a file.
