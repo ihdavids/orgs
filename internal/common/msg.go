@@ -49,6 +49,9 @@ type NewFileRequest struct {
 	Filename string `json:"filename"`
 	Title    string `json:"title"`
 	Template string `json:"template"`
+	// Refuse rather than reload when the file is already there: a "new
+	// file" form must not quietly hand back somebody's existing notes.
+	MustBeNew bool `json:"mustBeNew"`
 }
 
 type Date string

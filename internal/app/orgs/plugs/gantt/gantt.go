@@ -243,6 +243,11 @@ func CheckPushDownChild(have map[string]*common.Todo, db common.ODb, n *common.T
 	return n
 }
 
+func NoBlocking(n *common.Todo) bool {
+	v := strings.ToLower(strings.TrimSpace(n.Props["NOBLOCKING"]))
+	return v != "" && v != "nil" && v != "no" && v != "false"
+}
+
 func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.Todo {
 	var dep *common.Todo = nil
 	if p, ok := n.Props["AFTER"]; ok && p != "" {
@@ -256,7 +261,21 @@ func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.
 		if curNode == nil {
 			return nil
 		}
+		// NOBLOCKING is org's own way of saying an entry is not held up by its
+		// siblings: it takes the heading out of its ORDERED chain. An AFTER
+		// above still counts, because that is a wait somebody wrote down.
+		if NoBlocking(n) {
+			return nil
+		}
+		// Every heading walked through, so a cycle ends the walk: a heading
+		// whose parent hash is its own (an untitled heading used to share
+		// its parent's) sent this round for ever and hung /gantt/tasks.
+		seen := map[string]bool{curNode.Hash: true}
 		for curNode.Parent != "" {
+			if seen[curNode.Parent] {
+				break
+			}
+			seen[curNode.Parent] = true
 			par := db.FindByHash(curNode.Parent)
 			if par == nil {
 				//fmt.Fprintf(os.Stderr, "Cannot find parent of %v : %v\n", curNode.Headline, curNode.Parent)

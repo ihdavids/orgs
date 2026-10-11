@@ -552,9 +552,39 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		// every re-read of a file goes through - a watcher event, a write from
 		// a handler, or a file appearing in a watched directory.
 		PublishReload(filename)
+	} else if os.IsNotExist(err) {
+		// Deleted, or the old name of a rename: the watcher reports both by
+		// the name that is gone. Forget it - it used to stay in /files, and
+		// in every query, until the server restarted.
+		self.UnloadFile(filename)
 	} else {
 		fmt.Fprintln(os.Stderr, "****** Failed to parse file {}", filename)
 	}
+}
+
+// Forget a file the database holds: its sections, its named tables, its place
+// in the file list and its version. Everything keyed per file (FileParts)
+// drops it on its next pass, because it is no longer in GetFiles.
+func (self *OrgDb) UnloadFile(filename string) {
+	self.dblock.Lock()
+	if _, ok := self.ByFile[filename]; !ok {
+		self.dblock.Unlock()
+		return
+	}
+	self.forgetSectionsForFile(filename)
+	self.CleanupTableRefsForFile(filename)
+	delete(self.ByFile, filename)
+	for i, f := range self.Filenames {
+		if f == filename {
+			self.Filenames = append(append([]string(nil), self.Filenames[:i]...), self.Filenames[i+1:]...)
+			break
+		}
+	}
+	delete(self.fileVersion, filename)
+	self.ReloadIndex += 1
+	self.dblock.Unlock()
+	Conf().Out.Infof("UNLOAD FILE: %s\n", filename)
+	PublishReload(filename)
 }
 
 func (self *OrgDb) Close() {
@@ -579,6 +609,17 @@ func (self *OrgDb) Watch() {
 					return
 				}
 				//log.Printf("EVENT %s %s\n", event.Name, event.Op)
+				// A folder that has gone may be reported only by its own
+				// name: forget every file that was under it.
+				if _, err := os.Stat(event.Name); os.IsNotExist(err) && !IsOrgFile(event.Name) {
+					prefix := strings.TrimRight(event.Name, string(os.PathSeparator)) + string(os.PathSeparator)
+					for _, f := range self.GetFiles() {
+						if strings.HasPrefix(f, prefix) {
+							self.UnloadFile(f)
+						}
+					}
+					continue
+				}
 				self.LoadFile(event.Name)
 			case err, ok := <-self.watcher.Errors:
 				if !ok {
@@ -757,6 +798,9 @@ func (self *OrgDb) CreateOrgFile(fname string, title string) *common.OrgFile {
 
 func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templateName string) *common.OrgFile {
 	if _, err := os.Stat(fname); err != nil {
+		if strings.TrimSpace(title) == "" {
+			title = titleFromFilename(fname)
+		}
 		template := templateName
 		if template == "" {
 			template = Conf().NewFileTemplate
@@ -779,6 +823,19 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		return self.ReloadFile(fname)
 	}
 	return nil
+}
+
+// A file's title from its name - snippets.org is "Snippets", q3_plan-notes.org
+// "Q3 plan notes" - for a file made with no title, rather than an empty
+// #+TITLE: nobody comes back to fill in. Most of the paths that make a file
+// (a capture target, a refile target, a date tree) have no title to give.
+func titleFromFilename(fname string) string {
+	base := strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname))
+	title := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(base, "_", " "), "-", " "))
+	if title == "" {
+		return ""
+	}
+	return strings.ToUpper(title[:1]) + title[1:]
 }
 
 func (self *OrgDb) FindNodeByHeadline(file *common.OrgFile, target *common.Target) *org.Section {
@@ -909,14 +966,7 @@ func (self *OrgDb) GetOrCreateFile(target *common.Target, allowCreate bool) *com
 	file := self.FindByFile(target.Filename)
 	if file == nil && allowCreate {
 		fname := self.GetFilepath(target.Filename)
-		// Titled after its name - snippets.org is "Snippets" - rather than
-		// left with an empty #+TITLE: nobody will come back to fill in.
-		base := strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname))
-		title := strings.ReplaceAll(strings.ReplaceAll(base, "_", " "), "-", " ")
-		if title != "" {
-			title = strings.ToUpper(title[:1]) + title[1:]
-		}
-		file = self.CreateOrgFile(fname, title)
+		file = self.CreateOrgFile(fname, "")
 	}
 	return file
 }

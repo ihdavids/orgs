@@ -1982,6 +1982,13 @@ func Reformat(query *common.FileList) (common.Result, error) {
 	for _, filename := range *query {
 		fmt.Fprintf(os.Stderr, "  reformat: [%v]\n", filename)
 		f := GetDb().FindByFile(filename)
+		if f == nil {
+			// Not a file the server holds: nothing to write, and handing the
+			// writer a nil file is not a reformat.
+			fmt.Fprintf(os.Stderr, "  reformat: no such file %v\n", filename)
+			didWrite = false
+			continue
+		}
 		didWrite = didWrite && WriteOutOrgFile(f)
 	}
 	return common.Result{Ok: didWrite}, nil
@@ -2077,30 +2084,112 @@ func IsStatusValid(query *common.TodoHash, status string) bool {
 	return false
 }
 
+// Put an exclusive marker tag (:NOW:, :FOCUS:) on one heading and take it off
+// whichever heading had it before.
+//
+// Three things went wrong here, all now avoided:
+//   - The old holders were found with HasTags, which also matches the
+//     children that only inherit the tag, and each was *toggled* - so the
+//     holder lost the tag and every one of its children gained it. Only a
+//     heading with the tag written on it is a holder, and it is removed, not
+//     toggled.
+//   - The target was looked up again by its hash after those writes. Any
+//     write can change hashes, and a lookup straight after one misses, so a
+//     hash target came back nil and the next line panicked. It is pinned down
+//     by file and outline path first instead, which a tag edit does not move.
+//   - Each change was a whole-file rewrite (ToggleTag); they are line edits
+//     of the headline now, like /heading/parts.
 func SetMarkerTag(target *common.ExclusiveTagMarker) (common.Result, error) {
-	res := common.Result{}
-	res.Ok = false
-	// Only do anything if you have a valid target!
-	if _, sec := GetDb().GetFromTarget(&target.ToId, true); sec != nil {
-		query := "!IsArchived() && (HasTags('" + target.Name + "'))"
-		q := common.StringQuery{Query: query}
-		toggle := common.TodoItemChange{Value: target.Name}
-		// Turn off today on anything that already has it.
-		if reply, err := QueryStringTodos(&q); err == nil {
-			if reply != nil {
-				for _, t := range *reply {
-					toggle.Hash = t.Hash
-					ToggleTag(&toggle)
-				}
-			}
-		}
-		// Turn on today on the target. Have to RE load the target
-		// as modifying tags could have invalidated our section
-		_, sec = GetDb().GetFromTarget(&target.ToId, true)
-		toggle.Hash = sec.Hash
-		return ToggleTag(&toggle)
+	res := common.Result{Ok: false}
+	name := strings.Trim(strings.TrimSpace(target.Name), ":")
+	if name == "" || strings.ContainsAny(name, " \t:") {
+		return res, nil
 	}
+	tgt := target.ToId
+	// allowCreate as before: a file+headline marker target that is not there
+	// yet is made.
+	if _, sec := GetDb().GetFromTarget(&tgt, true); sec == nil {
+		return res, nil
+	}
+	if err := GetDb().ConvertTargetToOlp(&tgt); err != nil {
+		return res, nil
+	}
+
+	// The headings the tag is written on, as file + outline path so each can
+	// be found again after the writes before it.
+	var holders []common.Target
+	q := common.StringQuery{Query: "!IsArchived() && (HasTags('" + name + "'))"}
+	if reply, err := QueryStringTodos(&q); err == nil && reply != nil {
+		for _, t := range *reply {
+			sec := GetDb().FindByHash(t.Hash)
+			if sec == nil || sec.Headline == nil || !hasTagFold(sec.Headline.Tags, name) {
+				continue
+			}
+			f := GetDb().FileFromSection(sec)
+			if f == nil {
+				continue
+			}
+			h := common.Target{Type: "file+olp", Filename: f.Filename, Id: common.BuildOutlinePath(sec, "::")}
+			if h.Filename == tgt.Filename && h.Id == tgt.Id {
+				continue // the target keeps it
+			}
+			holders = append(holders, h)
+		}
+	}
+	for i := range holders {
+		if err := editLocalTags(&holders[i], func(tags []string) []string { return withoutTagFold(tags, name) }); err != nil {
+			return res, err
+		}
+	}
+	if err := editLocalTags(&tgt, func(tags []string) []string {
+		if hasTagFold(tags, name) {
+			return tags
+		}
+		return append(tags, name)
+	}); err != nil {
+		return res, err
+	}
+	res.Ok = true
 	return res, nil
+}
+
+func hasTagFold(tags []string, name string) bool {
+	for _, t := range tags {
+		if strings.EqualFold(strings.TrimSpace(t), name) {
+			return true
+		}
+	}
+	return false
+}
+
+func withoutTagFold(tags []string, name string) []string {
+	var out []string
+	for _, t := range tags {
+		if !strings.EqualFold(strings.TrimSpace(t), name) {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// Change the tags written on one heading's own line, as a line edit. Nothing
+// is written when the tags come out the same.
+func editLocalTags(t *common.Target, edit func([]string) []string) error {
+	f, sec := GetDb().GetFromTarget(t, false)
+	if f == nil || sec == nil || sec.Headline == nil {
+		return fmt.Errorf("could not find %s in %s", t.Id, t.Filename)
+	}
+	was := append([]string(nil), sec.Headline.Tags...)
+	next := edit(append([]string(nil), was...))
+	if strings.Join(next, ":") == strings.Join(was, ":") {
+		return nil
+	}
+	lines, from, _, ok := recordLines(f.Filename, sec)
+	if !ok {
+		return fmt.Errorf("could not read %s", f.Filename)
+	}
+	lines[from] = setHeadlineParts(lines[from], sec.Headline.Status, nil, &next)
+	return writeLines(f.Filename, lines)
 }
 
 func GetMarkerTag(name string) (*common.Todos, error) {

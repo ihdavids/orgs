@@ -105,6 +105,7 @@ func ganttTaskFrom(d common.ODb, have map[string]*common.Todo, cannon map[string
 	}
 	t.AfterId = td.Props["AFTER"]
 	_, t.Ordered = td.Props["ORDERED"]
+	t.Chained = mermaid.Chained(have, d, td)
 
 	t.Crit = plugs.HasP(td, "CRIT") || td.Status == "BLOCKED"
 	t.Active = plugs.HasP(td, "ACT") || td.Status == "IN-PROGRESS" || td.Status == "INPROGRESS"

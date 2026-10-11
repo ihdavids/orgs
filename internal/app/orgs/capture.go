@@ -241,6 +241,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -479,15 +481,19 @@ func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Se
 				if i == p.Row {
 					// fmt.Fprintf(os.Stderr, "WRITING: i %d row %d endLine %d", i, p.Row, len(lines))
 					indent := strings.Repeat(" ", sec.Headline.Lvl+2)
+					content := args.NewNode.Content
 					if tname == "entry" {
-						head := strings.Repeat("*", sec.Headline.Lvl+1) + " " + args.NewNode.Headline
+						active, done := ValidStatusFromFile(GetDb().FindByFile(filename))
+						head := strings.Repeat("*", sec.Headline.Lvl+1) + " " +
+							withPriority(args.NewNode.Headline, args.NewNode.Priority, append(active, done...))
 						if t := captureTags(args.NewNode.Tags); t != "" {
 							head += "  " + t
 						}
 						fileContent += head + "\n"
+						content = withProperties(content, args.NewNode.Props)
 					}
 					if tname == "plain" || tname == "entry" {
-						fileContent += indentEachLine(args.NewNode.Content, indent)
+						fileContent += indentEachLine(content, indent)
 					} else if tname == "table-line" {
 						fileContent += indent + "- [ ] " + args.NewNode.Content + "\n"
 					}
@@ -520,6 +526,94 @@ func indentEachLine(content, indent string) string {
 	}
 	return out
 }
+
+// A captured entry's priority, where org writes it: after the todo keyword
+// when the headline starts with one, else first. It used to be dropped -
+// NewNode.Priority was never read - so `orgs mcp`'s capture tool, which sends
+// one, filed every entry without it. A headline that already has a cookie
+// keeps its own, and anything but one letter or digit is not a priority.
+func withPriority(headline, priority string, keywords []string) string {
+	p := strings.ToUpper(strings.TrimSpace(strings.Trim(strings.TrimSpace(priority), "[]#")))
+	if p == "" || !priorityRe.MatchString(p) {
+		return headline
+	}
+	h := strings.TrimSpace(headline)
+	if strings.Contains(h, "[#") {
+		return headline
+	}
+	cookie := "[#" + p + "]"
+	if word, rest, ok := strings.Cut(h, " "); ok || h != "" {
+		for _, k := range keywords {
+			if k != "" && word == k {
+				if !ok {
+					return word + " " + cookie
+				}
+				return word + " " + cookie + " " + strings.TrimSpace(rest)
+			}
+		}
+	}
+	if h == "" {
+		return cookie
+	}
+	return cookie + " " + h
+}
+
+// A captured entry's body with its properties in a drawer, where org reads
+// one: after any planning lines the template wrote, merged into the
+// template's own drawer when it has one (the template's values win - it was
+// written for this). NewNode.Props used to be dropped entirely.
+func withProperties(content string, props map[string]string) string {
+	if len(props) == 0 {
+		return content
+	}
+	keys := make([]string, 0, len(props))
+	for k := range props {
+		k = strings.TrimSpace(k)
+		if k != "" && !strings.ContainsAny(k, " \t:") {
+			keys = append(keys, k)
+		}
+	}
+	if len(keys) == 0 {
+		return content
+	}
+	sort.Slice(keys, func(i, j int) bool { return strings.ToUpper(keys[i]) < strings.ToUpper(keys[j]) })
+	lines := []string{}
+	if strings.TrimSpace(content) != "" {
+		lines = strings.Split(strings.TrimRight(content, "\n"), "\n")
+	}
+	at := 0
+	for at < len(lines) && planningRe.MatchString(lines[at]) {
+		at++
+	}
+	propLine := func(k string) string {
+		return fmt.Sprintf("%-10s %s", ":"+strings.ToUpper(k)+":", strings.TrimSpace(props[k]))
+	}
+	if at < len(lines) && strings.EqualFold(strings.TrimSpace(lines[at]), ":PROPERTIES:") {
+		end := at + 1
+		have := map[string]bool{}
+		for end < len(lines) && !strings.EqualFold(strings.TrimSpace(lines[end]), ":END:") {
+			if m := propNameRe.FindStringSubmatch(lines[end]); m != nil {
+				have[strings.ToUpper(m[1])] = true
+			}
+			end++
+		}
+		var add []string
+		for _, k := range keys {
+			if !have[strings.ToUpper(k)] {
+				add = append(add, propLine(k))
+			}
+		}
+		return strings.Join(splice(lines, end, add), "\n") + "\n"
+	}
+	drawer := []string{":PROPERTIES:"}
+	for _, k := range keys {
+		drawer = append(drawer, propLine(k))
+	}
+	drawer = append(drawer, ":END:")
+	return strings.Join(splice(lines, at, drawer), "\n") + "\n"
+}
+
+var propNameRe = regexp.MustCompile(`^\s*:([^:\s]+):`)
 
 // The tags of a captured entry, written the way org writes them. Kept out of
 // the headline when there are none rather than leaving `::` behind.

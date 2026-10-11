@@ -50,21 +50,35 @@ import (
 )
 
 func getDayPageAt(dt time.Time) time.Time {
-	change := []string{"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
 	if Conf().Server.DayPageMode == "week" {
-		firstDay := strings.ToLower(Conf().Server.DayPageModeWeekDay)
-		startAt := 0
-		for i, v := range change {
-			if strings.HasPrefix(v, firstDay) {
-				startAt = i
-			}
-		}
-		offset := int(dt.Weekday()) - startAt
-		if offset != 0 {
-			dt = dt.AddDate(0, 0, -offset)
-		}
+		return weekStartOn(dt, Conf().Server.DayPageModeWeekDay)
 	}
 	return dt
+}
+
+// The day a week page is named for: the most recent `firstDay` on or before
+// dt. "mon", "Monday" and "MONDAY" all name Monday; an empty or unknown name
+// is Monday.
+//
+// It used to subtract weekday-minus-start without wrapping, so on any day
+// before the start day in Go's Sunday-first numbering (a Sunday, with weeks
+// starting Monday) the offset went negative and the page was the *next*
+// week's - a day out, and a week early. And an empty name matched every day
+// as a prefix and settled on Saturday.
+func weekStartOn(dt time.Time, firstDay string) time.Time {
+	days := []string{"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
+	want := strings.ToLower(strings.TrimSpace(firstDay))
+	startAt := int(time.Monday)
+	if want != "" {
+		for i, v := range days {
+			if strings.HasPrefix(v, want) {
+				startAt = i
+				break
+			}
+		}
+	}
+	back := (int(dt.Weekday()) - startAt + 7) % 7
+	return dt.AddDate(0, 0, -back)
 }
 
 func getDayPageFilename(from time.Time) (string, string) {
@@ -190,7 +204,15 @@ func CreateDayPage() (common.FileList, error) {
 			todayData = w.String()
 		}
 		fmt.Fprintf(os.Stderr, "WRITING TEMPLATE %s\n", filename)
-		ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm)
+		// The day page folder may not be there yet - a new dayPagePath, or a
+		// first page ever - and writing into a missing folder failed with
+		// nothing said.
+		if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+			return nil, fmt.Errorf("could not make the day page folder: %w", err)
+		}
+		if err := ioutil.WriteFile(filename, []byte(todayData), fs.ModePerm); err != nil {
+			return nil, fmt.Errorf("could not write the day page: %w", err)
+		}
 	}
 	return []string{filename}, nil
 }

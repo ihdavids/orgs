@@ -3,9 +3,11 @@ package orgs
 
 import (
 	b64 "encoding/base64"
+	"errors"
 	"encoding/json"
 	"io"
 	"log"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -826,10 +828,10 @@ func RequestFullFileHtml(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -870,10 +872,10 @@ func RequestFullTodoHtml(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -904,11 +906,11 @@ func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "ERROR during request", err)
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "ERROR getting hash value", err)
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -928,6 +930,10 @@ func RequestFullTodo(w http.ResponseWriter, r *http.Request) {
 	    | =filename= | string | yes      | Absolute path where the new org file should be created.           |
 	    | =title=    | string | no       | Title for the file. Defaults to the basename without extension.   |
 	    | =template= | string | no       | Template name (e.g. =new/journal.tpl=) to use for initial content.|
+	    | =mustBeNew= | bool  | no       | Fail (=409=) if the file already exists, rather than reloading it.|
+
+	    The file must end in =.org= and sit inside one of the configured =orgDirs=;
+	    folders on the way to it are created. A template must be one of =/newtemplates=.
 
 	    *Response:*
 
@@ -949,6 +955,32 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: "Filename is required"})
 		return
+	}
+	// Only org files, only under the org directories: this endpoint writes
+	// to disk, and a path from a request must not reach anywhere else.
+	fname, ok := insideOrgDirs(req.Filename)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: "the file has to be inside one of the org directories"})
+		return
+	}
+	if filepath.Ext(fname) != ".org" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: "the file has to end in .org"})
+		return
+	}
+	req.Filename = fname
+	if req.Template != "" && (strings.Contains(req.Template, "..") || !strings.HasPrefix(req.Template, "new/") || !strings.HasSuffix(req.Template, ".tpl")) {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: "unknown template " + req.Template})
+		return
+	}
+	if req.MustBeNew {
+		if _, err := os.Stat(fname); err == nil {
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: fname + " already exists"})
+			return
+		}
 	}
 	title := req.Title
 	if title == "" {
@@ -974,7 +1006,8 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 	    *Method:* =GET=
 
-	    *Parameters:* None.
+	    *Parameters:* =all= (optional): any value lists every folder under the =orgDirs=,
+	    empty ones included (hidden folders and =node_modules= left out).
 
 	    *Response:* A JSON array of absolute directory paths.
 	    EDOC
@@ -982,6 +1015,26 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 func RequestDirs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	dirSet := map[string]bool{}
+	// Every folder under the org directories, empty ones too - what a "put the
+	// new file here" picker wants. Hidden folders and node_modules are skipped.
+	if r.URL.Query().Get("all") != "" {
+		for _, root := range Conf().Server.OrgDirs {
+			filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+				if err != nil || !d.IsDir() {
+					return nil
+				}
+				name := d.Name()
+				if p != root && (strings.HasPrefix(name, ".") || name == "node_modules") {
+					return filepath.SkipDir
+				}
+				if len(dirSet) >= 20000 {
+					return filepath.SkipAll
+				}
+				dirSet[p] = true
+				return nil
+			})
+		}
+	}
 	files := GetDb().GetFiles()
 	for _, f := range files {
 		dirSet[filepath.Dir(f)] = true
@@ -1058,10 +1111,10 @@ func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1093,10 +1146,10 @@ func PostRenameHeadline(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1128,10 +1181,10 @@ func PostChangeBody(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1239,11 +1292,11 @@ func PostChangeProperty(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Failed to deserialize")
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1278,11 +1331,11 @@ func PostToggleTags(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Failed to deserialize")
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1372,11 +1425,11 @@ func PostReformat(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			json.NewEncoder(w).Encode(reply)
 		} else {
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Failed to deserialize")
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1455,7 +1508,7 @@ func RequestHash(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		json.NewEncoder(w).Encode(reply)
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1493,7 +1546,7 @@ func RequestByHash(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(res)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1715,11 +1768,11 @@ func PostCapture(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "Capture failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Failed to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1794,11 +1847,11 @@ func PostMarker(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "Today failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Failed to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1836,11 +1889,11 @@ func PostDelete(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "Delete failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Delete to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1877,11 +1930,11 @@ func PostUpdate(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "Update failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Update to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -1917,11 +1970,11 @@ func PostRefile(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "Refile failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Refile to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2080,11 +2133,11 @@ func PostArchive(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "Archive failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "Archive to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2156,19 +2209,15 @@ func PostClockIn(w http.ResponseWriter, r *http.Request) {
 		var reply common.ResultMsg
 		reply, err = Clock().ClockIn(&args)
 		if err == nil {
-			if reply.Ok {
-				// A clock starting is the one thing a status line wants to
-				// know about without being asked, so it goes on /events.
-				Publish(Event{Kind: EventClockIn, Hash: args.Id, Msg: reply.Msg})
-			}
+			// The clock publishes its own clockin/clockout events (clock.go).
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "ClockIn failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "ClockIn to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2193,17 +2242,14 @@ func PostClockOut(w http.ResponseWriter, r *http.Request) {
 		var reply common.ResultMsg
 		reply, err = Clock().ClockOut()
 		if err == nil {
-			if reply.Ok {
-				Publish(Event{Kind: EventClockOut, Msg: reply.Msg})
-			}
 			json.NewEncoder(w).Encode(reply)
 		} else {
 			fmt.Fprintln(os.Stderr, "ClockOut failed to operate")
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "ClockOut to deserialize", err, string(body))
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2292,7 +2338,7 @@ func RequestLogbook(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2329,15 +2375,15 @@ func PostExecb(w http.ResponseWriter, r *http.Request) {
 				json.NewEncoder(w).Encode(reply)
 			} else {
 				fmt.Fprintln(os.Stderr, "BlockExec failed to exec")
-				json.NewEncoder(w).Encode(err)
+				answerErr(w, err)
 			}
 		} else {
 			fmt.Fprintln(os.Stderr, "BlockExec failed to deserialize", err, string(body))
-			json.NewEncoder(w).Encode(err)
+			answerErr(w, err)
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "BlockExec failed to read body", err)
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2371,9 +2417,12 @@ func RequestTableRandomGet(w http.ResponseWriter, r *http.Request) {
 		tables := GetDb().GetNamedTables(name)
 		if len(tables) > 0 {
 			table := tables[0]
-			max := len(table.Table.Rows)
-			rowIdx := rand.Intn(max)
-			row := table.Table.Rows[rowIdx]
+			rows := tableDataRows(table.Table)
+			if len(rows) == 0 {
+				json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: fmt.Sprintf("table %s has no data rows", name)})
+				return
+			}
+			row := table.Table.Rows[rows[rand.Intn(len(rows))]]
 			w := org.NewOrgWriter()
 
 			res := "|"
@@ -2483,7 +2532,7 @@ func PostFormulaInfo(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "TableFailed failed to read body", err)
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2529,7 +2578,7 @@ func PostExect(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "TableExec failed to read body", err)
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2578,7 +2627,7 @@ func PostExecAllT(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		fmt.Fprintln(os.Stderr, "AllTableExec failed to read body", err)
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2635,7 +2684,7 @@ func RequestValidStatus(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(res)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2668,7 +2717,7 @@ func RequestNextSibling(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(res)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2701,7 +2750,7 @@ func RequestPrevSibling(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(res)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2733,7 +2782,7 @@ func RequestLastChild(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(res)
 		}
 	} else {
-		json.NewEncoder(w).Encode(err)
+		answerErr(w, err)
 	}
 }
 
@@ -2759,4 +2808,91 @@ func RequestTags(w http.ResponseWriter, r *http.Request) {
 	} else {
 		json.NewEncoder(w).Encode(res)
 	}
+}
+
+// insideOrgDirs cleans a path and says whether it is inside one of the org
+// directories (a relative path is taken from the first). The cleaned path is
+// what should be used.
+func insideOrgDirs(p string) (string, bool) {
+	dirs := Conf().Server.OrgDirs
+	if len(dirs) == 0 {
+		return "", false
+	}
+	if !filepath.IsAbs(p) {
+		p = filepath.Join(dirs[0], p)
+	}
+	p = filepath.Clean(p)
+	for _, d := range dirs {
+		root, err := filepath.Abs(d)
+		if err != nil {
+			continue
+		}
+		rel, err := filepath.Rel(root, p)
+		if err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return p, true
+		}
+	}
+	return "", false
+}
+
+// The rows of a table worth picking: not the |---+---| rules (rows with no
+// columns), not the header (everything above the first rule, when there are
+// rows below it - org's own reading), and not the special rows a formula
+// table marks with ! # * $ / in the first column. /tablerandomget used to
+// pick from every row, so it handed back the header and the rules.
+func tableDataRows(t *org.Table) []int {
+	if t == nil {
+		return nil
+	}
+	firstRule := -1
+	for i, r := range t.Rows {
+		if len(r.Columns) == 0 {
+			firstRule = i
+			break
+		}
+	}
+	headerEnds := 0
+	if firstRule > 0 {
+		for j := firstRule + 1; j < len(t.Rows); j++ {
+			if len(t.Rows[j].Columns) > 0 {
+				headerEnds = firstRule
+				break
+			}
+		}
+	}
+	var out []int
+	for i := headerEnds; i < len(t.Rows); i++ {
+		r := t.Rows[i]
+		if len(r.Columns) == 0 || r.IsSpecial {
+			continue
+		}
+		out = append(out, i)
+	}
+	return out
+}
+
+// answerErr is how a handler says it failed: the error's own text in a
+// ResultMsg, with a status that says whose fault it was - 400 for a request
+// that could not be read (bad json, a hash that is not base64), 500 for
+// everything that went wrong doing the work.
+//
+// Handlers used to encode the error value itself, json.NewEncoder(w).Encode(err),
+// and most error types have no exported fields, so the answer was `{}` - a
+// reply that said nothing, not even that it had failed.
+func answerErr(w http.ResponseWriter, err error) {
+	msg := "the request failed"
+	if err != nil {
+		msg = err.Error()
+	}
+	status := http.StatusInternalServerError
+	var syntaxErr *json.SyntaxError
+	var typeErr *json.UnmarshalTypeError
+	var b64Err b64.CorruptInputError
+	if errors.As(err, &syntaxErr) || errors.As(err, &typeErr) || errors.As(err, &b64Err) ||
+		errors.Is(err, io.ErrUnexpectedEOF) {
+		status = http.StatusBadRequest
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: msg})
 }

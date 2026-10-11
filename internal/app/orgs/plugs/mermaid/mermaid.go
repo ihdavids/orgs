@@ -138,7 +138,21 @@ func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.
 		if curNode == nil {
 			return nil
 		}
+		// NOBLOCKING is org's own way of saying an entry is not held up by its
+		// siblings: it takes the heading out of its ORDERED chain. An AFTER
+		// above still counts, because that is a wait somebody wrote down.
+		if NoBlocking(n) {
+			return nil
+		}
+		// Every heading walked through, so a cycle ends the walk: a heading
+		// whose parent hash is its own (an untitled heading used to share
+		// its parent's) sent this round for ever and hung /gantt/tasks.
+		seen := map[string]bool{curNode.Hash: true}
 		for curNode.Parent != "" {
+			if seen[curNode.Parent] {
+				break
+			}
+			seen[curNode.Parent] = true
 			par := db.FindByHash(curNode.Parent)
 			if par == nil {
 				//fmt.Fprintf(os.Stderr, "Cannot find parent of %v : %v\n", curNode.Headline, curNode.Parent)
@@ -168,6 +182,30 @@ func After(have map[string]*common.Todo, db common.ODb, n *common.Todo) *common.
 		}
 	}
 	return dep
+}
+
+// Whether a heading has opted out of its ORDERED chain with NOBLOCKING.
+func NoBlocking(n *common.Todo) bool {
+	v := strings.ToLower(strings.TrimSpace(n.Props["NOBLOCKING"]))
+	return v != "" && v != "nil" && v != "no" && v != "false"
+}
+
+// Whether an ORDERED parent (or one further up) would chain this heading
+// behind something, AFTER and NOBLOCKING aside. What the chart needs to know
+// to take an arrow away: clearing AFTER alone would hand such a heading
+// straight back to its chain.
+func Chained(have map[string]*common.Todo, db common.ODb, n *common.Todo) bool {
+	if n == nil {
+		return false
+	}
+	bare := *n
+	bare.Props = map[string]string{}
+	for k, v := range n.Props {
+		if k != "AFTER" && k != "NOBLOCKING" {
+			bare.Props[k] = v
+		}
+	}
+	return After(have, db, &bare) != nil
 }
 
 func HeadlineAloneHasTag(name string, tags []string) bool {

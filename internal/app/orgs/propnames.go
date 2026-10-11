@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sort"
+	"strings"
 
 	"github.com/ihdavids/orgs/internal/common"
 )
@@ -38,7 +39,10 @@ type propPart map[string]map[string]int
 
 var propParts = NewFileParts[propPart]()
 
-func propertiesInUse() []PropertyUse {
+// propertiesInUse lists every property name in use. The names in `every`
+// (upper case) get all their values rather than the commonest few - what a
+// field offering the people tasks are assigned to wants.
+func propertiesInUse(every map[string]bool) []PropertyUse {
 	per := propParts.All(func(f *common.OrgFile) propPart {
 		part := propPart{}
 		for _, sec := range flattenSections(f) {
@@ -73,9 +77,10 @@ func propertiesInUse() []PropertyUse {
 			n int
 		}
 		list := []vn{}
+		whole := every[strings.ToUpper(k)]
 		for v, n := range vs {
 			use.Count += n
-			if v != "" && len(v) <= longPropValue {
+			if v != "" && (whole || len(v) <= longPropValue) {
 				list = append(list, vn{v, n})
 			}
 		}
@@ -85,7 +90,7 @@ func propertiesInUse() []PropertyUse {
 			}
 			return list[i].v < list[j].v
 		})
-		for i := 0; i < len(list) && i < mostPropValues; i++ {
+		for i := 0; i < len(list) && (whole || i < mostPropValues); i++ {
 			use.Values = append(use.Values, list[i].v)
 		}
 		out = append(out, use)
@@ -112,12 +117,22 @@ func propertiesInUse() []PropertyUse {
 
 	    *Method:* =GET=
 
-	    *Parameters:* None.
+	    *Parameters:*
+	    | Name  | Type   | Description                                                        |
+	    |-------+--------+--------------------------------------------------------------------|
+	    | =all= | string | Optional. Comma separated property names to list every value of,   |
+	    |       |        | rather than the commonest twelve (=all=ASSIGNEE,ASSIGNED=).          |
 
 	    *Response:* =[{"Name": "EFFORT", "Count": 41, "Values": ["1:00", "0:30"]}]=
 	    EDOC
 */
 func RequestProperties(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(propertiesInUse())
+	every := map[string]bool{}
+	for _, n := range strings.Split(r.URL.Query().Get("all"), ",") {
+		if n = strings.TrimSpace(n); n != "" {
+			every[strings.ToUpper(n)] = true
+		}
+	}
+	json.NewEncoder(w).Encode(propertiesInUse(every))
 }

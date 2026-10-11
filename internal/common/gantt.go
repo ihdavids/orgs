@@ -48,6 +48,9 @@ type GanttTask struct {
 	After   string
 	AfterId string
 	Ordered bool
+	// An ORDERED parent would put this heading behind something if it had no
+	// AFTER; NOBLOCKING is how it is taken out of that chain.
+	Chained bool
 
 	// The bar's look, all of it optional and read off the heading: PERCENTDONE,
 	// GANTT_COLOR (or COLOR), and GANTT_ORDER, which is the only thing that
