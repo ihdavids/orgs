@@ -25,3 +25,4 @@ Ian Davids_idavids*.json
 clock_data.json
 tools/screenshots/node_modules/
 tools/screenshots/package-lock.json
+.DS_Store
