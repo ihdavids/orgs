@@ -50,6 +50,10 @@ func RestApi(router *mux.Router) {
 		fmt.Fprintf(os.Stderr, "WARNING: Authentication is disabled (noAuth: true), everything is done as %q\n", NoAuthUsername)
 	}
 
+	// After anything that may have written a file, the database reads it
+	// again before the answer goes back, so the next request sees it.
+	api.Use(freshAfterWrite)
+
 	api.HandleFunc("/refresh", refresh).Methods("POST")
 	api.HandleFunc("/reloadconfig", PostReloadConfig).Methods("POST") // re-read the yaml: capture templates, filters, ... (reload.go)
 	// Adding an account. Only an administrator may, and only when this server
@@ -663,6 +667,7 @@ func RequestExporters(w http.ResponseWriter, r *http.Request) {
 	    |----------------+--------+----------+------------------------------------------------------------------------------------|
 	    | =filename=     | string | no       | Output filename when =local=t=. Ignored otherwise.                                 |
 	    | =query=        | string | yes      | The org file to export (basename or path).                                         |
+	    | =subtree=      | string | no       | Export only the heading with this hash and its subtree, titled by the heading.     |
 	    | =local=        | string | no       | Set to =t= to write the result to =filename= on disk instead of returning it.     |
 	    | =filelinks=    | string | no       | Set to =t= to include file-style links in the export.                              |
 	    | =httpslinks=   | string | no       | Set to =t= to convert links to https-style links.                                  |
@@ -710,11 +715,22 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	if httpslinks == "t" {
 		opts.Opts += "httpslinks;"
 	}
+	// subtree=<hash>: export that heading and what is under it, not the file.
+	var from common.ODb = db
+	if sub := r.URL.Query().Get("subtree"); sub != "" {
+		view, err := subtreeView(db, query, sub)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: err.Error()})
+			return
+		}
+		from = view
+	}
 	var res common.ResultMsg
 	if local == "t" {
-		res, _ = ExportToFile(db, &opts)
+		res, _ = ExportToFile(from, &opts)
 	} else {
-		res, _ = ExportToString(db, &opts)
+		res, _ = ExportToString(from, &opts)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
@@ -2896,6 +2912,19 @@ func tableDataRows(t *org.Table) []int {
 // Handlers used to encode the error value itself, json.NewEncoder(w).Encode(err),
 // and most error types have no exported fields, so the answer was `{}` - a
 // reply that said nothing, not even that it had failed.
+// Writes from handlers do not all read their file back; this does it for
+// them, after the handler and before the response is flushed.
+func freshAfterWrite(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(w, r)
+		if r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut {
+			if d := odb; d != nil {
+				d.ReloadChanged()
+			}
+		}
+	})
+}
+
 func answerErr(w http.ResponseWriter, err error) {
 	msg := "the request failed"
 	if err != nil {

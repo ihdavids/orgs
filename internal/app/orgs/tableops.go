@@ -255,9 +255,9 @@ func (s *RangeIter) OpGen(name string, left interface{}, right interface{}, para
 	}
 
 	if left != nil {
-		return nil, fmt.Errorf("[%s] unknown generic operator error [%v](%s) [%s] [%v](%s)", name, left, reflect.TypeOf(left).Name, name, right, reflect.TypeOf(right).Name)
+		return nil, fmt.Errorf("[%s] unknown generic operator error [%v](%s) [%s] [%v](%s)", name, left, reflect.TypeOf(left).Name(), name, right, reflect.TypeOf(right).Name())
 	} else if right != nil {
-		return nil, fmt.Errorf("[%s] unknown generic operator error [%v](%s) [%s] [%v](%s)", name, left, "<nil>", name, right, reflect.TypeOf(right).Name)
+		return nil, fmt.Errorf("[%s] unknown generic operator error [%v](%s) [%s] [%v](%s)", name, left, "<nil>", name, right, reflect.TypeOf(right).Name())
 	} else {
 		return nil, fmt.Errorf("[%s] unknown generic operator error [%v](%s) [%s] [%v](%s)", name, left, "<nil>", name, right, "<nil>")
 	}

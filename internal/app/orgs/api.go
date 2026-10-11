@@ -51,7 +51,7 @@ func (s *Db) QueryByHash(args *common.TodoHash, reply *common.Todo) error {
 	var err error = nil
 	res := FindByHash(args)
 	if res == nil {
-		err = fmt.Errorf("could not find hash %s", args)
+		err = fmt.Errorf("could not find hash %s", *args)
 	} else {
 		*reply = *res
 	}
@@ -63,7 +63,7 @@ func (s *Db) QueryByAnyId(args *common.TodoHash, reply *common.Todo) error {
 	res := FindByAnyId(args)
 
 	if res == nil {
-		err = fmt.Errorf("could not find by any id %s", args)
+		err = fmt.Errorf("could not find by any id %s", *args)
 	} else {
 		*reply = *res
 	}
@@ -74,7 +74,7 @@ func (s *Db) QueryNextSibling(args *common.TodoHash, reply *common.Todo) error {
 	var err error = nil
 	res := NextSibling(args)
 	if res == nil {
-		err = fmt.Errorf("could not find next sibling %s", args)
+		err = fmt.Errorf("could not find next sibling %s", *args)
 	} else {
 		*reply = *res
 	}
@@ -85,7 +85,7 @@ func (s *Db) QueryPrevSibling(args *common.TodoHash, reply *common.Todo) error {
 	var err error = nil
 	res := PrevSibling(args)
 	if res == nil {
-		err = fmt.Errorf("could not find prev sibling %s", args)
+		err = fmt.Errorf("could not find prev sibling %s", *args)
 	} else {
 		*reply = *res
 	}
@@ -96,7 +96,7 @@ func (s *Db) QueryLastChild(args *common.TodoHash, reply *common.Todo) error {
 	var err error = nil
 	res := LastChild(args)
 	if res == nil {
-		err = fmt.Errorf("could not find last child %s", args)
+		err = fmt.Errorf("could not find last child %s", *args)
 	} else {
 		*reply = *res
 	}

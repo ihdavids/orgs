@@ -36,6 +36,8 @@
   mode or a particular place to live: write that by hand in any file the server
   watches and the contacts tab has it a second later.
 
+  [[file:images/worg-contacts.png]]
+
 ** The one thing that makes it a record
 
    #+BEGIN_EXAMPLE

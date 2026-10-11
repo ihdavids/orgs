@@ -26,9 +26,15 @@ func (i *arrayFlags) Set(value string) error {
 
 var introFiles arrayFlags
 
+// What the sources are written in, and what the document is called. Orgs is
+// Go; the vscode plugin, which builds its docs with this too, is TypeScript.
+var extensions = map[string]bool{".go": true}
+var title = "Orgs"
+var theme = "docs"
+
 
 func IsGoFile(filename string) bool {
-	return filepath.Ext(filename) == ".go"
+	return extensions[filepath.Ext(filename)]
 }
 type DocNode struct {
 	Name string
@@ -37,6 +43,9 @@ type DocNode struct {
 	// A guide (an org file from the guides directory) is written ahead of
 	// the reference sections beside it.
 	Guide bool
+	// #+DOC_ORDER in a guide: guides with one come first, lowest first;
+	// the rest follow alphabetically.
+	Order int
 }
 var groups map[string]*DocNode = map[string]*DocNode{}
 
@@ -191,6 +200,7 @@ func ProcessGuide(filename string) {
 	lines := strings.Split(strings.TrimRight(string(data), "\n"), "\n")
 	title := strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
 	section := ""
+	order := 0
 	i := 0
 	for ; i < len(lines); i++ {
 		if strings.TrimSpace(lines[i]) == "" {
@@ -205,6 +215,8 @@ func ProcessGuide(filename string) {
 			title = strings.TrimSpace(m[2])
 		case "DOC_SECTION":
 			section = strings.TrimSpace(m[2])
+		case "DOC_ORDER":
+			fmt.Sscanf(strings.TrimSpace(m[2]), "%d", &order)
 		}
 	}
 	depth := 0
@@ -220,12 +232,53 @@ func ProcessGuide(filename string) {
 			}
 		} else if blockStart.MatchString(line) {
 			inBlock = true
-		} else if m := guideHeading.FindStringSubmatch(line); m != nil {
-			line = strings.Repeat("*", depth+1) + line
+		} else {
+			if m := guideHeading.FindStringSubmatch(line); m != nil {
+				line = strings.Repeat("*", depth+1) + line
+			}
+			line = rebaseLinks(line, filepath.Dir(filename))
 		}
 		out += line + "\n"
 	}
-	SectionChildren(section)[title] = &DocNode{Name: title, Docs: out, Children: map[string]*DocNode{}, Guide: true}
+	// A guide can also be a section other guides (or SDOC blocks) sit in:
+	// what was filed under it before it was read stays under it.
+	parent := SectionChildren(section)
+	node := &DocNode{Name: title, Docs: out, Children: map[string]*DocNode{}, Guide: true, Order: order}
+	if old, ok := parent[title]; ok {
+		node.Children = old.Children
+	}
+	parent[title] = node
+}
+
+// The directory the merged document is written to. A guide's file: links are
+// written relative to the guide (so they work when the guide is read on its
+// own) and have to be rebased to here, or every image in docs/ breaks once
+// the guide is merged into a document one directory up.
+var outputDir = "."
+
+var fileLink = regexp.MustCompile(`\[\[file:([^\]:]+)`)
+
+func rebaseLinks(line, fromDir string) string {
+	return fileLink.ReplaceAllStringFunc(line, func(m string) string {
+		target := fileLink.FindStringSubmatch(m)[1]
+		if filepath.IsAbs(target) || strings.HasPrefix(target, "~") {
+			return m
+		}
+		abs, err := filepath.Abs(filepath.Join(fromDir, target))
+		// Only a file that is there: a guide also writes links as examples
+		// of org syntax (=[[file:art/lyra.png]]=), and those stay as written.
+		if err != nil {
+			return m
+		}
+		if _, err := os.Stat(abs); err != nil {
+			return m
+		}
+		rel, err := filepath.Rel(outputDir, abs)
+		if err != nil {
+			return m
+		}
+		return "[[file:" + filepath.ToSlash(rel)
+	})
 }
 
 func WriteRecursive(lvl int, gr map[string]*DocNode, f *os.File) {
@@ -237,6 +290,12 @@ func WriteRecursive(lvl int, gr map[string]*DocNode, f *os.File) {
 		sort.Slice(keys, func(i, j int) bool {
 			if gr[keys[i]].Guide != gr[keys[j]].Guide {
 				return gr[keys[i]].Guide
+			}
+			if oi, oj := gr[keys[i]].Order, gr[keys[j]].Order; oi != oj && (oi > 0 || oj > 0) {
+				if oi == 0 || oj == 0 {
+					return oi > 0
+				}
+				return oi < oj
 			}
 			return strings.ToLower(keys[i]) < strings.ToLower(keys[j])
 		})
@@ -261,8 +320,8 @@ func WriteDocs(output string) {
 	if f, err := os.OpenFile(output, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600); err == nil {
 		defer f.Close()
 		// TODO: Make this configurable
-		f.WriteString("#+TITLE: Orgs\n")
-		f.WriteString("#+HTML_THEME: docs\n")
+		f.WriteString("#+TITLE: " + title + "\n")
+		f.WriteString("#+HTML_THEME: " + theme + "\n")
 
 
 		for _,file := range introFiles {
@@ -270,7 +329,7 @@ func WriteDocs(output string) {
 				defer r.Close()
 				scanner := bufio.NewScanner(r)
 				for scanner.Scan() {
-					line := scanner.Text()
+					line := rebaseLinks(scanner.Text(), filepath.Dir(file))
 					f.WriteString(line)
 					f.WriteString("\n")
 				}
@@ -303,8 +362,21 @@ func main() {
 	flag.StringVar(&rootDir, "src", "./", "Where to find source files.")
     flag.Var(&introFiles, "start", "Intro files to add first")
 	flag.StringVar(&guideDir, "guides", "", "Directory of org guides to merge in (default <src>/docs, \"-\" for none)")
+	exts := ".go"
+	flag.StringVar(&exts, "ext", ".go", "Source file extensions to read SDOC blocks from, comma separated (.go,.ts)")
+	flag.StringVar(&title, "title", "Orgs", "The document's #+TITLE")
+	flag.StringVar(&theme, "theme", "docs", "The document's #+HTML_THEME")
 
 	flag.Parse()
+	extensions = map[string]bool{}
+	for _, e := range strings.Split(exts, ",") {
+		if e = strings.TrimSpace(e); e != "" {
+			if !strings.HasPrefix(e, ".") {
+				e = "." + e
+			}
+			extensions[e] = true
+		}
+	}
 
 	if output == "" || rootDir == "" {
 		fmt.Printf("You must specify a source and destination directory")
@@ -329,6 +401,9 @@ func main() {
 
 	// Ensure we do not accidentally process the existing output file
 	os.Remove(output)
+	if abs, err := filepath.Abs(filepath.Dir(output)); err == nil {
+		outputDir = abs
+	}
 	for _, file := range files {
 		ProcessFile(file)
 	}

@@ -1,0 +1,41 @@
+#+TITLE: Contacts
+
+* Maya Chen
+  :PROPERTIES:
+  :RECORD:       contact
+  :ID:           6f2b7f0e-1d1c-4a64-9b73-2a1d6f4b5c01
+  :EMAIL:        maya.chen@example.com
+  :PHONE_MOBILE: +1-555-555-0142
+  :COMPANY:      Example Co.
+  :TITLE:        Design lead
+  :BIRTHDAY:     1991-{{MD+9}}
+  :END:
+  Runs the design system work. Prefers async updates.
+* Priya Natarajan
+  :PROPERTIES:
+  :RECORD:       contact
+  :ID:           6f2b7f0e-1d1c-4a64-9b73-2a1d6f4b5c02
+  :EMAIL:        priya@example.com
+  :PHONE_MOBILE: +1-555-555-0177
+  :COMPANY:      Example Co.
+  :TITLE:        Product manager
+  :BIRTHDAY:     1988-03-02
+  :END:
+* Sam Okafor
+  :PROPERTIES:
+  :RECORD:       contact
+  :ID:           6f2b7f0e-1d1c-4a64-9b73-2a1d6f4b5c03
+  :EMAIL:        sam@example.org
+  :COMPANY:      Conference committee
+  :TITLE:        Programme chair
+  :END:
+  Asked about a talk on plain-text productivity.
+* Lena Fischer
+  :PROPERTIES:
+  :RECORD:       contact
+  :ID:           6f2b7f0e-1d1c-4a64-9b73-2a1d6f4b5c04
+  :EMAIL:        lena.fischer@example.de
+  :PHONE_MOBILE: +49-30-5555-0100
+  :ADDRESS:      Berlin
+  :BIRTHDAY:     1985-11-23
+  :END:

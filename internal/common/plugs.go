@@ -157,7 +157,7 @@ func (o *PluginManager) GetPass(name string, passSource string) string {
 		nil,
 	)
 	if err != nil {
-		fmt.Errorf("%s", err.Error())
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		panic("Failed to aquire password... ABORT!")
 	}
 	o.cachedPassword[name] = pass
@@ -176,8 +176,7 @@ func (o *PluginManager) SetPass(name string, passwd string) error {
 	// save password in keychain so that it can be used for subsequent http requests
 	err := keyringSet(name, passwd)
 	if err != nil {
-		fmt.Errorf("Failed to set password in keyring: %s", err.Error())
-		return err
+		return fmt.Errorf("Failed to set password in keyring: %w", err)
 	}
 	return nil
 }

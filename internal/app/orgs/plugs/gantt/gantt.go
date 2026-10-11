@@ -426,7 +426,7 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 
 func (self *Gantt) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
-	fmt.Fprintf(os.Stderr, "GANTT: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "GANTT: Export called %s %s %s\n", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)

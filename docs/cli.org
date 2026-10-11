@@ -1,0 +1,127 @@
+#+TITLE: The command line, in pictures
+#+DOC_ORDER: 1
+#+OPTIONS: toc:2 num:nil
+
+* What this is
+
+  A tour of the =orgs= command line: one picture per command worth seeing,
+  and the line that draws it. Every command talks to a running =orgs serve=
+  (or runs one in-process for itself with =-local=), so they all see the same
+  notes, and anything changed in one shows up in the others and in worg.
+
+  The pictures are of a small demo notebook kept in =docs/screenshots/demo=;
+  =tools/screenshots= takes them again (see [[*Taking the pictures again][Taking the pictures again]]).
+
+  Every command also takes =-json=, =-format=, =-dry-run= and =-no-color=,
+  so what is drawn here for a person can be read by a program instead.
+
+* The agenda: =orgs agenda=
+
+  Three months of calendar, today's entries, and the week underneath. =,= and
+  =.= step a day, =n= comes back to today, =t= changes the keyword of the
+  entry under the cursor, =m= opens the month.
+
+  [[file:images/cli-agenda.png]]
+
+* Planning the day: =orgs plan=
+
+  The day as hours: what is booked, what is free, and the tasks waiting for a
+  slot, most urgent first. It is the agenda's day planner in worg, at a prompt.
+
+  [[file:images/cli-plan.png]]
+
+* One screen for everything: =orgs tui=
+
+  A query's results in a list, with the heading's body beside it. =:= changes
+  the query, =/= filters what is there, =t= changes a keyword, enter opens the
+  heading in your editor.
+
+  [[file:images/cli-tui.png]]
+
+* Asking questions: =orgs search=
+
+  The same query language worg's Search tab uses. Plain words match headlines;
+  an expression can ask anything the database knows.
+
+  #+BEGIN_SRC sh
+  orgs search 'IsTask() && HasTags("work")'
+  orgs search 'DeadlineWithin("7d")' -json | jq '.[].Headline'
+  #+END_SRC
+
+  [[file:images/cli-search.png]]
+
+* Boards: =orgs kanban=
+
+  worg's kanban boards, the same boards, editable from the terminal. =H= and
+  =L= move a card between columns (which changes its keyword), =J= and =K=
+  reorder it, =t= picks a keyword, =c= clocks in.
+
+  [[file:images/cli-kanban.png]]
+
+* Schedules: =orgs gantt=
+
+  A saved query drawn as a gantt chart, the same plan worg draws: =EFFORT=
+  sizes a bar, =AFTER= and =ORDERED= chain them, weekends are skipped, and
+  =-crit= marks the critical path.
+
+  [[file:images/cli-gantt.png]]
+
+* Column view: =orgs cols=
+
+  org's column view of a file, from its =#+COLUMNS:= line. Parents total the
+  columns that ask for it (=%EFFORT{:}=), enter edits a value in place, =s=
+  sorts within each parent.
+
+  [[file:images/cli-cols.png]]
+
+* Habits: =orgs habits=
+
+  Every habit's last month at a glance: =█= kept, =░= missed, =·= not due.
+  =orgs habits done <name>= ticks one off.
+
+  [[file:images/cli-habits.png]]
+
+* Tables: =orgs tables=
+
+  Every org table in your notes, in a picker with the table drawn beside it.
+  =ctrl-e= runs its =#+TBLFM= formulas.
+
+  [[file:images/cli-tables.png]]
+
+* The weekly review: =orgs review=
+
+  Everything that wants a decision: projects with nothing to do next, deadlines
+  nobody scheduled, things waiting on somebody else, time booked against open
+  tasks. =orgs review -fix= walks them one at a time.
+
+  [[file:images/cli-review.png]]
+
+* Flashcards: =orgs drill=
+
+  Spaced repetition over your notes, org-drill style: the same cards, the same
+  algorithms, the same =DRILL_*= properties. See [[*Flashcards — drilling your notes, org-drill style][Flashcards]] for how to write
+  cards.
+
+  [[file:images/cli-drill.png]]
+
+* What is in there: =orgs stats=
+
+  [[file:images/cli-stats.png]]
+
+* Taking the pictures again
+
+  The pictures are taken by a script, against a demo server with its own
+  notes, so they can be taken again whenever a command changes:
+
+  #+BEGIN_SRC sh
+  cd tools/screenshots
+  npm install
+  node capture.mjs                  # every picture
+  node capture.mjs cli-kanban       # just the ones named
+  node capture.mjs serve            # just the demo server, to look around
+  #+END_SRC
+
+  The demo notes are in =docs/screenshots/demo=. Their dates are written as
+  ={{D+3}}= and filled in when the script runs, so the agenda is always about
+  today. Terminal pictures run each command in a pseudo terminal and draw the
+  screen with xterm.js; worg pictures drive Chrome with puppeteer.

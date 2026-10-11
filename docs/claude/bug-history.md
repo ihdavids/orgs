@@ -202,3 +202,27 @@ Porting OrgExtended's missing features (dynamic blocks, babel results and calls,
 4. **`/tablerandomget` returned the header and `|---|` rules.** It picked from every row (and `rand.Intn(0)` panicked on an empty table). `tableDataRows`: not the rules, not the header above the first rule when rows follow it, not a formula table's special rows (`TestTableDataRows`).
 5. **Deleted files stayed in `/files`.** The watcher called `LoadFile` on the gone name, the open failed, and nothing was forgotten until a restart. `LoadFile` now calls `UnloadFile` for a file that no longer exists (sections, named tables, file list, version; FileParts caches drop it on their next pass), and a removed folder unloads every file under it.
 6. **Errors answered `{}`.** 47 handlers in `rest.go` did `json.NewEncoder(w).Encode(err)`; an error value has no exported fields. They go through `answerErr`: a `ResultMsg` with the error's text, 400 for an unreadable request (bad json, bad base64), 500 otherwise. worg's `doGet`/`doPost` and the Go rest client read the body whatever the status.
+
+## Found driving the vscode plugin's tests (2026-10-11)
+
+1. **A request straight after a write saw the file as it was before.** Only
+   `writeLines` read its file back into the database; refile, archive, copy
+   (`refile.go`), clock in/out and every `WriteOutOrgFile` caller wrote the
+   file and left the re-read to the watcher. An archive sent the moment a
+   refile answered looked its heading up by line in the pre-refile parse and
+   archived half of the wrong one. Fixed once rather than per writer:
+   `freshAfterWrite` (rest.go) runs `OrgDb.ReloadChanged` after every POST,
+   PUT and DELETE, before the response is flushed - it re-reads each loaded
+   file whose mtime moved (recorded by `LoadFile`).
+2. **A file deleted behind the server's back was still written into.** An
+   archive into a `_archive` file that had just been removed went into the
+   parse left in memory and was lost. `ReloadChanged` unloads files that are
+   gone.
+3. **`/clock`'s target is not a hash.** Clocking in writes the LOGBOOK, which
+   changes the heading's hash, so the clock remembers it as `file+olp`
+   (`Id` = `"H1::H2"`). A client resolving it with `/hash` finds nothing; the
+   plugin resolves the outline path itself.
+4. **`/table/calc` (new) and `subtree=` on `/file/{type}` (new).** Not bugs:
+   an editor needs to evaluate a table it holds unsaved, and to export one
+   subtree; both are done without touching any exporter or formula code - see
+   tablecalc.go and subtreeexport.go.

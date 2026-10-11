@@ -1,0 +1,22 @@
+#+TITLE: Inbox
+
+* TODO Call the plumber about the kitchen tap
+  :PROPERTIES:
+  :CREATED:  [{{D-1}} 18:42]
+  :END:
+* Idea: a weekly digest of saved articles
+  :PROPERTIES:
+  :CREATED:  [{{D-1}} 22:05]
+  :END:
+* TODO Reply to Sam about the conference talk
+  :PROPERTIES:
+  :CREATED:  [{{D+0}} 08:02]
+  :END:
+* TODO Look into a standing desk
+  :PROPERTIES:
+  :CREATED:  [{{D+0}} 08:15]
+  :END:
+* Book recommendation from Priya: "A Philosophy of Software Design"
+  :PROPERTIES:
+  :CREATED:  [{{D+0}} 08:31]
+  :END:

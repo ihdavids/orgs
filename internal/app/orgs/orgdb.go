@@ -43,6 +43,9 @@ type OrgDb struct {
 	// difference between a save costing one file and a save costing the
 	// database. This is the number a per-file cache can be keyed on instead.
 	fileVersion map[string]uint64
+	// When each file was last changed on disk as of its last read, for
+	// ReloadChanged.
+	loadedMod map[string]time.Time
 	// Whether the hash/id registries have been walked in full, and for which
 	// reload. See FindByHash.
 	hashIndexBuilt bool
@@ -517,6 +520,10 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 	}
 	Conf().Out.Infof("LOAD FILE: %s\n", filename)
 	if r, err := os.Open(filename); err == nil {
+		var mod time.Time
+		if st, serr := r.Stat(); serr == nil {
+			mod = st.ModTime()
+		}
 		d := GetConfig().Parse(r, filename)
 		r.Close()
 		ofile := new(common.OrgFile)
@@ -547,6 +554,10 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 			self.fileVersion = map[string]uint64{}
 		}
 		self.fileVersion[filename] += 1
+		if self.loadedMod == nil {
+			self.loadedMod = map[string]time.Time{}
+		}
+		self.loadedMod[filename] = mod
 		self.dblock.Unlock()
 		// Anybody watching /events hears about it here, which is the one place
 		// every re-read of a file goes through - a watcher event, a write from
@@ -786,6 +797,30 @@ func (self *OrgDb) GetFilepath(file string) string {
 	return file
 }
 
+// Read again every file that has changed on disk since it was last read. The
+// file watcher gets there too, but in its own time: a handler that wrote a file
+// and answered, and a client asking about the file straight after, raced it -
+// an archive straight after a refile looked the heading up in the file as it
+// was before the refile. Run after every request that writes (rest.go).
+func (self *OrgDb) ReloadChanged() {
+	self.dblock.Lock()
+	known := make(map[string]time.Time, len(self.ByFile))
+	for f := range self.ByFile {
+		known[f] = self.loadedMod[f]
+	}
+	self.dblock.Unlock()
+	for f, was := range known {
+		st, err := os.Stat(f)
+		if err == nil && !st.ModTime().Equal(was) {
+			self.LoadFile(f, true)
+		} else if os.IsNotExist(err) {
+			// Deleted behind our back: an archive into it would write into a
+			// file that is not there any more.
+			self.UnloadFile(f)
+		}
+	}
+}
+
 func (self *OrgDb) ReloadFile(fname string) *common.OrgFile {
 	self.LoadFile(fname, true)
 	file := self.FindByFile(fname)
@@ -822,7 +857,6 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		fmt.Fprintf(os.Stderr, "RELOAD ATTEMPT: %s\n", fname)
 		return self.ReloadFile(fname)
 	}
-	return nil
 }
 
 // A file's title from its name - snippets.org is "Snippets", q3_plan-notes.org

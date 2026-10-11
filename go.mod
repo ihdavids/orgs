@@ -12,7 +12,6 @@ require (
 	github.com/flosch/pongo2/v5 v5.0.0
 	github.com/fsnotify/fsnotify v1.5.4
 	github.com/gdamore/tcell/v2 v2.8.1
-	github.com/gen2brain/beeep v0.0.0-20220909211152-5a9ec94374f6
 	github.com/go-jira/jira v1.0.28
 	github.com/go-jose/go-jose/v4 v4.1.1
 	github.com/google/uuid v1.3.0
@@ -20,7 +19,7 @@ require (
 	github.com/gorilla/rpc v1.2.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/ides15/todoist v0.0.0-20220427224039-71f7428f4d5a
-	github.com/ihdavids/go-org v1.6.3-0.20260506050446-28600e1818bc
+	github.com/ihdavids/go-org v1.6.3-0.20261011231845-591d8ab3bc9c
 	github.com/ihdavids/govaluate v0.0.0-20231220060452-759d66a62509
 	github.com/ihdavids/tablewriter v0.0.0-20231130030027-2e70cfc41f0c
 	github.com/junegunn/fzf v0.65.2
@@ -48,8 +47,8 @@ require (
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
-	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
-	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4
+	github.com/godbus/dbus/v5 v5.1.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
@@ -64,7 +63,6 @@ require (
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	github.com/theckman/go-flock v0.4.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
@@ -90,5 +88,3 @@ require (
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 	gopkg.in/yaml.v3 v3.0.1
 )
-
-replace github.com/ihdavids/go-org => /Users/idavids/dev/go-org

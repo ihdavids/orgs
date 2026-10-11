@@ -1,6 +1,8 @@
 package common
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ihdavids/go-org/org"
@@ -54,14 +56,20 @@ type NewFileRequest struct {
 	MustBeNew bool `json:"mustBeNew"`
 }
 
+// Date is YYYY-DD-MM (day before month): the format GET /daypage/{date}
+// documents and the vscode plugin sends.
 type Date string
 
 func (self *Date) Set(dt time.Time) {
-	*self = Date(dt.Format("2006-02-01"))
+	*self = Date(fmt.Sprintf("%04d-%02d-%02d", dt.Year(), dt.Day(), int(dt.Month())))
 }
 
 func (self *Date) Get() (time.Time, error) {
-	return time.Parse("2006-02-01", string(*self))
+	parts := strings.Split(string(*self), "-")
+	if len(parts) != 3 {
+		return time.Time{}, fmt.Errorf("could not read date %q, expected YYYY-DD-MM", string(*self))
+	}
+	return time.Parse("2006-01-02", parts[0]+"-"+parts[2]+"-"+parts[1])
 }
 
 type Todo struct {

@@ -111,6 +111,12 @@ type OrgHtmlWriter struct {
 	// every link inside a heading is written between that heading's start and
 	// the next one's.
 	inHeadline *org.Headline
+	// Each heading's id, by its Index in the document, and the heading a
+	// `[[*Title]]` link names. A link can come before the heading it names,
+	// so the id is settled by whichever needs it first: the heading being
+	// written or a link to it.
+	headingIDs     map[int]string
+	headingByTitle map[string]int
 }
 
 var docStart = `
@@ -130,7 +136,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}, nil, nil}
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}, nil, nil, nil, nil}
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -396,7 +402,66 @@ func (w *OrgHtmlWriter) WriteAudio(h org.Headline) {
 	}
 }
 
+func (w *OrgHtmlWriter) headingID(index int) string {
+	if w.headingIDs == nil {
+		w.headingIDs = map[int]string{}
+	}
+	id, ok := w.headingIDs[index]
+	if !ok {
+		id = uuid.New().String()
+		w.headingIDs[index] = id
+	}
+	return id
+}
+
+// The heading a `[[*Title]]` link names: org matches the title without its
+// keyword, priority or tags, which is what Title holds. An exact match wins,
+// then one that differs only in case or spacing - the first of either.
+func (w *OrgHtmlWriter) findHeading(title string) (int, bool) {
+	loose := func(s string) string { return strings.ToLower(strings.Join(strings.Fields(s), " ")) }
+	if w.headingByTitle == nil {
+		w.headingByTitle = map[string]int{}
+		var walk func(*org.Section)
+		walk = func(sec *org.Section) {
+			if sec == nil {
+				return
+			}
+			if h := sec.Headline; h != nil {
+				t := org.String(h.Title...)
+				for _, k := range []string{"=" + t, "~" + loose(t)} {
+					if _, ok := w.headingByTitle[k]; !ok {
+						w.headingByTitle[k] = h.Index
+					}
+				}
+			}
+			for _, c := range sec.Children {
+				walk(c)
+			}
+		}
+		if w.SrcDoc != nil {
+			walk(w.SrcDoc.Outline.Section)
+		}
+	}
+	if i, ok := w.headingByTitle["="+title]; ok {
+		return i, true
+	}
+	i, ok := w.headingByTitle["~"+loose(title)]
+	return i, ok
+}
+
 func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
+	// `[[*Title]]` - a heading of this document. Left to go-org it is written
+	// as a relative url, `*Title`, that goes nowhere.
+	if l.Protocol == "" && strings.HasPrefix(l.URL, "*") {
+		if index, ok := w.findHeading(strings.TrimSpace(l.URL[1:])); ok {
+			description := html.EscapeString(strings.TrimSpace(l.URL[1:]))
+			if l.Description != nil {
+				description = w.WriteNodesAsString(l.Description...)
+			}
+			w.WriteString(fmt.Sprintf(`<a href="#%s" class="heading-link">%s</a>`, w.headingID(index), description))
+			return
+		}
+	}
 	// `[[attachment:report.pdf]]` - a file the heading owns. Written as a
 	// picture when it is one and as a link when it is not, which is what org
 	// does with it, and resolved against the heading rather than against the
@@ -555,7 +620,7 @@ func (w *OrgHtmlWriter) WriteHeadline(h org.Headline) {
 	//secProps = GetProp("REVEAL_TRANSITION", "data-transition", h, secProps)
 	//w.WriteString(fmt.Sprintf(`<section %s>`, secProps))
 
-	id := uuid.New().String()
+	id := w.headingID(h.Index)
 	parent := w.FindParent(h)
 	if parent != nil && w.ShouldClose(parent) {
 		w.WriteString("</div>")

@@ -28,6 +28,10 @@
    - VS Code: *Org: Execute Table* with the cursor in the table, or *Org: Execute All Tables In File*
 
    The table is rewritten in place, realigned, with the formula line kept.
+
+   [[file:images/worg-tables.png]]
+
+   [[file:images/cli-tables.png]]
    If a formula fails, nothing is written and the error names the formula.
 
 * Anatomy of a formula
@@ -668,6 +672,29 @@
 
   Write the name *without quotes*. =remote('Hits', $2)= is not recognised and
   the formula fails.
+
+* Colouring cells
+
+  =highlight(cell, color[, value])= writes =value= (or the cell's own value)
+  and gives the cell a colour; =red(cell[, value])=, =green=, =yellow=,
+  =blue=, =cyan=, =purple=, =orange= and =pink= are the same with the colour
+  in the name. =gradient(cell, progress, color, color...)= picks a colour
+  along the list by =progress= from 0 to 100.
+
+  #+BEGIN_SRC org
+  | task   | done | status   |
+  |--------+------+----------|
+  | write  |   90 | on track |
+  | review |   20 | behind   |
+  #+TBLFM: $3=if($2 >= 50, green($3, "on track"), red($3, "behind"))
+  #+END_SRC
+
+  =$2=gradient($2, $2, "red", "yellow", "green")= colours a column of
+  percentages by their own value, leaving the numbers as they are.
+
+  The colours are not written into the file - org has nowhere to keep them.
+  =POST /table/calc= answers with them beside the table, and an editor (the
+  vscode plugin) shows them until the table is next changed.
 
 * Spreadsheet names
 

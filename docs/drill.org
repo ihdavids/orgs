@@ -27,6 +27,12 @@
   | Drill     | =HasTags("drill")= (org-drill's own cards)     |
   | Hard ones | a saved search, edited in the Saved Queries tab |
 
+  [[file:images/worg-flashcards.png]]
+
+  The same decks drill in a terminal with =orgs drill=:
+
+  [[file:images/cli-drill.png]]
+
 * Making cards
 
 ** A simple card

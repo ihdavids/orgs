@@ -1392,7 +1392,9 @@ func (self *CommandAgenda) ShowAgendaPane(core *commands.Core) {
 	for i := start; i < end; i += 1 {
 		displayTime := true
 		for _, v := range self.Reply {
-			if v.Date.Start.Hour() == i && v.Date.Start.Minute() == 0 {
+			// Untimed entries (no date at all, for a heading only listed
+			// for its deadline elsewhere) went to the all-day block above.
+			if v.Date != nil && v.Date.HaveTime && v.Date.Start.Hour() == i && v.Date.Start.Minute() == 0 {
 				displayTime = false
 			}
 		}

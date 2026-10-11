@@ -1,0 +1,27 @@
+# Seeds the demo server's orgs_extensions.yaml: the saved queries, kanban
+# board and flashcard deck the screenshots show. A noAuth server's user is
+# "local".
+users:
+  local:
+    storedQueries:
+    - name: Plan
+      query: 'IsTask() && InFile("work.org") && HasProperty("EFFORT")'
+    - name: Open work
+      query: 'IsTask() && !IsArchived() && HasTags("work")'
+    - name: Errands
+      query: 'IsTask() && !IsArchived() && HasTags("home") && !HasTags("habit")'
+    kanbanBoards:
+    - name: Work
+      storedQuery: Open work
+      groupBy: status
+      columns:
+      - {value: TODO, color: blue}
+      - {value: NEXT, color: violet}
+      - {value: INPROGRESS, color: indigo}
+      - {value: WAITING, color: orange}
+      - {value: BLOCKED, color: pink}
+      - {value: DONE, color: green}
+    drillDecks:
+    - name: Spanish
+      description: Everyday phrases
+      query: 'HasTags("spanish") && HasTags("drill")'

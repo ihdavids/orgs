@@ -148,7 +148,7 @@ func (self *MermaidMindMap) MindMapExportRes(o *bytes.Buffer, db common.ODb, nam
 
 func (self *MermaidMindMap) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
 	ValidateMap(self.Props)
-	fmt.Fprintf(os.Stderr, "MindMap: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "MindMap: Export called %s %s %s\n", query, to, opts)
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: mindmap failed to query expression, %v [%s]\n", err, query)

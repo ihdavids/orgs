@@ -1,0 +1,96 @@
+#+TITLE: Work
+#+FILETAGS: :work:
+#+COLUMNS: %40ITEM(Task) %TODO %EFFORT(Effort){:} %ASSIGNEE(Who) %PRIORITY(P)
+
+* Website relaunch                                                  :project:
+  :PROPERTIES:
+  :ORDERED:  t
+  :END:
+  Move the marketing site to the new design system before the autumn campaign.
+  Planning notes are in [[file:notes.org::*Design system][Design system]].
+
+** DONE Audit the current pages
+   CLOSED: [{{D-9}} 16:40] SCHEDULED: <{{D-10}}>
+   :PROPERTIES:
+   :EFFORT:   2d
+   :ASSIGNEE: Maya
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-10}} 09:00]--[{{D-10}} 12:30] =>  3:30
+   CLOCK: [{{D-9}} 13:00]--[{{D-9}} 16:40] =>  3:40
+   :END:
+** INPROGRESS [#A] Build the component library
+   SCHEDULED: <{{D-4}}>
+   :PROPERTIES:
+   :EFFORT:   5d
+   :ASSIGNEE: Ian
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-2}} 09:10]--[{{D-2}} 11:55] =>  2:45
+   CLOCK: [{{D-1}} 14:00]--[{{D-1}} 17:20] =>  3:20
+   :END:
+   - [X] Buttons and links
+   - [X] Typography scale
+   - [ ] Cards
+   - [ ] Navigation bar
+** TODO [#B] Migrate the blog templates
+   :PROPERTIES:
+   :EFFORT:   3d
+   :ASSIGNEE: Ian
+   :END:
+** TODO Content review with marketing                               :meeting:
+   SCHEDULED: <{{D+1}} 10:00-11:00>
+   :PROPERTIES:
+   :EFFORT:   1h
+   :ASSIGNEE: Priya
+   :END:
+** TODO [#A] Launch
+   DEADLINE: <{{D+14}}>
+   :PROPERTIES:
+   :EFFORT:   1d
+   :ASSIGNEE: Maya
+   :END:
+
+* Quarterly planning                                                :project:
+** DONE Gather team input
+   CLOSED: [{{D-6}} 11:00]
+   :PROPERTIES:
+   :EFFORT:   1d
+   :ASSIGNEE: Priya
+   :END:
+** NEXT Draft the Q4 goals
+   DEADLINE: <{{D+2}}>
+   :PROPERTIES:
+   :EFFORT:   2d
+   :ASSIGNEE: Ian
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D+0}} 08:30]--[{{D+0}} 09:45] =>  1:15
+   :END:
+** WAITING Budget sign-off from finance
+   :PROPERTIES:
+   :EFFORT:   1d
+   :ASSIGNEE: Priya
+   :AFTER:    Draft the Q4 goals
+   :END:
+** TODO Share the plan with the team
+   SCHEDULED: <{{D+5}} 15:00>
+   :PROPERTIES:
+   :EFFORT:   2h
+   :ASSIGNEE: Ian
+   :END:
+
+* Operations
+** TODO Renew the TLS certificates                                     :ops:
+   DEADLINE: <{{D+0}}>
+** BLOCKED Upgrade the database cluster                                :ops:
+   :PROPERTIES:
+   :EFFORT:   2d
+   :END:
+   Waiting on the vendor's maintenance window.
+** TODO [#C] Tidy the on-call runbook                                  :ops:
+   SCHEDULED: <{{D+3}}>
+** TODO 1:1 with Maya                                                :meeting:
+   SCHEDULED: <{{D+0}} 13:30-14:00>
+** TODO Standup                                                      :meeting:
+   SCHEDULED: <{{D+0}} 09:30-09:45 +1d>

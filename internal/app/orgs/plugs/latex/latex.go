@@ -304,7 +304,7 @@ func (s *SubTemplates) ParagraphTemplate(name string, usedefault ...bool) (Strin
 func MakeTemplateRegistry(classPath, defaultPath string) *SubTemplates {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++")
 		}
 	}()
 	var t *SubTemplates = &SubTemplates{}
@@ -382,7 +382,7 @@ func (self *OrgLatexExporter) Unmarshal(unmarshal func(interface{}) error) error
 }
 
 func (self *OrgLatexExporter) Export(db common.ODb, query string, to string, opts string, props map[string]string) error {
-	fmt.Fprintf(os.Stderr, "LATEX: Export called", query, to, opts)
+	fmt.Fprintf(os.Stderr, "LATEX: Export called %s %s %s\n", query, to, opts)
 	err, str := self.ExportToString(db, query, opts, props)
 	if err != nil {
 		return err
@@ -1139,7 +1139,7 @@ func (w *OrgLatexWriter) SpecialHeaders(h org.Headline) bool {
 	defer func() {
 		if err := recover(); err != nil {
 			head := w.WriteNodesAsString(h.Title...)
-			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", head, "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred:", err, "\n", head, "\n+++++++++++++++++++++++++++++++++++++++++++")
 		}
 	}()
 	if w.templateRegistry.HaveHeadingOverrides() {
@@ -1860,7 +1860,7 @@ EDOC
 func (w *OrgLatexWriter) WriteTable(t org.Table) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred in table:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++\n")
+			log.Println("\n!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!!\npanic occurred in table:", err, "\n", "\n+++++++++++++++++++++++++++++++++++++++++++")
 			panic("PANIC WRITING TABLE")
 		}
 	}()
@@ -1872,15 +1872,14 @@ func (w *OrgLatexWriter) WriteTable(t org.Table) {
 		}
 	}
 	// TODO: Handle this one in a template!
-	if w.docclass == "dndbook" {
-		name := ""
-		if w.envs.HaveCaption() {
-			name = w.envs.GetCaption()
-		}
-		//tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
-		fmt.Sprintf("DndTable | [header=%s]", name)
-		//w.startEnv(tableEnv)
-	}
+	//if w.docclass == "dndbook" {
+	//	name := ""
+	//	if w.envs.HaveCaption() {
+	//		name = w.envs.GetCaption()
+	//	}
+	//	tableEnv = fmt.Sprintf("DndTable | [header=%s]", name)
+	//	w.startEnv(tableEnv)
+	//}
 	cnt := len(t.ColumnInfos)
 	sep := ""
 	// Dndbook does its own formatting

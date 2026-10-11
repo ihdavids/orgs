@@ -17,6 +17,7 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	logging "gopkg.in/op/go-logging.v1"
 )
 
 //"github.com/golang-jwt/jwt/v5"
@@ -52,7 +53,17 @@ func logToFile() *os.File {
 	// -json | jq` got "Loading: ..." in the middle of its json, and `orgs mcp`
 	// speaks JSON-RPC over stdout, where one stray log line ends the session.
 	// Nothing about a log line wants to be in the answer.
-	wrt := io.MultiWriter(os.Stderr, f)
+	var wrt io.Writer = io.MultiWriter(os.Stderr, f)
+	// A picker's preview pane is a second run of this binary, and fzf draws
+	// its stderr in the pane: every preview opened on the log banner and
+	// the "Loading:" line. fzf sets FZF_PREVIEW_COLUMNS in that run. A
+	// preview's own complaints (fmt to stderr) still show.
+	if os.Getenv("FZF_PREVIEW_COLUMNS") != "" {
+		wrt = f
+		// The config loader's "Loading:" goes through go-logging, whose
+		// default backend is a stderr of its own.
+		logging.SetBackend(logging.NewLogBackend(f, "", log.LstdFlags))
+	}
 	log.SetOutput(wrt)
 	//log.SetOutput(f)
 	log.Println("--- [OrgS] ----------------------------------")

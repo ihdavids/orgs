@@ -1,0 +1,112 @@
+#+TITLE: worg, in pictures
+#+DOC_ORDER: 2
+#+OPTIONS: toc:2 num:nil
+
+* What worg is
+
+  worg is the web front end built into the server: =orgs serve= hands it out at
+  =/=, so any browser that can reach the server (a phone included) has it. It
+  works on the same notes as the command line and the editor plugins; a change
+  made in one is in the others a second later.
+
+  It has a light and a dark look, picked with the moon in the top corner.
+
+  [[file:images/worg-agenda-dark.png]]
+
+  The pictures here are of the demo notebook in =docs/screenshots/demo=, taken
+  by =tools/screenshots= (see [[*Taking the pictures again][Taking the pictures again]] in the command line tour).
+
+* Agenda
+
+  The day as a planner: habits at the top, the hours of the day with what is
+  booked into them, and the tasks still to place down the side, most urgent
+  first. Drag a task onto an hour to schedule it. Week and Month show the
+  wider view; the calendars mark days with something on them.
+
+  [[file:images/worg-agenda.png]]
+
+* Search
+
+  The query language in a form: an expression, a regular expression over the
+  text, and filters by keyword, tag and property. Rows can be edited where
+  they are; Inspect opens a heading's dates, drawers and body beside the
+  table.
+
+  [[file:images/worg-search.png]]
+
+* Files
+
+  Every org file, read rendered or as org, and edited in place. Drawers fold,
+  links follow, and the Links panel shows what points at the file and what it
+  points at.
+
+  [[file:images/worg-files.png]]
+
+* Kanban
+
+  Boards built from a saved query, one column per keyword (or per tag or
+  property value). Dragging a card to another column changes the heading in
+  its file.
+
+  [[file:images/worg-kanban.png]]
+
+* Gantt Chart
+
+  A saved query as a schedule: =EFFORT= sizes the bars, =AFTER= and =ORDERED=
+  chain them, today is the red line. Bars can be dragged to reschedule,
+  coloured by state, person or any property, and split into lanes.
+
+  [[file:images/worg-gantt.png]]
+
+* Column View
+
+  org's column view of a file, from its =#+COLUMNS:= line, with totals on each
+  parent. Any cell can be edited in place.
+
+  [[file:images/worg-columns.png]]
+
+* Tables
+
+  Every org table, opened as a spreadsheet. Formulas (=#+TBLFM=) are shown and
+  recalculated, cells are edited in place, and a selection can be charted.
+  See [[*Tables][Tables]] for the formula language.
+
+  [[file:images/worg-tables.png]]
+
+* Mind Map
+
+  A saved query drawn as a map, coloured by branch, keyword or tag, and
+  exported as an image.
+
+  [[file:images/worg-mindmap.png]]
+
+* Contacts
+
+  Headings with a =RECORD= property, as an address book: upcoming birthdays at
+  the top, a vCard import, and each contact's fields and notes beside the
+  list. See [[*Records — the contact book, and everything else worth a list][Records]].
+
+  [[file:images/worg-contacts.png]]
+
+* Flashcards
+
+  Spaced repetition over your notes, org-drill compatible. A deck is a query;
+  clozes hide part of a line until you ask for the answer. See
+  [[*Flashcards — drilling your notes, org-drill style][Flashcards]].
+
+  [[file:images/worg-flashcards.png]]
+
+* Weekly Review
+
+  GTD's weekly review as steps: empty the inbox one item at a time (refile,
+  schedule, tag, archive, done), then the projects with no next action, what
+  is waiting on others, last week's time and the stale scheduled items.
+
+  [[file:images/worg-review.png]]
+
+* Code
+
+  Every source block in your notes, by language, with syntax colouring; a block
+  can be run and its results written back under it.
+
+  [[file:images/worg-code.png]]

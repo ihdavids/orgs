@@ -39,7 +39,7 @@ func ganttDateStr(t org.OrgDate) string {
 // dragging the bar should write back to. A heading with neither gets
 // "SCHEDULED", because that is what org means by "this is when I will do it".
 func ganttDateKind(hash string) string {
-	if sec := GetDb().FindByHash(hash); sec != nil && sec != nil && sec.Headline != nil {
+	if sec := GetDb().FindByHash(hash); sec != nil && sec.Headline != nil {
 		if sec.Headline.Timestamp != nil {
 			return "TIMESTAMP"
 		}

@@ -1,0 +1,17 @@
+{
+  "name": "orgs-screenshots",
+  "private": true,
+  "description": "Captures the documentation screenshots of the orgs CLI and worg against a demo notebook.",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node -e \"const fs=require('fs'),p=require('path');const d=p.join('node_modules','node-pty','prebuilds');if(fs.existsSync(d))for(const s of fs.readdirSync(d)){const h=p.join(d,s,'spawn-helper');if(fs.existsSync(h))fs.chmodSync(h,0o755)}\"",
+    "serve": "node capture.mjs serve",
+    "capture": "node capture.mjs"
+  },
+  "dependencies": {
+    "@xterm/addon-serialize": "^0.13.0",
+    "@xterm/headless": "^5.5.0",
+    "node-pty": "^1.0.0",
+    "puppeteer-core": "^24.0.0"
+  }
+}

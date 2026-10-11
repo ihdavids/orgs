@@ -42,6 +42,10 @@
   A command line interface for interacting with your org files
   from the command line
 
+  [[file:images/worg-agenda.png]]
+
+  [[file:images/cli-agenda.png]]
+
 ** Uses
    	OrgS is intended to be like the Language Server Protocol of org files.
    	It is intended to support:

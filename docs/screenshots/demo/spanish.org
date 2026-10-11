@@ -1,0 +1,21 @@
+#+TITLE: Spanish
+#+FILETAGS: :spanish:drill:
+
+* Greetings
+** Good morning                                                       :drill:
+   ¿Cómo se dice "good morning"?
+*** Answer
+    Buenos días
+** Cloze: introductions                                               :drill:
+   Me [llamo||verb] Ian y [soy] de Canadá.
+** Thank you very much                                                :drill:
+   ¿Cómo se dice "thank you very much"?
+*** Answer
+    Muchas gracias
+* Verbs
+** To be (permanent)                                                  :drill:
+   The verb for permanent qualities is [ser]; for states it is [estar].
+** I would like                                                       :drill:
+   ¿Cómo se dice "I would like a coffee"?
+*** Answer
+    Quisiera un café
