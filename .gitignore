@@ -29,3 +29,4 @@ tools/screenshots/package-lock.json
 /docex
 .orgs-index
 keystore.yaml
+orgs_extensions.yaml
