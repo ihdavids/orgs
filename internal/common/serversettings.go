@@ -199,9 +199,22 @@ type ServerSettings struct {
 		#+END_SRC
 
 		When this is empty the module still searches =<templatePath>/dnd=,
-		=./templates/dnd= and =~/.orgs/dnd=.
+		=./templates/dnd= (or, when neither exists, the dnd folder built into
+		the binary) and =~/.orgs/dnd=.
 		EDOC */
 	DndPaths []string `yaml:"dndPaths"`
+	/* SDOC: Settings
+	* Update Check
+		GET /version tells a client (the vscode plugin, =orgs version=) which
+		version this server is and whether a newer release is out. To know
+		that, the server asks github for the latest release of ihdavids/orgs,
+		at most every six hours. Turn the question off with:
+
+		#+BEGIN_SRC yaml
+	  noUpdateCheck: true
+		#+END_SRC
+		EDOC */
+	NoUpdateCheck bool `yaml:"noUpdateCheck"`
 	/* SDOC: Settings
 	* Dnd Session Path
 		Where play session logs are written. Starting a session from a

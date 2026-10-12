@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/assets"
 	htmlexp "github.com/ihdavids/orgs/internal/app/orgs/plugs/html"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/slides"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
@@ -74,6 +75,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/html/themes", RequestHtmlThemes)             // The themes the html exporter can render with
 	api.HandleFunc("/slides/themes", RequestSlideThemes)          // The themes the presentation exporters can render with
 	api.HandleFunc("/exporters", RequestExporters).Methods("GET") // The exporters this server was configured with
+	api.HandleFunc("/version", RequestVersion).Methods("GET")     // This server's version and whether a newer release is out (version.go)
 	api.HandleFunc("/taggroups", RequestTagGroups)
 	api.HandleFunc("/properties", RequestProperties).Methods("GET") // property names in use, for the query box (propnames.go)
 	api.HandleFunc("/grep", RequestGrep)
@@ -1100,18 +1102,8 @@ func RequestDirs(w http.ResponseWriter, r *http.Request) {
 */
 func RequestNewTemplates(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	newDir := filepath.Join(Conf().Server.TemplatePath, "new")
-	var templates []string
-	entries, err := os.ReadDir(newDir)
-	if err != nil {
-		json.NewEncoder(w).Encode(templates)
-		return
-	}
-	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".tpl") {
-			templates = append(templates, "new/"+e.Name())
-		}
-	}
+	// The built in ones and any added to the template folder, each name once.
+	templates := assets.GlobTemplates("new/*.tpl", Conf().Server.TemplatePath)
 	json.NewEncoder(w).Encode(templates)
 }
 

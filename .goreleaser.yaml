@@ -1,0 +1,45 @@
+# Release builds of orgs: `git tag v1.2.3 && git push origin v1.2.3` and
+# .github/workflows/release.yml runs this. Try it locally without publishing:
+#   goreleaser release --snapshot --clean
+version: 2
+
+project_name: orgs
+
+builds:
+  - id: orgs
+    main: ./cmd/orgs
+    binary: orgs
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags:
+      - -trimpath
+    # -s -w drops the symbol table and dwarf data (linux/amd64: 90 MB
+    # without, 78 MB with). The -X values are what `orgs version` and GET /version
+    # report (internal/common/version.go).
+    ldflags:
+      - -s -w
+      - -X github.com/ihdavids/orgs/internal/common.Version={{.Tag}}
+      - -X github.com/ihdavids/orgs/internal/common.Commit={{.ShortCommit}}
+      - -X github.com/ihdavids/orgs/internal/common.BuildDate={{.Date}}
+
+archives:
+  - id: orgs
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.org
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^Checkpoint"
+      - "^Update$"

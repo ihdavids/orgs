@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/internal/templates"
 	"gopkg.in/op/go-logging.v1"
@@ -150,6 +151,10 @@ type Config struct {
 		#+END_SRC
 
 		This defaults to: ./templates/html_styles/images
+
+		The images and fonts built into the binary are served behind these
+		folders, so either may be left out; a file of the same name in the
+		folder replaces the built in one.
 		EDOC */
 	TemplateImagesPath string `yaml:"templateImagesPath"`
 	TemplateFontPath   string `yaml:"templateFontPath"`
@@ -386,6 +391,10 @@ func (self *Config) ParseConfig() {
 			// is a working config in hand; the only thing missing is the file,
 			// and nothing here needs one.
 			filename = ""
+		} else if flag.Arg(0) == "version" {
+			// Asked straight after an install, before there is any config:
+			// the defaults are enough to print this binary's version.
+			filename = ""
 		} else {
 			fmt.Fprintf(os.Stderr, "Looks like you do not have a [%s] configuration file. Please add one!\n", self.Config)
 			os.Exit(-1)
@@ -413,6 +422,8 @@ func (self *Config) ParseConfig() {
 	manager.Out = GetLog()
 	if self.Server != nil {
 		manager.Tempo = &templates.TemplateManager{TemplatePath: config.Server.TemplatePath}
+		// For the code that searches templates with no config to hand.
+		assets.TemplatePath = config.Server.TemplatePath
 		manager.Tempo.Initialize()
 		self.setTemplateIdentity(manager.Tempo)
 	}

@@ -6,26 +6,25 @@ import (
 	"html"
 	"html/template"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+// PlugExpandTemplatePath is name as given if that is a file, else the first
+// copy on the template search path (the configured templatePath, ./templates,
+// then the one built into the binary), else name unchanged.
 func PlugExpandTemplatePath(name string) string {
-	tempName, _ := filepath.Abs(name)
-	tempFolderName, _ := filepath.Abs(path.Join("./templates", name))
-	if _, err := os.Stat(name); err == nil {
-		// Use name
+	if tempName, err := filepath.Abs(name); err == nil {
+		if st, err := os.Stat(tempName); err == nil && !st.IsDir() {
+			return tempName
+		}
 	}
-	if _, err := os.Stat(tempName); err == nil {
-		// Try abs name of name
-		name = tempName
-	} else if _, err := os.Stat(tempFolderName); err == nil {
-		// Try in the template folder for name
-		name = tempFolderName
+	if found := assets.FindTemplate(name); found != "" {
+		return found
 	}
 	return name
 }

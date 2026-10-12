@@ -60,6 +60,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/taggroups"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/tui"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/user"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/version"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/voice"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/watch"
 )

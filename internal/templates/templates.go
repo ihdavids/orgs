@@ -3,7 +3,6 @@ package templates
 import (
 	"fmt"
 	"os"
-	"path"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/ekalinin/go-textwrap"
 	"github.com/flosch/pongo2/v5"
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/orgdate"
 	"github.com/muesli/reflow/wordwrap"
 )
@@ -526,16 +526,13 @@ func (self *TemplateManager) resolveTemplateString(template string, context map[
 
 func (self *TemplateManager) ExpandTemplatePath(name string) string {
 	tempName, _ := filepath.Abs(name)
-	tempFolderName, _ := filepath.Abs(path.Join(self.TemplatePath, name))
-	//if _, err := os.Stat(name); err == nil {
-	// Use name
-	//}
 	if _, err := os.Stat(tempName); err == nil {
 		// Try abs name of name
-		name = tempName
-	} else if _, err := os.Stat(tempFolderName); err == nil {
-		// Try in the template folder for name
-		name = tempFolderName
+		return tempName
+	}
+	// Then the template folder, and the copy built into the binary behind it.
+	if found := assets.FindTemplate(name, self.TemplatePath); found != "" {
+		return found
 	}
 	return name
 }

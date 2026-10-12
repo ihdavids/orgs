@@ -52,7 +52,8 @@ package dnd
   Modules are searched for in (in order):
   1. The built in SRD data compiled into the binary.
   2. Every directory listed in =dndPaths= in your server settings.
-  3. =<templatePath>/dnd= and =./templates/dnd=.
+  3. =<templatePath>/dnd= and =./templates/dnd=, or the dnd folder built
+     into the binary when neither exists.
 
 ** Widening a class's spell list
 

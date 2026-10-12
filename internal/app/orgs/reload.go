@@ -35,6 +35,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/yaml.v2"
 )
@@ -122,6 +123,7 @@ func ReloadConfig() (common.ReloadResult, error) {
 	o.DayPageModeWeekDay = n.DayPageModeWeekDay
 	o.DayPageMaxSearchBack = n.DayPageMaxSearchBack
 	o.DndPaths = n.DndPaths
+	o.NoUpdateCheck = n.NoUpdateCheck
 	o.DndSessionPath = n.DndSessionPath
 	o.DndSessionTemplate = n.DndSessionTemplate
 	o.AccessControl = n.AccessControl
@@ -136,6 +138,7 @@ func ReloadConfig() (common.ReloadResult, error) {
 		m.TagGroups = cur.TagGroups
 		if m.Tempo != nil {
 			m.Tempo.TemplatePath = o.TemplatePath
+			assets.TemplatePath = o.TemplatePath
 			cur.setTemplateIdentity(m.Tempo)
 		}
 	}

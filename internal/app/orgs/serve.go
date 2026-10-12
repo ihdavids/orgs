@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/slides"
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/worg"
 	"github.com/rs/cors"
@@ -240,7 +241,7 @@ func StartServer(sets *common.ServerSettings) {
 	// directory would be a theme nobody could rely on.
 	slides.SearchPath = sets.TemplatePath
 	log.Printf("%s\n", unicorn4)
-	log.Printf("[STARTING SERVER]\n")
+	log.Printf("[STARTING SERVER] orgs %s\n", versionLine())
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
@@ -279,11 +280,13 @@ func StartServer(sets *common.ServerSettings) {
 			if fpath, err := filepath.Abs(path); err == nil {
 				fmt.Fprintf(os.Stderr, "PREFIX: %s\n", fpath)
 				fs := http.FileServer(http.Dir(fpath))
+				// The configured folders first and the copies built into the
+				// binary behind them, so a server started anywhere has them.
 				tpath, _ := filepath.Abs(Conf().TemplateImagesPath)
 				fmt.Fprintf(os.Stderr, "TEMP PATH: %s\n", tpath)
-				internalfs := http.FileServer(http.Dir(tpath))
+				internalfs := http.FileServer(assets.Overlay(tpath, filepath.Join(assets.Dir("templates"), "html_styles", "images")))
 				tfpath, _ := filepath.Abs(Conf().TemplateFontPath)
-				internalfontfs := http.FileServer(http.Dir(tfpath))
+				internalfontfs := http.FileServer(assets.Overlay(tfpath, filepath.Join(assets.Dir("templates"), "fonts")))
 				router.PathPrefix("/images/").Handler(http.StripPrefix("/images", fs))
 				router.PathPrefix("/orgimages/").Handler(http.StripPrefix("/orgimages", internalfs))
 				router.PathPrefix("orgimages/").Handler(http.StripPrefix("orgimages", internalfs))
@@ -292,6 +295,10 @@ func StartServer(sets *common.ServerSettings) {
 			}
 		}
 	}
+	// The old web pages and the font awesome fonts their stylesheet loads
+	// from ../webfonts. A ./web or ./webfonts in the working directory wins.
+	router.PathPrefix("/web/").Handler(http.StripPrefix("/web", http.FileServer(assets.Overlay("./web", assets.Dir("web")))))
+	router.PathPrefix("/webfonts/").Handler(http.StripPrefix("/webfonts", http.FileServer(assets.Overlay("./webfonts", assets.Dir("webfonts")))))
 	// Serve the embedded worg frontend
 	webFS, _ := fs.Sub(worg.Content, ".")
 	router.PathPrefix("/").Handler(http.FileServer(http.FS(webFS)))

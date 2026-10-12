@@ -11,12 +11,12 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -900,25 +900,16 @@ func GetStylesheet(name string, fontfamily string) string {
 }
 
 // HtmlThemes lists the themes the html exporter can render with: every
-// "<name>_style.css" under the template folder's html_styles directory.
+// "<name>_style.css" under html_styles in any template folder, the built in
+// ones included.
 func HtmlThemes() []string {
-	dir := plugs.PlugExpandTemplatePath("html_styles")
-	entries, err := os.ReadDir(dir)
-	if err != nil {
+	names := []string{}
+	for _, n := range assets.GlobTemplates("html_styles/*_style.css") {
+		names = append(names, strings.TrimSuffix(strings.TrimPrefix(n, "html_styles/"), "_style.css"))
+	}
+	if len(names) == 0 {
 		return []string{"default"}
 	}
-	names := []string{}
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		n := e.Name()
-		if !strings.HasSuffix(n, "_style.css") {
-			continue
-		}
-		names = append(names, strings.TrimSuffix(n, "_style.css"))
-	}
-	sort.Strings(names)
 	return names
 }
 

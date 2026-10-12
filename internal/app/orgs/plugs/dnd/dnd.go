@@ -218,6 +218,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/internal/common/dnd"
 	"gopkg.in/op/go-logging.v1"
@@ -280,12 +281,26 @@ func Reload() *dnd.Library {
 }
 
 // DefaultPaths is the search path used when nothing is configured.
+//
+// The dnd folder built into the binary comes last, and only when neither
+// template folder has a dnd folder of its own: a module loaded twice appends
+// its lists twice, so a copy of the built in folder must replace it rather
+// than sit beside it.
 func DefaultPaths(templatePath string) []string {
 	paths := []string{}
 	if templatePath != "" {
 		paths = append(paths, filepath.Join(templatePath, "dnd"))
 	}
 	paths = append(paths, "./templates/dnd")
+	own := false
+	for _, p := range paths {
+		if st, err := os.Stat(p); err == nil && st.IsDir() {
+			own = true
+		}
+	}
+	if builtin := assets.Dir("templates"); !own && builtin != "" {
+		paths = append(paths, filepath.Join(builtin, "dnd"))
+	}
 	if home, err := os.UserHomeDir(); err == nil {
 		paths = append(paths, filepath.Join(home, ".orgs", "dnd"))
 	}

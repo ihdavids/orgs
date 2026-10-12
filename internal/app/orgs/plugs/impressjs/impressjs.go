@@ -243,14 +243,13 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/slides"
+	"github.com/ihdavids/orgs/internal/assets"
 	"github.com/ihdavids/orgs/internal/common"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -630,9 +629,8 @@ func (self *ImpressExporter) Export(db common.ODb, query string, to string, opts
 
 func (e *ImpressExporter) ExpandThemePath(tname string) string {
 	name := "impress_theme_" + tname + ".css"
-	tempFolderName, _ := filepath.Abs(path.Join(e.ThemePath, name))
-	if _, err := os.Stat(tempFolderName); err == nil {
-		name = tempFolderName
+	if found := assets.FindTemplate(name, e.ThemePath, assets.TemplatePath); found != "" {
+		return found
 	}
 	return name
 }

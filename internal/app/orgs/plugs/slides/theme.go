@@ -35,6 +35,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs"
+	"github.com/ihdavids/orgs/internal/assets"
 )
 
 // Theme is a local theme, loaded.
@@ -136,9 +137,9 @@ func ThemeNames() []string {
 	return out
 }
 
-// readTheme looks in the configured template path first and the working
-// directory's ./templates after, which is the order the template manager
-// itself resolves in.
+// readTheme looks in the configured template path first, the working
+// directory's ./templates after and the copy built into the binary last, which
+// is the order the template manager itself resolves in.
 func readTheme(name string) ([]byte, error) {
 	for _, dir := range themeDirs() {
 		if data, err := os.ReadFile(filepath.Join(dir, name)); err == nil {
@@ -149,18 +150,10 @@ func readTheme(name string) ([]byte, error) {
 }
 
 func themeDirs() []string {
-	dirs := []string{}
 	if SearchPath != "" {
-		dirs = append(dirs, SearchPath)
-		if abs, err := filepath.Abs(SearchPath); err == nil && abs != SearchPath {
-			dirs = append(dirs, abs)
-		}
+		return assets.TemplateDirs(SearchPath, assets.TemplatePath)
 	}
-	dirs = append(dirs, "./templates")
-	if abs, err := filepath.Abs("./templates"); err == nil {
-		dirs = append(dirs, abs)
-	}
-	return dirs
+	return assets.TemplateDirs()
 }
 
 // ── The animated backdrop ───────────────────────────────────────────────────
