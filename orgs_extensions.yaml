@@ -111,3 +111,58 @@ users:
       - TODO
       headerKey: ""
       headerColors: {}
+    drillDecks: []
+  ian:
+    storedQueries:
+    - name: Orch
+      query: IsStatus('TODO') && HasTags('WORK') || HasTags('JIRA')
+    - name: Goo
+      query: HasTags("JIRA") && MatchProperty("CUSTOM_ID","CLI-(91033|91033)")
+    captureTemplates: []
+    kanbanBoards:
+    - name: Board
+      storedQuery: Goo
+      query: ""
+      includeArchived: false
+      groupBy: status
+      groupKey: ""
+      columns: []
+      showUnset: true
+      unsetTitle: ""
+      colorBy: none
+      colorKey: ""
+      colors: {}
+      badges: []
+      backShows: both
+      sort: manual
+      orderKey: KANBAN
+      layout: board
+      listFields:
+      - priority
+      - deadline
+      - tags
+      labelSource: none
+      labelKey: ""
+      labelColors: {}
+      labelOrder: []
+      hidden: []
+      folded:
+      - BLOCKED
+      - PHONE
+      - MEETING
+      - BACKLOG
+      - CANCELLED
+      - ""
+      - NEXT
+      - WAITING
+      - PAUSED
+      headerKey: ""
+      headerColors: {}
+    drillDecks: []
+  local:
+    storedQueries:
+    - name: all
+      query: IsTodo()
+    captureTemplates: []
+    kanbanBoards: []
+    drillDecks: []
