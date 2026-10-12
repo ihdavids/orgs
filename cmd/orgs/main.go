@@ -227,6 +227,15 @@ func expandAliases(args []string) []string {
 	return args
 }
 
+// Whether the config has a token from `orgs login` that has not run out.
+func storedTokenGood() bool {
+	if orgs.Conf().Token == "" {
+		return false
+	}
+	expiry, err := time.Parse(time.RFC3339, orgs.Conf().TokenExpiry)
+	return err != nil || time.Now().Before(expiry)
+}
+
 func main() {
 	orgs.DefaultKeystore()
 	f := logToFile()
@@ -238,6 +247,16 @@ func main() {
 	core.ConfigFile = orgs.Conf().Config
 	if orgs.Conf().Token != "" {
 		core.Rest.Header.Set("Authorization", "Bearer "+orgs.Conf().Token)
+	}
+	// No token that is still good, but this config holds the keys of a server
+	// on this machine (the one VS Code sets up, read from the orgs.yaml beside
+	// its binary): make one rather than ask for a login. See localtoken.go.
+	minted := false
+	if !storedTokenGood() {
+		if tok, _, ok := orgs.LocalToken(); ok {
+			core.Rest.Header.Set("Authorization", "Bearer "+tok)
+			minted = true
+		}
 	}
 	core.Start()
 
@@ -276,7 +295,7 @@ func main() {
 			// token *without trying the refresh*, so a session that could have
 			// been renewed silently told people to log in again.
 			_, offline := commands.CmdRegistry[k].Cmd.(commands.Offline)
-			if !localMode && !offline && k != "login" && k != "serve" &&
+			if !localMode && !minted && !offline && k != "login" && k != "serve" &&
 				orgs.Conf().TokenExpiry != "" {
 				if expiry, err := time.Parse(time.RFC3339, orgs.Conf().TokenExpiry); err == nil {
 					// Try the renewal first and only give up if it fails: an

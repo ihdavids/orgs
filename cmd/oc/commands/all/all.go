@@ -63,4 +63,5 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/version"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/voice"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/watch"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/worg"
 )

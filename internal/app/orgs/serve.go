@@ -318,7 +318,14 @@ func StartServer(sets *common.ServerSettings) {
 	// costs a walk of the whole database is what this is here to stop.
 	StartTrigramIndex()
 
-	// Allow http connections but only from localhost
+	// Everything below serves handler rather than the router, so the
+	// localhost check sits in front of the api, the files and worg alike.
+	var handler http.Handler = router
+	if sets.LocalhostOnly {
+		handler = localhostOnly(router)
+		fmt.Fprintf(os.Stderr, "LOCALHOST ONLY: requests from other machines are refused\n")
+	}
+
 	go func() {
 		var corsHandler http.Handler
 		if sets.AccessControl == "*" {
@@ -327,7 +334,7 @@ func StartServer(sets *common.ServerSettings) {
 				AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 				AllowedHeaders: []string{"*"},
 			})
-			corsHandler = corsPolicy.Handler(router)
+			corsHandler = corsPolicy.Handler(handler)
 		} else {
 			// Explicitly allow worg dev port over localhost
 			corsPolicy := cors.New(cors.Options{
@@ -338,16 +345,13 @@ func StartServer(sets *common.ServerSettings) {
 				//	// Enable Debugging for testing, consider disabling in production
 				// Debug: true,
 			})
-			corsHandler = corsPolicy.Handler(router)
+			corsHandler = corsPolicy.Handler(handler)
 		}
 		//if orgs.Conf().AllowHttp {
 		fmt.Fprintf(os.Stderr, "HTTP PORT: %d\n", sets.Port)
 		//fmt.Fprintf(os.Stderr, "WEB: %s\n", orgs.Conf().WebServePath)
 		//fmt.Fprintf(os.Stderr, "ORG: %s\n", orgs.Conf().ServePath)
-		err := http.ListenAndServe(fmt.Sprint(":", sets.Port), corsHandler)
-		if err != nil {
-			log.Fatal("ListenAndServe: ", err)
-		}
+		listenAndServe(sets.LocalhostOnly, sets.Port, "", "", corsHandler)
 		//}
 	}()
 
@@ -360,7 +364,7 @@ func StartServer(sets *common.ServerSettings) {
 				AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 				AllowedHeaders: []string{"*"},
 			})
-			tlsCorsHandler = corsPolicy.Handler(router)
+			tlsCorsHandler = corsPolicy.Handler(handler)
 		} else {
 			corsPolicy := cors.New(cors.Options{
 				AllowedOrigins:   []string{sets.AccessControl},
@@ -369,15 +373,12 @@ func StartServer(sets *common.ServerSettings) {
 				AllowedHeaders:   []string{"*"},
 				Debug:            true,
 			})
-			tlsCorsHandler = corsPolicy.Handler(router)
+			tlsCorsHandler = corsPolicy.Handler(handler)
 		}
 		fmt.Fprintf(os.Stderr, "PORT: %d\n", sets.TLSPort)
 		servercrt := sets.ServerCrt
 		serverkey := sets.ServerKey
-		err := http.ListenAndServeTLS(fmt.Sprint(":", sets.TLSPort), servercrt, serverkey, tlsCorsHandler)
-		if err != nil {
-			log.Fatal("ListenAndServeTLS: ", err)
-		}
+		listenAndServe(sets.LocalhostOnly, sets.TLSPort, servercrt, serverkey, tlsCorsHandler)
 	} else {
 		// The https listener is what used to hold this function open, so with
 		// allowHttps off the process fell straight through both listeners and

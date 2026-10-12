@@ -40,6 +40,8 @@ func RestApi(router *mux.Router) {
 	// The salt a client hashes a password with before sending it. Public
 	// because it is asked for by somebody who is not logged in yet.
 	router.HandleFunc("/salt", salt).Methods("GET")
+	// A one-use login link a logged in client made for a browser (ticket.go).
+	router.HandleFunc("/login/ticket/{ticket}", RedeemLoginTicket).Methods("GET")
 
 	// Protected routes - all endpoints below require a valid JWS token
 	api := router.PathPrefix("").Subrouter()
@@ -57,6 +59,7 @@ func RestApi(router *mux.Router) {
 	api.Use(freshAfterWrite)
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
+	api.HandleFunc("/login/ticket", PostLoginTicket).Methods("POST") // a one-use login link for a browser (ticket.go)
 	api.HandleFunc("/reloadconfig", PostReloadConfig).Methods("POST") // re-read the yaml: capture templates, filters, ... (reload.go)
 	// Adding an account. Only an administrator may, and only when this server
 	// has a keystore file to write - see adduser.go.

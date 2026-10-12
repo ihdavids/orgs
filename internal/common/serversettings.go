@@ -184,6 +184,26 @@ type ServerSettings struct {
 	// server. Turn it on once everything has been rebuilt - the server names
 	// each cleartext login in its log until then.
 	RequireHashedLogin bool `yaml:"requireHashedLogin"`
+	/* SDOC: Settings
+	* Localhost Only
+		Serve this machine and nothing else. The http and https listeners
+		bind to 127.0.0.1 (and ::1) instead of every interface, and any
+		request that does not come from this machine, or that names some
+		other host in its Host header, is refused with a 403.
+
+		#+BEGIN_SRC yaml
+	  server:
+	    localhostOnly: true
+		#+END_SRC
+
+		The Host check is what stops another web site from reaching the
+		server through your browser by pointing its own name at 127.0.0.1
+		(DNS rebinding). Names under =.localhost= are accepted. Off by
+		default. A reverse proxy on the same machine still gets through,
+		because its requests come from localhost, so leave this off or
+		check the proxy if you mean to publish orgs through one.
+		EDOC */
+	LocalhostOnly bool `yaml:"localhostOnly"`
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
 	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`

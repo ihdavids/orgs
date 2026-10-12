@@ -16,6 +16,13 @@ command line client.
   (HTTP and/or HTTPS) with JWT logins, a per-user keystore and token expiry.
 - Embeds the worg web app, the html/latex templates, the documentation
   themes and fonts, so a server needs no files beside the binary.
+- Login tickets: `POST /login/ticket` (logged in) hands out a one-use,
+  one-minute link, `GET /login/ticket/<t>`, that logs a browser in to worg
+  without a password. `orgs worg [View]` opens one.
+- The command line makes its own token for a server on this machine when its
+  config holds that server's keys (`orgJWS`, `orgJWE`, `orgSalt`) and it has
+  no good token of its own - so the binary VS Code installs, which reads the
+  server's `orgs.yaml` beside it, needs no login.
 - `GET /version` reports the running version and whether a newer release is
   on github (cached 6h; `server.noUpdateCheck` turns it off).
 - Exporters: html, markdown, latex/pdf, pandoc, mermaid, gantt, Confluence,

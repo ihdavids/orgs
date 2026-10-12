@@ -22,12 +22,13 @@ func (self *Serve) StartPlugin(manager *common.PluginManager) {
 
 func (self *Serve) SetupParameters(fset *flag.FlagSet) {
 
-	// NOTE: for this to work the default should always be the current
-	//       value of the structure. Avoid using a default here
-	//       instead specify it in Defaults up above.
+	// Zero means "not given": Exec only overrides the yaml's port:/tlsport:
+	// with a flag that was actually passed. A literal default here (8010, 443)
+	// used to win over the yaml on every run. The real defaults live in
+	// ServerSettings.Init.
 	fset.StringVar(&self.ServePath, "servepath", self.ServePath, "serve path")
-	fset.IntVar(&self.Port, "port", 8010, "serve port")
-	fset.IntVar(&self.TLSPort, "tlsport", 443, "tls serve port")
+	fset.IntVar(&self.Port, "port", 0, "serve port (default: port in the config, else 8010)")
+	fset.IntVar(&self.TLSPort, "tlsport", 0, "tls serve port (default: tlsport in the config, else 443)")
 }
 
 func (self *Serve) Exec(core *commands.Core) {
