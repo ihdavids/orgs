@@ -16,7 +16,9 @@ if [ ! -d "$WORG" ]; then
 fi
 
 echo "building worg in $WORG"
-(cd "$WORG" && npm run build)
+# No source maps: they hold worg's whole source, would be embedded in the
+# binary (30 MB of them) and published with every release.
+(cd "$WORG" && GENERATE_SOURCEMAP=false npm run build)
 
 # A failed `npm run build` leaves the previous build's public files behind and
 # no `static/`, which looked enough like a build to be copied over the embedded
