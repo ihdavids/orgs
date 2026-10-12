@@ -4,7 +4,7 @@ import "testing"
 
 func lvlRuleset(t *testing.T) *Ruleset {
 	t.Helper()
-	l := NewLibrary([]string{"../../../templates/dnd"})
+	l := NewLibrary(moduleDirs(t))
 	l.Resolve()
 	rs := l.Get("srd")
 	if rs == nil {

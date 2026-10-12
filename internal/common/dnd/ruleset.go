@@ -135,7 +135,7 @@ package dnd
   Each value is a formula: terms joined with "+", where a term is a number,
   an ability id whose modifier is added, or the proficiency bonus as =prof=,
   =prof/2= (rounded down) or =prof/2up= (rounded up). A feat takes the same
-  block. See =templates/dnd/bonuses.yaml= for worked examples.
+  block.
 
   =unless= is the one field that is not a formula. Every feature in the rules
   that moves a speed is qualified by what you are wearing, so those two

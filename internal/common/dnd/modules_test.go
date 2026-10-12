@@ -1,11 +1,37 @@
 package dnd
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
-// The add on modules shipped in templates/dnd have to load and index cleanly.
+// moduleDirs is templates/dnd plus the private ruleset modules, which live in
+// their own repository rather than in orgs. ORGS_DND_PATHS names them (a path
+// list, as PATH is), else the sibling clone ../dnd-templates. A test that
+// needs them is skipped where they are not checked out.
+func moduleDirs(t *testing.T) []string {
+	t.Helper()
+	extra := filepath.SplitList(os.Getenv("ORGS_DND_PATHS"))
+	if len(extra) == 0 {
+		extra = []string{"../../../../dnd-templates"}
+	}
+	dirs := []string{"../../../templates/dnd"}
+	for _, d := range extra {
+		if st, err := os.Stat(d); err == nil && st.IsDir() {
+			dirs = append(dirs, d)
+		}
+	}
+	if len(dirs) == 1 {
+		t.Skip("private dnd modules not found: set ORGS_DND_PATHS or clone dnd-templates beside orgs")
+	}
+	return dirs
+}
+
+// The add on modules have to load and index cleanly.
 // They are data, so nothing else would catch a typo in them.
 func TestShippedModulesLoad(t *testing.T) {
-	lib := NewLibrary([]string{"../../../templates/dnd"})
+	lib := NewLibrary(moduleDirs(t))
 	if len(lib.Errors) > 0 {
 		t.Fatalf("module load errors: %v", lib.Errors)
 	}
@@ -88,7 +114,7 @@ func TestShippedModulesLoad(t *testing.T) {
 // Fast Movement is the case that showed the engine had no way to move a
 // walking speed at all: a 5th level barbarian reads 30 without it.
 func TestFastMovementRaisesSpeed(t *testing.T) {
-	lib := NewLibrary([]string{"../../../templates/dnd"})
+	lib := NewLibrary(moduleDirs(t))
 	rs := lib.Get("srd")
 	if rs == nil {
 		t.Fatal("no srd ruleset")

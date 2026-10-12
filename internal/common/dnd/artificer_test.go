@@ -4,7 +4,7 @@ import "testing"
 
 func modules(t *testing.T) *Ruleset {
 	t.Helper()
-	l := NewLibrary([]string{"../../../templates/dnd"})
+	l := NewLibrary(moduleDirs(t))
 	l.Resolve()
 	if len(l.Errors) > 0 {
 		t.Fatalf("module load errors: %v", l.Errors)

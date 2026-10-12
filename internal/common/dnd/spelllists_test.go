@@ -107,7 +107,7 @@ spellLists:
 // The shipped druid module has to hold the whole druid list together: the
 // spells it adds outright and the ones it only widens the list with.
 func TestShippedDruidListIsComplete(t *testing.T) {
-	l := NewLibrary([]string{"../../../templates/dnd"})
+	l := NewLibrary(moduleDirs(t))
 	l.Resolve()
 	if len(l.Errors) > 0 {
 		t.Fatalf("module load errors: %v", l.Errors)
@@ -153,7 +153,7 @@ func TestShippedDruidListIsComplete(t *testing.T) {
 // A concentration spell has to say so in both places, or the sheet shows a
 // duration the concentration marker disagrees with.
 func TestDruidSpellsAgreeAboutConcentration(t *testing.T) {
-	l := NewLibrary([]string{"../../../templates/dnd"})
+	l := NewLibrary(moduleDirs(t))
 	l.Resolve()
 	rs := l.Get("srd")
 	for i := range rs.Spells {
@@ -172,7 +172,7 @@ func TestDruidSpellsAgreeAboutConcentration(t *testing.T) {
 // save avoided all the damage when it only halved it. These are the spells in
 // the shipped modules that halve, checked through the same path the sheet uses.
 func TestHalvingSpellsSayTheyHalve(t *testing.T) {
-	l := NewLibrary([]string{"../../../templates/dnd"})
+	l := NewLibrary(moduleDirs(t))
 	l.Resolve()
 	rs := l.Get("srd")
 	c := &Character{Name: "T", Race: "human",
