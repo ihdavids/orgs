@@ -4,6 +4,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/adduser"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/agenda"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/capture"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/cert"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clockin"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clockout"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/clocks"

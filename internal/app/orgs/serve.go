@@ -326,7 +326,14 @@ func StartServer(sets *common.ServerSettings) {
 		fmt.Fprintf(os.Stderr, "LOCALHOST ONLY: requests from other machines are refused\n")
 	}
 
+	if sets.HttpsOnly && !sets.AllowHttps {
+		log.Fatal("httpsOnly is set but allowHttps is not: there would be nothing to listen on. Set allowHttps: true (and a certificate - orgs cert makes one)")
+	}
 	go func() {
+		if sets.HttpsOnly {
+			fmt.Fprintf(os.Stderr, "HTTPS ONLY: no http listener on %d\n", sets.Port)
+			return
+		}
 		var corsHandler http.Handler
 		if sets.AccessControl == "*" {
 			corsPolicy := cors.New(cors.Options{

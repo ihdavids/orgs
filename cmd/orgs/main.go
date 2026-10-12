@@ -184,6 +184,7 @@ func startLocalServer(core *commands.Core) string {
 	// The https listener is the one that blocks, and there is no certificate to
 	// serve one with here. Left on, StartServer would try and log.Fatal.
 	sets.AllowHttps = false
+	sets.HttpsOnly = false
 	sets.NoAuth = true
 
 	go orgs.StartServer(sets)

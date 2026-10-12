@@ -204,6 +204,27 @@ type ServerSettings struct {
 		check the proxy if you mean to publish orgs through one.
 		EDOC */
 	LocalhostOnly bool `yaml:"localhostOnly"`
+	/* SDOC: Settings
+	* Https Only
+		Serve https and nothing else: the plain http listener on =port= is
+		not started, so nothing - a login, a token, a note - can cross the
+		wire unencrypted, even on this machine.
+
+		#+BEGIN_SRC yaml
+	  server:
+	    allowHttps: true
+	    httpsOnly: true
+	    tlsport: 8010
+	    servercrt: "server.crt"
+	    serverkey: "server.key"
+		#+END_SRC
+
+		It needs =allowHttps= and a certificate. =orgs cert= makes a
+		self-signed one for this machine (=localhost=, =127.0.0.1=, =::1=)
+		at =servercrt= / =serverkey=. Off by default. =orgs -local= is not
+		affected: it serves itself over http on the loopback, for one command.
+		EDOC */
+	HttpsOnly bool `yaml:"httpsOnly"`
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
 	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`

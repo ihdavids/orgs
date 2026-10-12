@@ -106,6 +106,7 @@ func RedeemLoginTicket(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		Expires:  expiresAt,
 		HttpOnly: true,
+		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteStrictMode,
 	})
 	// ...and worg's, which is what worg looks for when it starts.
@@ -115,6 +116,7 @@ func RedeemLoginTicket(w http.ResponseWriter, r *http.Request) {
 		Value:    url.QueryEscape(string(worg)),
 		Path:     "/",
 		Expires:  expiresAt,
+		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteStrictMode,
 	})
 	to := "/"

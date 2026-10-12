@@ -179,6 +179,7 @@ func restartOnly(o, n *common.ServerSettings) []string {
 	diff("server.orgDirs", o.OrgDirs, n.OrgDirs)
 	diff("server.allowHttp", o.AllowHttp, n.AllowHttp)
 	diff("server.allowHttps", o.AllowHttps, n.AllowHttps)
+	diff("server.httpsOnly", o.HttpsOnly, n.HttpsOnly)
 	diff("server.noAuth", o.NoAuth, n.NoAuth)
 	diff("server.requireHashedLogin", o.RequireHashedLogin, n.RequireHashedLogin)
 	diff("server.keystore", o.Keystore, n.Keystore)
