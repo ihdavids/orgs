@@ -4,18 +4,8 @@ Each release is cut by `./makerelease.sh`, which tags the version below and
 pushes the tag; `.github/workflows/release.yml` then builds and publishes it.
 Add the next version's section here before bumping `VERSION` in that script.
 
-## v0.1.0 - unreleased
+## v0.2.0 - released
 
-The first tagged release. Binaries for linux, macOS and windows (amd64 and
-arm64), each a single `orgs` executable that is both the server and the
-command line client.
-
-### Server
-
-- Watches org directories, parses them with go-org and serves a REST API
-  (HTTP and/or HTTPS) with JWT logins, a per-user keystore and token expiry.
-- Embeds the worg web app, the html/latex templates, the documentation
-  themes and fonts, so a server needs no files beside the binary.
 - Login tickets: `POST /login/ticket` (logged in) hands out a one-use,
   one-minute link, `GET /login/ticket/<t>`, that logs a browser in to worg
   without a password. `orgs worg [View]` opens one.
@@ -28,6 +18,19 @@ command line client.
 - `orgs cert` makes a self-signed certificate for this machine (localhost,
   127.0.0.1, ::1, plus `-host` names) at `servercrt`/`serverkey`, good for
   820 days; it leaves an existing pair alone unless `-force`.
+
+## v0.1.0 - released
+
+The first tagged release. Binaries for linux, macOS and windows (amd64 and
+arm64), each a single `orgs` executable that is both the server and the
+command line client.
+
+### Server
+
+- Watches org directories, parses them with go-org and serves a REST API
+  (HTTP and/or HTTPS) with JWT logins, a per-user keystore and token expiry.
+- Embeds the worg web app, the html/latex templates, the documentation
+  themes and fonts, so a server needs no files beside the binary.
 - `GET /version` reports the running version and whether a newer release is
   on github (cached 6h; `server.noUpdateCheck` turns it off).
 - Exporters: html, markdown, latex/pdf, pandoc, mermaid, gantt, Confluence,
