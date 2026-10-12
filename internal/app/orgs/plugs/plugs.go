@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"html/template"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,6 +61,19 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 	t.Execute(o, m)
 }
 
+// RelTo is the directory an exporter was asked to write links relative to
+// (`relto=<dir>;` in its opts), or "".
+func RelTo(opts string) string {
+	for _, o := range strings.Split(opts, ";") {
+		if v, ok := strings.CutPrefix(o, "relto="); ok {
+			if d, err := url.QueryUnescape(v); err == nil {
+				return d
+			}
+		}
+	}
+	return ""
+}
+
 // MediaURL turns the target of an org `file:` link into something a browser can
 // fetch, and is the one copy of that sum.
 //
@@ -78,6 +92,10 @@ func ExpandTemplateIntoBuf(o *bytes.Buffer, temp string, m map[string]interface{
 //   - `filelinks;` - an absolute `file://` url, for a page opened off disk;
 //   - `httpslinks;`/`httplinks;` - this server by name, for a webview that
 //     cannot do relative urls;
+//   - `relto=<dir>;` - a path relative to that directory, for a page that is
+//     published beside its pictures rather than served by orgs (`orgs export
+//     -rel`). The directory is query-escaped, and a relative one is taken from
+//     the server's working directory, which is where `-local` writes;
 //   - anything else - a **path** under /images, which is the one that works
 //     wherever the browser reached this server from.
 func MediaURL(doc *org.Document, pm *common.PluginManager, opts, target string) string {
@@ -115,6 +133,14 @@ func MediaURL(doc *org.Document, pm *common.PluginManager, opts, target string) 
 	}
 	if abs == "" {
 		return target
+	}
+
+	if dir := RelTo(opts); dir != "" {
+		if d, err := filepath.Abs(dir); err == nil {
+			if r, err := filepath.Rel(d, abs); err == nil {
+				return filepath.ToSlash(r)
+			}
+		}
 	}
 
 	if strings.Contains(opts, "filelinks;") {

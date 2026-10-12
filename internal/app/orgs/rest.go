@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/mux"
 	"math/rand"
@@ -673,6 +674,7 @@ func RequestExporters(w http.ResponseWriter, r *http.Request) {
 	    | =local=        | string | no       | Set to =t= to write the result to =filename= on disk instead of returning it.     |
 	    | =filelinks=    | string | no       | Set to =t= to include file-style links in the export.                              |
 	    | =httpslinks=   | string | no       | Set to =t= to convert links to https-style links.                                  |
+	    | =relto=        | string | no       | Write image and attachment links relative to this directory, for a page published beside its media. |
 	    | =parent=       | string | no       | A parent property passed to the exporter (exporter-specific).                      |
 	    | =printable=    | string | no       | Set to =t= for an exporter's printer friendly output where it has one.              |
 	    | =theme=        | string | no       | Render with this theme instead of the one the file asks for. See =/html/themes=.   |
@@ -716,6 +718,9 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	}
 	if httpslinks == "t" {
 		opts.Opts += "httpslinks;"
+	}
+	if relto := r.URL.Query().Get("relto"); relto != "" {
+		opts.Opts += "relto=" + url.QueryEscape(relto) + ";"
 	}
 	// subtree=<hash>: export that heading and what is under it, not the file.
 	var from common.ODb = db

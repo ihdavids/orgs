@@ -5,6 +5,7 @@ package export
 //	orgs export -f html notes.org -out notes.html
 //	orgs export -f html notes.org -theme docs -stdout
 //	orgs export -f pdf adventure.org -out adventure.pdf
+//	orgs export -f html docs.org -out docs/docs.html -rel   pictures as images/x.png
 //	orgs export -f mermaid -query 'IsTask()' -out plan.mmd
 //	orgs export -list                    what this server can export to
 //	orgs export -list-themes             what the html exporter can wear
@@ -50,6 +51,7 @@ type Export struct {
 	Refresh    bool
 	FileLinks  bool
 	HttpsLinks bool
+	Rel        bool
 	List       bool
 	ListThemes bool
 	To         string
@@ -71,6 +73,7 @@ func (self *Export) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Refresh, "refresh", false, "build again rather than answering from the pdf cache")
 	fset.BoolVar(&self.FileLinks, "filelinks", false, "write links as file:// urls")
 	fset.BoolVar(&self.HttpsLinks, "httpslinks", false, "write links as https urls to this server")
+	fset.BoolVar(&self.Rel, "rel", false, "write image links relative to the -out file, for a page published beside its pictures")
 	fset.BoolVar(&self.List, "list", false, "what this server can export to")
 	fset.BoolVar(&self.ListThemes, "list-themes", false, "what the html exporter can wear")
 	fset.StringVar(&self.To, "to", "", "with -f pandoc: the format pandoc writes (docx, odt, epub, rst, ...)")
@@ -158,6 +161,9 @@ func (self *Export) run(core *commands.Core) {
 	if self.HttpsLinks {
 		ps["httpslinks"] = "t"
 	}
+	if self.Rel {
+		ps["relto"] = self.relTo()
+	}
 
 	if self.Local {
 		if self.Filename == "" {
@@ -192,6 +198,25 @@ func (self *Export) run(core *commands.Core) {
 		commands.Fail("orgs export: %s", strings.TrimSpace(res.Msg))
 	}
 	self.deliver([]byte(res.Msg))
+}
+
+// The directory -rel makes links relative to: the one -out writes into. With
+// -local that is the server's path and the server resolves it; otherwise the
+// file is written here, so it is made absolute here - which is only the same
+// place on the server's disk when the server is on this machine.
+func (self *Export) relTo() string {
+	if self.Filename == "" {
+		commands.Fail("orgs export -rel: -out says what the links are relative to")
+	}
+	dir := filepath.Dir(self.Filename)
+	if self.Local {
+		return dir
+	}
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		commands.Fail("orgs export -rel: %v", err)
+	}
+	return abs
 }
 
 // A pdf is the one format that is not an exporter call: the pdf exporter
@@ -293,6 +318,7 @@ func has(vs []string, want string) bool {
 
 const usage = `  orgs export -f html notes.org -out notes.html
   orgs export -f html notes.org -theme docs        (to stdout)
+  orgs export -f html docs.org -out docs/docs.html -rel   (links relative to docs/)
   orgs export -f pdf  adventure.org -out book.pdf
   orgs export -f docx notes.org                    (pandoc: docx, odt, epub, rst, ...)
   orgs export -f mermaid -query 'IsTask()' -out plan.mmd

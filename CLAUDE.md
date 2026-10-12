@@ -46,6 +46,7 @@ go build -o docex ./cmd/docex
 `orgs export`:
 - Writes **here** (client side) by default; `-local` makes the server write at that path on its own disk. (It used to be reversed, so `orgs -url https://box:8010 export -out ./notes.html` wrote on box.)
 - `-f pdf` is not an exporter call: the pdf exporter writes a file and returns nothing to a string, so `/pdf` is its own endpoint answering with bytes, cached against the org file's state when built.
+- `-rel` writes image/attachment links relative to the `-out` file's directory (`relto=` on `/file/{type}`, handled in `plugs.MediaURL`) instead of `/images/<path under the first org dir>`, for a page published beside its pictures. Without `-local` the client sends its own absolute directory, so it only lines up when the server shares this disk.
 - `-list` / `-list-themes` ask the server. `/exporters` exists for `-list` because an exporter compiled in but not named in the yaml is absent as far as a request is concerned, and its refusal looks identical to one for a nonexistent exporter.
 
 No Makefile, no lint config. Health checks: `go vet ./...` and `go build ./...`. Tests: `go test ./internal/common/dnd/ ./cmd/oc/commands/dnd/`; plain `go test ./...` fails on its default vet check over pre-existing `fmt.Printf` calls in several plugins.
@@ -207,7 +208,7 @@ The `PluginManager` passed to plugins carries the shared templates, filter map, 
 
 `cmd/docex` extracts comment blocks fenced with `SDOC: <section>` and `EDOC` in the Go sources into Org documentation. Preserve the markers and section names when editing such comments; the doc build depends on them.
 
-It also merges the hand-written guides in `docs/*.org` (not subdirectories; `-guides` changes the directory, `-guides -` turns it off). Each guide names its section with `#+DOC_SECTION: Tables` (`::` nests, as SDOC does), goes first in that section under its `#+TITLE`, and has its headings pushed down to fit. A guide with no `#+DOC_SECTION` becomes its own top-level section. `docs/overview.org` is the `-start` intro instead. Build with `tools/builddocs.sh`.
+It also merges the hand-written guides in `docs/*.org` (not subdirectories; `-guides` changes the directory, `-guides -` turns it off). Each guide names its section with `#+DOC_SECTION: Tables` (`::` nests, as SDOC does), goes first in that section under its `#+TITLE`, and has its headings pushed down to fit. A guide with no `#+DOC_SECTION` becomes its own top-level section. `docs/overview.org` is the `-start` intro instead. Build with `tools/builddocs.sh`, which also exports `docs/docs.html` (the published page) through an in-process server with a throwaway config and `export -rel`, so its pictures are `images/x.png` beside it.
 
 **Do not run `gofmt` on a file whose SDOC block sits directly above a declaration** (all the `/dnd/*` and `/records/*` endpoint files). Go 1.19+ reformats doc comments: re-indents the block, turns `* Heading` into `- Heading`, and reflows org tables. Two breakages are invisible in a diff, because `docex` matches both markers as whole lines:
 
