@@ -84,6 +84,21 @@ type GanttView struct {
 	WorkloadProp string `yaml:"workloadProp,omitempty" json:"workloadProp,omitempty"`
 	// The time clocked on each task, drawn under its bar.
 	Actual bool `yaml:"actual,omitempty" json:"actual,omitempty"`
+	// The plan layers in worg's Options, each off unless set: tasks with no
+	// EFFORT drawn at a guessed length, a forecast of when the work ends,
+	// the progress line, the milestone slip chart, folding to epics (and the
+	// hashes of the folded ones), work waiting on outsiders, the arrow style
+	// ("classic" or "ortho"), the minimap and compact rows.
+	Guesses      bool     `yaml:"guesses,omitempty" json:"guesses,omitempty"`
+	Forecast     bool     `yaml:"forecast,omitempty" json:"forecast,omitempty"`
+	ProgressLine bool     `yaml:"progressLine,omitempty" json:"progressLine,omitempty"`
+	SlipChart    bool     `yaml:"slipChart,omitempty" json:"slipChart,omitempty"`
+	Epics        bool     `yaml:"epics,omitempty" json:"epics,omitempty"`
+	ShutEpics    []string `yaml:"shutEpics,omitempty" json:"shutEpics,omitempty"`
+	Waits        bool     `yaml:"waits,omitempty" json:"waits,omitempty"`
+	Arrows       string   `yaml:"arrows,omitempty" json:"arrows,omitempty"`
+	Minimap      bool     `yaml:"minimap,omitempty" json:"minimap,omitempty"`
+	Compact      bool     `yaml:"compact,omitempty" json:"compact,omitempty"`
 	// Snapshots of the plan's dates, and the one drawn under the bars.
 	Baselines []GanttBaseline `yaml:"baselines,omitempty" json:"baselines,omitempty"`
 	Baseline  string          `yaml:"baseline,omitempty" json:"baseline,omitempty"`

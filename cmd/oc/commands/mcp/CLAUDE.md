@@ -19,3 +19,10 @@ The org database as MCP tools over stdin/stdout. A **client**, not a second serv
 - `org_search` understands headings, keywords, tags and dates; `org_find` understands nothing and finds a phrase in a drawer, table or source block. Descriptions say which to use.
 
 `orgs mcp -list` prints the table with writing tools marked; with `-json` it emits name, description, `Writes` and schema, not the `Tool` struct (it holds the run function and will not marshal).
+
+## The gantt tools
+
+`gantt.go` (appended to the table in an `init`): `gantt_tasks` and `gantt_suggest` read, `gantt_link`, `gantt_set_effort` and `gantt_apply_suggestions` write. The descriptions carry the workflow - tasks, suggest, show the person, then apply or link one at a time - because a model left to itself writes first.
+
+- **`/gantt/suggest` is a POST that writes nothing**, so it goes through `common.RestPost`, not `SendReceivePostErr`, which would refuse it under `-dry-run`.
+- **`gantt_apply_suggestions` plans from one read, then looks every heading up again before each write** in a fresh `/gantt/tasks`: by `ID`/`CUSTOM_ID`, else file + level + headline + which twin (see **Traps: hashes**). A property write moves no hash, but a rename from anywhere else between writes would; a heading not found again is reported and skipped, never written by a stale hash. Under `-dry-run` it lists the writes it would make.

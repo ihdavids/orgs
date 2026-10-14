@@ -19,6 +19,8 @@ type GanttTask struct {
 	Level    int
 	Parent   string
 	Status   string
+	// The letter of the heading's [#A] cookie, "" when it has none.
+	Priority string
 	Tags     []string
 	Props    map[string]string
 
@@ -147,4 +149,115 @@ type GanttMarkerEdit struct {
 	Start GanttMarkerDay
 	// Set for a range; nil for a single day.
 	End *GanttMarkerDay
+}
+
+// ---------------------------------------------------------------------------
+// /gantt/suggest and /gantt/link: setting a chart up from a pile of tickets.
+// ---------------------------------------------------------------------------
+
+// GanttSuggestReq asks for what a chart could be told that it is not yet: the
+// dependencies its tasks' own text names, the estimates history can guess, and
+// the ways its tasks could be split into swim lanes.
+type GanttSuggestReq struct {
+	// The chart's query: the tasks are exactly what /gantt/tasks finds for it.
+	Query string
+	// Any of "deps", "estimates", "lanes", "ratios"; empty asks for all.
+	// "deps" also answers Redundant and Cycles.
+	Kinds []string
+	// Hours in a day of effort. Default 8.
+	DayHours float64
+	// The start of the history estimates and ratios are read from, as typed
+	// anywhere else (-180d, 2026-01-01). Default "-180d".
+	From string
+}
+
+// A dependency the text suggests: Task waits on After.
+type GanttDepSuggestion struct {
+	Task       string // hash
+	After      string // hash
+	AfterTitle string
+	// The phrase or line it came from, trimmed to about 120 characters.
+	Evidence string
+	// "text", "link", "key", "jira" or "sequence".
+	Source     string
+	Confidence float64 // 0..1
+}
+
+// An existing link that the chart would keep without: Task waits on After,
+// and the path through Via already says so.
+type GanttRedundantLink struct {
+	Task string
+	// The hash the link names.
+	After string
+	// The hashes of the longer path that already implies it, in wait order
+	// (Task waits on Via[0], ..., the last waits on After). Empty when another
+	// link says exactly the same thing (an AFTER naming the heading the
+	// ORDERED parent would chain it behind anyway).
+	Via []string
+	// Only an AFTER can be taken off; an ORDERED chain is the outline.
+	Removable bool
+}
+
+// A guess at the EFFORT of an open task that has none.
+type GanttEstimateGuess struct {
+	Task string // hash
+	// An org effort in DayHours units: "45min", "1.5h", "2d". Always set.
+	Effort string
+	// What Effort comes to in working minutes, a day being DayHours: "2d"
+	// at the default 8 hours is 960, not org's 2880.
+	Mins float64
+	// Where the number came from, as a sentence.
+	Basis      string
+	Samples    int
+	Confidence float64
+}
+
+// One way of splitting a chart's tasks into lanes.
+type GanttLaneSuggestion struct {
+	// "tag", "parent", "file", "chain" or "property".
+	By string
+	// The property's name when By is "property" (ASSIGNED, COMPONENT...).
+	Prop   string
+	Label  string
+	Score  float64
+	Groups []GanttLaneGroup
+	// Dependency edges (existing and suggested) between tasks in different
+	// groups: fewer means lanes that can be read on their own.
+	CrossLinks int
+}
+
+type GanttLaneGroup struct {
+	// "(none)" holds the tasks with no value.
+	Name  string
+	Tasks []string // hashes
+}
+
+// The answer to /gantt/suggest. Every list is present (possibly empty) for
+// the kinds asked for.
+type GanttSuggest struct {
+	Ok    bool
+	Msg   string
+	Query string
+
+	Deps      []GanttDepSuggestion
+	Redundant []GanttRedundantLink
+	// Existing dependency cycles, each as hashes in wait order: each waits on
+	// the next, and the last on the first.
+	Cycles    [][]string
+	Estimates []GanttEstimateGuess
+	Lanes     []GanttLaneSuggestion
+	// actual/estimated of every finished task in the window with both an
+	// EFFORT and clocked time (absurd ones, under 0.05 or over 20, left out),
+	// for a client-side forecast.
+	Ratios []float64
+}
+
+// GanttLinkReq makes Task wait on After (by AFTER, naming After by its ID,
+// which it is given if it has none), or with Remove, stops it waiting on it.
+// AFTER holds one heading, so adding to a task whose AFTER already names
+// another is refused: Remove that one first.
+type GanttLinkReq struct {
+	Task   string // hash
+	After  string // hash
+	Remove bool
 }

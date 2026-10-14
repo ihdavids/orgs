@@ -430,6 +430,17 @@ Saved chart setups are `GET/POST /ext/gantt/views` (`ganttviews.go`, `ganttViews
 
 `setPropIn` (attach.go) indents a new property like the drawer it joins, not by heading depth: Emacs writes drawers in column zero, and the old indent left a three-space stray in them (seen on every gantt reorder). Every property writer goes through it.
 
+### Setting a chart up from tickets: `/gantt/suggest` and `/gantt/link`
+
+`ganttsuggest.go` (wire types at the foot of `internal/common/gantt.go`, pure parts pinned by `ganttsuggest_test.go`) reads the tasks `/gantt/tasks` draws for a query (`ganttTaskSet`, factored out of the handler so the two cannot disagree) and suggests dependencies, estimates and lanes; it writes nothing. `ganttlink.go` writes one dependency. Clients: worg's gantt tools and the `gantt_*` MCP tools.
+
+1. **AFTER holds one heading** (as `/insights/deps` says), so a task gets at most one dependency suggestion, none if it already waits on something (AFTER or an ORDERED parent), and none that closes a circle with the existing links plus the more certain suggestions taken before it. `/gantt/link` **refuses** to add to a task whose AFTER names another heading (remove first) rather than drop a wait silently; overriding an ORDERED chain is allowed and said.
+2. **Phrases are read from the heading's own body** (`ownEnd`), drawers, planning, clock and block lines skipped. Links and ticket keys in the clause are taken at their word and never guessed past: a key naming nothing in the chart is about something outside it. Only a clause with neither is matched against titles, and a two-word title needs two of its words.
+3. **Ticket keys**: the jira template keeps the key in `CUSTOM_ID` and a browse url in `LINK`, and writes no issue links; `BLOCKED_BY`/`DEPENDS_ON`/`BLOCKS`/`ISSUELINKS` are read if a richer import writes them.
+4. **Redundant** = an AFTER whose ORDERED chain (the one clearing it would hand the task back to) already reaches the same heading. With one wait per task there is no other kind; `redundantEdges` is a general transitive reduction fed that chain as a fixed edge.
+5. **Estimates** sample finished, clocked work in the window the way `/insights/estimates` measures it (rollups skipped, unestimated children's clocks included); `Mins` are working minutes with `DayHours` days.
+6. `/gantt/link` gives the waited-on heading an `ID` made by `ganttIdFor`, worg's `idFor` (see **Traps: logic said twice**), then re-finds the waiter before writing AFTER (see **Traps: re-measure**).
+
 Gantt edits go through the existing endpoints, and three of them were fixed for it: `subtreeEndRow` takes a subtree's end from the file's own lines; `SetProperty` with an empty value removes the property, and the drawer too if it ends up empty; with `noAuth: true` everything runs as user `local`. Details in `docs/claude/bug-history.md`.
 
 ## Moving headings: refile, copy and archive

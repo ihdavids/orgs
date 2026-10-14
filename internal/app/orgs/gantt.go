@@ -78,7 +78,7 @@ func ganttTaskFrom(d common.ODb, have map[string]*common.Todo, cannon map[string
 	t := common.GanttTask{
 		Hash: td.Hash, Headline: strings.TrimSpace(td.Headline), Filename: td.Filename,
 		LineNum: td.LineNum, Level: td.Level, Parent: td.Parent, Status: td.Status,
-		Tags: td.Tags, Props: td.Props, IsActive: td.IsActive, Implied: implied,
+		Priority: td.Priority, Tags: td.Tags, Props: td.Props, IsActive: td.IsActive, Implied: implied,
 	}
 	if td.Date != nil && td.Date.TimestampType == org.Active {
 		t.Start = ganttDateStr(*td.Date)
@@ -187,14 +187,37 @@ EDOC
 */
 func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
-	res := common.GanttData{Ok: false, Query: query, Tasks: []common.GanttTask{}}
+	set, err := ganttTaskSet(query)
+	res := set.Data
+	if err != nil {
+		res.Msg = fmt.Sprintf("gantt: failed to query expression, %v [%s]", err, query)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+// The tasks a chart draws for a query, with what was used to find them:
+// /gantt/tasks answers with Data, and /gantt/suggest reads the rest so that
+// it suggests things about exactly the tasks the chart shows.
+type ganttSet struct {
+	Data common.GanttData
+	// Every task's heading as the query (or the chain behind it) found it,
+	// by the hash the chart draws it under.
+	Todos map[string]*common.Todo
+	have  map[string]*common.Todo
+	canon map[string]string
+}
+
+func ganttTaskSet(query string) (*ganttSet, error) {
+	set := &ganttSet{
+		Data:  common.GanttData{Ok: false, Query: query, Tasks: []common.GanttTask{}},
+		Todos: map[string]*common.Todo{},
+	}
+	res := &set.Data
 
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
-		res.Msg = fmt.Sprintf("gantt: failed to query expression, %v [%s]", err, query)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
-		return
+		return set, err
 	}
 
 	// `have` is what the query found, and is what the mermaid helpers use to
@@ -218,6 +241,7 @@ func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 			canon[cid] = td.Hash
 		}
 	}
+	set.have, set.canon = have, canon
 	seen := map[string]bool{}
 	// Every heading the query found first, so an AFTER reference to any of them
 	// - earlier or later in the list - resolves against the whole set and none is
@@ -228,6 +252,7 @@ func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		seen[td.Hash] = true
+		set.Todos[td.Hash] = td
 		res.Tasks = append(res.Tasks, ganttTaskFrom(db, have, canon, td, false))
 	}
 	// Then pull in anything a found task comes after that the query did not
@@ -252,6 +277,7 @@ func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		seen[d.Hash] = true
+		set.Todos[d.Hash] = d
 		dt := ganttTaskFrom(db, have, canon, d, true)
 		res.Tasks = append(res.Tasks, dt)
 		if dt.After != "" {
@@ -259,8 +285,7 @@ func RequestGanttTasks(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	res.Ok = true
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	return set, nil
 }
 
 // "2026-01-05" as org writes a date. A date the client sent that org cannot

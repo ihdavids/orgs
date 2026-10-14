@@ -164,6 +164,9 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/gantt/tasks", RequestGanttTasks).Methods("GET")
 	api.HandleFunc("/gantt/add", PostGanttAdd).Methods("POST")
 	api.HandleFunc("/gantt/marker", PostGanttMarker).Methods("POST")
+	// Suggestions for a chart set up from a pile of tickets, and writing a dependency (ganttsuggest.go, ganttlink.go)
+	api.HandleFunc("/gantt/suggest", PostGanttSuggest).Methods("POST")
+	api.HandleFunc("/gantt/link", PostGanttLink).Methods("POST")
 
 	// A file's git history and the file at a revision, for worg's Diff tab (filehistory.go)
 	api.HandleFunc("/history", RequestHistory).Methods("GET")
