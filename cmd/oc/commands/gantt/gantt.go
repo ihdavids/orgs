@@ -7,6 +7,8 @@ package gantt
 //	orgs gantt 'IsProject()'        draw a query written out
 //	orgs gantt launch -color resource -lane OWNER -crit
 //	orgs gantt launch -from today -to +6w
+//	orgs gantt launch -csv -out plan.csv     the schedule as a spreadsheet
+//	orgs gantt launch -jira -out jira.csv    for Jira's Import issues from CSV
 //
 // The chart is worg's: the same /gantt/tasks answer (ORDERED and AFTER chains,
 // EFFORT as a duration, GANTT_ORDER, GANTT_COLOR, PERCENTDONE), laid out by a
@@ -15,6 +17,7 @@ package gantt
 // `orgs q` and worg's search tab keep.
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -37,6 +40,9 @@ type Gantt struct {
 	Crit     bool
 	Theme    string
 	Pane     bool
+	Csv      bool
+	Jira     bool
+	Out      string
 }
 
 type storedQuery struct {
@@ -58,6 +64,9 @@ func (self *Gantt) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Crit, "crit", false, "mark the critical path")
 	fset.StringVar(&self.Theme, "theme", "", "dark or light (default: guessed from COLORFGBG, else dark)")
 	fset.BoolVar(&self.Pane, "pane", false, "draw for a picker's preview pane")
+	fset.BoolVar(&self.Csv, "csv", false, "write the schedule as csv (ID, WBS, dates, predecessors...)")
+	fset.BoolVar(&self.Jira, "jira", false, "write csv for Jira's Import issues from CSV")
+	fset.StringVar(&self.Out, "out", "", "write -csv/-jira to this file rather than stdout")
 }
 
 func (self *Gantt) Exec(core *commands.Core) {
@@ -103,6 +112,10 @@ func (self *Gantt) Exec(core *commands.Core) {
 		crit = CriticalPath(m)
 	}
 
+	if self.Csv || self.Jira {
+		self.export(m, now, title)
+		return
+	}
 	if commands.Machine() {
 		self.machine(m, now, crit)
 		return
@@ -232,6 +245,36 @@ func (self *Gantt) machine(m *Model, now time.Time, crit map[string]bool) {
 		})
 	}
 	commands.Render(rows, nil)
+}
+
+// export writes the plan as csv. The critical path is always worked out for
+// it: a column that is empty unless a flag was remembered is a column nobody
+// trusts.
+func (self *Gantt) export(m *Model, now time.Time, title string) {
+	if len(m.Tasks) == 0 {
+		commands.Fail("nothing in %s to export", title)
+	}
+	var buf bytes.Buffer
+	var err error
+	if self.Jira {
+		err = writeJira(&buf, m)
+	} else {
+		err = writeCSV(&buf, m, now, CriticalPath(m))
+	}
+	if err != nil {
+		commands.Fail("gantt: %v", err)
+	}
+	if self.Out == "" {
+		os.Stdout.Write(buf.Bytes())
+		return
+	}
+	if commands.Wrote("write "+self.Out, fmt.Sprintf("%d tasks", len(m.Tasks))) {
+		return
+	}
+	if err := os.WriteFile(self.Out, buf.Bytes(), 0o644); err != nil {
+		commands.Fail("gantt: %v", err)
+	}
+	fmt.Fprintf(os.Stderr, "wrote %d tasks to %s\n", len(m.Tasks), self.Out)
 }
 
 func savedQueries(core *commands.Core) []storedQuery {

@@ -1,0 +1,25 @@
+{{define "main"}}
+<article class="page listing">
+  <header class="page-header"><h1 class="page-title">Archive</h1><p class="page-subtitle">{{plural (len .Site.Pages) "page" "pages"}}</p></header>
+  {{if .Years}}
+  <section class="archive-years">
+    <h2 class="section-title">By date</h2>
+    {{range .Years}}
+    <div class="year">
+      <h3 class="year-title">{{.Name}}</h3>
+      {{template "postlist" (dict "pages" .Pages "v" $)}}
+    </div>
+    {{end}}
+  </section>
+  {{end}}
+  <section class="archive-folders">
+    <h2 class="section-title">By folder</h2>
+    {{range .Folders}}
+    <div class="folder">
+      <h3 class="folder-title">{{.Name}}</h3>
+      {{template "postlist" (dict "pages" .Pages "v" $)}}
+    </div>
+    {{end}}
+  </section>
+</article>
+{{end}}

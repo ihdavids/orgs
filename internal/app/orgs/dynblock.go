@@ -381,22 +381,40 @@ func levelIndent(level int) string {
 // of them is written, and they are spliced in from the bottom up, so each
 // block's rows are still the rows it was found at (see Traps: re-measure).
 func refreshDynBlocks(filename string, pick func(b dynBlock) bool) (common.DynBlockFile, error) {
+	res, path, lines, changed, err := dynBlockLines(filename, pick)
+	if err != nil || !changed {
+		return res, err
+	}
+	if err := writeLines(path, lines); err != nil {
+		return res, err
+	}
+	res.Written = true
+	return res, nil
+}
+
+// dynBlockLines is the file's lines with the picked blocks written afresh,
+// and whether that changed anything - writing nothing. refreshDynBlocks writes
+// them; an export reads them (refresh.go), so the page shows today's clock
+// table without the file being rewritten because somebody exported it.
+func dynBlockLines(filename string, pick func(b dynBlock) bool) (common.DynBlockFile, string, []string, bool, error) {
 	res := common.DynBlockFile{File: filename}
 	f := GetDb().FindByFile(filename)
 	if f == nil || f.Doc == nil {
-		return res, fmt.Errorf("no file called %q", filename)
+		return res, "", nil, false, fmt.Errorf("no file called %q", filename)
 	}
 	path := f.Doc.Path
 	res.File = path
 	// The database's reading of the file must be the one on disk, or the rows
-	// a block is attributed by belong to a different version of it.
-	GetDb().ReloadFile(path)
+	// a block is attributed by belong to a different version of it. Only when
+	// it is not: an export reads through here, and an unneeded reload is a
+	// reload event, which sends worg back for the page again.
+	GetDb().ReloadIfChanged(path)
 	if f = GetDb().FindByFile(path); f == nil || f.Doc == nil {
-		return res, fmt.Errorf("could not read %q", filename)
+		return res, path, nil, false, fmt.Errorf("could not read %q", filename)
 	}
 	lines, err := ganttFileLines(path)
 	if err != nil {
-		return res, err
+		return res, path, nil, false, err
 	}
 	blocks := findDynBlocks(lines)
 	bodies := make([][]string, len(blocks))
@@ -419,7 +437,7 @@ func refreshDynBlocks(filename string, pick func(b dynBlock) bool) (common.DynBl
 		res.Blocks = append(res.Blocks, out)
 	}
 	if len(res.Blocks) == 0 {
-		return res, nil
+		return res, path, lines, false, nil
 	}
 
 	changed := false
@@ -445,13 +463,7 @@ func refreshDynBlocks(filename string, pick func(b dynBlock) bool) (common.DynBl
 		lines = out
 		changed = true
 	}
-	if changed {
-		if err := writeLines(path, lines); err != nil {
-			return res, err
-		}
-		res.Written = true
-	}
-	return res, nil
+	return res, path, lines, changed, nil
 }
 
 func blockInfo(b dynBlock, owner *org.Section) common.DynBlock {

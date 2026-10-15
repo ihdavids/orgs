@@ -563,6 +563,11 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		// every re-read of a file goes through - a watcher event, a write from
 		// a handler, or a file appearing in a watched directory.
 		PublishReload(filename)
+		// A save of a file that asks to be tangled on save (#+auto_tangle: t).
+		// Not the first load: a server starting up is not somebody saving.
+		if have {
+			autoTangleAfterLoad(ofile)
+		}
 	} else if os.IsNotExist(err) {
 		// Deleted, or the old name of a rename: the watcher reports both by
 		// the name that is gone. Forget it - it used to stay in /files, and
@@ -818,6 +823,19 @@ func (self *OrgDb) ReloadChanged() {
 			// file that is not there any more.
 			self.UnloadFile(f)
 		}
+	}
+}
+
+// ReloadIfChanged re-reads one file only when the disk has a different
+// version from the one loaded. A reload is announced (PublishReload) and bumps
+// ReloadIndex, so a reader that reloads unconditionally - an export, say -
+// makes every client that redraws on reload ask for it again.
+func (self *OrgDb) ReloadIfChanged(fname string) {
+	self.dblock.RLock()
+	was, ok := self.loadedMod[fname]
+	self.dblock.RUnlock()
+	if st, err := os.Stat(fname); !ok || err != nil || !st.ModTime().Equal(was) {
+		self.LoadFile(fname, true)
 	}
 }
 

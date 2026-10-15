@@ -1,0 +1,12 @@
+name: Docs
+description: documentation - every page in a tree on the left, this page's contents on the right, search up front
+fonts:
+  - "https://fonts.googleapis.com/css2?family=Inter:wght@400..750&family=JetBrains+Mono:wght@400;600&display=swap"
+highlight:
+  light: github
+  dark: github-dark
+layout:
+  sidebar: tree
+  toc: aside
+  backlinks: bottom
+  home: list

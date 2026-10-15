@@ -1,0 +1,29 @@
+/* ledger - an accountant's book: figures in a monospace, ruled columns,
+   green-bar rows and a boxed total. Bottle green by default. */
+:root {
+  --accent: #2f6b4f;
+  --ink: #1f2a24;
+  --muted: #5e6b63;
+  --rule: #c9d6cd;
+  --tint: #eef5f0;
+  --font-body: "Avenir Next", Avenir, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-num: "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+}
+.masthead { border-bottom: 2px solid var(--accent); padding-bottom: 12px; }
+.issuer-name { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 11pt; }
+.doc-title { font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: 20pt; color: var(--accent); }
+.meta { border: 1px solid var(--rule); padding: 8px 12px; }
+.meta dd { font-size: 8.5pt; }
+.amount-due { border: 1.5px solid var(--accent); padding: 10px 14px; }
+.amount-due .big { font-size: 18pt; color: var(--accent); }
+.lines { border: 1px solid var(--rule); }
+.lines thead th { background: var(--accent); color: #fff; border: 0; }
+.lines td + td, .lines th + th { border-left: 1px solid var(--rule); }
+.lines thead th + th { border-left-color: rgba(255,255,255,.25); }
+.lines tr.line td { border-bottom: 0; }
+.lines tbody tr.line:nth-of-type(even) td { background: var(--tint); }
+.lines tr.project th { background: #fff; border-bottom: 1px solid var(--rule); text-transform: uppercase; letter-spacing: .08em; font-size: 7.5pt; }
+.lines .num { font-size: 9pt; }
+.totals table { border: 1px solid var(--rule); }
+.totals tr.grand th, .totals tr.grand td { background: var(--accent); color: #fff; border-top: 0; }
+.thanks { font-weight: 600; }

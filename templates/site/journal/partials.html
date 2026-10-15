@@ -1,0 +1,23 @@
+{{/* Journal replaces the header with a masthead: the date line, the title set
+     large in the middle, the sections under it. */}}
+{{define "header"}}
+<header class="site-header masthead">
+  <div class="bar masthead-top">
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">{{template "icon-menu"}}</button>
+    <span class="dateline">{{.Site.Built.Format "Monday, January 2, 2006"}}</span>
+    <div class="tools">
+      {{template "searchbox" .}}
+      <button class="theme-toggle" type="button" aria-label="Switch between light and dark">{{template "icon-theme"}}</button>
+    </div>
+  </div>
+  {{if eq .Kind "home"}}<div class="masthead-title"><a class="brand" href="{{.Root}}index.html">{{.Site.Title}}</a>{{with .Site.Description}}<p class="masthead-tagline">{{.}}</p>{{end}}</div>{{end}}
+  <div class="bar masthead-nav">
+    {{if ne .Kind "home"}}<a class="brand brand-small" href="{{.Root}}index.html">{{.Site.Title}}</a>{{end}}
+    <nav class="site-nav" aria-label="Site">
+      {{- range .Site.Nav}}
+      <a href="{{if .Abs}}{{.URL}}{{else}}{{$.Root}}{{.URL}}{{end}}"{{if eq .URL $.URL}} aria-current="page"{{end}}>{{.Title}}</a>
+      {{- end}}
+    </nav>
+  </div>
+</header>
+{{end}}

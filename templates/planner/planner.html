@@ -1,0 +1,174 @@
+{{- /*
+  The printable planner for GET /agenda/print, and what orgs print -f pdf
+  prints. Go html/template; data is plannerPage (internal/app/orgs/plannerprint.go):
+
+    .View    week, day or month
+    .Sheets  one per printed page
+    .Base    planner/base.css: the layout
+    .CSS     the theme's stylesheet (planner/themes/<theme>.css)
+    .Paper   the @page size ("A4 landscape"); .SheetW/.SheetH/.Margin to match
+
+  Layout is base.css; a theme only dresses it. A copy of this file in your
+  templatePath's planner/ folder replaces it.
+*/ -}}
+<!doctype html>
+<html lang="en" class="view-{{.View}} theme-{{.Theme}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<style>
+:root { --sheet-w: {{.SheetW}}; --sheet-h: {{.SheetH}}; --margin: {{.Margin}}; }
+@page { size: {{.Paper}}; margin: {{.Margin}}; }
+</style>
+<style>{{.Base}}</style>
+<style>{{.CSS}}</style>
+</head>
+<body>
+{{- range $s := .Sheets}}
+{{- if eq $s.View "week"}}
+<section class="sheet week">
+  <header class="sheet-head">
+    <div class="head-title">{{$s.Title}}</div>
+    <div class="head-sub">{{$s.Subtitle}}</div>
+  </header>
+  <div class="spread">
+    <div class="page page-left">
+      {{- range $s.Left}}{{template "daycol" .}}{{end}}
+    </div>
+    <div class="gutter"></div>
+    <div class="page page-right">
+      {{- range $s.Right}}{{template "daycol" .}}{{end}}
+      <aside class="panel">
+        {{- if $s.Overdue}}
+        <section class="box overdue">
+          <h3>Overdue</h3>
+          <ul class="items">{{range $s.Overdue}}{{template "item" .}}{{end}}</ul>
+        </section>
+        {{- end}}
+        {{- if $s.Tasks}}
+        <section class="box tasks">
+          <h3>Tasks</h3>
+          <ul class="items">{{range $s.Tasks}}{{template "item" .}}{{end}}</ul>
+        </section>
+        {{- end}}
+        {{- if $s.Habits}}
+        <section class="box habits">
+          <h3>Habits</h3>
+          <table class="habit-grid">
+            <tr><th></th>{{range $s.HabitDays}}<th>{{.}}</th>{{end}}</tr>
+            {{- range $s.Habits}}
+            <tr><td class="habit-name">{{.Title}}</td>{{range .Marks}}<td><span class="tick {{.}}"></span></td>{{end}}</tr>
+            {{- end}}
+          </table>
+        </section>
+        {{- end}}
+        <section class="box notes">
+          <h3>Notes</h3>
+          <div class="write"></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</section>
+{{- else if eq $s.View "day"}}
+{{- $d := index $s.Days 0}}
+<section class="sheet day{{if $d.Today}} is-today{{end}}">
+  <header class="sheet-head">
+    <div class="head-num">{{day $d.Date}}</div>
+    <div class="head-words">
+      <div class="head-title">{{$s.Title}}</div>
+      <div class="head-sub">{{$s.Subtitle}}</div>
+    </div>
+  </header>
+  <div class="day-body">
+    <div class="schedule">
+      <div class="hours">
+        {{- range $s.Hours}}<div class="hour"><span>{{.}}</span></div>{{end}}
+      </div>
+      <div class="events">
+        {{- range $s.Slots}}
+        <div class="event kind-{{.Entry.Kind}}{{if .Entry.Done}} done{{end}}" style="{{.Style}}">
+          <span class="time">{{.Entry.Time}}{{if .Entry.End}}–{{.Entry.End}}{{end}}</span>
+          <span class="title">{{.Entry.Title}}</span>
+        </div>
+        {{- end}}
+      </div>
+    </div>
+    <aside class="panel">
+      <section class="box today-list">
+        <h3>Today</h3>
+        <ul class="items">
+          {{- range $d.AllDay}}{{template "item" .}}{{end}}
+          {{- if not $d.AllDay}}<li class="item empty">Nothing dated</li>{{end}}
+        </ul>
+      </section>
+      {{- if $s.Overdue}}
+      <section class="box overdue">
+        <h3>Overdue</h3>
+        <ul class="items">{{range $s.Overdue}}{{template "item" .}}{{end}}</ul>
+      </section>
+      {{- end}}
+      {{- if $s.Tasks}}
+      <section class="box tasks">
+        <h3>Could do</h3>
+        <ul class="items">{{range $s.Tasks}}{{template "item" .}}{{end}}</ul>
+      </section>
+      {{- end}}
+      {{- if $s.Habits}}
+      <section class="box habits">
+        <h3>Habits</h3>
+        <ul class="items">{{range $s.Habits}}<li class="item"><span class="tick {{index .Marks 0}}"></span><span class="title">{{.Title}}</span></li>{{end}}</ul>
+      </section>
+      {{- end}}
+      <section class="box notes">
+        <h3>Notes</h3>
+        <div class="write"></div>
+      </section>
+    </aside>
+  </div>
+</section>
+{{- else}}
+<section class="sheet month">
+  <header class="sheet-head">
+    <div class="head-title">{{$s.Title}}</div>
+    <div class="head-sub">{{$s.Subtitle}}</div>
+  </header>
+  <div class="month-grid rows-{{len $s.Weeks}}">
+    {{- range $s.Weekdays}}<div class="wd">{{.}}</div>{{end}}
+    {{- range $w := $s.Weeks}}{{range $w}}
+    <div class="cell{{if .Outside}} outside{{end}}{{if .Today}} today{{end}}{{if .Weekend}} weekend{{end}}">
+      <div class="cnum">{{day .Date}}</div>
+      <ul class="items">
+        {{- range .Shown}}{{template "item" .}}{{end}}
+      </ul>
+      {{- if .More}}<div class="more">+{{.More}} more</div>{{end}}
+    </div>
+    {{- end}}{{end}}
+  </div>
+</section>
+{{- end}}
+{{- end}}
+</body>
+</html>
+
+{{- define "daycol"}}
+<div class="daycol{{if .Today}} today{{end}}{{if .Weekend}} weekend{{end}}">
+  <div class="day-head"><span class="dow">{{dow .Date}}</span><span class="dnum">{{day .Date}}</span></div>
+  <ul class="items">
+    {{- range .AllDay}}{{template "item" .}}{{end}}
+    {{- range .Timed}}{{template "item" .}}{{end}}
+  </ul>
+  <div class="write"></div>
+</div>
+{{- end}}
+
+{{- define "item"}}
+<li class="item kind-{{.Kind}}{{if .Done}} done{{end}}{{if .Time}} timed{{end}}">
+  {{- if .Box}}<span class="cb{{if .Done}} checked{{end}}"></span>{{end}}
+  {{- if .Time}}<span class="time">{{.Time}}</span>{{end}}
+  {{- if .Priority}}<span class="pri pri-{{.Priority}}">{{.Priority}}</span>{{end}}
+  <span class="title">{{.Title}}</span>
+  {{- if .Mark}}<span class="mark {{.MarkClass}}">{{.Mark}}</span>{{end}}
+</li>
+{{- end}}

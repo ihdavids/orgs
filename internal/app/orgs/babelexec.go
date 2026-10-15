@@ -24,9 +24,43 @@ package orgs
   | =code=, =org=        | a source block                                  |
   | =silent=, =none=     | nothing written                                 |
   | =append=, =prepend=  | added to what is there instead of replacing it  |
+  | =pp=                 | python's value pretty printed (=:results value pp=) |
+  | =link=, =graphics=   | with =:file=: the code writes the file itself, and the result is the link |
+
+  =:results= words come in groups - collection (=output=, =value=), type
+  (=table=, =list=, =scalar=, =verbatim=, =file=...), format (=raw=, =drawer=,
+  =pp=, =link=...) and handling (=replace=, =append=, =silent=...) - and, as in
+  org, a word nearer the block replaces an inherited one of its own group:
+  =:results replace= on a block undoes a file's =header-args :results append=.
 
   A block named with =#+NAME:= writes =#+RESULTS: name=, so another block can
   take it as a variable. =:eval no= (or =never=) is never run.
+
+  A block that fails (a non-zero exit) has what it printed and what it wrote to
+  standard error written as its result, so the error is in the file where the
+  answer would be. =:stderr yes= adds standard error after the output of a
+  block that worked (for programs that warn, or answer there).
+
+  ** Around the program and the result
+
+  | Header             | Does                                                      |
+  |--------------------+-----------------------------------------------------------|
+  | =:prologue "text"= | put before the program (after its variables)              |
+  | =:epilogue "text"= | put after it                                              |
+  | =:wrap=            | the result in =#+begin_results= ... =#+end_results=        |
+  | =:wrap example=    | ... in any block: =:wrap src python=, =:wrap quote=         |
+  | =:post fmt(x=*this*)= | run block =fmt= with =*this*= standing for the result, and write what it returns instead |
+  | =:cache yes=       | run only when the code or its inputs changed: the result is written as =#+RESULTS[hash]:= and a run with the same hash leaves it be |
+  | =:stdin name=      | a table (or result) by name as standard input - for awk, which reads its program from a file |
+
+  ** Noweb
+
+  With =:noweb yes= (or =eval=, =no-export=, =strip-export=, =strip-tangle=), a
+  block's =<<name>>= is replaced by the code of block =name= (or of every block
+  whose =:noweb-ref= is =name=) before it runs, and =<<name(args)>>= by the
+  *result* of running =name= with those arguments, as a =#+CALL:= would. Text
+  before a reference on its line is repeated on every line it brings in
+  (=:noweb-prefix no= turns that off). Tangling reads references the same way.
 
   ** Calling a block
 
@@ -54,9 +88,33 @@ package orgs
   ** Variables
 
   =:var x=name= takes a table by its name, the result of a named block (which
-  is run first), or a =#+RESULTS: name= already in a file. A table handed to
-  gnuplot is written to a file and bound as its name, so =plot data using
-  1:2= works as it does in org.
+  is run first), a =#+RESULTS: name= already in a file, a named list (its
+  items) or a named example block (its text). =other.org:name= names one in
+  another file, relative to this one.
+
+  An index picks part of a table or list, counting from 0 as org does, rules
+  included: =data[2,1]= a cell, =data[,0]= a column, =data[1:3]= rows 1 to 3,
+  =data[-1]= the last row, =*= everything at that level.
+
+  A table's first row is its column names when a rule is under it: they are
+  taken off before the block sees the table and put back on its result when
+  that is a table the same width (=:colnames no= passes the header as data,
+  =:colnames yes= always takes the first row, =:colnames '(a b)= names the
+  result's columns). =:rownames yes= does the same with the first column. Rules
+  are left out unless =:hlines yes=, which passes them as the language's null
+  (=None=, =nil=...).
+
+  Every language gets its variables in its own way: an assignment before the
+  code for python, ruby, perl, lua, R, javascript, powershell and shell (a
+  table as tab separated text); package-level =var=s for go (a body with no
+  =package main= and =func main= is wrapped in them, as ob-go does, and
+  =:imports "os" "strings"= adds imports); a =let= round the program for
+  emacs-lisp; =-v name=value= for awk; and =$name= substituted in the SQL for
+  sqlite (a table as the path of a csv file with its header, for =.import=;
+  =:db= names the database, =:colnames yes= or =:header= prints a header, and
+  the answer comes back as a table). A table handed to gnuplot is written to
+  a file and bound as its name, so =plot data using 1:2= works as it does in
+  org.
 
   ** Pictures
 
@@ -84,6 +142,9 @@ package orgs
 EDOC */
 
 import (
+	"crypto/sha1"
+	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -98,6 +159,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/noweb"
 )
 
 // ----------------------------------------------------------------------------
@@ -124,6 +186,11 @@ type babelJob struct {
 	depth int
 	// Where the code is, "notes.org:12", for a session's tracebacks.
 	Where string
+	// Values given outright rather than looked up: :post's *this*.
+	bound map[string]babelVal
+	// The hash on the #+RESULTS[...] line already under the block, for
+	// :cache yes; empty when there is none.
+	cachedHash string
 }
 
 // The last value given for a header argument.
@@ -137,15 +204,53 @@ func (j *babelJob) arg(key string) (string, bool) {
 	return val, found
 }
 
-// Every word of every :results, lower-cased: "output table replace".
-func (j *babelJob) results() []string {
-	out := []string{}
-	for _, a := range j.Args {
-		if strings.EqualFold(a.Key, "results") {
-			out = append(out, strings.Fields(strings.ToLower(a.Value))...)
+// The groups :results words come in. A later word replaces an earlier one of
+// its own group - so a block's own :results replace undoes an inherited
+// append - and words of different groups add up (org's
+// org-babel-merge-params over org-babel-common-header-args-w-values).
+var resultGroups = [][]string{
+	{"output", "value"},
+	{"file", "list", "vector", "table", "scalar", "verbatim"},
+	{"raw", "html", "latex", "org", "code", "pp", "drawer", "link", "graphics"},
+	{"replace", "silent", "none", "discard", "append", "prepend"},
+}
+
+func resultGroup(w string) int {
+	for i, g := range resultGroups {
+		for _, x := range g {
+			if x == w {
+				return i
+			}
 		}
 	}
-	return out
+	return -1
+}
+
+// The :results words in force, lower-cased: "output table replace". The
+// header arguments come inherited first and the block's own last, so the
+// nearest wins within each group.
+func (j *babelJob) results() []string {
+	chosen := map[int]string{}
+	extra := []string{}
+	for _, a := range j.Args {
+		if !strings.EqualFold(a.Key, "results") {
+			continue
+		}
+		for _, w := range strings.Fields(strings.ToLower(a.Value)) {
+			if g := resultGroup(w); g >= 0 {
+				chosen[g] = w
+			} else if !hasWord(extra, w) {
+				extra = append(extra, w)
+			}
+		}
+	}
+	out := []string{}
+	for g := range resultGroups {
+		if w, ok := chosen[g]; ok {
+			out = append(out, w)
+		}
+	}
+	return append(out, extra...)
 }
 
 func hasWord(words []string, w ...string) bool {
@@ -283,6 +388,12 @@ func (j *babelJob) fileArg() (written string, abs string, ok bool) {
 const maxBabelDepth = 8
 
 // runJob runs one job and reads what came back.
+//
+// In order, as org does it: noweb references expanded, the variables looked
+// up and shaped (index, :colnames, :rownames, :hlines) and bound, :prologue
+// and :epilogue around the program, :cache consulted, the program run, its
+// output shaped by :results, the column and row names put back, :post run
+// over it, and :wrap put round it.
 func runJob(j babelJob) (common.CodeResult, error) {
 	res := common.CodeResult{}
 	if j.depth > maxBabelDepth {
@@ -313,7 +424,18 @@ func runJob(j babelJob) (common.CodeResult, error) {
 		}
 	}
 
-	program := j.Code
+	code := j.Code
+	if j.nowebOnEval() {
+		expanded, warns, err := noweb.Expand(code, j.nowebResolver())
+		if err != nil {
+			return res, fmt.Errorf("noweb: %v", err)
+		}
+		code = expanded
+		for _, w := range warns {
+			fmt.Fprintf(os.Stderr, "BABEL %s: noweb: %s\n", j.Where, w)
+		}
+	}
+
 	written, out, hasFile := j.fileArg()
 	if r.picture != nil {
 		if !hasFile {
@@ -323,51 +445,106 @@ func runJob(j babelJob) (common.CodeResult, error) {
 			return res, err
 		}
 		if r.picture.prepare != nil {
-			program = r.picture.prepare(program, out)
+			code = r.picture.prepare(code, out)
 		}
 	}
 	if collect == "value" && r.wrapValue != nil && session == "" {
-		program = r.wrapValue(program)
+		code = r.wrapValue(code)
+		if hasWord(want, "pp") && key == "python" {
+			code = strings.Replace(code, "    print(__orgs_result)", "    import pprint; pprint.pprint(__orgs_result)", 1)
+		}
 	}
 
-	// A table handed to gnuplot goes in a file for the length of the run.
+	// The variables. A table handed to a language that reads tables from
+	// files (gnuplot, sqlite) goes in one for the length of the run.
 	tmp := ""
 	defer func() {
 		if tmp != "" {
 			os.RemoveAll(tmp)
 		}
 	}()
-	if r.bind != nil && len(j.Vars) > 0 {
-		pre := []string{}
+	shape := j.shape()
+	binds, argv := []string{}, []string{}
+	if r.bind != nil || r.bindArgs != nil {
 		for _, v := range j.Vars {
 			if v.Name == "" {
 				continue
 			}
-			v, rows, err := j.resolveVar(v)
+			val, err := j.resolveValue(v)
 			if err != nil {
 				return res, fmt.Errorf("variable %s: %v", v.Name, err)
 			}
-			if rows != nil && r.picture != nil && r.picture.prepare != nil {
+			val, header := shape.prepareWithHeader(val)
+			if (val.isTbl || val.isList) && r.tableFile != "" {
 				if tmp == "" {
 					if tmp, err = os.MkdirTemp("", "orgsbabel"); err != nil {
 						return res, err
 					}
 				}
-				data := filepath.Join(tmp, v.Name+".dat")
-				lines := []string{}
-				for _, row := range rows {
-					lines = append(lines, strings.Join(row, "\t"))
+				data := filepath.Join(tmp, v.Name+r.tableFile)
+				text := tsv(val)
+				if r.tableFile == ".csv" {
+					// With its header: .import names a new table's columns
+					// from the first row, and would take the first data row.
+					withHead := val
+					if header != nil && val.isTbl {
+						withHead.rows = append([][]string{header}, val.rows...)
+					}
+					text = csvText(withHead)
 				}
-				if err := os.WriteFile(data, []byte(strings.Join(lines, "\n")+"\n"), 0600); err != nil {
+				if err := os.WriteFile(data, []byte(text+"\n"), 0600); err != nil {
 					return res, err
 				}
-				v = common.CodeVar{Name: v.Name, Value: data, Ref: data}
-				rows = nil
+				val = textVal(v.Name, data)
 			}
-			pre = append(pre, r.bind(v.Name, v, rows))
+			if r.bindArgs != nil {
+				argv = append(argv, r.bindArgs(v.Name, val)...)
+			} else {
+				binds = append(binds, r.bind(v.Name, val))
+			}
 		}
-		if len(pre) > 0 {
-			program = strings.Join(pre, "\n") + "\n" + program
+	}
+	program := code
+	switch {
+	case r.assemble != nil:
+		program = r.assemble(&j, code, binds)
+	case len(binds) > 0:
+		program = strings.Join(binds, "\n") + "\n" + code
+	}
+	if p, ok := j.arg("prologue"); ok && p != "" {
+		program = p + "\n" + program
+	}
+	if e, ok := j.arg("epilogue"); ok && e != "" {
+		program = program + "\n" + e
+	}
+
+	cmdline := r.defaultCmdline
+	if c, ok := j.arg("cmdline"); ok {
+		cmdline = c
+	}
+	extra := append(argv, shellWords(cmdline)...)
+	if key == "sqlite" {
+		if db, ok := j.arg("db"); ok && db != "" {
+			extra = append(extra, db)
+		}
+	}
+	stdin := ""
+	if s, ok := j.arg("stdin"); ok && s != "" {
+		val, err := j.resolveValue(readVar("stdin="+s, namedKinds(j.File), j.OrgPath))
+		if err != nil {
+			return res, fmt.Errorf(":stdin %s: %v", s, err)
+		}
+		stdin = tsv(val) + "\n"
+	}
+
+	// :cache yes: the same program with the same inputs gives the same
+	// answer, so a result already written for it is the answer.
+	if j.cacheOn() {
+		res.Hash = babelHash(j.Lang, program, extra, stdin, want, written)
+		if j.cachedHash != "" && j.cachedHash == res.Hash {
+			res.Ok, res.Cached = true, true
+			res.Msg = "cached: the result already there is for this code and these inputs"
+			return res, nil
 		}
 	}
 
@@ -376,13 +553,17 @@ func runJob(j babelJob) (common.CodeResult, error) {
 		timeout = 30 * time.Second
 	}
 	if session != "" {
-		return runInSession(j, r, session, program, collect, timeout)
+		res, err := runInSession(j, r, session, program, collect, timeout)
+		if err == nil {
+			hash := babelHash(j.Lang, program, extra, stdin, want, written)
+			j.finish(&res, shape)
+			if j.cacheOn() {
+				res.Hash = hash
+			}
+		}
+		return res, err
 	}
-	cmdline := r.defaultCmdline
-	if c, ok := j.arg("cmdline"); ok {
-		cmdline = c
-	}
-	ran, rerr := runProgram(r, program, j.Dir, timeout, out, shellWords(cmdline)...)
+	ran, rerr := runProgram(r, program, j.Dir, timeout, out, stdin, extra...)
 	res.Seconds = ran.took.Seconds()
 	res.Stderr = strings.TrimRight(ran.stderr, "\n")
 	res.Code = ran.code
@@ -391,52 +572,330 @@ func runJob(j babelJob) (common.CodeResult, error) {
 		return res, nil
 	}
 	text := ran.stdout
-	if strings.TrimSpace(text) == "" && ran.code != 0 {
-		// Nothing on stdout and a non-zero exit: what there is to show is what
-		// went wrong.
-		res.Kind = "text"
+	if ran.code != 0 {
+		// It failed: what it printed and what it said went wrong are the
+		// result, written in place of the last good one as a notebook shows a
+		// traceback - an error nobody can see is worse.
+		res.Kind = "error"
 		res.Msg = fmt.Sprintf("exit %d", ran.code)
+		parts := []string{}
+		if t := strings.TrimRight(text, "\n"); t != "" {
+			parts = append(parts, t)
+		}
+		if e := strings.TrimRight(ran.stderr, "\n"); e != "" {
+			parts = append(parts, e)
+		}
+		if len(parts) == 0 {
+			parts = append(parts, res.Msg)
+		}
+		res.Raw = strings.Join(parts, "\n")
+		res.Result = res.Raw
 		return res, nil
 	}
-	res.Ok = ran.code == 0
-	if !res.Ok {
-		res.Msg = fmt.Sprintf("exit %d", ran.code)
+	res.Ok = true
+	// :stderr yes puts what went to standard error after what went to
+	// standard out, for programs that write their answer there (or warn).
+	if s, ok := j.arg("stderr"); ok && (s == "yes" || s == "t" || s == "merge") && strings.TrimSpace(ran.stderr) != "" {
+		text = strings.TrimRight(text, "\n")
+		if text != "" {
+			text += "\n"
+		}
+		text += strings.TrimRight(ran.stderr, "\n") + "\n"
 	}
 	res.Raw = strings.TrimRight(text, "\n")
 
 	switch {
 	case r.picture != nil:
 		res.Kind, res.Result = "file", "[["+"file:"+written+"]]"
+	case hasFile && hasWord(want, "link", "graphics"):
+		// The code wrote the file itself; the result is the link to it, and
+		// what it printed is not the file (org's :results link/graphics).
+		res.Kind, res.Result = "file", "[["+"file:"+written+"]]"
 	case hasFile && !hasWord(want, "silent", "none"):
 		// :file on a block that does not draw: what it printed is the file, as
 		// in org. A block that printed nothing wrote the file itself.
 		if strings.TrimSpace(text) != "" {
+			if hasWord(want, "mkdirp") || j.argYes("mkdirp") {
+				os.MkdirAll(filepath.Dir(out), 0755)
+			}
 			if err := os.WriteFile(out, []byte(text), 0644); err != nil {
 				return res, err
 			}
 		}
 		res.Kind, res.Result = "file", "[["+"file:"+written+"]]"
+	case key == "sqlite" && !hasWord(want, "raw", "verbatim", "scalar") && sqliteTabular(&j):
+		res.Kind, res.Result = csvTable(text, sqliteHeader(&j))
 	case r.csvOut && !hasWord(want, "raw", "verbatim", "scalar"):
-		rows, err := csvRows(text, ",")
-		if err != nil || len(rows) == 0 {
-			res.Kind, res.Result = "text", strings.TrimRight(text, "\n")
-			break
-		}
-		// The first row is the header.
-		table := [][]string{rows[0]}
-		if len(rows) > 1 {
-			table = append(table, nil)
-			table = append(table, rows[1:]...)
-		}
-		res.Kind, res.Result = "table", strings.Join(orgTableLines(table), "\n")
+		res.Kind, res.Result = csvTable(text, true)
 	default:
 		res.Kind = babelShape(want, text)
 		res.Result = babelFormat(res.Kind, text)
 	}
+	if j.cacheOn() {
+		res.Hash = babelHash(j.Lang, program, extra, stdin, want, written)
+	}
+	j.finish(&res, shape)
 	// A result that names a file is only half an answer until somebody can see
 	// what is in it.
 	describeResultFile(&res, j.OrgPath)
 	return res, nil
+}
+
+// csvTable reads csv output as a table, the first row a header over a rule
+// when header says so.
+func csvTable(text string, header bool) (string, string) {
+	rows, err := csvRows(text, ",")
+	if err != nil || len(rows) == 0 {
+		return "text", strings.TrimRight(text, "\n")
+	}
+	table := rows
+	if header && len(rows) > 1 {
+		table = append([][]string{rows[0], nil}, rows[1:]...)
+	}
+	return "table", strings.Join(orgTableLines(table), "\n")
+}
+
+func sqliteTabular(j *babelJob) bool {
+	for _, m := range []string{"list", "column", "line", "html", "box", "markdown", "table", "json"} {
+		if _, ok := j.arg(m); ok {
+			return false
+		}
+	}
+	return true
+}
+
+// csvText is a table as csv, for sqlite's .import.
+func csvText(v babelVal) string {
+	buf := &strings.Builder{}
+	w := csv.NewWriter(buf)
+	if v.isList {
+		for _, c := range v.list {
+			w.Write([]string{c})
+		}
+	}
+	for _, r := range v.rows {
+		if r != nil {
+			w.Write(r)
+		}
+	}
+	w.Flush()
+	return strings.TrimRight(buf.String(), "\n")
+}
+
+// finish is what happens to a result after the program: column and row names
+// put back, :post run over it, :wrap put round it.
+func (j *babelJob) finish(res *common.CodeResult, shape *tableShape) {
+	if !res.Ok {
+		return
+	}
+	shape.reassemble(res)
+	if post, ok := j.arg("post"); ok && strings.TrimSpace(post) != "" {
+		if err := j.runPost(res, post); err != nil {
+			res.Ok, res.Msg = false, ":post "+post+": "+err.Error()
+			return
+		}
+	}
+	if w, ok := j.arg("wrap"); ok {
+		wrapResult(res, w, j.results(), j.Lang)
+	}
+}
+
+var postCallRe = regexp.MustCompile(`^\s*([^\s(]+)\s*(?:\((.*)\))?\s*$`)
+
+// runPost runs :post name(args) with *this* standing for the result: the
+// block's result becomes whatever the post block makes of it.
+func (j *babelJob) runPost(res *common.CodeResult, post string) error {
+	m := postCallRe.FindStringSubmatch(post)
+	if m == nil {
+		return fmt.Errorf("not a block call (name or name(args))")
+	}
+	sub, _, err := callJob(m[1], "", m[2], "", j.File, j.OrgPath)
+	if err != nil {
+		return err
+	}
+	sub.depth = j.depth + 1
+	this := resultValue("*this*", res.Kind, res.Result)
+	sub.bound = map[string]babelVal{}
+	for _, v := range sub.Vars {
+		if strings.TrimSpace(v.Value) == "*this*" {
+			b := this
+			b.v.Name = v.Name
+			sub.bound[v.Name] = b
+		}
+	}
+	if len(sub.bound) == 0 && len(sub.Vars) > 0 && strings.TrimSpace(m[2]) == "" {
+		// name with no arguments: its first variable is the result, the way
+		// org's *this* reads in a block that declares one.
+		b := this
+		b.v.Name = sub.Vars[0].Name
+		sub.bound[sub.Vars[0].Name] = b
+	}
+	out, err := runJob(sub)
+	if err != nil {
+		return err
+	}
+	if !out.Ok {
+		return fmt.Errorf("%s", strings.TrimSpace(out.Msg))
+	}
+	hash := res.Hash
+	*res = out
+	res.Hash = hash
+	return nil
+}
+
+// wrapResult puts :wrap's block round a result: :wrap alone is
+// #+begin_results, :wrap src python is a python block.
+func wrapResult(res *common.CodeResult, w string, want []string, lang string) {
+	words := strings.Fields(w)
+	name := "results"
+	args := ""
+	if len(words) > 0 {
+		name, args = words[0], strings.Join(words[1:], " ")
+	}
+	body := strings.TrimRight(res.Result, "\n")
+	if res.Kind == "text" || res.Kind == "error" {
+		body = strings.TrimRight(res.Raw, "\n")
+	}
+	lines := []string{"#+begin_" + name}
+	if args != "" {
+		lines[0] += " " + args
+	}
+	lines = append(lines, escapeBlockLines(body)...)
+	lines = append(lines, "#+end_"+name)
+	res.Kind, res.Result = "wrap", strings.Join(lines, "\n")
+}
+
+// resultValue is a result as a variable's value: a table, or the text.
+func resultValue(name, kind, text string) babelVal {
+	if kind == "table" {
+		if rows := babelRows(text); len(rows) > 0 {
+			return tableVal(name, rows)
+		}
+	}
+	// The fixed width colons org writes in front of a text result are not
+	// part of the value.
+	lines := []string{}
+	for _, l := range strings.Split(strings.TrimRight(text, "\n"), "\n") {
+		t := strings.TrimSpace(l)
+		if t == ":" {
+			t = ""
+		}
+		lines = append(lines, strings.TrimPrefix(t, ": "))
+	}
+	return textVal(name, strings.Join(lines, "\n"))
+}
+
+// ----------------------------------------------------------------------------
+// :cache
+// ----------------------------------------------------------------------------
+
+func (j *babelJob) argYes(key string) bool {
+	v, ok := j.arg(key)
+	return ok && (v == "yes" || v == "t")
+}
+
+func (j *babelJob) cacheOn() bool { return j.argYes("cache") }
+
+// babelHash is what a cached result is for: the language, the program as it
+// will run (variables, noweb and prologue included), its command line and
+// input, and how the result is asked for.
+func babelHash(lang, program string, extra []string, stdin string, want []string, file string) string {
+	h := sha1.New()
+	for _, s := range []string{lang, program, strings.Join(extra, "\x00"), stdin, strings.Join(want, " "), file} {
+		h.Write([]byte(s))
+		h.Write([]byte{0})
+	}
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+var resultsHashRe = regexp.MustCompile(`(?i)^\s*#\+RESULTS\[([0-9a-f]+)\]:`)
+
+// cachedHashAt is the hash on the #+RESULTS[...] line after row, or "".
+func cachedHashAt(lines []string, after int) string {
+	i := after + 1
+	for i < len(lines) && strings.TrimSpace(lines[i]) == "" {
+		i++
+	}
+	if i < len(lines) {
+		if m := resultsHashRe.FindStringSubmatch(lines[i]); m != nil {
+			return strings.ToLower(m[1])
+		}
+	}
+	return ""
+}
+
+// ----------------------------------------------------------------------------
+// noweb
+// ----------------------------------------------------------------------------
+
+// nowebOnEval says :noweb expands references when the block is run
+// (org-babel-noweb-p for :eval).
+func (j *babelJob) nowebOnEval() bool {
+	v, _ := j.arg("noweb")
+	switch strings.ToLower(v) {
+	case "yes", "eval", "no-export", "strip-export", "strip-tangle":
+		return noweb.Has(j.Code)
+	}
+	return false
+}
+
+// nowebResolver finds what a reference means in the job's file: the blocks
+// whose :noweb-ref is the name (inherited header arguments counted), joined
+// with the first one's :noweb-sep, else the block of that name; a call is a
+// #+CALL: of the named block.
+func (j *babelJob) nowebResolver() noweb.Resolver {
+	prefix := true
+	if p, ok := j.arg("noweb-prefix"); ok && (p == "no" || p == "nil") {
+		prefix = false
+	}
+	return noweb.Resolver{
+		Prefix: prefix,
+		Body: func(name string) (string, bool) {
+			if j.File == nil {
+				return "", false
+			}
+			names := namedKinds(j.File)
+			parts := []string{}
+			sep := "\n"
+			for _, ref := range collectFileBlocks(j.File) {
+				b := readBlock(ref, names)
+				sub := jobForBlock(&b, j.File)
+				if r, ok := sub.arg("noweb-ref"); ok && r == name {
+					if len(parts) == 0 {
+						if s, ok := sub.arg("noweb-sep"); ok {
+							sep = strings.ReplaceAll(s, `\n`, "\n")
+						}
+					}
+					parts = append(parts, strings.TrimSuffix(b.Code, "\n"))
+				}
+			}
+			if len(parts) > 0 {
+				return strings.Join(parts, sep), true
+			}
+			if b, _ := findNamedSrc(name, j.File); b != nil {
+				return strings.TrimSuffix(b.Code, "\n"), true
+			}
+			return "", false
+		},
+		Call: func(name, args string) (string, error) {
+			sub, _, err := callJob(name, "", args, "", j.File, j.OrgPath)
+			if err != nil {
+				return "", err
+			}
+			sub.depth = j.depth + 1
+			out, err := runJob(sub)
+			if err != nil {
+				return "", err
+			}
+			if !out.Ok {
+				return "", fmt.Errorf("%s: %s", name, out.Msg)
+			}
+			if out.Kind == "table" {
+				return out.Result, nil
+			}
+			return strings.TrimRight(out.Raw, "\n"), nil
+		},
+	}
 }
 
 // :cmdline split the way a shell would: on spaces, with quotes keeping words
@@ -473,18 +932,26 @@ func shellWords(s string) []string {
 	return out
 }
 
-// What a variable is when the program gets it: its rows when it names a
-// table (or something that produced one), or itself with Value set to the
-// text it stands for.
-func (j *babelJob) resolveVar(v common.CodeVar) (common.CodeVar, [][]string, error) {
+// resolveValue is a variable's value: what its reference names (a table, a
+// block's result, a named result, list or example) or the literal it is, with
+// its index (data[1:3,2]) applied. Shaping for :colnames and the rest comes
+// after, in runJob.
+func (j *babelJob) resolveValue(v common.CodeVar) (babelVal, error) {
+	if b, ok := j.bound[v.Name]; ok {
+		return b, nil
+	}
 	f := j.File
 	if v.RefFile != "" {
 		if other := GetDb().FindByFile(v.RefFile); other != nil {
 			f = other
+		} else if v.Ref != "" {
+			return babelVal{}, fmt.Errorf("no file %s", v.RefFile)
 		}
 	}
+	var val babelVal
 	switch v.RefKind {
 	case "table":
+		found := false
 		if f != nil {
 			for _, ref := range collectFileTables(f) {
 				if ref.Name != v.Ref {
@@ -492,68 +959,59 @@ func (j *babelJob) resolveVar(v common.CodeVar) (common.CodeVar, [][]string, err
 				}
 				rows := [][]string{}
 				for _, row := range tableRows(ref.Table) {
-					if row.Kind != "sep" {
+					if row.Kind == "sep" {
+						rows = append(rows, nil)
+					} else {
 						rows = append(rows, row.Cells)
 					}
 				}
-				return v, rows, nil
+				val, found = tableVal(v.Name, rows), true
+				break
 			}
 		}
-		return v, nil, fmt.Errorf("no table called %q", v.Ref)
+		if !found {
+			return val, fmt.Errorf("no table called %q", v.Ref)
+		}
 	case "src":
 		block, bf := findNamedSrc(v.Ref, f)
 		if block == nil {
-			return v, nil, fmt.Errorf("no block called %q", v.Ref)
+			return val, fmt.Errorf("no block called %q", v.Ref)
 		}
 		sub := jobForBlock(block, bf)
 		sub.depth = j.depth + 1
 		r, err := runJob(sub)
 		if err != nil {
-			return v, nil, fmt.Errorf("running %s: %v", v.Ref, err)
+			return val, fmt.Errorf("running %s: %v", v.Ref, err)
 		}
 		if !r.Ok {
-			return v, nil, fmt.Errorf("running %s: %s", v.Ref, r.Msg)
+			return val, fmt.Errorf("running %s: %s", v.Ref, r.Msg)
 		}
-		return valueOf(v, r.Kind, r.Result)
-	case "results":
-		if f != nil && f.Doc != nil {
-			if node, ok := f.Doc.NamedNodes[v.Ref]; ok {
-				text := strings.TrimRight(node.String(), "\n")
-				kind := "text"
-				if strings.HasPrefix(strings.TrimSpace(text), "|") {
-					kind = "table"
-				}
-				return valueOf(v, kind, text)
+		val = resultValue(v.Name, r.Kind, r.Result)
+	case "results", "list", "example":
+		node, ok := namedNode(f, v.Ref)
+		if !ok {
+			return val, fmt.Errorf("no %s called %q", v.RefKind, v.Ref)
+		}
+		switch v.RefKind {
+		case "list":
+			val = listVal(v.Name, listItems(node))
+		case "example":
+			val = textVal(v.Name, exampleText(node))
+		default:
+			text := strings.TrimRight(node.String(), "\n")
+			kind := "text"
+			if strings.HasPrefix(strings.TrimSpace(text), "|") {
+				kind = "table"
 			}
+			val = resultValue(v.Name, kind, text)
 		}
-		return v, nil, fmt.Errorf("no result called %q", v.Ref)
+	default:
+		val = scalarVal(v)
 	}
-	return v, nil, nil
-}
-
-// A variable standing for something a block produced.
-func valueOf(v common.CodeVar, kind, text string) (common.CodeVar, [][]string, error) {
-	if kind == "table" {
-		rows := [][]string{}
-		for _, row := range babelRows(text) {
-			if row != nil {
-				rows = append(rows, row)
-			}
-		}
-		return v, rows, nil
+	if v.Index != "" {
+		return applyIndex(val, v.Index)
 	}
-	// The fixed width colons org writes in front of a text result are not
-	// part of the value.
-	lines := []string{}
-	for _, l := range strings.Split(strings.TrimRight(text, "\n"), "\n") {
-		t := strings.TrimSpace(l)
-		if t == ":" {
-			t = ""
-		}
-		lines = append(lines, strings.TrimPrefix(t, ": "))
-	}
-	// Ref set and RefKind empty is a string to the binders; a number stays one.
-	return common.CodeVar{Name: v.Name, Value: strings.Join(lines, "\n"), Ref: v.Ref}, nil, nil
+	return val, nil
 }
 
 // The block a name means: one in the file first, then the first one in any
@@ -667,7 +1125,7 @@ var listItemRe = regexp.MustCompile(`^([-+]|\d+[.)])\s`)
 // placeResult writes a result under the line at row after (a block's END
 // line or a #+CALL:), replacing the result already there. Returns the file's
 // lines afterwards.
-func placeResult(lines []string, after int, name, indent string, body []string, want []string) []string {
+func placeResult(lines []string, after int, name, indent string, body []string, want []string, hash string) []string {
 	ind := func(ls []string) []string {
 		out := []string{}
 		for _, l := range ls {
@@ -692,14 +1150,26 @@ func placeResult(lines []string, after int, name, indent string, body []string, 
 		case hasWord(want, "prepend"):
 			return splice(lines, i+1, ind(body))
 		default:
-			// The header line stays as written; only what is under it goes.
-			add = append([]string{lines[i]}, ind(body)...)
+			// The header line stays as written; only what is under it goes -
+			// but for its hash, which is what :cache checks next time.
+			head := lines[i]
+			if hash != "" || resultsHashRe.MatchString(head) {
+				bracket := ""
+				if hash != "" {
+					bracket = "[" + hash + "]"
+				}
+				head = regexp.MustCompile(`(?i)#\+RESULTS(\[[^\]]*\])?:`).ReplaceAllString(head, "#+RESULTS"+bracket+":")
+			}
+			add = append([]string{head}, ind(body)...)
 		}
 		out := append([]string{}, lines[:i]...)
 		out = append(out, add...)
 		return append(out, lines[end+1:]...)
 	}
 	header := indent + "#+RESULTS:"
+	if hash != "" {
+		header = indent + "#+RESULTS[" + hash + "]:"
+	}
 	if name != "" {
 		header += " " + name
 	}
@@ -715,6 +1185,13 @@ func resultBody(res *common.CodeResult, want []string, lang string) []string {
 		if text != "" {
 			body = strings.Split(text, "\n")
 		}
+	case res.Kind == "wrap":
+		// :wrap's block, already round it.
+		body = strings.Split(text, "\n")
+		if hasWord(want, "drawer") {
+			body = append(append([]string{":RESULTS:"}, body...), ":END:")
+		}
+		return body
 	case res.Kind == "drawer" || strings.HasPrefix(text, ":results:\n"):
 		// Several outputs already gathered in their drawer (a session's text
 		// and figures, a notebook cell's outputs): written as they stand.
@@ -790,7 +1267,7 @@ func hasResultAfter(lines []string, after int) bool {
 // Writes a block's result under it in its file.
 func writeBlockResult(block *common.CodeBlock, job babelJob, res *common.CodeResult) error {
 	want := job.results()
-	if hasWord(want, "silent", "none", "discard") {
+	if hasWord(want, "silent", "none", "discard") || res.Cached {
 		return nil
 	}
 	lines, err := ganttFileLines(block.Filename)
@@ -809,7 +1286,15 @@ func writeBlockResult(block *common.CodeBlock, job babelJob, res *common.CodeRes
 		// without one would change on its first run.
 		return nil
 	}
-	lines = placeResult(lines, end, block.Name, indent, body, want)
+	before := strings.Join(lines, "\n")
+	lines = placeResult(lines, end, block.Name, indent, body, want, res.Hash)
+	// The same result as last time is left alone: a block re-run on a timer
+	// (refresh.go) would otherwise rewrite its file every few minutes for
+	// nothing, waking every watcher of it.
+	if strings.Join(lines, "\n") == before {
+		res.Unchanged = true
+		return nil
+	}
 	if err := writeLines(block.Filename, lines); err != nil {
 		return err
 	}
@@ -1039,6 +1524,7 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			}
 			block := readBlock(ref, names)
 			job := jobForBlock(&block, f)
+			job.cachedHash = cachedHashAt(lines, block.EndLine)
 			ran := common.BabelRan{Kind: "block", Name: block.Name, Line: it.row}
 			res, err := runJob(job)
 			if err != nil {
@@ -1062,15 +1548,19 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 		job, _, err := callJob(m[2], m[3], m[4], m[5], f, path)
 		var res common.CodeResult
 		if err == nil {
+			job.cachedHash = cachedHashAt(lines, it.row)
 			res, err = runJob(job)
 		}
 		if err != nil {
 			res = common.CodeResult{Msg: err.Error()}
 		}
 		want := job.results()
-		if (res.Ok || res.Kind == "error") && write && !hasWord(want, "silent", "none", "discard") {
-			lines = placeResult(lines, it.row, blockName(lines, it.row), m[1], resultBody(&res, want, job.Lang), want)
-			if err := writeLines(path, lines); err != nil {
+		if (res.Ok || res.Kind == "error") && write && !res.Cached && !hasWord(want, "silent", "none", "discard") {
+			before := strings.Join(lines, "\n")
+			lines = placeResult(lines, it.row, blockName(lines, it.row), m[1], resultBody(&res, want, job.Lang), want, res.Hash)
+			if strings.Join(lines, "\n") == before {
+				res.Unchanged = true
+			} else if err := writeLines(path, lines); err != nil {
 				res.Ok, res.Msg = false, "ran, but the result could not be written: "+err.Error()
 			} else {
 				res.Written = true

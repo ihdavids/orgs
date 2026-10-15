@@ -1,0 +1,34 @@
+/* letterpress - warm paper, a transitional serif, small capitals and a
+   fleuron: a stationer's invoice. Burgundy by default. */
+:root {
+  --accent: #7a2e3a;
+  --ink: #2a2421;
+  --muted: #7d7067;
+  --rule: #e2d8cc;
+  --tint: #f5ede2;
+  --paper: #fbf7f0;
+  --desk: #d9d2c7;
+  --font-body: Baskerville, "Baskerville Old Face", "Libre Baskerville", "Hoefler Text", Garamond, Georgia, serif;
+  --font-display: var(--font-body);
+  --font-num: var(--font-body);
+}
+body { font-size: 10.5pt; }
+.masthead { flex-direction: column; align-items: center; text-align: center; margin-bottom: 18px; }
+.masthead::after { content: "❦"; color: var(--accent); font-size: 14pt; margin-top: 8px; }
+.issuer-name { font-size: 20pt; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.issuer-lines { font-style: italic; }
+.doc-head { justify-content: center; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.doc-title { font-weight: 400; font-size: 16pt; letter-spacing: .3em; text-transform: uppercase; }
+.meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 28px; }
+.meta > div { display: flex; flex-direction: column; align-items: center; }
+.meta dt { font-variant: small-caps; text-transform: lowercase; letter-spacing: .08em; }
+.meta dd { text-align: center; }
+.label, .lines thead th { font-family: var(--font-body); font-weight: 400; font-variant: small-caps; text-transform: lowercase; letter-spacing: .12em; font-size: 10pt; }
+.lines thead th { border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); color: var(--accent); }
+.lines tr.project th { font-style: italic; font-weight: 400; font-size: 10.5pt; }
+.amount-due .big { font-weight: 400; font-size: 20pt; color: var(--accent); }
+.lines .num, .totals td, .meta dd, .amount-due .big { font-variant-numeric: lining-nums tabular-nums; }
+.totals tr.grand th, .totals tr.grand td { border-top: 1px solid var(--accent); border-bottom: 1px solid var(--accent); color: var(--accent); font-weight: 400; font-size: 13pt; }
+.thanks { text-align: center; font-style: italic; }
+/* The paper's tone to the edge of the page, margins included. */
+@page { background: #fbf7f0; }

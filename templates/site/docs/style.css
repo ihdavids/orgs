@@ -1,0 +1,54 @@
+/* Docs: quiet, blue, made to be scanned - the tree, the text, the contents. */
+:root {
+  --bg: #ffffff; --bg-alt: #f5f7fa; --fg: #1a1d23; --muted: #555d6b; --faint: #8b93a1; --rule: #e5e8ee;
+  --accent: #2563eb; --accent-ink: #fff; --mark: #fdf1b3; --code-bg: #f5f7fa; --todo: #c2410c; --done: #15803d;
+  --font-body: "Inter", system-ui, sans-serif; --font-display: "Inter", system-ui, sans-serif; --font-ui: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --size: 16px; --leading: 1.7; --measure: 46rem; --wide: 92rem; --radius: 8px; --header-h: 3.75rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115; --bg-alt: #171a21; --fg: #e4e7ec; --muted: #a3abb8; --faint: #6b7380; --rule: #252a33;
+    --accent: #6ea8ff; --accent-ink: #0f1115; --mark: #4a3d0a; --code-bg: #171a21; --todo: #fb923c; --done: #4ade80;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115; --bg-alt: #171a21; --fg: #e4e7ec; --muted: #a3abb8; --faint: #6b7380; --rule: #252a33;
+  --accent: #6ea8ff; --accent-ink: #0f1115; --mark: #4a3d0a; --code-bg: #171a21; --todo: #fb923c; --done: #4ade80;
+}
+.site-header .bar { max-width: none; padding: 0 1.5rem; }
+.brand { font-weight: 750; font-size: 1.05rem; display: inline-flex; align-items: center; gap: 0.55rem; }
+.brand::before { content: ""; width: 1.4rem; height: 1.4rem; border-radius: 6px; background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 40%, #a855f7)); }
+.site-nav { flex: 0 1 auto; }
+.tools { flex: 1; justify-content: flex-end; }
+.search-field { border-radius: var(--radius); background: var(--bg-alt); }
+@media (min-width: 901px) {
+  .search-field { width: 18rem; }
+  .search-field:focus-within { width: 24rem; background: var(--bg); }
+}
+.site-body { max-width: none; padding: 2rem 1.5rem 4rem; gap: 3.5rem; }
+.has-tree.has-aside .site-body { grid-template-columns: 16rem minmax(0, 1fr) 14rem; }
+.has-tree .site-body { grid-template-columns: 16rem minmax(0, 1fr); }
+.site-tree { border-right: 1px solid var(--rule); padding-right: 1rem; }
+.tree-home { font-weight: 600; color: var(--fg); margin-bottom: 0.4rem; }
+.site-tree .tree-folder > a, .site-tree .tree-folder > .tree-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--faint); margin-top: 1.1rem; }
+.site-tree ul ul { border-left: 0; padding-left: 0; margin-left: 0; }
+.site-main > * { margin-left: auto; margin-right: auto; }
+.page-title { font-size: clamp(1.9rem, 3.5vw, 2.4rem); font-weight: 750; letter-spacing: -0.03em; }
+.page-header { margin-bottom: 2rem; padding-bottom: 1.4rem; border-bottom: 1px solid var(--rule); }
+.page-body h2 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em; padding-top: 1.6rem; border-top: 1px solid var(--rule); margin-top: 2.6rem; }
+.page-body h3 { font-size: 1.15rem; font-weight: 650; }
+.page-body a { text-decoration: none; font-weight: 500; }
+.page-body a:hover { text-decoration: underline; }
+.page-body blockquote { font-style: normal; background: color-mix(in srgb, var(--accent) 7%, transparent); border-left-color: var(--accent); padding: 0.75rem 1rem; border-radius: 0 var(--radius) var(--radius) 0; color: var(--fg); }
+.page-body code { color: color-mix(in srgb, var(--accent) 70%, var(--fg)); }
+.page-body pre code { color: inherit; }
+.page-body .note-block, .page-body .tip-block, .page-body .warning-block, .page-body .important-block {
+  border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: var(--radius); padding: 0.75rem 1rem; margin: 0 0 1.2rem; background: var(--bg-alt);
+}
+.page-body .warning-block { border-left-color: var(--todo); }
+.page-body .tip-block { border-left-color: var(--done); }
+.page-aside .toc ol { border-left: 1px solid var(--rule); }
+.hero { padding: 1rem 0 1.5rem; border-bottom: 1px solid var(--rule); margin-bottom: 1rem; }
+.hero-title { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 750; letter-spacing: -0.03em; }
+.kind-home .home > * { margin-left: auto; }

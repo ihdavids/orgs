@@ -1,0 +1,124 @@
+/* The invoice and timesheet layout, shared by every theme.
+   A theme (invoice/themes/<name>.css) sets the custom properties below and
+   dresses the parts; the structure, paging and print rules live here so a
+   new theme cannot break a page break. */
+
+:root {
+  --accent: #1f3a5f;
+  --ink: #1d1d1f;
+  --muted: #6b6b70;
+  --rule: #d9d9de;
+  --tint: #f4f5f7;
+  --paper: #ffffff;
+  --desk: #e8e8ec;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-body);
+  --font-num: var(--font-body);
+  --sheet-w: 8.5in;
+  --sheet-h: 11in;
+  --margin: 0.75in;
+}
+html.paper-A4 { --sheet-w: 210mm; --sheet-h: 297mm; }
+html.paper-legal { --sheet-h: 14in; }
+
+/* Real page margins, so a long invoice's second page has them too. */
+@page { margin: 0.6in 0.65in; }
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font: 10pt/1.45 var(--font-body);
+  font-feature-settings: "kern", "liga";
+}
+
+/* On screen, sheets of paper on a desk. In print, the page is the sheet. */
+.sheet {
+  position: relative;
+  width: var(--sheet-w);
+  min-height: var(--sheet-h);
+  margin: 24px auto;
+  padding: var(--margin);
+  background: var(--paper);
+  box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.08);
+  display: flex;
+  flex-direction: column;
+}
+@media screen and (max-width: 8.6in) {
+  .sheet { width: auto; min-height: 0; margin: 0; padding: 24px 16px; box-shadow: none; }
+}
+@media print {
+  body { background: var(--paper); }
+  .sheet { margin: 0; padding: 0; box-shadow: none; width: auto; min-height: calc(var(--sheet-h) - 1.3in); break-after: page; }
+  .sheet:last-child { break-after: auto; }
+}
+
+h1, h2, p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 8.5pt; }
+.label {
+  font: 600 7.5pt/1.2 var(--font-body);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Masthead: who it is from. */
+.masthead { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+.logo { max-height: 56px; max-width: 180px; object-fit: contain; }
+.issuer-name { font: 600 13pt/1.2 var(--font-display); }
+.issuer-lines { color: var(--muted); font-size: 8.5pt; margin-top: 4px; }
+.issuer-lines span { display: inline; }
+.issuer-lines span + span::before { content: " · "; }
+
+/* The title and the invoice's particulars. */
+.doc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 28px; }
+.doc-title { font: 600 26pt/1 var(--font-display); }
+.meta { display: grid; grid-template-columns: auto auto; gap: 2px 16px; margin: 0; font-size: 9pt; }
+.meta > div { display: contents; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+.parties { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; }
+.party-name { font-weight: 600; }
+.amount-due { text-align: right; }
+.amount-due .big { font: 600 22pt/1.1 var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* The lines. */
+table { border-collapse: collapse; width: 100%; }
+.lines { margin-bottom: 20px; }
+.lines thead { display: table-header-group; }
+.lines th, .lines td { padding: 7px 8px; vertical-align: top; text-align: left; }
+.lines thead th { font: 600 7.5pt/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--ink); }
+.lines tr { break-inside: avoid; }
+.lines .num { text-align: right; white-space: nowrap; }
+.lines td.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.lines .dates, .lines .time { white-space: nowrap; }
+.lines td.dates, .lines td.time { color: var(--muted); }
+.lines .desc { width: 100%; }
+.lines td.desc .sub { color: var(--muted); font-size: 8pt; margin-top: 1px; }
+.lines tr.line td { border-bottom: 1px solid var(--rule); }
+.lines tr.project th { padding-top: 14px; font: 600 8.5pt/1.2 var(--font-body); color: var(--accent); }
+.lines tr.unbillable td { color: var(--muted); }
+
+.totals { display: flex; justify-content: flex-end; margin-bottom: 28px; break-inside: avoid; }
+.totals table { width: auto; min-width: 45%; }
+.totals th { text-align: left; font-weight: 400; color: var(--muted); padding: 4px 8px; }
+.totals td { text-align: right; padding: 4px 8px; font-family: var(--font-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.totals tr.grand th, .totals tr.grand td { color: var(--ink); font-weight: 600; font-size: 12pt; padding-top: 10px; border-top: 1px solid var(--ink); }
+
+/* The foot sinks to the bottom of a short invoice. */
+.foot { margin-top: auto; display: grid; gap: 12px; font-size: 9pt; break-inside: avoid; }
+.notes { white-space: pre-line; }
+.thanks { font-family: var(--font-display); color: var(--accent); }
+.terms { color: var(--muted); }
+
+.signatures { grid-template-columns: 1fr 1fr .6fr; gap: 32px; padding-top: 40px; }
+.sign { display: flex; flex-direction: column; gap: 4px; }
+.sign .line { border-bottom: 1px solid var(--ink); height: 28px; }
+.sign .label { margin: 0; }
+
+.empty p { margin-top: 12px; color: var(--muted); }

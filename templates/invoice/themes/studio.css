@@ -1,0 +1,27 @@
+/* studio - a design studio's sheet: a strip of colour down the left edge,
+   heavy display type and generous spacing. Coral by default. */
+:root {
+  --accent: #e4572e;
+  --ink: #161616;
+  --muted: #74706c;
+  --rule: #ece8e4;
+  --tint: #fbf3ef;
+  --font-body: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  --font-display: "Futura", "Avenir Next", "Century Gothic", "Helvetica Neue", sans-serif;
+}
+.sheet { border-left: 14px solid var(--accent); }
+@media print { .sheet { border-left-width: 8px; padding-left: 22px; } }
+.masthead { justify-content: space-between; flex-direction: row-reverse; }
+.issuer { text-align: left; }
+.issuer-name { font-family: var(--font-display); font-weight: 700; font-size: 15pt; letter-spacing: .02em; }
+.doc-head { flex-direction: column; align-items: flex-start; gap: 14px; }
+.doc-title { font-family: var(--font-display); font-weight: 800; font-size: 46pt; letter-spacing: -.02em; text-transform: lowercase; color: var(--accent); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 28px; }
+.meta > div { display: flex; flex-direction: column; }
+.meta dd { text-align: left; font-weight: 600; }
+.amount-due .big { font-family: var(--font-display); font-weight: 800; font-size: 26pt; }
+.lines thead th { border-bottom: 2px solid var(--accent); color: var(--ink); }
+.lines tr.project th { color: var(--ink); font-family: var(--font-display); font-size: 10pt; }
+.totals tr.grand td { color: var(--accent); font-family: var(--font-display); font-weight: 800; font-size: 16pt; }
+.totals tr.grand th, .totals tr.grand td { border-top: 2px solid var(--accent); }
+.thanks { font-family: var(--font-display); font-weight: 700; font-size: 12pt; }

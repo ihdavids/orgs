@@ -1,0 +1,18 @@
+{{define "main"}}
+<article class="page listing">
+  <header class="page-header">
+    <p class="crumbs"><a href="{{.Root}}tags/index.html">Tags</a></p>
+    <h1 class="page-title"><span class="hash">#</span>{{.Tag.Name}}</h1>
+    <p class="page-subtitle">{{plural .Tag.Count "entry" "entries"}}</p>
+  </header>
+  <ul class="entry-list">
+  {{- range .Tag.Entries}}
+    <li>
+      <a href="{{$.Root}}{{.URL}}">{{.Title}}</a>
+      {{- with .PageTitle}}<span class="entry-page">in {{.}}</span>{{end}}
+      {{- if and (not .PageTitle) .Page.HasDate}}<time datetime="{{.Page.ISODate}}">{{.Page.ShortDate}}</time>{{end}}
+    </li>
+  {{- end}}
+  </ul>
+</article>
+{{end}}

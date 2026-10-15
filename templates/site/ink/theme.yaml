@@ -1,0 +1,12 @@
+name: Ink
+description: dark first and modern - a crisp sans on near-black with one electric accent
+fonts:
+  - "https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=JetBrains+Mono:wght@400;600&display=swap"
+highlight:
+  light: github
+  dark: tokyonight-night
+layout:
+  toc: aside
+  backlinks: bottom
+  home: cards
+  darkDefault: true

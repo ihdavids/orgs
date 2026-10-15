@@ -2,6 +2,7 @@ package all
 
 import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/autoclockout"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/beamer"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/confluence"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/deckjs"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/dnd"
@@ -14,13 +15,16 @@ import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/impressjs"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/jira"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/latex"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/manuscript"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/markdown"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/mermaid"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/pandoc"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/trello"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/typst"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/notify"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/revealjs"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todoist"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todotxt"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/webslides"
 )

@@ -618,6 +618,21 @@ type ServerSettings struct {
 	EDOC */
 	Babel BabelSettings `yaml:"babel"`
 	/* SDOC: Settings
+	* Refresh
+		What the server keeps current by itself: source blocks with
+		=:schedule=, dynamic blocks with =:refresh=, files with =#+REFRESH:=
+		(see *Keeping Blocks Current*).
+
+		#+BEGIN_SRC yaml
+		refresh:
+		  every: 1h          # every file's dynamic blocks and #+TBLFM tables
+		  onExport: true     # exports read them refreshed, in memory (default)
+		  scheduled: true    # run :schedule blocks; needs babel.enable (default)
+		  tick: 30           # seconds between looks at what is due
+		#+END_SRC
+	EDOC */
+	Refresh RefreshSettings `yaml:"refresh"`
+	/* SDOC: Settings
 	* The Agenda
 
 		=GET /agenda= works out what lands on each day (repeaters, ranges,
@@ -654,6 +669,48 @@ type ServerSettings struct {
 		wherever it goes.
 	EDOC */
 	Review ReviewSettings `yaml:"review"`
+	/* SDOC: Settings
+	* Timesheets and Invoices
+
+		Who =orgs invoice= and =orgs timesheet= bill, and how. Time belongs to
+		a client by a =:CLIENT:= property (inherited, or a file's
+		=#+PROPERTY: CLIENT acme=), else by a tag naming one of the clients
+		below; =RATE= and =BILLABLE: no= are read the same way.
+
+		#+BEGIN_SRC yaml
+		invoice:
+		  from:
+		    name: "Ian Davids Consulting"
+		    address: ["12 Harbour St", "Halifax NS B3H 1A1"]
+		    email: billing@example.com
+		    taxId: "GST 123456789"
+		  currency: CAD
+		  rate: 120            # an hour, when nothing else says
+		  round: 15            # bill each line in quarter hours
+		  roundMode: up        # up, nearest or down
+		  taxRate: 15
+		  taxName: HST
+		  termDays: 30
+		  number: "{CLIENT}-{yyyy}{mm}"
+		  payment: ["Transit 00123  Account 4567890", "e-Transfer: billing@example.com"]
+		  theme: classic       # classic, modern, minimal, ledger, studio, letterpress
+		  accent: "#7a2e3a"
+		  paper: letter        # or a4
+		  logo: ~/brand/logo.png
+		  clients:
+		    acme:
+		      name: "Acme Corporation"
+		      contact: "Accounts Payable"
+		      address: ["1 Road Runner Way", "Phoenix AZ"]
+		      rate: 150
+		      currency: USD
+		      taxRate: 0
+		      aliases: [acmeco]
+		#+END_SRC
+
+		Every key may be left out.
+	EDOC */
+	Invoice InvoiceSettings `yaml:"invoice"`
 	/* SDOC: Settings
 	* Default Author
 		Default author parameter to use when generating new templates
@@ -818,3 +875,24 @@ type BabelSettings struct {
 	// handed to the command on standard input.
 	Commands map[string][]string `yaml:"commands"`
 }
+
+// RefreshSettings is the `refresh:` block (refresh.go).
+//
+//	refresh:
+//	  every: 1h          # every file's dynamic blocks and #+TBLFM tables, this often
+//	  onExport: true     # an export sees them refreshed (in memory; the file is not written)
+//	  scheduled: true    # run :schedule source blocks (needs babel.enable)
+//	  tick: 30           # seconds between looks at what is due
+type RefreshSettings struct {
+	Every string `yaml:"every"`
+	// A pointer so that unset can mean "on".
+	OnExport  *bool `yaml:"onExport"`
+	Scheduled *bool `yaml:"scheduled"`
+	Tick      int   `yaml:"tick"`
+}
+
+// ExportRefresh says whether an export should see refreshed blocks.
+func (r RefreshSettings) ExportRefresh() bool { return r.OnExport == nil || *r.OnExport }
+
+// RunScheduled says whether :schedule blocks are run.
+func (r RefreshSettings) RunScheduled() bool { return r.Scheduled == nil || *r.Scheduled }

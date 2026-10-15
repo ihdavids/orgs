@@ -1,0 +1,24 @@
+{{define "main"}}
+<article class="page{{if .Page.HasDate}} post{{end}}">
+  <header class="page-header">
+    {{if .Page.Folder}}<p class="crumbs"><a href="{{.Root}}index.html">{{.Site.Title}}</a> <span aria-hidden="true">/</span> {{.Page.Folder}}</p>{{end}}
+    <h1 class="page-title">{{.Page.Title}}</h1>
+    {{with .Page.Subtitle}}<p class="page-subtitle">{{.}}</p>{{end}}
+    {{template "meta" .}}
+    {{template "page-tags" .}}
+  </header>
+  {{if and .Page.TOC (eq .Theme.Layout.TOC "inline")}}<details class="toc-inline" open><summary>Contents</summary>{{template "toc" .}}</details>{{end}}
+  {{if and .Page.TOC (eq .Theme.Layout.TOC "aside")}}<details class="toc-mobile"><summary>On this page</summary>{{template "toc" .}}</details>{{end}}
+  <div class="page-body{{if .Theme.Layout.Sidenotes}} with-sidenotes{{end}}">
+  {{.Body}}
+  </div>
+  {{if and .Page.Backlinks (ne .Theme.Layout.Backlinks "aside")}}{{template "backlinks" .}}{{end}}
+  {{if and .Page.Backlinks (eq .Theme.Layout.Backlinks "aside")}}<div class="backlinks-mobile">{{template "backlinks" .}}</div>{{end}}
+  {{if or .Prev .Next}}
+  <nav class="pager" aria-label="More posts">
+    {{with .Prev}}<a class="pager-prev" href="{{$.Root}}{{.URL}}"><span>Older</span>{{.Title}}</a>{{else}}<span></span>{{end}}
+    {{with .Next}}<a class="pager-next" href="{{$.Root}}{{.URL}}"><span>Newer</span>{{.Title}}</a>{{end}}
+  </nav>
+  {{end}}
+</article>
+{{end}}

@@ -7,6 +7,7 @@ package kanban
 //	orgs kanban ls              the boards there are
 //	orgs kanban sprint -print   draw it once and exit (also what a pipe gets)
 //	orgs kanban sprint -json    the columns and their cards, for a program
+//	orgs kanban sprint -html    the board as one html page (html.go)
 //	orgs kanban new sprint -q 'IsTodo() && HasTags("sprint")'
 //	orgs kanban new sprint -saved mine
 //	orgs kanban rm sprint
@@ -36,6 +37,11 @@ type Kanban struct {
 	Saved  string
 	Group  string
 	Layout string
+
+	Html      bool
+	Out       string
+	Open      bool
+	HtmlTheme string
 }
 
 func (self *Kanban) Unmarshal(u func(interface{}) error) error { return u(self) }
@@ -44,11 +50,15 @@ func (self *Kanban) StartPlugin(m *common.PluginManager)       {}
 func (self *Kanban) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Print, "print", false, "draw the board once and exit")
 	fset.IntVar(&self.Width, "width", 0, "columns to draw -print in (default: the terminal's)")
-	fset.StringVar(&self.Theme, "theme", "", "dark or light (default: guessed from COLORFGBG, else dark)")
+	fset.StringVar(&self.Theme, "theme", "", "dark or light (default: guessed from COLORFGBG, else dark); with -html also default, paper or midnight")
 	fset.StringVar(&self.Query, "q", "", "new: the board's query")
 	fset.StringVar(&self.Saved, "saved", "", "new: a saved query's name for the board's cards")
 	fset.StringVar(&self.Group, "group", "", "new: status, tag or property:NAME")
-	fset.StringVar(&self.Layout, "layout", "", "board or list (for this look only, -print)")
+	fset.StringVar(&self.Layout, "layout", "", "board or list (for this look only, -print and -html)")
+	fset.BoolVar(&self.Html, "html", false, "write the board as one html page (-out, -theme, -open)")
+	fset.StringVar(&self.Out, "out", "", "with -html: the file to write (default <board>.html; - for stdout)")
+	fset.BoolVar(&self.Open, "open", false, "with -html: open the page in the browser")
+	fset.StringVar(&self.HtmlTheme, "html-theme", "", "with -html: "+strings.Join(HtmlThemes, ", ")+" (-theme works too)")
 }
 
 func (self *Kanban) Exec(core *commands.Core) {
@@ -99,6 +109,10 @@ func (self *Kanban) Exec(core *commands.Core) {
 		a.board().Layout = self.Layout
 	}
 
+	if self.Html {
+		self.html(a)
+		return
+	}
 	if commands.Machine() {
 		self.machine(a)
 		return

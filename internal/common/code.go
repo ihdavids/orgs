@@ -199,6 +199,13 @@ type CodeResult struct {
 	TextLang string
 	// Whether the result was written into the file as #+RESULTS:.
 	Written bool
+	// Ran, and wrote nothing because the result was what the file already
+	// had. Not a failure; a block on a timer is usually this.
+	Unchanged bool `json:",omitempty"`
+	// :cache yes: the hash of what ran (written as #+RESULTS[hash]:), and
+	// whether it did not run because the result already there has that hash.
+	Hash   string `json:",omitempty"`
+	Cached bool   `json:",omitempty"`
 }
 
 // Changing a block in the file it lives in.

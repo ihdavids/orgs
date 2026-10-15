@@ -1,0 +1,11 @@
+name: Mono
+description: one monospace face, no decoration - a terminal's honesty for notes and logs
+fonts:
+  - "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap"
+highlight:
+  light: algol_nu
+  dark: native
+layout:
+  toc: inline
+  backlinks: bottom
+  home: list

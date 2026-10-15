@@ -1,0 +1,47 @@
+/* modern - a product planner: a geometric sans, an indigo accent, each day
+   headed by a soft band, rounded tags for marks. */
+:root {
+  --paper: #ffffff;
+  --ink: #1e2230;
+  --muted: #6b7080;
+  --faint: #b4b8c4;
+  --rule: #e3e5ec;
+  --line: #eceef3;
+  --accent: #4f46e5;
+  --tint: #f7f7fb;
+  --today: #f1f0fe;
+  --late: #dc2626;
+  --warn: #d97706;
+  --font-body: "Avenir Next", Avenir, "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: var(--font-body);
+  --font-num: var(--font-body);
+  --radius: 1.6mm;
+}
+.head-title { font-weight: 700; font-size: 20pt; letter-spacing: -.01em; }
+.head-sub { color: var(--accent); font-weight: 600; }
+.sheet-head { border-bottom: 0; }
+.daycol, .panel { border-left: 0; padding: 0 1.2mm; }
+.day-head { background: var(--tint); border: 0; border-radius: var(--radius); padding: 1mm 1.8mm; }
+.daycol.today .day-head { background: var(--accent); }
+.daycol.today .dnum, .daycol.today .dow { color: #fff; }
+.daycol.weekend, .daycol.today { background: none; }
+.daycol .dnum { font-weight: 700; font-size: 14pt; }
+.daycol .dow { font-weight: 600; }
+h3 { color: var(--accent); font-weight: 700; }
+.panel { background: var(--tint); border-radius: var(--radius); padding: 2mm 2.2mm; margin-left: 1mm; }
+.item .mark { border-radius: 1mm; padding: 0 .8mm; background: var(--today); color: var(--accent); }
+.item .mark.late { background: #fde8e8; color: var(--late); }
+.item .mark.warn { background: #fef3e2; color: var(--warn); }
+.item .time { font-weight: 600; }
+.cb { border-radius: .6mm; border-color: var(--muted); }
+.sheet.day .head-num { font-weight: 800; }
+.event { border-left: 0; background: var(--today); border-radius: var(--radius); }
+.event .time { font-weight: 600; }
+.month-grid { border: 0; gap: 1mm; }
+.month-grid .wd { border: 0; font-weight: 700; color: var(--accent); }
+.cell { border: 0; background: var(--tint); border-radius: var(--radius); }
+.cell.weekend { background: #fbfbfd; }
+.cell.today { background: var(--today); box-shadow: inset 0 0 0 .8pt var(--accent); }
+.cell .cnum { font-weight: 700; }
+.gutter { width: 4mm; }
+.gutter::after { border-left: 0; }

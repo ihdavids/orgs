@@ -1,0 +1,46 @@
+/* bullet - a dot-grid notebook: the whole sheet is a 5mm dot grid, the
+   numbers are typewriter, boxes are round-cornered, and the accent is a
+   muted teal like a fineliner. */
+:root {
+  --paper: #fdfcf9;
+  --ink: #2b2b2b;
+  --muted: #7a7a74;
+  --faint: #b9b8b0;
+  --rule: #d6d4cc;
+  --line: #c9c7bd;
+  --accent: #1f6f6b;
+  --tint: #fdfcf9;
+  --today: rgba(31, 111, 107, .07); /* see-through, so the dots show */
+  --font-body: "Avenir Next", Avenir, "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-display: "American Typewriter", "Courier Prime", "Courier New", monospace;
+  --font-num: "American Typewriter", "Courier Prime", "Courier New", monospace;
+  --radius: 1.5mm;
+  --line-gap: 5mm;
+  /* Dots over the whole sheet, as a dotted notebook page; the writing areas
+     are left clear to show them. */
+  --sheet-bg: radial-gradient(circle, #c9c7bd .3mm, transparent .36mm);
+  --sheet-bg-size: 5mm 5mm;
+  --write-bg: none;
+}
+.sheet-head { border-bottom: 0; }
+.head-title { font-size: 19pt; }
+.head-title::before { content: "• "; color: var(--accent); }
+.daycol, .panel { border-left: 0; }
+.daycol { padding: 0 1.4mm; }
+.day-head { border-bottom: 0; border: .6pt solid var(--ink); border-radius: var(--radius); padding: .8mm 1.6mm; }
+.daycol.today .day-head { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+.daycol.today .dnum, .daycol.today .dow { color: var(--paper); }
+.daycol.weekend, .daycol.today { background: none; }
+.panel { background: none; }
+.panel .box { border: .6pt solid var(--rule); border-radius: var(--radius); padding: 1.4mm 1.8mm; }
+.cb { border-radius: 50%; }
+.cb.checked { background: var(--ink); }
+.cb.checked::after { border-color: var(--paper); }
+.item .title::before { content: none; }
+.hour { background-image: none; }
+.event { background: var(--paper); border: .6pt solid var(--accent); border-left-width: 1.6pt; border-radius: var(--radius); }
+.cell.weekend { background: none; }
+.cell.today .cnum { background: var(--accent); color: var(--paper); border-radius: var(--radius); padding: 0 1mm; align-self: flex-start; }
+.gutter::after { border-left: 0; }
+/* The paper under the page margins too, or it prints in a white frame. */
+@page { background: #fdfcf9; }

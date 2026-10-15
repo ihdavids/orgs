@@ -6,11 +6,21 @@ package importcmd
 //	orgs import analysis.ipynb -o science/penguins.org
 //	orgs import analysis.ipynb -overwrite -run     import again, then run every block
 //	orgs import analysis.ipynb -print              the org text, and nothing written
+//	orgs import ~/Obsidian/Vault -o vault          a whole vault, folders kept
+//	orgs import note.md                            one markdown file
+//	orgs import todo.txt -o inbox.org -append      todo.txt tasks onto a file
+//	orgs import work.ics -o calendar.org -append -since -30d
 //
 // The file is read here and sent, because it is usually on this machine and
 // the server may be another. The extension says what the file is; each kind
 // is an Importer, so another format is one more Register call (the vCard one
 // could hang off this as .vcf) rather than another command.
+//
+// Notebooks are converted by the server (/import/ipynb). Markdown, todo.txt
+// and calendars are converted here, by the packages the server's exporters
+// share (internal/common/mdorg, todotxt, ical), and the org is written
+// through /import/org - which is what decides where a file may go and what
+// an append already holds.
 
 import (
 	"errors"
@@ -33,6 +43,14 @@ type Options struct {
 	Print     bool
 	Run       bool
 	Open      bool
+	// Add to the end of the org file rather than refusing because it is there.
+	Append bool
+	// Calendars: leave out events that ended before this.
+	Since string
+	// Calendars: tag every entry.
+	Tag string
+	// todo.txt: no heading per project.
+	Flat bool
 }
 
 // An Importer is one kind of file orgs import reads.
@@ -41,6 +59,11 @@ type Importer struct {
 	Kind string
 	// The extensions that mean it, with the dot: ".ipynb".
 	Exts []string
+	// Whole file names that mean it whatever their extension: "todo.txt".
+	Names []string
+	// It reads a folder (a vault) as well as a file; Import is then handed
+	// the folder's path and no data.
+	Dirs bool
 	// Import the file's bytes; name is the file's name as given.
 	Import func(core *commands.Core, name string, data []byte, o *Options)
 }
@@ -54,6 +77,22 @@ func importerFor(name, as string) (*Importer, bool) {
 	ext := strings.ToLower(filepath.Ext(name))
 	if as != "" {
 		ext = "." + strings.TrimPrefix(strings.ToLower(as), ".")
+	} else {
+		base := strings.ToLower(filepath.Base(name))
+		for i := range importers {
+			for _, n := range importers[i].Names {
+				if n == base {
+					return &importers[i], true
+				}
+			}
+		}
+		if st, err := os.Stat(name); err == nil && st.IsDir() {
+			for i := range importers {
+				if importers[i].Dirs {
+					return &importers[i], true
+				}
+			}
+		}
 	}
 	for i := range importers {
 		for _, e := range importers[i].Exts {
@@ -68,7 +107,7 @@ func importerFor(name, as string) (*Importer, bool) {
 func kinds() string {
 	out := []string{}
 	for _, imp := range importers {
-		out = append(out, fmt.Sprintf("%s (%s)", imp.Kind, strings.Join(imp.Exts, ", ")))
+		out = append(out, fmt.Sprintf("%s (%s)", imp.Kind, strings.Join(append(append([]string{}, imp.Names...), imp.Exts...), ", ")))
 	}
 	sort.Strings(out)
 	return strings.Join(out, "; ")
@@ -86,18 +125,22 @@ func (self *ImportCmd) HelpGroup() string                                 { retu
 
 func (self *ImportCmd) SetupParameters(fset *flag.FlagSet) {
 	self.fset = fset
-	fset.StringVar(&self.opts.Out, "o", "", "the org file to write: relative to the first org directory, or absolute inside one (default: the file's own name)")
+	fset.StringVar(&self.opts.Out, "o", "", "the org file to write (a folder for a vault): relative to the first org directory, or absolute inside one (default: the file's own name)")
 	fset.BoolVar(&self.opts.Overwrite, "overwrite", false, "replace a file (and its pictures) that is already there")
+	fset.BoolVar(&self.opts.Append, "append", false, "add to the end of an org file that is already there (a calendar skips events it already has)")
+	fset.StringVar(&self.opts.Since, "since", "", "calendars: leave out events that ended before this (2026-01-01, -30d, ...)")
+	fset.StringVar(&self.opts.Tag, "tag", "", "calendars: tag every entry with this")
+	fset.BoolVar(&self.opts.Flat, "flat", false, "todo.txt: tasks at the top level, projects as a property, not a heading each")
 	fset.BoolVar(&self.opts.Print, "print", false, "print the org text and write nothing")
 	fset.BoolVar(&self.opts.Run, "run", false, "run every source block once it is imported (babel has to be on)")
 	fset.BoolVar(&self.opts.Open, "open", false, "open the new file in your editor")
-	fset.StringVar(&self.As, "as", "", "what the file is, when its extension does not say (e.g. ipynb); needed for -")
+	fset.StringVar(&self.As, "as", "", "what the file is, when its name does not say (ipynb, md, todotxt, ics); needed for -")
 }
 
 func (self *ImportCmd) Exec(core *commands.Core) {
 	words := commands.FreeArgs(self.fset)
 	if len(words) != 1 {
-		commands.Fail("orgs import <file> [-o target.org] [-overwrite] [-run] [-print]\nKnows: %s", kinds())
+		commands.Fail("orgs import <file|vault folder> [-o target.org] [-overwrite|-append] [-print]\nKnows: %s", kinds())
 	}
 	name := words[0]
 	imp, ok := importerFor(name, self.As)
@@ -106,6 +149,13 @@ func (self *ImportCmd) Exec(core *commands.Core) {
 	}
 	var data []byte
 	var err error
+	if st, serr := os.Stat(name); serr == nil && st.IsDir() {
+		if !imp.Dirs {
+			commands.Fail("%s is a folder; orgs import reads a folder only as a markdown vault", name)
+		}
+		imp.Import(core, name, nil, &self.opts)
+		return
+	}
 	if name == "-" {
 		data, err = io.ReadAll(os.Stdin)
 		name = ""
@@ -119,10 +169,13 @@ func (self *ImportCmd) Exec(core *commands.Core) {
 }
 
 func init() {
-	commands.AddCmd("import", "turn another kind of file into an org file: a Jupyter notebook (.ipynb)", func() commands.Cmd {
+	commands.AddCmd("import", "turn other files into org: Jupyter notebooks, markdown and Obsidian vaults, todo.txt, calendars (.ics)", func() commands.Cmd {
 		return &ImportCmd{}
 	})
 	Register(Importer{Kind: "Jupyter notebook", Exts: []string{".ipynb"}, Import: importNotebook})
+	Register(Importer{Kind: "markdown or an Obsidian vault (a folder)", Exts: []string{".md", ".markdown", ".mdown"}, Dirs: true, Import: importMarkdown})
+	Register(Importer{Kind: "todo.txt", Names: []string{"todo.txt", "done.txt"}, Exts: []string{".todotxt"}, Import: importTodoTxt})
+	Register(Importer{Kind: "iCalendar", Exts: []string{".ics", ".ical", ".icalendar"}, Import: importCalendar})
 }
 
 // ----------------------------------------------------------------------------
@@ -204,6 +257,9 @@ func importNotebook(core *commands.Core, name string, data []byte, o *Options) {
 func plural(n int, what string) string {
 	if n == 1 {
 		return "1 " + what
+	}
+	if strings.HasSuffix(what, "y") {
+		return fmt.Sprintf("%d %sies", n, what[:len(what)-1])
 	}
 	return fmt.Sprintf("%d %ss", n, what)
 }

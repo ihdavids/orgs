@@ -257,8 +257,10 @@ print(1)
 	if s := j.sessionName(); s != "inherited" {
 		t.Errorf("session %q", s)
 	}
-	// The heading's :results output is nearer than the file's silent.
-	if w := j.results(); !hasWord(w, "output") || w[len(w)-1] != "output" {
+	// The heading's :results output and the file's silent are different
+	// groups (collection, handling), so both are in force, as in org; a
+	// nearer word replaces a farther one only within its group.
+	if w := j.results(); !hasWord(w, "output") || !hasWord(w, "silent") {
 		t.Errorf("results %v", w)
 	}
 }

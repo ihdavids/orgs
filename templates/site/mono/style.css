@@ -1,0 +1,64 @@
+/* Mono: a typewriter page by day, a phosphor screen by night. */
+:root {
+  --bg: #fcfcfa; --bg-alt: #f1f1ec; --fg: #1b1b1b; --muted: #555550; --faint: #8f8f88; --rule: #d6d6cf;
+  --accent: #0047ff; --accent-ink: #fff; --mark: #ffef7a; --code-bg: #f1f1ec; --todo: #d40000; --done: #007a2e;
+  --font-body: "IBM Plex Mono", ui-monospace, Menlo, monospace; --font-display: var(--font-body); --font-ui: var(--font-body); --font-mono: var(--font-body);
+  --size: 15px; --leading: 1.75; --measure: 44rem; --wide: 60rem; --radius: 0;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0e0c; --bg-alt: #141814; --fg: #c9d6c3; --muted: #8fa189; --faint: #5c6b58; --rule: #253024;
+    --accent: #7ee787; --accent-ink: #0c0e0c; --mark: #2c4a1f; --code-bg: #141814; --todo: #ff7b72; --done: #7ee787;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0e0c; --bg-alt: #141814; --fg: #c9d6c3; --muted: #8fa189; --faint: #5c6b58; --rule: #253024;
+  --accent: #7ee787; --accent-ink: #0c0e0c; --mark: #2c4a1f; --code-bg: #141814; --todo: #ff7b72; --done: #7ee787;
+}
+.site-header { position: static; background: var(--bg); backdrop-filter: none; border-bottom: 1px dashed var(--rule); }
+.brand { font-weight: 500; font-size: 1rem; }
+.brand::before { content: "~/"; color: var(--faint); }
+.brand::after { content: " $"; color: var(--accent); animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .brand::after { animation: none; } }
+.site-nav a::before { content: "["; color: var(--faint); }
+.site-nav a::after { content: "]"; color: var(--faint); }
+.search-field { border-radius: 0; }
+.page-title, .hero-title { font-size: 1.6rem; font-weight: 700; letter-spacing: 0; line-height: 1.35; }
+.page-title::before, .hero-title::before { content: "# "; color: var(--accent); }
+.hero-title { font-size: 1.9rem; }
+.page-subtitle, .hero-description { font-size: 1rem; }
+.page-subtitle::before, .hero-description::before { content: "> "; color: var(--faint); }
+.page-header { margin-bottom: 2rem; }
+.page-body h2, .page-body h3, .page-body h4 { font-size: 1rem; font-weight: 700; letter-spacing: 0; }
+.page-body h2::before { content: "## "; color: var(--accent); }
+.page-body h3::before { content: "### "; color: var(--accent); }
+.page-body h4::before { content: "#### "; color: var(--accent); }
+.page-body h2 { margin-top: 2.4rem; }
+.page-body a { text-decoration: underline; text-decoration-style: dotted; }
+.page-body ul { list-style: none; padding-left: 1.6rem; }
+.page-body ul > li:not(.checked):not(.unchecked):not(.indeterminate)::before { content: "-"; color: var(--accent); display: inline-block; width: 1.6rem; margin-left: -1.6rem; }
+.page-body li.checked::before, .page-body li.unchecked::before, .page-body li.indeterminate::before { border-radius: 0; }
+.page-body blockquote { border-left: 0; padding-left: 1.6rem; position: relative; font-style: normal; }
+.page-body blockquote::before { content: ">"; position: absolute; left: 0; color: var(--accent); }
+.page-body hr { background: none; height: auto; overflow: hidden; }
+.page-body hr::after { content: "----------------------------------------------------------------"; color: var(--rule); white-space: nowrap; }
+.page-body code { background: none; padding: 0; color: var(--accent); font-size: 1em; }
+.page-body pre code { color: inherit; }
+.code pre.chroma, .page-body pre.example { border: 1px dashed var(--rule); font-size: 0.9rem; }
+.page-body th { font-size: 0.9rem; text-transform: uppercase; }
+.tag { border-radius: 0; background: none; border: 0; padding: 0; font-weight: 400; color: var(--accent); }
+.kw { border-radius: 0; font-size: 0.85em; }
+.section-title { font-size: 0.9rem; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.section-title::before { content: "$ ls "; color: var(--accent); }
+.post-list li { grid-template-columns: 7.5rem minmax(0, 1fr); border-bottom: 0; padding: 0.15rem 0; }
+.post-list > li > a { font-weight: 400; }
+.post-list > li > a:hover { background: var(--accent); color: var(--accent-ink); }
+.page-index li { border-bottom: 0; padding: 0.3rem 0; }
+.page-index > li > a { font-weight: 400; }
+.page-index > li > a::before { content: "→ "; color: var(--faint); }
+.toc-inline { border-style: dashed; border-radius: 0; }
+.toc ol { border-left: 0; }
+.toc li a { border-left: 0; }
+.pager a, .page > .backlinks li { border-radius: 0; border-style: dashed; }
+.site-footer { border-top-style: dashed; }

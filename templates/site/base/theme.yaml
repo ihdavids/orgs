@@ -1,0 +1,4 @@
+# base is not a theme: it holds the templates, stylesheet and script every
+# theme starts from. This file is here only so a listing can skip it.
+name: Base
+description: the templates every theme starts from

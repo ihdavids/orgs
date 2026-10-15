@@ -1,0 +1,83 @@
+{{define "layout"}}<!doctype html>
+{{- $aside := and (eq .Kind "page") .Page (or (and .Page.TOC (eq .Theme.Layout.TOC "aside")) (and .Page.Backlinks (eq .Theme.Layout.Backlinks "aside")))}}
+{{- $tree := eq .Theme.Layout.Sidebar "tree"}}
+<html lang="{{.Site.Language}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{if .Title}}{{.Title}} · {{end}}{{.Site.Title}}</title>
+{{with .Description}}<meta name="description" content="{{.}}">{{end}}
+{{with .Site.Author}}<meta name="author" content="{{.}}">{{end}}
+<meta name="generator" content="orgs">
+<meta property="og:title" content="{{if .Title}}{{.Title}}{{else}}{{.Site.Title}}{{end}}">
+{{with .Description}}<meta property="og:description" content="{{.}}">{{end}}
+{{if .Site.BaseURL}}<link rel="canonical" href="{{.Site.BaseURL}}/{{.URL}}">{{end}}
+<script>(function(){var t=null;try{t=localStorage.getItem('orgsSiteTheme')}catch(e){}if(!t&&{{.Theme.Layout.DarkDefault}})t='dark';if(t)document.documentElement.setAttribute('data-theme',t)})()</script>
+{{- if .Theme.Fonts}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{{- range .Theme.Fonts}}
+<link rel="stylesheet" href="{{.}}">
+{{- end}}
+{{- end}}
+<link rel="stylesheet" href="{{.Root}}assets/site.css">
+<link rel="alternate" type="application/atom+xml" title="{{.Site.Title}}" href="{{.Root}}feed.xml">
+{{if .Math}}<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">{{end}}
+{{block "head" .}}{{end}}
+</head>
+<body class="theme-{{.Theme.Name}} kind-{{.Kind}}{{if $tree}} has-tree{{end}}{{if $aside}} has-aside{{end}}" data-root="{{.Root}}">
+<a class="skip-link" href="#content">Skip to content</a>
+{{block "header" .}}
+<header class="site-header">
+  <div class="bar">
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">{{template "icon-menu"}}</button>
+    <a class="brand" href="{{.Root}}index.html">{{block "brand" .}}{{.Site.Title}}{{end}}</a>
+    <nav class="site-nav" aria-label="Site">
+      {{- range .Site.Nav}}
+      <a href="{{if .Abs}}{{.URL}}{{else}}{{$.Root}}{{.URL}}{{end}}"{{if eq .URL $.URL}} aria-current="page"{{end}}>{{.Title}}</a>
+      {{- end}}
+    </nav>
+    <div class="tools">
+      {{template "searchbox" .}}
+      <button class="theme-toggle" type="button" aria-label="Switch between light and dark">{{template "icon-theme"}}</button>
+    </div>
+  </div>
+</header>
+{{end}}
+<div class="site-body">
+  {{if $tree}}
+  <aside class="site-tree" aria-label="Pages">
+    {{block "tree-head" .}}<a class="tree-home{{if eq .URL "index.html"}} current{{end}}" href="{{.Root}}index.html">Overview</a>{{end}}
+    <nav>{{template "tree" (dict "nodes" .Site.Tree "v" .)}}</nav>
+  </aside>
+  {{end}}
+  <main id="content" class="site-main">
+  {{block "main" .}}{{end}}
+  </main>
+  {{if $aside}}
+  <aside class="page-aside" aria-label="On this page">
+    {{if and .Page.TOC (eq .Theme.Layout.TOC "aside")}}{{template "toc" .}}{{end}}
+    {{if and .Page.Backlinks (eq .Theme.Layout.Backlinks "aside")}}{{template "backlinks" .}}{{end}}
+  </aside>
+  {{end}}
+</div>
+{{block "footer" .}}
+<footer class="site-footer">
+  <div class="bar">
+    <p>{{if .Site.Footer}}{{.Site.Footer}}{{else}}© {{.Site.Year}}{{with .Site.Author}} {{.}}{{end}}{{end}}</p>
+    <p class="footer-links"><a href="{{.Root}}feed.xml">Feed</a> · <a href="{{.Root}}archive.html">Archive</a>{{if .Site.Tags}} · <a href="{{.Root}}tags/index.html">Tags</a>{{end}} · <span class="made">Made with orgs</span></p>
+  </div>
+</footer>
+{{end}}
+<script src="{{.Root}}assets/site.js"></script>
+{{if .Mermaid}}<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+var dark = document.documentElement.getAttribute('data-theme') === 'dark' || (!document.documentElement.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+mermaid.initialize({startOnLoad: true, theme: dark ? 'dark' : 'neutral'});
+</script>{{end}}
+{{if .Math}}<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.querySelector('.page-body'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false},{left:'$',right:'$',display:false},{left:'\\begin{equation}',right:'\\end{equation}',display:true},{left:'\\begin{align}',right:'\\end{align}',display:true}],throwOnError:false})"></script>{{end}}
+{{block "scripts" .}}{{end}}
+</body>
+</html>
+{{end}}

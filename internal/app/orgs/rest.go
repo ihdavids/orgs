@@ -10,7 +10,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -74,6 +73,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/newtemplates", RequestNewTemplates)
 	api.HandleFunc("/file/{type}", RequestFile)                   // html etc
 	api.HandleFunc("/pandoc", RequestPandoc).Methods("GET")
+	api.HandleFunc("/book", RequestBook).Methods("GET") // export.go: a manuscript (docx) or an ebook (epub), written natively
 	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                    // Get all stored filters from the server
 	api.HandleFunc("/html/themes", RequestHtmlThemes)             // The themes the html exporter can render with
@@ -133,6 +133,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/clockout", PostClockOut).Methods("POST")
 	api.HandleFunc("/clock", RequestClock)
 	api.HandleFunc("/clockreport", RequestClockReport)
+	api.HandleFunc("/timesheet", RequestTimesheet).Methods("GET") // timesheet.go: clocked time by client, csv/html invoices
 	api.HandleFunc("/execb", PostExecb).Methods("POST")
 	api.HandleFunc("/babel/exec", PostBabelExec).Methods("POST")
 	api.HandleFunc("/dblocks", RequestDynBlocks).Methods("GET")
@@ -145,6 +146,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/columns", RequestColumns).Methods("GET")       // org column view, with effort rolled up
 	api.HandleFunc("/columns/spec", PostColumnSpec).Methods("POST") // write a file's #+COLUMNS: line
 	api.HandleFunc("/columns/values", RequestColumnValues).Methods("GET") // every property in a file, with its values
+	api.HandleFunc("/csv", RequestCsv).Methods("GET")                     // csvexport.go: a column view or a query as csv
 	api.HandleFunc("/habits", RequestHabits).Methods("GET")
 	api.HandleFunc("/habits/untick", PostHabitUntick).Methods("POST") // clear today's tick         // every habit and how it is going
 	api.HandleFunc("/tables", RequestTables)
@@ -205,6 +207,12 @@ func RestApi(router *mux.Router) {
 	registerCryptRoutes(api)      // cryptui.go: revealing encrypted headings
 	registerNotifyRoutes(api)     // notifydeliver.go: notification status and a test
 	registerImportRoutes(api)  // ipynbimport.go: Jupyter notebooks into org files
+	registerPlannerPrintRoutes(api) // plannerprint.go: GET /agenda/print, the agenda as a paper planner
+	registerBeamerRoutes(api)       // beamerpdf.go: beamer decks as pdf, and the presets
+	registerTypstRoutes(api)        // typstpdf.go: /typst/pdf, /typst/templates
+	registerSiteRoutes(api)         // site.go: a folder of org files as a static web site
+	registerRefreshRoutes(api)      // refresh.go: :schedule blocks, dynamic blocks and formulas kept current
+	api.HandleFunc("/detangle", PostDetangle).Methods("POST") // detangle.go: a tangled file's edits back into its blocks
 	registerBabelSessionRoutes(api) // babelsession.go: python :session list and stop
 	registerForgeRoutes(api)   // forge.go: github / gitlab poll now, token check
 	registerContactImportRoutes(api) // vcardimport.go: vCard files into the contact records
@@ -621,10 +629,12 @@ func RequestSlideThemes(w http.ResponseWriter, r *http.Request) {
 * GET /exporters — What This Server Can Export To
 
 	Answers with the names of the exporters configured under =server.exporters=,
-	which are exactly the ={type}= values =/file/{type}= will accept.
+	and of the ones that need no settings (=todotxt=, =ics=, =typst=, ...), which
+	are there whether the yaml names them or not. Together they are exactly the
+	={type}= values =/file/{type}= will accept.
 
-	The list cannot be guessed from the outside: an exporter that is compiled in
-	but not named in the yaml is not there as far as a request is concerned, and
+	The list cannot be guessed from the outside: any other exporter that is
+	compiled in but not named in the yaml is not there as far as a request is concerned, and
 	the refusal for one that is missing looks the same as the refusal for one
 	that does not exist. A client offering a format to pick from has to be able
 	to ask.
@@ -639,11 +649,7 @@ func RequestSlideThemes(w http.ResponseWriter, r *http.Request) {
 	EDOC
 */
 func RequestExporters(w http.ResponseWriter, r *http.Request) {
-	names := []string{}
-	for _, e := range Conf().Server.Exporters {
-		names = append(names, e.Name)
-	}
-	sort.Strings(names)
+	names := ExporterNames()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
 		Ok    bool
@@ -739,6 +745,12 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 		}
 		from = view
 	}
+	// The page is computed from the file as it would read with its dynamic
+	// blocks refreshed and its formulas run (refresh.go) - in memory, so an
+	// export never rewrites the file. A subtree export reads the file itself.
+	if r.URL.Query().Get("subtree") == "" && r.URL.Query().Get("refresh") != "f" {
+		from = exportView(from, query)
+	}
 	var res common.ResultMsg
 	if local == "t" {
 		res, _ = ExportToFile(from, &opts)
@@ -786,15 +798,19 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	    *Supported Block Header Arguments:*
 	    | Header Arg     | Description                                                                    |
 	    |----------------+--------------------------------------------------------------------------------|
-	    | =:tangle=      | Output file path (relative to the org file directory, or absolute). =no= to skip. |
-	    | =:noweb=       | Set to =yes= to expand =<<name>>= references in the block.                    |
+	    | =:tangle=      | Output file path (relative to the org file directory, or absolute); =yes= for the org file's name with the language's extension; =no= to skip. |
+	    | =:noweb=       | =yes=, =tangle=, =no-export= or =strip-export= expand =<<name>>= references; =strip-tangle= removes them. |
 	    | =:noweb-ref=   | Defines this block as a reusable fragment that others can reference.            |
 	    | =:noweb-sep=   | Separator when concatenating multiple blocks with the same =:noweb-ref=.       |
 	    | =:mkdirp=      | Set to =yes= to create parent directories if they do not exist.                |
 	    | =:padline=     | Set to =no= to suppress the blank line inserted between blocks.                |
 	    | =:shebang=     | A shebang line (e.g. =#!/bin/bash=) prepended to the output file.              |
 	    | =:tangle-mode= | File permissions, e.g. =(identity #o755)= or =0644=.                           |
-	    | =:comments=    | Set to =link= or =both= to insert source-link comments.                       |
+	    | =:comments=    | =link= writes org's =[[file:x.org::*Heading][Heading:N]]= / =Heading:N ends here= markers around each block (what =orgs detangle= reads), =org= the text before the block as comments, =both= both. |
+
+	    Header arguments are inherited as org inherits them: =#+PROPERTY: header-args=,
+	    then =header-args:<lang>=, then each heading's =header-args= and
+	    =header-args:<lang>= properties from the outermost in, then the block's own.
 
 	    *Errors:*
 

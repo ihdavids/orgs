@@ -303,7 +303,7 @@ The index is cached against `OrgDb.ReloadIndex` (see **Traps: caches**), because
 
 `POST /code/run` (`internal/app/orgs/babel.go`) runs one block. **Off unless `babel.enable` is set** (the refusal says what to write), because reading files and executing them are different promises, the server may be reachable beyond its machine, and people use `noAuth`.
 
-1. **Variables are prepended in the language's syntax**: `:var scale=2` an assignment, `:var data=monthly` a list of lists with numeric cells bare so `sum(r[1] for r in data)` works. Go and emacs-lisp run without variables (a prepended assignment survives in neither), and say so.
+1. **Variables are bound in the language's syntax** (`runner.bind`, or `assemble` for go/elisp/sqlite, `bindArgs` for awk): `:var scale=2` an assignment, `:var data=monthly` a list of lists with numeric cells bare so `sum(r[1] for r in data)` works. See **Babel values and the run pipeline** below.
 2. **Code is dedented before it runs** and travels dedented on the wire, because the indent belongs to the org file (python would raise `IndentationError` on line one). `UpdateBlock` re-indents on the way back, so the round trip is exact.
 3. **A table result is org table text**, parsed by `tablesIn` and drawn by `OrgTableView`. `:results` is honoured when present; otherwise the shape is guessed timidly (org table, tab-separated, printed list of lists), because a paragraph cut into columns reads worse. "As it printed" is one click away.
 
@@ -501,6 +501,26 @@ Client: `worg/src/move.ts` (pure, tested), `MoveDialog.tsx` (one dialog for all 
 
 Clock ranges are `clockBlockRange` (`:block`) and `clockRangeOf` (`:tstart`/`:tend` through `internal/orgdate`): half open, weeks from Monday, and a clock is clipped to the range (`clockMinsIn`); a running clock counts to now. `/clockreport` uses the same, carries each entry's `Sessions`, and answers `Error` for a range it cannot read.
 
+## Timesheets and invoices: `GET /timesheet`
+
+`timesheet.go` (wire types and the `invoice:` settings in `internal/common/timesheet.go`, pinned by `timesheet_test.go`). Clients: `orgs invoice`, `orgs timesheet`. The SDOC at its top is the user documentation.
+
+- **Every sitting belongs to exactly one client**, or an invoice bills it twice: the inherited `CLIENT` property (file `#+PROPERTY: CLIENT` too), else the nearest tag naming a configured client/alias or `clientTags`. `by=tag` takes the first allowed tag nearest the heading; with nothing configured, any tag but `project`/`archive`/`nobill`. Unattributed time is its own client `""`, listed last, never invoiced, and warned about.
+- **Rounding is per invoice line** (a task, or a task-day with `lines=day`), to the minute first then to `round` - ten five-minute sittings bill as one increment, not ten. Entry amounts are unrounded.
+- Rate: heading `RATE` (inherited) > client > request `rate` > `invoice.rate`. `BILLABLE: no` or a `nobill` tag: listed on timesheets, off invoices (`unbillable=t` puts them on at no charge).
+- The invoice number's month is the **range's** first month, not the issue date.
+- html: `templates/invoice/invoice.html` (Go `html/template`, not pongo2: it escapes) + `invoice/base.css` (layout, paging) + `invoice/themes/<name>.css`, all found with `assets.FindTemplate`, so a user's copy replaces any of them. `accent` must look like a colour (`cssColorRe`); a request's `logo` must be a url - a path only from the yaml, or any client could read any server file into the page.
+
+## Manuscripts and ebooks: `GET /book`
+
+`plugs/manuscript/` (SDOC there is the user guide): `book.go` reads an org file into a `Book` (chapters, blocks, runs, footnotes), `docx.go` and `epub.go` write it - by hand, as zips of XML, so nothing needs installing. Both writers work only from `Book`, never from the org tree, so they agree about what a chapter or scene is. `GET /book` (in `export.go`) uses the `manuscript`/`epub` exporters' yaml when configured (either one's contact details serve both) and works without.
+
+- **Structure**: shallowest heading = chapter; `:part:` makes its children the chapters; deeper headings are scene breaks unless `#+MANUSCRIPT_SCENES: nil`. Scene marks are read from a paragraph's **source** (`***` parses as a bold star), and `#` / `* * *` cannot be marks at all (comment, heading).
+- **Word requires schema order** inside `w:pPr` and `w:rPr`; a misordered file opens as "unreadable content". `pp.xml()` and `rp.xml()` are written in that order - keep them so.
+- Fonts and spacing are on the `Normal` style as well as the doc defaults: Quick Look and some converters read only the style (shunn rendered in Times without it). Quick Look also ignores page breaks and tab stops, so it is no judge of those.
+- EPUB: `mimetype` first and stored; the id is a uuid from title + author unless `#+ISBN`/`#+IDENTIFIER`, so a re-export is the same book in a library. Pictures are copied in; a url or missing file is left out and reported (`X-Orgs-Warning`). Themes are `templates/epub/themes/*.css`.
+- Not checked with epubcheck (no Java here); the tests check well-formedness and structure.
+
 ## Babel: results, calls, inline code, pictures, ledgers
 
 `babelexec.go` holds the engine; `babel.go` the runners and bindings. Everything runs a `babelJob` (`runJob`): a block (`jobForBlock`), a `#+CALL:` (`callJob`: the named block, the call's arguments over its `:var`s, the call's header arguments over its own) or inline `src_lang[…]{…}` / `call_name(…)`. `POST /babel/exec` runs what is at a line or everything in a file; `POST /code/run` writes too with `Write`.
@@ -648,3 +668,70 @@ One path for everything that pops up: `deliverNote` (`notifydeliver.go`) publish
 - **The plugin's settings** (`plugs/notify`, SDOC has the yaml): `remind: [10, 2]` minutes before a timed appointment (each offset once; a late start sends only the smallest crossed one), `deadlines: "08:30"` a once-a-day digest (overdue, due today, warning), `quiet: "22:00-07:00"` (crossing midnight; critical still shows), `sound`, `focus`, `desktop: false` (events only, for a server whose screen nobody sees), `open` (worg's address for a click), `icon`. Old `beep`/`notifyBeforeMins` are still read.
 - **What was sent is kept** in `notify_data.json` in the plugin home dir (reminder keys with an expiry a day after the start, the digest's day), so a restart repeats nothing.
 - **A click opens worg at the heading**: `common.HeadingLink` → `?app=Files&open=<file>&line=<0-based>&heading=…`. The base is `open`, else `http://localhost:<port>`. `StartServer` copies the `-port`/`-tlsport` it was started with into `PlugManager` and `Conf().Server`: the yaml's port was in the links while the flag's was being served.
+
+## Org made elsewhere: `POST /import/org`
+
+`orgimport.go` (wire types `internal/common/orgimport.go`, `orgimport_test.go`). The markdown/Obsidian, todo.txt and iCalendar importers convert **on the client** (`cmd/oc/commands/importcmd/formats.go`, with `internal/common/mdorg`, `todotxt`, `ical`) and send org here, so where a file may go and what it would clash with are decided by the server that owns the directories.
+
+- Paths go through `insideOrgDirs`; files must end in `.org`; a file already there is refused (409) unless `Overwrite` or `Append`. **Assets are written first**, so a file never links to a picture not yet there; an asset already there is kept (and said) unless `Overwrite`, because it is nearly always the same picture from the last import.
+- **`Append` adds only top level entries** (`importEntries` splits at `* `) and leaves off the new text's `#+KEYWORD:` head. With `SkipKnown`, an entry whose `KeyProp` (default `ID`; calendars use `ICAL_UID`) the file already holds anywhere (`knownKeys`, any case, any indent) is left out and counted in `Skipped` - which is what makes re-importing a calendar idempotent.
+- `DryRun` answers each file's text (what an append would add, not the whole file) and turns a clash into a warning.
+
+## CSV: `GET /csv`
+
+`csvexport.go`. `file=` is `BuildColumnView` (rollups and all); `query=` is `QueryColumnView` - `queryEachSection` (filters expanded, as `/search`) with `ownRow` per heading, nothing summed, default columns `queryCsvColumns`. So the spreadsheet's cells are the Columns tab's cells. `sep`, `header=f`, `bom=t` (Excel needs it for utf-8), `meta=t`, `own=t`. Clients: `orgs csv`, `orgs cols -csv`, `orgs q -csv`.
+
+`BuildColumnView` used to read property drawers from `fileLines(filename)` - the name *as asked* - so `/columns?file=plan.org` (relative to the org directory, which `FindByFile` accepts) found no drawer and every EFFORT was blank; `orgs cols` and worg never noticed because they send absolute paths. It reads `f.Filename` now.
+
+## Exporters that need no yaml
+
+`exporterNamed` (`export.go`) is the configured exporter of that name, or else a registered one implementing `common.Standalone` (made and started once, on first use). `/file/{type}` and `/exporters` (`ExporterNames`) both go through it, so `todotxt`, `ics`, `beamer` and `typst` work on a bare config. Keep `Standalone` for exporters with nothing to configure: one that needs a url or a password would fail at the first request instead of saying what is missing.
+
+- **`todotxt`** (`plugs/todotxt`) and **`ics`** (`plugs/ics/export.go`, beside the old ics *poller*) take a file (every heading) or a query (`plugs.Headings`); titles go through `plugs.PlainText` (links as description + url, emphasis dropped). The rules live in `internal/common/todotxt` and `internal/common/ical`, shared with the importers, so a round trip is read by the rules it was written by (`TestRoundTrip` in each).
+- The `ics` uid is `:ICAL_UID:` (what the importer wrote), else `:ID:`/`:CUSTOM_ID:`, else a hash of file name and outline path, so exporting again updates events rather than duplicating them. A timed stamp with no end lasts its `EFFORT` (H:MM) or `duration` (60). A VTODO with an all-day DUE writes DTSTART as a day too (RFC 5545 wants them the same kind).
+
+## The paper planner: `GET /agenda/print`
+
+`plannerprint.go` (`plannerprint_test.go`; client `orgs print`) lays out `buildAgenda`'s answer and works out no dates of its own. Carried-forward overdue entries (`Late > 0`) leave today's column for the Overdue panel, so each appears once. A deadline's own day says "due" even while it is warning (the agenda gives it `DueIn` there too); other days "in Nd". With the habits strip on (the default), habits are left out of the day lists and Overdue, since a daily habit would fill every cell. The tasks panel is `IsTask() && !HasAnyDate()`, NEXT/STARTED/DOING first, then priority - not `Todo.IsActive`, which is true of every open keyword.
+
+The page is `html/template` + `templates/planner/base.css` + one `planner/themes/<name>.css`, all found with `assets.FindTemplate` and inlined, so a theme is one file. Sheets are sized by the server (`--sheet-w`/`--sheet-h`) a hair under the page, so each prints as exactly one page. Two Chrome printing traps: a pattern on many elements (a dot grid on every month cell) becomes a picture per element (a 3.9MB pdf) - put it on the sheet once (`--sheet-bg`); and a tinted paper needs `@page { background }`, or the margins print white.
+
+## Beamer pdfs
+
+`beamerpdf.go`: `GET /beamer/pdf?filename=&theme=&code=&refresh=` compiles the `beamer` exporter's tex (cached in memory on a hash of the tex) and `GET /beamer/themes` lists the presets. Notes on the exporter itself are in `plugs/beamer/CLAUDE.md`.
+
+## Keeping blocks current: `refresh.go`
+
+`GET /refresh`, `POST /refresh/run`, a ticker started by `registerRefreshRoutes` (every `refresh.tick` seconds, default 30), records in `refresh_data.json` beside `focus_data.json`, pinned by `refresh_test.go`. Client: `orgs refresh`. Four kinds of entry, found by `refreshEntriesOf` (rescanned only when `ReloadIndex` moves):
+
+- **`block`**: a source block whose job (`jobForBlock`, so inherited `header-args` count) has `:schedule`; keyed by `#+NAME:` else language + hash of the code, so it survives lines moving. **`call`**: a `#+CALL:` with `:schedule` in its own header arguments, keyed by a hash of the line. Both run through `runItem` - the same path as `orgs code at` - so results, sessions and `babel.enable` (checked in `runJob`) are babel's own; an entry says `Blocked` rather than failing every tick when babel or `refresh.scheduled` is off.
+- **`dblock`**: a dynamic block with `:refresh` (generators ignore the extra parameter), keyed by its `#+BEGIN:` line and ordinal; **`file`**: `#+REFRESH:` above the first heading, or `refresh.every` for files with a dynamic block or a `#+TBLFM:` - all dynamic blocks, then every formula (`refreshFile`).
+- Schedules (`parseSchedule`): spans (`30m`, `1h30m`, `2d`, `1w`, floor one minute), `hourly`/`daily`/`weekly`, or a time of day (`07:30`, `daily 07:30`: due once at or after it). Never run = due now; the record survives restarts, so a restart does not rerun everything.
+- **Nothing is rewritten for nothing**: `writeBlockResult` and the call path compare before writing (`CodeResult.Unchanged`), `dynBlockLines` already did, and `recalcTableLines` compares the table rendered before and after its formulas - not the file's text, which a hand-aligned table never matches. A clock table's `#+CAPTION:` carries the minute, so it does change each run, as in Emacs.
+- **Exports read a refreshed copy** (`exportFile`/`exportView`/`exportFileStamped`): `RequestFile` (unless `subtree=` or `refresh=f`), `/typst/pdf` (the stamp joins its cache key, which is otherwise the file's mtime), `/beamer/pdf` (keyed on the tex already), and `/site`. `refreshFile(…, false)` writes nothing; the document handed over has the formulas' values in it.
+- **`dynBlockLines` reloads only a changed file** (`OrgDb.ReloadIfChanged`). It used to `ReloadFile` unconditionally, harmless for `orgs dblock`, but an export goes through it now, and every reload is a `reload` event that sends worg back for the page - a loop.
+
+## Tangle, detangle, auto-tangle
+
+The tangler is `plugs/tangle` (exporter `tangle`, `GET /tangle`, `orgs tangle`); `detangle.go` here is `POST /detangle`, auto-tangle and the ledger; tests `plugs/tangle/tangle_test.go`, `detangle_test.go`.
+
+- **Blocks** come from `collectBlocks`, which must unwrap `org.NodeWithName` (a `#+NAME:`d block) and `org.NodeWithMeta` (`#+CAPTION:`/`#+ATTR_`) - before it did, named blocks were never tangled. It records each block's heading chain, its 1-based index in its heading's own text, and the paragraph text before it.
+- **Header arguments** (`argsFor`): go-org keeps *every* `#+PROPERTY:` line under the single key `PROPERTY` (newline-joined), so `doc.Get("header-args")` is always empty - the old reading never saw a file's header-args. Order: file plain, file `:lang`, each heading outermost first (plain then `:lang`; property keys are upper-cased by go-org), then the block. Languages match by family (`sh`/`bash`/`shell`). The plugin cannot import this package, so this is a second reading of what `inheritedArgs` does at run time; keep the two in step.
+- **Noweb** references are expanded by `internal/common/noweb`, shared with running a block: a name can't start or end with whitespace (C++ `<<`/`>>` is not a reference); `:noweb-prefix` (default yes) repeats the text before a reference on every line; an unresolved one stays as written with a warning (`TangleResult.Warnings`); depth 20 is an error. `<<name(args)>>` goes through `tangle.Evaluate`.
+- **Code** is dedented (unless `-i`) and org's comma escape undone (`unescapeLine`); detangle re-escapes (`EscapeLine`) and re-indents to what the block's body already uses. `:tangle yes` is `<org name>.<ext>` (`tangleExt`, org-babel-tangle-lang-exts).
+- **Markers** are org's: `PRE[[file:<org, relative to the tangled file>::*Heading][Label]]POST` … `PRE Label ends here POST`, `Label` = `#+NAME:` else `Heading:N` (above the first heading, the org file's name). `commentDelims` gives each language's comment form, block comments (`/* */`, `<!-- -->`) included; json gets none.
+- **Detangle** (`Detangle`) parses markers (`tangle.ParseMarkers`; nested markers = a noweb expansion, refused), finds the org file by the link relative to the tangled file and then by name, the block by label (`tangle.Blocks`), and splices bottom up per org file. A block with `<<refs>>` it would expand is skipped: its tangled text is the expansion. The server reads the tangled file itself only inside the org directories; the client sends `Text`.
+- **Auto-tangle**: `LoadFile` calls `autoTangleAfterLoad` on a *re*-load only (`have`: a server starting is not a save); it is debounced 400ms and only for `#+auto_tangle: t` (`AUTO_TANGLE`). `tangle.WriteFile` writes nothing when the file already says it. **The ledger** (`tangle_data.json` in the plugin home, fed by `tangle.OnWrite` from every write, `orgs tangle -w` included, and from "already right") holds a hash of what orgs last wrote to each target: a target on disk that matches neither that nor the new content was edited by hand, and auto-tangle stops for it (event `tangled`, a stderr line) rather than overwrite it. A target orgs never wrote is written (the user just turned auto-tangle on). After a detangle the next auto-tangle finds the file already right and re-records it, so it does not conflict.
+
+## Babel values and the run pipeline
+
+`babelvalue.go` (the value model), `runJob` in `babelexec.go` (the pipeline), binders in `babel.go`; tests `babelfeatures_test.go` (real interpreters, skipped when missing).
+
+- **A `:var` resolves to a `babelVal`** (`resolveValue`): scalar as written (code: `:var s="x"` stays a string literal), text (from the file: a cell, a result - a number if it reads as one), list, or table with **nil rows for rules**. `j.bound` holds values given outright (`:post`'s `*this*`). `other.org:name` is read in `readVar` (`crossFile`) into `RefFile`.
+- **Index before shape**, as org (`org-babel-ref-index-list`): rules count as rows and pass through; a level that comes out one long is unwrapped (so `[2,1]` is a cell, `[,0]` a column); ranges are inclusive, negatives from the end.
+- **Shape** (`tableShape.prepare`): header off when a rule follows the first row (or `:colnames yes`), first column off with `:rownames yes`, rules out unless `:hlines yes` (then the binder's null: `None`, `nil`, `hline` in elisp). The first table's header/rownames are put back on a *table* result of the same width/height (`reassemble`) - **unless the result already has a header over a rule** (sqlite's, a csv's), or it doubles. This changed behaviour: a table's header used to be passed as a data row.
+- **Order in `runJob`**: noweb (`nowebOnEval`, `internal/common/noweb` - same engine as tangle; `Body` = noweb-ref blocks then the named block, `Call` = `callJob`+`runJob`) → picture prepare → value wrap (python; `pp` swaps in `pprint`) → variables (tables to files for `tableFile` languages: gnuplot `.dat`, sqlite `.csv` *with* the header so `.import` names columns) → `assemble`/prepend → `:prologue`/`:epilogue` → `:cache` hash (`babelHash` over the final program, args, stdin, results words, file; `j.cachedHash` is read from `#+RESULTS[...]` by the caller; a match returns `Cached`, written by nobody) → run → **non-zero exit = Kind `error` with stdout + stderr** (written, like a session traceback) → shape by `:results` → `finish`: `reassemble`, `:post` (via `callJob`, `*this*` bound), `:wrap` (Kind `wrap`, written as it stands).
+- **`:results` merge** (`results()`): words in org's four groups; a later word replaces an earlier one *of its own group*; inherited args come first, the block's last. A test that relied on words piling up was updated.
+- `placeResult` takes the hash and rewrites the header's `[hash]`; `resultsLineRe` already allowed it. `runProgram` takes `stdin` (only usable when the program goes in a file: awk now does, `-f block.awk`).
+- go: a body with `package` gets its vars after the imports; one without is wrapped (`package main`, imports from `:imports` plus `fmt` when used, `func main` when missing). elisp: `(let (binds) code)` - a variable called `t` is a constant there and fails, as in Emacs.
+- `tangle.Evaluate` is set in `detangle.go`'s init to run `<<name(args)>>` through `callJob`/`runJob`, so tangling such a reference needs `babel.enable`.

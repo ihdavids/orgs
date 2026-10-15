@@ -114,8 +114,10 @@ Feature notes sit in `CLAUDE.md` files beside the code and load when you work th
 - `internal/app/orgs/CLAUDE.md`: the server (`internal/app/orgs`)
 - `internal/app/orgs/plugs/html/CLAUDE.md`: the html exporter
 - `internal/app/orgs/plugs/slides/CLAUDE.md`: the presentation exporters
+- `internal/app/orgs/plugs/beamer/CLAUDE.md`: the LaTeX Beamer exporter
+- `internal/app/orgs/plugs/typst/CLAUDE.md`: the Typst exporter
 - `internal/common/dnd/CLAUDE.md`: the D&D module
-- `templates/CLAUDE.md`: the html templates and documentation themes
+- `templates/CLAUDE.md`: the html templates and documentation themes, and the static site themes
 - `docs/claude/bug-history.md`: what broke while building each feature, and how it was fixed
 
 ### Top-level layout
@@ -128,6 +130,7 @@ Feature notes sit in `CLAUDE.md` files beside the code and load when you work th
 - `internal/app/orgs/plugs/all/all.go` — blank-imports every server plugin, same reason.
 - `internal/common/` — shared client/server code: `restclient.go` (`RestGet[T]` / `RestPost[T]`), `serversettings.go`, `plugs.go` (`Exporter` / `Poller` / `Updater` interfaces and `PluginManager`), wire data types.
 - `internal/templates/` — pongo2 template manager for exporters and capture templates. `values.go` is the one list of names every template answers (`{{date}}`, `{{today}}`, `{{week_start}}`, `{{uuid}}`…): file templates get them from `standardContext`, capture templates through `common.CapAutoValue`. Add a name there, not in either caller. Standard values are marked safe, so `<…>` timestamps aren't html-escaped.
+- `internal/common/mdorg/`, `todotxt/`, `ical/` — markdown (and Obsidian vaults), todo.txt and iCalendar, read and (for the last two) written. Pure packages, used by `orgs import` on the client and by the `todotxt`/`ics` exporters on the server, so a round trip is read by the rules it was written by.
 - `internal/orgdate/` — reads a date the way a person types it (`tomorrow`, `+2w`, `fri 14:00`). Shared by `orgs sched`/`deadline`/`close` (through `commands.ParseDate`) and the template function `when()`, so the two can't disagree.
 - `templates/`, `web/`, `webfonts/` — static assets served by the HTTP file server beside the REST API.
 

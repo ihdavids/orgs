@@ -308,7 +308,10 @@ func BuildColumnView(filename, asked string) (common.ColumnsResult, error) {
 
 	// The file's lines once, for the property drawers. Asking go-org for them
 	// would leave every heading whose drawer starts in column zero with none.
-	lines := fileLines(filename)
+	// Read from the path the database found, not the name asked for: a name
+	// relative to the org directory (plan.org) is found by FindByFile but not
+	// by the filesystem, and every property came back empty.
+	lines := fileLines(f.Filename)
 
 	roots := buildColumnNodes(f, lines, res.Spec)
 	for _, n := range roots {

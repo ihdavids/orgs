@@ -1,0 +1,42 @@
+/* modern - a contemporary non-fiction look: sans-serif headings, block
+   paragraphs with space between and no indent, left-aligned text. */
+body { font-family: Charter, "Bitstream Charter", Georgia, serif; line-height: 1.55; margin: 0 5%; }
+p { margin: 0 0 .9em; text-indent: 0; text-align: left; widows: 2; orphans: 2; }
+.chapter-head { margin: 2.5em 0 2em; page-break-after: avoid; }
+.chapter-label { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: .75em; font-weight: bold; letter-spacing: .15em; text-transform: uppercase; margin-bottom: .4em; }
+h1.chapter-title, h2, h3, h4, h5, h6, .titlepage .title { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+h1.chapter-title { font-size: 1.8em; font-weight: bold; line-height: 1.2; margin: 0; }
+section.part .chapter-head { margin-top: 30%; text-align: center; }
+h2 { font-size: 1.25em; margin: 1.8em 0 .6em; page-break-after: avoid; }
+h3 { font-size: 1.05em; margin: 1.4em 0 .5em; }
+h4, h5, h6 { font-size: 1em; margin: 1.2em 0 .4em; }
+.scene-break { text-align: center; margin: 1.5em 0; letter-spacing: .4em; }
+blockquote { margin: 1.2em 0; padding-left: 1em; border-left: 3px solid #bbb; }
+.verse { margin: 1.2em 1.5em; }
+.center, .center p { text-align: center; }
+pre { font-size: .8em; white-space: pre-wrap; background: #f3f3f3; padding: .6em .8em; margin: 1em 0; }
+code { font-size: .9em; }
+ul, ol { margin: 0 0 1em 1.5em; padding: 0; }
+li p { margin-bottom: .3em; }
+dl { margin: 0 0 1em; } dt { font-weight: bold; } dd { margin: 0 0 .6em 1.5em; }
+table { border-collapse: collapse; margin: 1.2em 0; font-size: .9em; width: 100%; }
+th { text-align: left; border-bottom: 2px solid #666; padding: .3em .5em; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+td { border-bottom: 1px solid #ccc; padding: .3em .5em; }
+figure { margin: 1.5em 0; page-break-inside: avoid; }
+figure img { max-width: 100%; }
+figcaption { font-size: .85em; color: #555; margin-top: .4em; }
+.underline { text-decoration: underline; }
+a.noteref { font-size: .7em; vertical-align: super; line-height: 0; }
+.footnotes { margin-top: 3em; font-size: .85em; }
+.footnotes hr { border: 0; border-top: 1px solid #ccc; }
+.titlepage { margin-top: 30%; }
+.titlepage .title { font-size: 2.2em; line-height: 1.15; margin: 0 0 .4em; }
+.titlepage .subtitle { font-size: 1.2em; color: #555; }
+.titlepage .author { margin-top: 2em; font-size: 1.15em; font-weight: bold; }
+.titlepage .publisher, .titlepage .rights { margin-top: 4em; font-size: .8em; color: #555; }
+.dedication { margin-top: 30%; text-align: center; font-style: italic; }
+.cover { margin: 0; padding: 0; text-align: center; }
+.cover img { max-width: 100%; max-height: 100%; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; }
+nav.toc ol ol { margin-left: 1.5em; }
+nav.toc li { margin: .4em 0; }

@@ -39,3 +39,7 @@ Per framework:
 - **impress.js** - steps can't nest (only direct children of `#impress`), so the tree is flattened (old nested steps were ignored and unreachable). `#+IMPRESS_LAYOUT:` places steps (line, grid, spiral, ring, zoom, random), since hand-placing is why people abandon impress. `random` is deterministic (like the dnd builder's dice) so it can be rehearsed. Old relative `:IMPRESS_X: .6` still means 0.6 screens.
 - **WebSlides** - a scrolling responsive page; the presented deck is the sendable file. `:CLASS:` goes onto the section, reaching its forty components without naming them. No notes view, so the `n` panel is ours; it asks `window.ws.currentSlide_`, not `.current`, which *both* slides carry mid-transition (the DOM finds the outgoing one first). WebSlides **renames section ids** to `section-N`, so `:CUSTOM_ID:` is lost.
 - **deck.js** - nesting *is* stepping, so outlines map exactly. Centred content is wrapped in `<div class="vcenter">`, not classed on the section: all three themes position `.vcenter` absolutely, which on the section fights deck.js and puts the slide off-screen. jQuery 3 is fine: deck.js only uses `.bind()`, deprecated not removed.
+
+## Beamer
+
+The LaTeX Beamer exporter is separate (`plugs/beamer`, notes in its own CLAUDE.md). It reads `#+BEGIN_NOTES` as speaker notes the same way these exporters do.

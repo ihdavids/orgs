@@ -1,0 +1,41 @@
+{{define "main"}}
+<div class="home">
+  {{if .Body}}
+  <article class="page home-page">
+    {{if .Page}}{{if ne .Page.Title .Site.Title}}<header class="page-header"><h1 class="page-title">{{.Page.Title}}</h1>{{with .Page.Subtitle}}<p class="page-subtitle">{{.}}</p>{{end}}</header>{{end}}{{end}}
+    <div class="page-body">{{.Body}}</div>
+  </article>
+  {{else}}
+  <header class="hero">
+    <h1 class="hero-title">{{.Site.Title}}</h1>
+    {{with .Site.Description}}<p class="hero-description">{{.}}</p>{{end}}
+  </header>
+  {{end}}
+  {{if .Site.Recent}}
+  <section class="recent">
+    <h2 class="section-title">Latest</h2>
+    {{if eq .Theme.Layout.Home "list"}}
+      {{template "postlist" (dict "pages" .Site.Recent "v" .)}}
+    {{else}}
+      <div class="cards cards-{{.Theme.Layout.Home}}">
+      {{range $i, $p := .Site.Recent}}{{template "card" (dict "p" $p "v" $ "feature" (and (eq $i 0) (eq $.Theme.Layout.Home "magazine")))}}{{end}}
+      </div>
+    {{end}}
+  </section>
+  {{end}}
+  {{if not .Body}}
+  <section class="all-pages">
+    <h2 class="section-title">{{if .Site.Recent}}Everything else{{else}}Pages{{end}}</h2>
+    {{if eq .Theme.Layout.Home "cards"}}
+      <div class="cards cards-cards">{{range .Site.Pages}}{{if not .HasDate}}{{template "card" (dict "p" . "v" $)}}{{end}}{{end}}</div>
+    {{else}}
+    <ul class="page-index">
+    {{- range .Site.Pages}}{{if not .HasDate}}
+      <li><a href="{{$.Root}}{{.URL}}">{{.Title}}</a>{{with .Summary}}<span class="page-index-summary">{{.}}</span>{{end}}</li>
+    {{- end}}{{end}}
+    </ul>
+    {{end}}
+  </section>
+  {{end}}
+</div>
+{{end}}

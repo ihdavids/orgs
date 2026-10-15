@@ -69,11 +69,13 @@ Load-bearing rules:
 - **`orgs outline -match`**: sparse tree - query hits plus ancestors to locate them, which `orgs search` cannot show.
 - **`orgs q`**: worg's stored queries; runs `/search` with the stored text, so every `search` feature applies. `orgs q watch <name> [-left] [-desktop] [-label L]` (or `watch <name> '<expr>'`), `unwatch`, `watches` are `/watches` (`savedq/watch.go`); what they find is **`orgs notifications`** (`notifications/`: `-unread`, `-read`, `-clear`, `-follow [-exec]`).
 - **`orgs gantt [name|query]`**: worg's gantt drawn in the terminal from `/gantt/tasks`. Bare = picker over the saved queries, with the chart in the pane (`-pane`, a flag, so a query called "preview" still works). A word that is not a saved query's name is the query itself. The server hands back what each heading knows; the dates are worked out client side by a port of worg's scheduler (see **Traps: logic said twice**). Bars are background-coloured cells so they can carry text (`40%`, `3d`); partly covered cells get eighth blocks. Truecolor when the terminal says so (`COLORTERM`, `TERM_PROGRAM`), otherwise the nearest xterm-256.
+  - **`-csv` / `-jira` [-out F]** (`gantt/csv.go`, `csv_test.go`) write the *scheduled* plan, so they live here and not on the server, which has no dates. Rows go in outline order (parents first); an undated parent spans its children. `-csv`: ID, WBS, Predecessors by ID (MS Project/ProjectLibre style), hash and file:line. `-jira`: Jira's CSV importer - `Issue Id`/`Parent` for the hierarchy (top heading with children = Epic, then Task, then Sub-task; a sub-task's children go under its task), a repeated `Blocks` column on the waited-on task, repeated `Labels`, estimates in seconds at 8h a day, dates in the importer's default `dd/MMM/yy h:mm a`. It reads the properties the jira plugin uses (`ISSUETYPE`, `PRIORITY`, `LABELS`, `STATUS`, `PROJECTKEY`); status comes from the keyword, not the server's `Active` flag.
 - **`orgs kanban [board]`**: worg's kanban boards in a tcell screen (`cmd/oc/commands/kanban/`). The boards are the per-user `/ext/kanban/boards`, so anything changed here (fold, sort, layout, hidden sections, the yaml from `S`) is changed in worg. The model is a port of `kanban.ts` (see **Traps: logic said twice**); every write is the endpoint worg uses. `-print` (and a pipe) draws the same screen once through a `tcell.SimulationScreen` and dumps the cells; `-json` is the columns with their cards.
   - **A keyword column writes the spelling the heading's file takes** (`spellingFor`): default columns come from the server's states (`INPROGRESS`), and a file whose `#+TODO` says `IN-PROGRESS` refuses the other spelling. worg writes the column's own value and fails there.
   - **The clocked card is found by file and outline path**: `/clock`'s target is `file+olp`, not a hash (worg reads `Target.Hash`, which does not exist, so its marker only lasts until a reload).
   - Columns derived for a property or tag board are **alphabetical**, not commonest first, or they reorder under every move.
   - A menu opened from the back of a card returns to it (`app.back`).
+  - **`-html`** (`kanban/html.go`, `htmlthemes.go`, `html_test.go`) writes the board as one html page with no requests in it, drawn from `layout()` with `printing` set (bodies fetched synchronously, through a `SimulationScreen` because `fetchBodies` posts an event) - never worked out again. The page's filter is the one copy of `CardMatches` (every word in the card's `Haystack`). Body text is escaped and only `http(s)`/`mailto:` org links become anchors (a `file:` or `id:` link means nothing on another machine). A theme is css custom properties in front of `cssLayout`; fonts are the system's, since a mailed page has nowhere to load one from. `-theme` keeps its terminal meaning (dark/light) and also names a page theme (default, paper, midnight) under `-html`.
 - **`orgs cols [file]`**: org's column view (`/columns`), editable, in a tcell screen (`cmd/oc/commands/cols/`) - worg's Columns tab. Edits go through the endpoints worg uses and the view is read back after each, never patched locally (a rollup is of the whole subtree). The editor always opens on a cell's `Own`, never its rolled-up `Value`. Sort is held by property name, not column position, so moving a column keeps it. With no file named, an fzf picker over `/files` (the last one opened first) with the view in the pane (`-pane`); it used to open an in-screen picker over an empty table, which indexed the empty column list and panicked. The preview runs with `2>/dev/null`, because fzf shows the child's stderr - its log lines - in the pane (`orgs gantt`'s picker likewise). `-columns` asks for a line for this look; `W` writes the line on show into the file.
 - **`tuikit`** (`cmd/oc/commands/tuikit/`) is what the full-screen views share: theme (`ThemeFor`, COLORFGBG), `Put`/`Fill`/`Box`, `Menu` (type to filter), `Prompt` (with Tab completion), `Confirm`, the overlay hand-off (`KeyOverlay`; `Back` returns to the panel a menu was opened from, unless it is no longer `Alive`), `Editor`/`EditText`, and `Dump` for `-print` through a `tcell.SimulationScreen`. Views keep their own unexported `seg`/`row` types: `go vet` refuses unkeyed literals of another package's struct.
 - **`orgs voice`** records with `sox`/`ffmpeg`/`arecord` (not linked, same reason whisperd.go supervises go-whisper). **Upload audio before anything else; show the transcript before writing.** Failed upload: save to a temp file and print the path - never lose the only copy. Uses `Rest.PostFile` (multipart).
@@ -170,7 +172,17 @@ Query and filter are separate on purpose: the **query** costs a request and can 
 - **`orgs archive -done [files]`** - `IsDone() && !IsArchived()`, narrowed by `InFile`. Several archives are **one `/move`**; `orgs rm` deletes bottom-up (see **Traps: hashes**).
 - **`orgs clocktable -mermaid`** - a mermaid gantt, a bar per clocked sitting. `-block` takes org's whole range grammar now.
 - **`orgs export -f docx|odt|epub|rst|…`** - any format in `pandocFormats` goes to `/pandoc` (or `-f pandoc -to X`); a binary format with no `-out` is named after the file rather than dumped on the terminal.
+- **`orgs export -f manuscript|epub`** go to **`GET /book`** (orgs' own writers, `plugs/manuscript`), not pandoc: `-style`/`-paper` for a manuscript, `-theme` for an ebook, `-list-themes` lists whichever the format has. `epub`/`epub3` left `pandocFormats` for this; `epub2` and `-f pandoc -to epub` are still pandoc's. Warnings and the word count come back as `X-Orgs-Warning`/`X-Orgs-Words` headers, read with `Rest.GetRawHeader`.
 - `commands.ResolveOrgFiles`/`ResolveOrgFile` (`orgfiles.go`) turn typed names into the server's files; `orgs fmt`, `dblock`, `code at`, `tables import` share them.
+
+## `orgs invoice` and `orgs timesheet`
+
+`invoice/` (one package, both commands; `kind` decides). Everything is the server's `GET /timesheet` (rules in `internal/app/orgs/CLAUDE.md`); this asks it and writes the answer here, as `orgs export` does.
+
+- `-f text` (default) prints a summary; `csv` and `html` go to stdout when piped, else to a file named after the invoice number; `-split` writes a file a client into `-out DIR`.
+- **A pdf is printed here, not on the server**: the server's html through a headless Chrome/Chromium/Edge found by `commands.FindBrowser` (`chromepdf.go`, shared with `orgs print`; `ORGS_CHROME` wins), with its own temporary profile so a Chrome already open neither interferes nor takes the job. Without one it fails saying to use `-f html` and print from a browser.
+- `-css FILE` is spliced in before `</head>` client side; `-logo FILE` is read here and sent as a `data:` url, because the server refuses a path from a request.
+- Warnings (time with no client) go to stderr; `-json` is the whole `Timesheet`.
 
 ## `orgs plan`
 
@@ -182,10 +194,25 @@ Query and filter are separate on purpose: the **query** costs a request and can 
 
 ## `orgs import`
 
-`cmd/oc/commands/importcmd/` (`import` is a Go keyword). `orgs import nb.ipynb [-o dir/name.org] [-overwrite] [-run] [-print] [-open] [-as ipynb]`, `-` reads stdin. The file is read here and its text sent (`/import/ipynb`), as `tables import` does. The extension picks an `Importer` (`Register`), so another format - the vCard importer, say, as `.vcf` - is one more registration, not another command.
+`cmd/oc/commands/importcmd/` (`import` is a Go keyword). `orgs import nb.ipynb [-o dir/name.org] [-overwrite|-append] [-run] [-print] [-open] [-as ipynb|md|todotxt|ics]`, `-` reads stdin. The file is read here and its text sent (`/import/ipynb`), as `tables import` does. The extension picks an `Importer` (`Register`), so another format - the vCard importer, say, as `.vcf` - is one more registration, not another command.
 
 - **`-print` and `-dry-run` ask the server for a dry run** (`DryRun: true`, called through `common.RestPost`, not `SendReceivePost`): the server converts and writes nothing, which says more than echoing a request that is mostly the notebook in base64. A clash with an existing file is a warning there, not a refusal.
 - `-run` follows the import with `/babel/exec` `All` (needs `babel.enable`); a failing cell is reported on stderr, not as a failed import.
+
+Markdown (a file, or a folder = an Obsidian vault), todo.txt (by whole name: `todo.txt`, `done.txt`, or `-as todotxt`) and iCalendar (`.ics`) are **converted here** (`importcmd/formats.go`) by `internal/common/mdorg`, `todotxt` and `ical` - the same packages the `todotxt` and `ics` exporters use, so out and back in is read by the rules it was written by - and written through **`POST /import/org`**, which decides where a file may go, clashes, `-append` and what an append already holds. Notebooks stay server side (`/import/ipynb`).
+
+- **A vault is converted whole**, because a `[[Note]]` is resolved by name anywhere in the vault (same folder first, then the shallowest), and `#heading` links need the target's headings (slugs too). Folders are kept, so links are relative `file:` links between the org files; attachments are found by path then by name, and **only the ones a note uses are sent**, at the same relative place. A lone `.md` looks for its pictures under its own folder, capped at 5000 files (so a note in `~/Downloads` does not walk all of it).
+- The shallowest heading becomes `*`; a note's lone top `# H1` is its title (front matter's `title` wins; a different H1 becomes `#+SUBTITLE`). Lines inside source blocks that org would read as headings or keywords get org's comma escape.
+- **A calendar appends idempotently**: every entry carries `:ICAL_UID:` and the request says `SkipKnown` with that key, so `orgs import work.ics -o cal.org -append` twice adds nothing the second time ("Nothing new"). `-since` takes `orgs sched`'s dates (`-30d`); repeats org cannot say (an end, several weekdays) keep their rule in `:RRULE:`.
+- todo.txt: `+project` is the parent heading (others in `:PROJECTS:`), `@context` a tag `@context`, `due:`/`t:` DEADLINE/SCHEDULED, `rec:1w` → `.+1w`, `rec:+1w` → `+1w`; `-flat` keeps projects off the outline.
+
+## `orgs csv`
+
+`csvout/` - `orgs csv file.org` (the column view, rollups and all), `orgs csv 'query'`, `orgs csv -q saved`; the same as `orgs cols FILE -csv` and `orgs q NAME -csv`, which call `csvout.Write`. The rows are the server's (`GET /csv`, built from `ownRow`/`BuildColumnView`), so the spreadsheet's numbers are the Columns tab's. `-columns`, `-sep comma|semicolon|tab`, `-excel` (a byte order mark, without which Excel misreads utf-8), `-meta` (Level, Line, Hash, File), `-own` (no rollups), `-no-header`, `-out`/`-open`. `-json` wraps the text with the row count; a query gets `%ITEM %TODO %PRIORITY %TAGS %SCHEDULED %DEADLINE %EFFORT %CLOCKSUM %FILE` unless `-columns` says otherwise.
+
+## `orgs print`
+
+`printcmd/`: `orgs print [week|day|month] [-from DATE] [-f html|pdf] [-out F] [-theme T] [-paper a4|letter] [-query Q] [-open]` over `GET /agenda/print` (server notes in `internal/app/orgs/CLAUDE.md`). `-f pdf` goes through **`commands.PrintPDF`** (`chromepdf.go`, a local headless Chrome; `commands.FindBrowser`, `ORGS_CHROME` wins) - the same printing `orgs invoice -f pdf` does (invoice calls it too).
 
 ## `orgs retag`, `split`, `merge`, `list2headings`
 
@@ -200,3 +227,11 @@ Query and filter are separate on purpose: the **query** costs a request and can 
 
 - `listen` moves a link the server made for itself (`localhost`) onto the address this client reaches it at, or `-open` (`rebase`), so a click opens the server's worg.
 - A lost server is said once and "back" once, not on every retry of `common.Events`.
+
+## `orgs refresh`
+
+`refresh/`: the terminal half of `/refresh` (server notes under **Keeping blocks current** in `internal/app/orgs/CLAUDE.md`). Bare: every entry numbered, with its file:line, how often, `3m ago, in 12m`, and how the last run went (or why it is blocked). `run N` takes that number (or a key), `run due`, `run all`; a file name refreshes that file's dynamic blocks and tables now, `-blocks` its scheduled blocks too. `orgs export -no-refresh` sends `refresh=f`, an export of the file as written; export's older `-refresh` means "rebuild the pdf cache" and is unchanged.
+
+## `orgs detangle`
+
+`orgtools/detangle.go`: reads each named file here and sends its text and absolute path to `POST /detangle` (server notes under **Tangle, detangle, auto-tangle** in `internal/app/orgs/CLAUDE.md`). `-dry-run` is the server's dry run (called through `common.RestPost`, not `SendReceivePost`, whose echo would only print the request), listing which blocks would change (`~`). Exits 1 when a section could not go back.

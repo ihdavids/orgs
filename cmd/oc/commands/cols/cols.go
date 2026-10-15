@@ -22,6 +22,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/ihdavids/orgs/cmd/oc/commands"
 	"github.com/ihdavids/orgs/cmd/oc/commands/tuikit"
+	"github.com/ihdavids/orgs/cmd/oc/commands/csvout"
 	"github.com/ihdavids/orgs/internal/common"
 	"golang.org/x/term"
 )
@@ -32,6 +33,9 @@ type Cols struct {
 	Width   int
 	Theme   string
 	Pane    bool
+	// -csv writes the view as csv instead of drawing it (csvout).
+	Csv     bool
+	csvOpts csvout.Options
 }
 
 func (self *Cols) Unmarshal(u func(interface{}) error) error { return u(self) }
@@ -43,6 +47,8 @@ func (self *Cols) SetupParameters(fset *flag.FlagSet) {
 	fset.IntVar(&self.Width, "width", 0, "columns to draw -print in (default: the terminal's)")
 	fset.StringVar(&self.Theme, "theme", "", "dark or light (default: guessed from COLORFGBG, else dark)")
 	fset.BoolVar(&self.Pane, "pane", false, "draw for a picker's preview pane")
+	fset.BoolVar(&self.Csv, "csv", false, "write the view as csv (rollups and all) instead of drawing it")
+	self.csvOpts.Flags(fset, false)
 }
 
 func (self *Cols) Exec(core *commands.Core) {
@@ -72,6 +78,14 @@ func (self *Cols) Exec(core *commands.Core) {
 		}
 	} else if last := lastFile(); last != "" && containsStr(files, last) {
 		a.file = last
+	}
+	if self.Csv {
+		if a.file == "" {
+			commands.Fail("orgs cols -csv: which file?")
+		}
+		self.csvOpts.Columns = self.Columns
+		csvout.Write(core, a.file, "", self.csvOpts)
+		return
 	}
 
 	if commands.Machine() {

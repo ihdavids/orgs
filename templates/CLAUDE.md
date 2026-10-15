@@ -45,3 +45,27 @@ Shared decisions:
 `HighlightCodeBlock` writes `language-<lang>`, and templates read `hljs_style`, with `hljs_style_default` so a theme can tell "nobody asked" from an explicit choice (history in `docs/claude/bug-history.md`).
 
 `GetStylesheet` rewrites every `url(...)` to `http://localhost:8010/`, so **docs_style.css must contain no `url()`** (chevrons and fold markers are borders partly for this). It also substitutes `{{fontfamily}}` (masthead and first two heading levels; prose uses the UI stack). Palette custom properties are defined three times: bare `:root` (light), `:root:not([data-theme="light"])` under `prefers-color-scheme: dark`, and `:root[data-theme="dark"]`, so the masthead switch wins both ways.
+
+## Invoice and timesheet themes
+
+`invoice/invoice.html` is one page for both kinds; `invoice/base.css` owns layout, paging and print, and a theme in `invoice/themes/` only sets the custom properties (`--accent`, `--ink`, `--muted`, `--rule`, `--tint`, `--paper`, `--font-body/display/num`) and dresses the parts. Listing is a glob of that folder, so a theme is one file. Printing (Chrome's print-to-pdf) notes:
+
+- **Page margins are real `@page` margins** and `.sheet` loses its padding in print, so a second page has margins; `min-height` a little under the page keeps the foot at the bottom of a one-page invoice without spilling a blank page.
+- Column rules in base.css hit `td` only: `.lines .num` once set the monospace and muted colour on header cells too (ledger's white-on-green "DATES" disappeared).
+- A tinted paper (letterpress) needs `@page { background }` as well, or the margins print white around a tinted box.
+
+## Ebook themes
+
+`epub/themes/*.css` (classic, literary, modern, plain) are the whole stylesheet of an EPUB from `orgs export -f epub`; a new theme is one file. Readers override fonts and sizes, so themes use `em` and lean on the classes `epub.go` writes: `p.first` (no indent), `.scene-break`, `.chapter-head`/`.chapter-label`/`.chapter-title`, `section.part`, `.verse`, `.center`, `.titlepage`, `.dedication`, `.footnotes`, `a.noteref`, `.underline`. Flourishes (`::first-letter`, small caps) must degrade to plain text on readers that ignore them.
+
+## Static site themes (`GET /site`, `orgs site`)
+
+`internal/app/orgs/plugs/site` builds from parsed documents into a map of paths to bytes; `internal/app/orgs/site.go` zips it (`GET /site`, or `local=t&out=` writes on the server) and `cmd/oc/commands/site` unzips it here.
+
+- **Every link is relative** (`Page.href`, `View.Root`), so a site works from `file://` - except the 404 page, rooted at the base url (or `/`). Search loads `assets/search.js`, not the json: a page opened from disk may load a script but not fetch.
+- Heading ids are slugs (`CUSTOM_ID` wins, duplicates `-2`), all assigned (`index`) before any page is written, because links point forward. Linked files are copied only from inside the org directories (`Options.Roots`); outside, the link is plain text.
+- The site's title is `site.yaml`'s or the request's, else the root `index.org`'s `#+TITLE`, else the folder's name. A summary is the opening prose: headings, code, tables, figures and footnote refs are taken out first.
+- A tag called `index` gets `tags/index-tag.html`, so it does not overwrite the tags index. The outline root carries an empty level-0 headline; skip it.
+- **A theme is a folder** `templates/site/<name>/`: `theme.yaml` (description, fonts, chroma `highlight: {light, dark}`, `layout:` switches - toc, backlinks, home, sidenotes, nav tree), `style.css`, optional `theme.js` and template overrides. Templates are Go `html/template` parsed in order: `site/base` layout and partials, the theme's layout and partials, base `<kind>.html`, the theme's `<kind>.html`; a later `{{define}}` wins. The shared folder is `site/base`, not `_base`: go:embed skips names starting with `_` or `.`.
+- Every file is found through `assets.FindTemplate`, so a user's folder can add a theme or replace one file of a built-in one. Colours use the usual triple `:root` definition.
+- **Code colouring is chroma classes**, light style plain and dark style scoped like the palette. A dark style says nothing about tokens it leaves plain, so the light style's colours leaked through (tango's black names on monokai's dark ground); each token is reset to plain before the dark rules (`highlightCSS`).

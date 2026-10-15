@@ -1,0 +1,80 @@
+{{define "icon-menu"}}<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>{{end}}
+
+{{define "icon-theme"}}<svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>{{end}}
+
+{{define "icon-search"}}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>{{end}}
+
+{{define "searchbox"}}
+<div class="search" role="search">
+  <label class="search-field">{{template "icon-search"}}<input type="search" placeholder="Search" aria-label="Search this site" autocomplete="off" spellcheck="false" data-search><kbd>/</kbd></label>
+  <div class="search-results" hidden></div>
+</div>
+{{end}}
+
+{{define "tree"}}
+<ul>
+{{- range .nodes}}
+  <li class="{{if .Folder}}tree-folder{{else}}tree-page{{end}}">
+    {{- if .URL}}<a href="{{$.v.Root}}{{.URL}}"{{if eq .URL $.v.URL}} class="current" aria-current="page"{{end}}>{{.Title}}</a>{{else}}<span class="tree-label">{{.Title}}</span>{{end}}
+    {{- if .Children}}{{template "tree" (dict "nodes" .Children "v" $.v)}}{{end}}
+  </li>
+{{- end}}
+</ul>
+{{end}}
+
+{{define "toc"}}
+<nav class="toc" aria-label="Contents">
+  <p class="toc-title">On this page</p>
+  <ol>
+  {{- range .Page.TOC}}
+    <li class="toc-l{{.Level}}"><a href="#{{.ID}}">{{.Title}}</a></li>
+  {{- end}}
+  </ol>
+</nav>
+{{end}}
+
+{{define "backlinks"}}
+<section class="backlinks" aria-label="Linked from">
+  <p class="backlinks-title">Linked from</p>
+  <ul>
+  {{- range .Page.Backlinks}}
+    <li><a href="{{$.Root}}{{.URL}}">{{.Title}}</a>{{if .Summary}}<span class="backlink-summary">{{.Summary}}</span>{{end}}</li>
+  {{- end}}
+  </ul>
+</section>
+{{end}}
+
+{{define "tags-inline"}}{{if .}}<span class="tag-list">{{range .}}<a class="tag" href="{{$.Root}}{{.URL}}">{{.Name}}</a>{{end}}</span>{{end}}{{end}}
+
+{{define "page-tags"}}{{if .Page.Tags}}<span class="tag-list">{{range .Page.Tags}}<a class="tag" href="{{$.Root}}{{.URL}}">{{.Name}}</a>{{end}}</span>{{end}}{{end}}
+
+{{define "meta"}}
+<p class="page-meta">
+  {{- if .Page.HasDate}}<time datetime="{{.Page.ISODate}}">{{.Page.DateText}}</time>{{end}}
+  {{- with .Page.Author}}<span class="author">{{.}}</span>{{end}}
+  {{- if gt .Page.Words 120}}<span class="reading">{{.Page.ReadingMin}} min read</span>{{end}}
+  {{- if .Page.Draft}}<span class="draft-badge">Draft</span>{{end}}
+</p>
+{{end}}
+
+{{define "card"}}
+<article class="card{{if .feature}} feature{{end}}">
+  {{- if .p.HasDate}}<time class="card-date" datetime="{{.p.ISODate}}">{{.p.ShortDate}}</time>{{end}}
+  <h3 class="card-title"><a href="{{.v.Root}}{{.p.URL}}">{{.p.Title}}</a></h3>
+  {{- with .p.Subtitle}}<p class="card-subtitle">{{.}}</p>{{end}}
+  {{- if .p.Summary}}<p class="card-summary">{{.p.Summary}}</p>{{end}}
+  {{- if .p.Tags}}<p class="card-tags">{{range .p.Tags}}<a class="tag" href="{{$.v.Root}}{{.URL}}">{{.Name}}</a>{{end}}</p>{{end}}
+</article>
+{{end}}
+
+{{define "postlist"}}
+<ul class="post-list">
+{{- range .pages}}
+  <li>
+    {{- if .HasDate}}<time datetime="{{.ISODate}}">{{.ShortDate}}</time>{{else}}<span class="no-date"></span>{{end}}
+    <a href="{{$.v.Root}}{{.URL}}">{{.Title}}</a>
+    {{- if .Tags}}<span class="tag-list">{{range .Tags}}<a class="tag" href="{{$.v.Root}}{{.URL}}">{{.Name}}</a>{{end}}</span>{{end}}
+  </li>
+{{- end}}
+</ul>
+{{end}}

@@ -1,0 +1,12 @@
+name: Tufte
+description: after Edward Tufte's books - wide margins, footnotes as sidenotes beside the text
+fonts:
+  - "https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400..700;1,400..600&display=swap"
+highlight:
+  light: tango
+  dark: monokai
+layout:
+  toc: none
+  backlinks: bottom
+  home: list
+  sidenotes: true

@@ -11,6 +11,7 @@ package savedq
 //	orgs q watch stale          say when it finds something new (watch.go)
 //	orgs q unwatch stale
 //	orgs q watches              what is being watched
+//	orgs q stale -csv -out stale.csv   its headings as a spreadsheet (csvout)
 //
 // These are the same stored queries worg's search tab keeps, over the same
 // per-user endpoints - which is the point of the command rather than an
@@ -31,6 +32,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	"github.com/ihdavids/orgs/cmd/oc/commands/csvout"
 	"github.com/ihdavids/orgs/internal/common"
 )
 
@@ -42,6 +44,9 @@ type Q struct {
 	Label   string
 	Left    bool
 	Desktop bool
+	// -csv writes the results as csv (csvout).
+	Csv     bool
+	csvOpts csvout.Options
 }
 
 // StoredQuery is the wire shape of one. Restated rather than imported, for the
@@ -61,6 +66,8 @@ func (self *Q) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.Label, "label", "", "watch: what its notifications are called")
 	fset.BoolVar(&self.Left, "left", false, "watch: also say when a heading stops matching")
 	fset.BoolVar(&self.Desktop, "desktop", false, "watch: also pop up on the server's desktop (the notify plugin)")
+	fset.BoolVar(&self.Csv, "csv", false, "write the results as csv for a spreadsheet")
+	self.csvOpts.Flags(fset, true)
 }
 
 func (self *Q) Exec(core *commands.Core) {
@@ -280,6 +287,10 @@ func (self *Q) run(core *commands.Core, name string) {
 	}
 	if self.Show {
 		commands.RenderOne(StoredQuery{Name: name, Query: query}, func() { fmt.Println(query) })
+		return
+	}
+	if self.Csv {
+		csvout.Write(core, "", query, self.csvOpts)
 		return
 	}
 

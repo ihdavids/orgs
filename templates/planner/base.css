@@ -1,0 +1,289 @@
+/* The planner's layout: where the days, the panel and the hour grid go, and
+   how a sheet fills exactly one printed page. A theme (planner/themes/*.css)
+   sets the custom properties below and dresses the parts; it should not need
+   to move anything.
+
+   Sheets are sized from the server (--sheet-w, --sheet-h: the page less its
+   @page margins), so a printed sheet is one page and never spills a blank one.
+   On screen each sheet is drawn as paper on a grey desk. */
+
+:root {
+  --paper: #ffffff;
+  --desk: #e7e5e1;
+  --ink: #1d1d1b;
+  --muted: #6f6c66;
+  --faint: #a9a59d;
+  --rule: #d9d5cc;
+  --line: #e6e2da;            /* writing lines */
+  --accent: #8a2c2c;
+  --tint: #f5f2ec;            /* weekend, panel */
+  --today: #fbf3e4;
+  --late: #b3261e;
+  --warn: #a8660b;
+  --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-display: var(--font-body);
+  --font-num: var(--font-body);
+  --size: 7.6pt;
+  --line-gap: 5.2mm;          /* spacing of the writing lines */
+  --radius: 0;
+  /* The writing area: ruled lines. The bullet theme swaps in a dot grid. */
+  /* At least a device pixel thick: a hairline drawn by a gradient drops out
+     on screen (and in Chrome's pdf) wherever it falls between pixels. */
+  /* One line at the foot of each tile of --line-gap. At least a device pixel
+     thick: a hairline drawn by a gradient drops out wherever it falls between
+     pixels. */
+  --write-bg: linear-gradient(to bottom, transparent calc(100% - .26mm), var(--line) calc(100% - .26mm));
+  --write-size: 100% var(--line-gap);
+  /* A pattern under the whole sheet (the bullet theme's dot grid). One
+     background for the sheet rather than one per box: Chrome prints each
+     element's pattern as its own picture, and a month of dotted cells was a
+     4MB pdf where one dotted sheet is 200kB. */
+  --sheet-bg: none;
+  --sheet-bg-size: auto;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--size);
+  line-height: 1.3;
+}
+
+.sheet {
+  width: var(--sheet-w);
+  height: var(--sheet-h);
+  margin: 12mm auto;
+  padding: 0;
+  background-color: var(--paper);
+  background-image: var(--sheet-bg);
+  background-size: var(--sheet-bg-size);
+  box-shadow: 0 0 0 var(--margin) var(--paper), 0 2px 14px calc(var(--margin) + 2px) rgba(0,0,0,.10);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.sheet + .sheet { margin-top: calc(12mm + 2 * var(--margin)); }
+
+@media print {
+  /* A tinted paper also needs @page { background: ... } in its theme, or
+     the margins print white around it (see classic.css). */
+  html, body { background: var(--paper); }
+  .sheet { margin: 0; box-shadow: none; break-after: page; page-break-after: always; }
+  .sheet:last-child { break-after: auto; page-break-after: auto; }
+  .sheet + .sheet { margin-top: 0; }
+}
+
+/* ---- head ------------------------------------------------------------ */
+
+.sheet-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8mm;
+  padding-bottom: 2.5mm;
+  margin-bottom: 3mm;
+  border-bottom: .6pt solid var(--ink);
+  flex: none;
+}
+.head-title { font-family: var(--font-display); font-size: 20pt; line-height: 1; }
+.head-sub { font-family: var(--font-display); color: var(--muted); font-size: 10pt; }
+
+h3 {
+  margin: 0 0 1.4mm;
+  font-family: var(--font-display);
+  font-size: 7pt;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- items ----------------------------------------------------------- */
+
+.items { list-style: none; margin: 0; padding: 0; }
+.item {
+  display: flex;
+  align-items: baseline;
+  gap: 1.2mm;
+  padding: .45mm 0;
+  min-width: 0;
+}
+.item .title { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.item .time { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--accent); flex: none; }
+.item .pri { flex: none; font-size: .8em; font-weight: 700; color: var(--accent); }
+.item .pri-B, .item .pri-C { color: var(--muted); }
+.item .mark {
+  flex: none;
+  font-size: .78em;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.item .mark.late { color: var(--late); }
+.item .mark.warn { color: var(--warn); }
+.item.done .title { text-decoration: line-through; color: var(--faint); }
+.item.done .time, .item.done .mark { color: var(--faint); }
+.item.empty { color: var(--faint); font-style: italic; }
+
+/* A box to tick. */
+.cb, .tick {
+  flex: none;
+  display: inline-block;
+  width: 2.3mm;
+  height: 2.3mm;
+  border: .6pt solid var(--ink);
+  border-radius: calc(var(--radius) / 3);
+  position: relative;
+  top: .25mm;
+}
+.cb.checked::after, .tick.done::after {
+  content: "";
+  position: absolute;
+  left: .55mm; top: .05mm;
+  width: .7mm; height: 1.4mm;
+  border: solid var(--ink);
+  border-width: 0 .7pt .7pt 0;
+  transform: rotate(45deg);
+}
+.tick.miss { border-color: var(--faint); background: linear-gradient(to top right, transparent 46%, var(--faint) 48%, var(--faint) 52%, transparent 54%); }
+
+/* Somewhere to write: fills what is left of its box. */
+.write {
+  flex: 1 1 auto;
+  min-height: calc(2 * var(--line-gap));
+  background-image: var(--write-bg);
+  background-size: var(--write-size);
+  background-position: 0 0;
+}
+
+/* ---- week ------------------------------------------------------------ */
+
+.spread { flex: 1 1 auto; display: flex; min-height: 0; }
+.page { flex: 1 1 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); min-height: 0; }
+.gutter { flex: none; width: 6mm; position: relative; }
+.gutter::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
+  border-left: .4pt dashed var(--rule);
+}
+.daycol, .panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 1.6mm;
+  border-left: .4pt solid var(--rule);
+}
+.page > :first-child { border-left: 0; padding-left: 0; }
+.page-right > .panel { padding-right: 0; }
+.daycol.weekend { background: var(--tint); }
+.daycol.today { background: var(--today); }
+.day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: .5pt solid var(--rule);
+  padding: .5mm 0 1mm;
+  margin-bottom: 1mm;
+}
+.daycol .dow {
+  font-family: var(--font-display);
+  font-size: 7.5pt;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.daycol .dnum { font-family: var(--font-num); font-size: 15pt; line-height: 1; }
+.daycol.today .dnum { color: var(--accent); }
+.daycol .items { flex: none; }
+.daycol .write { margin-top: 1mm; }
+
+.panel { background: var(--tint); padding-top: 1mm; padding-left: 2mm; gap: 2.5mm; }
+.panel .box { display: flex; flex-direction: column; min-height: 0; flex: none; }
+.panel .box.notes { flex: 1 1 auto; }
+.panel .box .items { overflow: hidden; }
+
+.habit-grid { border-collapse: collapse; width: 100%; table-layout: fixed; }
+.habit-grid th { font-weight: 400; color: var(--muted); font-size: 6.5pt; text-align: center; padding: 0 0 .5mm; }
+.habit-grid th:first-child { width: 34%; }
+.habit-grid .tick { width: 2mm; height: 2mm; }
+.habit-grid td { text-align: center; padding: .4mm 0; }
+.habit-grid td.habit-name { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 1mm; }
+
+/* ---- day ------------------------------------------------------------- */
+
+.sheet.day .sheet-head { justify-content: flex-start; align-items: center; gap: 5mm; }
+.sheet.day .head-num { font-family: var(--font-num); font-size: 44pt; line-height: .9; color: var(--accent); }
+.sheet.day .head-words { display: flex; flex-direction: column; gap: 1.5mm; }
+.day-body { flex: 1 1 auto; display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 5mm; min-height: 0; }
+.schedule { position: relative; display: flex; min-height: 0; }
+.hours { flex: 1 1 auto; display: flex; flex-direction: column; }
+.hour {
+  flex: 1 1 0;
+  border-top: .5pt solid var(--rule);
+  position: relative;
+  background-image: linear-gradient(to bottom, transparent calc(50% - .13mm), var(--line) calc(50% - .13mm), var(--line) calc(50% + .13mm), transparent calc(50% + .13mm));
+  background-position: 13mm 0;
+  background-repeat: no-repeat;
+}
+.hour:last-child { border-bottom: .5pt solid var(--rule); }
+.hour span {
+  position: absolute; left: 0; top: .6mm;
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  color: var(--muted); font-size: 7pt;
+}
+.events { position: absolute; top: 0; bottom: 0; left: 13mm; right: 0; }
+.event {
+  position: absolute;
+  padding: .6mm 1.2mm;
+  border-left: 1.2pt solid var(--accent);
+  background: var(--tint);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  overflow: hidden;
+  font-size: 7.6pt;
+  line-height: 1.25;
+  outline: .6pt solid var(--paper);
+}
+.event .time { display: block; color: var(--accent); font-family: var(--font-num); font-size: .9em; }
+.event.done .title { text-decoration: line-through; color: var(--faint); }
+.sheet.day .panel { border-left: 0; padding: 1.5mm 2.5mm; }
+
+/* ---- month ----------------------------------------------------------- */
+
+.month-grid {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto;
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+  border-top: .5pt solid var(--rule);
+  border-left: .5pt solid var(--rule);
+}
+.month-grid .wd {
+  padding: 1mm 1.5mm;
+  font-family: var(--font-display);
+  font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  border-right: .5pt solid var(--rule);
+  border-bottom: .5pt solid var(--rule);
+}
+.cell {
+  border-right: .5pt solid var(--rule);
+  border-bottom: .5pt solid var(--rule);
+  padding: 1mm 1.4mm;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.cell .cnum { font-family: var(--font-num); font-size: 11pt; line-height: 1.1; margin-bottom: .5mm; }
+.cell.weekend { background: var(--tint); }
+.cell.today { background: var(--today); }
+.cell.today .cnum { color: var(--accent); }
+.cell.outside .cnum, .cell.outside .item { color: var(--faint); }
+.cell .item { padding: .15mm 0; font-size: 6.8pt; }
+.cell .item .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell .more { color: var(--muted); font-size: 6.5pt; margin-top: auto; }

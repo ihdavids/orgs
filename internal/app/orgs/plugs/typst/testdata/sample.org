@@ -1,0 +1,137 @@
+#+TITLE: Field Notes: *Spring* Survey [2026]
+#+SUBTITLE: A test of /everything/ the exporter does
+#+AUTHOR: Jane Roe and John #Doe
+#+EMAIL: jane@example.com
+#+DATE: <2026-10-14 Wed>
+#+LANGUAGE: en
+#+KEYWORDS: birds, survey; spring
+#+DESCRIPTION: Notes from the spring bird survey
+#+OPTIONS: toc:2 p:t
+#+TODO: TODO NEXT | DONE CANCELLED
+#+MACRO: greet Hello, $1!
+
+Some text before the first heading, with a footnote[fn:1] and an inline one[fn:: Inline /footnote/ text.].
+
+* Introduction :intro:
+  :PROPERTIES:
+  :CUSTOM_ID: intro
+  :ID: 6f1c8d2e-intro
+  :END:
+Plain prose with *bold*, /italic/, _underline_, +strike+, =verbatim=, ~code~,
+H_{2}O and E = mc^{2}. Entities: \alpha \rarr -- and ---.
+A macro: {{{greet(world)}}} and the title: {{{title}}}.
+
+Hostile text: a # hash, $5 or so, @someone, <angle> [brackets], C:\temp,
+path//to and c/*x, `ticks`, a ~ tilde, under_score_name, star*s.
+- = this line starts with an equals in a list item
++ plus at the start
+1. numbered-looking text
+/ term-looking text
+
+* TODO [#A] Count the birds :work:field:
+  DEADLINE: <2026-10-20 Tue> SCHEDULED: <2026-10-15 Thu>
+** DONE Find binoculars
+   CLOSED: [2026-10-13 Tue 10:00]
+** NEXT Write up [1/3]
+- [X] draft
+- [-] figures
+- [ ] review
+* Data
+See [[*Introduction][the intro]], [[#intro]], [[id:6f1c8d2e-intro][by id]], [[tbl-counts]], and <<here>> a target, [[here][back to target]].
+External: [[https://example.com/a?b=1&c=2][Example site]] and https://typst.app plain, [[file:other.org][other notes]], [[mailto:x@y.z]].
+
+#+CAPTION: Counts by /species/
+#+NAME: tbl-counts
+| Species      | Count | Notes   |
+|--------------+-------+---------|
+| Robin        |    12 | common  |
+| Wren         |     3 | *rare*  |
+|--------------+-------+---------|
+| Total        |    15 | $ & #   |
+
+| no | header | here |
+| 1  | 2      | 3    |
+
+#+ATTR_TYPST: :width 40%
+#+CAPTION: A chart
+#+NAME: fig-chart
+[[file:chart.png]]
+
+[[./chart.png]]
+
+#+BEGIN_SRC python :exports both
+def f(x):
+    return x ** 2  # `ticks` and ```fences```
+print(f(3))
+#+END_SRC
+
+#+RESULTS:
+: 9
+
+#+BEGIN_SRC sh :exports none
+rm -rf /
+#+END_SRC
+
+#+BEGIN_EXAMPLE
+literal *text* #here
+#+END_EXAMPLE
+
+: fixed width line with $ and #
+
+#+BEGIN_QUOTE
+To be or not to be, *that* is the question.
+#+END_QUOTE
+
+#+BEGIN_VERSE
+Roses are red
+  Violets are blue
+#+END_VERSE
+
+#+BEGIN_CENTER
+Centred text
+#+END_CENTER
+
+#+BEGIN_NOTE
+A special *note* block.
+#+END_NOTE
+
+#+BEGIN_EXPORT typst
+#text(fill: red)[raw typst passes through]
+#+END_EXPORT
+
+#+TYPST: #v(0.5em)
+
+-----
+
+* Maths
+Inline $a^2 + b^2 = c^2$ and \(\frac{1}{2}\alpha\) and display:
+\[ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} \]
+\begin{align}
+a &= b + c \\
+d &= e
+\end{align}
+
+* Lists
+1. first
+2. second
+   - nested *bullet*
+   - another
+     with continuation
+3. third
+
+Lettered:
+
+a) alpha
+b) beta
+
+- Term one :: the first description
+- Term two :: the second
+
+* Archived :ARCHIVE:
+Hidden body.
+* Hidden :noexport:
+This must not appear.
+* COMMENT Commented
+This must not appear either.
+
+[fn:1] The first footnote, with a [[https://example.com][link]].

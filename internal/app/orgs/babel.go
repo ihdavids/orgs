@@ -72,10 +72,20 @@ type runner struct {
 	// When set, the code is written to a temp file with this extension and the
 	// path is appended to the command instead of being piped in.
 	ext string
-	// How to write a variable binding. Nil means this language is run without
-	// its variables; see the doc block. rows is the table the variable names,
-	// nil when it names none.
-	bind func(name string, v common.CodeVar, rows [][]string) string
+	// How to write a variable binding: a line of the program's own syntax,
+	// put in front of the code (or wherever assemble puts it).
+	bind func(name string, v babelVal) string
+	// Puts the bindings and the code together, for a language where they
+	// cannot simply go first: go's need the package clause and imports
+	// before them, elisp's wrap the program in a let, sqlite substitutes.
+	assemble func(j *babelJob, code string, binds []string) string
+	// Bindings that go on the command line rather than in the program (awk's
+	// -v name=value). They go in front of :cmdline.
+	bindArgs func(name string, v babelVal) []string
+	// What a variable that is a file is written to, for a language that reads
+	// a table from a file (gnuplot, sqlite): set, a table variable is written
+	// as one and bound as its path.
+	tableFile string
 	// Whether `:results value` needs the body wrapped so the return can be
 	// printed.
 	wrapValue func(code string) string
@@ -123,12 +133,13 @@ var runners = map[string]runner{
 	"perl":   {cmd: []string{"perl"}, bind: bindPerl, defaultCollect: "output"},
 	"lua":    {cmd: []string{"lua"}, bind: bindLua, defaultCollect: "output"},
 	"r":      {cmd: []string{"Rscript", "-"}, bind: bindR, defaultCollect: "output"},
-	"awk":    {cmd: []string{"awk", "-f", "-"}, defaultCollect: "output"},
-	"sqlite": {cmd: []string{"sqlite3"}, defaultCollect: "output"},
-	// Compiled or scoped in a way a prepended assignment does not survive, so
-	// they run without their variables rather than pretending.
-	"go":   {cmd: []string{"go", "run"}, ext: ".go", defaultCollect: "output"},
-	"lisp": {cmd: []string{"emacs", "-Q", "--batch", "--script"}, ext: ".el", defaultCollect: "output"},
+	// awk reads its program from a file so standard input is free for :stdin.
+	"awk":    {cmd: []string{"awk", "-f"}, ext: ".awk", bindArgs: bindAwk, defaultCollect: "output"},
+	"sqlite": {cmd: []string{"sqlite3"}, bind: bindSqlite, assemble: assembleSqlite, tableFile: ".csv", defaultCollect: "output"},
+	// Compiled, or scoped so that a prepended assignment would not survive:
+	// their bindings are put where the language needs them.
+	"go":   {cmd: []string{"go", "run"}, ext: ".go", bind: bindGo, assemble: assembleGo, defaultCollect: "output"},
+	"lisp": {cmd: []string{"emacs", "-Q", "--batch", "--script"}, ext: ".el", bind: bindElisp, assemble: assembleElisp, defaultCollect: "output"},
 	"powershell": {
 		cmd: []string{"pwsh", "-NoProfile", "-NonInteractive", "-Command", "-"},
 		bind: bindPowershell, defaultCollect: "output",
@@ -161,7 +172,7 @@ var runners = map[string]runner{
 	"beancount": {cmd: []string{"bean-query", "-f", "csv"}, ext: ".beancount", defaultCollect: "output",
 		defaultCmdline: "BALANCES", csvOut: true},
 	"ledger": {cmd: []string{"ledger", "-f"}, ext: ".ledger", defaultCollect: "output", defaultCmdline: "bal"},
-	"gnuplot": {cmd: []string{"gnuplot"}, bind: bindGnuplot, defaultCollect: "output", picture: &picture{
+	"gnuplot": {cmd: []string{"gnuplot"}, bind: bindGnuplot, tableFile: ".dat", defaultCollect: "output", picture: &picture{
 		prepare: func(code, out string) string {
 			term := map[string]string{"svg": "svg", "pdf": "pdfcairo", "eps": "postscript eps", "jpg": "jpeg", "jpeg": "jpeg", "gif": "gif"}[pictureFormat(out)]
 			if term == "" {
@@ -253,35 +264,51 @@ func babelAllows(lang string) (runner, error) {
 // Writing the variables in
 // ----------------------------------------------------------------------------
 
-// A value as the language would write it. A table becomes a list of lists, a
-// list becomes a list, and anything else is passed through as it was written -
-// which is what makes `:var n=2` an integer and `:var s="x"` a string without
-// anybody having to say which.
-func literalOf(v common.CodeVar, rows [][]string, quote func(string) string, open, close, sep string) string {
-	if rows == nil {
-		val := strings.TrimSpace(v.Value)
-		if val == "" {
-			return quote("")
+// A value as the language would write it. A table becomes a list of lists
+// (a kept rule, :hlines yes, the language's null), a list a list, and a
+// scalar written in the header is passed through as it was written - which is
+// what makes `:var n=2` an integer and `:var s="x"` a string without anybody
+// having to say which. A scalar that came from the file (a cell, a text
+// result) is a number when it reads as one and a string otherwise.
+func literalOf(b babelVal, quote func(string) string, open, close, sep, null string) string {
+	switch {
+	case b.isTbl:
+		outer := []string{}
+		for _, row := range b.rows {
+			if row == nil {
+				outer = append(outer, null)
+				continue
+			}
+			cells := []string{}
+			for _, c := range row {
+				cells = append(cells, cellLiteral(c, quote))
+			}
+			outer = append(outer, open+strings.Join(cells, sep)+close)
 		}
-		if literalRe.MatchString(val) {
-			return val
-		}
-		// A bare word that resolved to nothing is a string as far as the
-		// program is concerned; org does the same.
-		if v.Ref != "" && v.RefKind == "" {
-			return quote(val)
-		}
-		return val
-	}
-	outer := []string{}
-	for _, row := range rows {
+		return open + strings.Join(outer, sep) + close
+	case b.isList:
 		cells := []string{}
-		for _, c := range row {
+		for _, c := range b.list {
 			cells = append(cells, cellLiteral(c, quote))
 		}
-		outer = append(outer, open+strings.Join(cells, sep)+close)
+		return open + strings.Join(cells, sep) + close
+	case b.text:
+		return cellLiteral(b.v.Value, quote)
 	}
-	return open + strings.Join(outer, sep) + close
+	v := b.v
+	val := strings.TrimSpace(v.Value)
+	if val == "" {
+		return quote("")
+	}
+	if literalRe.MatchString(val) {
+		return val
+	}
+	// A bare word that resolved to nothing is a string as far as the
+	// program is concerned; org does the same.
+	if v.Ref != "" && v.RefKind == "" {
+		return quote(val)
+	}
+	return val
 }
 
 // A table cell, as a number when it reads as one and a string otherwise. That
@@ -306,32 +333,36 @@ func quoteSingle(s string) string {
 	return `'` + strings.ReplaceAll(s, `'`, `'\''`) + `'`
 }
 
-func bindPython(name string, v common.CodeVar, rows [][]string) string {
-	return name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ")
+func bindPython(name string, v babelVal) string {
+	return name + " = " + literalOf(v, quoteDouble, "[", "]", ", ", "None")
 }
 
-func bindJs(name string, v common.CodeVar, rows [][]string) string {
-	return "const " + name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ") + ";"
+func bindJs(name string, v babelVal) string {
+	return "const " + name + " = " + literalOf(v, quoteDouble, "[", "]", ", ", "null") + ";"
 }
 
-func bindRuby(name string, v common.CodeVar, rows [][]string) string {
-	return name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ")
+func bindRuby(name string, v babelVal) string {
+	return name + " = " + literalOf(v, quoteDouble, "[", "]", ", ", "nil")
 }
 
-func bindLua(name string, v common.CodeVar, rows [][]string) string {
-	return "local " + name + " = " + literalOf(v, rows, quoteDouble, "{", "}", ", ")
+func bindLua(name string, v babelVal) string {
+	return "local " + name + " = " + literalOf(v, quoteDouble, "{", "}", ", ", "nil")
 }
 
-func bindPerl(name string, v common.CodeVar, rows [][]string) string {
-	return "my $" + name + " = " + literalOf(v, rows, quoteDouble, "[", "]", ", ") + ";"
+func bindPerl(name string, v babelVal) string {
+	return "my $" + name + " = " + literalOf(v, quoteDouble, "[", "]", ", ", "undef") + ";"
 }
 
-func bindR(name string, v common.CodeVar, rows [][]string) string {
-	if rows == nil {
-		return name + " <- " + literalOf(v, nil, quoteDouble, "c(", ")", ", ")
+func bindR(name string, v babelVal) string {
+	if !v.isTbl {
+		return name + " <- " + literalOf(v, quoteDouble, "c(", ")", ", ", "NA")
 	}
 	cols := []string{}
-	for _, row := range rows {
+	for _, row := range v.rows {
+		if row == nil {
+			cols = append(cols, "NA")
+			continue
+		}
 		cells := []string{}
 		for _, c := range row {
 			cells = append(cells, cellLiteral(c, quoteDouble))
@@ -341,32 +372,201 @@ func bindR(name string, v common.CodeVar, rows [][]string) string {
 	return name + " <- list(" + strings.Join(cols, ", ") + ")"
 }
 
-func bindPowershell(name string, v common.CodeVar, rows [][]string) string {
-	if rows == nil {
-		return "$" + name + " = " + literalOf(v, nil, quoteDouble, "", "", "")
+func bindPowershell(name string, v babelVal) string {
+	if !v.isTbl && !v.isList {
+		return "$" + name + " = " + literalOf(v, quoteDouble, "", "", "", "$null")
 	}
-	return "$" + name + " = " + literalOf(v, rows, quoteDouble, "@(", ")", ", ")
+	return "$" + name + " = " + literalOf(v, quoteDouble, "@(", ")", ", ", "$null")
 }
 
 // gnuplot reads a table from a file, so a table variable arrives here already
-// written to one (runJob does it) and is bound as the file's name - which is
-// what org does, and what makes `plot data using 1:2` work.
-func bindGnuplot(name string, v common.CodeVar, rows [][]string) string {
-	return name + " = " + literalOf(v, nil, quoteDouble, "", "", "")
+// written to one (runJob does it, tableFile) and is bound as the file's name -
+// which is what org does, and what makes `plot data using 1:2` work.
+func bindGnuplot(name string, v babelVal) string {
+	return name + " = " + literalOf(v, quoteDouble, "", "", "", "")
 }
 
-// A shell gets scalars as variables and a table as tab separated text, which
-// is the shape every tool in a pipeline already reads.
-func bindShell(name string, v common.CodeVar, rows [][]string) string {
-	if rows == nil {
-		return name + "=" + quoteSingle(strings.Trim(strings.TrimSpace(v.Value), `"'`))
+// tsv is a table or list as tab separated lines, the shape every tool in a
+// pipeline already reads. Rules are left out.
+func tsv(v babelVal) string {
+	switch {
+	case v.isTbl:
+		lines := []string{}
+		for _, row := range v.rows {
+			if row != nil {
+				lines = append(lines, strings.Join(row, "\t"))
+			}
+		}
+		return strings.Join(lines, "\n")
+	case v.isList:
+		return strings.Join(v.list, "\n")
 	}
-	lines := []string{}
-	for _, row := range rows {
-		lines = append(lines, strings.Join(row, "\t"))
-	}
-	return name + "=" + quoteSingle(strings.Join(lines, "\n"))
+	return v.scalarText()
 }
+
+// A shell gets scalars as variables and a table as tab separated text.
+func bindShell(name string, v babelVal) string {
+	return name + "=" + quoteSingle(tsv(v))
+}
+
+// awk gets its variables as -v name=value, which awk reads with its escapes:
+// a backslash is doubled so it arrives as one. A table is tab separated lines,
+// for split().
+func bindAwk(name string, v babelVal) []string {
+	return []string{"-v", name + "=" + strings.ReplaceAll(tsv(v), `\`, `\\`)}
+}
+
+// go: package-level vars (a local one nobody uses is a compile error; a
+// package one is not), of interface{} so a table's mixed cells type check.
+func bindGo(name string, v babelVal) string {
+	switch {
+	case v.isTbl:
+		rows := []string{}
+		for _, row := range v.rows {
+			if row == nil {
+				rows = append(rows, "nil")
+				continue
+			}
+			cells := []string{}
+			for _, c := range row {
+				cells = append(cells, cellLiteral(c, quoteDouble))
+			}
+			rows = append(rows, "{"+strings.Join(cells, ", ")+"}")
+		}
+		return "var " + name + " = [][]interface{}{" + strings.Join(rows, ", ") + "}"
+	case v.isList:
+		return "var " + name + " = []interface{}{" + literalOf(v, quoteDouble, "", "", ", ", "nil") + "}"
+	}
+	lit := literalOf(v, quoteDouble, "", "", "", "nil")
+	if strings.HasPrefix(lit, "'") {
+		lit = quoteDouble(strings.Trim(lit, "'"))
+	}
+	return "var " + name + " = " + lit
+}
+
+var goPackageRe = regexp.MustCompile(`(?m)^\s*package\s+\w+`)
+var goMainRe = regexp.MustCompile(`(?m)^\s*func\s+main\s*\(`)
+var goImportRe = regexp.MustCompile(`(?ms)^\s*import\s*(\([^)]*\)|"[^"]*")`)
+
+// assembleGo is ob-go's wrapping: a body with no package clause becomes
+// package main, one with no main is put in one, :imports adds imports (and
+// fmt is added when the body uses it and nothing imports it), and the
+// variables go after the imports.
+func assembleGo(j *babelJob, code string, binds []string) string {
+	if goPackageRe.MatchString(code) {
+		// A whole program: the variables after its imports, or its package line.
+		at := 0
+		if locs := goImportRe.FindAllStringIndex(code, -1); len(locs) > 0 {
+			at = locs[len(locs)-1][1]
+		} else if loc := goPackageRe.FindStringIndex(code); loc != nil {
+			at = loc[1]
+		}
+		if len(binds) == 0 {
+			return code
+		}
+		return code[:at] + "\n\n" + strings.Join(binds, "\n") + "\n" + code[at:]
+	}
+	imports := []string{}
+	if imp, ok := j.arg("imports"); ok {
+		for _, w := range shellWords(imp) {
+			imports = append(imports, quoteDouble(w))
+		}
+	}
+	body := code
+	head := []string{}
+	for _, l := range strings.Split(body, "\n") {
+		if m := goImportRe.FindString(l); m != "" {
+			head = append(head, strings.TrimSpace(l))
+		}
+	}
+	for _, h := range head {
+		body = strings.Replace(body, h, "", 1)
+	}
+	if strings.Contains(body, "fmt.") && !strings.Contains(strings.Join(imports, " ")+strings.Join(head, " "), `"fmt"`) {
+		imports = append(imports, `"fmt"`)
+	}
+	if !goMainRe.MatchString(body) {
+		body = "func main() {\n" + body + "\n}"
+	}
+	out := []string{"package main"}
+	out = append(out, head...)
+	if len(imports) > 0 {
+		out = append(out, "import ("+strings.Join(imports, "; ")+")")
+	}
+	out = append(out, binds...)
+	out = append(out, body)
+	return strings.Join(out, "\n") + "\n"
+}
+
+// elisp: (name value) pairs for a let around the program; a rule is the
+// symbol hline, as org passes it.
+func bindElisp(name string, v babelVal) string {
+	quote := func(s string) string { return quoteDouble(s) }
+	switch {
+	case v.isTbl:
+		return "(" + name + " '" + literalOf(v, quote, "(", ")", " ", "hline") + ")"
+	case v.isList:
+		return "(" + name + " '" + literalOf(v, quote, "(", ")", " ", "nil") + ")"
+	}
+	return "(" + name + " " + literalOf(v, quote, "", "", "", "nil") + ")"
+}
+
+func assembleElisp(j *babelJob, code string, binds []string) string {
+	if len(binds) == 0 {
+		return code
+	}
+	return "(let (" + strings.Join(binds, "\n      ") + ")\n" + code + "\n)\n"
+}
+
+var sqliteVarRe = regexp.MustCompile(`\$([A-Za-z_][A-Za-z0-9_]*)`)
+
+// assembleSqlite is ob-sqlite's: $name in the SQL is replaced with the
+// variable's value (a table's, with the path of the csv file it was written
+// to, for .import), and the dot commands for :header and output modes go
+// first.
+func assembleSqlite(j *babelJob, code string, binds []string) string {
+	vals := map[string]string{}
+	for _, b := range binds {
+		if i := strings.IndexByte(b, '='); i > 0 {
+			vals[b[:i]] = b[i+1:]
+		}
+	}
+	code = sqliteVarRe.ReplaceAllStringFunc(code, func(m string) string {
+		if v, ok := vals[m[1:]]; ok {
+			return v
+		}
+		return m
+	})
+	pre := []string{}
+	mode := "csv"
+	for _, m := range []string{"csv", "list", "column", "line", "html", "box", "markdown", "table", "json"} {
+		if _, ok := j.arg(m); ok {
+			mode = m
+		}
+	}
+	pre = append(pre, ".mode "+mode)
+	if sep, ok := j.arg("separator"); ok && mode == "list" {
+		pre = append(pre, ".separator "+quoteDouble(sep))
+	}
+	if nv, ok := j.arg("nullvalue"); ok {
+		pre = append(pre, ".nullvalue "+quoteDouble(nv))
+	}
+	if sqliteHeader(j) {
+		pre = append(pre, ".headers on")
+	}
+	return strings.Join(pre, "\n") + "\n" + code
+}
+
+func sqliteHeader(j *babelJob) bool {
+	if h, ok := j.arg("header"); ok && h != "no" && h != "nil" && h != "off" {
+		return true
+	}
+	c, _ := j.arg("colnames")
+	return c == "yes" || c == "t"
+}
+
+// sqlite's bindings are name=value pairs for assembleSqlite to substitute.
+func bindSqlite(name string, v babelVal) string { return name + "=" + v.scalarText() }
 
 // ----------------------------------------------------------------------------
 // Running it
@@ -397,7 +597,7 @@ type babelOutcome struct {
 
 // runProgram runs a program. out is the picture's path for a language that
 // draws, and empty otherwise.
-func runProgram(r runner, program string, dir string, timeout time.Duration, out string, extra ...string) (babelOutcome, error) {
+func runProgram(r runner, program string, dir string, timeout time.Duration, out string, stdin string, extra ...string) (babelOutcome, error) {
 	res := babelOutcome{}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -430,6 +630,9 @@ func runProgram(r runner, program string, dir string, timeout time.Duration, out
 	}
 	if in == "" {
 		cmd.Stdin = strings.NewReader(program)
+	} else if stdin != "" {
+		// The program is in a file, so standard input is free: :stdin.
+		cmd.Stdin = strings.NewReader(stdin)
 	}
 	var so, se bytes.Buffer
 	cmd.Stdout = &so
@@ -703,6 +906,9 @@ func RunBlock(req *common.CodeRun) (common.CodeResult, error) {
 		return common.CodeResult{}, err
 	}
 	job := jobForBlock(block, f)
+	if lines, err := ganttFileLines(block.Filename); err == nil && !req.SetCode {
+		job.cachedHash = cachedHashAt(lines, block.EndLine)
+	}
 	if req.SetCode {
 		// Running what is in the editor, before it has been saved. A run is
 		// the fastest way to find out whether an edit works, and making

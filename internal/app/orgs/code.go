@@ -376,6 +376,17 @@ func readVar(raw string, names map[string]namedKind, filename string) common.Cod
 	if target == "" || literalRe.MatchString(target) {
 		return v
 	}
+	// other.org:name - something named in another file, relative to this one.
+	if path, name, ok := crossFile(target, filename); ok {
+		v.Ref, v.RefFile = name, path
+		if other := GetDb().FindByFile(path); other != nil {
+			v.RefFile = other.Filename
+			if k, ok := namedKinds(other)[name]; ok {
+				v.RefKind, v.RefLine, v.Rows, v.Cols = k.Kind, k.Line, k.Rows, k.Cols
+			}
+		}
+		return v
+	}
 	// Anything left that looks like a name is treated as one. Where the name
 	// is not known, RefKind stays empty and Ref is still reported - a broken
 	// reference is the thing most worth seeing.

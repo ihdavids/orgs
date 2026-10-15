@@ -15,10 +15,12 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
-// registerImportRoutes adds the importers. Called from RestApi. Only
-// notebooks for now; another format is another route under /import/.
+// registerImportRoutes adds the importers. Called from RestApi. Notebooks
+// are converted here; markdown, todo.txt and calendars are converted by the
+// client and written through /import/org (orgimport.go).
 func registerImportRoutes(api *mux.Router) {
 	api.HandleFunc("/import/ipynb", PostImportIpynb).Methods("POST")
+	api.HandleFunc("/import/org", PostImportOrg).Methods("POST")
 }
 
 // The org file a request names: the notebook's own name when it names none,

@@ -1,0 +1,46 @@
+/* Garden: sage paper, soft cards, links that look like paths between notes. */
+:root {
+  --bg: #f6f5ee; --bg-alt: #ecebe0; --fg: #24302a; --muted: #5b6b60; --faint: #93a197; --rule: #dedcce;
+  --accent: #2f7a4f; --accent-ink: #fff; --mark: #d8edc9; --code-bg: #ecebe0; --todo: #b5651d; --done: #2f7a4f;
+  --font-body: "Karla", system-ui, sans-serif; --font-display: "Fraunces", Georgia, serif; --font-ui: "Karla", system-ui, sans-serif;
+  --size: 18px; --leading: 1.7; --measure: 40rem; --wide: 76rem; --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121814; --bg-alt: #1a221d; --fg: #dde6de; --muted: #9db0a3; --faint: #66786c; --rule: #26312a;
+    --accent: #84d2a3; --accent-ink: #121814; --mark: #234531; --code-bg: #1a221d; --todo: #e3a15e; --done: #84d2a3;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121814; --bg-alt: #1a221d; --fg: #dde6de; --muted: #9db0a3; --faint: #66786c; --rule: #26312a;
+  --accent: #84d2a3; --accent-ink: #121814; --mark: #234531; --code-bg: #1a221d; --todo: #e3a15e; --done: #84d2a3;
+}
+.brand { font-weight: 650; }
+.brand::before { content: "✿"; color: var(--accent); margin-right: 0.4rem; }
+.site-header { border-bottom: 1px dashed var(--rule); }
+.page-title, .hero-title { font-weight: 650; letter-spacing: -0.02em; }
+.page-body h2, .page-body h3 { font-weight: 600; }
+.page-body a { color: var(--accent); text-decoration: none; background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: 4px; padding: 0 0.15em; }
+.page-body a:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.page-body a.anchor, .page-body .tag { background: none; }
+.page-body a.ext { background: none; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.page-body blockquote { border-left-color: var(--accent); background: var(--bg-alt); padding: 0.8rem 1.1rem; border-radius: 0 var(--radius) var(--radius) 0; font-style: normal; }
+.page-aside { background: var(--bg-alt); border-radius: var(--radius); padding: 1.1rem 1.1rem 0.4rem; }
+.page-aside .toc ol { border-left-color: var(--rule); }
+.page-aside .backlinks { margin-top: 0.4rem; }
+.page-aside .backlinks li { background: var(--bg); border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.55rem; }
+.page-aside .backlinks a { color: var(--fg); }
+.page-aside .backlinks a::before { content: "← "; color: var(--accent); }
+.page-aside .backlink-summary { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: 0.2rem; }
+.backlinks-mobile .backlinks li { background: var(--bg-alt); border-radius: 10px; padding: 0.6rem 0.75rem; }
+.backlinks-mobile ul { list-style: none; padding: 0; }
+.tag { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: transparent; color: var(--accent); }
+.cards { gap: 1rem; }
+.card { background: var(--bg-alt); border-color: transparent; border-radius: 16px; }
+.card:hover { border-color: var(--accent); transform: rotate(-0.4deg) translateY(-2px); }
+.card-title { font-weight: 600; }
+.card-date::before { content: "🌱 "; }
+.hero { padding: 2rem 0 1rem; }
+.hero-title::before { content: "🌿"; display: block; font-size: 2.2rem; margin-bottom: 0.6rem; }
+.code pre.chroma { border: 0; border-radius: 12px; }
+.search-field { background: var(--bg-alt); border-color: transparent; }

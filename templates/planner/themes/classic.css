@@ -1,0 +1,27 @@
+/* classic - a bound diary: ivory paper, a book face, oxblood for today and
+   the times, ruled lines in a warm grey. */
+:root {
+  --paper: #fffdf8;
+  --ink: #23201b;
+  --muted: #7b7468;
+  --faint: #b2ab9d;
+  --rule: #d8d0c0;
+  --line: #e7e0d2;
+  --accent: #7d2427;
+  --tint: #f7f2e8;
+  --today: #fbf0e1;
+  --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-display: "Didot", "Bodoni 72", "Iowan Old Style", Georgia, serif;
+  --font-num: "Didot", "Bodoni 72", "Iowan Old Style", Georgia, serif;
+}
+.head-title { font-style: italic; font-size: 22pt; }
+.head-sub { font-variant: small-caps; letter-spacing: .08em; font-size: 10.5pt; }
+.sheet-head { border-bottom: 1.2pt double var(--ink); border-bottom-style: double; border-bottom-width: 2.2pt; }
+.daycol .dnum { font-size: 17pt; }
+.daycol .dow { font-variant: small-caps; text-transform: lowercase; letter-spacing: .1em; font-size: 9pt; }
+h3 { font-variant: small-caps; text-transform: lowercase; letter-spacing: .1em; font-size: 9pt; font-weight: 400; color: var(--accent); }
+.item .time { font-style: italic; }
+.cell .cnum { font-size: 12pt; }
+.month-grid .wd { font-variant: small-caps; text-transform: lowercase; font-size: 9pt; }
+/* The paper under the page margins too, or it prints in a white frame. */
+@page { background: #fffdf8; }

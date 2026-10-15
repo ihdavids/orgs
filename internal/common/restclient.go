@@ -231,10 +231,17 @@ func RestPost[T any](self *Rest, api string, data any) (T, error) {
 // status, so a caller can tell a pdf from an error page - which Get cannot,
 // having already turned both into a string with no status beside it.
 func (self *Rest) GetRaw(api string, ps map[string]string) ([]byte, string, int, error) {
+	body, h, status, err := self.GetRawHeader(api, ps)
+	return body, h.Get("Content-Type"), status, err
+}
+
+// GetRawHeader is GetRaw with every header of the answer, for an endpoint
+// that says more than its body does (warnings, a word count).
+func (self *Rest) GetRawHeader(api string, ps map[string]string) ([]byte, http.Header, int, error) {
 	coreurl := self.Url + "/" + api
 	base, err := url.Parse(coreurl)
 	if err != nil {
-		return nil, "", 0, fmt.Errorf("rest parse error: %s", err)
+		return nil, http.Header{}, 0, fmt.Errorf("rest parse error: %s", err)
 	}
 	if len(ps) > 0 {
 		params := url.Values{}
@@ -245,19 +252,19 @@ func (self *Rest) GetRaw(api string, ps map[string]string) ([]byte, string, int,
 	}
 	req, err := http.NewRequest("GET", base.String(), nil)
 	if err != nil {
-		return nil, "", 0, fmt.Errorf("rest request error: %s", err)
+		return nil, http.Header{}, 0, fmt.Errorf("rest request error: %s", err)
 	}
 	req.Header = self.Header.Clone()
 	resp, err := self.client().Do(req)
 	if err != nil {
-		return nil, "", 0, fmt.Errorf("rest call error: %s", err)
+		return nil, http.Header{}, 0, fmt.Errorf("rest call error: %s", err)
 	}
 	defer resp.Body.Close()
 	body, rerr := ioutil.ReadAll(resp.Body)
 	if rerr != nil {
-		return nil, "", resp.StatusCode, rerr
+		return nil, resp.Header, resp.StatusCode, rerr
 	}
-	return body, resp.Header.Get("Content-Type"), resp.StatusCode, nil
+	return body, resp.Header, resp.StatusCode, nil
 }
 
 // RestGetErr is RestGet with the error handed back rather than printed.

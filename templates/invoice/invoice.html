@@ -1,0 +1,185 @@
+{{- /*
+  The invoice and timesheet page for GET /timesheet?format=html, and what
+  orgs invoice -f pdf prints. Go html/template; data:
+
+    .T      the Timesheet (internal/common/timesheet.go)
+    .Kind   "invoice" or "timesheet"
+    .Base   invoice/base.css: the layout
+    .CSS    the theme's stylesheet (invoice/themes/<theme>.css)
+    .Accent a colour, or empty
+    .Page   letter, A4 or legal
+    .Logo   a data: or http(s) url, or empty
+
+  Layout is base.css; a theme only dresses it. A copy of this file in your
+  templatePath's invoice/ folder replaces it.
+*/ -}}
+<!doctype html>
+<html lang="en" class="kind-{{.Kind}} paper-{{.Page}} theme-{{.Theme}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}}</title>
+<style>{{.Base}}</style>
+<style>{{.CSS}}</style>
+<style>
+@page { size: {{.Page}}; }
+{{if .Accent}}:root { --accent: {{.Accent}}; }{{end}}
+</style>
+</head>
+<body>
+{{- $t := .T -}}
+{{- $logo := .Logo -}}
+{{- if eq .Kind "invoice" -}}
+{{- $billed := billed $t.Clients -}}
+{{- range $c := $billed}}
+<article class="sheet invoice">
+  {{template "masthead" (dict2 $t $logo)}}
+  <header class="doc-head">
+    <h1 class="doc-title">Invoice</h1>
+    <dl class="meta">
+      <div><dt>Invoice no.</dt><dd>{{$c.Number}}</dd></div>
+      <div><dt>Issued</dt><dd>{{long $c.Date}}</dd></div>
+      <div><dt>Due</dt><dd>{{long $c.Due}}</dd></div>
+      {{- if $t.Range}}<div><dt>Period</dt><dd>{{$t.Range}}</dd></div>{{end}}
+      {{- if $c.PO}}<div><dt>PO</dt><dd>{{$c.PO}}</dd></div>{{end}}
+    </dl>
+  </header>
+
+  <section class="parties">
+    <div class="bill-to">
+      <h2 class="label">Billed to</h2>
+      <div class="party-name">{{$c.BillTo.Name}}</div>
+      {{- with $c.BillTo.Contact}}<div>{{.}}</div>{{end}}
+      {{- range $c.BillTo.Address}}<div>{{.}}</div>{{end}}
+      {{- with $c.BillTo.Email}}<div>{{.}}</div>{{end}}
+      {{- with $c.BillTo.Phone}}<div>{{.}}</div>{{end}}
+      {{- with $c.BillTo.TaxId}}<div class="muted">{{.}}</div>{{end}}
+    </div>
+    <div class="amount-due">
+      <h2 class="label">Amount due</h2>
+      <div class="big">{{money $c $c.Total}}</div>
+      <div class="muted">{{$c.Currency}} · due {{long $c.Due}}</div>
+    </div>
+  </section>
+
+  <table class="lines">
+    <thead>
+      <tr><th class="desc">Description</th><th class="dates">Dates</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr>
+    </thead>
+    {{- range $group := byProject $c.Lines}}
+    <tbody>
+      {{- with (index $group 0).Project}}<tr class="project"><th colspan="5">{{.}}</th></tr>{{end}}
+      {{- range $group}}
+      <tr class="line">
+        <td class="desc">{{.Description}}<div class="sub">{{.Sessions}} {{if eq .Sessions 1}}session{{else}}sessions{{end}} · {{hm .Mins}} clocked</div></td>
+        <td class="dates">{{span .Date .LastDate}}</td>
+        <td class="num">{{hours .BilledMins}}</td>
+        <td class="num">{{money $c .Rate}}</td>
+        <td class="num">{{money $c .Amount}}</td>
+      </tr>
+      {{- end}}
+    </tbody>
+    {{- end}}
+  </table>
+
+  <section class="totals">
+    <table>
+      <tr><th>Hours</th><td>{{hours $c.BilledMins}}</td></tr>
+      <tr><th>Subtotal</th><td>{{money $c $c.Subtotal}}</td></tr>
+      {{- if $c.TaxRate}}<tr><th>{{$c.TaxName}} ({{pct $c.TaxRate}}%)</th><td>{{money $c $c.Tax}}</td></tr>{{end}}
+      <tr class="grand"><th>Total {{$c.Currency}}</th><td>{{money $c $c.Total}}</td></tr>
+    </table>
+  </section>
+
+  <footer class="foot">
+    {{- if $t.Round}}<p class="muted small">Each line is billed in {{$t.Round}}-minute increments{{if ne $t.RoundMode "up"}} ({{$t.RoundMode}}){{end}}.</p>{{end}}
+    {{- with $c.Notes}}<div class="notes">{{.}}</div>{{end}}
+    {{- if $t.Payment}}
+    <div class="payment">
+      <h2 class="label">Payment</h2>
+      {{- range $t.Payment}}<div>{{.}}</div>{{end}}
+    </div>
+    {{- end}}
+    {{- with $t.Terms}}<div class="terms">Terms: {{.}}</div>{{end}}
+    <div class="thanks">Thank you for your business.</div>
+  </footer>
+</article>
+{{- else}}
+<article class="sheet empty">
+  {{template "masthead" (dict2 $t $logo)}}
+  <h1 class="doc-title">Nothing to invoice</h1>
+  <p>No billable time was clocked{{if $t.Range}} in {{$t.Range}}{{end}}.</p>
+</article>
+{{- end}}
+{{- else -}}
+{{- range $c := $t.Clients}}
+<article class="sheet timesheet">
+  {{template "masthead" (dict2 $t $logo)}}
+  <header class="doc-head">
+    <h1 class="doc-title">Timesheet</h1>
+    <dl class="meta">
+      <div><dt>Client</dt><dd>{{$c.Name}}</dd></div>
+      {{- if $t.Range}}<div><dt>Period</dt><dd>{{$t.Range}}</dd></div>{{end}}
+      <div><dt>Hours</dt><dd>{{hours $c.Mins}}</dd></div>
+    </dl>
+  </header>
+
+  <table class="lines entries">
+    <thead>
+      <tr><th class="time">Time</th><th class="desc">Task</th><th class="num">Hours</th><th class="num">Amount</th></tr>
+    </thead>
+    {{- range $day := days $c.Entries}}
+    <tbody>
+      <tr class="project day"><th colspan="3">{{weekday (index $day 0).Date}}, {{long (index $day 0).Date}}</th><th class="num">{{hm (sum $day)}}</th></tr>
+      {{- range $day}}
+      <tr class="line{{if not .Billable}} unbillable{{end}}">
+        <td class="time">{{.Start}}–{{if .End}}{{.End}}{{else}}now{{end}}</td>
+        <td class="desc">{{.Task}}{{with .Project}}<div class="sub">{{.}}</div>{{end}}</td>
+        <td class="num">{{hours .Mins}}</td>
+        <td class="num">{{if .Billable}}{{money $c .Amount}}{{else}}<span class="muted">not billed</span>{{end}}</td>
+      </tr>
+      {{- end}}
+    </tbody>
+    {{- end}}
+  </table>
+
+  <section class="totals">
+    <table>
+      <tr><th>Clocked</th><td>{{hm $c.Mins}}</td></tr>
+      {{- if $c.UnbillableMins}}<tr><th>Not billable</th><td>{{hm $c.UnbillableMins}}</td></tr>{{end}}
+      {{- if $c.Key}}<tr class="grand"><th>Billed hours</th><td>{{hours $c.BilledMins}}</td></tr>{{end}}
+    </table>
+  </section>
+
+  <footer class="foot signatures">
+    <div class="sign"><span class="line"></span><span class="label">Submitted by</span></div>
+    <div class="sign"><span class="line"></span><span class="label">Approved by</span></div>
+    <div class="sign short"><span class="line"></span><span class="label">Date</span></div>
+  </footer>
+</article>
+{{- else}}
+<article class="sheet empty">
+  {{template "masthead" (dict2 $t $logo)}}
+  <h1 class="doc-title">Timesheet</h1>
+  <p>Nothing was clocked{{if $t.Range}} in {{$t.Range}}{{end}}.</p>
+</article>
+{{- end}}
+{{- end}}
+</body>
+</html>
+
+{{- define "masthead"}}
+<div class="masthead">
+  {{- if .Logo}}<img class="logo" src="{{.Logo}}" alt="">{{end}}
+  <div class="issuer">
+    {{- with .T.Issuer.Name}}<div class="issuer-name">{{.}}</div>{{end}}
+    <div class="issuer-lines">
+      {{- range .T.Issuer.Address}}<span>{{.}}</span>{{end}}
+      {{- with .T.Issuer.Email}}<span>{{.}}</span>{{end}}
+      {{- with .T.Issuer.Phone}}<span>{{.}}</span>{{end}}
+      {{- with .T.Issuer.Website}}<span>{{.}}</span>{{end}}
+      {{- with .T.Issuer.TaxId}}<span>{{.}}</span>{{end}}
+    </div>
+  </div>
+</div>
+{{- end}}

@@ -1,0 +1,22 @@
+#+TITLE: A #title with $dollars$ and <angles> and ] brackets [
+#+AUTHOR: O'Brien "Quote" \ Backslash
+
+* Heading with # and @ref and <label> and $ and ] :tag_one:@ctx:
+- [ ] item with ] and [ and `tick` and \ and // and /* x
+- term with :: colon :: description: with colon
+| a | b ] | c [ |
+|---+------+------|
+| # | $ $  | @x   |
+* [[https://example.com/q?a=1&b="x"][link with ] in it]] after
+Text (in parens) after *bold*(x). And =verb with ] and " and \= in it=.
+Footnote with brackets[fn:: inner [x] and ] alone].
+#+BEGIN_SRC
+no language, first line plain
+#+END_SRC
+#+BEGIN_SRC c
+ int main() { return 0; }  // ``` in code
+#+END_SRC
+* Same
+* Same
+* 1. Starts with number
+* = equals heading

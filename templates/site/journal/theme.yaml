@@ -1,0 +1,11 @@
+name: Journal
+description: a magazine - big display serif, a masthead, the newest story set large over a grid of the rest
+fonts:
+  - "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500..900;1,500..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=Inter:wght@400..700&display=swap"
+highlight:
+  light: xcode
+  dark: dracula
+layout:
+  toc: aside
+  backlinks: bottom
+  home: magazine

@@ -9,6 +9,8 @@ package export
 //	orgs export -f mermaid -query 'IsTask()' -out plan.mmd
 //	orgs export -list                    what this server can export to
 //	orgs export -list-themes             what the html exporter can wear
+//	orgs export -f manuscript story.org  a docx in manuscript format (-style novel)
+//	orgs export -f epub novel.org        an ebook (-theme literary)
 //
 // Two things to know before changing anything here.
 //
@@ -33,6 +35,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	sitecmd "github.com/ihdavids/orgs/cmd/oc/commands/site"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/pandoc"
 	"github.com/ihdavids/orgs/internal/common"
 )
@@ -49,12 +52,15 @@ type Export struct {
 	Stdout     bool
 	Printable  bool
 	Refresh    bool
+	NoRefresh  bool
 	FileLinks  bool
 	HttpsLinks bool
 	Rel        bool
 	List       bool
 	ListThemes bool
 	To         string
+	Style      string
+	Paper      string
 }
 
 func (self *Export) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -71,21 +77,40 @@ func (self *Export) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Stdout, "stdout", false, "print the answer even when -out was given")
 	fset.BoolVar(&self.Printable, "printable", false, "the printable variant, where the exporter has one")
 	fset.BoolVar(&self.Refresh, "refresh", false, "build again rather than answering from the pdf cache")
+	fset.BoolVar(&self.NoRefresh, "no-refresh", false, "export the file as it stands, without refreshing its dynamic blocks and formulas first")
 	fset.BoolVar(&self.FileLinks, "filelinks", false, "write links as file:// urls")
 	fset.BoolVar(&self.HttpsLinks, "httpslinks", false, "write links as https urls to this server")
 	fset.BoolVar(&self.Rel, "rel", false, "write image links relative to the -out file, for a page published beside its pictures")
 	fset.BoolVar(&self.List, "list", false, "what this server can export to")
 	fset.BoolVar(&self.ListThemes, "list-themes", false, "what the html exporter can wear")
 	fset.StringVar(&self.To, "to", "", "with -f pandoc: the format pandoc writes (docx, odt, epub, rst, ...)")
+	fset.StringVar(&self.Style, "style", "", "with -f manuscript: modern, shunn, novel or reader")
+	fset.StringVar(&self.Paper, "paper", "", "with -f manuscript: letter or a4; with -f typst-pdf: a4 or us-letter")
 }
 
 func (self *Export) Exec(core *commands.Core) {
 	if free := commands.FreeText(self.fset); free != "" && self.Query == "" {
 		self.Query = free
 	}
+	// A site is many files, so it is /site's zip rather than an exporter's
+	// string; orgs site is the command, and this is the same thing.
+	if strings.EqualFold(self.Format, "site") {
+		if self.ListThemes {
+			sitecmd.ListThemes(core)
+			return
+		}
+		sitecmd.Build(core, sitecmd.Options{Dir: self.Query, Out: self.Filename, Theme: self.Theme, Local: self.Local})
+		return
+	}
 	switch {
 	case self.List:
 		self.list(core)
+		return
+	case self.ListThemes && strings.HasPrefix(strings.ToLower(self.Format), "typst"):
+		self.typstTemplates(core)
+		return
+	case self.ListThemes && self.bookFormat() != "":
+		self.bookThemes(core)
 		return
 	case self.ListThemes:
 		self.themes(core)
@@ -96,6 +121,18 @@ func (self *Export) Exec(core *commands.Core) {
 	}
 	if strings.EqualFold(self.Format, "pdf") {
 		self.pdf(core)
+		return
+	}
+	if to := self.bookFormat(); to != "" {
+		self.book(core, to)
+		return
+	}
+	if f := strings.ToLower(self.Format); f == "beamer-pdf" || f == "beamerpdf" {
+		self.beamerPdf(core)
+		return
+	}
+	if f := strings.ToLower(self.Format); f == "typst-pdf" || f == "typstpdf" {
+		self.typstPdf(core)
 		return
 	}
 	if to := self.pandocFormat(); to != "" {
@@ -130,10 +167,16 @@ func (self *Export) list(core *commands.Core) {
 }
 
 func (self *Export) themes(core *commands.Core) {
+	// Each format with themes of its own answers for them; html is the rest.
+	path := "html/themes"
+	switch strings.ToLower(self.Format) {
+	case "beamer", "beamer-pdf", "beamerpdf":
+		path = "beamer/themes"
+	}
 	res, err := commands.SendReceiveGetErr[struct {
 		Ok     bool
 		Themes []string
-	}](core, "html/themes", nil)
+	}](core, path, nil)
 	if err != nil {
 		commands.Fail("orgs export: %v", err)
 	}
@@ -163,6 +206,9 @@ func (self *Export) run(core *commands.Core) {
 	}
 	if self.Rel {
 		ps["relto"] = self.relTo()
+	}
+	if self.NoRefresh {
+		ps["refresh"] = "f"
 	}
 
 	if self.Local {
@@ -242,12 +288,14 @@ func (self *Export) pdf(core *commands.Core) {
 	self.deliver(body)
 }
 
-// The formats that are pandoc's rather than an exporter of orgs' own.
+// The formats that are pandoc's rather than an exporter of orgs' own. typst
+// left this list when orgs got its own typst exporter; pandoc's is still
+// -f pandoc -to typst.
 var pandocFormats = map[string]bool{
-	"docx": true, "word": true, "odt": true, "epub": true, "epub2": true, "epub3": true, "pptx": true,
+	"docx": true, "word": true, "odt": true, "epub2": true, "pptx": true,
 	"rtf": true, "rst": true, "mediawiki": true, "wiki": true, "asciidoc": true, "adoc": true,
 	"plain": true, "txt": true, "textile": true, "dokuwiki": true, "jira": true, "man": true,
-	"typst": true, "docbook": true, "icml": true, "opml": true, "commonmark": true, "gfm": true,
+	"docbook": true, "icml": true, "opml": true, "commonmark": true, "gfm": true,
 	"ipynb": true, "texinfo": true, "fb2": true,
 }
 
@@ -286,6 +334,127 @@ func (self *Export) pandoc(core *commands.Core, to string) {
 	self.deliver(body)
 }
 
+// The formats orgs writes itself (/book): a manuscript and an ebook. epub was
+// pandoc's; pandoc's is still -f pandoc -to epub.
+func (self *Export) bookFormat() string {
+	switch strings.ToLower(self.Format) {
+	case "manuscript", "ms":
+		return "docx"
+	case "epub", "epub3", "ebook":
+		return "epub"
+	}
+	return ""
+}
+
+func (self *Export) bookThemes(core *commands.Core) {
+	res, err := commands.SendReceiveGetErr[struct {
+		Ok     bool
+		Styles []string
+		Themes []string
+	}](core, "book", map[string]string{"list": "t"})
+	if err != nil {
+		commands.Fail("orgs export: %v", err)
+	}
+	names := res.Themes
+	if self.bookFormat() == "docx" {
+		names = res.Styles
+	}
+	commands.Render(names, func() {
+		for _, n := range names {
+			fmt.Println(n)
+		}
+	})
+}
+
+func (self *Export) book(core *commands.Core, to string) {
+	if self.Local {
+		commands.Fail("orgs export -f %s: -local is not supported here; -out writes here", self.Format)
+	}
+	if self.Filename == "" {
+		base := filepath.Base(self.Query)
+		self.Filename = strings.TrimSuffix(base, filepath.Ext(base)) + "." + to
+	}
+	ps := map[string]string{"filename": self.Query, "to": to, "style": self.Style, "paper": self.Paper, "theme": self.Theme}
+	body, h, status, err := core.Rest.GetRawHeader("book", ps)
+	if err != nil {
+		commands.Fail("orgs export: %v", err)
+	}
+	if status >= 400 {
+		commands.Fail("orgs export -f %s: %s", self.Format, strings.TrimSpace(string(body)))
+	}
+	for _, w := range h.Values("X-Orgs-Warning") {
+		fmt.Fprintf(os.Stderr, "%s\n", w)
+	}
+	if n := h.Get("X-Orgs-Words"); n != "" {
+		fmt.Fprintf(os.Stderr, "%s words\n", n)
+	}
+	self.deliver(body)
+}
+
+// A beamer deck compiled to pdf: bytes, so its own endpoint, as /pdf is.
+func (self *Export) beamerPdf(core *commands.Core) {
+	if self.Local {
+		commands.Fail("orgs export -f beamer-pdf: -local is not supported here; -out writes here")
+	}
+	if self.Filename == "" {
+		base := filepath.Base(self.Query)
+		self.Filename = strings.TrimSuffix(base, filepath.Ext(base)) + ".pdf"
+	}
+	ps := map[string]string{"filename": self.Query, "theme": self.Theme}
+	if self.Refresh {
+		ps["refresh"] = "t"
+	}
+	body, ctype, status, err := core.Rest.GetRaw("beamer/pdf", ps)
+	if err != nil {
+		commands.Fail("orgs export: %v", err)
+	}
+	if status >= 400 || !strings.Contains(ctype, "pdf") {
+		commands.Fail("orgs export -f beamer-pdf: %s", strings.TrimSpace(string(body)))
+	}
+	self.deliver(body)
+}
+
+// typst-pdf is compiled on the server (/typst/pdf), which answers with bytes
+// as /pdf does.
+func (self *Export) typstPdf(core *commands.Core) {
+	if self.Local {
+		commands.Fail("orgs export -f typst-pdf: -local is not supported; -out writes here")
+	}
+	if self.Filename == "" {
+		base := filepath.Base(self.Query)
+		self.Filename = strings.TrimSuffix(base, filepath.Ext(base)) + ".pdf"
+	}
+	ps := map[string]string{"filename": self.Query, "template": self.Theme, "paper": self.Paper}
+	if self.Refresh {
+		ps["refresh"] = "t"
+	} else if self.NoRefresh {
+		ps["refresh"] = "f"
+	}
+	body, ctype, status, err := core.Rest.GetRaw("typst/pdf", ps)
+	if err != nil {
+		commands.Fail("orgs export: %v", err)
+	}
+	if status >= 400 || !strings.Contains(ctype, "pdf") {
+		commands.Fail("orgs export -f typst-pdf: %s", strings.TrimSpace(string(body)))
+	}
+	self.deliver(body)
+}
+
+func (self *Export) typstTemplates(core *commands.Core) {
+	res, err := commands.SendReceiveGetErr[struct {
+		Ok        bool
+		Templates []string
+	}](core, "typst/templates", nil)
+	if err != nil {
+		commands.Fail("orgs export: %v", err)
+	}
+	commands.Render(res.Templates, func() {
+		for _, t := range res.Templates {
+			fmt.Println(t)
+		}
+	})
+}
+
 // Where the bytes end up: a file when -out was given, stdout otherwise, and
 // both when -stdout was asked for as well.
 func (self *Export) deliver(body []byte) {
@@ -300,6 +469,9 @@ func (self *Export) deliver(body []byte) {
 	}
 	if commands.Wrote(fmt.Sprintf("write %d bytes to %s", len(body), self.Filename), nil) {
 		return
+	}
+	if dir := filepath.Dir(self.Filename); dir != "." {
+		os.MkdirAll(dir, 0o755)
 	}
 	if err := os.WriteFile(self.Filename, body, 0644); err != nil {
 		commands.Fail("orgs export: could not write %s: %v", self.Filename, err)
@@ -320,8 +492,15 @@ const usage = `  orgs export -f html notes.org -out notes.html
   orgs export -f html notes.org -theme docs        (to stdout)
   orgs export -f html docs.org -out docs/docs.html -rel   (links relative to docs/)
   orgs export -f pdf  adventure.org -out book.pdf
-  orgs export -f docx notes.org                    (pandoc: docx, odt, epub, rst, ...)
+  orgs export -f manuscript story.org              (a docx: -style modern, shunn, novel, reader)
+  orgs export -f epub novel.org                    (an ebook: -theme classic, literary, modern, plain)
+  orgs export -f docx notes.org                    (pandoc: docx, odt, rst, ...)
   orgs export -f mermaid -query 'IsTask()' -out plan.mmd
+  orgs export -f beamer talk.org -out talk.tex     (a LaTeX Beamer deck; -f beamer-pdf compiles it)
+  orgs export -f typst notes.org -out notes.typ -theme report   (-f typst-pdf compiles it: article, report, notes)
+  orgs export -f todotxt inbox.org -out todo.txt   (tasks as todo.txt; a query works too)
+  orgs export -f ics 'HasDeadline()' -out due.ics  (events and to-dos for a calendar)
+  orgs export -f site notes/blog -out public -theme paper   (a static web site; see orgs site)
   orgs export -list          what this server can export to
   orgs export -list-themes   what the html exporter can wear
 

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"sort"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -256,6 +257,26 @@ var ExporterRegistry = map[string]ExportCreator{}
 func AddExporter(name string, creator ExportCreator) {
 	//fmt.Fprintf(os.Stderr, "ADDING EXPORTER: %s\n", name)
 	ExporterRegistry[name] = creator
+}
+
+// Standalone marks an exporter that needs no settings: it answers to its name
+// whether or not the yaml lists it under server.exporters. An exporter that
+// wants a password, a url or a template folder is not one.
+type Standalone interface {
+	Standalone() bool
+}
+
+// StandaloneExporters is the names of every registered exporter that is
+// Standalone, sorted.
+func StandaloneExporters() []string {
+	out := []string{}
+	for name, create := range ExporterRegistry {
+		if s, ok := create().(Standalone); ok && s.Standalone() {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 func FindExporter(name string) ExportCreator {

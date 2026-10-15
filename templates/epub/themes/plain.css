@@ -1,0 +1,19 @@
+/* plain - almost nothing: the reader's own font, size, margins and spacing
+   win. Only what the structure needs (indents, scene breaks, notes). */
+p { margin: 0; text-indent: 1.2em; }
+p.first, .scene-break + p, blockquote p, .verse p, li p, dd p, figcaption, .center p { text-indent: 0; }
+.chapter-head { margin: 2em 0 1.5em; text-align: center; }
+.chapter-label { text-indent: 0; text-align: center; }
+.scene-break { text-indent: 0; text-align: center; margin: 1em 0; }
+.center, .center p { text-align: center; }
+.verse { margin: 1em 2em; }
+pre { white-space: pre-wrap; }
+figure { margin: 1em 0; text-align: center; }
+figure img { max-width: 100%; }
+.underline { text-decoration: underline; }
+a.noteref { vertical-align: super; font-size: .7em; line-height: 0; }
+.footnotes p { text-indent: 0; }
+.titlepage, .dedication { text-align: center; margin-top: 25%; }
+.titlepage p, .dedication p { text-indent: 0; text-align: center; }
+.cover { text-align: center; } .cover img { max-width: 100%; max-height: 100%; }
+nav.toc ol { list-style: none; }

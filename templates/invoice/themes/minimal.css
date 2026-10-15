@@ -1,0 +1,24 @@
+/* minimal - Swiss: one sans, black on white, hairlines, a lot of air, and the
+   total set large. The accent is only the total. */
+:root {
+  --accent: #000000;
+  --ink: #000000;
+  --muted: #7a7a7a;
+  --rule: #e6e6e6;
+  --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --margin: 0.9in;
+}
+body { font-size: 9.5pt; }
+.masthead { margin-bottom: 56px; }
+.issuer-name { font-weight: 500; font-size: 10pt; }
+.issuer-lines span { display: block; }
+.issuer-lines span + span::before { content: none; }
+.doc-head { margin-bottom: 40px; align-items: flex-start; }
+.doc-title { font-weight: 300; font-size: 40pt; letter-spacing: -.02em; }
+.label, .lines thead th { font-weight: 500; letter-spacing: .04em; text-transform: none; font-size: 8pt; }
+.lines thead th { border-bottom: .5pt solid var(--ink); }
+.lines tr.line td { border-bottom: .5pt solid var(--rule); padding: 10px 8px; }
+.lines tr.project th { color: var(--ink); font-weight: 500; padding-top: 20px; }
+.amount-due .big { font-weight: 300; font-size: 30pt; letter-spacing: -.02em; }
+.totals tr.grand th, .totals tr.grand td { border-top: .5pt solid var(--ink); font-weight: 400; font-size: 16pt; }
+.thanks { color: var(--muted); }

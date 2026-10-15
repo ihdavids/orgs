@@ -1,0 +1,23 @@
+/* classic - a bookish letterhead: serif type, small caps, a double rule under
+   the masthead and a double rule under the total. Navy by default. */
+:root {
+  --accent: #1f3a5f;
+  --ink: #1b1b1b;
+  --muted: #6d6a64;
+  --rule: #dcd8d0;
+  --font-body: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-display: var(--font-body);
+  --font-num: var(--font-body);
+}
+body { font-size: 10.5pt; font-variant-numeric: oldstyle-nums proportional-nums; }
+.masthead { flex-direction: column; align-items: center; text-align: center; padding-bottom: 14px; border-bottom: 3px double var(--accent); }
+.issuer-name { font-size: 18pt; font-weight: 400; letter-spacing: .06em; font-variant: small-caps; color: var(--accent); }
+.issuer-lines { font-style: italic; }
+.doc-title { font-weight: 400; font-size: 30pt; letter-spacing: .04em; font-variant: small-caps; }
+.label, .lines thead th { font-family: var(--font-body); font-weight: 400; font-variant: small-caps; text-transform: lowercase; letter-spacing: .1em; font-size: 10pt; }
+.lines thead th { border-bottom: 1px solid var(--accent); color: var(--accent); }
+.lines .num, .totals td, .meta dd, .amount-due .big { font-variant-numeric: lining-nums tabular-nums; }
+.lines tr.project th { font-family: var(--font-body); font-style: italic; font-weight: 400; font-size: 10.5pt; }
+.amount-due .big { font-weight: 400; color: var(--accent); }
+.totals tr.grand th, .totals tr.grand td { border-top: 1px solid var(--accent); border-bottom: 3px double var(--accent); font-weight: 600; }
+.thanks { font-style: italic; text-align: center; padding-top: 8px; border-top: 1px solid var(--rule); }
