@@ -20,6 +20,11 @@ func TestMarkerStampSpellings(t *testing.T) {
 			Start: common.GanttMarkerDay{Date: "2004-08-23", Time: "10:00", Until: "11:00"},
 			End:   &common.GanttMarkerDay{Date: "2004-08-26", Time: "10:00", Until: "11:00"}},
 			"<2004-08-23 Mon 10:00-11:00>--<2004-08-26 Thu 10:00-11:00>"},
+		{common.GanttMarkerEdit{Start: common.GanttMarkerDay{Date: "2026-10-05"}, Repeat: "+1w"}, "<2026-10-05 Mon +1w>"},
+		{common.GanttMarkerEdit{Start: common.GanttMarkerDay{Date: "2026-10-05", Time: "09:30", Until: "09:45"}, Repeat: ".+2d/4d"},
+			"<2026-10-05 Mon 09:30-09:45 .+2d/4d>"},
+		{common.GanttMarkerEdit{Start: common.GanttMarkerDay{Date: "2026-10-09"}, End: &common.GanttMarkerDay{Date: "2026-10-10"}, Repeat: "+2w"},
+			"<2026-10-09 Fri +2w>--<2026-10-10 Sat +2w>"},
 	}
 	for _, c := range cases {
 		got, err := markerDateText(&c.e)
@@ -33,6 +38,11 @@ func TestMarkerStampSpellings(t *testing.T) {
 	}
 	if _, err := markerDateText(&common.GanttMarkerEdit{Start: common.GanttMarkerDay{Date: "2004-08-23", Time: "10am"}}); err == nil {
 		t.Error("a time that is not HH:MM was accepted")
+	}
+	for _, r := range []string{"1w", "+w", "+1x", "+1w>", "+1w <2026-01-01>"} {
+		if _, err := markerDateText(&common.GanttMarkerEdit{Start: common.GanttMarkerDay{Date: "2026-10-05"}, Repeat: r}); err == nil {
+			t.Errorf("the repeater %q was accepted", r)
+		}
 	}
 }
 

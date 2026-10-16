@@ -69,9 +69,11 @@ type GanttView struct {
 	// wins over StoredQuery. A view needs one or the other.
 	Query string `yaml:"query,omitempty" json:"query,omitempty"`
 	// What narrows the rows: a regular expression a heading's title must match
-	// ("regex"), one it must not match ("notregex"), or a second query whose
-	// headings are the ones kept ("query"). Empty is "query", which is what a
-	// view saved before there was a choice meant.
+	// ("regex"), one it must not match ("notregex"), a second query whose
+	// headings are the ones kept ("query"), or a comma-separated list of
+	// people a task is ("assignee") or is not ("notassignee") assigned to.
+	// Empty is "query", which is what a view saved before there was a choice
+	// meant.
 	Filter     string `yaml:"filter,omitempty" json:"filter,omitempty"`
 	FilterMode string `yaml:"filterMode,omitempty" json:"filterMode,omitempty"`
 	// Overdue and slipping work highlighted.

@@ -149,6 +149,9 @@ type GanttMarkerEdit struct {
 	Start GanttMarkerDay
 	// Set for a range; nil for a single day.
 	End *GanttMarkerDay
+	// The repeater, as org writes it ("+1w", ".+2d/4d"), put into each
+	// stamp; "" for a date that does not repeat.
+	Repeat string
 }
 
 // ---------------------------------------------------------------------------

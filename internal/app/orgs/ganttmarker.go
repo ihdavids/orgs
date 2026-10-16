@@ -25,11 +25,13 @@ var (
 	markerDeadRe  = regexp.MustCompile(`DEADLINE:\s*<[^>]*>`)
 	markerSchedRe = regexp.MustCompile(`SCHEDULED:\s*<[^>]*>`)
 	markerHeadRe  = regexp.MustCompile(`^(\*+)\s`)
+	// A repeater: +1w, ++2m, .+1d, with org-habit's /4d after it.
+	markerRepeatRe = regexp.MustCompile(`^(\+|\+\+|\.\+)\d+[hdwmy](/\d+[hdwmy])?$`)
 )
 
 // One end of a marker as org writes it: <2026-10-14 Wed>, <… 10:00>, or
-// <… 10:00-11:00>.
-func markerStamp(d common.GanttMarkerDay) (string, error) {
+// <… 10:00-11:00>, with the repeater last when it has one (<… +1w>).
+func markerStamp(d common.GanttMarkerDay, repeat string) (string, error) {
 	t, err := time.Parse("2006-01-02", strings.TrimSpace(d.Date))
 	if err != nil {
 		return "", fmt.Errorf("%q is not a date (YYYY-MM-DD)", d.Date)
@@ -47,12 +49,21 @@ func markerStamp(d common.GanttMarkerDay) (string, error) {
 			s += "-" + u
 		}
 	}
+	if repeat != "" {
+		s += " " + repeat
+	}
 	return "<" + s + ">", nil
 }
 
-// The whole date: one stamp, or two joined by -- for a range.
+// The whole date: one stamp, or two joined by -- for a range. A repeating
+// range carries the repeater on both stamps: go-org reads it from the first,
+// and both is how org itself writes a range that is to be shifted whole.
 func markerDateText(e *common.GanttMarkerEdit) (string, error) {
-	a, err := markerStamp(e.Start)
+	repeat := strings.TrimSpace(e.Repeat)
+	if repeat != "" && !markerRepeatRe.MatchString(repeat) {
+		return "", fmt.Errorf("%q is not a repeater (like +1w)", repeat)
+	}
+	a, err := markerStamp(e.Start, repeat)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +73,7 @@ func markerDateText(e *common.GanttMarkerEdit) (string, error) {
 	if e.End.Date < e.Start.Date {
 		return "", fmt.Errorf("a range has to end on or after the day it starts")
 	}
-	b, err := markerStamp(*e.End)
+	b, err := markerStamp(*e.End, repeat)
 	if err != nil {
 		return "", err
 	}
@@ -217,9 +228,11 @@ func setMarkerDate(lines []string, from, own int, ind, kind, date string, isRang
 	| =Start=      | object | ={Date, Time, Until}=: a day, an optional time and the end  |
 	|              |        | of a span within that day.                                  |
 	| =End=        | object | The same for the last day of a range; absent for one day.   |
+	| =Repeat=     | string | A repeater for the date, =+1w=, =.+2d=; empty for none.     |
 
 	A range is written as =<a>--<b>=, and each end may be a span of its day,
-	=<2004-08-23 Mon 10:00-11:00>--<2004-08-26 Thu 10:00-11:00>=.
+	=<2004-08-23 Mon 10:00-11:00>--<2004-08-26 Thu 10:00-11:00>=. A repeater
+	goes at the end of each stamp, =<2026-10-05 Mon +1w>=.
 
 	*Response:* A =ResultMsg=.
 EDOC */
