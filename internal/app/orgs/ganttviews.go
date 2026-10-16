@@ -122,6 +122,9 @@ type GanttView struct {
 	// app's light or dark mode.
 	Colors    map[string]string `yaml:"colors,omitempty" json:"colors,omitempty"`
 	ShutLanes []string          `yaml:"shutLanes,omitempty" json:"shutLanes,omitempty"`
+	// Lanes in the order their headings were dragged into in worg. Only the
+	// lanes named move, among the places they hold.
+	LaneOrder []string `yaml:"laneOrder,omitempty" json:"laneOrder,omitempty"`
 	Markers   *GanttMarkers     `yaml:"markers,omitempty" json:"markers,omitempty"`
 	// More marker queries, each with its own look.
 	MarkerSets []GanttMarkers `yaml:"markerSets,omitempty" json:"markerSets,omitempty"`
