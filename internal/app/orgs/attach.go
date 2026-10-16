@@ -331,19 +331,29 @@ func ensurePropertyDrawer(lines []string, from, to int, ind string) (out []strin
 }
 
 // Set one property inside a drawer that is known to exist. A new line takes
-// the indent of the drawer it goes into, not the one the caller would have
-// used for a drawer of its own: Emacs (since org 9.5) writes drawers in column
-// zero, and a property indented by heading depth inside one of those reads as
-// a stray. ind is only used when the drawer's own line cannot be read.
+// the indent the drawer's other properties already have, not the one the
+// caller would have used for a drawer of its own: Emacs (since org 9.5) writes
+// drawers and their properties in column zero, and a property indented by
+// heading depth inside one of those reads as a stray. The other way round, a
+// drawer whose properties sit two in from :PROPERTIES: used to be given its
+// new line at the drawer's own indent, out of line with the rest. An empty
+// drawer gets two spaces in from :PROPERTIES:. ind is only used when the
+// drawer's own line cannot be read.
 func setPropIn(lines []string, ps, pe int, ind, key, val string) (out []string, newPe int) {
 	if ps >= 0 && ps < len(lines) {
-		ind = lines[ps][:len(lines[ps])-len(strings.TrimLeft(lines[ps], " \t"))]
+		ind = lines[ps][:len(lines[ps])-len(strings.TrimLeft(lines[ps], " \t"))] + "  "
 	}
+	sibling := false
 	for i := ps + 1; i < pe && i < len(lines); i++ {
-		if m := propLineRe.FindStringSubmatch(lines[i]); m != nil && strings.EqualFold(m[2], key) {
-			lines[i] = propLine(m[1], m[2], val, 0)
-			alignDrawer(lines, ps, pe)
-			return lines, pe
+		if m := propLineRe.FindStringSubmatch(lines[i]); m != nil {
+			if strings.EqualFold(m[2], key) {
+				lines[i] = propLine(m[1], m[2], val, 0)
+				alignDrawer(lines, ps, pe)
+				return lines, pe
+			}
+			if !sibling {
+				ind, sibling = m[1], true
+			}
 		}
 	}
 	lines = splice(lines, pe, []string{propLine(ind, key, val, 0)})

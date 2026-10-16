@@ -18,7 +18,7 @@
 	- AFTER
 
 	Other Key Properties
-	- ASSIGNED
+	- ASSIGNEE (or ASSIGNED, as jira writes it)
 	- RID
 	- RESOURCEID
 
@@ -319,6 +319,10 @@ func HeadlineAloneHasTag(name string, tags []string) bool {
 
 func GetResource(db common.ODb, resource string, td *common.Todo) string {
 	if res, ok := td.Props["ASSIGNED"]; ok {
+		resource = res
+	}
+	// ASSIGNEE is what the gantt editor writes; ASSIGNED is jira's.
+	if res, ok := td.Props["ASSIGNEE"]; ok {
 		resource = res
 	}
 	if res, ok := td.Props["RID"]; ok {

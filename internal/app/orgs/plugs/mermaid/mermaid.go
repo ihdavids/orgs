@@ -222,6 +222,10 @@ func GetResource(db common.ODb, resource string, td *common.Todo) string {
 	if res, ok := td.Props["ASSIGNED"]; ok {
 		resource = res
 	}
+	// ASSIGNEE is what the gantt editor writes; ASSIGNED is jira's.
+	if res, ok := td.Props["ASSIGNEE"]; ok {
+		resource = res
+	}
 	if res, ok := td.Props["RID"]; ok {
 		resource = res
 	}
@@ -251,7 +255,9 @@ func GetSection(db common.ODb, td *common.Todo) string {
 		}
 	}
 	if section == "" {
-		if res, ok := td.Props["ASSIGNED"]; ok {
+		if res, ok := td.Props["ASSIGNEE"]; ok {
+			section = res
+		} else if res, ok := td.Props["ASSIGNED"]; ok {
 			section = res
 		}
 	}

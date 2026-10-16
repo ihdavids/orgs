@@ -803,7 +803,7 @@ func (a *app) newEntry() {
 				props[k] = v
 			}
 			if q.Person != "" {
-				props["ASSIGNED"] = q.Person
+				props["ASSIGNEE"] = q.Person
 			}
 			headline := q.Headline
 			if q.Priority != "" {

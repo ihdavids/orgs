@@ -79,7 +79,7 @@ type GanttView struct {
 	// How far each task could slip, drawn as a tail after its bar.
 	Slack bool `yaml:"slack,omitempty" json:"slack,omitempty"`
 	// Each person's load per day, drawn under the chart, and the property
-	// that names the person (ASSIGNED when empty).
+	// that names the person (ASSIGNEE when empty).
 	Workload     bool   `yaml:"workload,omitempty" json:"workload,omitempty"`
 	WorkloadProp string `yaml:"workloadProp,omitempty" json:"workloadProp,omitempty"`
 	// The time clocked on each task, drawn under its bar.

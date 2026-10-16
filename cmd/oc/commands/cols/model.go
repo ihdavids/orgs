@@ -417,7 +417,7 @@ func Complete(text string, props []common.ColumnPropValues) (int, []Suggestion) 
 //
 //	NEXT Write the spec 3d @Sam #design ^fri !A RISK=high
 //
-// a keyword first, #tags, @person (ASSIGNED), effort, ^date (read the way
+// a keyword first, #tags, @person (ASSIGNEE), effort, ^date (read the way
 // orgs sched reads one - internal/orgdate, which is parseWhen's twin), !A
 // priority, KEY=value properties; the rest is the title.
 

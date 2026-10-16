@@ -335,7 +335,7 @@ func ganttNewLines(lvl int, a *common.GanttAdd) []string {
 	if len(props) > 0 {
 		lines = append(lines, indent+":PROPERTIES:")
 		for _, p := range props {
-			lines = append(lines, indent+":"+p[0]+": "+p[1])
+			lines = append(lines, indent+"  :"+p[0]+": "+p[1])
 		}
 		lines = append(lines, indent+":END:")
 	}

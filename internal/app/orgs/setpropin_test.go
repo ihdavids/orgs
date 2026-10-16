@@ -43,3 +43,27 @@ func TestSetPropInMatchesTheDrawer(t *testing.T) {
 		t.Errorf("property not written:\n%s", strings.Join(out, "\n"))
 	}
 }
+
+// Properties two in from their drawer (what the gantt files are written with)
+// get a new one at the same depth, and an empty drawer gets two spaces in.
+func TestSetPropInMatchesTheSiblings(t *testing.T) {
+	lines := []string{
+		"*** TODO Docs",
+		"    :PROPERTIES:",
+		"      :EFFORT: 2d",
+		"    :END:",
+	}
+	out, _ := setPropIn(lines, 1, 3, "", "ASSIGNEE", "ann")
+	if !strings.HasPrefix(out[3], "      :ASSIGNEE:") {
+		t.Errorf("new property not lined up with its siblings:\n%s", strings.Join(out, "\n"))
+	}
+	lines = []string{
+		"*** TODO Docs",
+		"    :PROPERTIES:",
+		"    :END:",
+	}
+	out, _ = setPropIn(lines, 1, 2, "", "EFFORT", "1d")
+	if !strings.HasPrefix(out[2], "      :EFFORT:") {
+		t.Errorf("property in an empty drawer not two in from it:\n%s", strings.Join(out, "\n"))
+	}
+}

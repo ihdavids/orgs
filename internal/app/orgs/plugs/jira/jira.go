@@ -292,7 +292,7 @@ func (self *JiraSync) CreateJira(db common.ODb, target *common.Target) (common.R
 			project := getProp(sec, "PROJECTKEY", "CLI")
 			priority := getProp(sec, "PRIORITY", "")
 			labels := getProp(sec, "LABELS", "")
-			assigned := getProp(sec, "ASSIGNED", "")
+			assigned := getProp(sec, "ASSIGNED", getProp(sec, "ASSIGNEE", ""))
 			devFacing := getProp(sec, "DEVFACING", "")
 			id := getProp(sec, "CUSTOM_ID", "")
 			if id != "" {
