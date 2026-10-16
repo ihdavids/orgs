@@ -2854,12 +2854,13 @@ func RequestLastChild(w http.ResponseWriter, r *http.Request) {
 	    EDOC
 */
 func RequestTags(w http.ResponseWriter, r *http.Request) {
+	// No tags anywhere is an empty list, not an error: worg feeds this
+	// straight to an autocomplete, and a string there took the page down.
 	res := GetDb().GetAllTags()
 	if res == nil {
-		json.NewEncoder(w).Encode("could not get tags list")
-	} else {
-		json.NewEncoder(w).Encode(res)
+		res = []string{}
 	}
+	json.NewEncoder(w).Encode(res)
 }
 
 // insideOrgDirs cleans a path and says whether it is inside one of the org
