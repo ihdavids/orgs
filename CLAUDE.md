@@ -97,6 +97,10 @@ Each of these comes up in several features below. They are stated once here, and
   - the id a dependency names a heading by: `ganttIdFor` in `internal/app/orgs/ganttlink.go` ↔ `idFor` in `worg/src/ganttops.ts` (`TestGanttIdFor`)
   - day planner load, overlaps and first free slot: `planLoad`/`planOverlaps`/`planFreeSlot` in `internal/app/orgs/planner.go` ↔ `dayLoad`/`overlapPairs`/`freeSlot` in `worg/src/planner.ts` (same cases in `planner_test.go` and `planner.test.ts`)
   - the triage walk (which item is next, "3 of 12", keep place by file + outline path) and tally names: `Walker.Walk`/`tallyName` in `cmd/oc/commands/triage/triage.go` ↔ `nextUnseen`/`tallyName` in `worg/src/review.ts`
+  - what a saved dungeon picture may contain: `safeSvg` in `internal/app/orgs/dnddungeon.go` ↔ `refused` in `worg/src/dungeon.test.ts`
+  - dungeon room shapes: `inShape` in `internal/common/dnd/randgen/dungeongrid.go` ↔ `inShape` in `worg/src/dungeon.ts` (`TestRoomShapesTouchEverySide` and the matching case in `dungeon.test.ts`)
+  - a generated map's fog square and its geometry: `randgen.FogCell`/`FitWorld` ↔ `fogCell`/`worldDungeon` in `worg/src/dungeon.ts`; the hex layout `mapgen.HexCenter` ↔ `hexGridPath` in `worg/src/dungeonrender.ts` (the overlay must lie on a hex world's hexes)
+  - which bytes are a picture a dungeon may be saved with: `pictureExt` in `internal/app/orgs/dnddungeon.go` ↔ `sniff` in `worg/src/uvtt.ts` (`TestPictureExt`, `uvtt.test.ts`)
   - focus countdown and status wording (`🍅 12:31 Write the report`, `☕ 4:59 break`): `cmd/oc/commands/focus/format.go` ↔ `worg/src/focus.ts`
 
 ### Where the rest of the notes live
@@ -132,6 +136,7 @@ Feature notes sit in `CLAUDE.md` files beside the code and load when you work th
 - `internal/common/` — shared client/server code: `restclient.go` (`RestGet[T]` / `RestPost[T]`), `serversettings.go`, `plugs.go` (`Exporter` / `Poller` / `Updater` interfaces and `PluginManager`), wire data types.
 - `internal/templates/` — pongo2 template manager for exporters and capture templates. `values.go` is the one list of names every template answers (`{{date}}`, `{{today}}`, `{{week_start}}`, `{{uuid}}`…): file templates get them from `standardContext`, capture templates through `common.CapAutoValue`. Add a name there, not in either caller. Standard values are marked safe, so `<…>` timestamps aren't html-escaped.
 - `internal/common/mdorg/`, `todotxt/`, `ical/` — markdown (and Obsidian vaults), todo.txt and iCalendar, read and (for the last two) written. Pure packages, used by `orgs import` on the client and by the `todotxt`/`ics` exporters on the server, so a round trip is read by the rules it was written by.
+- `internal/common/mapgen/` — map generators for the tabletop tools: a region (mapgen4's way, or inked like Perilous Shores), a world on hexes (hexgen's), a town and a village (watabou's city and village generators', drawn as SVG with shared roofs, trees, mills, boats and carts in `decor.go`). Pure: params in, picture out. Notes in `docs/claude/worg.md` (Generated maps).
 - `internal/orgdate/` — reads a date the way a person types it (`tomorrow`, `+2w`, `fri 14:00`). Shared by `orgs sched`/`deadline`/`close` (through `commands.ParseDate`) and the template function `when()`, so the two can't disagree.
 - `templates/`, `web/`, `webfonts/` — static assets served by the HTTP file server beside the REST API.
 

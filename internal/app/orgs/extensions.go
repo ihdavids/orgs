@@ -137,6 +137,9 @@ type UserExt struct {
 	Review *common.ReviewState `yaml:"review,omitempty" json:"review,omitempty"`
 	// Saved queries being watched for new matches (see querywatch.go).
 	QueryWatches []common.QueryWatch `yaml:"queryWatches,omitempty" json:"queryWatches,omitempty"`
+	// The org file the initiative tracker keeps this person's party in (see
+	// dndcombat.go). Chosen once, from worg.
+	DndParty string `yaml:"dndParty,omitempty" json:"dndParty,omitempty"`
 }
 
 // ExtensionsConfig is the root of the per-user extensions YAML file.
