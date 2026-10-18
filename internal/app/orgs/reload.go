@@ -125,6 +125,8 @@ func ReloadConfig() (common.ReloadResult, error) {
 	o.DndPaths = n.DndPaths
 	o.NoUpdateCheck = n.NoUpdateCheck
 	o.DndSessionPath = n.DndSessionPath
+	o.DndSharedPath = n.DndSharedPath
+	o.DndSoundPath = n.DndSoundPath
 	o.DndSessionTemplate = n.DndSessionTemplate
 	o.AccessControl = n.AccessControl
 	o.Log = n.Log

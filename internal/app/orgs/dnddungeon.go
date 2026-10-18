@@ -225,7 +225,7 @@ func PostDndDungeonSave(w http.ResponseWriter, r *http.Request) {
 		var prev randgen.Dungeon
 		if json.Unmarshal(old, &prev) == nil && prev.Rows == req.Dungeon.Rows && prev.Cols == req.Dungeon.Cols {
 			st := readDungeonState(fileLines(fname))
-			if st.Fog != "" || len(st.Party) == 2 || st.FogGM || st.FogPlayers || st.Combat != "" || st.Track || st.Left != "" {
+			if st.Fog != "" || len(st.Party) == 2 || st.FogGM || st.FogPlayers || st.Combat != "" || st.Track || st.Left != "" || st.Roving != "" || st.Measure != "" || st.Trail != "" || st.Camera != "" || st.Fx != "" || st.Tokens != "" {
 				keep = &st
 			}
 		}
@@ -322,10 +322,32 @@ func PostDndDungeonSave(w http.ResponseWriter, r *http.Request) {
 	| =file=    | string | yes      | The dungeon's org file.                       |
 	| =path=    | string | yes      | The picture, relative to it (=maps/x-map.jpg=). |
 
+	A path starting =@shared/= is in the shared folder (=dndSharedPath=) instead: its =tokens= or
+	=images=, pictures or (tokens) videos.
+
 	*Response:* the picture.
 	EDOC */
 func RequestDndDungeonImage(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
+	// A token or picture in the shared folder (dndSharedPath).
+	if rel := r.URL.Query().Get("path"); strings.HasPrefix(rel, sharedPrefix) {
+		var p string
+		var ok bool
+		for _, folder := range []string{"tokens", "images"} {
+			if p, _, ok = resolveShow("", folder, rel); ok {
+				break
+			}
+		}
+		ext := strings.ToLower(filepath.Ext(p))
+		if !ok || !(showExts[ext] || videoExts[ext]) {
+			dndError(w, http.StatusBadRequest, "not a picture in the shared folder")
+			return
+		}
+		if !serveShow(w, r, p) {
+			dndError(w, http.StatusNotFound, "no picture at %s", rel)
+		}
+		return
+	}
 	fname, ok := insideOrgDirs(strings.TrimSpace(r.URL.Query().Get("file")))
 	if !ok {
 		dndError(w, http.StatusBadRequest, "the file has to be inside one of the org directories")
@@ -336,15 +358,10 @@ func RequestDndDungeonImage(w http.ResponseWriter, r *http.Request) {
 		dndError(w, http.StatusBadRequest, "not a picture beside the dungeon")
 		return
 	}
-	if _, err := os.Stat(p); err != nil {
+	// A file, or a picture inside a zip in a tokens or images folder.
+	if !serveShow(w, r, p) {
 		dndError(w, http.StatusNotFound, "no picture at %s", r.URL.Query().Get("path"))
-		return
 	}
-	w.Header().Set("Cache-Control", "private, max-age=600")
-	if strings.EqualFold(filepath.Ext(p), ".svg") {
-		w.Header().Set("Content-Security-Policy", svgPolicy)
-	}
-	http.ServeFile(w, r, p)
 }
 
 /* SDOC: API
@@ -544,6 +561,22 @@ type dungeonState struct {
 	// The party went down (or up) linked stairs to this map: the players'
 	// screen goes after it. Cleared when the party comes back.
 	Left string `json:"left,omitempty"`
+	// Encounters roving the map (worg's, base64 JSON like the fight): what
+	// they are and where they stand now. Opaque to the server.
+	Roving string `json:"roving,omitempty"`
+	// Shapes measured on the map (worg's measure.ts) and the way the party
+	// has come (its trail), both base64 JSON and opaque here.
+	Measure string `json:"measure,omitempty"`
+	Trail   string `json:"trail,omitempty"`
+	// The players' camera: the box of the map their screen shows, "x,y,w,h"
+	// in the picture's pixels; empty when their screen frames itself.
+	Camera string `json:"camera,omitempty"`
+	// The weather over the map and the spells lately cast on it (worg's
+	// fx.ts, base64 JSON), for the players' screen to play.
+	Fx string `json:"fx,omitempty"`
+	// Tokens standing on the map (worg's tokens.ts, base64 JSON): which
+	// picture, where, how big, whether the players see it.
+	Tokens string `json:"tokens,omitempty"`
 }
 
 // The Map heading's extent in the file's lines: its row, and the last row
@@ -600,6 +633,18 @@ func readDungeonState(lines []string) dungeonState {
 			st.Combat = val
 		case "DND_LEFT":
 			st.Left = val
+		case "DND_ROVING":
+			st.Roving = val
+		case "DND_MEASURE":
+			st.Measure = val
+		case "DND_TRAIL":
+			st.Trail = val
+		case "DND_CAMERA":
+			st.Camera = val
+		case "DND_FX":
+			st.Fx = val
+		case "DND_TOKENS":
+			st.Tokens = val
 		}
 	}
 	return st
@@ -632,14 +677,30 @@ func writeDungeonState(fname string, st dungeonState) error {
 	}
 	// Only while the party is away, not an empty line on every map.
 	if st.Left != "" {
-		lines, _ = setPropIn(lines, ps, pe, "  ", "DND_LEFT", st.Left)
+		lines, pe = setPropIn(lines, ps, pe, "  ", "DND_LEFT", st.Left)
 	} else {
-		lines, _ = dropPropIn(lines, ps, pe, "DND_LEFT")
+		var dropped bool
+		if lines, dropped = dropPropIn(lines, ps, pe, "DND_LEFT"); dropped {
+			pe--
+		}
+	}
+	// Likewise only on a map something roams, something is measured, or
+	// the party has left a trail.
+	for _, kv := range [][2]string{{"DND_ROVING", st.Roving}, {"DND_MEASURE", st.Measure}, {"DND_TRAIL", st.Trail}, {"DND_CAMERA", st.Camera}, {"DND_FX", st.Fx}, {"DND_TOKENS", st.Tokens}} {
+		if kv[1] != "" {
+			lines, pe = setPropIn(lines, ps, pe, "  ", kv[0], kv[1])
+		} else {
+			var dropped bool
+			if lines, dropped = dropPropIn(lines, ps, pe, kv[0]); dropped {
+				pe--
+			}
+		}
 	}
 	return writeLines(fname, lines)
 }
 
 var fogRe = regexp.MustCompile(`^[A-Za-z0-9+/=]*$`)
+var cameraRe = regexp.MustCompile(`^([-0-9.]+(,[-0-9.]+){3})?$`)
 
 /* SDOC: API
 * POST /dnd/dungeon/state — Keep the Fog of War
@@ -647,12 +708,16 @@ var fogRe = regexp.MustCompile(`^[A-Za-z0-9+/=]*$`)
 	pin stands, and whether the fog shows on the GM's and the players' view - as
 	=DND_FOG=, =DND_PARTY=, =DND_FOG_GM=, =DND_FOG_PLAYERS=, =DND_COMBAT= (the initiative
 	tracker's fight), =DND_TRACK= (the players' screen follows the party room by room) and
-	=DND_LEFT= (the map the party went to by linked stairs; a players' screen goes after it) on
+	=DND_LEFT= (the map the party went to by linked stairs; a players' screen goes after it) and
+	=DND_ROVING= (encounters roving the map), =DND_MEASURE= (shapes measured on it) and =DND_TRAIL=
+	(the way the party has come), the last three worg's base64 JSON, and =DND_CAMERA= (the box of the map
+	the players' screen shows, =x,y,w,h= in the picture's pixels) and =DND_FX= (the weather and recent spell
+	effects, worg's base64 JSON) and =DND_TOKENS= (tokens standing on the map, worg's base64 JSON), on
 	the dungeon's =Map= heading. =GET /dnd/dungeon/load= answers them back as =state=.
 
 	*Method:* =POST=
 
-	*Request Body:* ={file, state: {fog, party: [row, col], fogGM, fogPlayers, combat, track, left}}=; =fog=
+	*Request Body:* ={file, state: {fog, party: [row, col], fogGM, fogPlayers, combat, track, left, roving, measure, trail, camera, fx, tokens}}=; =fog=
 	is a bitset of explored cells, row by row, in base64, and =combat= worg's fight as base64 JSON.
 
 	*Response:* ={Ok, Msg}=
@@ -671,8 +736,9 @@ func PostDndDungeonState(w http.ResponseWriter, r *http.Request) {
 		dndError(w, http.StatusBadRequest, "the file has to be an org file inside one of the org directories")
 		return
 	}
-	if !fogRe.MatchString(req.State.Fog) || !fogRe.MatchString(req.State.Combat) {
-		dndError(w, http.StatusBadRequest, "the fog and the fight have to be base64")
+	if !fogRe.MatchString(req.State.Fog) || !fogRe.MatchString(req.State.Combat) || !fogRe.MatchString(req.State.Roving) ||
+		!fogRe.MatchString(req.State.Measure) || !fogRe.MatchString(req.State.Trail) || !cameraRe.MatchString(req.State.Camera) || !fogRe.MatchString(req.State.Fx) || !fogRe.MatchString(req.State.Tokens) {
+		dndError(w, http.StatusBadRequest, "the fog, the fight and the roving encounters have to be base64")
 		return
 	}
 	if req.State.Left != "" {

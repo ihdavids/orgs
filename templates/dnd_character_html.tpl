@@ -8659,6 +8659,9 @@ them up.">Temp</button>
     var p = this.projectUp([it.x, it.y, it.z]);
     var R = it.r * grown * p[2], i;
     ctx.save();
+    // Drawn about its own middle: without this every cloud of a bang rolled
+    // up out of the top left corner of the page.
+    ctx.translate(p[0], p[1]);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = it.face;
     ctx.beginPath();
@@ -14136,23 +14139,25 @@ them up.">Temp</button>
 
   // Everything in the session, in order, as one list.
   function tlItems(d) {
-    var out = [];
+    var notes = [], rolls = [];
     (d.noteLog || []).forEach(function (n, i) {
-      out.push({ what: 'note', at: tlMinutes(n.time), time: n.time || '',
-                 text: n.text || '', index: i });
+      notes.push({ what: 'note', at: tlMinutes(n.time), time: n.time || '',
+                   text: n.text || '', index: i });
     });
     (d.rollLog || []).forEach(function (r, i) {
-      out.push({ what: 'roll', at: tlMinutes(r.time), time: r.time || '',
-                 row: r, kind: tlKind(r), nat: tlNatural(r), index: i });
+      rolls.push({ what: 'roll', at: tlMinutes(r.time), time: r.time || '',
+                   row: r, kind: tlKind(r), nat: tlNatural(r), index: i });
     });
+    // Each log is in the order it was written, so midnight is found in each
+    // before they are merged: sorting the clock times first put 00:02 ahead
+    // of 23:58. worg's timeline.ts does the same (timeline.test.ts).
+    tlUnwrap(notes);
+    tlUnwrap(rolls);
+    var out = notes.concat(rolls);
+    out.forEach(function (it, i) { it.seq = i; });
     // Stable: notes and rolls written in the same minute keep the order the
     // file has them in, which is the order they were written.
-    out.sort(function (a, b) {
-      if (a.at === null) { return b.at === null ? 0 : -1; }
-      if (b.at === null) { return 1; }
-      return a.at - b.at;
-    });
-    tlUnwrap(out);
+    out.sort(function (a, b) { return a.abs - b.abs || a.seq - b.seq; });
     return out;
   }
 

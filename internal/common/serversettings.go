@@ -273,6 +273,36 @@ type ServerSettings struct {
 		can be searched, agenda'd and archived like everything else.
 		EDOC */
 	DndSessionPath     string `yaml:"dndSessionPath"`
+	/* SDOC: Settings
+	* Dnd Shared Path
+		A folder of tokens and pictures every map can use, beside each map's own:
+		its =tokens= folder (subfolders are categories, =tokens.json= marks large
+		ones) and its =images= folder, as a map's own are laid out. The map
+		viewer lists a map's own first, then these.
+
+		#+BEGIN_SRC yaml
+	  dndSharedPath: "/Users/me/dev/gtd/dnd/common"
+		#+END_SRC
+
+		A relative path is taken relative to your first orgDir; =~= is your home.
+		Left out, there is no shared folder.
+		EDOC */
+	DndSharedPath string `yaml:"dndSharedPath"`
+	/* SDOC: Settings
+	* Dnd Sound Path
+		Where the DM screen's sound board finds sounds (subfolders are
+		categories; zip, 7z, rar and tar archives are read as folders), and
+		where a sound played from the web is kept, under =cache/=.
+
+		#+BEGIN_SRC yaml
+	  dndSoundPath: "/Users/me/dev/gtd/dnd/common/sounds"
+		#+END_SRC
+
+		A relative path is taken relative to your first orgDir; =~= is your
+		home. Left out, it is =sounds= in the shared folder (=dndSharedPath=),
+		and without that there is none.
+		EDOC */
+	DndSoundPath string `yaml:"dndSoundPath"`
 	DndSessionTemplate string `yaml:"dndSessionTemplate"`
 	DayPageTemplate    string `yaml:"dayPageTemplate"`
 	/* SDOC: Settings

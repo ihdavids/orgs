@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/apognu/gocal v0.9.0
+	github.com/bodgit/sevenzip v1.5.2
 	github.com/bzick/tokenizer v1.4.0
 	github.com/coryb/oreo v0.0.0-20180804211640-3e1b88fc08f1
 	github.com/ekalinin/go-textwrap v0.0.2
@@ -23,15 +24,29 @@ require (
 	github.com/ihdavids/govaluate v0.0.0-20231220060452-759d66a62509
 	github.com/ihdavids/tablewriter v0.0.0-20231130030027-2e70cfc41f0c
 	github.com/junegunn/fzf v0.65.2
+	github.com/klauspost/compress v1.17.11
 	github.com/koki-develop/go-fzf v0.15.0
 	github.com/muesli/reflow v0.3.0
+	github.com/nwaples/rardecode/v2 v2.2.0
 	github.com/rivo/tview v0.0.0-20241103174730-c76f7879f592
 	github.com/rs/cors v1.9.0
 	github.com/tmc/keyring v0.0.0-20230418032330-0c8bdba76fa8
+	github.com/ulikunitz/xz v0.5.12
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/api v0.99.0
 	gopkg.in/AlecAivazis/survey.v1 v1.6.1
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/bodgit/plumbing v1.3.0 // indirect
+	github.com/bodgit/windows v1.0.1 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/pierrec/lz4/v4 v4.1.21 // indirect
+	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 )
 
 require (

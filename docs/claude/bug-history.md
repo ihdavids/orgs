@@ -230,3 +230,14 @@ Porting OrgExtended's missing features (dynamic blocks, babel results and calls,
 ## 2026-10-15: markers after 1 Nov drawn and edited a day early
 
 A Monday-to-Friday marker (`<2026-11-02 Mon>--<2026-11-06 Fri>`) showed as Sunday to Thursday in the chart and in its editor, and saving snapped back to Sunday, while the file was right. The ones before 1 Nov were fine. The machine is in America/Vancouver; its tzdata (2026b) keeps BC on UTC-7 after 1 Nov 2026, so Go wrote `2026-11-02T00:00:00-07:00`. Chrome's and Node's ICU (2025b) still fall back to -8 that day and read the instant as `Sun Nov 01 23:00`. Found by asking `/search` for the marker and comparing with `new Date(...)` in the page. Fixed by reading every server org date through `orgMoment` (wall-clock fields, offset ignored) in gantt, agenda, search, kanban and the org editor; regression test in `gantt.test.ts`.
+
+## 2026-10-17: lasting map effects that would not go away
+
+The user found putting out domes and pillars "inconsistent": a second click sometimes put one out, sometimes left part of it frozen on the map, sometimes did nothing they could see, and "Put out all" did not always clear everything. Two bugs, one look:
+
+- `AuraLayer` (worg `components/MapFx.tsx`) cleared its canvas, when the last aura went, through the transform the last drawn aura had left set - a scale of a square's size - so `clearRect(0, 0, w, h)` wiped a small part and the rest of the last frame stayed, no longer animating. Fixed by clearing with the identity transform (`wipe`), also on unmount.
+- The click that puts one out tested every aura's circle on the floor, in plan squares. A dome, a pillar, a flame is drawn standing up from its spot, so a click on what can be seen of it was outside that circle and put a second one down instead (which then looked like the first not going). Fixed by `auraAt` testing a standing aura against its drawn reach (`auraReach`) in the picture's pixels.
+
+- A third cause of "my click did nothing": the DM screen's rail and header tooltips are long and opened over the map, and a click landing on an open tooltip went to it, not the map. They are `disableInteractive` now. The first fix also put `sx={{ pointerEvents: 'none' }}` on the `Tooltip`, which Joy applies to the child: every header and rail button went dead ("the players' screen button doesn't bring anything up"). Found with a check that `elementFromPoint` at each labelled button's middle is inside it.
+
+Found by: counting lit pixels on both screens' canvases after placing, clicking on the body, and "Put out all" (scratchpad `auratest.mjs`), which a screenshot would not show reliably.

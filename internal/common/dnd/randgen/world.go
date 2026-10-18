@@ -29,6 +29,15 @@ type World struct {
 	Places []WorldPlace `json:"places,omitempty"`
 	Pins   []WorldPin   `json:"pins,omitempty"`
 	Labels []WorldLabel `json:"labels,omitempty"`
+	// How the map editor last settled it (mapgen.Settle): towns' density
+	// (0 none .. 1 quite a few) and whether roads join them.
+	Settle *WorldSettle `json:"settle,omitempty"`
+}
+
+type WorldSettle struct {
+	Density float64 `json:"density"`
+	Roads   bool    `json:"roads"`
+	Seed    uint64  `json:"seed,omitempty"`
 }
 
 // WorldHex is the dotted hex grid over the map: a hex's width in pixels of
@@ -38,12 +47,18 @@ type WorldHex struct {
 	Show    bool    `json:"show"`
 	Size    float64 `json:"size"`
 	Opacity float64 `json:"opacity"`
+	// The grid's ink, a CSS colour ("#1d1a16" when empty).
+	Colour string `json:"colour,omitempty"`
+	// "dots" (the default) or "lines".
+	Style string `json:"style,omitempty"`
 }
 
 type WorldRoad struct {
 	Kind string    `json:"kind"` // road, highway, trail, sea
 	Name string    `json:"name,omitempty"`
 	Pts  []float64 `json:"pts"` // x0, y0, x1, y1, ...
+	// Made by settling the map, so settling it again replaces it.
+	Auto bool `json:"auto,omitempty"`
 }
 
 type WorldPlace struct {
@@ -54,6 +69,7 @@ type WorldPlace struct {
 	X      float64 `json:"x"`
 	Y      float64 `json:"y"`
 	Secret bool    `json:"secret,omitempty"` // the GM's only
+	Auto   bool    `json:"auto,omitempty"`   // made by settling the map
 }
 
 type WorldPin struct {

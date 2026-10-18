@@ -127,6 +127,11 @@ func Render(t *Terrain, p Params) *image.RGBA {
 	}
 	var polys *sites
 	edgeNoise := newNoise(p.Seed*17 + 3)
+	// The detail: treetops, the snow line's ragged edge, the sea's mottle.
+	canopy := newNoise(p.Seed*31 + 5)
+	snowEdge := newNoise(p.Seed*43 + 11)
+	seaMottle := newNoise(p.Seed*59 + 17)
+	treeSize := math.Max(3, float64(max(W, H))/300)
 	if p.Style == "biomes" {
 		polys = newSites(W, H, max(8, max(W, H)/110), p.Seed)
 	}
@@ -160,16 +165,64 @@ func Render(t *Terrain, p Params) *image.RGBA {
 			} else if water {
 				depth := -e
 				if e >= 0 {
-					depth = lake * 4
+					// A lake: pale in its shallows, deepening to the middle.
+					depth = smoothstep(0.002, 0.05, lake) * 0.12
 				}
 				// Shallows hug the coast; the open sea is deep, a little
 				// lighter over banks.
 				c = mix(pl.shallow, pl.deep, smoothstep(0, 0.03+0.08*(1-p.Ocean), depth)*0.85+smoothstep(0.1, 0.6, depth)*0.15)
+				if e < 0 && p.Ripples > 0 {
+					// The sea is never one flat colour: a slow mottle of
+					// currents, and lines where it deepens, each the same
+					// width on the page however steep the bottom is.
+					c = mix(c, pl.shallow, (seaMottle.fbm(fx/float64(W)*6, fy/float64(W)*6, 3)*0.5+0.5)*0.12*p.Ripples)
+					gx := elev(x+1, y) - elev(x-1, y)
+					gy := elev(x, y+1) - elev(x, y-1)
+					g := math.Hypot(gx, gy)/2 + 1e-6
+					for k, lv := range []float64{0.012, 0.03, 0.06, 0.1, 0.16} {
+						dpx := math.Abs(depth-lv) / g
+						if dpx < 1.2 {
+							a := (1 - dpx/1.2) * p.Ripples * (0.55 - float64(k)*0.08)
+							c = mix(c, pl.foam, a)
+						}
+					}
+				}
 			} else {
 				m := coarse(t.Moist, fx, fy)
 				c = pl.landColour(e, m)
-				if e < 0.018 {
+				// Treetops where it is wooded: rounded crowns, light on the
+				// side the sun is, dark between them.
+				if p.Forests > 0 {
+					wood := smoothstep(0.42, 0.7, m) * (1 - smoothstep(0.5, 0.72, e)) * smoothstep(0.02, 0.06, e)
+					if wood > 0.01 {
+						v := canopy.at(fx/treeSize, fy/treeSize)*0.6 + canopy.at(fx/treeSize*2.3+7, fy/treeSize*2.3+3)*0.4
+						crown := smoothstep(-0.2, 0.45, v)
+						// Green crowns on a coloured map; an old sheet's are
+						// inked in its own browns.
+						dk, lt := rgb{0.55, 0.72, 0.5}, rgb{1.08, 1.15, 0.95}
+						if p.Style != "atlas" {
+							dk, lt = rgb{0.74, 0.69, 0.6}, rgb{1.05, 1.04, 1.0}
+						}
+						dark := mix(c, rgb{c[0] * dk[0], c[1] * dk[1], c[2] * dk[2]}, 0.8)
+						lit := mix(c, rgb{c[0] * lt[0], c[1] * lt[1], c[2] * lt[2]}, 0.6)
+						c = mix(c, mix(dark, lit, crown), wood*p.Forests)
+					}
+				}
+				// Sand along the coast, wider for more.
+				if band := 0.006 + 0.03*p.Beaches; p.Beaches > 0 && e < band {
+					c = mix(pl.beach, c, smoothstep(0, band, e))
+				} else if p.Beaches == 0 && e < 0.018 {
 					c = mix(pl.beach, c, e/0.018)
+				}
+				// Snow on the peaks, its line ragged and lower where it is wet.
+				if p.Snow > 0 {
+					line := 1.08 - p.Snow*0.3 - m*0.05 + snowEdge.fbm(fx/float64(W)*16, fy/float64(W)*16, 3)*0.06
+					if e > line {
+						// Lying on the ridges and gentler slopes; the steepest
+						// faces show rock through it.
+						steep := math.Hypot(elev(x+1, y)-elev(x-1, y), elev(x, y+1)-elev(x, y-1)) * float64(W) / 40
+						c = mix(c, pl.snow, smoothstep(line, line+0.06, e)*(0.92-0.5*clamp(steep, 0, 1)))
+					}
 				}
 			}
 			// Shading: the slope against the light. A flat cell is as it is.
@@ -188,6 +241,10 @@ func Render(t *Terrain, p Params) *image.RGBA {
 			} else if !water {
 				if elev(x+1, y) < 0 || elev(x-1, y) < 0 || elev(x, y+1) < 0 || elev(x, y-1) < 0 {
 					c = mix(c, pl.ink, 0.25+p.Outline*0.65)
+				} else if p.Beaches > 0 && (coarse(t.Lake, fx+1.5, fy) > 0.002 || coarse(t.Lake, fx-1.5, fy) > 0.002 ||
+					coarse(t.Lake, fx, fy+1.5) > 0.002 || coarse(t.Lake, fx, fy-1.5) > 0.002) {
+					// A lake's shore, inked more lightly than the sea's.
+					c = mix(c, pl.ink, 0.15+p.Outline*0.35)
 				}
 			} else if e < 0 && e > -0.035 {
 				c = mix(c, pl.foam, (1-(-e/0.035))*0.45)
@@ -205,7 +262,9 @@ func Render(t *Terrain, p Params) *image.RGBA {
 		}
 	}
 	if p.Style == "parchment" {
-		paper(img, p.Seed)
+		paper(img, p.Seed, 1)
+	} else if p.Texture > 0 {
+		paper(img, p.Seed, p.Texture)
 	}
 	return img
 }
@@ -279,16 +338,18 @@ func line(img *image.RGBA, a, b [2]float64, wa, wb float64, c rgb) {
 	}
 }
 
-// paper ages a parchment map: a faint mottle and darker edges.
-func paper(img *image.RGBA, seed uint64) {
+// paper ages a map: a faint mottle and darker edges, by strength (1 is a
+// parchment map's).
+func paper(img *image.RGBA, seed uint64, strength float64) {
 	n := newNoise(seed*3 + 1)
 	W, H := img.Bounds().Dx(), img.Bounds().Dy()
 	parallelRows(H, func(y int) {
 		for x := 0; x < W; x++ {
 			fx, fy := float64(x)/float64(W), float64(y)/float64(H)
-			mottle := 1 + n.fbm(fx*9, fy*9*float64(H)/float64(W), 4)*0.08
+			grain := n.at(float64(x)*0.9, float64(y)*0.9) * 0.025
+			mottle := 1 + (n.fbm(fx*9, fy*9*float64(H)/float64(W), 4)*0.08+grain)*strength
 			ex := math.Min(math.Min(fx, 1-fx), math.Min(fy, 1-fy))
-			vig := 0.82 + 0.18*smoothstep(0, 0.12, ex)
+			vig := 1 - 0.18*strength*(1-smoothstep(0, 0.12, ex))
 			i := img.PixOffset(x, y)
 			for k := 0; k < 3; k++ {
 				img.Pix[i+k] = uint8(clamp(float64(img.Pix[i+k])*mottle*vig, 0, 255))

@@ -96,6 +96,8 @@ type Dungeon struct {
 	Labels    []DLabel `json:"labels"`
 	Rooms     []DRoom  `json:"rooms"`
 	Wandering string   `json:"wandering"`
+	// Lights are what holds a fire or a glow (lights.go).
+	Lights []DLight `json:"lights,omitempty"`
 	// Style is how the editor last drew it (worg's MapStyle: theme, view,
 	// angle...), kept so the map viewer draws it the same way. The server
 	// never reads it.
@@ -227,6 +229,7 @@ func GenerateDungeon(rs *dnd.Ruleset, req DungeonRequest) *Dungeon {
 	for r := 0; r < g.rows; r++ {
 		d.Grid[r] = string(g.cell[r*g.cols : (r+1)*g.cols])
 	}
+	c.lightRooms(d, o["kind"])
 	if o["kind"] == "dwelling" {
 		d.Wandering = c.dwellingHappens()
 	} else {

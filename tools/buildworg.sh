@@ -15,6 +15,10 @@ if [ ! -d "$WORG" ]; then
     exit 1
 fi
 
+# The character sheet's casting effects, lifted out for the map screens
+# (public/dicefx.js), so worg never ships an older copy than the sheet.
+python3 "$HERE/tools/dicefx/extract.py" "$WORG/public/dicefx.js"
+
 echo "building worg in $WORG"
 # No source maps: they hold worg's whole source, would be embedded in the
 # binary (30 MB of them) and published with every release.

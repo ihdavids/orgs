@@ -10,6 +10,8 @@ import "embed"
 // image into public/ does not need this file edited again. gantt-viewer.js is
 // what a gantt chart saved as html runs (worg's scripts/build-viewer.js):
 // worg fetches it and puts it in the page, so it has to be here to fetch.
+// dicefx.js is the character sheet's casting effects for the map screens
+// (tools/dicefx/extract.py), loaded on the first effect.
 //
-//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js
+//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js
 var Content embed.FS

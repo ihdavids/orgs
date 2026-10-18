@@ -241,6 +241,76 @@ func RequestMapgenNames(w http.ResponseWriter, r *http.Request) {
 	dndJson(w, map[string]interface{}{"ok": true, "names": names})
 }
 
+/* SDOC: API
+* POST /mapgen/settle — Towns and Roads for a Map
+	Places towns, cities, villages and ports on a generated region or world where people would
+	live (flat, watered land by rivers and coasts), as many as a density asks for, and routes roads
+	between them the easiest way across the map's own terrain - through forest, round mountains
+	and lakes, avoiding swamp, crossing rivers only where it must. Writes nothing: the map editor
+	takes the answer into the map.
+
+	*Method:* =POST=
+
+	*Request Body:* ={params, strokes, density, roads, seed, keep: [{kind, name, x, y}]}=; =density=
+	0 (none) to 1 (quite a few); =keep= the places already on the map, which roads reach too.
+
+	*Response:* ={ok, places: [{kind, name, x, y}], roads: [{kind, pts}]}=, in fractions of the map.
+	EDOC */
+func PostMapgenSettle(w http.ResponseWriter, r *http.Request) {
+	AccessControl(&w)
+	var req struct {
+		Params  mapgen.Params   `json:"params"`
+		Strokes []mapgen.Stroke `json:"strokes"`
+		mapgen.SettleOptions
+	}
+	if !dndBody(w, r, &req) {
+		return
+	}
+	s := mapgen.Settle(req.Params, req.Strokes, req.SettleOptions)
+	dndJson(w, map[string]interface{}{"ok": true, "places": s.Places, "roads": s.Roads})
+}
+
+/* SDOC: API
+* POST /mapgen/surf — A Coast's Surf
+	The coast of a generated region as lines - the shore, where the foam breaks, and lines of
+	swell further out - for the map viewer to animate. A hex world, town or village has none.
+
+	*Method:* =POST=
+
+	*Request Body:* ={params, strokes}=
+
+	*Response:* ={ok, lines: [[[x0, y0, x1, y1, ...], ...], ...]}=, shore first, in fractions of the map.
+	EDOC */
+func PostMapgenSurf(w http.ResponseWriter, r *http.Request) {
+	AccessControl(&w)
+	var req struct {
+		Params  mapgen.Params   `json:"params"`
+		Strokes []mapgen.Stroke `json:"strokes"`
+	}
+	if !dndBody(w, r, &req) {
+		return
+	}
+	h := mapgen.Hash(req.Params, req.Strokes)
+	surfLock.Lock()
+	lines, ok := surfCache[h]
+	surfLock.Unlock()
+	if !ok {
+		lines = mapgen.Surf(req.Params, req.Strokes)
+		surfLock.Lock()
+		if len(surfCache) > 16 {
+			surfCache = map[string][][][]float64{}
+		}
+		surfCache[h] = lines
+		surfLock.Unlock()
+	}
+	dndJson(w, map[string]interface{}{"ok": true, "lines": lines})
+}
+
+var (
+	surfLock  sync.Mutex
+	surfCache = map[string][][][]float64{}
+)
+
 var _ = fmt.Sprint
 
 // svgPolicy is sent with every SVG a map is drawn as: a picture runs nothing.

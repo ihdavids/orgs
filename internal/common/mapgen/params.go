@@ -58,6 +58,15 @@ type Params struct {
 	Relief  float64 `json:"relief"`
 	Outline float64 `json:"outline"`
 	Style   string  `json:"style"`
+	// Detail (render.go): snow on the high peaks, a canopy of trees where it
+	// is wooded, sand along the coasts, lines of depth out to sea, and the
+	// grain and darkened edges of a printed sheet. 0 is none, which is how a
+	// map made before they existed is drawn.
+	Snow    float64 `json:"snow"`
+	Forests float64 `json:"forests"`
+	Beaches float64 `json:"beaches"`
+	Ripples float64 `json:"ripples"`
+	Texture float64 `json:"texture"`
 
 	// The hex world: how many hexes across, how wide a hex is drawn (px),
 	// the world's average temperature (°C) and axial tilt (degrees), how
@@ -130,7 +139,8 @@ func Defaults() Params {
 		RiverCount: 30, Lakes: true, Craters: 0, Volcanoes: 4, Territories: 12, HexStyle: "satellite",
 		Seed: 1, Width: 1536, Height: 1024, Land: 0.5, Island: 0.6, Coast: 0.5,
 		Mountains: 0.55, Jagged: 0.5, Ocean: 0.5, Wind: 200, Rain: 0.5, Shadow: 0.5, Evaporate: 0.5,
-		Rivers: 0.45, RiverWidth: 0.5, Light: 225, Relief: 0.55, Outline: 0.5, Style: "atlas"}
+		Rivers: 0.45, RiverWidth: 0.5, Light: 225, Relief: 0.55, Outline: 0.5, Style: "atlas",
+		Snow: 0.6, Forests: 0.55, Beaches: 0.5, Ripples: 0.45, Texture: 0.35}
 }
 
 // Normal is p with everything inside its range: a map can be asked for with
@@ -150,7 +160,8 @@ func (p Params) Normal() Params {
 	p.Width = int(clamp(float64(p.Width), 128, 4096))
 	p.Height = int(clamp(float64(p.Height), 128, 4096))
 	for _, f := range []*float64{&p.Land, &p.Island, &p.Coast, &p.Mountains, &p.Jagged, &p.Ocean, &p.Rain,
-		&p.Shadow, &p.Evaporate, &p.Rivers, &p.RiverWidth, &p.Relief, &p.Outline} {
+		&p.Shadow, &p.Evaporate, &p.Rivers, &p.RiverWidth, &p.Relief, &p.Outline,
+		&p.Snow, &p.Forests, &p.Beaches, &p.Ripples, &p.Texture} {
 		if math.IsNaN(*f) {
 			*f = 0.5
 		}
@@ -336,6 +347,11 @@ func Fields() []Field {
 		r("relief", "Relief", "Look", "How strongly the hills are shaded"),
 		r("outline", "Coastline", "Look", "How dark the coast is drawn"),
 		{Id: "style", Prop: "STYLE", Label: "Style", Group: "Look", Kind: "select", Choices: Styles, Gen: "terrain"},
+		{Id: "snow", Prop: "SNOW", Label: "Snow on the peaks", Group: "Detail", Kind: "range", Min: 0, Max: 1, Step: 0.01, Gen: "terrain", Hint: "How far down the mountains the snow comes"},
+		{Id: "forests", Prop: "FORESTS", Label: "Forest canopy", Group: "Detail", Kind: "range", Min: 0, Max: 1, Step: 0.01, Gen: "terrain", Hint: "Treetops drawn where the land is wooded"},
+		{Id: "beaches", Prop: "BEACHES", Label: "Beaches", Group: "Detail", Kind: "range", Min: 0, Max: 1, Step: 0.01, Gen: "terrain", Hint: "Sand along the coasts"},
+		{Id: "ripples", Prop: "RIPPLES", Label: "Depth lines", Group: "Detail", Kind: "range", Min: 0, Max: 1, Step: 0.01, Gen: "terrain", Hint: "Lines out to sea where it deepens, as on an old chart"},
+		{Id: "texture", Prop: "TEXTURE", Label: "Paper", Group: "Detail", Kind: "range", Min: 0, Max: 1, Step: 0.01, Gen: "terrain", Hint: "The grain and darkened edges of a printed sheet"},
 		{Id: "shoresStyle", Prop: "SHORESSTYLE", Label: "Style", Group: "Look", Kind: "select", Choices: ShoresStyles, Gen: "shores"},
 	}
 }
