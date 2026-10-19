@@ -127,6 +127,9 @@ func ReloadConfig() (common.ReloadResult, error) {
 	o.DndSessionPath = n.DndSessionPath
 	o.DndSharedPath = n.DndSharedPath
 	o.DndSoundPath = n.DndSoundPath
+	o.DndMusicPath = n.DndMusicPath
+	o.SpotifyClientId = n.SpotifyClientId
+	o.SpotifyRedirect = n.SpotifyRedirect
 	o.DndSessionTemplate = n.DndSessionTemplate
 	o.AccessControl = n.AccessControl
 	o.Log = n.Log

@@ -377,7 +377,8 @@ func packName(stem string) (string, string) {
 // fight's matching reads past. Their category is the first folder that
 // sorts them (Creatures, under a pack's single top folder), else the
 // archive's name; an animated one's still is a picture of its name beside it.
-func archivePictures(p, rel, as string, tokens bool, sizes tokenSizes, shared bool, cats map[string]bool) []showPicture {
+func archivePictures(p, rel, as, folder string, sizes tokenSizes, shared bool, cats map[string]bool) []showPicture {
+	tokens := folder != "images"
 	a, err := openArchive(p)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "dnd: reading %s: %s\n", p, err)
@@ -422,6 +423,9 @@ func archivePictures(p, rel, as string, tokens bool, sizes tokenSizes, shared bo
 		}
 		cats[cat] = true
 		name, size := packName(path.Base(s))
+		if folder == "tiles" {
+			name, size = tileName(path.Base(s)), tileSquares(path.Base(s))
+		}
 		seen[name]++
 		if n := seen[name]; n > 1 {
 			name = fmt.Sprintf("%s %d", name, n)
@@ -430,10 +434,13 @@ func archivePictures(p, rel, as string, tokens bool, sizes tokenSizes, shared bo
 		if sz, ok := sizes.Sizes[key]; ok {
 			size = sz
 		}
-		if size == "small" {
+		if size == "small" && folder != "tiles" {
 			size = ""
 		}
-		pic := showPicture{Path: as + key, Name: name, Category: cat, Size: size, Shared: shared}
+		pic := showPicture{Path: as + key, Name: name, Category: cat, Size: size, Shared: shared, Tags: sizes.Tags[key]}
+		if n := sizes.Names[key]; n != "" {
+			pic.Name = n
+		}
 		if videoExts[ext] && stills[s] != "" {
 			pic.Still = as + rel + "/" + stills[s]
 		}

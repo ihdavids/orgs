@@ -41,6 +41,10 @@ func RestApi(router *mux.Router) {
 	router.HandleFunc("/salt", salt).Methods("GET")
 	// A one-use login link a logged in client made for a browser (ticket.go).
 	router.HandleFunc("/login/ticket/{ticket}", RedeemLoginTicket).Methods("GET")
+	// Where Spotify sends the browser back after signing in (dndmusic.go):
+	// public, because it comes back on 127.0.0.1 without the server's
+	// cookie; it takes only a sign in this server started.
+	router.HandleFunc("/dnd/music/spotify/callback", RequestDndSpotifyCallback).Methods("GET")
 
 	// Protected routes - all endpoints below require a valid JWS token
 	api := router.PathPrefix("").Subrouter()
@@ -252,10 +256,24 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/dungeon/pictures", PostDndDungeonPictures).Methods("POST")
 	api.HandleFunc("/dnd/dungeon/pictures/edit", PostDndDungeonPictureEdit).Methods("POST")
 	api.HandleFunc("/dnd/picture/fetch", PostDndPictureFetch).Methods("POST")
+	api.HandleFunc("/dnd/picture/scrape", PostDndPictureScrape).Methods("POST") // every picture on a page (dndscrape.go)
+	api.HandleFunc("/dnd/campaigns", RequestDndCampaigns).Methods("GET") // campaigns and their areas of maps (dndcampaign.go)
+	api.HandleFunc("/dnd/campaign", PostDndCampaign).Methods("POST")
+	api.HandleFunc("/dnd/maps", RequestDndMaps).Methods("GET")
+	api.HandleFunc("/dnd/map/thumb", RequestDndMapThumb).Methods("GET")
 	api.HandleFunc("/dnd/sounds", RequestDndSounds).Methods("GET") // the sound board (dndsounds.go)
 	api.HandleFunc("/dnd/sounds/file", RequestDndSoundFile).Methods("GET")
 	api.HandleFunc("/dnd/sounds/search", RequestDndSoundSearch).Methods("GET")
 	api.HandleFunc("/dnd/sounds/cache", PostDndSoundCache).Methods("POST")
+	api.HandleFunc("/dnd/music", RequestDndMusic).Methods("GET") // the music (dndmusic.go)
+	api.HandleFunc("/dnd/music/file", RequestDndMusicFile).Methods("GET")
+	api.HandleFunc("/dnd/music/spotify", RequestDndSpotify).Methods("GET")
+	api.HandleFunc("/dnd/music/spotify/play", PostDndSpotifyPlay).Methods("POST")
+	api.HandleFunc("/dnd/music/spotify/control", PostDndSpotifyControl).Methods("POST")
+	api.HandleFunc("/dnd/music/spotify/login", RequestDndSpotifyLogin).Methods("GET")
+	api.HandleFunc("/dnd/music/spotify/setup", PostDndSpotifySetup).Methods("POST")
+	api.HandleFunc("/dnd/music/spotify/search", RequestDndSpotifySearch).Methods("GET")
+	api.HandleFunc("/dnd/music/spotify/playlists", RequestDndSpotifyPlaylists).Methods("GET")
 	api.HandleFunc("/dnd/dungeon/stock", PostDndDungeonStock).Methods("POST")
 	api.HandleFunc("/dnd/dungeon/encounter", PostDndDungeonEncounter).Methods("POST")
 	api.HandleFunc("/dnd/dungeon/lights", PostDndDungeonLights).Methods("POST")

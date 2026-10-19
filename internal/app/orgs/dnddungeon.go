@@ -225,7 +225,7 @@ func PostDndDungeonSave(w http.ResponseWriter, r *http.Request) {
 		var prev randgen.Dungeon
 		if json.Unmarshal(old, &prev) == nil && prev.Rows == req.Dungeon.Rows && prev.Cols == req.Dungeon.Cols {
 			st := readDungeonState(fileLines(fname))
-			if st.Fog != "" || len(st.Party) == 2 || st.FogGM || st.FogPlayers || st.Combat != "" || st.Track || st.Left != "" || st.Roving != "" || st.Measure != "" || st.Trail != "" || st.Camera != "" || st.Fx != "" || st.Tokens != "" {
+			if st.Fog != "" || len(st.Party) == 2 || st.FogGM || st.FogPlayers || st.Combat != "" || st.Track || st.Left != "" || st.Roving != "" || st.Measure != "" || st.Trail != "" || st.Camera != "" || st.Fx != "" || st.Tokens != "" || st.Pins != "" || st.Tiles != "" {
 				keep = &st
 			}
 		}
@@ -322,8 +322,8 @@ func PostDndDungeonSave(w http.ResponseWriter, r *http.Request) {
 	| =file=    | string | yes      | The dungeon's org file.                       |
 	| =path=    | string | yes      | The picture, relative to it (=maps/x-map.jpg=). |
 
-	A path starting =@shared/= is in the shared folder (=dndSharedPath=) instead: its =tokens= or
-	=images=, pictures or (tokens) videos.
+	A path starting =@shared/= is in the shared folder (=dndSharedPath=) instead: its =tokens=,
+	=tiles= or =images=, pictures or (tokens, tiles) videos.
 
 	*Response:* the picture.
 	EDOC */
@@ -333,7 +333,7 @@ func RequestDndDungeonImage(w http.ResponseWriter, r *http.Request) {
 	if rel := r.URL.Query().Get("path"); strings.HasPrefix(rel, sharedPrefix) {
 		var p string
 		var ok bool
-		for _, folder := range []string{"tokens", "images"} {
+		for _, folder := range []string{"tokens", "tiles", "images"} {
 			if p, _, ok = resolveShow("", folder, rel); ok {
 				break
 			}
@@ -577,6 +577,12 @@ type dungeonState struct {
 	// Tokens standing on the map (worg's tokens.ts, base64 JSON): which
 	// picture, where, how big, whether the players see it.
 	Tokens string `json:"tokens,omitempty"`
+	// Pins the GM has put on the map (worg's pins.ts, base64 JSON): where,
+	// what they look like, whether the players see them.
+	Pins string `json:"pins,omitempty"`
+	// Tiles laid on the map (worg's tiles.ts, base64 JSON): which picture,
+	// where, how big, turned how far, whether the players see them.
+	Tiles string `json:"tiles,omitempty"`
 }
 
 // The Map heading's extent in the file's lines: its row, and the last row
@@ -645,6 +651,10 @@ func readDungeonState(lines []string) dungeonState {
 			st.Fx = val
 		case "DND_TOKENS":
 			st.Tokens = val
+		case "DND_PINS":
+			st.Pins = val
+		case "DND_TILES":
+			st.Tiles = val
 		}
 	}
 	return st
@@ -686,7 +696,7 @@ func writeDungeonState(fname string, st dungeonState) error {
 	}
 	// Likewise only on a map something roams, something is measured, or
 	// the party has left a trail.
-	for _, kv := range [][2]string{{"DND_ROVING", st.Roving}, {"DND_MEASURE", st.Measure}, {"DND_TRAIL", st.Trail}, {"DND_CAMERA", st.Camera}, {"DND_FX", st.Fx}, {"DND_TOKENS", st.Tokens}} {
+	for _, kv := range [][2]string{{"DND_ROVING", st.Roving}, {"DND_MEASURE", st.Measure}, {"DND_TRAIL", st.Trail}, {"DND_CAMERA", st.Camera}, {"DND_FX", st.Fx}, {"DND_TOKENS", st.Tokens}, {"DND_PINS", st.Pins}, {"DND_TILES", st.Tiles}} {
 		if kv[1] != "" {
 			lines, pe = setPropIn(lines, ps, pe, "  ", kv[0], kv[1])
 		} else {
@@ -712,12 +722,12 @@ var cameraRe = regexp.MustCompile(`^([-0-9.]+(,[-0-9.]+){3})?$`)
 	=DND_ROVING= (encounters roving the map), =DND_MEASURE= (shapes measured on it) and =DND_TRAIL=
 	(the way the party has come), the last three worg's base64 JSON, and =DND_CAMERA= (the box of the map
 	the players' screen shows, =x,y,w,h= in the picture's pixels) and =DND_FX= (the weather and recent spell
-	effects, worg's base64 JSON) and =DND_TOKENS= (tokens standing on the map, worg's base64 JSON), on
+	effects, worg's base64 JSON) =DND_TOKENS= (tokens standing on the map), =DND_PINS= (the GM's pins) and =DND_TILES= (tiles laid on it), all worg's base64 JSON, on
 	the dungeon's =Map= heading. =GET /dnd/dungeon/load= answers them back as =state=.
 
 	*Method:* =POST=
 
-	*Request Body:* ={file, state: {fog, party: [row, col], fogGM, fogPlayers, combat, track, left, roving, measure, trail, camera, fx, tokens}}=; =fog=
+	*Request Body:* ={file, state: {fog, party: [row, col], fogGM, fogPlayers, combat, track, left, roving, measure, trail, camera, fx, tokens, pins, tiles}}=; =fog=
 	is a bitset of explored cells, row by row, in base64, and =combat= worg's fight as base64 JSON.
 
 	*Response:* ={Ok, Msg}=
@@ -737,7 +747,7 @@ func PostDndDungeonState(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !fogRe.MatchString(req.State.Fog) || !fogRe.MatchString(req.State.Combat) || !fogRe.MatchString(req.State.Roving) ||
-		!fogRe.MatchString(req.State.Measure) || !fogRe.MatchString(req.State.Trail) || !cameraRe.MatchString(req.State.Camera) || !fogRe.MatchString(req.State.Fx) || !fogRe.MatchString(req.State.Tokens) {
+		!fogRe.MatchString(req.State.Measure) || !fogRe.MatchString(req.State.Trail) || !cameraRe.MatchString(req.State.Camera) || !fogRe.MatchString(req.State.Fx) || !fogRe.MatchString(req.State.Tokens) || !fogRe.MatchString(req.State.Pins) || !fogRe.MatchString(req.State.Tiles) {
 		dndError(w, http.StatusBadRequest, "the fog, the fight and the roving encounters have to be base64")
 		return
 	}

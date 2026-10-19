@@ -30,11 +30,12 @@ type showPicture struct {
 	Path     string `json:"path"`           // relative to the org file: images/npcs/elf.png
 	Name     string `json:"name"`           // elf
 	Category string `json:"category"`       // npcs, or "" at the top of images
-	Size     string `json:"size,omitempty"` // a token's: "large", else small
+	Size     string `json:"size,omitempty"` // a token's: "large", else small; a tile's squares, "3x2"
 	// An animated token's still picture (a picture beside the video with its
 	// name), for a thumbnail.
 	Still  string `json:"still,omitempty"`
-	Shared bool   `json:"shared,omitempty"` // from the shared folder (dndSharedPath)
+	Shared bool     `json:"shared,omitempty"` // from the shared folder (dndSharedPath)
+	Tags   []string `json:"tags,omitempty"`   // the GM's words for it, from the folder's json
 }
 
 // Tokens may also be videos: a looping animated token (a WebM with a clear
@@ -69,11 +70,13 @@ func sharedDir() (string, bool) {
 	return p, true
 }
 
-// walkShow lists one tokens or images folder: `top` the folder, `as` what its
-// paths start with (tokens/, or @shared/tokens/). A video and a picture of the
-// same name in one folder are one token: the video, with the picture its still.
-func walkShow(top, as string, tokens bool, shared bool, cats map[string]bool) []showPicture {
+// walkShow lists one tokens, tiles or images folder: `top` the folder, `as`
+// what its paths start with (tokens/, or @shared/tokens/). A video and a
+// picture of the same name in one folder are one token: the video, with the
+// picture its still.
+func walkShow(top, as, folder string, shared bool, cats map[string]bool) []showPicture {
 	sizes := readTokenSizes(top)
+	tokens := folder != "images" // tokens and tiles may be videos
 	type found struct{ rel, name, ext string }
 	byDir := map[string][]found{}
 	zips := []showPicture{}
@@ -94,7 +97,7 @@ func walkShow(top, as string, tokens bool, shared bool, cats map[string]bool) []
 		if k, _ := archiveKind(e.Name()); k != "" {
 			// An archive is a folder of its own (dndarchive.go).
 			rel, _ := filepath.Rel(top, p)
-			zips = append(zips, archivePictures(p, filepath.ToSlash(rel), as, tokens, sizes, shared, cats)...)
+			zips = append(zips, archivePictures(p, filepath.ToSlash(rel), as, folder, sizes, shared, cats)...)
 			return nil
 		}
 		if !showExts[ext] && !(tokens && videoExts[ext]) {
@@ -124,7 +127,16 @@ func walkShow(top, as string, tokens bool, shared bool, cats map[string]bool) []
 			if parts := strings.Split(f.rel, "/"); len(parts) > 1 {
 				cat = parts[0]
 			}
-			pic := showPicture{Path: as + f.rel, Name: f.name, Category: cat, Size: sizes.Sizes[f.rel], Shared: shared}
+			pic := showPicture{Path: as + f.rel, Name: f.name, Category: cat, Size: sizes.Sizes[f.rel], Shared: shared, Tags: sizes.Tags[f.rel]}
+			if folder == "tiles" {
+				pic.Name = tileName(f.name)
+				if pic.Size == "" {
+					pic.Size = tileSquares(f.name)
+				}
+			}
+			if n := sizes.Names[f.rel]; n != "" {
+				pic.Name = n
+			}
 			if videoExts[f.ext] && stills[f.name] != "" {
 				pic.Still = as + stills[f.name]
 			}
@@ -158,41 +170,117 @@ func resolveShow(fname, folder, rel string) (string, string, bool) {
 	return showPath(fname, folder, rel)
 }
 
-// Which folder beside the map: the pictures to show, or the tokens.
+// Which folder beside the map: the pictures to show, the tokens, or the
+// tiles (pieces of map put down, turned and sized on it).
 func showFolder(f string) (string, bool) {
 	switch strings.TrimSpace(f) {
 	case "", "images":
 		return "images", true
 	case "tokens":
 		return "tokens", true
+	case "tiles":
+		return "tiles", true
 	}
 	return "", false
 }
 
-// A tokens folder's sizes, by path inside it: tokens/tokens.json. A token not
-// in it is small.
+// What a folder knows of its pictures, by path inside it, in a json named
+// for the folder (tokens/tokens.json, tiles/tiles.json, images/images.json):
+// a token's size (not in it: small), a tile's squares ("3x2"), and the tags
+// the GM has given each. A path through an archive is a key like any other,
+// so a picture in a zip is sized and tagged without touching the zip.
 type tokenSizes struct {
-	Sizes map[string]string `json:"sizes"`
+	Sizes map[string]string   `json:"sizes"`
+	Tags  map[string][]string `json:"tags,omitempty"`
+	// A name the GM gave it, shown in place of its file's: renaming never
+	// moves a file, since maps refer to pictures by their paths.
+	Names map[string]string `json:"names,omitempty"`
+}
+
+func folderMetaFile(dir string) string {
+	return filepath.Join(dir, filepath.Base(dir)+".json")
 }
 
 func readTokenSizes(dir string) tokenSizes {
 	var t tokenSizes
-	if b, err := os.ReadFile(filepath.Join(dir, "tokens.json")); err == nil {
+	if b, err := os.ReadFile(folderMetaFile(dir)); err == nil {
 		json.Unmarshal(b, &t)
 	}
 	if t.Sizes == nil {
 		t.Sizes = map[string]string{}
 	}
+	if t.Tags == nil {
+		t.Tags = map[string][]string{}
+	}
+	if t.Names == nil {
+		t.Names = map[string]string{}
+	}
 	return t
 }
 
 func writeTokenSizes(dir string, t tokenSizes) error {
+	if len(t.Tags) == 0 {
+		t.Tags = nil
+	}
+	if len(t.Names) == 0 {
+		t.Names = nil
+	}
 	b, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(dir, "tokens.json"), b, 0644)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(folderMetaFile(dir), b, 0644)
 }
+
+// cleanPictureTags is tags as kept: lower case, single spaces, no commas, each once,
+// in the order given.
+func cleanPictureTags(in []string) []string {
+	out := []string{}
+	seen := map[string]bool{}
+	for _, t := range in {
+		for _, one := range strings.Split(t, ",") {
+			one = strings.ToLower(strings.Join(strings.Fields(one), " "))
+			if len([]rune(one)) > 40 {
+				one = string([]rune(one)[:40])
+			}
+			if one != "" && !seen[one] {
+				seen[one] = true
+				out = append(out, one)
+			}
+		}
+	}
+	return out
+}
+
+// A tile's size in squares in its file's name: Room_Crypt_3x4.
+var tileSizeRe = regexp.MustCompile(`(?i)(?:^|[^0-9])(\d{1,2})\s*[x×]\s*(\d{1,2})(?:[^0-9]|$)`)
+
+// A tile's name from its file's: the words, without a size in squares or the
+// pack's separators ("Room_Crypt_3x4" is Room Crypt).
+func tileName(stem string) string {
+	s := tileSizeRe.ReplaceAllString(stem, " ")
+	s = strings.Join(strings.FieldsFunc(s, func(r rune) bool { return r == '_' || r == ' ' || r == '-' || r == '.' }), " ")
+	if s == "" {
+		return stem
+	}
+	return s
+}
+
+// A tile's squares when its file's name says (Room_3x4.png: 3 across, 4
+// down), else "" (the map viewer works it out from the picture).
+func tileSquares(stem string) string {
+	m := tileSizeRe.FindStringSubmatch(stem)
+	if m == nil || strings.TrimLeft(m[1], "0") == "" || strings.TrimLeft(m[2], "0") == "" {
+		return ""
+	}
+	return strings.TrimLeft(m[1], "0") + "x" + strings.TrimLeft(m[2], "0")
+}
+
+// A tile's squares as the map viewer remembers them: "3x2", "1.5x0.75".
+var tileSizeValue = regexp.MustCompile(`^\d{1,3}(\.\d{1,3})?x\d{1,3}(\.\d{1,3})?$`)
 
 /* SDOC: API
 * GET /dnd/dungeon/pictures — A Map's Pictures to Show
@@ -206,13 +294,15 @@ func writeTokenSizes(dir string, t tokenSizes) error {
 	| Parameter | Type   | Required | Description              |
 	|-----------+--------+----------+--------------------------|
 	| =file=    | string | yes      | The map's org file.      |
-	| =folder=  | string | no       | =images= (the default) or =tokens=. |
+	| =folder=  | string | no       | =images= (the default), =tokens= or =tiles=. |
 
 	*Response:* ={Ok, Dir, Pictures: [{path, name, category, size, still, shared}], Categories, Shared}=;
 	no folder is an empty list, not an error. A token's =size= is =large= when its folder's
 	=tokens.json= says so. The shared folder's (=dndSharedPath=) come after the map's own, their
 	paths starting =@shared/=; =Shared= says whether there is one. A token may be a video (=.webm=,
-	=.mp4=), with =still= the picture of the same name beside it.
+	=.mp4=), with =still= the picture of the same name beside it. A tile's =size= is its squares
+	(=3x2=), as remembered or as its file's name says (=Room_3x2.png=), else empty. =tags= are
+	the GM's words for it, kept in the folder's json (=tokens.json=, =tiles.json=, =images.json=).
 	EDOC */
 func RequestDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
@@ -223,13 +313,13 @@ func RequestDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 	}
 	folder, ok := showFolder(r.URL.Query().Get("folder"))
 	if !ok {
-		dndError(w, http.StatusBadRequest, "the folder is images or tokens")
+		dndError(w, http.StatusBadRequest, "the folder is images, tokens or tiles")
 		return
 	}
 	base := filepath.Dir(fname)
 	dir := filepath.Join(base, folder)
 	cats := map[string]bool{}
-	pics := walkShow(dir, folder+"/", folder == "tokens", false, cats)
+	pics := walkShow(dir, folder+"/", folder, false, cats)
 	sort.Slice(pics, func(i, j int) bool {
 		if pics[i].Category != pics[j].Category {
 			return pics[i].Category < pics[j].Category
@@ -240,7 +330,7 @@ func RequestDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 	shared, hasShared := sharedDir()
 	if hasShared {
 		if top := filepath.Join(shared, folder); filepath.Clean(top) != filepath.Clean(dir) {
-			more := walkShow(top, sharedPrefix+folder+"/", folder == "tokens", true, cats)
+			more := walkShow(top, sharedPrefix+folder+"/", folder, true, cats)
 			sort.Slice(more, func(i, j int) bool {
 				if more[i].Category != more[j].Category {
 					return more[i].Category < more[j].Category
@@ -398,22 +488,30 @@ func pagePicture(page []byte, at string) (string, string) {
 
 	With =shared: true= it goes into the shared folder (=dndSharedPath=) instead, for every map.
 
-	*Request Body:* ={file, folder, category, name, size, shared, data | url}=
+	With =folder: tiles= it goes into the =tiles= folder, and =size= is its squares (=3x2=).
+	=tags= are kept for it in the folder's json.
+
+	An archive (zip, 7z, rar, tar and its compressed kinds, up to 300 MB) is kept as it is when
+	=filename= names one and its bytes are one: it is then a folder of pictures of its own.
+
+	*Request Body:* ={file, folder, category, name, filename, size, tags, shared, data | url}=
 
 	*Response:* ={Ok, Msg, Path, Name, Category}=
 	EDOC */
 func PostDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
-	r.Body = http.MaxBytesReader(w, r.Body, showMaxBytes*2)
+	r.Body = http.MaxBytesReader(w, r.Body, showMaxArchive/3*4+(1<<20))
 	var req struct {
-		File     string `json:"file"`
-		Category string `json:"category"`
-		Name     string `json:"name"`
-		Data     string `json:"data"`
-		Url      string `json:"url"`
-		Folder   string `json:"folder"`
-		Size     string `json:"size"`
-		Shared   bool   `json:"shared"`
+		File     string   `json:"file"`
+		Category string   `json:"category"`
+		Name     string   `json:"name"`
+		Filename string   `json:"filename"`
+		Data     string   `json:"data"`
+		Url      string   `json:"url"`
+		Folder   string   `json:"folder"`
+		Size     string   `json:"size"`
+		Tags     []string `json:"tags"`
+		Shared   bool     `json:"shared"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		dndError(w, http.StatusBadRequest, "could not read request: %s", err)
@@ -438,7 +536,7 @@ func PostDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 	}
 	folder, ok := showFolder(req.Folder)
 	if !ok {
-		dndError(w, http.StatusBadRequest, "the folder is images or tokens")
+		dndError(w, http.StatusBadRequest, "the folder is images, tokens or tiles")
 		return
 	}
 	pic, name, code, err := takePicture(req.Data, req.Url, req.Name)
@@ -447,11 +545,20 @@ func PostDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ext := pictureExt(pic)
-	if ext == "" {
-		dndError(w, http.StatusUnsupportedMediaType, "that is not a JPEG, PNG, WebP or GIF picture")
+	if suffix := archiveSuffix(req.Filename); suffix != "" && looksArchive(pic) {
+		// A pack as it came: listed as a folder of its own.
+		ext = suffix
+		if _, stem := archiveKind(req.Filename); name == "" || name == req.Filename {
+			name = stem
+		}
+		if len(pic) > showMaxArchive {
+			dndError(w, http.StatusRequestEntityTooLarge, "that is more than %d MB", showMaxArchive>>20)
+			return
+		}
+	} else if ext == "" {
+		dndError(w, http.StatusUnsupportedMediaType, "that is not a JPEG, PNG, WebP or GIF picture, or an archive of them")
 		return
-	}
-	if len(pic) > showMaxBytes {
+	} else if len(pic) > showMaxBytes {
 		dndError(w, http.StatusRequestEntityTooLarge, "that is more than %d MB", showMaxBytes>>20)
 		return
 	}
@@ -484,15 +591,49 @@ func PostDndDungeonPictures(w http.ResponseWriter, r *http.Request) {
 		dndError(w, http.StatusInternalServerError, "%s", err)
 		return
 	}
-	if folder == "tokens" && req.Size == "large" {
+	tags := cleanPictureTags(req.Tags)
+	tileSize := folder == "tiles" && tileSizeValue.MatchString(req.Size)
+	if (folder == "tokens" && req.Size == "large") || tileSize || len(tags) > 0 {
 		inTop, _ := filepath.Rel(top, p)
+		key := filepath.ToSlash(inTop)
 		t := readTokenSizes(top)
-		t.Sizes[filepath.ToSlash(inTop)] = "large"
+		if folder == "tokens" && req.Size == "large" || tileSize {
+			t.Sizes[key] = req.Size
+		}
+		if len(tags) > 0 {
+			t.Tags[key] = tags
+		}
 		writeTokenSizes(top, t)
 	}
 	rel, _ := filepath.Rel(home, p)
 	dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Added " + filepath.Base(p),
 		"Path": as + filepath.ToSlash(rel), "Name": strings.TrimSuffix(filepath.Base(p), ext), "Category": cat})
+}
+
+// The most an archive added may weigh.
+const showMaxArchive = 300 << 20
+
+// archiveSuffix is the ending an archive of this name is kept with, "" when
+// it is not one.
+func archiveSuffix(name string) string {
+	low := strings.ToLower(name)
+	for _, k := range archiveKinds {
+		if strings.HasSuffix(low, k.suffix) {
+			return k.suffix
+		}
+	}
+	return ""
+}
+
+// looksArchive is whether the bytes begin as an archive does: zip, 7z, rar,
+// gzip, bzip2, xz, zstd, or a plain tar.
+func looksArchive(b []byte) bool {
+	for _, m := range [][]byte{{'P', 'K', 3, 4}, {'7', 'z', 0xBC, 0xAF, 0x27, 0x1C}, []byte("Rar!\x1a\x07"), {0x1f, 0x8b}, []byte("BZh"), {0xFD, '7', 'z', 'X', 'Z', 0}, {0x28, 0xB5, 0x2F, 0xFD}} {
+		if len(b) >= len(m) && string(b[:len(m)]) == string(m) {
+			return true
+		}
+	}
+	return len(b) > 262 && string(b[257:262]) == "ustar"
 }
 
 // takePicture is a picture sent as base64, or fetched from a url (a page's own
@@ -589,13 +730,16 @@ func showPath(fname, folder, rel string) (string, string, bool) {
 
 /* SDOC: API
 * POST /dnd/dungeon/pictures/edit — Size or Put Away a Token or Picture
-	For a picture or token beside a map (its =path= relative to the org file): =size= (=small=
-	or =large=) sets a token's size in its folder's =tokens.json=; =delete: true= moves it into
-	a hidden =.deleted= folder in its folder (never listed, so it can be fished back out).
+	For a picture, token or tile beside a map (its =path= relative to the org file): =size=
+	(=small= or =large=) sets a token's size in its folder's =tokens.json=, and a tile's squares
+	(=3x2=, or empty to forget them) in =tiles.json=; =tags= (a list, empty for none) sets its
+	tags, in a picture in an archive too; =name= a name to show in place of its file's (empty: its
+	file's again - the file is never moved, as maps refer to it by its path); =delete: true= moves it into a hidden =.deleted= folder
+	in its folder (never listed, so it can be fished back out).
 
 	*Method:* =POST=
 
-	*Request Body:* ={file, folder, path, size, delete}=
+	*Request Body:* ={file, folder, path, size, tags, name, delete}=
 
 	*Response:* ={Ok, Msg}=
 	EDOC */
@@ -605,8 +749,10 @@ func PostDndDungeonPictureEdit(w http.ResponseWriter, r *http.Request) {
 		File   string `json:"file"`
 		Folder string `json:"folder"`
 		Path   string `json:"path"`
-		Size   string `json:"size"`
-		Delete bool   `json:"delete"`
+		Size   string    `json:"size"`
+		Tags   *[]string `json:"tags"`
+		Name   *string   `json:"name"`
+		Delete bool      `json:"delete"`
 	}
 	if !dndBody(w, r, &req) {
 		return
@@ -618,7 +764,7 @@ func PostDndDungeonPictureEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	folder, ok := showFolder(req.Folder)
 	if !ok {
-		dndError(w, http.StatusBadRequest, "the folder is images or tokens")
+		dndError(w, http.StatusBadRequest, "the folder is images, tokens or tiles")
 		return
 	}
 	p, top, ok := resolveShow(fname, folder, req.Path)
@@ -649,11 +795,65 @@ func PostDndDungeonPictureEdit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		t := readTokenSizes(top)
-		if _, had := t.Sizes[key]; had {
+		_, had := t.Sizes[key]
+		_, tagged := t.Tags[key]
+		_, named := t.Names[key]
+		if had || tagged || named {
 			delete(t.Sizes, key)
+			delete(t.Tags, key)
+			delete(t.Names, key)
 			writeTokenSizes(top, t)
 		}
 		dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Put away " + filepath.Base(p)})
+		return
+	}
+	if req.Name != nil {
+		t := readTokenSizes(top)
+		if n := strings.Join(strings.Fields(*req.Name), " "); n != "" {
+			if len([]rune(n)) > 80 {
+				n = string([]rune(n)[:80])
+			}
+			t.Names[key] = n
+		} else {
+			delete(t.Names, key)
+		}
+		if err := writeTokenSizes(top, t); err != nil {
+			dndError(w, http.StatusInternalServerError, "%s", err)
+			return
+		}
+		dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Renamed"})
+		return
+	}
+	if req.Tags != nil {
+		t := readTokenSizes(top)
+		if tags := cleanPictureTags(*req.Tags); len(tags) > 0 {
+			t.Tags[key] = tags
+		} else {
+			delete(t.Tags, key)
+		}
+		if err := writeTokenSizes(top, t); err != nil {
+			dndError(w, http.StatusInternalServerError, "%s", err)
+			return
+		}
+		dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Tagged " + filepath.Base(p)})
+		return
+	}
+	if folder == "tiles" {
+		if req.Size != "" && !tileSizeValue.MatchString(req.Size) {
+			dndError(w, http.StatusBadRequest, "a tile's size is its squares across and down: 3x2")
+			return
+		}
+		t := readTokenSizes(top)
+		if req.Size == "" {
+			delete(t.Sizes, key)
+		} else {
+			t.Sizes[key] = req.Size
+		}
+		if err := writeTokenSizes(top, t); err != nil {
+			dndError(w, http.StatusInternalServerError, "%s", err)
+			return
+		}
+		dndJson(w, map[string]interface{}{"Ok": true, "Msg": filepath.Base(p) + " is " + req.Size + " squares"})
 		return
 	}
 	if folder != "tokens" || (req.Size != "small" && req.Size != "large") {

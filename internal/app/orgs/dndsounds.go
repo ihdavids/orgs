@@ -752,7 +752,9 @@ func RequestDndSoundSearch(w http.ResponseWriter, r *http.Request) {
 	*Request Body:* ={source, name, url, page, license, author, duration}=, a sound as
 	=GET /dnd/sounds/search= gives it.
 
-	*Response:* ={Ok, Msg, Path}=, the sound's path in the sound folder.
+	*Response:* ={Ok, Msg, Path}=, the sound's path in the sound folder; or, for a sound still
+	downloading after fifteen seconds (a long recording), ={Ok, Pending: true}=: it goes on in the
+	background, and asking again answers its path once it is kept.
 	EDOC */
 func PostDndSoundCache(w http.ResponseWriter, r *http.Request) {
 	AccessControl(&w)
@@ -771,45 +773,81 @@ func PostDndSoundCache(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	soundCacheMu.Lock()
-	defer soundCacheMu.Unlock()
 	cache := readSoundCache(dir)
 	if c, ok := cache.Sounds[it.Url]; ok {
 		if p, _, ok := resolveSound(dir, c.Path); ok {
 			if _, err := os.Stat(p); err == nil {
+				soundCacheMu.Unlock()
 				dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Kept already", "Path": c.Path})
 				return
 			}
 		}
 	}
+	job := soundJobs[it.Url]
+	if job == nil {
+		job = &soundJob{done: make(chan struct{})}
+		soundJobs[it.Url] = job
+		go keepSound(dir, it, job)
+	}
+	soundCacheMu.Unlock()
+	// A short sound is kept before the answer; a long one (Freesound's
+	// CDN gives a long recording out slowly) goes on in the background, and
+	// asking again says how it went.
+	select {
+	case <-job.done:
+		if job.err != nil {
+			dndError(w, http.StatusBadGateway, "%s", job.err)
+			return
+		}
+		dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Kept " + path.Base(job.path), "Path": job.path})
+	case <-time.After(15 * time.Second):
+		dndJson(w, map[string]interface{}{"Ok": true, "Pending": true, "Msg": "Still keeping it: a long one"})
+	}
+}
+
+// A sound being kept: done when it is, with its path or why not.
+type soundJob struct {
+	done chan struct{}
+	path string
+	err  error
+}
+
+var soundJobs = map[string]*soundJob{}
+
+// keepSound downloads a web sound into the sound folder, written to a
+// .part file and moved into place whole, then noted in the cache's index.
+func keepSound(dir string, it soundItem, job *soundJob) {
+	defer func() {
+		soundCacheMu.Lock()
+		delete(soundJobs, it.Url)
+		soundCacheMu.Unlock()
+		close(job.done)
+	}()
+	u, _ := url.Parse(it.Url)
 	req, _ := http.NewRequest("GET", it.Url, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36")
-	resp, err := (&http.Client{Timeout: 3 * time.Minute}).Do(req)
+	resp, err := (&http.Client{Timeout: 45 * time.Minute}).Do(req)
 	if err != nil {
-		dndError(w, http.StatusBadGateway, "could not fetch it: %s", err)
+		job.err = fmt.Errorf("could not fetch it: %s", err)
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		dndError(w, http.StatusBadGateway, "%s answered %s", u.Host, resp.Status)
+		job.err = fmt.Errorf("%s answered %s", u.Host, resp.Status)
 		return
 	}
-	b, err := io.ReadAll(io.LimitReader(resp.Body, soundMaxBytes+1))
-	if err != nil || len(b) > soundMaxBytes {
-		dndError(w, http.StatusBadGateway, "could not fetch it (or it is over %d MB)", soundMaxBytes>>20)
-		return
-	}
-	// Its kind: by what the server said, else by the address.
+	// Its kind: by the address, else by what the server said.
 	ext := strings.ToLower(path.Ext(u.Path))
 	if ct := resp.Header.Get("Content-Type"); !audioExts[ext] && ct != "" {
-		if exts, _ := mime.ExtensionsByType(strings.Split(ct, ";")[0]); len(exts) > 0 {
+		if strings.HasPrefix(ct, "text/") {
+			job.err = fmt.Errorf("that address is a page, not a sound")
+			return
+		}
+		if exts, _ := mime.ExtensionsByType(strings.Split(ct, ";")[0]); len(exts) > 0 && audioExts[exts[0]] {
 			ext = exts[0]
 		}
 	}
 	if !audioExts[ext] {
-		if strings.HasPrefix(resp.Header.Get("Content-Type"), "text/") {
-			dndError(w, http.StatusUnsupportedMediaType, "that address is a page, not a sound")
-			return
-		}
 		ext = ".mp3"
 	}
 	service := safeShowName(it.Source)
@@ -818,7 +856,7 @@ func PostDndSoundCache(w http.ResponseWriter, r *http.Request) {
 	}
 	folder := filepath.Join(dir, "cache", service)
 	if err := os.MkdirAll(folder, 0755); err != nil {
-		dndError(w, http.StatusInternalServerError, "%s", err)
+		job.err = err
 		return
 	}
 	stem := safeShowName(it.Name)
@@ -835,18 +873,37 @@ func PostDndSoundCache(w http.ResponseWriter, r *http.Request) {
 		}
 		p = filepath.Join(folder, fmt.Sprintf("%s %d%s", stem, i, ext))
 	}
-	if err := os.WriteFile(p, b, 0644); err != nil {
-		dndError(w, http.StatusInternalServerError, "%s", err)
+	part := p + ".part"
+	f, err := os.Create(part)
+	if err != nil {
+		job.err = err
+		return
+	}
+	n, err := io.Copy(f, io.LimitReader(resp.Body, soundMaxBytes+1))
+	f.Close()
+	if err != nil || n > soundMaxBytes {
+		os.Remove(part)
+		if err == nil {
+			err = fmt.Errorf("it is over %d MB", soundMaxBytes>>20)
+		}
+		job.err = fmt.Errorf("could not fetch it: %s", err)
+		return
+	}
+	if err := os.Rename(part, p); err != nil {
+		job.err = err
 		return
 	}
 	rel, _ := filepath.Rel(dir, p)
 	it.Path = soundPrefix + filepath.ToSlash(rel)
 	it.Cached = ""
+	soundCacheMu.Lock()
+	cache := readSoundCache(dir)
 	cache.Sounds[it.Url] = it
 	if out, err := json.MarshalIndent(cache, "", "  "); err == nil {
 		os.WriteFile(filepath.Join(dir, "cache", "sounds.json"), out, 0644)
 	}
-	dndJson(w, map[string]interface{}{"Ok": true, "Msg": "Kept " + filepath.Base(p), "Path": it.Path})
+	soundCacheMu.Unlock()
+	job.path = it.Path
 }
 
 // A sound's file by its @sounds/ path.

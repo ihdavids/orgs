@@ -303,6 +303,32 @@ type ServerSettings struct {
 		and without that there is none.
 		EDOC */
 	DndSoundPath string `yaml:"dndSoundPath"`
+	/* SDOC: Settings
+	* Dnd Music Path and Spotify
+		Where the DM screen's music finds tracks: subfolders are albums (play
+		one whole), and zip, 7z, rar and tar archives are read as folders.
+		Every audio format plays (the ones a browser does not know are turned
+		into Ogg Opus with ffmpeg). Left out, it is =music= in the shared folder
+		(=dndSharedPath=).
+
+		On a Mac with the Spotify app, the music can also be Spotify's: orgs
+		plays, pauses and skips it in the app (AppleScript, nothing to set up).
+		Searching Spotify and listing your playlists needs Spotify's Web API:
+		make an app at https://developer.spotify.com/dashboard (any name), add
+		the redirect URI orgs shows (=http://127.0.0.1:<port>/dnd/music/spotify/callback=),
+		put its client id here, and connect once from the music panel. No secret
+		is kept: the sign in is PKCE, and its token is kept in your user config
+		folder (=orgs/spotify.json=, readable by you only).
+
+		#+BEGIN_SRC yaml
+	  dndMusicPath: "/Users/me/dev/gtd/dnd/common/music"
+	  spotifyClientId: "0123456789abcdef0123456789abcdef"
+	  spotifyRedirect: ""   # only to use another than http://127.0.0.1:<port>/dnd/music/spotify/callback
+		#+END_SRC
+		EDOC */
+	DndMusicPath    string `yaml:"dndMusicPath"`
+	SpotifyClientId string `yaml:"spotifyClientId"`
+	SpotifyRedirect string `yaml:"spotifyRedirect"`
 	DndSessionTemplate string `yaml:"dndSessionTemplate"`
 	DayPageTemplate    string `yaml:"dayPageTemplate"`
 	/* SDOC: Settings

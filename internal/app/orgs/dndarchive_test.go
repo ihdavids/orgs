@@ -45,7 +45,7 @@ func TestZipFolder(t *testing.T) {
 	w.Close()
 	f.Close()
 	cats := map[string]bool{}
-	pics := archivePictures(zp, "Pack.zip", "tokens/", true, tokenSizes{Sizes: map[string]string{}}, false, cats)
+	pics := archivePictures(zp, "Pack.zip", "tokens/", "tokens", tokenSizes{Sizes: map[string]string{}}, false, cats)
 	if len(pics) != 4 {
 		t.Fatalf("want 4 pictures, got %d: %+v", len(pics), pics)
 	}
@@ -94,7 +94,7 @@ func TestTarArchives(t *testing.T) {
 		tw.Close()
 		w.Close()
 		f.Close()
-		pics := archivePictures(p, name, "tokens/", true, tokenSizes{Sizes: map[string]string{}}, false, map[string]bool{})
+		pics := archivePictures(p, name, "tokens/", "tokens", tokenSizes{Sizes: map[string]string{}}, false, map[string]bool{})
 		if len(pics) != 2 {
 			t.Fatalf("%s: want 2 pictures, got %+v", name, pics)
 		}
