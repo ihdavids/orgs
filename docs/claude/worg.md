@@ -114,6 +114,20 @@ The Org view has an **Edit** button (offered in no other view) that swaps `OrgSo
 - `jk`/`jj` are `Vim.map(..., 'insert')`, timed by vim's `insertModeEscKeysTimeout` (200ms). Leaving insert mode that way finishes a field step (the mode-change listener, deferred because vim fires it mid-update) rather than cancelling a capture.
 - **The help** is `docs/editor.org` in this repo, embedded by `docs/embed.go` and rendered by `GET /editor/help` (`internal/app/orgs/editorhelp.go`); `components/EditorHelp.tsx` (mounted once in `App`) shows it, opened through a window event by F1, `SPC ?`, `:help`, the Keys button and the settings menu's Editor keys pane. Change a binding and change that file.
 
+## Writing mode in the editor
+
+A mode of `OrgTextEditor` (settings `writing*`, `grammarServer`), entered from the Files toolbar's **Write** or the editor's **Writing** button. User guide: the Writing mode section of `docs/editor.org`.
+
+- Three files: `worg/src/writing.ts` (pure, `writing.test.ts`: outline, `moveSubtree`, paragraphs/sentences, which spans are prose, word counts, the built-in grammar/style rules, LanguageTool's answer), `spell.ts` (nspell, the thesaurus), `components/WritingMode.ts` (CodeMirror: typewriter, focus dim, checker, hover/right-click fixes, the pick list) and `components/WritingOutline.tsx`.
+- **Prose only** is decided by OrgSource's own tokens (`PROSE` in writing.ts): fg, heading levels, emphasis, linkDesc, table. A paragraph is checked as one text (`proseOf`) with an OBJ character standing in for org between pieces and a map back to document offsets, so a rule runs across a wrapped paragraph's line breaks.
+- **Spelling** is wooorm's `dictionary-en` 4.0.0 copied into `worg/public/dict/` (`en.aff`, `en.dic`, licence), fetched once on first check. **`dict` must stay in `worg/embed.go`'s go:embed list** or it 404s and nothing is underlined in red, silently. US English: `grey` is flagged. Suggestions are re-ranked by edit distance (a swap of neighbours costs 0.75) then first letter, because hunspell's order put "beers" before "years".
+- The word under the cursor is never marked as misspelt (it is being typed). Edited ranges lose their marks until the next check (400ms after typing).
+- **Moving a heading** in the outline is `moveSubtree`: two changes in original offsets, re-levelling every heading in the subtree (not ones inside blocks). A file's final empty line belongs to no subtree, so moving the last heading keeps the trailing newline.
+- Typewriter is a `transactionExtender` adding `scrollIntoView(head, {y:'center'})` to every selection/doc change except pointer selection; the room above and below is `padding: 50cqh` with the editor's host as a size container.
+- Hover tooltips are wrapped in CodeMirror's `.cm-tooltip-hover`; style that (in `editorTheme`, from the palette), not the content's own class.
+- The thesaurus (Datamuse `rel_syn`, then `ml` filtered to its top ten and those tagged `syn`; the rest is an alphabetical tail of junk) and the fix list share one pick list, drawn with the capture menu's `.cm-cap-*` classes. `wordTools` is in every editor and goes **before** `orgKeys` so its Prec.highest keydown wins while the list is open.
+- Tested in headless Chrome: puppeteer's `mouse.dragAndDrop` hangs on HTML5 drag and drop; dispatch `DragEvent`s with a shared `DataTransfer` instead.
+
 ## The Diff tab
 
 `components/Diff.tsx` (panel), `DiffView.tsx` (the viewer), `DiffHistory.tsx` (the commit graph), `DiffOutline.tsx` and `DiffSummary.tsx`; the model is `src/orgdiff.ts` and `src/githistory.ts`, both pure and tested. Server: `internal/app/orgs/filehistory.go` (`GET /history`, `GET /history/text`). The Files tab's History button opens it on the file being read (`nav.toDiff`, which writes the `diffFile` setting and switches).

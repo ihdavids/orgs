@@ -151,3 +151,45 @@ search, so use =C-x C-s=). A save is refused when the file has changed on disk s
 started editing - a capture, a kanban drag, Emacs - and you are offered to
 overwrite it or to throw your edit away and reload. Leaving the editor, the
 file or the Org view with unsaved changes asks first.
+
+* Writing mode
+*Write* on the Files toolbar opens the editor in writing mode; the *Writing*
+button under the editor turns it on and off. It stays on for the next file
+until you turn it off. The bar over the text switches each part on its own:
+
+- *Outline*: the file's headings down the side, nothing else, with the words
+  under each. The heading you are in is lit. Click a heading to go to it,
+  the triangle to fold it. Drag a heading to move it with everything under
+  it: drop on the top of another heading to go before it, on the bottom to go
+  after it, in the middle to go in as its last child; the levels change to
+  fit. With the outline focused: =Up= =Down= walk it, =Left= =Right= fold and
+  unfold, =M-Up= =M-Down= move the heading, =M-Left= =M-Right= promote and
+  demote it, =Enter= back to the text.
+- *Typewriter*: the line you are writing stays in the middle of the window,
+  and the text fades out towards the top and bottom.
+- *Focus*: the paragraph, sentence or line you are in stays bright and the
+  rest is faded back while you type.
+- *Font*: serif, sans or mono, in a narrow column of wrapped lines.
+- *Check*: spelling (red), grammar (blue) and style (green) underlined as you
+  write, over your prose only - not links, timestamps, drawers or source
+  blocks. Rest the mouse on an underline to see what is wrong and click a fix;
+  right-click the word to take the first fix (shift right-click for the
+  browser's own menu). A misspelling can be added to your dictionary (kept in
+  this browser) or ignored until the page is reloaded. The menu by *Check*
+  turns each kind on and off and takes a LanguageTool server for real grammar
+  checking: a local one (=http://localhost:8081=) or a public one, which is
+  sent each paragraph you check. With none, the built-in rules are used and
+  no text leaves the browser.
+
+| Keys                          | What it does                                            |
+|-------------------------------+---------------------------------------------------------|
+| =F7=                          | the next problem, with its fixes                        |
+| =S-F7=                        | thesaurus: synonyms for the word at the cursor          |
+| =]s= =[s= (vim)               | next, previous problem                                  |
+| =z== (vim), =M-$= (emacs)     | fixes for the word at the cursor                        |
+| =SPC y= (vim), =C-c y= (emacs) | thesaurus                                              |
+
+In a list of fixes or synonyms: the arrows or =1=-=9=, =Enter= to take one,
+=Esc= to put it away. The thesaurus works anywhere in the editor, writing mode
+or not. It asks datamuse.com, sending only the word looked up. Spelling uses an
+English (US) dictionary inside the page.

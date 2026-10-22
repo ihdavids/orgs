@@ -11,7 +11,8 @@ import "embed"
 // what a gantt chart saved as html runs (worg's scripts/build-viewer.js):
 // worg fetches it and puts it in the page, so it has to be here to fetch.
 // dicefx.js is the character sheet's casting effects for the map screens
-// (tools/dicefx/extract.py), loaded on the first effect.
+// (tools/dicefx/extract.py), loaded on the first effect. dict/ is the
+// English dictionary the editor's writing mode spells with (en.aff, en.dic).
 //
-//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js
+//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict
 var Content embed.FS
