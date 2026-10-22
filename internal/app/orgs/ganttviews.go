@@ -11,6 +11,12 @@ import (
 	"github.com/ihdavids/orgs/internal/common"
 )
 
+// A named group of marker sets, shown or hidden as one.
+type GanttMarkerGroup struct {
+	Name   string `yaml:"name" json:"name"`
+	Hidden bool   `yaml:"hidden,omitempty" json:"hidden,omitempty"`
+}
+
 // GanttMarkers are the vertical lines a gantt view draws across the chart: one
 // for every heading a second saved query finds, at that heading's date. They
 // say "the release", "the offsite", "code freeze" - moments the plan has to
@@ -21,6 +27,8 @@ type GanttMarkers struct {
 	// way, often generated one per tag or property value.
 	Label  string `yaml:"label,omitempty" json:"label,omitempty"`
 	Hidden bool   `yaml:"hidden,omitempty" json:"hidden,omitempty"`
+	// The group a set is filed under (GanttView.MarkerGroups), by name.
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
 
 	// The saved query whose headings become lines, or a query written for
 	// the markers (Query wins when both are set).
@@ -130,6 +138,9 @@ type GanttView struct {
 	Markers   *GanttMarkers     `yaml:"markers,omitempty" json:"markers,omitempty"`
 	// More marker queries, each with its own look.
 	MarkerSets []GanttMarkers `yaml:"markerSets,omitempty" json:"markerSets,omitempty"`
+	// The groups marker sets are filed under, in order, each shown or
+	// hidden as a whole. Kept apart from the sets so an empty group stays.
+	MarkerGroups []GanttMarkerGroup `yaml:"markerGroups,omitempty" json:"markerGroups,omitempty"`
 	// How the bars of the headings each rule matches are drawn: outline,
 	// fill and shape, each decided by the first matching rule that sets it.
 	BarRules []GanttBarRule `yaml:"barRules,omitempty" json:"barRules,omitempty"`

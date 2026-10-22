@@ -258,6 +258,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/picture/fetch", PostDndPictureFetch).Methods("POST")
 	api.HandleFunc("/dnd/picture/scrape", PostDndPictureScrape).Methods("POST") // every picture on a page (dndscrape.go)
 	api.HandleFunc("/dnd/campaigns", RequestDndCampaigns).Methods("GET") // campaigns and their areas of maps (dndcampaign.go)
+	api.HandleFunc("/dnd/journal", RequestDndJournal).Methods("GET")  // the DM's notes on a map (dndmapnotes.go)
+	api.HandleFunc("/dnd/journal", PostDndJournal).Methods("POST")    // put notes on a map, or make new ones there
 	api.HandleFunc("/dnd/campaign", PostDndCampaign).Methods("POST")
 	api.HandleFunc("/dnd/maps", RequestDndMaps).Methods("GET")
 	api.HandleFunc("/dnd/map/thumb", RequestDndMapThumb).Methods("GET")
