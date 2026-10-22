@@ -140,6 +140,8 @@ type UserExt struct {
 	// The org file the initiative tracker keeps this person's party in (see
 	// dndcombat.go). Chosen once, from worg.
 	DndParty string `yaml:"dndParty,omitempty" json:"dndParty,omitempty"`
+	// Words per file per day, from the editor's writing mode (writing.go).
+	WritingLog map[string]map[string]WritingDay `yaml:"writingLog,omitempty" json:"writingLog,omitempty"`
 }
 
 // ExtensionsConfig is the root of the per-user extensions YAML file.

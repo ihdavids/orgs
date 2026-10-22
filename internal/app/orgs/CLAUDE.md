@@ -735,3 +735,7 @@ The tangler is `plugs/tangle` (exporter `tangle`, `GET /tangle`, `orgs tangle`);
 - `placeResult` takes the hash and rewrites the header's `[hash]`; `resultsLineRe` already allowed it. `runProgram` takes `stdin` (only usable when the program goes in a file: awk now does, `-f block.awk`).
 - go: a body with `package` gets its vars after the imports; one without is wrapped (`package main`, imports from `:imports` plus `fmt` when used, `func main` when missing). elisp: `(let (binds) code)` - a variable called `t` is a constant there and fails, as in Emacs.
 - `tangle.Evaluate` is set in `detangle.go`'s init to run `<<name(args)>>` through `callJob`/`runJob`, so tangling such a reference needs `babel.enable`.
+
+## Writing mode's server half: `writing.go`
+
+`GET/POST /writing/snapshots` (a file's snapshots in `.snapshots/<name>.json` beside it, written via a temp file and rename, one writer at a time), `GET/POST /writing/log` (`UserExt.WritingLog`), `POST /compile` (org text from worg exported as though it were the file: `bookBytes` in `export.go` for docx/epub, shared with `/book`, else `ExportToString` over a `subtreeDb`). Notes on the worg side in `docs/claude/worg.md` (Writing mode).

@@ -17,6 +17,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/manuscript"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/pandoc"
 	"github.com/ihdavids/orgs/internal/common"
@@ -257,6 +258,26 @@ func RequestBook(w http.ResponseWriter, r *http.Request) {
 		doc.Path = path
 	}
 	props := map[string]string{"style": q.Get("style"), "paper": q.Get("paper"), "theme": q.Get("theme")}
+	base := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	b, typ, ext, words, warns, err := bookBytes(doc, path, to, props)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("X-Orgs-Words", fmt.Sprint(words))
+	for _, warn := range warns {
+		w.Header().Add("X-Orgs-Warning", warn)
+	}
+	w.Header().Set("Content-Type", typ)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", base+"."+ext))
+	w.Write(b)
+}
+
+// bookBytes writes a parsed org document as a manuscript (docx) or an ebook
+// (epub) with the configured exporters' settings: /book's work, shared with
+// the editor's compile (writingcompile.go), which hands it text that is not
+// on disk.
+func bookBytes(doc *org.Document, path, to string, props map[string]string) (b []byte, typ, ext string, words int, warns []string, err error) {
 	docx, epub := &manuscript.DocxExporter{}, &manuscript.EpubExporter{}
 	for _, exp := range Conf().Server.Exporters {
 		switch p := exp.Plugin.(type) {
@@ -274,10 +295,6 @@ func RequestBook(w http.ResponseWriter, r *http.Request) {
 	if docx.Settings.Props == nil && epub.Settings.Props != nil {
 		docx.Settings = epub.Settings
 	}
-	base := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-	var b []byte
-	var warns []string
-	typ, ext := "", ""
 	switch to {
 	case "docx", "manuscript", "word":
 		b, err = docx.Bytes(doc, props)
@@ -286,19 +303,11 @@ func RequestBook(w http.ResponseWriter, r *http.Request) {
 		b, warns, err = epub.Bytes(doc, props)
 		typ, ext = "application/epub+zip", "epub"
 	default:
-		http.Error(w, fmt.Sprintf("to=%s: docx or epub", to), http.StatusBadRequest)
-		return
+		return nil, "", "", 0, nil, fmt.Errorf("to=%s: docx or epub", to)
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, "", "", 0, nil, err
 	}
-	book := manuscript.Read(doc, path, docx.Defaults())
-	w.Header().Set("X-Orgs-Words", fmt.Sprint(book.Words))
-	for _, warn := range warns {
-		w.Header().Add("X-Orgs-Warning", warn)
-	}
-	w.Header().Set("Content-Type", typ)
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", base+"."+ext))
-	w.Write(b)
+	words = manuscript.Read(doc, path, docx.Defaults()).Words
+	return
 }

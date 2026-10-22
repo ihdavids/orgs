@@ -181,6 +181,54 @@ until you turn it off. The bar over the text switches each part on its own:
   sent each paragraph you check. With none, the built-in rules are used and
   no text leaves the browser.
 
+Beside those, the icons on the bar:
+
+- *Corkboard*: the headings at one level as index cards - title, status as a
+  coloured strip, synopsis (or the first words, greyed), words against the
+  target, and how many cards are under it (click that to look inside; the
+  path at the top goes back up). Click a card to edit its synopsis and
+  status, double-click to write it, drag it onto the left or right half of
+  another to move it there with everything under it.
+- *Second pane*: another file, or this one as it was when you opened the
+  pane, read only beside the text, with a list of its headings to jump to.
+- *One section alone*: only the heading you are in and what is under it, the
+  rest hidden behind a bar with the way back (*Show the whole file*).
+  Double-clicking a heading in the outline does the same for that heading.
+- *Targets* (the flag): words for this session (kept in the browser), for the
+  file (=#+WORD_TARGET:= in the file) and for the heading you are in
+  (=WORD_TARGET= on it). The status line shows the session and the file as
+  rings; the outline and the cards show a heading's as a bar.
+- *History* (the chart): words written per day for eight weeks, in this file
+  or in all of them, with the streak. Clicking the word count under the text
+  opens it too. The count is kept on the server per person, as the file's
+  word count at the start and end of each day, so it is the words added less
+  the words taken out.
+- *Compile* (the share icon): tick the headings that make the book (anything
+  tagged =notes= or =noexport=, or with the status Notes, starts unticked)
+  and pick a Word manuscript (with its style and paper), an ebook, a web page,
+  the org text or plain text. Drawers and planning lines, and the synopses,
+  statuses and targets, are left out unless you say otherwise. Nothing is
+  written to your files: the server exports the text it is sent.
+- *Full screen*: the editor over the whole window, nothing else on it
+  (=⌘⇧Enter= / =C-S-Enter= too); the browser's own full screen as well where
+  it allows. =Esc= leaves the browser's full screen and the editor's with it.
+
+Each heading's *synopsis*, *status* and *word target* are edited from the
+pencil on its outline row or from its card, and kept as its =SYNOPSIS=,
+=STATUS= and =WORD_TARGET= properties, so Emacs sees them too. The statuses
+are To do, First draft, Revised draft, Final draft, Done and Notes; the
+outline can show the synopses under the titles (its first button). The same
+dialog keeps *snapshots*: a copy of the heading and everything under it,
+taken before a rewrite, compared with the text as it is now (removed lines
+red, added green), restored (undo takes a restore back) or deleted.
+Snapshots are kept beside the file, in =.snapshots/<file>.json=.
+
+The checker also marks a name spelt two ways - a capitalised word used once
+or twice that is one slip away from one used three times or more (Marra for
+Mara) - with the common one as its fix, and stops calling the common one a
+misspelling. Under style, a word used again within 25 words of the last time
+is marked (dotted), names and common words left alone.
+
 | Keys                          | What it does                                            |
 |-------------------------------+---------------------------------------------------------|
 | =F7=                          | the next problem, with its fixes                        |
