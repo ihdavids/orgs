@@ -254,15 +254,21 @@ func PostWritingLog(w http.ResponseWriter, r *http.Request) {
 
 /* SDOC: API
 * GET /writing/log — The Writing Log
-	Every day this user wrote in each file: ={Ok, Files: {file: {date: {Start, End}}}}=.
-	=file= narrows it to one file.
+	Every day this user wrote in each file: ={Ok, Files: {file: {date: {Start, End}}}, Goals}=.
+	=file= narrows it to one file. =Goals= is what =POST /writing/goals= kept,
+	or absent.
 EDOC */
 func RequestWritingLog(w http.ResponseWriter, r *http.Request) {
 	ext := GetExtensions()
 	out := map[string]map[string]WritingDay{}
+	var goals *WritingGoals
 	if ext != nil {
 		ext.mu.RLock()
 		if u, ok := ext.Users[GetUsername(r)]; ok {
+			if u.WritingGoals != nil {
+				g := *u.WritingGoals
+				goals = &g
+			}
 			want := r.URL.Query().Get("file")
 			for f, days := range u.WritingLog {
 				if want != "" && f != want {
@@ -277,7 +283,56 @@ func RequestWritingLog(w http.ResponseWriter, r *http.Request) {
 		}
 		ext.mu.RUnlock()
 	}
-	writingJson(w, map[string]any{"Ok": true, "Files": out})
+	res := map[string]any{"Ok": true, "Files": out}
+	if goals != nil {
+		res["Goals"] = goals
+	}
+	writingJson(w, res)
+}
+
+// WritingGoals are words to write in a day, a week (Monday on) and a month;
+// zero is no goal. A streak counts days that met the daily goal, or any day
+// with words when there is none; RestDays a week may be missed without
+// breaking it.
+type WritingGoals struct {
+	Daily    int `yaml:"daily,omitempty" json:"Daily"`
+	Weekly   int `yaml:"weekly,omitempty" json:"Weekly"`
+	Monthly  int `yaml:"monthly,omitempty" json:"Monthly"`
+	RestDays int `yaml:"restDays,omitempty" json:"RestDays"`
+}
+
+/* SDOC: API
+* POST /writing/goals — Set Writing Goals
+	Body ={Daily, Weekly, Monthly, RestDays}=: words a day, a week and a month
+	(zero for none), and days off a week a streak survives. Kept per user in the
+	extensions file beside the writing log.
+
+	*Response:* ={Ok, Msg}=
+EDOC */
+func PostWritingGoals(w http.ResponseWriter, r *http.Request) {
+	var g WritingGoals
+	if err := json.NewDecoder(r.Body).Decode(&g); err != nil {
+		writingJson(w, common.ResultMsg{Ok: false, Msg: err.Error()})
+		return
+	}
+	if g.Daily < 0 || g.Weekly < 0 || g.Monthly < 0 || g.RestDays < 0 || g.RestDays > 6 {
+		writingJson(w, common.ResultMsg{Ok: false, Msg: "goals are words (0 or more) and rest days 0 to 6"})
+		return
+	}
+	ext := GetExtensions()
+	if ext == nil {
+		writingJson(w, common.ResultMsg{Ok: false, Msg: "no extensions file to keep the goals in"})
+		return
+	}
+	ext.mu.Lock()
+	ext.getUser(GetUsername(r)).WritingGoals = &g
+	err := ext.save()
+	ext.mu.Unlock()
+	if err != nil {
+		writingJson(w, common.ResultMsg{Ok: false, Msg: err.Error()})
+		return
+	}
+	writingJson(w, common.ResultMsg{Ok: true})
 }
 
 // ---------------------------------------------------------------------------

@@ -211,6 +211,9 @@ func StartWhisper() {
 			<-ch
 			fmt.Fprintf(os.Stderr, "\n[whisper] stopping\n")
 			StopWhisper()
+			// Both handlers see the signal; whichever exits first stops
+			// LanguageTool's child too (languagetool.go).
+			StopLanguageTool()
 			os.Exit(0)
 		}()
 	})

@@ -312,6 +312,9 @@ func StartServer(sets *common.ServerSettings) {
 	// Started here rather than in a plugin because it outlives a reload and is
 	// not driven by the org files at all.
 	StartWhisper()
+	// LanguageTool for writing mode's checker, when languageTool: asks orgs
+	// to run one (languagetool.go).
+	StartLanguageTool()
 	// The trigram index, so that searching the text of every file is not
 	// reading the text of every file. Built in the background: the first
 	// request is somebody typing into a search box, and a first keystroke that
@@ -403,6 +406,8 @@ func StartServer(sets *common.ServerSettings) {
 		<-sig
 	}
 	StopWhisper()
+	StopLanguageTool()
+	StopHarper()
 	StopTrigramIndex()
 	StopBabelSessions()
 	stopPlugins(sets)

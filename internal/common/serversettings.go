@@ -96,6 +96,85 @@ type VoiceSettings struct {
 	Target Target `yaml:"target"`
 }
 
+// LanguageToolSettings is a LanguageTool server for worg's writing mode
+// (internal/app/orgs/languagetool.go): one orgs starts and stops, from an
+// unzipped LanguageTool or a docker image, or one somebody else runs (Url).
+// The browser reaches it through orgs (/languagetool/check), so it can
+// listen on localhost only.
+type LanguageToolSettings struct {
+	// Start one with the server.
+	Enabled bool `yaml:"enabled"`
+	// The port it listens on, and where orgs looks for one already running.
+	// 8082 because whisper's default is 8081.
+	Port int `yaml:"port"`
+	// An unzipped LanguageTool (the folder holding languagetool-server.jar).
+	// Run with java when set; docker is used when it is empty.
+	Path string `yaml:"path"`
+	// The docker image run when Path is empty.
+	Docker string `yaml:"docker"`
+	// The java to run Path with.
+	Java string `yaml:"java"`
+	// A folder of LanguageTool's n-gram data (holding en/, de/...), for the
+	// confusion rules (their/there). Optional and large.
+	Ngrams string `yaml:"ngrams"`
+	// Extra arguments for java (before -cp: -Xmx2g), and for the server or
+	// docker run (after the rest).
+	JavaArgs  []string `yaml:"javaArgs"`
+	ExtraArgs []string `yaml:"extraArgs"`
+	// A LanguageTool orgs does not start: only proxied to.
+	Url string `yaml:"url"`
+}
+
+// AssistantSettings is the writing assistant in worg's writing mode
+// (internal/app/orgs/assistant.go): which AI backends it may use and the keys
+// for them. The keys stay on the server; the browser only ever talks to orgs.
+type AssistantSettings struct {
+	// The backend worg uses unless the writer picks another: claude, chatgpt
+	// or gemini. "off" turns the assistant off for everyone. Empty takes the
+	// first one that has a key.
+	Backend string `yaml:"backend"`
+	Claude  AssistantBackend `yaml:"claude"`
+	ChatGPT AssistantBackend `yaml:"chatgpt"`
+	Gemini  AssistantBackend `yaml:"gemini"`
+	// The most of a file sent as context, in characters (default 400000).
+	MaxContext int `yaml:"maxContext"`
+}
+
+// AssistantBackend is one AI service.
+type AssistantBackend struct {
+	// Leave it out of the list worg offers.
+	Disabled bool `yaml:"disabled"`
+	// The API key: the key itself, "env:NAME" for an environment variable,
+	// or "keyring:NAME" for the OS keyring (service "orgs"). Empty reads the
+	// service's usual variable (ANTHROPIC_API_KEY, OPENAI_API_KEY,
+	// GEMINI_API_KEY); Claude also takes an `ant auth login` profile.
+	ApiKey string `yaml:"apiKey"`
+	// The model, else the backend's default (claude-opus-5-5, gpt-5, gemini-flash-latest).
+	Model string `yaml:"model"`
+	// Other models the writer may pick from in worg.
+	Models []string `yaml:"models"`
+	// A different endpoint: an OpenAI-compatible server (a local model, a
+	// proxy) for chatgpt, or a gateway for the others.
+	Url string `yaml:"url"`
+	// Claude only: how hard it thinks - low, medium, high, xhigh or max.
+	Effort string `yaml:"effort"`
+}
+
+// HarperServerSettings runs Harper (https://github.com/automattic/harper) on
+// the server for worg's checker (internal/app/orgs/harper.go): its own
+// language server, harper-ls, started on the first check and kept running.
+// For phones, which cannot spare the memory for Harper in the browser.
+type HarperServerSettings struct {
+	// Offer it at all.
+	Enabled bool `yaml:"enabled"`
+	// The harper-ls binary. Else harper-ls on PATH, else the one orgs
+	// downloaded before, else (unless download is false) the release named by
+	// Version from GitHub, kept under the user cache directory.
+	Path     string `yaml:"path"`
+	Download *bool  `yaml:"download"`
+	Version  string `yaml:"version"`
+}
+
 type ServerSettings struct {
 	/* SDOC: Settings
 	* Orgs Keys
@@ -486,6 +565,103 @@ type ServerSettings struct {
 		on every voice note heading.
 		EDOC */
 	Voice VoiceSettings `yaml:"voice"`
+	/* SDOC: Settings
+	* LanguageTool
+		A [[https://languagetool.org][LanguageTool]] server for the spelling and
+		grammar checker in worg's writing mode. Turn it on and orgs starts one
+		when the server starts and stops it when the server stops; worg then
+		picks "The orgs server's own" in the checker menu, and its text goes to
+		orgs and no further.
+
+		From an unzipped LanguageTool ([[https://languagetool.org/download/LanguageTool-stable.zip][LanguageTool-stable.zip]], needs java 17 or later):
+
+		#+BEGIN_SRC yaml
+	  languageTool:
+	    enabled: true
+	    path: "~/tools/LanguageTool-6.6"   # holds languagetool-server.jar
+		#+END_SRC
+
+		Or with docker, when =path= is empty:
+
+		#+BEGIN_SRC yaml
+	  languageTool:
+	    enabled: true
+	    docker: "erikvl87/languagetool"    # the default image
+		#+END_SRC
+
+		Everything else:
+
+		#+BEGIN_SRC yaml
+	  languageTool:
+	    enabled: true
+	    port: 8082                          # where it listens (whisper has 8081)
+	    java: "java"                        # the java to run path with
+	    javaArgs: ["-Xmx2g"]                # for java, before -cp
+	    ngrams: "~/tools/ngrams"            # n-gram data: their/there, to/too
+	    extraArgs: []                       # for the server, or docker run
+	    url: "http://otherbox:8010"         # one orgs does not start
+		#+END_SRC
+
+		Something already answering on the port is used rather than started
+		again, so a LanguageTool you run by hand works too. =url= instead of
+		=enabled= proxies to a server somebody else runs.
+		EDOC */
+	LanguageTool LanguageToolSettings `yaml:"languageTool"`
+	/* SDOC: Settings
+	* Writing Assistant
+		An AI assistant in worg's writing mode: a pane down the left side of the
+		editor to talk over the text with, ask for a rewrite of a passage, a
+		critique, a synopsis or names, and put what comes back into the file.
+		Three backends: Claude, ChatGPT and Gemini. The keys are kept here, on
+		the server; the browser talks only to orgs.
+
+		#+BEGIN_SRC yaml
+	  assistant:
+	    backend: claude                  # the default: claude, chatgpt, gemini, or off
+	    claude:
+	      apiKey: "keyring:anthropic"    # or "env:ANTHROPIC_API_KEY", or the key
+	      model: claude-opus-5-5
+	      models: [claude-sonnet-5-5, claude-haiku-4-5]
+	      effort: medium                 # low, medium, high, xhigh, max
+	    chatgpt:
+	      apiKey: "env:OPENAI_API_KEY"
+	      model: gpt-5
+	      url: ""                        # an OpenAI-compatible server instead
+	    gemini:
+	      apiKey: "env:GEMINI_API_KEY"
+	      model: gemini-flash-latest
+		#+END_SRC
+
+		A backend with no key is offered as not set up. =backend: off= turns the
+		assistant off for everyone; =disabled: true= on one hides just that one.
+		With no =apiKey= each reads its usual environment variable, and Claude
+		also an =ant auth login= profile. A keyring key is stored with
+		=security add-generic-password -s orgs -a anthropic -w= on a Mac.
+		=maxContext= caps how much of a file is sent (characters, default
+		400000).
+		EDOC */
+	Assistant AssistantSettings `yaml:"assistant"`
+	/* SDOC: Settings
+	* Harper
+		[[https://github.com/automattic/harper][Harper]] for writing mode's checker, run on the server rather than in
+		the browser: for phones and small tablets, which cannot spare the memory
+		Harper needs in a page. worg's Harper settings pick where it runs.
+
+		#+BEGIN_SRC yaml
+	  harper:
+	    enabled: true
+	    path: ""          # harper-ls; empty: on PATH, else downloaded once
+	    download: true    # fetch harper-ls from GitHub when there is none
+	    version: 2.13.0   # the release to fetch, the same as worg's
+		#+END_SRC
+
+		orgs runs Harper's own language server, =harper-ls=, the first time a
+		check asks for it, and keeps it running. With no =path= and none on the
+		=PATH=, the release for this machine is downloaded from GitHub once into
+		the user cache directory (=orgs/harper-ls-<version>/=). =brew install harper=
+		or =cargo install harper-ls= work as well.
+		EDOC */
+	Harper HarperServerSettings `yaml:"harper"`
 	/* SDOC: Settings
 	* Attachments
 
@@ -892,6 +1068,11 @@ func (self *ServerSettings) Init() {
 		Languages: []string{},
 		Timeout:   30,
 		Commands:  map[string][]string{},
+	}
+	self.LanguageTool = LanguageToolSettings{
+		Port:   8082,
+		Docker: "erikvl87/languagetool",
+		Java:   "java",
 	}
 	self.Voice = VoiceSettings{
 		Models:   "",

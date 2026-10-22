@@ -24,6 +24,16 @@ func keyringGet(user string) (string, error) {
 	return password, nil
 }
 
+// KeyringGet reads a secret orgs keeps in the OS keyring (service "orgs").
+func KeyringGet(user string) (string, error) {
+	return keyring.Get("orgs", user)
+}
+
+// KeyringSet keeps a secret in the OS keyring (service "orgs").
+func KeyringSet(user, passwd string) error {
+	return keyring.Set("orgs", user, passwd)
+}
+
 func keyringSet(user, passwd string) error {
 	return keyring.Set("orgs", user, passwd)
 }

@@ -14,5 +14,5 @@ import "embed"
 // (tools/dicefx/extract.py), loaded on the first effect. dict/ is the
 // English dictionary the editor's writing mode spells with (en.aff, en.dic).
 //
-//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict
+//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict harper
 var Content embed.FS

@@ -145,12 +145,48 @@ NORMAL, INSERT, VISUAL, V-LINE, V-BLOCK, REPLACE. Leaving insert mode with
 | =C-x C-c=                 | close                                          |
 | =F1=                      | this page                                      |
 
+* Jump
+=C-;= in either key set (or =SPC ;= in vim's normal mode) jumps to anything
+you can see. Type a character or a word that is on screen: each place it is
+found is lit, with a letter tag over its first character, nearest the cursor
+first. Type the tag and the cursor is there. Keep typing the word instead to
+narrow it down: a tag is never a letter that would carry on the word, so a
+key always means one or the other. With more places than letters the tags
+are two letters long.
+
+Lowercase finds either case; type a capital and only that case is found.
+=Enter= goes to the nearest, =Backspace= takes a letter back, =Esc= (or a
+click) gives up. With text selected, the jump extends the selection.
+
 * Saving
 =⌘S= saves in either key set, and so does =C-s= in vim (in emacs =C-s= is
 search, so use =C-x C-s=). A save is refused when the file has changed on disk since you
 started editing - a capture, a kanban drag, Emacs - and you are offered to
 overwrite it or to throw your edit away and reload. Leaving the editor, the
 file or the Org view with unsaved changes asks first.
+
+* Pictures
+A link to a picture - =[[file:img/map.png]]=, =[[./photo.jpg][a caption]]=, a
+=https:= url, or a bare =file:x.png= - has the picture drawn under its line,
+here and in the Org view. It is never part of the text: the cursor steps over
+it and nothing is written into the file. A link inside a source or example
+block is left alone.
+
+- *Images* on the status line shows or hides every picture in the file. The
+  file's own =#+STARTUP: inlineimages= or =noinlineimages= decides until you
+  choose; with neither, they are shown.
+- An eye at the end of a picture link's line, there while the pointer is on
+  the line, shows or hides that one picture, whatever the file is set to. The
+  eye on a picture's corner hides it too.
+- =#+ATTR_ORG: :width 300= (else =#+ATTR_HTML: :width=) just above the link
+  sets its width, in pixels, a percentage, or a fraction (=0.5=). Otherwise a
+  picture is its own size, held to the column and to 60% of the window's
+  height.
+- Click a picture to see it full size; =Esc= or a click puts it away.
+- A picture that cannot be shown says why: no such file, or outside the folder
+  the server shares (the first org directory).
+
+What you choose is remembered for each file in this browser.
 
 * Writing mode
 *Write* on the Files toolbar opens the editor in writing mode; the *Writing*
@@ -166,20 +202,29 @@ until you turn it off. The bar over the text switches each part on its own:
   unfold, =M-Up= =M-Down= move the heading, =M-Left= =M-Right= promote and
   demote it, =Enter= back to the text.
 - *Typewriter*: the line you are writing stays in the middle of the window,
-  and the text fades out towards the top and bottom.
+  and the text fades out towards the top and bottom. Scrolling (wheel,
+  trackpad) moves the cursor with the text, so it stays on the middle line.
+  =F8= turns it on and off. The menu beside it (▾) sets where the fade starts: how far in from the
+  top and bottom edges, as a share of the window, the text goes from nothing
+  to full strength (none at all, up to 45%). The plain editor has its own
+  typewriter switch, on the status line by *Writing* (off unless you turn it
+  on; =F8= there too), sharing the same fade.
 - *Focus*: the paragraph, sentence or line you are in stays bright and the
   rest is faded back while you type.
-- *Font*: serif, sans or mono, in a narrow column of wrapped lines.
+- *Font*: serif, sans or mono, in wrapped lines the width of the pane.
+- *Column*: the text in a narrow column in the middle of the pane, like a
+  page. Off unless you turn it on.
+
+On a phone the outline and the assistant slide over the text from the left
+rather than sitting beside it; picking a heading in the outline puts it away.
 - *Check*: spelling (red), grammar (blue) and style (green) underlined as you
   write, over your prose only - not links, timestamps, drawers or source
   blocks. Rest the mouse on an underline to see what is wrong and click a fix;
   right-click the word to take the first fix (shift right-click for the
   browser's own menu). A misspelling can be added to your dictionary (kept in
   this browser) or ignored until the page is reloaded. The menu by *Check*
-  turns each kind on and off and takes a LanguageTool server for real grammar
-  checking: a local one (=http://localhost:8081=) or a public one, which is
-  sent each paragraph you check. With none, the built-in rules are used and
-  no text leaves the browser.
+  turns each kind on and off and switches on LanguageTool (below). Without
+  it, the built-in speller and rules are used and no text leaves the browser.
 
 Beside those, the icons on the bar:
 
@@ -189,6 +234,19 @@ Beside those, the icons on the bar:
   path at the top goes back up). Click a card to edit its synopsis and
   status, double-click to write it, drag it onto the left or right half of
   another to move it there with everything under it.
+- *Storyline*: who is in which scene, as a chart. The scenes run left to
+  right (the headings with nothing under them, or every heading at the level
+  you pick, chapters say); each character is a line through them, and the
+  lines of everyone in a scene are drawn together in it, so you can see who
+  meets whom, who drops out of the story and for how long. Who is in a scene
+  comes from its =CHARACTERS= property (commas between names) and =POV= (the
+  point of view, drawn as a dot), and, with /Names found in the text/ on,
+  every name you write often enough (pick how often) that appears in the
+  scene. A =TENSION= from 0 to 10 on the scenes draws the story's arc over
+  the top; each scene's words and status are under it, and the chapters are
+  bands behind it. Hover a line or a name to pick it out, click a name in the
+  cast to hide it (a place found as a name, say), hover a scene for its
+  synopsis and cast, click it to go there.
 - *Second pane*: another file, or this one as it was when you opened the
   pane, read only beside the text, with a list of its headings to jump to.
 - *One section alone*: only the heading you are in and what is under it, the
@@ -198,11 +256,24 @@ Beside those, the icons on the bar:
   file (=#+WORD_TARGET:= in the file) and for the heading you are in
   (=WORD_TARGET= on it). The status line shows the session and the file as
   rings; the outline and the cards show a heading's as a bar.
-- *History* (the chart): words written per day for eight weeks, in this file
-  or in all of them, with the streak. Clicking the word count under the text
-  opens it too. The count is kept on the server per person, as the file's
-  word count at the start and end of each day, so it is the words added less
-  the words taken out.
+- *Goals* (the chart): its /Check In/ tab has your words today, this week and this
+  month against the goals you set, with what is still to go and what that is
+  a day; your streak (days in a row you met the daily goal, or wrote at all
+  when there is none) and the longest; and a heatmap of every day you wrote,
+  a square a day, Monday at the top. Hover a square for its words, click it
+  for the files you wrote in that day. /This file/ and /Every file/ change
+  what is counted. Clicking the word count under the text opens it too.
+  /Goals and look/ sets the words a day, a week (seven days' worth when left
+  empty) and a month, and how many days off a week a streak survives; these
+  are kept on the server, so every browser sees them. It also sets how the
+  heatmap looks (kept in the browser): /gradual/ (a smooth ramp up to the
+  daily goal), /solid/ (one colour for any words), /stops/ (a step of colour
+  at each word count you list, such as =100, 500, 1000=) or /liquid/ (each
+  day fills from the bottom up to the goal); its hue, how many weeks,
+  rounded or square cells, and the month and day names. A dot marks a day
+  that met the goal. The flag's menu opens it too. The count is kept on the
+  server per person, as the file's word count at the start and end of each
+  day, so it is the words added less the words taken out.
 - *Compile* (the share icon): tick the headings that make the book (anything
   tagged =notes= or =noexport=, or with the status Notes, starts unticked)
   and pick a Word manuscript (with its style and paper), an ebook, a web page,
@@ -229,10 +300,146 @@ Mara) - with the common one as its fix, and stops calling the common one a
 misspelling. Under style, a word used again within 25 words of the last time
 is marked (dotted), names and common words left alone.
 
+** Harper
+[[https://github.com/automattic/harper][Harper]] is a grammar checker that runs in the browser itself, so like the
+built-in checker nothing you write is sent anywhere. It is on unless you turn
+it off in the menu by *Check* (▾), and is used whenever LanguageTool is off.
+
+- Its spelling takes over from the built-in dictionary: it knows which
+  English you write (American, British, Canadian, Australian or Indian, chosen
+  in the menu - "harbour" is right in British) and suggests better fixes.
+  Names you have written three times or more, and words added to your
+  dictionary, are still never misspellings.
+- Its grammar and style rules sit beside the built-in ones: a problem either
+  finds is marked, once. The built-in checks Harper does not make (a name
+  spelt two ways, a word repeated close together) stay.
+- Its problems say "· Harper" and offer *Ignore this rule*; the rules switched
+  off are listed in the menu, each with a × to turn it back on.
+- *Runs*: /in this browser/ (the first check fetches Harper, about 20MB,
+  and takes a few seconds; the built-in rules stand in until then), /on the
+  orgs server/ (each paragraph checked goes to orgs, which runs Harper; the
+  page loads nothing - for phones, which cannot spare the memory), or
+  /automatically/: the server on a phone or small tablet, this browser
+  elsewhere. On a phone, Automatically never loads Harper into the page: if
+  the server has no Harper, only the built-in rules check. The same rules,
+  dialects and fixes either way.
+- For the server to run it, =orgs.yaml= needs:
+  #+BEGIN_SRC yaml
+  server:
+    harper:
+      enabled: true
+  #+END_SRC
+  orgs then starts Harper's own language server (=harper-ls=) the first time
+  a check asks for it. One installed (=brew install harper=, =cargo install
+  harper-ls=) is used; otherwise orgs downloads the release for this machine
+  from GitHub once (=download: false= stops it, =path:= names one).
+
+** The assistant
+The sparkle on the writing bar opens an AI assistant in a pane down the left
+of the text: Claude, ChatGPT or Gemini, whichever the server has keys for. The
+arrow at its top folds it to a strip; the sparkle again puts it away.
+
+- *Backend and model*: picked at the top, from those the server offers
+  (=assistant:= in =orgs.yaml=, below). One with no key shows as "no key".
+- *Keys* (the key at the top, or /Set up a key/ when none is set up): for
+  each service, whether it has a key and where from, and how to get one -
+  a link to the service's key page, then paste the key and press /Test and
+  save/. The server tries it with the service first and keeps it only if it
+  works, in its OS keyring (or, with no keyring, a file beside =orgs.yaml=
+  only its owner can read); it is used at once, ahead of a key in
+  =orgs.yaml= or the environment, and never sent back to the browser.
+  /Remove/ takes it away. Only an administrator of the server can set keys
+  (anyone, with =noAuth=), since what the assistant does is billed to them.
+- *Sees of this file*: the /section/ the cursor is in, the /whole file/, or
+  /nothing/ but what you type. Your selection is always sent along when there
+  is one. The line under it says roughly how much that is.
+- *Can read*: this file, and nothing else unless you add a file there. Each
+  added file is sent whole with every question; take it off with its ×.
+  Added files are remembered for this file in this browser. The server reads
+  only the files named, and only org files it serves; it refuses anything
+  else.
+- *Actions*: Continue (from the cursor), Rephrase, Tighten and Show, don't
+  tell (on the selection - select text first), Critique, Synopsis, Names and
+  Questions. Anything typed in the box is added to the action's request.
+- Each answer has *Insert* (at the cursor; as a paragraph of its own at the
+  start or end of a line), *Replace* (the selection) and copy. Both are
+  ordinary edits, so undo takes them out again. *Stop* ends an answer part
+  way; the bin starts a new conversation.
+
+Nothing is sent until you ask. The conversation is about this file and goes
+when you open another.
+
+On the server (keys never reach the browser):
+
+#+BEGIN_SRC yaml
+server:
+  assistant:
+    backend: claude              # the default; "off" turns the assistant off for everyone
+    claude:
+      apiKey: "keyring:anthropic"   # or "env:ANTHROPIC_API_KEY", or the key itself
+      model: claude-opus-5-5
+      models: [claude-sonnet-5-5]   # others to offer
+      effort: medium                # low, medium, high, xhigh, max
+    chatgpt:
+      apiKey: "env:OPENAI_API_KEY"
+      model: gpt-5
+      url: ""                       # an OpenAI-compatible server (a local model) instead
+    gemini:
+      apiKey: "env:GEMINI_API_KEY"
+      model: gemini-flash-latest
+#+END_SRC
+
+With no =apiKey= each backend reads its usual environment variable, and Claude
+also an =ant auth login= profile. =disabled: true= hides one backend.
+
+** LanguageTool
+[[https://languagetool.org][LanguageTool]] is a real spelling, grammar and style checker. Switch it on
+in the menu by *Check* (▾) and it does all three; the built-in rules stand
+in for a paragraph until its answer comes. The menu has:
+
+- *Server*: /the orgs server's own/ (one orgs runs for you, set up in
+  =orgs.yaml=, below; your text goes to orgs and no further), /public/
+  (=api.languagetool.org=, free, with limits), /premium/
+  (=api.languagetoolplus.com=, with your user name and API key), or /another
+  server/ by its url (=http://localhost:8081=). The public and premium
+  servers are sent each paragraph you check. *Test* sends one sentence and
+  says what answered, in what language, and how fast.
+- *Language*: detect it (the default, steered by the preferred varieties,
+  =en-US= unless you say =en-GB=), one from the list, or any code.
+- *Mother tongue*: finds false friends for a writer whose first language it
+  is.
+- *Picky*: LanguageTool's stricter rules for style, tone and wordiness.
+- *Check as I type*: off, paragraphs are only sent when you press =F7=.
+- *Rules and categories*: rule and category ids to switch on or off.
+  *Ignore this rule* on a problem's fixes adds its rule to the ones switched
+  off.
+
+*Add to dictionary* works on LanguageTool's misspellings too: your words are
+never marked, whoever checks.
+
+To have orgs run LanguageTool, add to =orgs.yaml= either an unzipped
+LanguageTool ([[https://languagetool.org/download/LanguageTool-stable.zip][LanguageTool-stable.zip]], which needs java 17 or later):
+
+#+BEGIN_SRC yaml
+server:
+  languageTool:
+    enabled: true
+    path: "~/tools/LanguageTool-6.6"   # the folder holding languagetool-server.jar
+#+END_SRC
+
+or, with no =path=, docker (the =erikvl87/languagetool= image unless
+=docker:= names another). It listens on port 8082 (=port:=); one already
+running there is used rather than started again, and orgs stops the one it
+started when it stops. =ngrams:= names LanguageTool's n-gram data for the
+their/there kind of mistake, =javaArgs: ["-Xmx2g"]= gives it more memory,
+and =url:= instead of =enabled:= passes the checks on to a LanguageTool
+somebody else runs.
+
 | Keys                          | What it does                                            |
 |-------------------------------+---------------------------------------------------------|
 | =F7=                          | the next problem, with its fixes                        |
 | =S-F7=                        | thesaurus: synonyms for the word at the cursor          |
+| =F8=                          | typewriter on or off (in the plain editor too)          |
 | =]s= =[s= (vim)               | next, previous problem                                  |
 | =z== (vim), =M-$= (emacs)     | fixes for the word at the cursor                        |
 | =SPC y= (vim), =C-c y= (emacs) | thesaurus                                              |

@@ -83,6 +83,16 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/writing/snapshots", PostSnapshot).Methods("POST")     // take or delete one
 	api.HandleFunc("/writing/log", RequestWritingLog).Methods("GET")       // words per file per day
 	api.HandleFunc("/writing/log", PostWritingLog).Methods("POST")
+	api.HandleFunc("/media/resolve", PostMediaResolve).Methods("POST") // where a file's pictures can be fetched (inline images)
+	api.HandleFunc("/languagetool/check", PostLanguageToolCheck).Methods("POST")         // writing mode's checker, passed to LanguageTool
+	api.HandleFunc("/languagetool/status", RequestLanguageToolStatus).Methods("GET")     // the LanguageTool orgs runs
+	api.HandleFunc("/languagetool/languages", RequestLanguageToolLanguages).Methods("GET")
+	api.HandleFunc("/writing/goals", PostWritingGoals).Methods("POST") // daily, weekly, monthly word goals
+	api.HandleFunc("/assistant/status", RequestAssistantStatus).Methods("GET") // the writing assistant's backends
+	api.HandleFunc("/assistant/chat", PostAssistantChat).Methods("POST")
+	api.HandleFunc("/assistant/key", PostAssistantKey).Methods("POST") // set a backend's key from worg
+	api.HandleFunc("/harper/lint", PostHarperLint).Methods("POST")     // Harper run on the server, for phones
+	api.HandleFunc("/harper/status", RequestHarperStatus).Methods("GET")
 	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file
 	api.HandleFunc("/filters", RequestFilters)                    // Get all stored filters from the server
 	api.HandleFunc("/html/themes", RequestHtmlThemes)             // The themes the html exporter can render with

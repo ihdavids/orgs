@@ -40,6 +40,12 @@
   links follow, and the Links panel shows what points at the file and what it
   points at.
 
+  Pictures a file links to are drawn under their links in the Org view and in
+  the editor, as Emacs does with =org-display-inline-images=. The picture
+  button on the toolbar (*Images* on the editor's status line) shows or hides
+  them all; an eye at the end of a link's line, there when the pointer is,
+  shows or hides that one. Click a picture to see it full size.
+
   [[file:images/worg-files.png]]
 
 * Kanban

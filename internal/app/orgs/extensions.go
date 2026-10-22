@@ -142,6 +142,9 @@ type UserExt struct {
 	DndParty string `yaml:"dndParty,omitempty" json:"dndParty,omitempty"`
 	// Words per file per day, from the editor's writing mode (writing.go).
 	WritingLog map[string]map[string]WritingDay `yaml:"writingLog,omitempty" json:"writingLog,omitempty"`
+	// Words a day, week and month this person means to write, and what a
+	// streak counts (writing.go).
+	WritingGoals *WritingGoals `yaml:"writingGoals,omitempty" json:"writingGoals,omitempty"`
 }
 
 // ExtensionsConfig is the root of the per-user extensions YAML file.
