@@ -753,6 +753,80 @@
 
   Do not hand edit those files, put your changes in a module instead.
 
+* The DM's journal on a map
+
+  The DM screen (a saved map opened in worg's Files tab) keeps your notes on
+  the map itself: a book mark at a spot, seen only on your screen - never the
+  players'. Clicking one opens the note in a window over the map; the window
+  moves by its strip, folds to one line, and grows with its corner.
+
+  A note is an ordinary org heading, in any org file, with two properties:
+
+  #+BEGIN_SRC org
+  ,* The drowned shrine
+  :PROPERTIES:
+  :DND_MAP: ../dungeons/the-grotto.org
+  :DND_AT:  12.5 8
+  :END:
+  Water to the knees. A cracked statue of the king watches the door.
+  #+END_SRC
+
+  =DND_MAP= names the map's org file, relative to the note's file, and is
+  inherited: from a parent heading, or from a =#+DND_MAP:= line at the top of
+  the file, so a file of notes for one map names it once. =DND_AT= is where, in
+  squares (across, then down). The note is the heading and everything under it;
+  a sub heading with a =DND_AT= of its own is a mark of its own as well. Notes
+  cannot live in the map's own org file, which is written again from the map
+  every time it is saved.
+
+  The journal button on the tool rail opens the list of notes. From there:
+  - *New note on the map* - type a title, click the map. It goes into
+    =<map>-journal.org= beside the map and opens in the editor.
+  - *Put a heading on the map* - pick any heading you already have, click the
+    map. Only its properties change.
+  - Drag a mark to move it. *note under it* adds a sub heading at a spot of its
+    own; *off the map* takes the properties away and leaves the heading.
+
+  The pencil edits the note's file in the org editor, at the note.
+
+** Links that act on the table
+
+  An org link to =dnd:= is a button in the window. Emacs and other readers
+  see an ordinary link. While editing, the ⚡ button finds an action by typing
+  and writes its link at the cursor (while reading, it copies it).
+
+  | Link                                | Does                                                         |
+  |-------------------------------------+--------------------------------------------------------------|
+  | =[[dnd:picture:Monsters/dragon.png]]= | Shows a picture from the map's =images= folder (path or name) |
+  | =[[dnd:picture]]=                     | Puts the picture away                                        |
+  | =[[dnd:fight:3 Goblin, Ogre]]=        | Brings them into the initiative tracker                      |
+  | =[[dnd:fight]]=                       | The same, from the note's own =\vert # \vert Monster \vert= table |
+  | =[[dnd:sound:thunder]]=               | Plays a sound: built in, or yours by name; =sound:loop rain=, =sound:stop= |
+  | =[[dnd:music:Tavern]]=                | An album or track by name, a =spotify:= uri; =music:stop=, =music:pause= |
+  | =[[dnd:weather:storm 0.8]]=           | Weather and its strength (0.1-1); =weather:clear=            |
+  | =[[dnd:spell:fire]]=                  | Casts at the note; =@party=, =@token:Ogre=, =@pin:Altar=, =@12,5= |
+  | =[[dnd:aura:dome-blue 2]]=            | A lasting effect, two squares out, placed the same way       |
+  | =[[dnd:screen:quake]]=                | hurt, shake, cracks, sting, eruption, quake, impact          |
+  | =[[dnd:show:token:Ogre]]=             | The players see it; =hide:=, =toggle:=; =token=, =tile=, =pin=, =band= or any |
+  | =[[dnd:reveal]]=                      | Lifts the fog over what can be seen from the note; =reveal:3= three squares round |
+  | =[[dnd:cover:3]]=                     | Puts the fog back                                            |
+  | =[[dnd:party]]=                       | Moves the party to the note                                  |
+  | =[[dnd:ping]]=                        | A ping at the note, on both screens                          |
+  | =[[dnd:look]]=                        | Points the players' camera at the note                       |
+  | =[[dnd:note:The crypt door]]=         | Opens another note on the map                                |
+
+  Several in one link run in turn: =[[dnd:weather:storm;sound:thunder;show:token:Ogre][The ogre bursts in]]=.
+  A name like =Goblin= answers to =Goblin 2= as well; =*= is everything of that kind.
+
+** Picking things on the map
+
+  A token, a tile or a pin picked on the DM screen gets a ring of buttons:
+  the eye shows or hides it from the players (you always see it, faded when
+  hidden), and a link button copies a =dnd:show:= link for it to paste into a
+  note. Tokens can also be made large or small, tiles turned, pins changed in
+  the pins panel, and any of them taken off the map. Tiles are picked while the
+  tiles shelf (=G=) is open, as before.
+
 * REST API
 
   | Endpoint             | Method | Purpose                                     |
@@ -768,6 +842,13 @@
   | =/dnd/refresh=       | POST   | Recompute a sheet after hand editing        |
   | =/dnd/sheet=         | GET    | The fully computed sheet as JSON            |
   | =/dnd/characters=    | GET    | Every character sheet the server knows      |
+
+  The DM's journal on a map:
+
+  | Endpoint        | Method | Purpose                                                    |
+  |-----------------+--------+------------------------------------------------------------|
+  | =/dnd/journal=  | GET    | Every note on a map (=file= the map's org file)            |
+  | =/dnd/journal=  | POST   | =op= place (also by =hash=), unplace or new: line edits    |
 
   The inventory:
 
