@@ -95,6 +95,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/languagetool/status", RequestLanguageToolStatus).Methods("GET")     // the LanguageTool orgs runs
 	api.HandleFunc("/languagetool/languages", RequestLanguageToolLanguages).Methods("GET")
 	api.HandleFunc("/writing/goals", PostWritingGoals).Methods("POST") // daily, weekly, monthly word goals
+	api.HandleFunc("/writing/ideas", RequestStoryIdeas).Methods("GET") // storyideas.go: the Ideas pane's generators
+	api.HandleFunc("/writing/ideas", PostStoryIdeas).Methods("POST")
 	api.HandleFunc("/assistant/status", RequestAssistantStatus).Methods("GET") // the writing assistant's backends
 	api.HandleFunc("/assistant/chat", PostAssistantChat).Methods("POST")
 	api.HandleFunc("/assistant/key", PostAssistantKey).Methods("POST") // set a backend's key from worg
@@ -398,6 +400,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/voice/recording/{id}", RequestVoiceAudio).Methods("GET")
 	api.HandleFunc("/voice/recording/{id}", DeleteVoiceRecording).Methods("DELETE")
 	api.HandleFunc("/voice/transcribe", PostVoiceTranscribe).Methods("POST")
+	api.HandleFunc("/voice/dictate", PostVoiceDictate).Methods("POST") // writing mode's dictation: a clip, transcribed, not kept
 	api.HandleFunc("/voice/note", PostVoiceNote).Methods("POST")
 	api.HandleFunc("/voice/append", PostVoiceAppend).Methods("POST")
 	api.HandleFunc("/image/paste", PostImagePaste).Methods("POST")

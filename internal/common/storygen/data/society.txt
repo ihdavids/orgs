@@ -1,0 +1,3721 @@
+# Word tables for cultures, religions and organisations (storygen).
+
+## culture_homes
+# used as: people of a/an {}  (singular noun phrase without article: 'river delta')
+== fantasy
+river delta
+high steppe
+island chain
+deep forest
+mountain valley
+salt desert
+fjord coast
+old imperial city
+marsh country
+border hill country
+chalk downland
+volcanic archipelago
+walled river city
+canyon maze
+frozen tundra
+cedar highland
+lake of floating villages
+pine coast of shipwrights
+red-sand oasis
+moorland of standing stones
+plain of a thousand barrows
+cliff city carved into a gorge
+fen kingdom half under water
+terraced tea mountain
+forest of giant mushrooms
+caravan road across the dunes
+drowned valley of old towers
+glacier edge
+bay of whale hunters
+valley under a sleeping volcano
+crossroads market town
+hill fort country
+mangrove coast
+ruined capital squatted by farmers
+river gorge of mills and bridges
+heathland of shepherds
+snowbound mountain pass
+coral atoll
+city built on a dead god's ribs
+grassland of horse herds
+salt marsh of reed-cutters
+cave city lit by fungus
+riverboat fleet that never docks
+orchard valley
+iron-mining mountain
+valley where the sun sets twice
+== sf
+tidally locked world's twilight band
+generation ship's lower decks
+ice moon's under-ocean
+ring habitat
+desert colony gone native
+mining town in the belt
+sunken arcology
+world of permanent storms
+orbital shipyard
+terraformed crater lake
+cloud city above a gas giant
+asteroid hollowed into a cathedral
+dying colony on a quarantined world
+comet riding the long ellipse
+seed vault station
+hydroponic ziggurat
+abandoned alien city reoccupied by humans
+spinning drum habitat with a river in the sky
+lava-tube settlement on a young moon
+convoy of slow freighters
+refugee flotilla
+research outpost cut off for a century
+tidal world of migrating towns
+canyon city on a red planet
+sealed dome forgotten by its founders
+crashed colony ship's hull
+pressure-domed seabed
+dark-side mining camp
+trade station at a jump point
+nomad fleet of solar sailors
+penal colony that freed itself
+garden world kept by machines
+station built inside a dead star's debris
+glacier world's thermal vents
+tethered elevator town
+salvage yard orbiting a battlefield
+moon of endless forests
+lagrange-point commune
+megacity arcology's hundredth floor
+nomad tribe of a rogue planet
+derelict battleship turned village
+world where the night lasts a year
+habitat grown from engineered coral
+farm moon of a rich world
+data archive where the staff stayed
+== modern
+fishing harbour
+immigrant neighbourhood in a big city
+hill-farming valley
+travelling fair
+old mining town
+island the ferries stopped calling at
+cathedral close
+coastal town of incomers and locals
+council estate built in the sixties
+canal boat community
+university town out of term
+seaside resort past its best
+market town on a bypass
+village that floods every winter
+high-rise block with a rooftop garden
+commuter suburb
+border town with two languages
+retirement colony by the sea
+steelworks town after the steelworks
+lighthouse island
+city allotment society
+inner-city street of corner shops
+holiday park out of season
+town that still has a railway works
+farming island with one pub
+mountain ski village
+river town of boatyards
+new town that never got its centre
+wine valley
+religious commune in the hills
+fenland village
+mill town on a cold river
+army garrison town
+port city's old docks
+village of second homes
+slate quarry village
+street of terraced houses with one road out
+night-shift neighbourhood near the hospital
+caravan site on the edge of town
+cliff-top village losing a garden a year
+cul-de-sac of the newly rich
+tower block due for demolition
+suburb built round a motorway junction
+remote crofting township
+village that won a best-kept prize once
+
+## values
+# used as: They prize {} and ...  (noun)
+== all
+hospitality
+hard work
+honour among kin
+silence
+cleverness
+endurance
+beauty
+frankness
+humility
+debts repaid
+the old ways
+learning
+courage
+thrift
+music
+tolerance
+loyalty to place
+self-reliance
+patience
+joy
+modesty
+a good argument
+generosity to strangers
+cleanliness
+punctuality
+storytelling
+craftsmanship
+restraint
+cunning in trade
+mercy
+honesty even when it hurts
+discretion
+neighbourliness
+obedience to elders
+the young
+a sense of humour
+grace under pressure
+memory
+fair shares
+ambition
+plain speaking
+privacy
+dignity in poverty
+quick wits
+skill with the hands
+faithfulness
+order
+freedom of movement
+hard bargains
+the family name
+a clean death
+keeping promises
+gentleness
+stubbornness
+good manners
+wealth honestly made
+wealth however made
+physical strength
+modest dress
+fine food
+deep sleep
+contemplation
+song
+grief openly shown
+forgiveness
+revenge
+tidiness
+competence
+shared meals
+laughter at funerals
+hard drink
+sobriety
+the land
+the sea
+mastery of a single craft
+curiosity
+correct procedure
+quiet charity
+loud charity
+a long memory for slights
+gratitude
+equality
+rank
+humble origins
+cool heads
+passion
+loyalty to the crew
+weather wisdom [fantasy, modern]
+plain food
+handsome horses [fantasy, modern]
+clean water
+the right to be left alone
+eloquence
+modesty in victory
+the courage to say no
+
+## taboos
+# used as: They never permit {}.  (-ing phrase: 'saying the names of the dead')
+== all
+saying the names of the dead
+eating in front of strangers
+cutting your hair before you marry
+refusing a gift
+whistling indoors
+showing the soles of your feet
+selling land
+sleeping with your head to the north
+killing a white bird [fantasy, modern]
+telling a dream before noon
+turning your back on the sea [fantasy, modern]
+wasting water
+boasting
+touching someone's head
+counting your children aloud
+pointing at the moon
+sitting with your back to the door
+putting bread upside down
+cutting a rope someone else tied
+singing at the table
+eating the last piece of anything
+speaking during a storm [fantasy, modern]
+walking under a ladder of any kind
+leaving a guest's cup empty
+crossing a threshold left foot first
+lending a knife without a coin in return
+naming a baby before its first tooth
+looking a priest in the eye
+burning wood that has floated [fantasy, modern]
+saying goodbye on a bridge
+marrying in the month of the dead
+spilling salt without throwing some back
+weeping where the dead can hear
+asking a stranger's age
+touching iron on the holy day
+playing music after dark
+calling a sailor by name at sea [fantasy, modern]
+leaving a door half open
+carrying fire from another house [fantasy, modern]
+writing anything in red ink [fantasy, modern]
+building a house facing west
+sweeping dust out of the front door
+cooking meat and milk together
+going barefoot inside the temple
+interrupting an elder
+asking how much something cost
+eating with the left hand
+laughing at a funeral
+not laughing at a funeral
+lying on the sabbath
+selling a horse you have named [fantasy, modern]
+giving a clock as a present
+taking the last boat out [fantasy, modern]
+picking flowers from a grave
+speaking of money at dinner
+letting a fire die on its own [fantasy, modern]
+wearing the colour of mourning to a wedding
+burying anyone without their shoes
+keeping a dead person's mirror
+counting the stars
+stepping on another's shadow
+leaving a bed unmade at noon
+cutting nails after dark
+opening an umbrella under a roof [modern]
+mentioning drowning near the water [fantasy, modern]
+cursing in front of children
+drinking before the host drinks
+wearing another family's tartan [fantasy, modern]
+keeping a bird in a cage
+calling the wolf by its true name [fantasy]
+throwing away bread
+leaving a knife on the table overnight
+breaking a promise made over salt
+starting a journey on the fourth day
+crying at a birth
+painting a face on a doll
+saying aloud that you are happy
+singing the old songs to outsiders
+naming a ship after a living person
+sitting on a table
+borrowing a wedding dress
+cutting down a tree that bears fruit
+leaving the harbour on a Friday [modern]
+stepping over a sleeping person
+speaking first to a widow
+kissing in public
+touching the drum unless you are its keeper
+eating fish heads
+marrying someone from upriver [fantasy, modern]
+turning down a dance
+leaving food on the plate
+finishing everything on the plate
+going hatless in the sun [fantasy, modern]
+writing down a recipe
+telling a child it is beautiful
+reading another's letters
+arriving on time
+arriving late
+asking a direct question
+saying no outright
+seating thirteen at a table
+returning by the road you left on
+walking past a shrine without bowing
+buying shoes for the dead
+handing anyone anything over a threshold
+leaving a well uncovered [fantasy, modern]
+talking about the weather before it turns [fantasy, modern]
+swearing on your mother
+touching another's tools
+cutting bread with a knife
+whistling at sea [fantasy, modern]
+looking back at a funeral procession
+naming a storm [fantasy, modern]
+using the front door except for coffins
+wearing gold before your first child
+selling a family recipe
+dyeing cloth on a rest day
+shaking hands across a fence
+pouring wine backhanded
+sharing a pipe with an enemy
+giving away a gift
+keeping a gift you were given to pass on
+lighting three from one match [modern]
+digging a grave the day before
+killing a spider in the house [fantasy, modern]
+saying the mountain's name in winter [fantasy, modern]
+laughing at a stammer
+putting shoes on a table
+letting a child sleep in moonlight [fantasy, modern]
+burning letters [fantasy, modern]
+mending clothes while wearing them
+eating while walking
+sleeping through sunrise on a feast day
+
+## greetings
+# used as: They greet each other as they {}.  (verb phrase: 'press foreheads together')
+== all
+press foreheads together
+say 'what news of the road?' [fantasy, modern]
+offer a pinch of salt
+clasp forearms
+bow and touch the heart
+ask after the other's mother first
+exchange a small stone
+say each other's full names
+kiss the right hand
+pour a drop on the ground
+touch the ground and then their own brow
+ask 'have you eaten?'
+sniff each other's cheek
+tap two fingers on the shoulder
+hold out both empty palms
+whistle a two-note family call
+say 'the fire is lit' and wait for 'and the door is open'
+rub noses
+bump shoulders like oxen at a gate [fantasy, modern]
+lift their hats an inch and no more
+share a sip from the same cup
+lock little fingers
+recite their mothers' names
+trade a pinch of tea leaves
+step forward, then back, then forward again
+murmur the weather and agree with it
+clap twice and bow
+press a palm to the other's chest
+touch the brims of their hats together
+say 'still breathing?' and answer 'still breathing'
+kiss three times, starting on the left
+hum the first line of a hymn
+show each other their hands are clean
+call out their trade
+raise a closed fist and open it slowly
+bow lower to the older one
+swap a breadcrumb
+place a hand on the other's head
+ask how the river is running [fantasy, modern]
+compliment each other's boots
+cross their wrists over their chest
+touch elbows
+nod once and say nothing at all
+say 'I see you' in the old tongue
+offer the sky a nod first [fantasy, modern]
+spit on their palms and shake
+grasp both hands and squeeze three times
+bless each other's road
+name the last thing they ate
+pinch each other's ear gently
+kneel briefly, the younger first
+ask after the cattle [fantasy, modern]
+press thumbs together
+light each other's pipe [fantasy, modern]
+trade one true sentence
+blow softly on each other's hands
+pretend not to see each other for a polite moment
+exchange a joke that must be groaned at
+tip a little water from a flask onto their shoes
+hold up the number of children they have
+recite the day's date
+say 'the tide is kind' [fantasy, modern]
+bow to the other's shadow
+touch the other's sleeve and then their own
+ask if the night was long
+offer a sprig of something green
+lean their foreheads to the other's shoulder
+share the last line of a song
+show the soles of their hands
+ring a small bell they carry
+kiss the air beside each ear
+hold each other's wrists to feel a pulse
+lift the other's hand to their brow
+announce how far they have walked
+call each other 'cousin', related or not
+sit down before speaking
+touch the threshold stone together [fantasy, modern]
+ask what the other dreamt
+say 'peace on your roof'
+link arms and turn once
+salute with a cup, full or empty
+swap hats for a moment
+wish each other a dry harvest [fantasy, modern]
+say 'you came back' whether or not they left
+hold up a lit match until it burns down [modern]
+taste a grain of the other's salt
+press palms flat against each other's
+bow from the waist and touch a knee
+offer the left hand, never the right
+grin with all their teeth
+ask after the health of the house
+name each other's grandfathers
+pat each other twice on the back
+
+## foods
+# used as: Food: {}  (dish or staple)
+== fantasy
+smoked eel
+barley bread with honey
+goat stew with sour milk
+salted fish and seaweed
+spiced flatbread
+chestnut porridge
+blood sausage
+roast pigeon
+acorn cakes baked in ashes
+horse milk fermented until it fizzes
+oatcakes and soft cheese
+fish sauce on everything
+pickled mushrooms from the deep wood
+roast boar on feast days
+hard cheese aged in caves
+pea soup thick enough to stand a spoon in
+dried apricots and almonds
+mutton pie with too much pepper
+eggs of seabirds gathered from the cliffs
+millet porridge with butter
+dark beer that counts as a meal
+trout cooked in clay
+lentil stew with burnt onions
+roast chestnuts sold at every corner
+honey cakes for the dead
+pickled herring and black bread
+smoked mutton hung all winter
+snails in garlic
+river crayfish boiled in beer
+rye bread so hard it keeps a year
+goose fat on toast
+lamb with mint and barley
+salted plums
+nettle soup in spring
+venison stewed with juniper
+fried locusts with salt
+dates and camel milk
+buckwheat pancakes
+mead brewed by the household
+whole fish baked in salt
+seal blubber and berries
+cabbage pickled in barrels
+roast swan, for nobles only
+pork crackling with apple
+bread baked with seeds from the temple
+eel jelly
+spiced wine kept warm all winter
+yak butter tea
+oat beer and onions
+frog legs from the fens
+== sf
+vat-grown protein dressed up for feasts
+fermented algae paste
+the one real tomato a week
+insect flour cakes
+printed noodles flavoured for home
+ice-moon kelp
+mushroom steaks grown on recycled waste
+nutrient bars named after dead admirals
+hydroponic lettuce eaten with ceremony
+synthetic coffee nobody admits to liking
+krill crackers
+bread from a starter older than the ship
+spirulina broth
+chicken that has never seen a chicken
+rationed sugar saved for birthdays
+spiced cricket paste
+tank-fish fried crisp
+tube-fed honey from a single hive
+moon-grown potatoes, endlessly
+yeast cheese aged in the airlock
+smuggled chocolate traded like gold
+reconstituted soup at shift change
+salted protein jerky
+greenhouse strawberries, one each
+noodles in recycled-water broth
+native fungus made edible by enzyme pills
+gel cubes in every colour
+algae beer
+alien tubers that must be boiled three times
+pressed seaweed sheets
+soya everything
+grubs farmed in the waste decks
+tomato paste from the founders' seed
+spiced rice grown under lamps
+lab-grown beef at weddings
+peppers grown in the reactor's warm room
+dried fruit from the last supply run
+gene-tweaked beans that taste of meat
+frozen ration packs from before the war
+the colony's single goat's cheese
+sweet kelp candy
+foam pudding
+egg powder omelettes
+yeast-grown fats in a little dish
+blue moss salad
+pickled vent shrimp
+pressure-cooked roots
+emergency rations past their date
+fish from the habitat's ring lake
+cake made with real flour for the dead
+== modern
+fried fish on Fridays
+a soup every grandmother makes differently
+pickled everything
+a dumpling for every holiday
+lamb at Easter
+a cake only made for funerals
+chips with gravy
+a roast on Sundays
+curry from the place on the corner
+bacon sandwiches after the night shift
+stew that goes on all week
+fruit cake soaked in brandy
+pasties carried down the mine
+tinned peaches with evaporated milk
+a stew made with whatever the boats bring in
+cheese on toast
+meat pies at the match
+lentil soup with lemon
+fried breakfast all day
+sausage rolls from the bakery
+mussels in season
+crab sandwiches
+flatbread from the bakery that never closes
+jacket potatoes with beans
+spaghetti with ketchup
+rice and peas on Sundays
+a pickled cabbage someone's aunt brings
+fish soup at the harbour cafe
+toast and dripping
+a pie someone always wins a prize for
+samosas from the community centre
+tea strong enough to stand a spoon in
+cockles in vinegar
+kebabs at closing time
+oatcakes with butter
+dhal and bread
+jam made at the church hall
+lamb stew with barley
+fried chicken from the van
+pancakes at the shrove fair
+cheese scones
+barbecue whatever the weather
+black pudding
+the same takeaway every Friday
+cold meat and pickles on Boxing Day
+smoked mackerel
+bread pudding
+noodle soup from the market stalls
+sandwiches cut into triangles
+porridge with salt
+
+## dress
+# used as: Dress: {}
+== fantasy
+undyed wool and bright sashes
+felted coats and fur hats
+linen wraps and copper jewellery
+leather and bone beads
+embroidered collars that tell your village
+long cloaks pinned with brass brooches
+indigo robes and silver nose rings
+sheepskin vests and boots to the knee
+tunics striped in clan colours
+veils for travelling, never at home
+feathers woven into the hair
+quilted armour even at market
+bare feet and many anklets
+oiled sealskin and whale-ivory buttons
+patched clothes, proudly patched
+silk for the rich, hemp for the rest
+wooden clogs and wide straw hats
+belts hung with the tools of your trade
+masks on feast days, painted faces otherwise
+heavy wool skirts for everyone
+fur trimmed with the tail of your first kill
+hoods pointed to show rank
+iron rings for every year of service
+loose trousers and a sash for each child
+mourning grey worn for a full year
+dyed hands and plain clothes
+leather aprons, scorched
+hair braided with the names of ancestors
+cloaks of reed and wax against the rain
+copper armbands given at marriage
+long sleeves that hide the hands
+tattooed faces and plain shirts
+tall hats that signal age
+ankle bells so no one sneaks
+clothes the colour of the local stone
+shells sewn onto everything
+belted robes and wooden sandals
+fox-fur collars in winter
+all black, with one colour sewn in secret
+woven grass in summer, wool in winter
+heavy jewellery that counts as savings
+robes embroidered with prayers
+quilted jackets lined with moss
+a single earring for each journey made
+masks against the dust
+== sf
+pressure suits worn half-open
+station blues with family patches
+layered thermals and a lucky scarf
+printed clothes in the season's colour
+tattoos instead of jewellery
+reflective cloaks against the radiation
+mag boots worn even where the gravity works
+coveralls with names stencilled on the back
+recycled fabric in a riot of patches
+smart cloth that shows your mood
+rebreather masks as fashion
+salvaged armour plating as jewellery
+uniforms from a navy that no longer exists
+hoods with heating coils
+glowing seams for the dark decks
+work gloves never taken off
+skin-tight vacsuits under robes
+handwoven cloth, the most expensive thing aboard
+shaved heads and implant ports on show
+insulated ponchos
+coloured visors for rank
+jumpsuits cut to show a scar
+cloaks made from old parachutes
+badges of every ship you have crewed
+bioluminescent face paint
+sandals cut from tyre rubber
+embroidered collars with clan codes
+gene-coded hair colours
+long coats lined with radiation foil
+belts of tools and spare filters
+a coloured stripe for each generation aboard
+plain grey; colour is for festivals
+uniforms with insignia ripped off
+dust masks embroidered with flowers
+reconditioned spacesuits passed down like heirlooms
+holographic jewellery
+loose robes for low gravity
+weighted hems that swing slowly
+wraps of solar film that charge as you walk
+corporate livery with the logo burned off
+knitted sweaters from the one wool goat
+bare arms to show the data tattoos
+boots older than the colony
+ponchos printed with star charts
+earpieces worn like jewels
+== modern
+work clothes, even on Sundays
+one good suit for weddings and funerals
+hand-knitted jumpers with family patterns
+whatever's warm
+football shirts
+waterproofs and wellingtons all year
+school uniform worn too long
+headscarves in every colour
+flat caps and tweed
+tracksuits and gold chains
+hi-vis jackets as everyday wear
+black for every occasion
+charity-shop coats
+denim, mended and mended again
+fishermen's smocks
+saris for weddings, jeans the rest of the time
+hats at church
+band T-shirts from concerts long ago
+overalls with the company name
+fleece and walking boots
+cardigans with tissues up the sleeve
+tailored suits on the high street
+outdoor coats and dog leads
+crocheted shawls
+matching family outfits at festivals
+cycling gear, everywhere
+scrubs and trainers
+second-hand everything
+waxed jackets and green wellies
+sports kit and slippers
+the same coat for twenty years
+festival wristbands nobody cuts off
+rugby shirts and shorts in winter
+formal dress for the market on Saturdays
+patterned socks as the one rebellion
+clothes from the factory outlet
+caps worn backwards
+pinned poppies and Sunday best
+dungarees and paint
+woollen hats in summer
+borrowed suits for interviews
+uniforms of the local brass band
+handmade dresses from a grandmother's patterns
+white shirts, always ironed
+work boots with everything
+
+## coming_of_age
+# used as: They grow up through {}.  (noun phrase: 'a night alone in the wild')
+== all
+a night alone in the wild [fantasy, modern]
+a first catch or harvest given away
+a journey to the old city and back
+choosing a second name
+a year working for another family
+a tattoo earned, not bought
+swimming the strait [fantasy, modern]
+a song composed and sung to everyone
+a debt taken on and paid
+a vigil with the dead
+a first solo voyage
+building their own boat [fantasy, modern]
+a day of silence in the temple
+a year with no family name
+carrying a stone up the mountain [fantasy, modern]
+a fight they must lose with grace
+a feast they cook for the whole village
+the first winter alone with the flock [fantasy, modern]
+a riddle contest with the elders
+a pilgrimage barefoot
+a night in the house of the dead
+learning to read the family book
+an apprenticeship that ends in a masterpiece
+planting a tree that must live a year
+a fast of three days
+the first time they drive the herd [fantasy, modern]
+a test of the old songs
+a year living among strangers
+a dance until they collapse
+taming a wild animal [fantasy, modern]
+cutting their childhood hair and burning it
+a duel with blunt swords [fantasy]
+a first kill and its burial [fantasy, modern]
+a confession before everyone
+a year of service in the fortress [fantasy]
+winning a race around the lake [fantasy, modern]
+writing their own funeral song
+a public apology for a childhood wrong
+naming their own guardian spirit [fantasy, sf]
+a winter on the fishing boats [fantasy, modern]
+a night watch on the walls [fantasy]
+a journey to find a word no one has used
+a climb to the bell tower [fantasy, modern]
+being sent away to an uncle
+a long walk to the coast with a letter [fantasy, modern]
+spending a season with the hermit
+making their own knife
+reciting the family line to seven generations
+carrying water for the whole village for a month [fantasy, modern]
+a vote they must cast in the assembly
+a trial run of the rapids [fantasy, modern]
+a voyage outside the dome [sf]
+their first spacewalk [sf]
+a solo shift in the reactor room [sf]
+the first wage handed over to their mother
+leaving school at sixteen for the yard [modern]
+a gap year that becomes three [modern]
+passing their driving test [modern]
+the first pint in the corner pub [modern]
+a summer working on the boats [fantasy, modern]
+moving to the city and coming back
+a gruelling exam everyone talks about for years
+a summer camp no one will describe [modern]
+a gift of land and a warning [fantasy, modern]
+a duty at the burial grounds
+a season herding the reindeer [fantasy, modern]
+a lonely week in the lookout tower [fantasy, modern]
+a game of skill against their father
+a mask they carve and must wear for a year
+a quest for a feather from the high cliffs [fantasy]
+a first trip to market alone
+the first time they speak at the council
+a stint guarding the sacred fire [fantasy]
+sewing their own adult clothes
+an argument they must win against the eldest
+being lowered into the cave on a rope [fantasy, modern]
+a day spent begging for their bread
+an oath sworn at the standing stone [fantasy]
+mending a net that has never been mended [fantasy, modern]
+a night counting the stars without sleep
+guiding a stranger across the marsh [fantasy, modern]
+a story they must tell well enough to be laughed at
+bringing home something stolen and returning it
+the first time they carry a coffin
+a trial in which the whole village pretends not to know them
+drinking from the bitter spring [fantasy]
+teaching a younger child to swim
+riding the wild horse until it stops [fantasy, modern]
+a year without mirrors
+a winter feeding the old people of the street [fantasy, modern]
+a solo flight in the training craft [sf]
+memorising the ship's charter [sf]
+
+## death_ways
+# used as: Their dead are {}.  (past-participle phrase: 'burned on the shore at low tide')
+== all
+burned on the shore at low tide [fantasy, modern]
+buried under the hearth [fantasy]
+given to the river [fantasy, modern]
+left on the hill for the birds [fantasy, modern]
+sealed in the family wall
+recycled, and a tree planted [sf, modern]
+sent to the stars, or the incinerator [sf]
+buried with a coin and a lie
+sung over for three nights
+forgotten on purpose after a year
+sewn into sailcloth and given to the sea [fantasy, modern]
+laid in boats and set adrift burning [fantasy]
+buried standing, facing home
+dried in the desert wind and kept in jars [fantasy, modern]
+placed in caves with their best tools [fantasy, modern]
+cremated and mixed into the mortar of new houses
+buried under a fruit tree they chose in life [fantasy, modern]
+wrapped in their own wedding linen
+given to the bog with a sprig of heather [fantasy]
+carried around the village one last time
+seated at the head of the table for a night
+burned with everything they owned
+buried at crossroads so they cannot find the way back [fantasy]
+hung in the branches of the oldest oak [fantasy]
+laid in the ice of the glacier [fantasy, modern]
+pressed into salt and kept in the temple
+buried with their faces painted gold
+shot into the sun from the launch rail [sf]
+composted into the gardens of the ship [sf]
+kept in the family's data archive as a voice [sf]
+frozen in the hope of a cure [sf, modern]
+ground into the soil of the hydroponic farms [sf]
+mourned by hired weepers and quickly buried [fantasy, modern]
+buried in the churchyard by the sea wall [fantasy, modern]
+cremated, their ashes scattered from the pier [modern]
+buried under the floor of the meeting house [fantasy, modern]
+dressed in white and left in the snow [fantasy, modern]
+given a second funeral after seven years
+dug up after a year and their bones washed [fantasy, modern]
+remembered by a song that no one else may sing
+set into the walls of the catacombs [fantasy, modern]
+given to the wolves in the old way [fantasy]
+buried in pairs with whoever died next
+laid out under stars for a night, then buried at dawn [fantasy, modern]
+sealed in honey [fantasy, modern]
+burned on pyres built by their enemies [fantasy]
+named in the long list read every winter
+tattooed onto the skin of their nearest kin
+buried with their eyes covered in shells [fantasy, modern]
+lowered into the volcano [fantasy]
+buried face down so they do not wander
+laid in the roots of a sacred tree [fantasy]
+cast into space in an open airlock ceremony [sf]
+returned to the planet they never saw [sf]
+mummified and consulted on hard decisions [fantasy]
+painted onto the walls of the family house
+buried in the family's allotment, illegally [modern]
+shipped home to a country they left as children [modern]
+laid in a cairn that every passer-by adds to [fantasy, modern]
+given to the tide in a wicker coffin [fantasy, modern]
+weighed, and their weight in grain given away [fantasy, modern]
+dressed in their best and taken to the pub [modern]
+cremated with fireworks [modern]
+buried with a letter to the next of kin unborn
+kept in the house until the next birth
+lifted to the roof and left to the wind [fantasy, modern]
+honoured with a bench by the sea [modern]
+buried in the mountain and the path closed behind them [fantasy, modern]
+sung across the water to the island of the dead [fantasy]
+burned and their ashes fed to the crops
+kept as bones in the ossuary chapel [fantasy, modern]
+walked to the border and buried just across it [fantasy, modern]
+put to sea on the outgoing tide at midnight [fantasy, modern]
+buried quickly, before the sun sets
+laid in stone boxes in the cliff face [fantasy, modern]
+buried with a bell on a string to the surface
+mourned with forty days of silence
+wrapped in leaves and laid in the treetops [fantasy]
+buried with their names spelled backwards
+given a feast at which they are toasted as if alive
+cremated in the steelworks furnace, unofficially [modern]
+buried in coffins they built themselves
+placed on the mountain ledge for the vultures [fantasy, modern]
+scattered at the football ground at night [modern]
+sent downriver on rafts of flowers [fantasy, modern]
+buried at sea in weighted sacks [fantasy, modern]
+remembered by a stone dropped in the well [fantasy, modern]
+kept in jars in the kitchen until someone decides
+taken by the undertaker and never spoken of [fantasy, modern]
+buried in the commons under unmarked grass [fantasy, modern]
+uploaded, or so the company says [sf]
+sealed in a capsule and set on a slow orbit [sf]
+laid in the reclamation vats with a hymn [sf]
+pressed into the hull plating as a memorial alloy [sf]
+frozen in the outer cargo hold until landfall [sf]
+dropped into the gas giant with a beacon singing their name [sf]
+given to the algae tanks and thanked at every meal [sf]
+logged, archived and released into the vacuum at shift change [sf]
+carried around the ring once on the slow tram [sf]
+buried in the first soil of the new world [sf]
+left in the derelict section and the bulkhead welded shut [sf]
+launched toward the home star in a coffin of ice [sf]
+kept in a sealed locker until the ship arrives [sf]
+mourned for one full rotation of the station [sf]
+remembered by an empty bunk no one may claim [sf]
+wrapped in their oldest coat and carried out at dawn
+named in every greeting for a year
+given a stranger's funeral so their enemies won't find them
+mourned by a rota so that someone is always weeping
+
+## arts
+# used as: Art: {}  (noun phrase)
+== all
+knotwork
+long story-songs
+carved masks
+weaving that records family lines
+drum circles
+pressed-flower books
+duelling poetry
+glasswork
+dance contests
+sand paintings swept away at dawn
+tattooing
+puppetry
+shadow plays on sheets
+bone carving
+throat singing
+competitive bread decoration
+mosaics of broken pottery
+quilts that tell a whole life
+lullabies passed mother to daughter
+ice sculpture
+paper lanterns released at night [fantasy, modern]
+stone stacking
+silent theatre
+embroidered maps of the coast [fantasy, modern]
+hair braiding as storytelling
+whistled songs across valleys [fantasy, modern]
+painted boats [fantasy, modern]
+carved spoons given as love tokens
+riddles told in verse
+chalk figures on hillsides [fantasy, modern]
+masked processions
+ballads about local disasters
+work songs sung in the fields
+calligraphy on silk banners
+tin whistles and fiddles
+light sculpture [sf, modern]
+holographic murals [sf]
+recordings of the ship's hum turned into music [sf]
+graffiti on the habitat walls [sf]
+dance in low gravity [sf]
+code poetry [sf, modern]
+holo-theatre of the founding [sf]
+chants that keep time for the pumps
+miniature gardens
+clockwork automata
+brass band marches [modern]
+choirs in the chapels
+pub folk sessions [modern]
+amateur dramatics
+murals on the gable ends [fantasy, modern]
+pottery fired in pit kilns [fantasy, modern]
+woodcuts of saints and sinners
+competitive flower arranging
+long-distance kite flying [fantasy, modern]
+painted eggs
+tile painting
+funeral portraits
+carved gravestones
+lace making
+scrimshaw [fantasy, modern]
+stained glass from bottle ends
+sung genealogies
+chess problems
+bell ringing in long changes
+fire dancing [fantasy, modern]
+dyeing cloth in secret patterns
+poems carved on trees [fantasy, modern]
+tapestries of old battles
+comic songs about the neighbours
+horse brasses [fantasy, modern]
+banners for every trade
+tattooed maps on the back
+cooking as theatre
+knitting in code
+stone walls built without mortar [fantasy, modern]
+carved doorframes
+step dancing on wooden boards
+drystone sculpture on the hills [fantasy, modern]
+cartography of imaginary places
+sea shanties [fantasy, modern]
+puppet shows for funerals
+sculpture from scrap metal [sf, modern]
+oral histories recorded on tape [modern]
+competitive storytelling
+jewellery from fish scales
+kite battles over the rooftops [fantasy, modern]
+paintings on bark [fantasy, modern]
+bird-song imitation contests [fantasy, modern]
+music made from the station's pipes [sf]
+a single endless poem, a line a day
+mirror mazes
+weathervanes in strange shapes [fantasy, modern]
+
+## misread
+# used as: Outsiders mistake {}.  ('their silence for rudeness')
+== all
+their silence for rudeness
+their bargaining for greed
+their mourning for celebration
+their jokes for insults
+their hospitality for weakness
+their politeness for agreement
+their gifts for bribes
+their lateness for disrespect
+their bluntness for anger
+their staring for hostility
+their laughter for mockery
+their patience for stupidity
+their caution for cowardice
+their poverty for laziness
+their wealth for theft
+their festivals for riots
+their quiet children for unhappy ones
+their prayers for curses
+their old women for servants
+their leaders for servants and their servants for leaders
+their shrugs for indifference
+their singing for drunkenness
+their food for poison
+their hand signs for gang signs [sf, modern]
+their fasting for illness
+their kindness for an opening bid
+their frankness about death for cruelty
+their refusal of thanks for offence
+their closed doors for secrets
+their open doors for an invitation
+their ritual combat for real violence
+their touching for flirting
+their distance for coldness
+their weeping for weakness
+their calm for not caring
+their argument for a fight
+their fight for an argument
+their tattoos for criminal marks
+their nicknames for insults
+their dances for courtship
+their courtship for business
+their business for friendship
+their compliments for sarcasm
+their sarcasm for compliments
+their elders' riddles for senility
+their god for a demon
+their saints for ghosts
+their children's freedom for neglect
+their mended clothes for poverty
+their thrift for meanness
+their generosity for showing off
+their offer of a bed for a proposition
+their refusal of food for disgust
+their slow speech for slow wits
+their questions for interrogation
+their gossip for malice
+their gravesides for picnic spots
+their picnics for funerals
+their nods for yes when they mean no
+their silence in grief for guilt
+their love of rules for fear
+their mockery of authority for rebellion
+their clan feuds for war
+their bells for alarms
+their alarms for celebrations
+their pride for arrogance
+their modesty for false modesty
+their curses for blessings
+their apologies for admissions of guilt
+their charity for pity
+their tidiness for coldness
+their mess for neglect
+their old songs for lullabies, though they are war songs
+their goodbyes for threats
+
+## sayings
+# used as: As they say: {}  (a proverb, a full sentence with its full stop)
+== all
+The sea keeps what it is given. [fantasy, modern]
+Count the bread, not the guests.
+A debt is a rope both ways.
+Wolves don't knock. [fantasy, modern]
+Every road has two ends.
+Ask the old dog. [fantasy, modern]
+Say it once, mean it twice.
+Winter remembers. [fantasy, modern]
+The well doesn't care who's thirsty. [fantasy, modern]
+You can't borrow a name.
+Light the lamp before you need it.
+Even the river turns back on itself. [fantasy, modern]
+A fed guest is a friend for a week; a fed enemy is a friend for a day.
+The goat that bleats loudest gets milked last. [fantasy, modern]
+Salt in the pot is better than gold in the ground.
+Never trust a calm harbour. [fantasy, modern]
+The hill doesn't climb itself. [fantasy, modern]
+Mend the net before the shoal comes. [fantasy, modern]
+A quiet mill grinds nothing. [fantasy, modern]
+Don't argue with the weather or the widow. [fantasy, modern]
+Bread shared is twice baked.
+Every lock has a cousin.
+The crow knows where the farmer sleeps. [fantasy, modern]
+If the dog won't eat it, neither should you. [fantasy, modern]
+A short knife is long enough in the dark.
+Old boots know the road.
+The tide forgives no one twice. [fantasy, modern]
+Burn the bridge only when you've counted the boats. [fantasy, modern]
+Clean hands, empty pot.
+A hungry man hears every bell.
+Thunder is just the sky clearing its throat. [fantasy, modern]
+The first snow lies; the second tells the truth. [fantasy, modern]
+A borrowed horse runs faster. [fantasy, modern]
+Never eat soup with a stranger's spoon.
+The best seat is nearest the door.
+A man who counts his friends has too few.
+What the cat drags in, the cat can drag out.
+Plant in grief, harvest in joy.
+Two cooks make three soups.
+The quiet son inherits the farm. [fantasy, modern]
+Rain on a wedding is the sky being jealous. [fantasy, modern]
+A lie travels by horse; the truth goes on foot. [fantasy, modern]
+Don't sharpen the axe for your neighbour's tree. [fantasy, modern]
+Ask the ferryman, not the passenger. [fantasy, modern]
+A full barn has many cousins. [fantasy, modern]
+No candle burns at both ends for long.
+The deepest well has the coldest water. [fantasy, modern]
+The mountain doesn't move for the goat. [fantasy, modern]
+Smoke always finds the guest. [fantasy, modern]
+Beware the man with one book.
+When the bees leave, follow them. [fantasy, modern]
+The wind doesn't read the almanac. [fantasy, modern]
+You can't milk a bull, but you can try. [fantasy, modern]
+Every stone in the wall was once in a field. [fantasy, modern]
+A friend's dog is half a friend. [fantasy, modern]
+The night is long but the candle is honest.
+Kind words cost nothing and buy plenty.
+The fox sends her compliments to the hens. [fantasy, modern]
+A pot watched by three people never boils.
+Shout at the sea and the sea shouts back. [fantasy, modern]
+Grief is a guest who stays for dinner.
+The oar that doesn't pull still gets wet. [fantasy, modern]
+A dry spring is a wet autumn's apology. [fantasy, modern]
+Even kings bow to get through a low door. [fantasy]
+Pay the smith before he tells you why. [fantasy, modern]
+If it floats, someone owns it.
+Don't paint the boat in the storm. [fantasy, modern]
+Ill luck sits nearest the fire. [fantasy, modern]
+Better a small fish on the table than a whale in the story. [fantasy, modern]
+The road home is always shorter.
+A broken pot remembers the potter.
+Grandmother's hands are slow but never empty.
+Strangers bring news and take spoons.
+The ox that pulls straight gets fed first. [fantasy, modern]
+Laughter is the cheapest medicine and the hardest to swallow.
+No one drowns in the soup they made themselves.
+When the ice sings, stay on shore. [fantasy, modern]
+A secret told to a wall still has ears.
+Feed the cat and the mice will talk.
+The empty barrel is first to the dance.
+The sun shines on the thief's field too. [fantasy, modern]
+Stars only count for those who look up.
+The oldest tree has the most crooked roots. [fantasy, modern]
+Promise the moon and you'll be asked to fetch it.
+A night's sleep settles a day's quarrel.
+The lame horse knows every stone. [fantasy, modern]
+Trust your friends and dry your boots.
+Never sing while the bread is rising.
+Your neighbour's ladder is closer than your brother's.
+Every widow knows a little law.
+What you whisper to the hearth, the chimney shouts. [fantasy, modern]
+A council is a goose with seven heads and no wings. [fantasy, modern]
+A cold hand makes a warm heart, or so the cold claim.
+Ask twice, take once.
+The wise woman keeps a stupid face.
+Rope is cheap until you need it.
+An honest scale has few friends.
+Let the soup settle before you judge the cook.
+The bird that sings at night has something to hide. [fantasy, modern]
+Lamps are lit by those who expect visitors.
+Wet wood smokes the longest. [fantasy, modern]
+Spend a coin, keep a story.
+Even the slow cart reaches the fair, if only to sweep up. [fantasy, modern]
+A bad harvest makes good neighbours.
+The kettle doesn't apologise for the steam.
+When the ravens talk, the soldiers listen. [fantasy]
+The ship that waits for perfect wind rots at anchor. [fantasy, modern]
+A gift goat still eats the washing. [fantasy, modern]
+The saw doesn't listen to excuses.
+The child who asks finds the honey.
+Debt sleeps lightly.
+The heaviest bag is the one you carry for someone else.
+Never wake a sleeping judge.
+An empty chair at the table is still a guest.
+The cliff doesn't warn the goat twice. [fantasy, modern]
+While the brothers argue, the cousin moves the boundary stone. [fantasy, modern]
+Leave the door open and the cold comes to dinner.
+Gold has no smell, but greed does.
+The mule remembers every kick. [fantasy, modern]
+Sweet water runs from bitter rock. [fantasy, modern]
+The flood doesn't ask whose field it is. [fantasy, modern]
+Stone soup needs a stone and a fool.
+A friend in the market is worth a purse in the hand.
+The road you didn't take is always smoother.
+Only the drowned know how deep it is. [fantasy, modern]
+Where there is cheese, there are mice.
+A fool pays the ferryman both ways. [fantasy, modern]
+No storm lasts longer than the stories about it. [fantasy, modern]
+The proud steeple gets the gulls. [fantasy, modern]
+Feed the rogue you know and he'll guard the gate. [fantasy, modern]
+Count the oars before you trust the captain. [fantasy, modern]
+The airlock opens for everyone eventually. [sf]
+Trust the hull, not the captain's smile. [sf]
+Air is the only debt you can't defer. [sf]
+When the pumps go quiet, start praying. [sf]
+A ration saved is a ration stolen.
+Machines never lie, but the people who read them do. [sf, modern]
+The stars are patient; the oxygen isn't. [sf]
+Every hatch has two sides and one key. [sf]
+Never sleep in a room without a second exit.
+The queue moves faster if you stop counting. [sf, modern]
+The kettle's on means come in.
+You can't pay the rent with good intentions.
+The bus comes when you light a cigarette. [modern]
+Never buy a car from a smiling man in the rain. [modern]
+A tidy shed means an untidy marriage. [fantasy, modern]
+The quiet ones always own the boat. [fantasy, modern]
+Never stand between a dog and its dinner. [fantasy, modern]
+Ice on the inside means a long winter. [fantasy, modern]
+What the eye doesn't see, the mother-in-law will.
+A full kettle is a slow welcome.
+The longest table has the shortest grace.
+The hearth keeps the house; the house keeps the name. [fantasy, modern]
+He who carries the lantern sees the least.
+Patience is a hill you climb sitting down.
+Old wounds forecast rain. [fantasy, modern]
+Words are wind, but the wind moves ships. [fantasy, modern]
+The mouse that brags is the cat's breakfast.
+You can't steer a ship that isn't moving.
+Bad news has wings; good news has to walk.
+A sharp word has no handle to pick it up by.
+A gift given twice is a debt.
+Every crooked chair finds a crooked floor.
+A wolf at a wedding still counts the lambs. [fantasy, modern]
+Snow hides the tracks and the ditches. [fantasy, modern]
+The river remembers every rock it went round. [fantasy, modern]
+Knock first, even at your own door.
+The cheapest lamp burns the house down.
+Love is a field; weed it daily.
+Every crowd has a pickpocket and a saint.
+A quiet house is a sleeping storm.
+When the dog sleeps by the door, expect visitors. [fantasy, modern]
+The sky owes no one rain. [fantasy, modern]
+The vacuum doesn't hold grudges; it doesn't need to. [sf]
+Check your seals twice and your friends once. [sf]
+Every recycler tastes of somebody. [sf]
+Spin keeps the feet down and the head up. [sf]
+The long haul makes short tempers. [sf]
+A ship is only as quiet as its noisiest bunk. [sf]
+Never trust a reading you wanted. [sf, modern]
+The station remembers what the crew forgets. [sf]
+Signal travels; regret doesn't. [sf]
+Hunger makes a short memory.
+A favour owed is a door left open.
+The one who fixes things is the one who gets blamed.
+
+## festivals
+# used as: Their great festival is {}.  (noun phrase: 'the Night of Open Doors, when no house may be locked')
+== all
+the Night of Open Doors, when no house may be locked
+the Feast of Lanterns, when every window holds a light for the lost
+Saltmorrow, when the first catch is thrown back to pay the sea [fantasy, modern]
+the Long Silence, a day when no one in the town may speak
+the Burning of the Year, when everyone throws one regret onto the bonfire [fantasy, modern]
+Hearthday, when every family carries a coal to the neighbour they quarrelled with [fantasy, modern]
+the Drowning of the Straw King, a scarecrow thrown in the river for luck [fantasy, modern]
+the Feast of Fools, when the youngest child rules the village for a day
+Bellnight, when every bell rings until dawn to scare off the winter
+Kinmeet, when scattered families walk home from wherever they are
+the Day of Masks, when no one may be recognised and no grudge counts
+the Festival of Small Debts, when every little loan must be repaid or forgiven
+the Night of Names, when the dead are named aloud one by one
+the Apple Wake, when the oldest tree in the orchard is sung to [fantasy, modern]
+the Turning, when everyone swaps houses for a night
+the Floodfeast, held on the hills while the valley drowns [fantasy, modern]
+the Feast of the Empty Chair, a place laid for whoever is missing
+Ploughmonday, when the plough is dragged through the streets by the unmarried [fantasy, modern]
+the Crossing, when the herds swim the river and everyone watches [fantasy, modern]
+Ash Morning, when the hearths are put out and relit from the temple fire [fantasy, modern]
+the Night of Long Tables, when the whole town eats in the square
+Seedday, when every child plants something and names it
+the Weighing, when the headman is weighed against grain given to the poor
+the Feast of Stones, when the boundary markers are walked and beaten [fantasy, modern]
+the Bride of the Sea, a ring thrown into the harbour every spring [fantasy, modern]
+Lantern Tide, when paper boats with candles float out at dusk [fantasy, modern]
+the Day of Quarrels, when every complaint must be said aloud and then dropped
+Wolfnight, when doors are barred and the young hunt the old fears [fantasy]
+the Great Sweep, when every house is emptied into the street and blessed
+the Feast of Strangers, when a stranger must be found to sit at the head
+the Kite Days, when the sky over the city is full of fighting kites [fantasy, modern]
+Founding Day, when the ship's log is read aloud from the first entry [sf]
+the Long Dark, a week of candlelight when the station dims its lamps [sf]
+Airday, when every lock and seal is checked and the checkers feasted [sf]
+the Night of the Signal, when everyone listens to static together [sf]
+First Light, when the dome's shutters open on the colony's dawn [sf]
+the Turning of the Wheel, when the habitat spins down for a day of floating [sf]
+the Remembering, when the dead's recordings are played in the commons [sf]
+Ration's End, when the year's last supply drop is shared in one meal [sf]
+the Hull Walk, when the young go outside and touch the ship [sf]
+the Regatta, when the whole harbour races anything that floats [fantasy, modern]
+Carnival Week, when the streets fill with floats and noise [fantasy, modern]
+the Gala, with a brass band, a queen and a fight behind the pub [modern]
+Effigy Night, when the figure on the bonfire is someone new each year [fantasy, modern]
+Pump Sunday, when every old water pump is dressed in petals and judged [modern]
+the Pram Race, when grown men push each other round all nine pubs [modern]
+the Mischief Night, when gates go missing and turn up on church roofs [fantasy, modern]
+the Harvest Supper, when the church hall smells of stew till spring [modern]
+the Blessing of the Boats, when the priest walks the quay [fantasy, modern]
+Sports Day, held every year since the war, rain or shine [modern]
+the Lamplighting, when the first lamp of winter is lit by the oldest woman
+the Night of Mirrors, when all mirrors are covered so the dead may pass
+the Festival of Bones, when ancestors' bones are dressed and paraded
+Thawday, when the first crack in the lake ice is celebrated with races [fantasy, modern]
+Honeytide, when the hives are opened and the first comb given to the poor [fantasy, modern]
+the Feast of the Broken Plate, when every household smashes one dish
+Little Wedding, when children marry dolls and everyone pretends to weep
+the Night of Wishes, when wishes written on bark are floated downstream [fantasy, modern]
+the Hare Chase, a race around the walls with a wooden hare [fantasy]
+Midsummer Watch, when no one may sleep on the shortest night [fantasy, modern]
+the Feast of the Ferryman, when all river crossings are free [fantasy, modern]
+the Silent Supper, eaten in darkness with the dead
+the Grain Queen, chosen by lot and carried through every field [fantasy, modern]
+the Riddle Fair, when every gate has a guard and every guard a riddle [fantasy]
+the Stilt Parade, when the giants walk the streets
+Black Market Day, when the forbidden goods are sold openly and taxed
+Debt Day, when the moneylenders must eat with their debtors
+the Day of Reversal, when servants are served and masters wash dishes
+the Feast of Rain, when the first storm is greeted by dancing in the mud [fantasy, modern]
+the Night of Bells and Butter, when the poor are given the winter's first churning [fantasy, modern]
+Starfall, when the meteor shower is watched in silence from the roofs
+the Ice Market, held on the frozen river until someone falls through [fantasy, modern]
+the Fortnight of Song, when everything must be sung, even complaints
+Shearing Week, when the sheep are clipped and the shearers crowned [fantasy, modern]
+the Burning Ship, when an old boat is set alight at sea [fantasy, modern]
+the Feast of the Last Sheaf, when the final stalks are plaited into a doll [fantasy, modern]
+the Day of Oaths, when every promise of the past year is renewed or broken
+the Great Market, when traders come from three valleys and the gates stay open [fantasy, modern]
+the Flower Battle, when the streets are pelted with petals
+the Moon Fast, three days of hunger ended with a feast at moonrise
+the Night of the Hunt, when the hunters' dogs bless the houses [fantasy, modern]
+the Feast of Return, held for the sailors whether they returned or not
+Lightning Day, when those struck and surviving are honoured [fantasy, modern]
+the Children's Parliament, which may pass one binding law a year
+the Spring Fool, when someone must be tricked into the duck pond [fantasy, modern]
+the Long Walk, a pilgrimage to the coast and back on foot [fantasy, modern]
+the Night of Paper, when everyone writes a secret and burns it unread
+the Market of Lies, where every trade must include one untrue boast
+the Greening, when the first leaves are worn in the hair
+the Lantern Wedding, when every couple married that year walks with a lamp
+the Festival of Engines, when the old machines are run for one day [sf, modern]
+Dust Day, when the town remembers the drought by not drinking until dusk
+Spinup, when the oldest wheel is set turning again and everyone falls over [sf]
+the Count, when every person aboard is named aloud and answers [sf]
+Landfall Eve, kept every year for a planet nobody has seen [sf]
+the Blackout Supper, eaten by starlight with the lamps cut [sf]
+the Feast of Seals, when the airlock doors are hung with paper flowers [sf]
+the Day of Borrowed Shoes, when everyone works a shift in someone else's
+the Silent Market, where every trade is done by gesture
+the Night of Second Chances, when any exile may come home for one meal
+
+## marriages
+# used as: They marry {}.  ('young and for life', 'by lottery each spring')
+== all
+young and for life
+by lottery each spring
+late, after the parents have died
+for a year and a day, then decide
+across clans, never within
+by the choice of the grandmothers
+in threes
+only once, and widows stay widowed
+as often as they like, with a feast each time
+for land, and love comes later or not at all
+after the bride's family wins a footrace
+by tying their hands with the same rope
+in secret, then tell the village a month later
+outside the walls, so the old gods see [fantasy]
+only when the whole street agrees
+at midwinter, never at any other time
+by exchanging knives
+whoever wins the singing contest
+in their sixties, once the children are grown
+for the length of a voyage
+by contract, renewed every seven years
+after a year living in each other's houses
+at the well, with the water as witness [fantasy, modern]
+in a mass ceremony every five years
+by eloping, which everyone expects
+without ceremony, and the feast is for the divorce
+the person who mends their roof in a storm [fantasy, modern]
+under the oldest oak, or not at all [fantasy, modern]
+for alliance, between rival families
+for love and are pitied for it
+only after paying the bride-price in livestock [fantasy, modern]
+after three refusals, for form's sake
+by lighting a fire together that must burn a week [fantasy, modern]
+in the registry office in their work clothes [modern]
+at the chapel the year they finish school [modern]
+after twenty years together, if they bother
+by ship's captain's licence somewhere at sea [fantasy, modern]
+the neighbour's child, as their parents always meant
+on the beach at low tide, before the sea returns [fantasy, modern]
+in a ceremony nobody outside the family may see
+by breaking bread over each other's heads
+in groups, as households rather than pairs
+for the duration of the colony charter [sf]
+by updating the ship's registry, quietly [sf]
+at the end of the harvest when there is money
+reluctantly, under the old law
+in the rain, for luck [fantasy, modern]
+under contract to the company [sf, modern]
+someone from the next valley, by tradition [fantasy, modern]
+by a vow spoken to the river [fantasy, modern]
+with the whole fleet as witnesses
+by blood oath, cut and pressed
+into each other's trades, not each other's families
+when the matchmaker says the stars allow
+by sharing the last ration on the long march
+whoever catches the bride's thrown bread
+in pairs of pairs, two couples bound together
+late at night, so the spirits are asleep
+by moving the bed from one house to another
+only after the house is built
+by drawing names from the founder's hat
+for one season, as the herders do [fantasy, modern]
+once their debts are paid
+in the presence of their ancestors' bones
+across the border, where it's cheaper [modern]
+the first person to share their umbrella [sf, modern]
+by swapping family names
+in the sea, standing waist-deep [fantasy, modern]
+without telling the priest
+after a duel of insults that ends in laughter
+quietly, then fight about it for forty years
+
+## divine_shapes
+# used as: They worship {}.  (noun phrase)
+== all
+one god, distant and just
+a pantheon who quarrel
+the ancestors
+twin gods, one of light and one of hunger
+no gods, only the law
+a god who died and left instructions
+a mother goddess with a thousand names
+a trickster who stole fire and still owes for it
+three sisters who spin, measure and cut
+a god of thresholds and doorways
+a god who sleeps and must not be woken
+a divine family who behave very badly
+a god of the harvest and of debt
+the sun, and fear the night
+a god who is everywhere and says nothing
+a wounded god who needs their prayers to heal
+a judge who weighs every word
+the void, which is kind
+a god of lost things
+a god who is a child
+an old woman who carries the world in her apron
+a god of the crossroads and of chance
+the first ancestor, who climbed out of the earth
+a hundred small gods, one for every house
+the storm, and its eye
+a god who has abandoned them, but might come back
+a god that is the sum of all its followers
+justice, made a person
+a god whose face no one may draw
+an unknowable thing, approached by riddles
+a god of keys and the things they keep
+a god of the hunt and the hunted
+a god of rest who forbids work
+a god of fire who demands nothing but warmth
+a god of messengers who never arrives
+== fantasy
+the land itself
+a dead god whose body is the world
+the moon and her seven daughters
+a god who is a beggar on the road
+spirits of every river and hill
+a dragon who sleeps beneath the capital
+the great tree whose roots hold up the sky
+a sea serpent who encircles the world
+a god of smiths who forged the first stars
+the first king, risen to godhood
+a horned god of the deep forest
+a goddess of wells and secrets
+the north wind, cruel and fair
+a bear spirit that guards the mountain
+a god with nine heads that argue
+a stag with antlers of fire
+the queen beneath the hill
+a god of salt and silence
+the bones of a giant on the plain
+a goddess of the hearth who eats the first bite
+an owl who knows the hour of every death
+a god of ferrymen who takes a coin for each soul
+the mist that comes off the lake
+a goddess of the loom who weaves every life
+a god of wine who is also the god of grief
+the stars as dead heroes
+a god of roads who walks in disguise
+a goddess of ravens and battle
+a god of the hive who speaks through bees
+a god imprisoned in the mountain
+the king, while he lives
+a god of mirrors and twins
+a god of the plough and the boundary stone
+the seven winds and their mother
+the last unicorn, said to be in the north
+the giants who made the world and left
+the god of the river ford
+an old witch said to be the mother of the gods
+a god of the sea who is jealous of the land
+the spirit of the first flame
+== sf
+the colony's founding AI
+the Signal from beyond the heliopause
+the ship, as living mother
+the first ones, whose ruins they found
+entropy, to be resisted
+the star they orbit
+the Founders, frozen in the vault below
+the algorithm that chooses their leaders
+the lost Earth, as paradise
+the black hole at the centre of the galaxy
+a machine god that may not exist yet
+the engineers who built the habitat
+the mind uploaded centuries ago
+the gene line, purified
+the void between the stars
+an alien who visited once and promised to return
+the reactor, which gives life and death
+the network, which hears every prayer
+the Captain, centuries dead and still obeyed
+the comet that will return in their lifetime
+the pattern in the noise
+the quantum god who lives in every possibility
+the cosmos as a computer and its programmer
+humanity's future self
+the terraforming machines
+the alien ruins' sleeping inhabitants
+the planet's hidden consciousness
+the code that wrote itself
+the last message from home
+the dead astronauts of the first mission
+the great filter, to be survived
+a cloned saint reborn in every generation
+the station's central intelligence, offline for years
+the light-speed barrier as a divine law
+the stellar nursery where they believe souls are made
+the hum of the ship's engines
+the oxygen gardens
+the singularity, which already happened
+the hive mind of the moon's fungus
+a god that arrives as data, one packet a year
+== modern
+a saint who was a local fisherman
+a prophet who died in 1974
+the universe, which listens
+a healing spring
+a god of second chances
+a woman who appeared in a cave above the town
+the patron saint of the football club
+a guru who now runs a garden centre
+the market, as most of the town does
+a saint whose finger is kept in the chapel
+a spirit who lives in the old pit shaft
+the founder of the commune
+the Virgin of the Motorway Bridge
+an angel who appeared to a bus driver
+the sea, under a saint's name
+the god of their grandparents, out of habit
+a holy man who never wrote anything down
+a local hermit who might still be alive
+a weeping statue in the high street
+the ancestors, consulted at the kitchen table
+the moon, through a crystal shop
+a self-help author who promised more
+a goddess rediscovered from a museum label
+the energy in standing stones
+a lady of the lake, as the tourist board calls her
+nature, in a loose and kindly way
+a saint of lost causes and lost keys
+the god of the chapel on the hill
+an old preacher's voice on cassette
+the healing well in the farmer's field
+the earth mother of the summer camp
+a television evangelist, long dead
+a dead rock singer, at least on his birthday
+a prophetess who predicted the floods
+a holy tree the council wants to cut down
+the ghost of a girl drowned in the reservoir
+a saint whose relics were stolen in 1983
+a miracle-working icon in a flat above a shop
+a spirit of the crossroads by the old garage
+the church, more than any god
+
+## holy
+# used as: They hold {} holy.  (noun)
+== all
+water
+fire
+silence
+the threshold
+salt
+the harvest
+the dead
+strangers
+the stars
+bread
+memory
+the first word spoken
+the hearth
+the dawn
+the sea
+the mountain
+children
+rain
+the moon
+iron
+oaths
+honey
+dreams
+blood
+the north wind [fantasy, modern]
+the hunt [fantasy, modern]
+music
+the written word
+the oldest tree
+wells [fantasy, modern]
+names
+the number seven
+twins
+the dying
+hospitality
+cattle [fantasy, modern]
+birds
+the crossroads
+snow
+dust
+the colour blue
+mirrors
+gold
+the horse [fantasy, modern]
+sleep
+the left hand
+light
+breath
+the soil
+the river
+grain
+wine
+milk
+bells
+the sun at noon
+songs
+the elderly
+hair
+eggs
+storms
+the sound of the engines [sf]
+air
+seeds
+clean data [sf]
+the founders' log [sf]
+the first day of the month
+shadows
+the word of a dying person
+labour
+rest
+bones
+
+## practices
+# used as: The faithful keep {}.  (noun phrase: 'a fast every new moon')
+== all
+a fast every new moon
+confession to a stranger
+daily washing of the feet
+a song sung at every meal
+pilgrimage once in a lifetime
+leaving food for the dead
+keeping one day a week in silence
+giving away a tenth
+lighting a lamp at dusk
+a dance until dawn on the longest night
+carrying a prayer stone
+never lying on the holy day
+a vigil on the eve of every birth
+a pinch of salt thrown over the shoulder before every journey
+a bowl of water by the bed for the soul to drink
+a knot tied in a cord for every prayer
+the habit of greeting the sunrise barefoot
+a candle burning in the window all winter
+a year of service to the temple in youth
+prayers said facing the sea [fantasy, modern]
+a weekly meal shared with a poor family
+the rule of no meat on the god's days
+the old calendar, though no one else does
+their heads covered under the open sky
+a small shrine by every door
+three bows before entering any house
+the practice of naming every new tool
+a ring of stones around every new house
+an hour of reading the scripture each dawn
+a spoonful of every meal set aside for the god
+the dead's birthdays with a cake
+a ritual bath before the new year
+a rosary of knotted grass
+the custom of answering every question with a question on the holy day
+fresh flowers on the altar every morning
+prayer at noon wherever they are
+vows of poverty for a year at a time
+a stone carried in the shoe as penance
+the first fruit of every tree for the priests
+a lamp lit for every sailor at sea [fantasy, modern]
+annual confession in front of the whole village
+a sacred fire that has not gone out in three hundred years [fantasy, modern]
+no fire on the rest day, even in winter [fantasy, modern]
+silence at sunset
+fasting from speech instead of food
+the tradition of planting a tree for every death
+a walk around the temple seven times
+the ritual of washing a stranger's hands
+a monthly feast for anyone who comes
+a tithe of labour instead of coin
+nightly readings of the names of the dead
+a pilgrimage to the founder's grave each spring
+a bowl of milk at the crossroads [fantasy, modern]
+a song for the reactor at every shift change [sf]
+a moment of silence when the airlocks cycle [sf]
+daily prayers synchronised to the ship's clock [sf]
+the custom of thanking machines before using them [sf, modern]
+a daily recitation of the colony charter [sf]
+backups of their memories as a sacred duty [sf]
+a minute's darkness at each orbit's turning [sf]
+the Sunday service, even with five people [modern]
+a weekly mass in a converted cinema [modern]
+the habit of crossing themselves at the old pit gate [modern]
+a pilgrimage to the holy well by coach [modern]
+a prayer group on a messaging app [modern]
+a fast from screens every holy day [sf, modern]
+the parish soup kitchen [modern]
+a candle lit for exams [sf, modern]
+a bottle of holy water in the glovebox [modern]
+grace before every meal, even in restaurants [sf, modern]
+the tradition of leaving coins at the saint's statue
+a procession through the high street every summer [fantasy, modern]
+a day of rest, whatever the boss says [sf, modern]
+the custom of blessing every new car [modern]
+a vow never to drink on the god's day
+a lifelong practice of daily alms
+an annual feast for the poor at the rich houses' expense
+the custom of leaving a door unlocked for the god
+a sacred dance taught only within families
+a garden tended as prayer
+a long fast before marriage
+a sacred meal of bread and bitter herbs
+a habit of humming the creed when afraid
+ritual tears every new year
+the custom of smashing a cup at every death
+pilgrimage to the island where the prophet drowned
+the practice of touching a door frame on every entry
+a weekly silent walk
+a period of exile for every penitent
+a dawn swim in the sea in every season [fantasy, modern]
+a journal of prayers read only by the next generation
+a day each month spent with the sick
+the tradition of carving a prayer into each new beam
+prayer beads made from their children's milk teeth
+a rule of eating nothing cooked by machine on feast days [sf, modern]
+a yearly walk of the parish boundary with willow wands [fantasy, modern]
+an hour of standing still at dawn
+the nightly blessing of the doors
+a cord tied to the wrist at birth and never cut
+the practice of fasting for someone else's sin
+a ritual quarrel with the god every spring
+a pot of earth from the homeland on every altar
+the fast of the long noon
+the custom of paying the priest in eggs [fantasy, modern]
+the duty of rescuing anyone from the water, whatever it costs
+a bell rung for every death in the parish [fantasy, modern]
+a secret word spoken only at the hour of death
+an annual night spent sleeping in the temple
+a monthly feast for the ancestors with an empty seat
+the rule of giving every guest the best bed
+the ritual of fasting from salt
+
+## clergy
+# used as: Their clergy: {}.  (noun phrase)
+== all
+wandering preachers who own nothing
+a hereditary priesthood
+elected elders
+anyone who has had a vision
+veiled women who keep the records
+monks bound to a single mountain [fantasy, modern]
+a council of the oldest
+no clergy at all, every head of household
+children chosen by lot
+paid professionals, and everyone knows it
+blind seers who sit at the crossroads [fantasy]
+married couples who serve together
+warrior priests who train at dawn [fantasy, sf]
+a single high priestess who must never leave the temple
+fishermen who preach in the off-season [fantasy, modern]
+hermits who come down once a year
+scholars who argue more than they pray
+twins, always in pairs
+a priesthood of widows
+singers whose voices must never break
+former criminals, by tradition
+mute monks who answer in writing
+a caste of midwives and undertakers
+a lottery each year, and no one wants to win
+the oldest woman in each village
+dream readers paid in bread [fantasy]
+masked priests whose faces no one knows
+a guild of bell-ringers
+the descendants of the prophet's sister
+musicians who serve in their spare time
+the madmen, who are thought touched by god
+a priesthood that must marry outside the faith
+eunuchs who keep the inner shrine
+travelling judges who also say mass
+lay readers who rotate every week
+a single priest for a hundred villages [fantasy, modern]
+the youngest child of every family
+ascetics who live in trees [fantasy, modern]
+tax collectors, unhappily
+ex-soldiers who swore off the sword [fantasy]
+an order of nuns who run the hospital
+the wealthiest family, by long custom
+a priest-king and his clerks [fantasy]
+gardeners who also bury the dead
+storytellers who keep the scriptures in memory
+a priesthood of the deaf
+the ship's engineers, who keep the old rites [sf]
+data priests who maintain the archives [sf]
+an AI confessor and two human assistants [sf]
+medics who double as chaplains [sf, modern]
+the oldest crew member aboard [sf]
+retired captains
+coders who read scripture in the source [sf]
+the station's psychologist, unofficially [sf]
+a vicar who covers six parishes [modern]
+a lay preacher who runs the garage [modern]
+a priest who is also the town's only doctor
+volunteers in cardigans [modern]
+the keeper of the old street chapel and his son [fantasy, modern]
+a part-time chaplain from the hospital [sf, modern]
+a rota of mothers
+retired teachers
+a priest under investigation [sf, modern]
+a young vicar fresh from the city [modern]
+the man who runs the healing well tours [modern]
+a couple who run the crystal shop [modern]
+nobody, since the last one left
+an order of beggars who are fed by law
+penitents who wear chains for a year
+those who have died once and come back
+anyone left-handed
+a sect within the sect that runs everything
+a hundred priests and only one temple
+priests who must be fed by the poorest family
+the deaf, the blind and the lame, as old law demands
+a dynasty of high priests who murder each other
+the town fool, on the holy days
+a priestess elected by the fishermen [fantasy, modern]
+smiths who forge the holy bells [fantasy, modern]
+the cooks of the great kitchen
+foundlings raised in the temple
+a council of nine masked elders
+readers of entrails, out of fashion [fantasy]
+a mother superior and her six spies
+a choir that votes on doctrine
+archivists who never leave the library
+a single family of ferrymen [fantasy, modern]
+women past childbearing, by law
+a priest who claims to be a thousand years old
+priests chosen by the dying
+astronomers who read the god's will in the sky
+a sisterhood of bakers
+monks who have never seen the sea
+whoever finds the holy stone each spring
+
+## symbols
+# used as: Their symbol is {}.  (noun phrase with article)
+== all
+an open hand
+a broken circle
+a key
+a ship's wheel
+two linked rings
+a closed eye
+a ladder
+a wheat sheaf
+a spiral
+a bell
+a star with seven points
+a lantern
+a black feather
+a crescent moon over a wave
+a crossed spoon and knife
+an hourglass
+a burning tree
+a crow with a coin in its beak
+an anchor wrapped in rope
+a single drop of water
+a candle snuffed out
+a white stag [fantasy, modern]
+an empty chair
+a knotted cord
+a crown upside down
+a door ajar
+a blue hand
+a fish swallowing its tail
+a sword through a loaf [fantasy]
+a mountain with a sun behind it
+a red thread
+a cracked bell
+a hand holding a flame
+a ring of three hares
+a rose with thorns but no flower
+a skull wearing a crown of wheat
+an eye in a palm
+a pair of scales
+a hammer and a harp
+a bee
+a five-fingered leaf
+a white bird on a black field
+a coin with a hole in it
+a whale's tail
+a boat with no oars
+a nail
+a lit match
+a mask with one eye
+a broken chain
+a tower struck by lightning
+a raven and a dove back to back
+a shepherd's crook
+a sealed scroll
+a footprint
+an iron ring
+an ear
+a sun with a bite taken out
+a coiled snake
+a feather and a stone
+a red door
+a pomegranate
+a lighthouse
+an owl with closed eyes
+a weathervane
+an oak leaf
+a spindle
+a bridge
+a dagger wrapped in cloth
+a heart with a keyhole
+an acorn
+a wolf's paw
+a stone circle
+a fishing hook
+a cupped pair of hands
+a silver nail
+a lamp with no flame
+a flower growing from a skull
+a horseshoe pointing down [fantasy, modern]
+a cross made of reeds
+a mountain goat
+a tree with roots like hands
+a black sun
+a spiral galaxy [sf, modern]
+a broken orbit [sf]
+an airlock door [sf]
+a seed inside a circuit [sf]
+a double helix [sf, modern]
+a ring around a planet [sf, modern]
+a satellite dish [sf, modern]
+a stylised atom [sf, modern]
+a planet split in two [sf]
+a ship's hull in silhouette [sf]
+a binary star
+a glowing node in a web [sf]
+a blank screen [sf, modern]
+an oxygen tank [sf]
+a starburst inside a triangle
+a circuit board heart [sf, modern]
+a comet's tail
+a scallop shell
+a red umbrella [sf, modern]
+a football [modern]
+a dove holding a key
+a lamp post [fantasy, modern]
+a pair of hands shaking
+a tree in a circle
+a mended teapot
+a bicycle wheel [sf, modern]
+a phone box [modern]
+a heron
+a lighthouse beam
+a terrace house drawn by a child [modern]
+an oak tree in a crown
+a kettle
+
+## commandments
+# used as: First law: {}  (an imperative, full sentence with full stop)
+== all
+Do not turn away a stranger at night.
+Do not take more than you need.
+Speak no ill of the dead.
+Keep your word, even to enemies.
+Do not let the fire go out. [fantasy, modern]
+Never strike first.
+Forgive by the third asking.
+Rest on the seventh day, whatever burns.
+Do not own what you cannot carry.
+Never write the god's name.
+Share your bread with whoever sits at your table.
+Do not cut a living tree.
+Speak the truth even when it costs you.
+Honour your mother's mother.
+Do not eat alone.
+Let no debt last past the new year.
+Bury every body you find.
+Never sell water.
+Do not curse the weather. [fantasy, modern]
+Give the first of everything away.
+Answer when the bell rings.
+Never lock out the hungry.
+Do not take a life on holy ground.
+Keep your hands clean and your door open.
+Do not mock the mad.
+Marry within the faith or not at all.
+Tell your dreams to no one but the priest.
+Never cross running water on the holy day. [fantasy, modern]
+Do not eat the flesh of anything with hands.
+Wash before you pray and after you lie.
+Feed the birds before yourself. [fantasy, modern]
+Do not count your blessings aloud.
+Light a lamp for the lost.
+Keep one day each week for silence.
+Do not boast of your gifts.
+Pay what you owe before you pray.
+Never break bread with a liar.
+Leave the gleanings for the poor. [fantasy, modern]
+Do not raise a hand to a child.
+Remember the names of seven generations.
+Never refuse water to the thirsty.
+Do not cross the threshold with angry words.
+Keep the oath you swore at birth.
+Give back what the sea gives you. [fantasy, modern]
+Do not hide your face from the god.
+Never kill a creature you will not eat.
+Protect the widow and the orphan.
+Carry the god's stone with you always.
+Do not covet your neighbour's luck.
+Tend the graves of strangers.
+Never sleep in anger.
+Do not build higher than the temple.
+Wear no gold on the days of mourning.
+Treat every guest as if the god sent them.
+Do not betray the one who shelters you.
+Never take the last of anything.
+Sing when you work.
+Do not seek the hour of your death.
+Teach every child to swim.
+Ask forgiveness before sunset.
+Never steal from the dead.
+Do not open the closed book.
+Give rest to every beast of burden. [fantasy, modern]
+Return what you borrow cleaner than you found it.
+Do not worship the king. [fantasy, modern]
+Never turn back on a pilgrimage.
+Keep the boundaries your fathers set.
+Do not hoard grain in a famine.
+Bless the bread before you cut it.
+Speak no lie on the threshold.
+Never drink the blood of anything.
+Do not raise your voice in the holy place.
+Never draw a weapon at the table.
+Feed the fire with your own hands. [fantasy, modern]
+Let the dying speak last.
+Do not waste breath on curses.
+Never vent the air of another. [sf]
+Seal every hatch behind you. [sf]
+Do not alter the founders' code. [sf]
+Keep a copy of every life. [sf]
+Never shut down a thinking machine. [sf]
+Count your oxygen as you count your sins. [sf]
+Do not breed beyond the ration. [sf]
+Never leave a crewmate outside. [sf]
+Do not trust the surface. [sf]
+Help your neighbour with the shopping. [modern]
+Do not drive on the holy day. [modern]
+Never miss the Sunday meal. [modern]
+Forgive the first insult, then write it down.
+Do not gamble away the rent. [sf, modern]
+Be kind to the new arrivals.
+Never speak to the press about the faith. [sf, modern]
+Visit the sick every week.
+Do not walk past someone who has fallen.
+Honour the land and the people on it.
+Leave the world better than you found it.
+Do not envy the rich; pity them.
+Forgive your enemies, but remember their names.
+Never mock the old ways in front of the old.
+Keep the lamp trimmed and the oil full. [fantasy, modern]
+Never sell a child.
+Do not swear on what you love.
+Let the stranger warm their hands first.
+Never break a promise made at a deathbed.
+Do not dig where the dead sleep.
+Never scorn a gift.
+Do not ask the god for anything but strength.
+Never go to war in spring.
+Carry no weapon into the market.
+Forget no kindness.
+Answer every letter.
+
+## schisms
+# used as: They are divided over {}.  (noun phrase)
+== all
+whether the prophet died or was taken
+who may be priests
+a rival claimant to the high seat
+whether outsiders can be saved
+a new translation of the scripture
+money: the temple is rich and the faithful are not
+a miracle the elders call a fraud
+whether to fight or endure
+the old calendar or the new
+a saint who might have been a murderer
+whether women may read the holy book aloud
+the right way to bury the dead
+a lost chapter found in a cellar
+whether the god has two natures or one
+the date of the end of the world, which has passed twice
+an alliance with the crown [fantasy, modern]
+whether animals have souls
+the use of music in worship
+a heresy about the afterlife that has caught on with the young
+the high priest's secret marriage
+whether the fast lasts three days or seven
+which way to face in prayer
+a relic that two temples both claim
+the colour of the vestments, which everyone says is not about the colour
+a prophecy that names a child in the village
+whether the god forgives suicide
+the sale of indulgences to fund a new tower [fantasy, modern]
+the question of whether machines can pray [sf, modern]
+whether the founders' AI was divine or merely wise [sf]
+the ship's destination, now that it is in sight [sf]
+whether to wake the sleepers in the vault [sf]
+whether the Signal has stopped or changed [sf]
+the edit history of the sacred code [sf]
+gene editing of the unborn [sf, modern]
+the planet below: home, or temptation [sf]
+whether to answer the alien message [sf]
+the merger with a richer congregation [sf, modern]
+selling the church hall to developers [modern]
+whether to hold services online [modern]
+the new vicar's sermons [modern]
+a rich donor's influence
+a treasurer's embezzlement and who knew about it
+whether the divorced may remarry in the temple
+a guru's will and who inherits [modern]
+the use of the old language in services
+the healing well's water: holy or contaminated [modern]
+whether miracles still happen
+the authority of the council over the village shrines
+a hymn that some say was stolen from a love song
+whether to forgive the last high priest
+the sacred mountain, now being mined [fantasy, modern]
+the true name of the god
+whether war against unbelievers is holy
+the role of the dead in daily life
+the existence of a second prophet
+whether the holy fire may be relit if it goes out
+the eating of meat on feast days
+whether to admit converts at all
+the prophet's sister's gospel
+the price of a pilgrimage
+the ordination of a child as high priest
+a dream that the high priestess had and won't explain
+whether the faithful may fight in the king's wars [fantasy]
+a temple built on the wrong side of the river [fantasy, modern]
+how many gods there are, exactly
+a forged letter from the founder
+the relocation of the holy relics to the capital
+whether to tell the young the real story
+celibacy for the clergy
+the old fasting rules, which nobody keeps
+a statue that has begun to weep
+whether a dead saint should be dug up to check
+a leader who declared himself the returned prophet
+the reading of omens in birds [fantasy, modern]
+the canonisation of the old king [fantasy, modern]
+how to pronounce the god's name
+the dates of the moon festivals
+whether to accept money from the mine owners
+a secret society within the clergy
+a vision in which the god asked for a new temple
+whether the sea god and the river god are the same [fantasy, modern]
+the burning of the old books
+the meaning of a single word in the second hymn
+a founding document that turned out to be a shopping list
+whether to rebuild the temple after the fire
+the shift from sacrifice to song [fantasy]
+the sale of the sacred grove [fantasy, modern]
+the place of the poor at the altar
+whether the holy day starts at dusk or dawn
+a high priest who confessed to doubting
+
+## afterlives
+# used as: They believe the dead {}.  (verb phrase: 'walk the salt road west')
+== all
+walk the salt road west
+become stars
+return as birds
+sleep until the world ends
+sit at a long table with their ancestors
+are reborn in the next child of the family
+wander until someone says their name
+live in the hill above the village [fantasy, modern]
+haunt anyone who wronged them
+cross a river on a ferry they must pay for
+are judged by a dog
+watch from the reflections in water
+become the wind in the high pass [fantasy, modern]
+go nowhere and are gone
+are weighed against a feather
+become part of the god
+are reborn as whatever they deserved
+sail to an island no one living has found
+work the fields of the god for a thousand years
+stay in the house for forty days
+dream the world into being
+become trees in a great forest
+are held in the god's memory and nowhere else
+must climb a ladder of their good deeds
+are scattered among their children
+wait at the crossroads for their loved ones
+live in the light of the reactor [sf]
+are stored in the archive, waiting for bodies [sf]
+become part of the ship's intelligence [sf]
+fall forever toward the star [sf]
+live on in their recorded voices [sf, modern]
+drift in the void, happy at last [sf]
+are reborn on the destination world [sf]
+return as data in the network [sf]
+are carried home on the next ship
+go to heaven, if the priest is to be believed
+are with the saints, or in the cemetery, depending who you ask
+live on in the memories of the town
+still sit in their chairs at the pub [modern]
+watch over the harbour from the headland [fantasy, modern]
+are reborn in the spring lambs [fantasy, modern]
+live under the lake in a drowned village [fantasy, modern]
+take the last train out of the old station [modern]
+walk the coast road at night [fantasy, modern]
+are still waiting for the bus [modern]
+gather in the old chapel on midsummer night [fantasy, modern]
+go up the chimney with the smoke [fantasy, modern]
+live in the second moon [fantasy, sf]
+must answer for every lie at a gate of iron
+tend the gardens in the other world
+become the rain
+are reborn in the same body over and over
+dance in the northern lights [fantasy, modern]
+eat at the god's table if they were generous
+hunger forever if they were greedy
+become the dust in old books
+return each winter with the snow [fantasy, modern]
+must be fed or they turn
+live in the mirrors of the houses they knew
+sleep in the mountain until they are needed
+become the voices in the wind chimes
+walk with the herds in the summer pastures [fantasy, modern]
+guide ships away from the rocks [fantasy, modern]
+are kept in the jar by the hearth, quite literally
+reappear as animals who look at you strangely
+return as strangers asking for bread
+live on as long as their songs are sung
+swim down to the drowned city of the gods
+are born again as their own grandchildren
+pass into the stone of the family grave
+become the hum in the station's walls [sf]
+go back to the moment of their happiest memory
+
+## holy_places
+# used as: Their holiest place is {}.  (noun phrase with article)
+== all
+a cave where the prophet slept
+a spring that never freezes [fantasy, modern]
+a ruined temple on an island [fantasy, modern]
+the oldest tree in the forest [fantasy, modern]
+a circle of standing stones [fantasy, modern]
+a mountain no one is allowed to climb
+a tomb under the city
+a stone that sings in the wind
+a lake that reflects the wrong sky
+a well at the crossroads [fantasy, modern]
+a bridge over the gorge
+a ruined lighthouse [fantasy, modern]
+a shrine at the end of a long pier [fantasy, modern]
+a battlefield where nothing grows
+a hill with a giant carved in its chalk [fantasy, modern]
+an empty throne in a locked room
+a waterfall behind which is a door [fantasy, modern]
+a crater where a star fell
+a forest clearing where the snow never lies [fantasy, modern]
+a bell tower without a bell [fantasy, modern]
+a cliff with a hermit's cell [fantasy, modern]
+a valley flooded by the dam, its spire still above water [modern]
+a salt flat where the first prayer was spoken
+a house where the founder was born
+a hollow in an oak big enough to sleep in [fantasy, modern]
+a garden behind a high wall
+a library that burned
+a tidal island reachable twice a day [fantasy, modern]
+a field marked by a single stone [fantasy, modern]
+a tower built over a well [fantasy, modern]
+a cave of painted hands [fantasy, modern]
+a frozen waterfall [fantasy, modern]
+a burial mound at the edge of the town [fantasy, modern]
+an island of graves [fantasy, modern]
+a ruined abbey [fantasy, modern]
+a crossroads where three kingdoms meet [fantasy]
+a desert pillar where a saint stood for years [fantasy, modern]
+a lake where a sword is said to lie [fantasy, modern]
+a cathedral that took four hundred years to build [fantasy, modern]
+an old mine shaft
+a garden on the observation deck [sf]
+the reactor core's viewing gallery [sf]
+a crashed shuttle in the desert [sf]
+the first dome of the colony [sf]
+an alien monolith [sf]
+a server room nobody may enter [sf]
+the bridge of the derelict flagship [sf]
+a crater where the first landing craft touched down [sf]
+the cryogenic vault [sf]
+an airlock that opens onto nothing [sf]
+the hydroponics bay where the first seed sprouted [sf]
+a viewport facing the home star [sf]
+a grotto in a council park [modern]
+a chapel in the old hospital [modern]
+a shrine in a motorway service station [modern]
+a well in a farmer's field [fantasy, modern]
+a stretch of beach where the prophet drowned [fantasy, modern]
+a bench in the town square
+a ruined church on a roundabout [modern]
+an old cinema converted to a temple [modern]
+a hill with a television mast [modern]
+a statue in the shopping centre [modern]
+a riverside spot where someone saw the saint [fantasy, modern]
+a quarry pond [fantasy, modern]
+a tree covered in ribbons [fantasy, modern]
+a tomb in the old cemetery
+a pub that was once a chapel [modern]
+a hermit's caravan in the woods [fantasy, modern]
+an empty house on the hill
+a stone hut where the first monks lived [fantasy, modern]
+a pool where the dead are washed
+the oldest working airlock, its controls worn smooth by hands [sf]
+a maintenance shaft where the founder's handprint is still on the wall [sf]
+the observation blister at the end of the long spine [sf]
+the wreck of the first lander, roped off in the plaza [sf]
+a cargo bay where the founders signed the charter [sf]
+the ship's oldest engine, cold for a century [sf]
+a moon base abandoned in the first exodus [sf]
+the antenna that first heard the Signal [sf]
+a garden grown in soil from the home world [sf]
+an escape pod that came back empty [sf]
+a sealed room where the last founder died
+a door no one has opened since the founding
+a meeting hall where the first law was written
+a kitchen where the first bread was baked
+a mural painted by a child who became a saint
+
+## sins
+# used as: The worst sin is {}.  (-ing phrase)
+== all
+breaking an oath
+wasting food
+lying to a guest
+turning away a stranger
+stealing from the dead
+forgetting your ancestors
+betraying your kin
+killing in anger
+boasting of your luck
+selling the land
+refusing to mourn
+speaking the god's name in vain
+poisoning a well [fantasy, modern]
+abandoning a crewmate [sf]
+hoarding in a famine
+striking a child
+cursing your mother
+cowardice in battle
+mocking the afflicted
+breaking bread with an enemy and then betraying them
+letting the fire die [fantasy, modern]
+telling a secret given in confession
+leaving the dead unburied
+taking the last of anything
+envying a neighbour's harvest
+ignoring a call for help at sea [fantasy, modern]
+cheating at the scales
+eating alone while others starve
+despair
+pride
+indifference
+breaking the silence of the holy day
+forging a will
+killing a guest
+desecrating a grave
+abandoning the old
+taking a bribe as a judge
+leaving the faith
+seducing a priest
+marrying outside the clan
+lying under oath
+burning a book
+cutting the sacred tree
+wasting water in the dry season
+venting another's air [sf]
+sabotaging life support [sf]
+altering the founding code [sf]
+deleting a mind [sf]
+breeding without a licence [sf]
+lying about rations
+opening the wrong hatch [sf]
+claiming credit for another's work
+gossiping in church [fantasy, modern]
+missing a funeral
+driving drunk [modern]
+breaking a promise to a child
+selling a friend's secret
+calling the police on a neighbour [modern]
+being rude to the old
+giving false hope
+taking the easy road
+forgetting a debt
+spitting on a grave
+naming a curse aloud
+pretending to be holy
+silence in the face of evil
+stealing a name
+setting a fire in harvest time [fantasy, modern]
+refusing hospitality in winter
+ruining a wedding
+
+## org_kinds
+# used as: The Silver Hand, a/an {}  (noun, no article)
+== fantasy
+guild
+knightly order
+merchant house
+thieves' society
+secret cult
+college of mages
+mercenary company
+sisterhood
+smugglers' ring
+court faction
+assassins' guild
+bardic college
+order of monster hunters
+river pirates' league
+alchemists' society
+royal spy network
+monastery of warrior monks
+order of healers
+cartographers' league
+beggars' guild
+bandit brotherhood
+druids' circle
+noble house
+moneylenders' consortium
+grave robbers' fellowship
+temple guard
+witch coven
+rebel cell
+order of exiled knights
+caravan company
+shipwrights' guild
+fighting school
+library order
+hunting lodge
+undertakers' guild
+travelling theatre troupe
+widows' society
+order of executioners
+lamplighters' guild
+dragon cult
+ferrymen's guild
+mountain clan
+hedge-wizards' union
+order of pilgrims' guards
+masons' lodge
+== sf
+megacorporation
+dockworkers' union
+pirate fleet
+research institute
+colonial militia
+religious mission
+data syndicate
+salvage crew
+terraforming consortium
+black-market clinic
+mercenary carrier group
+hacker collective
+mining cooperative
+smuggling cartel
+xenoarchaeology team
+navy intelligence cell
+separatist movement
+transport guild
+clone rights group
+cybernetics firm
+bounty hunters' guild
+diplomatic corps
+station security force
+medical relief fleet
+gene-modding cult
+AI liberation front
+news network
+survey corps
+freight line
+arms dealership
+colony charter company
+asteroid prospectors' union
+quarantine authority
+pleasure liner company
+stellar cartography bureau
+off-world bank
+deep-space monastery
+android repair co-op
+prison ship authority
+memory brokerage
+exile government
+racing league
+seed-vault foundation
+first-contact committee
+hydroponics guild
+== modern
+family firm
+charity
+activist group
+crime family
+law firm
+local newspaper
+rowing club
+tech start-up
+residents' association
+church choir
+football supporters' club
+book club
+private detective agency
+amateur dramatic society
+neighbourhood watch
+trade union
+property developer
+political party branch
+masonic lodge
+historical society
+youth club
+women's institute
+marching band
+lifeboat crew
+allotment society
+housing cooperative
+pirate radio station
+scout troop
+debating society
+security firm
+recruitment agency
+fishing cooperative
+cycling club
+bridge club
+food bank
+community garden
+taxi firm
+bingo hall
+working men's club
+antiques dealership
+estate agency
+ghost-hunting society
+think tank
+veterans' association
+wild swimming group
+
+## org_name_parts
+# used as: The {} Hand  (an adjective or noun, capitalised)
+== fantasy
+Silver
+Ash
+Crimson
+Thorn
+Lantern
+Iron
+Hollow
+Raven
+Salt
+Grey
+Golden
+Last
+Black
+White
+Bronze
+Copper
+Amber
+Emerald
+Scarlet
+Ivory
+Obsidian
+Oak
+Willow
+Rowan
+Hawthorn
+Briar
+Ember
+Frost
+Storm
+Tide
+Moon
+Sun
+Star
+Dawn
+Dusk
+Midnight
+Wolf
+Stag
+Owl
+Serpent
+Lion
+Bear
+Falcon
+Crow
+Hart
+Antler
+Bone
+Blood
+Ink
+Candle
+Bell
+Gilded
+Broken
+Silent
+Hidden
+Veiled
+Sleeping
+Weeping
+Burning
+Wandering
+Crowned
+Twin
+Seventh
+Winter
+Thistle
+Lily
+Rose
+Velvet
+Ironwood
+Shadow
+Pale
+Mistletoe
+== sf
+Meridian
+Helix
+Vanguard
+Orbital
+Polaris
+Nova
+Synthesis
+Deepline
+Aurora
+Bastion
+Kestrel
+Zenith
+Apex
+Quantum
+Vector
+Nexus
+Stellar
+Ion
+Photon
+Neutrino
+Halcyon
+Horizon
+Eclipse
+Perihelion
+Aphelion
+Solstice
+Equinox
+Lumen
+Cobalt
+Titanium
+Carbon
+Graphene
+Cipher
+Axiom
+Parallax
+Singularity
+Tachyon
+Hyperion
+Corvid
+Sentinel
+Ascendant
+Pinnacle
+Prism
+Spectrum
+Radiant
+Kepler
+Lagrange
+Vantage
+Arc
+Epoch
+Infinity
+Omega
+Alpha
+Proxima
+Nebula
+Quasar
+Pulsar
+Orion
+Cygnus
+Lyra
+Draco
+Atlas
+Boreal
+Triton
+Europa
+Ganymede
+Obelisk
+Monolith
+Voidline
+Starward
+Fusion
+Covalent
+== modern
+Riverside
+Northgate
+Harbour
+St Anne's
+Oakfield
+Evergreen
+Kingsley
+Brightwater
+Millbrook
+Phoenix
+Unity
+Westbury
+Eastfield
+Southbank
+Hillcrest
+Meadowview
+Ashford
+Greenway
+Parkside
+Lakeside
+Bridgewater
+Fairview
+Stonebridge
+Highfield
+Elmwood
+Beechwood
+Maplewood
+Copperfield
+Redbrick
+Castlegate
+Marketgate
+Church Street
+Victoria
+Albion
+Coronation
+Jubilee
+Sovereign
+Heritage
+Pinnacle Point
+Crown
+Oak Tree
+Blue Anchor
+Red Lion
+Mill Lane
+Seaview
+Cliffside
+Wharfside
+Dockside
+St Michael's
+St Mary's
+Trinity
+Kingsway
+Queensway
+Clearwater
+Silverdale
+Thornbury
+Hawthorne
+Linden
+Larkhill
+Swan
+Heron
+Kestrel Lane
+Sunrise
+Horizon Park
+Blackwater
+Greystone
+Holloway
+Bellfield
+Ivy House
+Ferrybridge
+
+## org_name_nouns
+# used as: The Silver {}  (a noun, capitalised)
+== fantasy
+Hand
+Circle
+Company
+Brotherhood
+Lamp
+Key
+Chain
+Crown
+Rose
+Tide
+Sisterhood
+Order
+Fellowship
+League
+Covenant
+Lodge
+Guild
+Hall
+Table
+Banner
+Blade
+Shield
+Spear
+Cup
+Thread
+Needle
+Lantern
+Gate
+Tower
+Wheel
+Wing
+Feather
+Eye
+Mask
+Veil
+Cloak
+Ring
+Scale
+Quill
+Bough
+Root
+Seal
+Sword
+Horn
+Flame
+Star
+Hound
+Oath
+Compact
+Watch
+Coin
+Bridge
+== sf
+Industries
+Collective
+Systems
+Dynamics
+Combine
+Holdings
+Initiative
+Fleet
+Labs
+Freehold
+Consortium
+Syndicate
+Corporation
+Network
+Directorate
+Authority
+Union
+Concern
+Logistics
+Technologies
+Ventures
+Group
+Array
+Protocol
+Institute
+Foundation
+Assembly
+Commonwealth
+Cooperative
+Alliance
+Mandate
+Agency
+Conglomerate
+Exchange
+Cartel
+Bureau
+Station
+Works
+Federation
+Command
+Mission
+Project
+Republic
+Hegemony
+Accord
+Front
+Lineage
+Dominion
+Ascendancy
+Directive
+Conclave
+== modern
+Trust
+Partners
+& Sons
+Society
+Club
+Associates
+Gazette
+Association
+Brothers
+Consultancy
+Limited
+Players
+Singers
+Rovers
+Athletic
+Forum
+Committee
+Council
+Ramblers
+Wanderers
+Echo
+Herald
+Express
+Chronicle
+Legion
+Rangers
+Centre
+Friends
+Volunteers
+Housing
+Properties
+Developments
+Mutual
+Estates
+Motors
+Media
+Press
+Times
+Choir
+Band
+Academy
+Builders
+Lettings
+Cabs
+Solicitors
+Radio
+Supporters
+Removals
+Building Society
+Benevolent Fund
+
+## public_aims
+# used as: says it exists {}  (infinitive: 'to help widows and orphans')
+== all
+to help widows and orphans
+to keep the roads safe
+to advance learning
+to protect its members' trade
+to honour the founders
+to make life better for everyone
+to find the lost
+to preserve the old songs
+to keep the peace
+to build
+to feed the hungry
+to heal the sick
+to bring light to dark places
+to defend the realm [fantasy]
+to keep the old faith pure
+to guard the borders
+to set fair prices
+to train the young in a trade
+to give the dead a decent burial
+to make the city beautiful
+to keep the river clean [fantasy, modern]
+to record the history of the town
+to bring justice where the law fails
+to protect travellers from bandits [fantasy, modern]
+to support retired sailors [fantasy, modern]
+to find a cure
+to explore the unknown
+to keep the wells sweet [fantasy, modern]
+to promote friendship between nations [fantasy, modern]
+to preserve the forests [fantasy, modern]
+to help prisoners start again
+to keep the lamps lit
+to protect the realm from monsters [fantasy]
+to rescue those lost at sea [fantasy, modern]
+to keep ancient knowledge safe
+to encourage fair trade
+to bring water to the dry lands
+to help families stay together
+to keep the market honest
+to protect the rights of workers
+to entertain
+to sing in the cathedral [fantasy, modern]
+to save the old buildings
+to bring the colony together [sf]
+to keep the station running [sf]
+to map the stars
+to protect the colony from contamination [sf]
+to bring news to the outer settlements [sf]
+to secure humanity's future [sf, modern]
+to share the benefits of technology with all [sf, modern]
+to keep the air clean
+to defend the colonists' rights [sf]
+to search for alien life [sf, modern]
+to make space travel safe [sf]
+to give every citizen a voice
+to rebuild after the war
+to improve the community
+to win the league [modern]
+to raise money for the hospital [modern]
+to keep the neighbourhood safe
+to protect the local wildlife [modern]
+to support local businesses [sf, modern]
+to fight for affordable housing [sf, modern]
+to keep young people off the streets [modern]
+to bring culture to the town
+to tell the truth without fear
+to campaign for a new bypass [modern]
+to save the local pool [modern]
+to give everyone a fair hearing
+to help people back into work [sf, modern]
+to make the high street thrive again [modern]
+to support veterans and their families
+to promote clean energy [sf, modern]
+to protect the coastline [fantasy, modern]
+to celebrate the town's heritage
+to look after its own
+to bring people together over good food
+to keep the old crafts alive
+to uphold the law
+to educate the poor
+to carry messages faithfully
+to keep the calendar
+to settle disputes without blood
+to help debtors out of prison
+to buy freedom for slaves [fantasy]
+to keep the plague out
+to watch the skies for omens [fantasy]
+to protect children
+to provide homes for the homeless
+to win the race every year
+to keep the founder's vision alive
+to support artists
+to protect the innocent
+to cultivate good taste
+
+## real_aims
+# used as: really, {}  (infinitive or noun phrase: 'to control who can trade at all')
+== all
+to control who can trade at all
+to bring back a dead founder
+to put their own on the throne [fantasy]
+to bury what the founders did
+to make one family very rich
+to prepare for a disaster only they know is coming
+to find a buried thing
+to sell everyone out to a rival
+exactly what they say, which nobody believes
+to keep a terrible secret contained
+revenge on a city
+to survive, nothing more
+to wake something asleep under the hills [fantasy]
+to own every acre in the valley [fantasy, modern]
+to launder money for the crown [fantasy]
+to find the heir no one knows exists
+to control the water supply
+to destroy a rival faith
+to buy up the debts of the nobility and call them in [fantasy]
+to protect a monster they made [fantasy, sf]
+to keep the old king's crimes hidden [fantasy]
+to gather the pieces of a broken artefact [fantasy]
+to start a war that will make them rich
+to steal the city's treasury
+to replace the guild masters with their puppets [fantasy]
+to smuggle refugees out of the country
+to keep magic for themselves alone [fantasy]
+to breed a perfect heir
+to undo a curse on the founder's bloodline [fantasy]
+to open a door that was closed for good reason
+to bring the old gods back [fantasy]
+to keep a dragon fed [fantasy]
+to take over the colony's life support [sf]
+to control the jump gate [sf]
+to upload their leader into the station's computer [sf]
+to sell the colony's genetic data [sf]
+to make contact with something that should be left alone [sf]
+to start a revolution
+to terraform the planet for someone else [sf]
+to keep the colonists ignorant of the truth about Earth [sf]
+to steal a ship and run
+to suppress evidence of an alien species [sf]
+to build an AI they can't control [sf, modern]
+to strip-mine the moon and leave [sf]
+to create a private army
+to hide the real cause of the plague
+to win the next election [sf, modern]
+to buy the land under the estate [modern]
+to keep the factory open at any cost [sf, modern]
+to cover up a death at the old quarry [modern]
+to get rid of the new mayor
+to push the old residents out
+to protect a killer among their own members
+to keep a family business alive by any means
+to launder drug money [sf, modern]
+to find out who killed the founder's son
+to sell the town's water to a bottling company [modern]
+to make the founder's grandson famous
+a seat on the council
+a war chest for a lawsuit [sf, modern]
+an excuse for its members to drink together
+a slow, careful takeover of the town
+a way out for its leader, who is in debt
+the founder's own glorification
+to steal a famous painting
+to recover a lost child
+to protect a witness
+to undermine the church [fantasy, modern]
+to destroy the evidence of a crime committed decades ago
+to bankrupt a rival firm [sf, modern]
+to keep their leader out of prison
+to marry their heir into the royal family [fantasy, modern]
+to ruin a single man
+to atone for an old massacre
+to finish what the founder started, whatever it costs
+a hidden war against another organisation
+to profit from both sides
+to kidnap someone important
+to make the city ungovernable
+to collect blackmail on everyone who matters
+to keep a forbidden book in print
+to control the price of bread
+to keep a ghost at peace [fantasy, modern]
+to find the lost city and claim it
+to rebuild the old empire
+to bring down the monarchy from within [fantasy, modern]
+to hide a refugee prince [fantasy]
+to replace the gods with something new
+to keep the founder alive, somehow
+to steal a secret from the academy
+to prove a theory everyone laughed at
+to get a single law changed
+to give their founder's lover a decent funeral
+a monopoly on grief
+to make sure no one ever finds the bodies
+to buy time until the comet passes
+to recruit an army of the desperate
+to hand the town to a foreign power
+to find a cure for their leader's daughter
+to keep the river from changing course [fantasy, modern]
+to make a small fortune and vanish
+to preserve the bloodline of a dead god [fantasy]
+to win back what the founder lost at cards
+to spy on the people they claim to serve
+to manipulate the harvest prices
+to stop a prophecy coming true [fantasy]
+to make a prophecy come true [fantasy]
+to find out who they really are
+nothing, now; the founders are dead and the habit remains
+to get even with the council
+to control the town's newspaper and therefore its memory [modern]
+to build a bomb [sf, modern]
+to bring down the space elevator [sf]
+
+## methods
+# used as: They {}.  (third person plural verb phrase, how they work: 'buy debts and call them in')
+== all
+buy debts and call them in
+marry into the families they want
+bribe the clerks, not the judges
+spread rumours in the markets
+blackmail with old letters
+work through front companies [sf, modern]
+hold lavish parties and listen
+run the only school worth attending
+lend money at kind rates and then at cruel ones
+plant agents as servants in great houses
+buy votes with bread
+control the ferries and the bridges [fantasy, modern]
+burn what they can't buy
+hire the desperate and keep them desperate
+keep records of everyone's secrets
+win friends by doing favours that must be repaid
+sponsor the arts and the artists
+lean on families through their children
+pay off the watch [fantasy]
+control the supply of a rare herb
+run a network of informants among the beggars
+own the inns and listen at the walls [fantasy, modern]
+forge documents better than the originals
+use the temple's confessionals
+send gifts that come with strings
+train children from orphanages
+stage accidents
+start fires and then sell insurance [sf, modern]
+keep the poor in debt for generations
+fund both sides
+work quietly and patiently over decades
+recruit students and wait
+take over failing businesses
+sell protection
+publish pamphlets anonymously [fantasy, modern]
+seduce the powerful
+kidnap and ransom
+disappear their enemies
+run the best gambling dens
+offer jobs to the newly released
+control the town's water
+hack the colony's network [sf]
+own the oxygen supply contracts [sf]
+control the docking schedules [sf]
+track every citizen's movements [sf, modern]
+manipulate the colony's algorithms [sf]
+sell implants with backdoors [sf]
+run the station's only bar [sf]
+smuggle goods in coffins
+use clones as agents [sf]
+corrupt the station's AI with subtle patches [sf]
+plant drones in every corridor [sf]
+buy shares in everything [sf, modern]
+lobby the council
+run the local paper [modern]
+own half the high street [modern]
+fund the football club [modern]
+sponsor every charity event [sf, modern]
+organise petitions and protests
+file endless lawsuits [sf, modern]
+use social media pile-ons [modern]
+pay for the school's new roof [sf, modern]
+keep a councillor in their pocket [modern]
+hire private investigators [sf, modern]
+take over committees one seat at a time
+buy up the local pubs [modern]
+own the landlords' agency [modern]
+run food banks and remember who comes [modern]
+use the church's mailing list [modern]
+set up rival groups to split the opposition
+give generously and remind everyone
+make themselves indispensable
+outlast their enemies
+wait for others to make mistakes
+settle disputes before they reach the courts
+keep their hands clean and use others
+leak documents to the press [sf, modern]
+threaten to resign
+infiltrate their rivals
+offer scholarships to the clever and poor
+run a pawn shop that knows everyone's troubles
+hold the deeds to the old houses
+buy silence with jobs
+make enemies vanish from the records
+hire out muscle by the hour
+host séances for the grieving rich [fantasy, modern]
+keep the archives and edit them
+use the postal service to watch the mail [sf, modern]
+sing in the choir and gossip after
+befriend the lonely and then use them
+manage the town's funerals and listen to the grieving
+rent rooms by the night and ask no questions
+control the grain stores and wait for a bad year
+send young members to every guild meeting [fantasy]
+
+## recruits
+# used as: They recruit {}.  (adverbial: 'from orphans', 'by invitation from three members')
+== all
+only by invitation from three members
+from orphans
+from the desperate
+openly, with banners
+by debt
+from rivals, by bribery
+by blood only
+after a test no one talks about
+through a front business
+from the best students of every year
+from the prisons
+from the poor quarters
+by marriage
+from among the bereaved
+through the temples
+from the army's deserters
+at the docks
+from failed apprentices
+through a secret advertisement in the almanac [fantasy, modern]
+from the ranks of the city watch [fantasy]
+in taverns, after midnight [fantasy, modern]
+after a dream
+from the children of members
+by kidnapping
+at funerals
+by lottery
+only after a confession
+from among the exiled
+from the sick, promising cures
+at harvest fairs [fantasy, modern]
+from shipwreck survivors
+through anonymous letters
+by challenge and combat
+from the ranks of the clergy
+by apprenticeship
+on the colony's network [sf]
+through games that are really tests
+from refugee ships
+by offering free medical care
+from the lower decks [sf]
+from those who fail the colony's exams [sf]
+through virtual reality clubs [sf, modern]
+from people who owe the company [sf, modern]
+among ex-soldiers
+from the gene-modded [sf]
+in the mining camps
+from people with nothing left to lose
+through the university societies [sf, modern]
+at the job centre [modern]
+through word of mouth at the pub [modern]
+from the school's sixth form [modern]
+through a website that looks like a quiz [sf, modern]
+from the rugby club [modern]
+through church youth groups [modern]
+by headhunting [sf, modern]
+on social media [sf, modern]
+from the care homes [sf, modern]
+from among the newly divorced
+through a reality television show [modern]
+at the allotments [modern]
+from local businesses [sf, modern]
+from the volunteers at the food bank [modern]
+by recommendation from a member's mother
+after a long trial period
+from anyone who comes to the door
+through dreams of the founder
+from the ranks of their enemies
+at the age of seven
+only on their deathbeds
+from those who hear a particular bell
+through a public examination nobody passes
+from the crowds at executions [fantasy]
+from those cured at the spring [fantasy, modern]
+by inheritance, whether you like it or not
+through the hospital's waiting room [sf, modern]
+
+## rifts
+# used as: Inside: {}.  (noun phrase: 'the old guard against the young')
+== all
+the old guard against the young
+a founder's three heirs, at war
+those who know the real aim against those who don't
+two lovers on opposite sides
+a treasurer who's been skimming
+a quarrel over going public
+a member who's talking to the authorities
+a leader who's losing their mind
+a power struggle between the two deputies
+a split over whether to use violence
+the rich members against the poor
+a dispute over the founder's last words
+a faction that wants to reform from within
+a secret alliance with a rival
+a spy in the inner circle
+an affair between the leader and a rival's spouse
+a missing ledger
+a dispute over who inherits the symbol
+a member whose family were murdered by another
+a leader who has found religion
+a faction that thinks the founder was a fraud
+the country branch against the city branch [fantasy, modern]
+an argument over money from a dubious source
+a junior member who knows too much
+a prophecy that names the next leader
+a member who has fallen for an enemy
+a debate over merging with another group
+a scandal that the leader is trying to bury
+the founder's child, who wants to shut it all down
+a heresy spreading among the young
+an old crime one member wants to confess
+a vote that was rigged
+a leader nobody has seen in a year
+two factions who each believe the other is the traitor
+the scholars against the fighters
+a rival leader in exile
+a quarrel over the use of magic [fantasy]
+a schism over whether to take outsiders
+the original members against the new
+a member who has been replaced by an impostor
+a debt one faction owes to another
+a dispute over the treasure
+a murder inside the headquarters
+a leader who is secretly a member of a rival group
+the soldiers against the diplomats
+an argument over the leader's will
+a feud between two founding families
+a question of who controls the archive
+a faction that wants revenge for a betrayal
+a love triangle among the leadership
+a forbidden alliance with the enemy
+a new member who is too good to be true
+a leader who wants to retire and can't
+an old member who won't die
+a dispute over the colony's water rights [sf]
+a split over a new technology
+a faction of clones demanding equal rights [sf]
+a cyborg wing that the purists despise [sf]
+an AI member whose loyalty is doubted [sf]
+a mutiny brewing in the lower ranks
+an engineer who has found something in the old code [sf]
+the station-born against the planet-born [sf]
+a quarrel over the next jump [sf]
+the board against the founder [sf, modern]
+a takeover bid [sf, modern]
+an embezzlement nobody wants to report
+a pension fund that's empty [sf, modern]
+a rivalry between two regional managers [sf, modern]
+a whistle-blower in the accounts department [sf, modern]
+a dispute over the club's new ground [modern]
+a row over the new logo [sf, modern]
+a by-election that split the membership [modern]
+a quarrel over the minutes of the last meeting
+a social secretary who wants to be chair
+a betrayal at the annual dinner
+a lawsuit between two founding members
+a family feud dressed up as policy
+a younger generation who want to modernise
+the volunteers against the paid staff
+a secret recording of the chair [sf, modern]
+a rift over a planning application [modern]
+a proposal to admit women that has failed nine times
+a resignation letter nobody has opened
+a dispute over a dog
+a member who has written a tell-all book [sf, modern]
+a dead member's diaries
+a rumour that the founder is still alive
+a faction that has started worshipping the founder
+a quarrel over who gets to be buried in the crypt [fantasy, modern]
+two sisters at the head, each waiting for the other to falter
+an heir who would rather be a poet
+a vote on whether to disband
+
+## org_assets
+# used as: They have {}.  (noun phrase)
+== all
+a judge on the payroll
+a hidden archive
+more money than sense
+a building nobody can enter
+the only good map of the tunnels
+a forger who can copy anything
+a safe house in every district
+the deeds to half the docks
+a famous name and nothing else
+an heir everyone thinks is dead
+a list of everyone's secrets
+a friend in the tax office
+a priest who hears the right confessions
+a doctor who asks no questions
+a warehouse full of something no one has inspected
+a loyal and very old servant
+a printing press in a cellar
+a letter that could topple the government
+a member in every family of note
+a fleet of fast boats [fantasy, modern]
+an army of lawyers [sf, modern]
+a weapon nobody knows they have
+the founder's preserved body
+a cellar of very old wine and older secrets
+the loyalty of the poor
+a share of every toll on the river road [fantasy, modern]
+an assassin on retainer
+a key to the city gates [fantasy]
+a chapter house that was once a prison
+a vault no one has opened in fifty years
+== fantasy
+a fleet of barges
+a hundred loyal swords
+a monopoly on salt
+a patron in the palace
+an informant in every inn
+a dragon's egg
+a library of forbidden books
+a tame wizard
+a castle in the mountains
+the king's ear
+a secret passage into the palace
+a crown jewel, stolen long ago
+a network of messenger ravens
+a cursed sword
+a hoard of gold in the catacombs
+the loyalty of the city watch
+a mine of rare silver
+a seer who is usually right
+the support of the old nobility
+a fortress on an island
+a flock of trained hawks
+a talisman that shields them from scrying
+the only bridge over the river
+a ship that has never been caught
+the lease on the royal granaries
+the oldest charter in the kingdom
+a vineyard that supplies the court
+a dungeon under their hall
+a herd of warhorses
+a pact with the forest folk
+a book of true names
+a hostage from a noble family
+the bones of a saint
+an alchemist who can make gold, almost
+a dozen trained war dogs
+the only map to the lost city
+a horn that summons something
+the debt of a prince
+a spy in the temple
+the gratitude of a dying queen
+a mill that grinds more than flour
+a mountain pass they alone can open
+an embassy in every capital
+a talking skull
+a toll gate on the king's road
+== sf
+a decommissioned warship
+root access to the station
+the only working fabricator
+a senator's debts
+a stash of real coffee
+a fleet of mining drones
+a secret jump route
+a private medical lab
+a cloned copy of the founder
+an AI that can predict the markets
+the colony's oxygen contracts
+a hidden asteroid base
+a black-budget research station
+a stolen alien artefact
+a backdoor into every implant
+the patent on the cure
+a monopoly on water ice
+a squad of augmented soldiers
+the station master's trust
+an orbital weapons platform
+the only working cryopod
+the ship's original blueprints
+a mole in the navy
+a satellite network
+the codes to the colony's shields
+a stealth shuttle
+a fleet of cargo haulers
+a vault of seeds from Earth
+a team of elite hackers
+a terraforming engine
+a private orbital elevator
+a library of uploaded minds
+the colony's gene bank
+a fusion reactor of their own
+the data from the lost probe
+an army of maintenance robots
+a quantum computer
+the only translator for the alien language
+a medical ship that answers to no one
+a sleeper agent in the council
+a stockpile of antimatter
+the station's surveillance feeds
+a moon, legally
+the colony's founding charter, the original
+a deep-space listening post
+== modern
+a councillor in its pocket
+a pension fund
+the town's biggest landlord on the board
+a podcast with a million listeners
+the CCTV footage
+a detective inspector who owes them
+a seat on the planning committee
+a block of flats in the centre
+the local paper's editor
+a cash-only nightclub
+a holiday home everyone uses
+a fleet of vans
+a lawyer who has never lost
+a social media following
+an endowment nobody understands
+the old cinema
+a yacht in the marina
+the mayor's diaries
+a warehouse by the motorway
+a list of donors
+a bent accountant
+a former MP as patron
+a minibus and a lot of goodwill
+a grant from the lottery
+the freehold on the pier
+a member of the royal household as honorary president
+a cemetery plot for every member
+a vintage car collection
+the only key to the bell tower
+a radio station
+a betting shop chain
+a farm on the edge of town
+a hospital consultant
+a drawer full of compromising photographs
+a famous chef
+a building contractor who does favours
+the town's oldest pub
+a war chest from a lottery win
+a celebrity patron with a past
+a large field the council wants
+a trophy cabinet and a legend
+an archive of old court records
+a scrapyard with a crusher
+a solicitor who handles everyone's wills
+the town's only cash machine for miles

@@ -1,0 +1,3420 @@
+# World tables: taverns, treasure and weather.
+
+## tavern_kinds
+# used as: "The Drowned Rat, a/an {}"  (format: kind|quality where quality is squalid, poor, modest, comfortable or wealthy)
+== fantasy
+dockside alehouse|poor
+crossroads coaching inn|modest
+cellar dive under a tannery|squalid
+guildhall tavern with carved beams|comfortable
+lodge for wealthy pilgrims|wealthy
+drovers' inn with more pens than beds|poor
+riverboat taproom moored for the winter|modest
+mountain hospice run by monks|modest
+gambling house behind a respectable front|comfortable
+mead hall gone to seed|poor
+hillside cider barn|modest
+smugglers' den in a sea cave|squalid
+inn built into the old city wall|modest
+wine house for the merchant quarter|wealthy
+soldiers' canteen outside the barracks|poor
+tavern on a bridge, rooms over the water|comfortable
+roadside hut serving whatever the owner shot|squalid
+temple-licensed brewhouse|comfortable
+fairground beer tent that never left|poor
+hunting lodge for the minor nobility|wealthy
+miners' alehouse black with coal dust|poor
+tea house for scholars and copyists|comfortable
+pirate bar where the law does not reach|squalid
+inn at the last ford before the wastes|modest
+garden tavern with trellises and lanterns|comfortable
+caravanserai around a dry fountain|modest
+inn kept by three generations of one family|modest
+taproom of a failing brewery|poor
+private club for retired adventurers|wealthy
+hovel with a barrel and a plank for a bar|squalid
+coaching inn on the king's road|comfortable
+lakeside fish house on stilts|modest
+underground tavern for dwarven traders|comfortable
+pilgrims' hostel with a strict prior|poor
+ferryman's alehouse at the crossing|poor
+lantern-lit inn for night travellers|modest
+palace kitchen that sells its leftovers out the back door|poor
+== sf
+orbital dockside bar|poor
+cantina at the edge of a spaceport|modest
+officers' lounge on a deep-space carrier|comfortable
+shipping-container bar in a refinery town|squalid
+zero-g drinking club with tethered stools|modest
+luxury observation lounge over a gas giant|wealthy
+mining-colony canteen with ration chits|poor
+automated bar run by an outdated robot|poor
+hydroponics-farm cider shed|modest
+smugglers' bar in a decommissioned airlock|squalid
+corporate executive club on the top ring|wealthy
+noodle counter and bar under a maglev line|modest
+bar on a generation ship that has forgotten its port|modest
+cantina carved into an asteroid|poor
+transit-hub lounge where nobody stays long|comfortable
+hab-module speakeasy brewing illegal spirits|squalid
+spinward ring bistro with real wood tables|wealthy
+truck stop on a desert colony highway|poor
+former chapel turned into a bar on a mining moon|modest
+dockworkers' union hall bar|poor
+casino lounge in a pleasure orbital|wealthy
+bar for synthetic people only|modest
+pressure-dome tavern beside the ice fields|modest
+cramped galley bar on a long-haul freighter|poor
+neon basement club in an arcology|comfortable
+quarantine station bar for the stranded|poor
+diplomatic lounge with translators on staff|wealthy
+bar built inside a crashed ship|squalid
+retro-themed bar for homesick colonists|comfortable
+racing-circuit pit bar|modest
+military-base canteen with one working tap|poor
+hotel bar on a space elevator|wealthy
+salvage-yard dive with a still in the back|squalid
+co-op bar run by terraforming crews|modest
+listening post with a bar for the three people stationed there|poor
+floating bar on an ocean world raft-city|comfortable
+== modern
+corner pub with a dartboard|modest
+student bar with sticky floors|poor
+hotel bar with a pianist|wealthy
+working men's club|poor
+gastropub with a chalkboard menu|comfortable
+dive bar under the railway arches|squalid
+cocktail bar with no sign on the door|wealthy
+country pub with low beams and a fire|comfortable
+sports bar with twelve screens|modest
+wine bar in a converted bank|wealthy
+seaside pub that smells of chips|modest
+karaoke bar above a takeaway|poor
+craft-beer taproom in an industrial unit|comfortable
+roadhouse on a long empty highway|poor
+airport bar with a view of the runway|modest
+members' club for actors and journalists|wealthy
+bowling-alley bar|modest
+village pub that doubles as the post office|modest
+late-night lock-in at a closed pub|poor
+basement jazz club|comfortable
+hipster bar with board games|comfortable
+football supporters' pub|poor
+riverside pub with a beer garden|comfortable
+bar in a hospital's staff social club|poor
+backstreet bar where the police drink|modest
+rooftop bar overlooking the city|wealthy
+pub on a canal boat|modest
+miners' welfare club that outlived the mine|poor
+whisky bar with four hundred bottles|wealthy
+pub inside a railway station|modest
+bar at the end of a pier|poor
+cash-only bar with a lot of rules|squalid
+tiki bar in a strip mall|poor
+wedding-venue bar at a country house|wealthy
+pub quiz institution with the same teams since 1990|modest
+bar in a ferry terminal|poor
+snooker hall with a bar|squalid
+
+## tavern_adjectives
+# used as: "The {} Lantern"  (capitalised adjective or colour for a sign)
+== all
+Drowned
+Gilded
+Crooked
+Laughing
+Sleeping
+Blind
+Broken
+Golden
+Silver
+Copper
+Brass
+Iron
+Rusty
+Red
+Black
+White
+Green
+Blue
+Grey
+Scarlet
+Crimson
+Amber
+Jade
+Ivory
+Painted
+Merry
+Wicked
+Lonely
+Hungry
+Thirsty
+Dancing
+Singing
+Weeping
+Whistling
+Leaping
+Wandering
+Lost
+Lucky
+Unlucky
+Jolly
+Tipsy
+Drunken
+Sober
+Honest
+Lying
+Bold
+Shy
+Proud
+Humble
+Fat
+Thin
+Lame
+One-Eyed
+Three-Legged
+Headless
+Bearded
+Bald
+Burning
+Frozen
+Flooded
+Salted
+Smoked
+Pickled
+Roasted
+Stuffed
+Spotted
+Speckled
+Striped
+Feathered
+Hollow
+Sunken
+Leaning
+Tilted
+Wooden
+Stone
+Glass
+Velvet
+Tattered
+Patched
+Mended
+Hidden
+Secret
+Silent
+Noisy
+Grinning
+Sulking
+Yawning
+Startled
+Wounded
+Hanged
+Running
+Flying
+Swimming
+Howling
+Barking
+Purring
+Crowing
+Sinking
+Rising
+Setting
+Wild
+Tame
+Mad
+Sly
+Clever
+Foolish
+Wise
+Old
+Young
+Ancient
+Last
+First
+Second
+Lesser
+Greater
+Twin
+Restless
+Patient
+Faithful
+Fickle
+Gentle
+Savage
+Bloody
+Mossy
+Muddy
+Dusty
+Misty
+Rainy
+Windy
+Starry
+Moonlit
+Midnight
+Morning
+Evening
+Northern
+Southern
+Eastern
+Western
+Royal
+Common
+Plain
+Hopeful
+Sorry
+Grateful
+Forgotten
+Famous
+Spiteful
+
+## tavern_nouns
+# used as: "The Drowned {}"  (capitalised singular noun for a sign)
+== all
+Rat
+Eel
+Lantern
+Goose
+Fox
+Hound
+Stag
+Boar
+Bear
+Wolf
+Badger
+Hare
+Rabbit
+Otter
+Weasel
+Ferret
+Crow
+Raven
+Rook
+Magpie
+Owl
+Hawk
+Falcon
+Swan
+Heron
+Duck
+Cockerel
+Hen
+Pigeon
+Wren
+Sparrow
+Kingfisher
+Gull
+Pelican
+Cormorant
+Pike
+Trout
+Salmon
+Herring
+Cod
+Oyster
+Crab
+Lobster
+Whale
+Mermaid
+Dragon
+Griffin
+Unicorn
+Wyvern
+Serpent
+Toad
+Frog
+Newt
+Snail
+Beetle
+Moth
+Bee
+Wasp
+Spider
+Cat
+Dog
+Horse
+Mare
+Pony
+Mule
+Donkey
+Ox
+Bull
+Cow
+Goat
+Ram
+Sheep
+Lamb
+Pig
+Sow
+Piglet
+Monkey
+Camel
+Elephant
+Lion
+Tiger
+Leopard
+Bishop
+Abbot
+Monk
+Nun
+Friar
+Pilgrim
+Beggar
+Thief
+Sailor
+Soldier
+Drummer
+Piper
+Fiddler
+Harper
+Juggler
+Jester
+King
+Queen
+Prince
+Princess
+Knight
+Squire
+Archer
+Smith
+Miller
+Baker
+Tinker
+Cobbler
+Tailor
+Weaver
+Shepherd
+Ploughman
+Ferryman
+Hangman
+Widow
+Maiden
+Giant
+Dwarf
+Ogre
+Goblin
+Witch
+Wizard
+Ghost
+Skull
+Anchor
+Barrel
+Bucket
+Tankard
+Flagon
+Kettle
+Cauldron
+Ladle
+Spoon
+Key
+Lock
+Bell
+Candle
+Crown
+Sceptre
+Sword
+Shield
+Axe
+Hammer
+Anvil
+Wheel
+Cart
+Plough
+Boat
+Ship
+Oar
+Compass
+Clock
+Mirror
+Harp
+Fiddle
+Drum
+Horn
+Boot
+Hat
+Glove
+Cloak
+Feather
+Thistle
+Rose
+Oak
+Acorn
+Apple
+Pear
+Plum
+Cherry
+Barley
+Wheatsheaf
+Moon
+Star
+Sun
+Comet
+Mitre
+Gallows
+Bridge
+Mill
+Tower
+Gate
+Well
+Fountain
+Pickle
+Sausage
+Pie
+Cheese
+Loaf
+Turnip
+Onion
+
+## tavern_rests
+# used as: "The Lantern's {}"  (capitalised: Rest, Arms, Head)
+== all
+Rest
+Arms
+Head
+Tail
+Nest
+Den
+Lair
+Hole
+Burrow
+Roost
+Retreat
+Haven
+Hearth
+Hearthside
+Fireside
+Table
+Board
+Cellar
+Pantry
+Kitchen
+Larder
+Cup
+Purse
+Pocket
+Pride
+Folly
+Fortune
+Luck
+Ruin
+Return
+Revenge
+Promise
+Secret
+Shadow
+Lament
+Song
+Wake
+Welcome
+Reward
+Bargain
+Mistake
+Retirement
+Lodging
+Respite
+Repose
+Comfort
+Refuge
+Last Stand
+Second Wife
+Elbow
+Knees
+Whiskers
+Teeth
+Bones
+
+## bar_names
+# used as: "{}"  (a full bar name for science fiction or contemporary, capitalised: 'Dock Nine', 'The Last Orbit')
+== sf
+Dock Nine
+The Last Orbit
+The Airlock
+Escape Velocity
+The Long Burn
+Perihelion
+Lagrange Point
+The Dead Star
+Red Shift
+The Event Horizon
+Bay Twelve
+The Slingshot
+Zero Point
+The Vacuum
+Hull Breach
+The Drift
+Spinward
+The Coriolis
+Docking Clamp
+The Spent Cell
+Delta-V
+The Cold Sleep
+Last Light Before Jump
+The Reactor Room
+Ring Three
+The Halfway Station
+Oxygen Debt
+The Wet Deck
+Burnout
+The Tether
+The Rust Belt
+Apogee
+The Scrubber
+Low Gravity
+The Waystation
+Freefall
+The Black Box
+Cargo Hold Seven
+The Ion Trail
+Hab Fourteen
+The Docking Fee
+Quarantine
+The Bulkhead
+Starboard
+The Recycler
+Terminus
+The Tidal Lock
+Ballast
+The Third Moon
+Gas Giant
+The Methane Lake
+Ice Mine
+The Comet Tail
+Retrograde
+The Last Shuttle
+Station Time
+The Graveyard Shift
+Ration Card
+The Sunward Side
+Nightside
+The Blue Marble
+Old Earth
+The Homesick
+Jump Lag
+The Long Haul
+The Dry Dock
+Synth and Tonic
+The Static
+Pressure Suit
+The Clean Room
+Second Sun
+The Gantry
+== modern
+The Crown and Anchor
+The Office
+Joe's
+The Local
+Last Orders
+The Railway Arms
+The Corner House
+Number Nine
+The Late Shift
+The Dog House
+Paddy's
+The Night Owl
+The Speakeasy
+Bar Rosa
+The Jukebox
+The Back Room
+Flannery's
+The Tin Roof
+The Lock Keeper
+The Cellar Door
+The Blue Note
+Eight Ball
+The Basement
+Happy Hour
+The Long Bar
+The Underpass
+The Lighthouse
+Station Road Social Club
+The Dive
+Tuesday's
+The Wheelhouse
+The Old Bank
+The Two Brewers
+The Pump Room
+Low Tide
+The Laundry
+The Fire Station
+The Lost and Found
+Mabel's
+The Stockroom
+The Night Bus
+The Rooftop
+Rosie's
+The Snug
+The Quiet Man
+The Last Train
+The Bottle Shop
+The Off Licence
+Gin Palace
+The Tap Room
+The Full House
+Copper Kettle Social
+The Garage
+Smoky's
+The Lounge
+The Kitchen Sink
+Double Shot
+The Bus Shelter
+The Jury Room
+Neon Moon
+Big Sal's
+The Ferry Inn
+The Allotment
+The Front Room
+Paper Moon
+The Waiting Room
+The Second Round
+Closing Time
+The Bar With No Name
+Dot's Place
+The Overflow
+
+## drinks
+# used as: "They pour {}."  (noun phrase)
+== fantasy
+a brown ale thick enough to stand a spoon in
+small beer for the children and the sick
+mead flavoured with heather
+cider so rough it squeaks
+a black stout brewed by the monks upriver
+spiced wine kept warm in a cauldron
+dwarven barley spirit that burns blue
+elderflower wine from the landlady's own bushes
+goat's milk with a slug of brandy
+perry made from pears nobody else will eat
+a pale ale that tastes faintly of smoke
+plum brandy smuggled over the pass
+something green that the barman calls medicine
+honeyed ale served in horn cups
+sour red wine from the abbey vineyard
+a bitter beer brewed with wormwood
+warm buttered rum for the sailors
+nettle beer, surprisingly good
+blackberry cordial for those who have sworn off drink
+a fortified wine as old as the inn
+watered beer and pretend not to
+a barley wine that has put three men under the table tonight
+hot cider with a roasted apple floating in it
+the last cask of a famous vintage
+elven wine in thimble-sized glasses
+a dark porter brewed with burnt bread
+juniper spirit that clears the head and then removes it
+mulled ale with ginger and pepper
+fermented mare's milk for the steppe traders
+birch sap wine
+a smoked beer that tastes like a bonfire
+cherry brandy from a locked cupboard
+rice wine brought by a caravan
+ale from a barrel that has been tapped since the war
+dandelion wine the colour of sunlight
+sloe gin kept under the counter
+hot mead with cloves
+a herbal liqueur made by hermits
+salt-water grog for anyone who loses a bet
+a beer so weak it is mostly a rumour
+toadstool wine, which no one recommends
+whey and honey for the temperance league
+a quince spirit that smells of summer
+black tea laced with rum
+the house brew, which changes with the landlord's mood
+wine from a cask found in a shipwreck
+pine-needle beer from the mountain villages
+a sweet pale wine for weddings
+hard cider aged in an old brandy barrel
+rosehip wine for the winter coughs
+a gritty ale brewed in the cellar
+blood-red wine from the south
+spirits distilled from potatoes
+hippocras, warm and very sweet
+the landlord's grandfather's recipe, still secret
+== sf
+recycled-water lager that tastes of the pipes
+synthetic whisky with a printed label
+algae beer, bright green and proud of it
+vodka distilled from hydroponic potatoes
+a fizzy blue drink with a vitamin complex
+coffee strong enough to wake a cryo sleeper
+real Earth wine at a terrible price
+moonshine from the engine-room still
+a cocktail that changes colour as it warms
+fermented fungus beer from the deep tunnels
+something the bartender calls 'atmosphere'
+a glass of pure oxygen-infused water
+nutrient shake with a shot of something stronger
+ice from a comet, melted, with gin
+a stout brewed from yeast older than the colony
+hot protein broth for the night shift
+an alien liqueur that only some species can drink
+pale ale grown in a vat
+a zero-g cocktail served in a sealed bulb
+cheap amphetamine tea for long-haul pilots
+methane-world rum, which smells exactly how you'd fear
+a sake brewed on the orbital farm
+ration-card beer, one per shift
+a bitter herbal drink the miners swear by
+the last bottle of a vintage from a dead world
+fortified electrolyte gin
+coolant-blue spirit that is definitely not coolant
+a smoky mezcal brewed from Martian agave
+glow-in-the-dark shots for tourists
+pressed fruit from the station's single orchard
+cold brew in a thermal flask
+lab-grown milk with a splash of rum
+an amber spirit aged in zero gravity
+the house special, contents classified
+synth-wine in a cardboard pouch
+a drink that is mostly foam and cheerfulness
+kombucha from a culture that came on the first ship
+tea grown under artificial suns
+chilled water from the ice caps, at whisky prices
+a sweet drink made from krill
+hot chocolate printed on demand
+rice spirit from the hab farms
+a sparkling wine from the outer moons
+cheap gin that tastes faintly of solvent
+a beer made with water from the ice moon
+spiced tea that the old spacers drink
+fermented sap from a terraforming tree
+a tall glass of something that hums
+the bartender's own brew, in an unlabelled flask
+a cocktail invented for a famous captain
+filtered rainwater from a planet with real rain
+a drink with a nanite garnish
+soy liquor from the bulk tanks
+a stimulant cola older than the station
+a bitter ale with a hint of ozone
+== modern
+pints of bitter from a hand pump
+cheap lager in plastic cups
+a gin and tonic with too much ice
+single malt from the top shelf
+cider on tap
+a pint of stout left to settle
+a glass of house red that comes from a box
+shots of something sweet and sticky
+espresso martinis for the after-work crowd
+a craft IPA that tastes like grapefruit
+a mild ale only the old men drink
+lemonade with a dash of lime
+mulled wine for the Christmas crowd
+a whisky sour with an egg white
+alcohol-free beer that almost tastes like beer
+rum and coke in a dimpled glass
+a bottle of prosecco for the birthday table
+dark rum with ginger beer
+a vodka cranberry with a straw
+a negroni, carefully stirred
+a pint of shandy for the designated driver
+tea from a pot that's been stewing since noon
+a pint of the local brewery's seasonal ale
+bourbon on the rocks
+a sour beer brewed with cherries
+an old-fashioned made the slow way
+a glass of rosé on a hot afternoon
+tequila with salt and lime
+a hot toddy for the man with the cold
+a lager top
+sherry for the vicar
+a pint of the guest ale
+a bloody mary at eleven in the morning
+port and lemon, for old times' sake
+warm flat beer from a forgotten barrel
+a glass of tap water and a disapproving look
+mezcal flights for people who want to talk about mezcal
+a pint of porter with a whisky chaser
+pints of cold cider in the beer garden
+an Irish coffee topped with cream
+a margarita by the jug
+a large glass of white wine, no questions
+a cocktail named after the landlady's dog
+brown ale in a bottle
+hot chocolate with a splash of brandy
+a gin from a distillery up the road
+sambuca, set alight
+a pint of the cheapest thing on tap
+a tonic water for the recovering
+a mojito with too much mint
+a barley wine at nine percent
+blackcurrant squash for the kids
+champagne nobody can afford
+a dram from a bottle the landlord keeps for funerals
+real ale that has gone slightly off
+
+## dishes
+# used as: "Known for {}."  (noun phrase)
+== fantasy
+eel pie with a pastry crust like armour
+a stew that has been simmering for eleven years
+black pudding and fried apples
+roast goose on feast days
+pickled eggs in a jar older than the barman
+mutton and barley broth
+bread baked in the morning and stale by noon
+venison pasties of uncertain venison
+cheese so strong it has its own table
+oysters by the dozen
+honey cakes the size of a fist
+fish soup with whatever the boats brought in
+a whole pig turned on a spit every market day
+turnip mash and gravy
+smoked trout on rye
+the landlady's famous rabbit pie
+blood sausage with mustard
+pease pottage, hot and cheap
+roasted chestnuts in winter
+spiced lamb from a southern recipe
+a dumpling stew that sits in the stomach for days
+cold pork pie and pickles
+salted herring and dark bread
+mushrooms foraged by someone who knows what they're doing
+hard biscuits for travellers
+a pigeon pie with the feet left poking out
+porridge with cream for the early risers
+grilled sardines on a plank
+hot pies sold through the window
+a cheese soup with ale in it
+lentils and sausage
+pickled walnuts
+fried bread with dripping
+a fish nobody can name but everyone orders
+frogs' legs, done in butter
+mussels steamed in cider
+a hearty barley loaf with seeds
+fried locusts with salt, a delicacy in the south
+roast capon stuffed with herbs
+beef and oyster pudding
+apple dumplings with custard
+a soup of leeks and potatoes
+jellied eels
+cured ham hanging from the rafters
+a pottage of the day's leftovers
+saffron buns at midwinter
+goat cheese and figs
+boiled mutton and caper sauce
+a game pie with three kinds of bird
+a thin gruel and nothing else
+a stew with dwarven fire pepper
+crayfish from the river
+plum duff on holidays
+fresh cream and strawberries in summer
+dried meat strips for the road
+== sf
+vat-grown steak cut to order
+algae noodles in hot broth
+printed dumplings shaped like the station logo
+cricket-flour flatbread
+nutrient bricks in six flavours
+real eggs, one per customer
+fungus burgers from the tunnel farms
+krill fritters with chilli sauce
+reconstituted curry that is better than it has any right to be
+hydroponic salad, very small and very proud
+fried soy cutlets with gravy
+a sandwich that comes in a pressurised tube
+dumplings filled with lab-grown pork
+seaweed chips from the ocean world
+a stew of whatever the recycler produced today
+the only fresh tomatoes in the sector
+protein paste spiced to taste like home
+spicy noodle bowls that make pilots cry
+flash-frozen fish from a water world
+yeast-cake with synthetic honey
+roasted grubs, a delicacy among the miners
+rice from the spinward farms
+a pie of genuine Earth apples, extremely rare
+grilled mushroom kebabs
+cheap ration packs warmed in the microwave
+shrimp grown in the station's tanks
+a breakfast that is served all shift long
+bean stew in sealed bowls for zero-g
+fried tofu with fermented sauce
+lab-grown chicken wings
+dehydrated ice cream from a tourist shop
+sourdough from a starter older than the colony
+cultured cheese from a vat named Gerald
+peppers grown under artificial light
+a soup made with water melted from comet ice
+fried insects in a paper cone
+a burger made of something you don't ask about
+spirulina pancakes
+grilled algae with lemon salt
+pickled vegetables from the long voyage stores
+steamed buns from the night market
+a stir-fry of hydroponic greens
+alien fruit that tastes of aniseed and copper
+emergency rations, served ironically
+coffee and doughnuts printed fresh every shift
+a casserole the cook calls 'traditional'
+sushi made with tank-grown fish
+roast tuber with protein gravy
+flatbread wraps of whatever is cheap today
+mock-turkey on landing day
+a spiced porridge for the cold sleepers who just woke
+syrup cake from the agricultural ring
+dumplings handmade by the owner's grandmother
+cubes of something gelatinous and nutritious
+a salad of edible flowers from the botanical deck
+== modern
+fish and chips wrapped in paper
+a Sunday roast with all the trimmings
+burgers the size of a hubcap
+scampi in a basket
+a ploughman's lunch with a slab of cheddar
+pie and mash
+chicken wings in a sauce rated by danger
+a curry night every Thursday
+steak and ale pie
+nachos piled high enough to need scaffolding
+a full English all day
+pork scratchings in little bags
+pickled onions from a jar on the bar
+a cheese board for the wine crowd
+tacos on Tuesday
+bangers and mash with onion gravy
+crisps, mostly
+a club sandwich with a cocktail stick
+the best scotch eggs in the county
+sausage rolls straight from the oven
+small plates nobody can share fairly
+loaded fries
+a vegan menu the old regulars complain about
+moules frites
+pizza from the oven in the beer garden
+a toastie with ham and cheese
+the hottest chilli in town, with a wall of fame
+shepherd's pie
+dumplings from the kitchen in the back
+chips with curry sauce
+a mixed grill for two that one man finishes alone
+salted peanuts in a dish on the bar
+fried chicken and waffles
+brunch on weekends with bottomless coffee
+potted shrimp
+a soup of the day that is always tomato
+lamb shank on mash
+oysters on Friday
+a hot pot that has been on the menu since 1962
+pub quiz sandwiches cut in triangles
+calamari rings and aioli
+sticky toffee pudding
+a burger with a fried egg on top
+fishcakes and tartare sauce
+a cheese toastie and a pickled egg
+pulled pork on a brioche bun
+vegetable lasagne
+jacket potatoes with beans
+bar snacks that are mostly olives
+a Friday fish fry
+Welsh rarebit
+kebabs from next door, which they allow
+chicken parmigiana that covers the plate
+a hamper of pork pies at the bar
+gammon, egg and pineapple
+
+## tavern_features
+# used as: "Inside: {}."  (noun phrase)
+== all
+a fire that never quite draws, so the room is always smoky
+a bar worn smooth by a century of elbows
+a dog asleep in the doorway that nobody dares move
+low ceilings and a step down that catches every stranger
+a wall of portraits of past landlords, one turned to face the wall
+a back room with a locked door and a lot of traffic
+a corner booth reserved for someone who never comes
+a floor that slopes towards the bar
+a chalked list of people who owe money
+benches carved with a hundred sets of initials
+a cat that sits on the till
+windows so grimy the day outside is just a rumour
+a clock that stopped the night something happened
+a staircase that creaks on every third step
+a stuffed fish with a brass plaque and a disputed story
+a single long table everyone has to share
+a jar of coins for a widow's fund
+a noticeboard of lost dogs, odd jobs and threats
+a bell over the door that rings a second late
+two rooms, one for locals and one for everyone else
+a cellar trapdoor behind the bar
+a hearth big enough to roast an ox [fantasy, modern]
+a corner where the floorboards have been replaced and repainted
+a battered piano with three dead keys [sf, modern]
+a mural half painted over
+a smell of wet coats and old beer
+a back door that opens onto the water
+shelves of things left behind by customers
+a mirror behind the bar that everyone watches instead of each other
+a ceiling hung with dried hops
+a cracked window patched with paper
+an empty stool with a glass always poured beside it
+a dartboard pocked with more than dart holes [sf, modern]
+a garden out the back with one crooked tree
+an old chair nobody sits in, by tradition
+a draught that blows out candles at the same table
+a framed letter of complaint from someone famous
+a tiled floor with a stain shaped like a country
+a rule board above the bar, half the rules crossed out
+a snug with a hatch to the bar for the shy
+== fantasy
+rushes on the floor changed once a season
+a whole ox skull over the hearth
+a mounted troll's hand, very much not a fake
+a pit for cockfights, now covered with planks
+rooms upstairs rented by the hour, the half day or the week
+a stable yard full of carts and arguing drovers
+a shrine to the god of travellers, with offerings of buttons
+a minstrels' gallery that hasn't seen a minstrel in years
+a well in the middle of the taproom
+a wizard's mark burned into the doorframe
+a notice from the watch nailed over an older notice
+long tables made from ship's timbers
+a bear on a chain, old and gentle and sad
+casks stacked to the ceiling along one wall
+a map of the region scratched into the plaster
+a loft where travellers sleep on straw for a copper
+a cage of songbirds above the bar
+shields of dead mercenaries hung as decoration
+a fireplace with an iron kettle always on
+a hidden room behind the wine racks
+oil lamps that smoke and spit
+a tapestry with the duke's face stabbed out
+a cellar that connects to the old catacombs
+an alcove where a hedge witch reads palms
+weapons racked at the door by law
+a hearth where the dog turns the spit
+a tree growing through the middle of the building
+a privy that opens over the river
+a sign promising no magic, which means there is some
+an ancient sword over the bar that the landlord swears is real
+a stone floor sunk in the middle from centuries of feet
+the bones of a dragon used as roof beams
+a round table where adventurers sign up for work
+a chalk circle on the floor nobody steps inside
+shutters with arrow slits, from rougher days
+benches lined with sheepskins
+a small private chapel off the taproom
+a back garden full of hives
+a giant's boot used as a bin
+a stable cat that runs the place
+a gallery overlooking a fighting ring
+a horn by the door to sound if raiders come
+a trophy wall of strange horns and teeth
+a locked chest that holds the inn's charter
+the bell from a sunken ship hanging by the bar
+a smoke-blackened icon of a forgotten saint
+stairs down to a public bathhouse
+pillars carved with the faces of the founders
+a loom in the corner where the landlady weaves between customers
+straw pallets in the eaves for the stable boys
+== sf
+a viewport looking out onto the planet turning below
+magnetic stools for when the gravity goes
+a jukebox that only plays music from Earth
+an air scrubber that rattles every few minutes
+holographic menus that glitch into old adverts
+a bar made from a ship's hull plate
+a pressure door with a hand-painted welcome sign
+bunks stacked in the back for drunk dockers
+a robot bartender with one arm replaced by a wrench
+a wall of mission patches from ships that never came back
+a hydroponic herb garden over the bar
+a security camera everyone knows is broken
+a vending machine selling oxygen canisters
+emergency suits hanging behind the bar
+a screen showing the docking schedule
+a booth with a jamming field for private talk
+a mural of a blue sky nobody here has seen
+a tank of fish grown for the kitchen
+seats bolted to the floor for heavy burns
+a gambling table run by an old AI
+the flag of a colony that doesn't exist any more
+a grav plating patch that makes one corner heavy
+mood lighting that matches the time back on Earth
+a bulletin board of crew wanted and crew lost
+an airlock door that sometimes cycles by itself
+a smell of hot circuits and fried noodles
+a karaoke rig salvaged from a cruise liner
+neon tubes that hum and flicker
+a medbay kit nailed to the wall, much used
+a small zero-g dance floor in a padded sphere
+a skylight looking straight into the gas giant's storms
+a bar top with a scrolling news feed
+the cockpit of an old fighter used as a booth
+a wall of lockers for weapons and secrets
+a translator unit that gets the jokes wrong
+a sign in five languages forbidding sidearms
+a still bubbling in full view of station security
+crates used as tables
+a plant from Earth in a glass case, watered with ceremony
+an automated tab system that remembers everyone's debts
+a poker table with a radiation-damaged deck
+bulkheads covered in signatures
+a holo-fireplace with a crackle loop
+a tiny garden of real grass that costs a credit to touch
+a memorial wall for the dome breach
+water rationing posters
+a docking-bay window with a view of loaders working
+an emergency shelter in the cellar
+a drone that delivers drinks badly
+a scratched poster of a band that went out on a long tour and never came back
+== modern
+a pool table with a slight lean
+a jukebox full of songs from one summer in the eighties
+a big screen showing the football with the sound off
+a fruit machine that hasn't paid out in a decade
+a beer garden with benches and an ashtray mountain
+chalkboard specials written in three colours
+a wall of signed football shirts
+a quiz machine with a cracked screen
+a framed photograph of the pub flooding in 1953
+a smoking shelter out the back made of corrugated iron
+a function room upstairs that smells of buffets
+a cork board of local band posters
+sticky carpet patterned to hide everything
+a radiator that clanks like a ghost
+a corner where the regulars play dominoes
+a shelf of board games missing pieces
+fairy lights left up from three Christmases ago
+a dog bowl by the door and a jar of biscuits
+a defibrillator by the door, freshly donated
+a pump clip collection covering a whole ceiling
+a cash machine that charges two pounds
+a small stage with a microphone stand
+a photo booth nobody uses
+an open kitchen and a chef who shouts
+a wall of whisky bottles in a cage
+leather sofas worn to the springs
+a tiled bar front from Victorian days
+a shelf of second-hand books swapped by customers
+a jar of pickled eggs nobody admits to ordering
+a darts league trophy cabinet
+a tank of tropical fish in the lounge
+a phone box in the corner, still working
+a pub cat with more followers online than the pub
+a children's play area nobody supervises
+a urinal trough that's listed by the council
+etched glass partitions between the booths
+a television showing horse racing all afternoon
+a lost property box with a wedding ring in it
+a skittle alley in the back
+a framed newspaper headline about a murder here
+CCTV screens behind the bar
+a long counter of taps with names that sound like threats
+a model railway running around the ceiling
+an honesty box for the eggs from the landlord's hens
+a laminated menu with photos of the food
+a bell for last orders with a dent in it
+a corner sofa where people go to cry
+an upright piano with a pint glass on it
+a collection of ceramic jugs hanging from the beams
+a charity bottle full of coppers
+a coat rack buried under a decade of forgotten umbrellas
+
+## patrons
+# used as: "Drinking here: {}."  (plural noun phrase)
+== all
+two old men who have argued about the same thing for thirty years
+off-duty guards trying not to be recognised
+a wedding party that has lost the bride
+gamblers waiting for a game to start
+a family in mourning, quietly getting drunk
+travellers caught by the weather
+locals who go silent when the door opens
+labourers still covered in the day's dust
+young lovers who think nobody notices
+regulars with their own tankards hung behind the bar
+a group of students planning something unwise
+sailors spending a month's pay in a night
+merchants celebrating a deal one of them will regret
+a crowd watching an arm-wrestling match
+musicians between sets
+a funeral party telling stories about the dead
+rival gangs at opposite ends of the room
+debt collectors waiting for someone
+a team of cleaners from the big house
+a handful of strangers who all arrived together and pretend they didn't
+night workers having their morning drink
+people sheltering from a fight outside
+a choir that has just finished practice
+farmhands in from the harvest
+pilgrims who have sworn off drink and are reconsidering
+three sisters who meet here once a year
+a crew celebrating a job they won't describe
+the landlord's relatives, drinking for free
+a pair of detectives pretending to be a married couple [sf, modern]
+people waiting for news from the mine
+a lonely widower and his dog
+dealers in things that are not quite legal
+soldiers back from a war that nobody won
+a quiz team that takes it far too seriously [sf, modern]
+mourners and celebrants who have confused each other's gatherings
+couriers waiting for their next run
+the local council, conducting business unofficially
+apprentices who've escaped their masters for an hour
+an old woman who knows everyone's business
+card sharps working the newcomers
+== fantasy
+dwarves arguing about the quality of the ale
+caravan guards between contracts
+a party of adventurers with one fewer member than last week
+hedge wizards trading recipes
+pilgrims on their way to a shrine
+smugglers posing as fishermen
+a knight without a horse
+drovers who smell of sheep
+priests out of their robes
+bards competing for the same corner
+elves who look down on the wine
+a halfling family on their way to a wedding
+mercenaries looking for a war
+witch-hunters who haven't found a witch in months
+charcoal burners in from the forest
+river pirates on their best behaviour
+stonemasons from the cathedral works
+the town watch, every one of them
+a noble slumming it under a false name
+goblin traders tolerated for their prices
+monks breaking their vow of silence one pint at a time
+a ferryman and his ghostly passenger
+shepherds down from the high pasture
+a tax collector drinking alone
+fortune tellers counting the day's take
+an ogre who just wants a quiet drink
+trappers selling furs from a sack
+siege engineers between sieges
+heralds rehearsing proclamations
+gravediggers on their break
+apprentice alchemists with singed eyebrows
+the guild of rat-catchers
+travelling players still in costume
+a band of outlaws with a price on each head
+dockhands waiting for the tide
+a caravan from the desert in silks and dust
+woodcutters with axes stacked by the door
+retired soldiers who tell the same war story
+falconers with birds on their fists
+a cartographer buying drinks for directions
+a dragon in human form, terrible at small talk
+lepers allowed in by a kind landlady
+students from the wizards' college
+pig farmers in from the market
+a troupe of acrobats who never sit on chairs
+== sf
+dock workers on a shift break
+pilots grounded by a solar storm
+miners with dust in every crease
+off-world tourists who took a wrong turn
+android companions waiting for their owners
+smugglers in very clean jumpsuits
+corporate auditors nobody wants to talk to
+colonists waiting for a ship that is three months late
+a salvage crew splitting a haul
+mercenaries with mismatched armour
+techs from the reactor, glowing faintly
+cryo sleepers just thawed and still shivering
+marines on shore leave
+alien traders who drink through tubes
+station security, off duty and bored
+a cult that thinks the station is a god
+asteroid prospectors celebrating a strike
+refugees from a lost colony
+ship captains bidding for cargo
+hackers in a booth with a jammer
+a band touring the outer moons
+diplomats pretending not to be diplomats
+terraformers home from the dust
+journalists chasing a cover-up
+clones who look uncomfortably alike
+a crew whose ship was impounded this morning
+medics from the plague ward
+racers from the low-orbit circuit
+bounty hunters comparing notes
+archivists from the generation ship's library
+union organisers keeping their voices down
+gene-modded labourers with gills
+retired explorers who swear they saw something
+the station's oldest resident and her robot cat
+customs officers taking bribes as tips
+deep-space haulers who haven't seen people in a year
+scientists from the research outpost, arguing in jargon
+a VIP's bodyguards watching everyone
+synthetic people celebrating a court ruling
+teenagers using fake ident chips
+priests of a faith founded in orbit
+contract killers in tasteful clothing
+hydroponics farmers with dirt under their nails
+a crew of comms officers swapping intercepted gossip
+a wealthy heir slumming in the lower decks
+== modern
+office workers on a leaving do
+a hen party in matching sashes
+football fans in replica shirts
+builders in hi-vis jackets
+nurses at the end of a double shift
+a book club that never discusses the book
+tourists photographing their drinks
+a stag party dressed as nuns
+taxi drivers waiting out the rush
+teachers on the last day of term
+a darts team in matching shirts
+students who should be revising
+musicians from the open mic night
+retired dockers in flat caps
+a first date going badly
+a first date going suspiciously well
+journalists from the local paper
+young parents on a rare night out
+farmers in from the livestock market
+lawyers from the court across the road
+a walking group with muddy boots
+an amateur dramatics society after a show
+bikers parked out front
+a wake for someone the whole town knew
+hospital porters still in uniform
+estate agents celebrating a sale
+a running club that mostly drinks
+divorcees comparing settlements
+a band of morris dancers
+property developers being glared at
+police officers who drink here every Friday
+the pub quiz regulars, plotting
+a retired couple who come in every day at four
+a film crew shooting something in the town
+fishermen back from the boats
+the fire brigade, after a long night
+call centre workers on payday
+tradesmen doing deals on beer mats
+a group of old school friends on their twentieth reunion
+cyclists in lycra, refusing to sit down
+pensioners playing cribbage
+online daters sizing each other up
+a christening party that started at noon
+care workers between visits
+gig-economy riders sheltering from the rain
+
+## tonight
+# used as: "Tonight {}."  (clause)
+== all
+the landlord is selling up and drinks are half price
+someone is paying for everyone's drinks and won't say why
+there is a wake for a man who may not be dead
+a stranger is asking about a woman who died here ten years ago
+the cook has quit and the landlord is cooking
+the roof is leaking onto table four
+two families are pretending not to be feuding
+a fight is brewing over a seat by the fire
+a famous singer is performing under a false name
+the regulars are betting on how long the new barmaid lasts
+the cellar has flooded and the beer is free before it spoils
+a marriage proposal is planned and everyone knows except the one being asked
+the till has been robbed and everyone is a suspect
+a child has wandered in looking for her father
+the power, or the fire, keeps going out
+a storyteller is promising the true tale of the town's founding
+a debt is being called in, loudly
+the landlady's ex is back in town
+someone has died at the bar and nobody wants to stop drinking
+a letter arrived for a customer who hasn't been seen in years
+the inn is full and the last room is being auctioned
+the old regular is celebrating his hundredth birthday
+the band is two hours late
+the dog has stolen a joint of meat
+two strangers have discovered they are brothers
+the place is being watched from across the street
+there is a competition to eat the hottest dish in the house
+an inspector is coming and the back room needs emptying
+the bar is out of everything but one drink
+it's quiet, too quiet, the regulars say
+someone is singing a song that was banned
+a card game has gone on for two days
+the barman has a black eye and won't talk about it
+a fortune teller is reading for free
+everyone is waiting for news of a birth upstairs
+a gang has taken the back booth
+a lost wallet is the subject of great generosity and greater suspicion [sf, modern]
+the oldest barrel in the cellar is being opened
+an engagement party and a divorce party have booked the same room [sf, modern]
+a man is trying to sell a map
+the landlord's daughter is running the bar alone for the first time
+somebody's horse, or car, or ship is blocking the way
+there is a quiz with a prize nobody wants [sf, modern]
+the cat has brought in something that is still alive
+a local hero is drinking alone and doesn't want company
+an old flame walks in at the worst possible moment
+the doors are locked and nobody may leave
+a delivery came for someone who says they never ordered it
+the regulars are holding a vote on whether to ban someone
+a ghost story contest is under way
+everyone is drinking to a ship, a mine or a regiment lost today
+the pipes are singing again
+a bet has been made on who can stay awake longest
+it's the anniversary of the fire
+the band is playing one song over and over by request
+a surprise party is waiting in the dark for the wrong person
+a deal is being done in whispers by the fireplace
+a newcomer has bought the inn's oldest debt
+someone has paid for a round with a coin nobody recognises
+the place is packed for no reason anyone can find
+a woman is selling her husband's boots, and his secrets
+== fantasy
+a necromancer is buying drinks and asking about the graveyard
+the duke's men are searching every room
+a bard is singing a satire about the local lord
+the full moon has made the regulars nervous
+a dragon was seen over the hills and everyone has an opinion
+a knight is challenging all comers to a duel at the hearth
+an elf is trying to pay with a song
+the harvest festival has spilled in from the square
+a wizard has turned the ale to water and refuses to turn it back
+the town crier is drinking himself hoarse
+a caravan has arrived with exotic beasts in the yard
+a witch is selling charms at the back table
+pilgrims and mercenaries are arguing over the best rooms
+the priest has come to bless the new barrels
+an adventuring party is recruiting and nobody will sign
+a troll is demanding a toll at the bridge outside
+there's a wedding feast and the groom is missing
+the rat-catchers have declared war on the cellar
+a prophet is announcing the end of the world, again
+the lord's tax collector is lodging upstairs
+a rival inn's champion has come to drink this one dry
+a bounty notice with a regular's face has gone up
+a cursed sword is being raffled
+the river has risen and the cellar is full of fish
+a dwarf has challenged everyone to a drinking contest
+the goblin market has set up in the yard
+a minstrel has brought a dancing bear
+two wizards are settling an argument with illusions
+a shipment of wine came from a city that burned last month
+the gallows outside will be used at dawn
+the guild is holding a secret meeting in the cellar
+a ghost has started tapping on the barrels
+a pedlar is selling relics of a saint nobody has heard of
+the inn is full of soldiers billeted by order
+a masked ball is being held by the local gentry
+== sf
+the station's gravity is acting up
+a ship just docked from a sector that went dark
+an AI is running the bar while the owner sleeps
+corporate security is checking idents at the door
+the oxygen ration was cut and nobody is happy
+a racing final is being shown on every screen
+a smuggler is offering passage to anyone with cash
+the dome lights are stuck on midday
+a famous pilot is drinking off her disgrace
+a strike has been called and the bar is the strike headquarters
+an alien delegation is trying the local drinks
+the station's AI is broadcasting poetry
+a quarantine has locked everyone in
+a mercenary company is hiring and paying in advance
+the water recycler failed and drinks are dry only
+a bounty hunter is showing a picture around
+the colony is celebrating landing day
+a solar storm has grounded every ship
+a cryo ship's crew has woken up two centuries late
+someone is selling seats on the last shuttle out
+the black market is open in the back booth
+a robot is having what looks like a breakdown
+the bar is hosting a wake for a lost ship's crew
+the gas giant's storm is visible through the viewport
+a mining strike was announced and everyone is rich, briefly
+a detective android is asking questions
+the station is changing hands and nobody knows who owns it
+a cult is recruiting with free drinks
+an old war hero is demanding the anthem
+the comms are down and rumours are filling the gap
+a jump gate opened somewhere it shouldn't
+the hydroponics bay sent up its first fresh fruit
+a hacker has made every screen play cartoons
+a duel is being arranged at zero-g in the cargo bay
+there's a lottery for a ticket home
+== modern
+it's the pub quiz and the cheats are back
+there's a karaoke night with a dangerous playlist
+the big match is on and the home side is losing
+a hen party and a stag party have collided
+the landlord is announcing he's sold to a chain
+a film crew wants to use the pub as a location
+it's the darts final against the pub across the road
+a power cut has everyone drinking by candlelight
+the local MP is drinking here, unwisely
+there's a lock-in and someone is banging on the door
+a band is playing their last ever gig
+the police are looking for someone and the regulars are looking at their feet
+it's open mic and a shy kid has signed up
+the snow has trapped everyone in for the night
+a charity auction is selling off the landlord's oddities
+someone has won the lottery and is buying drinks
+the new owner is changing the name and the regulars are revolting
+a celebrity has walked in and everyone is pretending not to notice
+a fire alarm keeps going off for no reason
+a stag do has lost the groom
+it's the anniversary of the regulars' famous quiz win
+a beer festival has taken over the garden
+a reunion of old classmates is going badly
+it's the last night before the pub closes for good
+an inspector from the brewery is checking the cellar
+a busker has come in from the rain
+a protest has gathered outside
+it's a quiz about the town's history and the old men are winning
+a birthday cake has been left unclaimed on the bar
+the football team is celebrating promotion
+someone's dog has had puppies in the snug
+the jukebox has been fixed and no one is happy about the songs
+the pub is hosting a speed-dating night
+a TV chef is filming in the kitchen
+a regular is being thrown out for the fifth time
+
+## house_rules
+# used as: "House rule: {}"  (full sentence with full stop)
+== all
+No singing before nine.
+No fighting, and if you must fight, take it outside.
+Pay before you drink.
+Leave your weapons at the door. [fantasy, sf]
+The chair by the fire belongs to old Tom, even now he's gone.
+No credit, no exceptions, not even for family.
+Anyone who breaks a glass buys a round.
+The dog gets the first crust.
+Don't talk about the war.
+No politics at the bar.
+Whoever rings the bell buys drinks for the house.
+The landlord's word is final.
+Last orders means last orders.
+Strangers sit by the door.
+No dice games after midnight.
+Children leave when the lamps are lit.
+Never ask the barman about his hand.
+Spill it, mop it.
+No sleeping at the tables.
+Don't feed the cat, no matter what it tells you.
+Debts are settled on the first of the month.
+No spitting on the floor; use the bucket.
+Song requests cost extra.
+The back room is not for hire.
+If you're sick, you clean it.
+No hats at the table.
+Anyone caught cheating at cards is banned for life.
+The landlady may refuse anyone, for any reason.
+No haggling over the price of a drink.
+Tell no lies at the bar; save them for the tables.
+Toast the dead on the last night of every month.
+Never sit with your back to the door, because someone else already does.
+Musicians drink free if they're any good.
+Wet dogs stay in the porch.
+The house always wins at the house's game.
+Don't drink from the barrel in the corner.
+Keep your feet off the benches.
+Swearing costs a penny for the jar.
+No fortune telling indoors.
+Don't ask who owns the place.
+Last one standing locks up.
+Any fight breaks the furniture, and the furniture is expensive.
+Anyone who mentions the fire is thrown out.
+No more than three to a bed upstairs. [fantasy]
+Visitors must say where they're from.
+The landlord does not change money.
+A round once bought cannot be refused.
+Don't touch the sword over the fireplace.
+Don't go down to the cellar after dark.
+Every newcomer tells a story or pays a fine.
+If you can't stand, you can't drink.
+No love letters passed through the staff.
+Whoever wins the quiz buys the next one. [sf, modern]
+The bar closes when the landlady cries.
+Do not wake the man in the corner.
+No deals done under this roof.
+Anyone who sings the town song must sing all forty verses.
+Sit where you're told.
+Strangers don't play darts. [sf, modern]
+Mind the step, and mind the landlord's temper.
+All grudges stay outside with the rain.
+Never order the soup on a Monday.
+Whoever owes the most cannot sit by the fire.
+The upstairs room is haunted, so don't ask for it.
+Tip the cook or eat what you're given.
+No gambling with the regulars' pensions. [sf, modern]
+Anyone who brings in a snake must leave with it.
+The jukebox, the harp, the radio: hands off.
+Pay the piper or don't dance.
+No reading at the bar; this is a place for talking.
+Lost property is sold on the last day of the season.
+Never bet against the landlady.
+No phones, no letters, no news from outside after ten.
+Anything left after closing belongs to the house.
+Everyone stands for the anthem, whichever anthem it is tonight.
+No bringing your own drink, and no bringing your own trouble.
+The corner table is for mourners.
+No crying into the beer; it waters it down.
+Ask the landlord's permission before you propose to anyone.
+No curses, no oaths, no prayers above a whisper.
+Anyone who wins at cards three times running gets searched.
+Never take the last pickled egg.
+The parrot is not to be taught new words.
+Be gone by dawn.
+
+## treasure_places
+# used as: "Found {}"  (where: 'under a loose hearthstone')
+== all
+under a loose hearthstone
+behind a false back in a wardrobe
+in the lining of a dead man's coat
+at the bottom of a well
+inside the wall of a house being knocked down
+under the floorboards of a child's bedroom
+buried at the foot of an old tree
+in a hollow in a garden wall
+beneath a grave that had no name on it
+in the rafters of a barn
+at the back of a cupboard nobody had opened in years
+sewn into a mattress
+in the belly of a fish
+behind a portrait in the hallway
+in a chimney, wrapped in soot-black cloth
+under a stone in a stream bed
+in a hole dug by a dog
+inside a hollow statue
+at the bottom of a flooded cellar
+beneath the altar of an abandoned church
+in a locked room that wasn't on the plans
+under the seat of an old cart
+in a nest of rats
+in the false bottom of a drawer
+wedged in the roots of a fallen tree
+in the attic of a house the family sold in a hurry
+in a cave behind a waterfall
+in the cesspit, unfortunately
+under the bed of an old woman who died poor, everyone thought
+in a pile of rubbish left out for collection [sf, modern]
+inside a grandfather clock [sf, modern]
+taped under a table [sf, modern]
+in the hands of a skeleton
+under a heap of stones on a hilltop
+in a cliff face exposed by a landslide
+beneath the floor of a cowshed
+at low tide on a mudflat
+in an abandoned mine shaft
+behind loose bricks in a fireplace
+in a box at the bottom of a pond
+under a gravestone that was too heavy for its plot
+inside a beehive
+in a drawer full of old letters
+in the hollow leg of a table
+at the back of a shop that had closed for good
+in a bird's nest high in a chimney
+in a heap of ashes after a fire
+buried under the threshold
+inside a book with its pages cut out
+in the garden of a house where a murder happened
+beneath the ice of a frozen lake
+in a ruin swallowed by ivy
+== fantasy
+in a barrow on the downs
+in the hoard of a dragon that died of old age
+under the throne of a ruined hall
+in a shrine to a god nobody remembers
+in the tomb of a knight buried with his horse
+behind a door that only opened at midnight
+in a wizard's tower, under a pile of failed experiments
+in the bed of a dried-up holy spring
+in the nest of a giant bird
+beneath a standing stone
+in the treasury of a sunken city
+in a smugglers' cave under the cliffs
+in the vault of a bankrupt moneylender
+in a troll's larder
+in the lining of a saint's reliquary
+on the body of a highwayman hanged at the crossroads
+in a goblin warren
+under the hearth of a hermit's hut
+in the crypt beneath the abbey
+in the stables of a coaching inn, under the straw
+inside a giant's discarded boot
+in a hollow oak that the druids called sacred
+in a castle's forgotten oubliette
+in the ruins of a sacked monastery
+in the wreck of a galleon on the rocks
+in a fairy ring, after the music stopped
+in the burned shell of a witch's cottage
+in the bandits' old camp in the forest
+beneath the bones of a dead dragon
+in the hold of a river barge sunk in the war
+in the cellar of a duke's hunting lodge
+in a mine the dwarves abandoned
+behind the waterfall at the edge of the kingdom
+under a cairn on a mountain pass
+in the lair of a creature the village killed last year
+in a chest at the bottom of a moat
+inside a statue of the old king
+in a mausoleum with its door already broken
+in an alchemist's laboratory, behind a jar of something alive
+beneath a gallows
+in a hidden chapel inside a cathedral wall
+in the den of an outlaw band
+in the drowned village under the reservoir
+in a sea cave only reachable at the lowest tides
+in a pilgrim's grave by the road
+== sf
+in a derelict freighter drifting in the belt
+in an escape pod that never reached anywhere
+in the cargo hold of an impounded ship
+in a crater on a dead moon
+in a sealed vault on an abandoned station
+in the wreck of a colony ship
+inside a crashed satellite
+in a smugglers' cache in an asteroid
+behind a maintenance panel in the ventilation ducts
+in the cold-sleep pod of someone who never woke
+in the ruins of a pre-collapse city
+in a ghost colony's administration building
+under the ice of a frozen world
+in a buried alien structure
+in a data vault of a bankrupt corporation
+in the hull of a ship scrapped for parts
+in the luggage of a dead diplomat
+in a dead drop in the station's recycling plant
+in the sand of a terraformed desert
+in a forgotten storage locker on the docks
+in the engine room of a decommissioned warship
+in a hollowed-out comet
+in the quarters of a missing captain
+in a sealed section after a hull breach
+inside a broken maintenance robot
+in an orbital junkyard
+in a crashed shuttle in the jungle
+in the black box of a lost ship
+in a research lab after the evacuation
+in the lowest level of a flooded arcology
+under the floor of a mining bunkhouse
+inside a hydroponics tank
+in the hold of a ship that came out of jump empty
+in a bunker from the last war
+in a capsule time-locked for a century
+in the vault of a dead world's bank
+in a stranded tourist liner
+in an asteroid miner's emergency shelter
+in the crawlspace of a habitat dome
+in the drifting remains of an old space station
+on the seabed of an ocean world
+in a collapsed lava tube
+behind a holographic wall
+in the cargo of a drone that crash-landed
+in a mausoleum ship carrying a dead emperor
+== modern
+in a safety deposit box nobody had paid for
+in a car bought at a police auction
+in a storage unit bought sight unseen
+under the floor of a council flat
+in the loft of a house bought from an estate
+in a suitcase in a left-luggage office
+in a canal, during a dredge
+in a skip outside a house clearance
+in a charity shop donation bag
+in a sofa from a second-hand shop
+in the wall cavity during a kitchen refit
+in the boot of an abandoned car
+behind the panel of an old radio
+under a patio laid in the eighties
+in a tin box in an allotment shed
+in a bank's lost property
+in the bottom of a fridge freezer
+in a locker at a closed-down swimming pool
+under the stage of a village hall
+in a field, with a metal detector
+in a hospital's old records room
+in a building site's foundations
+in a wartime bunker under the garden
+in the airing cupboard of a dead aunt's flat
+in a rucksack at a bus station
+in the recesses of a pawn shop safe
+in a school time capsule dug up decades early
+in an old fuse box
+in a disused railway tunnel
+in a coat bought at a jumble sale
+behind the bath panel
+in a mobile home on a closing site
+inside a piano being restored
+in the attic of a closed hotel
+in a shoebox at the back of a wardrobe
+in a lock-up garage that hadn't been opened since 1979
+in an old church's bell tower
+in the ceiling tiles of an office
+inside a hollow door
+in a submerged car at the bottom of a quarry lake
+in a holdall in a hedge
+in a cellar under a takeaway
+in a beach hut after the storm
+in the lining of a second-hand handbag
+under the floor of a demolished cinema
+
+## containers
+# used as: "in {}"  (noun phrase with article: 'a tin that once held tea')
+== all
+a tin that once held tea
+a child's shoe
+a cloth bag tied with a bootlace
+a box with a broken lock
+a stoneware jar sealed with wax
+an oilskin packet
+a hollowed-out book
+a sock, darned many times
+a leather purse stiff with age
+a wooden box carved with initials
+a jar of something that used to be honey
+a bundle of rags
+a biscuit tin with a royal wedding on the lid [modern]
+a sack of mouldy grain
+a lady's glove
+a powder horn [fantasy, modern]
+a teapot with no spout
+a bag stitched from a flag
+a small coffin, empty of anything else
+a box too heavy for its size
+a wrapping of old newspaper [sf, modern]
+a hatbox
+a baby's cradle
+a canvas satchel with a bullet hole [sf, modern]
+a chamber pot, thankfully clean
+a bird cage covered by a cloth
+a velvet pouch that smells of perfume
+a doll with its head screwed on
+a brass-bound chest
+a pillowcase embroidered with a name
+a bottle with a message wrapped around it
+a lunchbox [sf, modern]
+a soldier's kit bag
+a sewing box
+a pickle jar
+a coffee pot
+a fishing creel
+a lead-lined box
+a box locked from the inside
+a knotted handkerchief
+a wicker hamper
+== fantasy
+an iron-bound strongbox
+a skull with a hinged lid
+a reliquary shaped like a hand
+a clay pot marked with a curse
+a saddlebag from a dead courier
+a sealed amphora
+a dragon's eggshell
+a drinking horn stoppered with wax
+a wizard's satchel that is bigger inside
+a lead casket sealed with a bishop's seal
+a hollow staff
+a monk's alms bowl, covered
+a barrel of salted fish
+a coffer with three locks and two keys
+a pilgrim's scrip
+a box of black glass
+a scabbard with no sword
+a dented helmet stuffed with straw
+a bag of goatskin
+a quiver stuffed with cloth
+a gourd
+a church collection box
+a casket carved with weeping saints
+a nest of woven reeds
+a brass urn
+a shepherd's knapsack
+a wooden chest painted with flowers for a dowry
+a sealed scroll case
+a bag made of a single huge leaf
+a lantern with the glass blacked out
+a lute case
+a tortoise shell
+a box made from a coffin lid
+a drum with a hidden panel
+a goblin's pouch on a string
+a beggar's bowl
+a jewelled egg that unscrews
+a silver-chased tankard
+a basket with a lid that bites
+a book with a lock and no keyhole
+a bull's bladder
+a toolbox belonging to a dwarf
+a bishop's mitre box
+a satchel of spell components
+a horn box stamped with a crown
+== sf
+a cryo-case still cold to the touch
+a sealed hazard container
+a cargo crate stencilled with a dead corporation's logo
+a pressure canister
+an emergency beacon with its insides gutted
+a diplomatic pouch with a broken seal
+a flight case with foam cut-outs
+a medical cooler
+a sample tube rack
+a vacuum-sealed bag
+a ration box with a false bottom
+a military ammo canister
+a holo-locked strongbox
+a drone's cargo bay
+a lead-lined radiation box
+a spacesuit helmet
+a tool locker
+a stasis pod the size of a shoebox
+a smuggler's shielded crate
+a black box from a ship
+a coffin-sized freight pod
+a child's backpack with a cartoon robot on it
+a canister labelled 'waste, do not open'
+a seed vault capsule
+a maintenance robot's chest cavity
+a recycler bin
+a fuel cell casing
+a data safe
+a sealed bubble of station glass
+an old suitcase from Earth
+a magnetic boot
+a padded weapons case
+a box printed from scrap plastic
+a capsule from a time vault
+a biohazard bag
+a ration-tin painted as a toy
+a nanite-proof canister
+a mail drone's hopper
+a tool belt pouch
+an emergency oxygen kit
+a pilot's flight bag
+a crate of ice
+a vintage lunchbox from a dead world
+a smart-lock briefcase
+a hollowed-out battery
+== modern
+a shoebox tied with string
+a supermarket carrier bag
+a padlocked toolbox
+a sports holdall
+a roll-top bread bin
+a filing cabinet drawer
+a suitcase with stickers from cities long gone
+an ammunition box from the war
+a metal cash box
+a carrier bag inside another carrier bag
+a briefcase with a combination lock
+a freezer bag
+a plastic tub that once held ice cream
+a vanity case
+a thermos flask
+a petrol can
+a fishing tackle box
+a camera bag
+a laptop case
+a wine box
+a photo album with pages glued shut
+a guitar case
+a hollowed-out bible
+a cereal box
+a jiffy bag addressed to someone else
+a wheelie suitcase with one wheel missing
+a pram
+a gym bag that smells of old trainers
+a takeaway carton
+a mail sack
+a stamp album
+a tackle bag
+a bucket of paint
+a cigar box
+a filing box marked 'tax 1987'
+a carpet roll
+a draught excluder shaped like a dog
+a hot-water bottle
+a hard hat
+a doctor's bag
+a vintage sweet jar
+a satchel from a grammar school
+a cool box
+a pencil case
+a folder of school reports
+
+## coins
+# used as: "{}"  (money in the setting, plural noun phrase: 'silver crowns clipped thin')
+== fantasy
+silver crowns clipped thin
+copper pennies green with age
+gold marks from a kingdom that no longer exists
+square coins with holes in the middle
+silver shillings stamped with a usurper's face
+bronze trade tokens from a merchant guild
+gold sovereigns still bright in their wrapping
+coins with the king's head scratched out
+dwarven ingots no bigger than a thumb
+church pennies stamped with a saint
+foreign coins nobody in town will take
+silver pieces cut into halves and quarters
+gold coins bitten by someone checking
+lead counterfeits with a thin wash of silver
+a heap of farthings
+bent gold rings used as money by the northmen
+silver ducats from across the sea
+temple offerings, still sticky with wax
+coins of an emperor who reigned for a single week
+pennies with holes punched for a necklace
+gold nobles from before the plague
+clipped silver and a few honest coins among them
+copper coins fused together by fire
+elven coins that feel warm in the hand
+coins stamped with a dragon, minted in a dragon's honour
+pay chits from a mercenary company
+tin tokens from a mine's company store
+salt wafers used as money in the desert
+silver groats in a tight roll
+a dead lord's mint, still unissued
+gold coins stamped on one side only
+coins melted down into a lump
+silver marks with the mint mark of a sacked city
+cowrie shells from the southern trade
+copper bits strung on a cord
+pennies from the abbey's own mint
+coins bearing a face that looks like the finder
+silver crescents from the desert kingdoms
+gold rounds with a lion on them
+ransom money, still in its counted bags
+bronze coins worn smooth by a century of thumbs
+== sf
+credit chips with the names scratched off
+bearer bonds from a corporation that went under
+untraceable crypto keys on a strip of paper
+station scrip only good on one ring
+colonial dollars, worthless since the revolution
+water tokens from a dry world
+oxygen vouchers stamped with a date
+company credit from a mining concern
+pre-collapse coins kept as curiosities
+fuel cells, which are better than money out here
+encrypted credit sticks with the passwords missing
+black-market barter chits
+hard-currency bars of pressed platinum
+corporate shares printed on plastic
+ration cards for a famine that ended
+Earth banknotes, now a collector's item
+quantum-locked credit wafers
+military pay slips from a lost war
+platinum coins minted on the moon
+alien currency that sings when held
+luxury goods vouchers from a pleasure station
+fake ident-linked credit, very good fakes
+cold-wallet drives in a waterproof wrap
+bundles of foreign station currency
+medical credit tokens
+tradeable carbon credits from a dead planet
+loyalty points from a shipping line, millions of them
+gold-plated data chips
+seed bank tokens, each good for a seed
+coins from a generation ship that minted its own
+lottery winnings never claimed
+hundred-credit notes with a famous explorer on them
+expired credit chips with a strange balance still on them
+smuggler's markers, payable on a dead man's word
+union strike-fund scrip
+cash from a colony that printed its own
+indenture contract buyouts
+anonymous credit transfers on a burner
+platinum slugs stamped with a ship's name
+tokens for the station's only bar
+== modern
+used banknotes in rubber bands
+pound coins in a jam jar
+old ten-shilling notes
+foreign currency from a dozen holidays
+a roll of fifties
+coins from before decimalisation
+gold bullion coins in a velvet pouch
+bundles of withdrawn notes, no longer legal tender
+gold sovereigns from a grandfather's war
+coppers sorted into paper bags
+twenty-pound notes, sequential
+banknotes from a country that changed its name
+commemorative coins never spent
+bonds in a brown envelope
+cash in an envelope marked 'for emergencies'
+foreign coins from a sailor's travels
+notes pressed flat in a diary
+silver threepenny bits
+dollars sealed in a vacuum bag
+coins from the bottom of a wishing well
+a payroll in brown wage packets
+lottery tickets, one of them a winner
+bank notes damp and mouldy
+casino chips from a closed casino
+premium bonds in the name of a stranger
+pre-euro francs and marks
+cash in unmarked envelopes
+gold bullion bars stamped with a bank
+crumpled notes in a sock
+two-pound coins wrapped in clingfilm
+travellers' cheques from the seventies
+old bus tokens
+fake banknotes, very good ones
+notes in a currency only collectors want
+share certificates for a company that is now huge
+cash from a robbery in 1983
+a stack of fivers with a phone number on each
+silver dollars from a great-uncle's time abroad
+euros in a pencil case
+coins left on a grave for luck
+
+## valuables
+# used as: "{}"  (one valuable thing, noun phrase with article)
+== all
+a pearl necklace with one pearl missing
+a gold ring engraved with two names
+a silver locket holding a lock of hair
+a pocket watch that still keeps time [sf, modern]
+a brooch shaped like a beetle, set with emeralds
+a ruby the size of a thumbnail
+a sapphire that was once in a crown
+an ivory comb carved with tiny animals
+a jade figurine of a sleeping cat
+a string of amber beads with insects inside
+a silver christening cup
+a gold tooth
+a diamond earring without its pair
+a painted miniature of a beautiful stranger
+a wedding band too small for any adult finger
+a silver cigarette case with a dent from a bullet [sf, modern]
+a cameo of a woman with a scar
+a pair of jet earrings for mourning
+a carved coral rosary [fantasy, modern]
+a gold chain heavy enough to strangle with
+a silver hand mirror
+a signet ring with a family crest
+a jewelled hairpin
+a set of silver spoons, one for each apostle [modern]
+a fine porcelain bowl, cracked and mended with gold
+a tortoiseshell snuffbox [fantasy, modern]
+an opal that changes colour in the dark
+an enamelled music box
+a garnet bracelet
+a silver thimble
+a gold-nibbed pen [sf, modern]
+a crystal decanter
+a ceremonial dagger set with stones
+a set of pearl buttons
+a silver hip flask
+a gold medal for bravery
+a pair of diamond cufflinks [sf, modern]
+a mother-of-pearl fan
+a gilded prayer book
+a single black pearl
+an amethyst on a chain
+== fantasy
+a crown too small for a man and too large for a child
+a sword with a hilt of gold wire
+a dragon scale the size of a dinner plate
+an elven circlet of silver leaves
+a chalice from a desecrated altar
+a ring that once belonged to a sorcerer-king
+a unicorn horn, or a narwhal tusk sold as one
+a reliquary holding a saint's finger
+a cloak pin shaped like a stag
+a silver harp string that never goes out of tune
+a dwarven-forged axe head inlaid with runes
+a book of hours illuminated in gold leaf
+a ceremonial mace of the old guild
+a gold torc from a barrow
+a jewelled goblet that detects poison
+a rope of pearls from the sea kingdom
+a mithril ring, impossibly light
+a gold-chased helm of a dead hero
+an orb of rock crystal
+a falcon's hood sewn with seed pearls
+a sceptre broken in half
+a ruby carved with a sleeping eye
+a silver bell for summoning servants
+a golden apple, solid, with a single bite out of it
+a tapestry fragment worked in gold thread
+a bishop's ring
+a merchant's seal of office
+a jewelled collar for a large dog
+a carved ivory chess set with one queen missing
+a crystal vial of phoenix tears
+a staff topped with a moonstone
+a gold mask from a tomb
+a silver-gilt drinking horn
+a necklace of dragon teeth
+a belt of linked gold plates
+a ring with a tiny map engraved inside
+a dagger with a blade of black glass
+a gemstone that hums when danger is near
+a coronet of the drowned queens
+a silver candelabrum from a looted chapel
+a gold reliquary shaped like a ship
+a jewelled spur
+a lute inlaid with mother-of-pearl
+a pendant of a griffin in flight
+a ring of three twisted metals
+a mirror with a gold frame of writhing snakes
+a statuette of a forgotten goddess in electrum
+a set of lockpicks made from silver
+an amulet of a god whose temple burned
+a box of saffron worth more than gold
+a phial of rare spice from the far east
+a gem cut with a hundred faces
+a scroll case of carved bone and gold
+a wizard's emerald spectacles
+a sword pommel set with a single star sapphire
+a pair of silver spurs from a famous jouster
+a gauntlet of gilded steel
+a royal charter with its wax seal intact
+a crystal skull
+a fairy's crown of woven gold wire
+a set of gold scales for weighing hearts
+a goblet made from a giant's tooth
+a bronze compass that points to home
+a flute carved from a single moonstone
+a necklace of coins from fallen kingdoms
+a gold leaf pressed with a spell
+a silver mask of the last king's face
+a gem-encrusted book cover with no book
+an enamelled egg containing a tiny clockwork bird
+a tiara of opals and frost-white silver
+a brass astrolabe engraved with false stars
+a ring that makes the wearer's voice beautiful
+a jewelled dog collar from the duchess's lapdog
+a velvet cap sewn with gold beads
+a carved horn cup rimmed with silver
+a bow inlaid with ivory
+a bundle of rare dye, worth a fortune to a weaver
+a seal ring of the old empire
+a gold ingot stamped with a griffin
+a pearl-handled stiletto
+a hand-copied grimoire, the only one
+a pair of crystal goblets that ring when lovers drink
+== sf
+a data crystal holding a lost symphony
+a ship's registry chip for a vessel worth millions
+an original paper book from Earth
+a gene library on a single vial
+a fusion core no bigger than a fist
+a navigation key to a hidden jump route
+a diamond grown in a gas giant's atmosphere
+a platinum flight medal from the first expedition
+a terraforming seed packet, illegal and priceless
+a painting from a museum on a dead planet
+a cybernetic eye set with sapphire lenses
+a mining claim deed for a rich asteroid
+a vial of real Earth soil
+a combat android's command module
+a meteorite of an element nobody has named
+a neural implant from a famous pilot
+a pair of antique wristwatches from Earth
+a stasis-locked rose from a garden that no longer exists
+a quantum processor stolen from a military lab
+an alien artefact that hums faintly
+a jump drive regulator, rare and expensive
+an original vinyl record from Old Earth
+a captain's commission from a disbanded fleet
+a bottle of whisky from a distillery now underwater
+a vial of a rare medicine
+a holographic portrait of a lost colony's founder
+a set of access codes to a corporate vault
+a pearl from an ocean world, the size of a plum
+a cryo-sealed embryo bank
+a gold record from a probe that was never launched
+a weapon from the last war, never fired
+a slice of the first moon base's hull
+a lab-grown ruby with the corporation's seal
+a necklace of meteorite beads
+a pilot's licence from a decommissioned academy
+a real silk scarf from Earth
+a crown of the deposed station-king
+a synthetic consciousness on a storage chip
+an encrypted ledger proving someone's crimes
+a cache of antibiotics
+a bracelet that works as a key to every door on a ship
+a sample of a substance from inside a black hole's horizon, supposedly
+a prototype cloaking device
+a small sculpture carved from Martian rock
+a block of ice from a comet named after someone's mother
+a crate of real coffee beans
+a vial of spice from an alien world
+an AI core of an old warship
+a painting done by a famous robot
+a first-generation prosthetic arm made of gold
+a star chart from a vanished civilisation
+a mission patch from the first jump
+a crystal grown in zero gravity
+a pocketful of rare earth metals
+a deed to a moon
+a music box that plays the anthem of a lost world
+a sealed bottle of air from a world before pollution
+a seed of a tree that once grew on Earth
+an ancient phone from the early twenty-first century
+a fighter pilot's helmet from a famous battle
+a smuggler's ledger of every bribe on the station
+a pristine first-edition comic from before the collapse
+a reactor key
+a ring of meteoric iron
+a silver flask engraved with a ship's motto
+a ticket for a passage on the last colony ship
+a figurine of an alien deity in black glass
+a jar of honey from the last bees on the station
+a pair of zero-g dancing shoes once worn by a star
+a gold-plated circuit board from a historic computer
+an untouched ship's chronometer
+a wedding ring made from a piece of a crashed ship
+a chess set carved from asteroid stone
+a sealed bottle of champagne from the first landing
+a medal from a war that the history books erased
+a souvenir shard from the first orbital elevator
+a pendant holding a speck of a sun
+a xenobiological specimen in a sealed jar
+a camera full of photographs from the far side of a galaxy
+a data card with a cure on it
+an artificial heart of extraordinary design
+an antique telescope from a world's first observatory
+== modern
+a first edition of a famous novel
+a vintage watch with a crocodile strap
+an original painting by a dead local artist
+a guitar signed by a band that broke up in 1972
+a rare stamp with an upside-down plane
+a diamond engagement ring returned in anger
+a Victorian mourning brooch
+a medal from the Battle of Britain
+a gold-plated fountain pen
+a vintage camera that still works
+a football shirt from a cup final
+an antique carriage clock
+a signed photograph of a film star
+a jewelled egg of uncertain origin
+a pair of solid gold cufflinks
+a vinyl record pressed in a run of ten
+a silver tea service
+a rare comic book in a plastic sleeve
+an antique doll worth more than the house
+a mid-century chair with a designer's mark
+a set of rare coins in a presentation case
+a sapphire pendant from a dead grandmother
+a vintage handbag in perfect condition
+a deed to a plot of land in the country
+a winning lottery ticket, still unclaimed
+a racing trophy
+a hand-written letter from a famous author
+an expensive Swiss watch that might be fake
+a bottle of fifty-year-old whisky
+a stained-glass lamp from a famous studio
+a gold-cased lighter
+a laptop with a cryptocurrency wallet on it
+a briefcase of share certificates
+a hand-drawn map by a famous explorer
+a painting found to be by an old master
+an antique sword from the Crimea
+a string of freshwater pearls
+a tennis racquet used in a final
+a stamp collection begun in 1890
+a rare toy still in its box
+a bottle of champagne from the Titanic's year
+a vintage motorcycle's logbook and keys
+a film reel from a lost silent movie
+a chess set made of carved bone
+a jewelled tiara from a society wedding
+a pair of rare trainers in their box
+a gold medal from the Olympics
+a piece of the Berlin Wall with a certificate
+an emerald ring smuggled through customs
+a box of old love letters by a famous poet
+a manuscript of an unpublished novel
+a violin made in Cremona
+a rare whisky in a crystal decanter
+a signed baseball from a famous season
+a set of ivory piano keys
+a first-day cover with a royal autograph
+a cheque made out to cash and never cashed
+a set of keys to a holiday home
+a Persian rug worth a fortune
+a christening gown of antique lace
+a model ship in a bottle, made by a famous prisoner
+a surrealist sketch on a napkin
+a vintage typewriter used by a famous writer
+an old-master drawing tucked behind a cheap print
+a pocket watch from the Great War
+a frosted glass vase by a famous maker
+a gold bar with a bank's stamp
+a set of original architectural drawings
+a rare bottle of port
+a jar of vintage marbles
+a bracelet from an art deco jeweller
+a hand-tooled leather saddle
+a necklace in a box from a jeweller now closed
+a war diary of historical importance
+an original movie poster
+a valuable fossil from the beach
+a mint condition stamp album
+a box of baseball cards
+a silver trophy from a forgotten sport
+a painting of the house as it was in 1800
+
+## curiosities
+# used as: "{}"  (one odd item that suggests a story, noun phrase with article)
+== all
+a key with a label that just says 'no'
+a letter addressed to the finder by name
+a child's drawing of a house with too many windows
+a glass eye
+a photograph of the finder, taken years ago [sf, modern]
+a map with a cross and the word 'sorry'
+a lock of red hair tied with a ribbon
+a diary with the last page torn out
+a wedding ring with the wrong name inside
+a tooth wrapped in a note
+a bird's skull painted gold
+a pocket watch stopped at 3:17 [sf, modern]
+a set of false teeth
+a doll's arm
+a bundle of letters never posted
+a recipe for a cake, with one ingredient crossed out
+a broken compass that always points the same wrong way
+a dried flower pressed in a page of scripture
+a confession, unsigned
+a wanted poster with a familiar face
+a glove with one finger cut off
+a bell with no clapper
+a list of names, half of them crossed out
+a small portrait with the face scratched away
+a ticket for a journey that leaves tomorrow
+a lucky rabbit's foot that didn't work
+a love token carved from bone
+a key to the finder's own front door
+a feather from no bird anyone can name
+a baby's bonnet
+a stone with a hole through it
+a pipe still warm
+a coded message in a child's hand
+a set of dice that always roll sixes
+a cork from a celebration
+a tiny wooden coffin with a mouse inside
+a piece of a broken plate that matches one at home
+a page of music with no title
+a will leaving everything to a cat
+a mask of a smiling face
+a seashell found a hundred miles from the sea
+a medal for an act of cowardice
+a lens that makes things look older
+a ball of string several miles long
+a ring of keys, none of which fit anything in town
+a brick from a house that burned
+a wooden leg
+a jar of buttons from different uniforms
+a fake moustache and a real passport [sf, modern]
+an hourglass with the sand stuck halfway
+a mourning ribbon for someone still alive
+a deed signed by a dead man yesterday
+a scrap of wallpaper from a famous house
+a snow globe of a town that doesn't exist [sf, modern]
+a tin soldier with a different face painted on [sf, modern]
+a hangman's knot, untied
+a candle that has never been lit, with a burned wick
+a prayer card for a saint of thieves
+a bottle of ink that writes in the wrong colour
+a heart carved into a turnip, long dried
+a note that just says 'I was here first'
+== fantasy
+a wand that only works on Tuesdays
+a mirror that shows the room as it was yesterday
+a frog in a jar that blinks when lies are told
+a crown made of twigs and a tiny gold leaf
+a scroll in a language that rearranges itself
+a severed shadow folded like a cloth
+a candle that burns cold
+a goblin's love letter
+a silver bell that rings for the dead
+a jar of somebody's voice
+a dragon's milk tooth
+a bone flute that plays itself at dusk
+a map that redraws itself to avoid the finder
+a feather quill that writes the truth
+a pair of boots that walk only east
+a pot of ink made from a squid that saw a god
+a doll that looks like the local baron
+a lantern that casts the wrong shadows
+a ring that tightens near water
+a book of spells, every page blank but one
+a grain of sand from a desert that sank
+a stone heart, still beating slowly
+a horseshoe from a horse that flew
+a mermaid's comb with a hair still in it
+a skull that hums lullabies
+a cup that refills with river water
+a wedding veil of spider silk
+a key that unlocks whatever it touches, once
+a cat's whisker in a gold case
+a letter of safe conduct from a king long dead
+a vial of moonlight
+a scale from a sea serpent, still wet
+a cracked crystal ball that shows only rain
+a tiny iron cage holding a wisp of smoke
+a clockwork songbird that sings a forbidden song
+a gauntlet that will not come off once worn
+a pilgrim's badge from a saint never canonised
+a set of runestones with one blank
+a toy knight that moves when nobody watches
+a harp string from an elven queen's harp
+a needle that sews without a hand
+a silver acorn that grows heavier each day
+a jar of fairy dust that is mostly dandruff
+a hand of glory with all its fingers burnt down
+a broken staff with a sleeping spirit inside
+a mummified finger pointing north
+a wooden mask that weeps sap
+a jewelled eye that sees through walls
+a goose egg made of brass
+an hourglass filled with a dead man's ashes
+== sf
+a holo-recording of someone pleading in an unknown language
+a robot's memory chip full of dreams
+a seed that grows only in vacuum
+a child's toy spaceship with real coordinates etched inside
+a ticket for the maiden voyage of a ship that vanished
+a medal from a planet that was never colonised
+a clone's ID tag with the finder's face
+a postcard from Earth dated two hundred years ago
+a data stick labelled 'do not play'
+a pressure suit glove with a hand bone still inside
+a bottle of air from a planet that blew up
+a broken AI that keeps asking for its mother
+a picture of a sunset on a world with three suns
+a lock of hair from a lab-grown human
+a rubber duck from the first moon base
+a nanobot swarm in a jar, quietly building something
+a hologram projector that shows a stranger's wedding
+a flag from a mutiny
+a crew manifest with one name blacked out
+an alien skull with a bullet hole
+a wristwatch set to a time zone that doesn't exist
+a scrap of a ship's log in the finder's handwriting
+a toothbrush that has been to every planet in the sector
+a gravity boot with a cat's claws in it
+a living plant from a dead world
+a memory cartridge of someone's childhood
+a key card to a station that was destroyed
+a paper letter, astonishingly
+a deactivated assassin drone the size of a moth
+an old AI's apology written in machine code
+a souvenir from a planet that never existed
+a chess piece made of an unknown alloy
+a blood sample labelled 'patient zero'
+a holo-ad for a colony that turned out to be a scam
+a space helmet full of sand
+a translator unit stuck in an alien dialect
+a prescription for a drug not yet invented
+a cryo tag with a birthdate in the twenty-first century
+a gun that only fires at its maker
+a jar of alien honey that glows
+a mission patch for a mission that was officially never flown
+a pilot's lucky dice, carved from a meteorite
+a map of a station that has a deck it shouldn't
+a stuffed toy robot with a tracker sewn inside
+a music box that plays a signal from deep space
+a vial of tears from a synthetic person
+a sealed envelope addressed to the captain of a ship not yet built
+a corporate ID for a company that won't be founded for a decade
+a photo of the finder standing on a world they've never visited
+a pen that writes in zero-g and nothing else
+== modern
+a cassette tape labelled 'for Mum, if anything happens'
+a mobile phone with three missed calls from a dead number
+an instant photo of a party nobody remembers
+a parking ticket from 1974
+a hospital bracelet for a baby with no birth record
+a set of car keys for a car nobody owns
+a prize-winning marrow rosette
+a postcard from a seaside town, never sent
+a videotape of a wedding nobody admits to
+a lottery ticket from the week the jackpot went unclaimed
+a school report with one teacher's comment underlined
+a pair of baby shoes cast in bronze
+a bus ticket with a phone number on the back
+a USB stick taped to a love letter
+a hotel room key from a hotel that burned down
+a wedding invitation for a wedding that never happened
+a dog tag from someone's war
+a newspaper clipping about a missing girl
+a fake passport with a real face
+a voodoo doll of a local councillor
+a betting slip on a horse that won
+a lucky penny from the year someone died
+a model aeroplane with a name painted on the wing
+a lock of hair in a matchbox
+a ticket stub from the last show of a famous band
+a broken pair of reading glasses
+a library book overdue since 1962
+a mixtape with a song list in a girl's handwriting
+a dentist's appointment card for a dead man
+a scorecard from a cricket match decades ago
+a telegram never delivered
+a key to a safety deposit box at a bank that closed
+a map of the town with one street that doesn't exist
+a stopped kitchen timer
+a wedding cake topper of two men from the 1950s
+a tin of buttons sorted by colour, with one glass eye among them
+a photo booth strip of four strangers laughing
+a church raffle ticket
+a gas mask in its box
+a ransom note cut from magazines
+a teddy bear with a zip in its back
+a fortune-cookie fortune folded into a locket
+a prescription for something unusual from a famous doctor
+a school blazer with someone else's name tag
+a cinema seat number from the old picture house
+a typewritten letter of resignation, never handed in
+a phone number scratched into a coin
+a train timetable with one train circled
+a jar of seaside sand labelled with a date and initials
+a list of things to do before dying, half ticked
+
+## catches
+# used as: "The catch: {}."  (clause: 'someone wants it back')
+== all
+someone wants it back
+the owner is still alive, and close
+it was stolen from a temple, a museum or a church
+the coins are counterfeit, and the finder will be blamed
+it is cursed, or everyone believes it is, which is nearly as bad
+a family has been searching for it for three generations
+it is evidence in an unsolved murder
+the authorities claim everything found on this land
+it was buried with a warning
+someone saw them find it
+the hiding place was a trap, and the trap is still armed
+it belongs to a child who will cry
+half of it is missing, and the other half is somewhere worse
+its last three owners died
+it is a ransom that never got paid
+the gang that hid it is coming back for it tonight
+it is the only proof of someone's innocence
+the finder's own family put it there
+it is too famous to sell
+it was hidden to keep it from someone, and they are still looking
+a ghost is very attached to it
+spending it will draw questions nobody can answer
+the dead man's widow knows exactly how much was there
+there is a name on it, and the name is the finder's
+it is a dowry promised to a wedding next week
+it was a payment for a crime still to be committed
+it is wanted by two buyers who hate each other
+the tax on it is more than it is worth
+the map inside leads somewhere worse
+it is bait
+it was meant for a charity that kept the town alive
+it carries a disease
+it's hot, and the person who stole it is in prison and talkative
+the finder signed a contract that gives it to the landowner
+a priest says it should be burned
+it can only be sold in the city where it was stolen
+the person who hid it left a letter explaining why
+it comes with a debt attached
+the real treasure is the thing wrapped around it, which nobody noticed
+the finder's best friend wants a share
+it was taken from the dead after a battle
+it belongs to the crown, by an old law [fantasy, modern]
+something followed it out of the ground
+it is wrapped in a note begging that it never be found
+it was a bribe, and the official who took it is now powerful
+the people who hid it were the finder's parents
+it is fake, but very good, and someone paid real money for the original
+it has been reported stolen, with a reward offered that's worth more
+the guardian who watched over it has just woken up
+it is the property of a madman who says he can hear where it goes
+moving it will bring down the building
+a rival has already sold it, though it wasn't his
+it is a gift meant for someone who died waiting for it
+whoever hid it is watching from a window
+the finder's spouse must never know
+it was smuggled, and the smugglers keep accounts
+it won't stay lost; it keeps turning up again
+it was hidden by the town's most beloved figure, which raises questions
+a dog keeps finding it again wherever it is hidden
+it is a test, and someone is grading
+selling it would break a promise to the dying
+there's a ledger with it listing everyone who was paid off
+the authorities who would buy it are the ones who stole it
+it was found on sacred ground
+the original owner's heirs have hired lawyers
+the person who buried it planned to come back, and did
+there was more, and someone else got there first
+it was hidden by a thief who was hanged before he could tell anyone [fantasy, modern]
+it has a twin, and the twin is cursed
+an old woman claims it was hers as a girl
+it smells of smoke, and the fire that caused it was no accident
+the finder was seen near the place the night it went missing
+it is half of a pair that must be reunited by midwinter
+it must be returned before the full moon, according to the note
+the wrapping is a page torn from a confession
+it is wanted as evidence in a war-crimes trial
+it was the last gift between estranged sisters
+the man who found it before died of greed, or so they say
+it's been insured, and the insurers want it found
+it's slowly changing whoever keeps it
+there's a tracker in it
+the one who knows its value is the one who can't be trusted
+a cult believes it is holy
+returning it would ruin a good family
+it is wanted by the person who hid it, who now runs the town
+it was meant to be found, by someone else
+someone has paid the finder's rent for a year to keep quiet about it
+it is one piece of something much larger
+the finder can never prove how they came by it
+it's what the last war was about
+
+## weather_sky
+# used as: "{}"  (sky and precipitation); sections: spring, summer, autumn, winter
+== spring
+rain that comes and goes all day
+a cold, bright morning with frost in the shade
+blossom blowing like snow
+warm wind and sudden showers
+fog until noon, then sun
+a soft drizzle that soaks without seeming to fall
+a sky of fast clouds and racing shadows
+hail for five minutes, then blue sky as if nothing happened
+a rainbow over the wet fields
+grey skies that lift at teatime
+a sharp shower that sends everyone under the eaves
+high thin cloud and a pale sun
+mist in the valley and clear sky above it
+a downpour that floods the lane
+sunshine through rain, the kind that brings out the worms
+low cloud sitting on the hills
+a week of steady rain and swollen rivers
+bright blue sky with a bite in the air
+sleet, late and unwelcome
+a clear night and a frost that kills the blossom
+spitting rain all morning
+heavy clouds that never quite rain
+the first warm sunshine, and everyone out in it
+a sky washed clean after a storm
+dew so heavy it looks like rain
+showers marching in from the west one after another
+a thunderstorm out of season
+puddles that reflect a perfect sky
+pollen hanging in the air like gold dust
+a gentle rain the farmers have been praying for
+cloud that breaks and closes all day
+a cold mist off the river
+a damp grey morning and a glorious evening
+snow on the high peaks, rain below
+skylarks over clear fields and a huge sky
+a storm of petals from the orchard
+== summer
+heat that makes the road shimmer
+a thunderstorm building all afternoon
+a long gold evening
+drought, the grass gone yellow
+warm rain at night
+a cloudless sky that goes on forever
+a haze that blurs the horizon
+a sudden storm with hailstones like marbles
+heat lightning flickering on the horizon with no thunder
+a sky white with heat
+a muggy, overcast day that won't break
+towering clouds over the hills by mid-afternoon
+a short, violent cloudburst that steams off the stones
+dust hanging in the still air
+a warm drizzle like breath
+a red sunset that promises tomorrow will be worse
+mackerel sky and a change coming
+thunder rolling round the hills all night
+a sea fret that rolls in and chills the coast
+a blue sky with one small cloud that follows the village
+a downpour that turns the dust to mud in a minute
+smoke from distant fires turning the sun orange
+the hottest day anyone can remember
+a heavy dew and a hot, clear morning
+a short night, light at both ends
+a storm that clears the air at last
+humidity so thick the walls sweat
+pale sky and a sun like a coin
+a week without a breath of rain
+a monsoon that won't stop
+warm fog over the marshes at dawn
+a sky full of stars and no moon
+swallows high in a clear sky
+dark clouds massing over the sea
+the rain everyone wanted, all at once
+a brassy sky before the storm
+== autumn
+gales stripping the trees
+a low sun in the eyes
+mist on the fields at dawn
+the first frost
+steady rain, the gutters full
+a clear, cold sky and golden light
+a dense fog that swallows the church tower
+showers and blustery sunshine
+a sky full of geese flying south
+dark by five and raining by six
+grey cloud that never moves
+a St Martin's summer, warm and still [modern]
+rain blowing in sheets across the moor
+a crisp morning with smoke rising straight up
+drizzle that turns the leaves to mush
+a storm off the sea that tears up the jetty
+a harvest moon huge and orange on the horizon
+low cloud and the smell of wood smoke
+a hard frost and leaves crunching underfoot
+rain that hasn't stopped for a week
+a brief blaze of sun on wet slate roofs
+a damp mist that beads on wool
+the river high and brown after the rains
+a soft, grey day with no shadows
+a sky of torn cloud and a watery sun
+an early snow that melts by noon
+a squall that comes out of nowhere
+a fine mist that soaks to the skin
+a clear night and the stars sharp as knives
+thick fog that lasts all day
+fields steaming in the morning sun
+cold rain and a sky the colour of slate
+leaves whirling in a sunny gale
+a hailstorm that strips the last apples
+rain drumming on the roofs all night
+the last warm afternoon of the year
+== winter
+snow muffling everything
+freezing fog
+a hard frost and a sky like glass
+sleet sideways
+a thaw, everything dripping
+a blizzard that buries the roads
+a white sky that promises snow and doesn't deliver
+icicles as long as swords
+rain that freezes as it lands
+a clear, starry night and a cruel frost
+a grey day that never really gets light
+a heavy snowfall overnight, untouched in the morning
+drifts as high as the hedges
+hoarfrost on every twig
+snow falling in big slow flakes
+a storm that brings the trees down
+days of drizzle and darkness
+a winter sun low and blinding on the snow
+ice on the inside of the windows
+the river frozen solid
+powdery snow that squeaks underfoot
+a thaw that turns the lanes to rivers
+a black frost with no snow, just cold
+fog frozen into the trees
+a sky so blue it hurts after a week of snow
+wet snow that turns to slush by noon
+a sleet storm that stings the face
+freezing rain glazing every surface
+a heavy grey sky pressing down on the roofs
+flurries that never settle
+a red sunrise over the snow
+a dark afternoon, lamps lit by three
+snow on the wind, blowing off the hills
+a long night with a thin moon
+the sea steaming in the frost
+an unseasonable mild spell, damp and grey
+
+## weather_wind
+# used as: "{}"  (wind, noun phrase: 'a wind off the sea that finds every gap')
+== all
+a wind off the sea that finds every gap
+not a breath of wind
+a gusty wind that slams doors
+a steady breeze from the west
+a bitter east wind that cuts through coats
+a warm wind from the south that smells of the desert
+a gale that rattles the slates
+a wind that changes direction every hour
+a soft breeze that barely stirs the leaves
+a howling wind in the chimneys all night
+a dry wind that cracks lips
+a cold draught down from the mountains
+a wind that carries the sound of bells from miles away
+sudden gusts that snatch hats
+a whistling wind through the rigging [fantasy, modern]
+a hot wind that wilts everything
+a sea breeze in the afternoon, dead calm at night
+a wind that smells of rain before the rain comes
+a north wind that brings snow
+a wind strong enough to lean on
+a damp wind off the marshes
+a fitful wind that drops and rises
+a wind that blows the smoke back down the chimney
+a whirlwind that spins the leaves in the square
+a stiff breeze that makes the flags snap
+a wind that moans in the eaves
+a mild wind that feels like spring
+a wind so strong the birds fly backwards
+a wind that scours the moor
+eddies of dust in the empty streets
+a wind that blows all the washing off the lines
+an icy wind that freezes tears
+a breeze carrying the smell of the tannery [fantasy, modern]
+a wind from the burning fields
+a wind off the ice
+a fierce squall that drives the boats home
+a lazy breeze that carries thistledown
+a wind that sets the weathervane spinning
+gusts that come with no warning from a clear sky
+a wind that keeps the windmills turning day and night [fantasy, modern]
+a sullen, still air that waits for something
+a wind that shakes the shutters like someone wants to get in
+a wind that drives sand into everything
+a sweet breeze from the hayfields
+a raw wind that makes eyes water
+a wind that tugs at cloaks and tempers [fantasy]
+a wind blowing the wrong way for the ships [fantasy]
+a hot, gritty wind from the quarries
+a gentle wind that brings the scent of the sea inland
+a wind that drowns out conversation
+a cold wind under a warm sun
+a wind that rolls the fog in like a tide
+a wind that tears the clouds to rags
+a back-and-forth wind that confuses the gulls
+a whispering breeze through the reeds
+a wind that lifts roofs
+a cold wind that blows the snow into drifts
+a steady trade wind that never stops
+a wind smelling of salt and seaweed
+a sudden calm in the middle of the storm
+a wind that carries voices from the hills
+
+## weather_temp
+# used as: "{}"  (how warm or cold it feels); sections: spring, summer, autumn, winter
+== spring
+warm in the sun, cold in the shade
+chilly mornings and mild afternoons
+a false warmth that fools the buds
+cold enough for a coat, warm enough to complain about it
+mild and damp
+crisp, with a bite after dark
+the first day warm enough to sit outside
+cool and fresh after the rain
+warm enough to make people careless
+a cold snap that undoes a week of growth
+pleasantly cool
+warmer than it has any right to be
+raw and wet
+cold at night, with frost in the hollows
+mild enough for the windows to open
+damp cold that gets into the joints
+balmy by midday
+a bright chill
+a sudden heat that wilts the seedlings
+cool, still and smelling of earth
+== summer
+stifling
+hot enough to fry an egg on the stones
+warm and heavy
+pleasantly warm with a breeze
+too hot to sleep
+blistering at noon, sweet in the evening
+close and humid
+a dry, baking heat
+cooler by the river
+a sticky heat that makes tempers short
+warm even at midnight
+a fresh coolness after the storm
+heat that pours off the walls after dark
+lazy and warm
+uncomfortably muggy
+cool for the time of year
+hot enough to melt the tar on the road [sf, modern]
+warm with a chill when the sun goes in
+a fierce, dry heat
+sweltering in the town, bearable in the hills
+== autumn
+cool and fresh
+a nip in the air
+mild for the time of year
+cold and damp
+warm in the sun, cold the moment it sets
+chilly enough to light the first fire
+raw and blustery
+a dry cold that clears the head
+damp and clammy
+warm at midday, frost by dawn
+cold enough to see your breath
+a mild, muggy spell
+bone-chilling rain
+cool and bright
+bitterly cold for the season
+grey and mild
+cold enough to bring the cattle in
+a soft chill
+the first cold that makes everyone hurry
+clammy and still
+== winter
+bitterly cold
+cold enough to freeze the ink
+mild and wet
+a dry, biting cold
+cold that numbs the fingers in minutes
+just above freezing
+cold enough to crack stones
+damp and miserable
+crisp and invigorating
+cold that gets into the bones and stays
+deceptively mild in the sun
+freezing in the shade all day
+far below freezing
+cold enough to kill
+raw and penetrating
+an unseasonal warmth
+cold enough that the breath freezes in beards
+dank and chilly indoors and out
+sharp and clear
+the deepest cold of the year
+
+## weather_events
+# used as: "{}"  (a striking weather event, noun phrase); sections: spring, summer, autumn, winter
+== spring
+a flood that carries away the mill wheel [fantasy, modern]
+a late frost that blackens every blossom
+a hailstorm that shreds the new crops
+a double rainbow over the town
+a tornado tearing across the plain
+a sudden snowstorm after a week of warmth
+a downpour that turns the market to a river
+a meltwater flood from the mountains
+a cloud of pollen like yellow smoke
+a storm that blows the church roof off
+a landslide after the rains
+a mud slide that buries the road
+a thunderstorm that sets a barn alight
+the river bursting its banks overnight
+a fog so thick people get lost in their own street
+a warm spell so sudden the ice on the lake cracks like gunfire [sf, modern]
+a gale that drives the ships onto the rocks
+a ring around the sun
+red rain carrying dust from distant deserts
+a squall that capsizes the ferry
+a sky full of migrating birds blotting out the sun
+== summer
+a heatwave that lasts a month
+a lightning strike on the bell tower
+a wildfire on the hills
+hailstones the size of eggs
+a drought that dries the well
+a waterspout out at sea
+a dust storm that turns noon to dusk
+a flash flood down a dry riverbed
+a storm that knocks out the bridge
+ball lightning rolling down the high street
+a plague of flies after the heat
+a night of thunder with no rain
+a cloudburst over the fair
+a heat so strong the roads melt
+a tornado tearing through the orchards
+a hot wind that ruins the harvest
+a sea mist so sudden the fishing fleet is lost
+a total eclipse of the sun
+a meteor shower lighting up the warm nights
+a pall of smoke from forest fires hanging over the town for days
+the reservoir dropping to show the drowned village [sf, modern]
+== autumn
+a great storm that fells a thousand trees
+a storm surge flooding the harbour
+a fog that lingers for a week
+the first snow, early, on the harvest
+a gale that brings down the windmill [fantasy, modern]
+an equinoctial tide that reaches the church steps
+a lightning storm over the sea
+a hurricane coming in off the ocean
+a mist so thick the bells ring all day to guide travellers
+leaves blown in drifts as high as a man
+a frost that kills the late crops
+a whirlwind that lifts a haystack whole
+a downpour that collapses the old bridge
+a hailstorm that flattens the vines
+the river turning on the town in a night
+the northern lights seen this far south
+a blood moon
+a waterspout coming ashore
+a tide so low the old wrecks show
+a storm that washes a ship's figurehead onto the beach
+== winter
+a blizzard that cuts the village off for a week
+an ice storm that brings down every power line, or every branch
+a frost fair on the frozen river [fantasy, modern]
+a snowdrift that buries a house
+an avalanche in the pass
+the sea freezing in the harbour
+a thaw flood that sweeps away the bridge
+a hard freeze that bursts every pipe [sf, modern]
+thundersnow
+a fog that freezes onto everything it touches
+the lake freezing so thick carts cross it [fantasy]
+a cold so deep the birds fall from the trees
+a storm that wrecks the fishing fleet
+northern lights burning green over the snow
+a snowfall so heavy the roofs cave in
+freezing rain glazing the whole town in ice
+a rare snow on the coast that the children have never seen
+icebergs drifting into the bay
+a snow eater wind that melts a foot of snow in an hour
+a white-out on the moors
+
+## sf_weather
+# used as: "{}"  (science-fiction weather or habitat climate, noun phrase)
+== all
+the habitat's lights dimmed for a scheduled night
+a dust storm turning the dome red
+acid rain hissing on the hull
+the station's climate stuck on too hot
+aurora over the ice
+methane snow
+the gas giant filling half the sky
+a solar flare warning, everyone inside
+recycled air with a burnt edge
+a radiation storm and the shutters down
+condensation dripping from every pipe on the lower decks
+a rogue weather drone seeding clouds over the market
+the terraforming plant releasing its monthly fog
+diamond rain on a giant world
+a sandstorm that strips paint off vehicles
+a tidal-locked twilight that never changes
+a sky of two suns, one setting as the other rises
+glass rain on a hot world
+snow made of carbon dioxide
+a cryovolcano erupting on the horizon
+the ring of a planet slicing the sky in half
+a geomagnetic storm scrambling every screen
+air so thin that everyone wears masks outdoors
+the dome's sprinklers running a programmed spring shower
+a sulphur fog that stains clothes yellow
+hail of frozen ammonia
+the station spinning into the planet's shadow
+a sky the colour of rust and a small cold sun
+nitrogen geysers on the ice plains
+the habitat's artificial wind turned up for the festival
+a supercell storm the size of a continent
+an eclipse by a moon three times the size of the sun
+a permanent night lit by a nearby nebula
+lightning crawling over the outside of the dome
+floating forests drifting through the cloud layer
+dust devils a mile high crossing the plain
+the climate control broken and the arcology sweating
+artificial gravity flickering, making the rain fall sideways
+a meteor shower visible through the hull windows
+a cold so deep the station hull rings
+the solar shield swinging closed for the hottest hours
+rain that falls upwards in the low-gravity sector
+a weather satellite failing and a hurricane nobody predicted
+spore clouds drifting from the alien forest
+the oxygen gardens blooming and the air turning sweet
+a sky full of debris from a broken station, burning as it falls
+the oceans boiling at the terminator line
+humid tropical air in the farming ring
+fog machines covering a leaking coolant spill
+a crimson sunset on a world with a red dwarf sun
+a planet where it rains iron
+tidal winds roaring as the moon passes close
+the hab's day cycle running six hours slow
+a smog of factory exhaust over the industrial moon
+a stillness so complete the dust never settles
+hydrocarbon lakes steaming under a brown sky
+the station's air smelling of ozone after a reactor test
+a sky full of orbiting cities glittering at night
+a lightning storm in the gas giant below, lighting the station
+snow falling inside the cargo bay from a cooling leak
+a long winter caused by an orbit far from the sun
+the dome frosting over during the long night
+sunlight filtered green through algae panels
+a monsoon on an ocean world that never ends
+volcanic ash raining onto the colony roofs
+heat shimmer off the solar farms
+the artificial sun flickering through a fault
+a gravity storm warping the clouds into spirals
+salt winds off a dried-up sea
+the habitat cooled for the cold-sleep season
+mist rising from the coolant canals
+a stormy sky the colour of bruised plums over the jungle
+a frozen world's brief summer, the ice melting into rivers
+stars visible in daylight through the thin atmosphere
+a weather-control failure that brings snow to the desert dome
+stale air on the lower decks and fresh on the upper
+the orbit passing through a comet's tail
+endless rain from a mismanaged climate engine
+night skies lit by a nearby supernova
+a cold sun barely bigger than a star
+a hurricane on the gas giant visible from orbit like a vast eye
+the hydroponics ring's humid, earthy air
+a sweltering engine deck and a freezing bridge
+a planet-wide sandstorm that lasts a season
+a temperature inversion trapping smog in the crater city
+dry, crackling air full of static
+a toxic bloom in the sea that turns the coast purple
+blizzards of ice crystals in the outer settlements
+a sudden pressure drop that makes ears pop all over the station
+a breeze from the vents scented with pine for the homesick
+a supercooled fog that freezes on contact with skin
+the station passing through the planet's radiation belts
+
+## lights
+# used as: "{}"  (the light, noun phrase: 'long shadows')
+== all
+grey, flat light
+long shadows
+a sky the colour of a bruise
+a white glare
+lamps lit at four in the afternoon
+a moon bright enough to read by
+no stars at all
+a sunset that won't finish
+a golden hour that lasts all afternoon
+light coming through the clouds in shafts
+a pearly dawn
+a red sunrise
+a green flash at sunset
+a full moon behind racing clouds
+starlight on the snow
+a sky so dark the stars look close enough to touch
+a dim, brown light like old photographs [sf, modern]
+lightning lighting the room for a heartbeat at a time
+a harsh noon light with no shadows
+the blue hour after sunset
+the copper light before a storm
+a low winter sun throwing shadows a mile long
+a hazy, milky light
+dappled light under the trees
+reflected light off the sea
+a crescent moon like a fingernail
+light fading early behind the hills
+the glow of a distant city on the clouds [sf, modern]
+a lemon-yellow dawn
+fog lit from inside by streetlamps [sf, modern]
+a sickly yellow sky before the snow
+moonlight striping the floor through the shutters
+a sun like a hole burned in paper
+twilight that goes on for hours
+candlelight in every window [fantasy, modern]
+the eerie glow of the northern lights
+sunlight sparkling off frost
+the orange glow of a fire on the horizon
+an overcast gloom that never lifts
+a single beam of sunlight through a broken roof
+a flat white sky that hides the sun
+dusk the colour of plums
+light reflected up from the snow, making everything bright
+dawn creeping in grey and slow
+a blood-red moon
+light rippling on the ceiling from the river
+soft, diffuse light like the inside of a shell
+a sky full of shooting stars
+violet evening light
+the sun breaking through for one minute and gone
+lamplight through rain
+a strange green tint to everything
+the silver light of a frosty morning
+the shine of wet cobbles
+heavy dusk at midday under storm clouds
+a rose-pink sky behind the chimneys
+a single star in a pale sky
+the sickly glow of marsh lights
+hard, clean light after the rain
+a sunset reflected in every window of the town
+faint light from a sliver of moon
+a brazen, coppery sky
+the white light of a snowfield under the moon
+shadows that seem to move on their own
+the last light catching the top of the tower
+a glare off the water that hurts the eyes
+deep shade and bright patches, nothing between
+the sun a dull disc behind smoke
+sunlight in long bars through the dust of a barn
+a blue-black night with every star out
+lantern light swinging in the wind
+a misty halo around the moon
+
+## moods
+# used as: "{}"  (what the weather does to people, full sentence with full stop)
+== all
+Everyone is short-tempered.
+People stay in.
+The streets are full.
+Sound carries.
+Nothing quite dries.
+It feels like something is about to happen.
+The old ache is in everyone's bones.
+Children are let out to play.
+Animals are restless.
+Old feuds flare up over nothing.
+Everyone is in love, or thinks they are.
+Strangers talk to each other at bus stops and market stalls. [modern]
+The taverns do a roaring trade. [fantasy]
+Nobody can sleep.
+People leave doors open and forget to lock them.
+Tempers fray by midday.
+Everyone seems to be waiting.
+The town feels holiday-lazy.
+The old folk say it's an omen.
+Dogs bark at nothing all night.
+People move quickly, heads down.
+Everyone is gloomy and nobody knows why.
+Work stops early.
+The sick get sicker.
+Lovers walk out in the evenings.
+Everybody is thinking about leaving.
+Rumours spread faster than usual.
+People drink more than they should.
+Business is slow, and so are the people.
+Arguments break out in queues.
+The children are wild.
+People are kinder than usual to one another.
+Everyone is tired by noon.
+Nobody wants to be alone.
+Old people sit outside and remember.
+Cats sit in windows and refuse to move.
+Every hearth is crowded. [fantasy]
+People notice things they would usually ignore.
+Mourners feel the loss more sharply.
+Lovers quarrel.
+The priests preach about endings.
+Everyone is waiting for the weather to break.
+Gardeners are in despair.
+People talk about the weather and nothing else.
+It is a good day for making decisions.
+It is a bad day for travelling.
+Nobody wants to work.
+Musicians play in the street.
+People feel braver than they should.
+Everyone eats too much.
+The air makes people restless and reckless.
+Memories come back unbidden.
+People go to bed early and wake up uneasy.
+The streets are empty by dark.
+Everyone is a little homesick.
+Fights break out over who gets the shade.
+People can't stop yawning.
+The market sells out of everything warm.
+The doctor is busy.
+Secrets come out.
+Folk walk with their collars up and their eyes down.
+Crime falls off; even thieves stay home.
+Crime rises; everyone is out and distracted.
+Old men predict worse to come.
+Everyone dresses wrong for it.
+The washing goes out and comes straight back in.
+Children make up songs about it.
+Nobody can concentrate on anything.
+People forgive things they shouldn't.
+Everyone seems to be in a hurry.
+The farmers are anxious.
+Sailors refuse to put to sea.
+Births and deaths both seem to come early.
+The baker sells out by nine.
+The quiet is unsettling.
+Everyone is sentimental.
+The poor suffer and the rich complain.
+People sleep in the afternoon.
+Neighbours check on each other.
+The ill-tempered get worse and the cheerful get louder.
+It brings out the gossips.
+Couples who have been circling each other finally speak.
+The town feels like it is holding its breath.
+People start new projects they won't finish.
+Someone always gets hurt on the ice.
+Nobody feels like themselves.
+Everyone has a story about the last time it was this bad.
+People wake to the silence and feel like children again.
+The graveyard has visitors. [fantasy, modern]
+Ghost stories are told after dark.

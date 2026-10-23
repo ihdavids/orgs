@@ -1,0 +1,2271 @@
+# Name tables for the story-idea generators: given names, surnames, bynames,
+# call signs and the pieces place names are built from.
+
+## given_feminine
+# used as: {} Okafor  (a real given name, read as feminine, any culture; capitalised)
+== all
+Adaeze
+Chiamaka
+Ngozi
+Ifeoma
+Nneka
+Amara
+Folake
+Yetunde
+Funmilayo
+Abena
+Akosua
+Ama
+Efua
+Esi
+Fatoumata
+Aminata
+Mariama
+Awa
+Khadija
+Binta
+Wanjiru
+Njeri
+Achieng
+Nyokabi
+Zawadi
+Neema
+Rehema
+Makena
+Saba
+Selam
+Tigist
+Meron
+Hirut
+Almaz
+Thandiwe
+Nomvula
+Lindiwe
+Zanele
+Palesa
+Naledi
+Thembeka
+Precious
+Tsitsi
+Rudo
+Chipo
+Fatima
+Aisha
+Layla
+Yasmin
+Nour
+Rania
+Samira
+Huda
+Salma
+Mariam
+Zainab
+Leila
+Shirin
+Parisa
+Roya
+Mahsa
+Golnar
+Azadeh
+Elif
+Zeynep
+Ayşe
+Emine
+Defne
+Nilüfer
+Gülşen
+Priya
+Ananya
+Lakshmi
+Meera
+Kavya
+Sunita
+Deepika
+Parvati
+Radha
+Anjali
+Shreya
+Nandini
+Farzana
+Nasreen
+Rukhsana
+Tahmina
+Mei
+Lian
+Xiu
+Jing
+Yan
+Ying
+Hua
+Fang
+Sakura
+Yuki
+Haruka
+Aiko
+Emiko
+Naoko
+Keiko
+Fumiko
+Ji-woo
+Seo-yeon
+Min-ji
+Eun-ji
+Soo-ah
+Linh
+Thao
+Huong
+Lan
+Ngoc
+Siti
+Dewi
+Ayu
+Kartini
+Malai
+Ploy
+Rizalina
+Maricel
+Ligaya
+Olga
+Tatiana
+Svetlana
+Natalia
+Irina
+Ludmila
+Zofia
+Agnieszka
+Katarzyna
+Małgorzata
+Jelena
+Milica
+Ivana
+Dragana
+Bogdana
+Oksana
+Anastasia
+Ingrid
+Sigrid
+Astrid
+Solveig
+Freya
+Liv
+Inger
+Gudrun
+Hildur
+Sólveig
+Aino
+Kaisa
+Siobhan
+Niamh
+Aoife
+Saoirse
+Róisín
+Bridget
+Mairead
+Eilidh
+Morag
+Catriona
+Seren
+Bethan
+Gwenllian
+Rhiannon
+Isabella
+Lucia
+Chiara
+Giulia
+Francesca
+Rosalia
+Carmela
+Inês
+Beatriz
+Leonor
+Margarida
+Mercedes
+Pilar
+Consuelo
+Esperanza
+Guadalupe
+Ximena
+Valentina
+Camila
+Luciana
+Paloma
+Marisol
+Élodie
+Margaux
+Céline
+Sylvie
+Geneviève
+Brigitte
+Gretchen
+Liesl
+Ilse
+Hannelore
+Annika
+Greta
+Elke
+Wilhelmina
+Anneke
+Femke
+Sanne
+Eleni
+Despina
+Kalliope
+Theodora
+Penelope
+Athena
+Chrysanthi
+Wichapi
+Winona
+Ayasha
+Nayeli
+Itzel
+Citlali
+Xochitl
+Killa
+Leilani
+Moana
+Kalani
+Mere
+Aroha
+Ngaio
+Miriam
+Rivka
+Esther
+Shoshana
+Tova
+Chava
+Yael
+Batsheva
+Ruth
+Naomi
+Margaret
+Dorothy
+Edith
+Mabel
+Agnes
+Harriet
+Florence
+Winifred
+Constance
+Beatrice
+Josephine
+Imogen
+Phoebe
+Ottilie
+Clementine
+Delphine
+Rosalind
+Evangeline
+Marguerite
+Ottoline
+Dolores
+Lorna
+Brenda
+Tracy
+Shanice
+Latoya
+Tamika
+Ebony
+Keisha
+Odile
+Ottavia
+Bronwen
+Ludovica
+Henrietta
+
+## given_masculine
+# used as: {} Okafor  (a real given name, read as masculine, any culture; capitalised)
+== all
+Chinedu
+Emeka
+Obinna
+Chukwuma
+Ikenna
+Tunde
+Babatunde
+Olusegun
+Kayode
+Femi
+Kwame
+Kofi
+Kwabena
+Yaw
+Kojo
+Mamadou
+Ousmane
+Moussa
+Ibrahima
+Cheikh
+Abdoulaye
+Kamau
+Otieno
+Mwangi
+Baraka
+Juma
+Bakari
+Tesfaye
+Dawit
+Haile
+Yonas
+Bekele
+Thabo
+Sipho
+Mandla
+Bongani
+Themba
+Kagiso
+Tendai
+Tafadzwa
+Farai
+Omar
+Youssef
+Khalid
+Tariq
+Hassan
+Karim
+Mahmoud
+Rashid
+Bilal
+Hamza
+Faisal
+Darius
+Kourosh
+Babak
+Farhad
+Reza
+Arash
+Behrouz
+Mehmet
+Mustafa
+Emre
+Kemal
+Murat
+Burak
+Oğuz
+Arjun
+Rahul
+Vikram
+Sanjay
+Rajesh
+Anand
+Ravi
+Suresh
+Pradeep
+Gurpreet
+Harjeet
+Imran
+Arif
+Shahid
+Wei
+Jun
+Hao
+Zhiwei
+Jian
+Lei
+Bo
+Haruto
+Takeshi
+Kenji
+Hiroshi
+Daisuke
+Shoichi
+Ichiro
+Min-jun
+Seo-jun
+Ji-hoon
+Dong-hyun
+Jae-won
+Minh
+Tuan
+Duc
+Quang
+Bao
+Budi
+Agus
+Wayan
+Somchai
+Anurak
+Kittisak
+Rodrigo
+Dante
+Bayani
+Ivan
+Dmitri
+Sergei
+Nikolai
+Pavel
+Mikhail
+Vladimir
+Yuri
+Piotr
+Tomasz
+Krzysztof
+Wojciech
+Miloš
+Dragan
+Bogdan
+Goran
+Stanislav
+Taras
+Bjørn
+Olaf
+Leif
+Sven
+Magnus
+Erik
+Torsten
+Gunnar
+Haakon
+Einar
+Ragnar
+Mikko
+Jussi
+Pekka
+Seán
+Ciarán
+Padraig
+Cormac
+Oisín
+Eoin
+Diarmuid
+Fergus
+Angus
+Hamish
+Ewan
+Dafydd
+Rhys
+Gethin
+Iolo
+Alessandro
+Giuseppe
+Matteo
+Salvatore
+Lorenzo
+Vittorio
+Enzo
+João
+Tiago
+Rui
+Afonso
+Joaquín
+Alejandro
+Javier
+Santiago
+Mateo
+Diego
+Ignacio
+Emiliano
+Fernando
+Benicio
+Thierry
+Étienne
+Lucien
+Gaspard
+Benoît
+Olivier
+Jean-Luc
+Klaus
+Dieter
+Wolfgang
+Friedrich
+Matthias
+Heinrich
+Ulrich
+Joost
+Pieter
+Maarten
+Bram
+Stavros
+Nikos
+Dimitrios
+Yannis
+Konstantinos
+Spyros
+Achilleas
+Tecumseh
+Hiawatha
+Chayton
+Ahanu
+Cuauhtémoc
+Tupac
+Inti
+Keoni
+Makoa
+Tane
+Wiremu
+Rangi
+Mosese
+Sione
+Avraham
+Moshe
+Yitzhak
+Shmuel
+Mordechai
+Eliezer
+Yehuda
+Akiva
+Ezra
+Arthur
+Walter
+Harold
+Albert
+Bernard
+Cyril
+Reginald
+Leonard
+Herbert
+Ernest
+Rupert
+Barnaby
+Jasper
+Ambrose
+Percival
+Horace
+Ignatius
+Bartholomew
+Silas
+Gideon
+Augustus
+Cornelius
+Desmond
+Delroy
+Winston
+Leroy
+Tyrone
+Darnell
+Jamal
+Dwayne
+Gary
+Kevin
+Nigel
+Trevor
+Clive
+Cosimo
+
+## given_neutral
+# used as: {} Okafor  (a real given name used for anyone; capitalised)
+== all
+Avery
+Rowan
+Morgan
+Quinn
+Sasha
+Robin
+Jordan
+Riley
+Casey
+Alex
+Sam
+Jesse
+Taylor
+Jamie
+Charlie
+Frankie
+Ashley
+Kendall
+Reese
+Emerson
+Hayden
+Parker
+Sawyer
+Marlowe
+Ellis
+Sidney
+Dana
+Leslie
+Lindsay
+Shannon
+Kerry
+Hollis
+Darcy
+Blair
+Sloane
+Remy
+Arden
+Ash
+Wren
+Sky
+River
+Phoenix
+Indigo
+Sage
+Ocean
+Kit
+Jo
+Toni
+Jody
+Billie
+Bobbie
+Lou
+Ali
+Nur
+Iman
+Noor
+Ihsan
+Kai
+Hikaru
+Makoto
+Akira
+Kaoru
+Haru
+Nao
+Michi
+Yu
+Ming
+Ping
+An
+Xin
+Hyun
+Jin
+Eun
+Sung
+Thanh
+Hoa
+Kiran
+Jyoti
+Ayo
+Ayodele
+Chidi
+Chinwe
+Amani
+Imani
+Tumelo
+Lerato
+Tshepo
+Koa
+Kekoa
+Aubrey
+Sunny
+Jean
+Andrea
+Simone
+Dominique
+Claude
+Camille
+Maxime
+Alexis
+Hilary
+Evelyn
+Laurence
+Marion
+Tenzin
+Pema
+Dorje
+Nima
+Sonam
+Rain
+Shiloh
+Eden
+Ariel
+Noa
+Yarden
+Lior
+Tal
+Shai
+Gal
+Dakota
+Cameron
+Marley
+Peyton
+Harley
+Lane
+Oakley
+Tatum
+Shea
+Jules
+Mika
+Nikita
+Sora
+Rin
+Hinata
+Kim
+Chris
+Pat
+Terry
+Lee
+Drew
+Finley
+Kamari
+Amari
+
+## surnames
+# used as: Mira {}  (a real family name from anywhere in the world; capitalised)
+== all
+Okafor
+Okonkwo
+Eze
+Nwosu
+Obi
+Adeyemi
+Adebayo
+Olawale
+Ogunleye
+Balogun
+Mensah
+Owusu
+Asante
+Boateng
+Appiah
+Agyeman
+Danso
+Diallo
+Traoré
+Keita
+Coulibaly
+Sow
+Ndiaye
+Diop
+Faye
+Camara
+Konaté
+Kamara
+Sesay
+Kariuki
+Njoroge
+Wambugu
+Ochieng
+Odhiambo
+Mutua
+Kiprono
+Chebet
+Mwakasege
+Okello
+Mugisha
+Habimana
+Uwimana
+Tesfaye
+Gebre
+Alemu
+Wolde
+Bekele
+Abebe
+Mohamud
+Warsame
+Dlamini
+Nkosi
+Mthembu
+Zulu
+Ndlovu
+Khumalo
+Mokoena
+Molefe
+Moyo
+Banda
+Phiri
+Mwale
+Chikwanha
+Haddad
+Khoury
+Nasser
+Mansour
+Saleh
+Hamdan
+Aziz
+Farouk
+Rahman
+Qureshi
+Hashemi
+El-Amin
+Bakr
+Sabbagh
+Tahir
+Hosseini
+Karimi
+Mohammadi
+Rostami
+Tehrani
+Shirazi
+Jafari
+Yazdani
+Ahmadi
+Moradi
+Yılmaz
+Kaya
+Demir
+Şahin
+Çelik
+Öztürk
+Aydın
+Arslan
+Doğan
+Kurt
+Patel
+Shah
+Mehta
+Desai
+Iyer
+Nair
+Menon
+Reddy
+Rao
+Krishnan
+Banerjee
+Chatterjee
+Mukherjee
+Ghosh
+Bose
+Sharma
+Verma
+Gupta
+Kapoor
+Malhotra
+Singh
+Gill
+Sandhu
+Dhillon
+Chowdhury
+Hossain
+Siddiqui
+Perera
+Fernando
+Jayasuriya
+Wickramasinghe
+Rana
+Thapa
+Gurung
+Sherpa
+Wang
+Li
+Zhang
+Liu
+Chen
+Yang
+Huang
+Zhao
+Wu
+Zhou
+Xu
+Sun
+Ma
+Zhu
+Hu
+Guo
+Lin
+He
+Gao
+Luo
+Cheung
+Wong
+Chan
+Leung
+Ng
+Tan
+Lim
+Goh
+Ong
+Teo
+Sato
+Suzuki
+Takahashi
+Tanaka
+Watanabe
+Ito
+Yamamoto
+Nakamura
+Kobayashi
+Kato
+Yoshida
+Yamada
+Matsumoto
+Inoue
+Kimura
+Hayashi
+Shimizu
+Mori
+Ishikawa
+Ogawa
+Kim
+Lee
+Park
+Choi
+Jung
+Kang
+Cho
+Yoon
+Jang
+Han
+Nguyen
+Tran
+Le
+Pham
+Hoang
+Phan
+Vu
+Dang
+Bui
+Do
+Santoso
+Wijaya
+Halim
+Kusuma
+Hidayat
+Nugroho
+Siregar
+Suryadi
+Srisai
+Chaiyaporn
+Wongsakul
+Rattanakorn
+Santos
+Reyes
+Cruz
+Bautista
+Mendoza
+Dela Cruz
+Villanueva
+Aquino
+Macapagal
+Ivanov
+Petrov
+Sokolov
+Smirnov
+Kuznetsov
+Popov
+Volkov
+Morozov
+Pavlova
+Fedorov
+Orlov
+Kowalski
+Nowak
+Wiśniewski
+Wójcik
+Kamiński
+Lewandowski
+Zieliński
+Szymański
+Dvořák
+Novák
+Svoboda
+Horváth
+Nagy
+Szabó
+Tóth
+Kovačević
+Petrović
+Jovanović
+Nikolić
+Marković
+Popescu
+Ionescu
+Dumitru
+Georgiev
+Dimitrov
+Shevchenko
+Bondarenko
+Kovalenko
+Tkachenko
+Hansen
+Johansen
+Olsen
+Larsen
+Andersen
+Nielsen
+Jensen
+Lindqvist
+Bergström
+Holm
+Lund
+Sandberg
+Nyström
+Eriksson
+Lindgren
+Halvorsen
+Haugen
+Bakke
+Virtanen
+Korhonen
+Mäkinen
+Nieminen
+Jónsdóttir
+Sigurðsson
+Murphy
+Kelly
+O'Sullivan
+Walsh
+O'Brien
+Byrne
+Ryan
+O'Connor
+Doyle
+McCarthy
+Gallagher
+Fitzgerald
+Kavanagh
+Ó Briain
+MacLeod
+MacDonald
+Campbell
+Fraser
+Cameron
+Sinclair
+Munro
+Mackenzie
+Buchanan
+Drummond
+Jones
+Davies
+Evans
+Thomas
+Llewellyn
+Pritchard
+Griffiths
+Prosser
+Vaughan
+Penhaligon
+Trelawney
+Pascoe
+Rossi
+Russo
+Fontana
+Esposito
+Bianchi
+Romano
+Colombo
+Ricci
+Marino
+Greco
+Bruno
+Gallo
+Conti
+De Luca
+Mancini
+Lombardi
+Moretti
+Barbieri
+Silva
+Pereira
+Ferreira
+Oliveira
+Costa
+Rodrigues
+Martins
+Sousa
+Carvalho
+Almeida
+García
+Rodríguez
+Martínez
+López
+González
+Hernández
+Pérez
+Sánchez
+Ramírez
+Torres
+Flores
+Rivera
+Gómez
+Díaz
+Morales
+Ortiz
+Castillo
+Vargas
+Ruiz
+Herrera
+Medina
+Aguilar
+Guerrero
+Delgado
+Quispe
+Mamani
+Huamán
+Condori
+Martin
+Bernard
+Dubois
+Durand
+Lefebvre
+Moreau
+Laurent
+Fournier
+Girard
+Bonnet
+Rousseau
+Lemaire
+Chevalier
+Müller
+Schmidt
+Schneider
+Fischer
+Weber
+Meyer
+Wagner
+Becker
+Hoffmann
+Schäfer
+Koch
+Zimmermann
+Braun
+Krüger
+Hartmann
+De Vries
+Van den Berg
+Janssen
+Bakker
+Visser
+Smit
+Mulder
+De Jong
+Peeters
+Claes
+Papadopoulos
+Papadakis
+Georgiou
+Nikolaidis
+Vlachos
+Karagiannis
+Konstantinou
+Antoniou
+Begay
+Yazzie
+Tsosie
+Benally
+Littlefoot
+Running Bear
+Deschenie
+Sixkiller
+Whitehorse
+Cornsilk
+Tuhiwai
+Ngata
+Te Rangi
+Parata
+Kealoha
+Kahananui
+Fonoti
+Tuilagi
+Vaipulu
+Fifita
+Taufa
+Cohen
+Levi
+Katz
+Friedman
+Rosenberg
+Goldberg
+Shapiro
+Abramowitz
+Mizrahi
+Peretz
+Ben-David
+Azoulay
+Smith
+Brown
+Wilson
+Taylor
+Clarke
+Hughes
+Wright
+Walker
+Robinson
+Thompson
+Hargreaves
+Ashworth
+Bellamy
+Blackwood
+Fairweather
+Thistlewood
+Pennyfeather
+Underhill
+Merriweather
+Cartwright
+Fletcher
+Thatcher
+Booker
+Washington
+Jefferson
+Freeman
+Banks
+Coleman
+Stewart
+Achterberg
+Okoro
+Nakashima
+Aboagye
+Bello
+Abdullahi
+Musa
+Yusuf
+Garba
+Ramos
+Navarro
+Iglesias
+Salazar
+Zapata
+Arroyo
+Lucero
+Montoya
+Mukasa
+Bhatt
+Pillai
+Joshi
+Kulkarni
+Agarwal
+Nakagawa
+Fujita
+Okada
+Hasegawa
+Kuroda
+Saxena
+Ferenczi
+Lukács
+Kaczmarek
+Wróbel
+Grabowski
+Petersen
+Rasmussen
+Christensen
+Ekström
+Åberg
+Kerr
+Boyle
+Quinn
+Delaney
+Abernathy
+Osei
+Achebe
+Fofanah
+Toure
+Bangura
+Ghani
+Hakimi
+Popal
+Durrani
+
+## callsigns
+# used as: Avery Brannigan ("{}")  (a crew nickname or call sign; capitalised)
+== all
+Doc
+Sparks
+Tinker
+Ghost
+Moth
+Sunday
+Biscuit
+Crowbar
+Hymn
+Ledger
+Pockets
+Lucky
+Nine
+Static
+Halfpint
+Bones
+Wrench
+Deacon
+Ketchup
+Shiver
+Tuesday
+Mouse
+Hammerhead
+Lighthouse
+Paperclip
+Marbles
+Gravy
+Junebug
+Saint
+Velvet
+Tinsel
+Dusty
+Smoke
+Cinders
+Fuse
+Patch
+Buckle
+Rook
+Magpie
+Jackdaw
+Heron
+Kestrel
+Mongoose
+Wombat
+Possum
+Badger
+Otter
+Gecko
+Tadpole
+Bishop
+Padre
+Sarge
+Professor
+Chaplain
+Banker
+Postman
+Gramps
+Nana
+Kid
+Rookie
+Cookie
+Pancake
+Noodle
+Pickles
+Teacup
+Sugar
+Salt
+Pepper
+Vinegar
+Blink
+Hiccup
+Mumbles
+Whisper
+Thunder
+Echo
+Zero
+Ace
+Deuce
+Snake Eyes
+Jackpot
+Long Shot
+Dead Reckoning
+Compass
+Sextant
+Plumb Bob
+Tripwire
+Keel
+Anchor
+Ballast
+Driftwood
+Barnacle
+Siren
+Undertow
+Tide
+Frost
+Blizzard
+Monsoon
+Dustbowl
+Mirage
+Cactus
+Thimble
+Spindle
+Bobbin
+Needles
+Scissors
+Glue
+Tape
+Torque
+Gimbal
+Rivet
+Solder
+Kilowatt
+Ohm
+Halogen
+Neon
+Argon
+Cobalt
+Rust
+Tarnish
+Chrome
+Brass
+Penny
+Nickel
+Dime
+Two Bits
+Tax Man
+Lawyer
+Choirboy
+Altar Girl
+Sleepy
+Hound
+Lapdog
+Greyhound
+Bloodhound
+Ferret
+Weasel
+Viper
+Cobra
+Gator
+Shark Bait
+Fishhook
+Lure
+Bait
+Hatchet
+Cleaver
+Butterknife
+Spoon
+Ladle
+Kettle
+Toaster
+Microwave
+Fridge
+Stretch
+Shorty
+Lefty
+Southpaw
+Tex
+Brooklyn
+Yorkie
+Geordie
+Mountie
+Outback
+Hollywood
+Vegas
+Roulette
+Bingo
+Domino
+Checkmate
+Stalemate
+Pawn
+Castle
+
+## epithets
+# used as: Ysolde {}  (a fantasy byname after a given name, e.g. the Younger, Half-hand, of the Long Road)
+== all
+the Younger
+the Elder
+Half-hand
+of the Long Road
+the Unready
+the Twice-Drowned
+Oathbreaker
+the Lame
+the Fair
+the Grey
+the Bald
+the Stammerer
+the Pious
+the Bastard
+Ironjaw
+Ash-tongue
+Lackland
+Crookback
+Sevenfingers
+the Quiet
+the Patient
+the Unwashed
+the Lucky
+the Unlucky
+the Late
+the Last
+the Fourth
+of No Fixed Abode
+of the Salt Marsh
+of the Crooked Bridge
+of the Nine Wells
+of Lower Hollin
+from Beyond the Weir
+the Ferryman's Daughter
+the Miller's Boy
+the Widow
+Kingsbane
+Wolf-friend
+Crow-caller
+Beekeeper
+Bridgeburner
+Bonesetter
+Stormborn
+Fogwalker
+Lanternjaw
+Copperhair
+Redbeard
+Whitehand
+Greycloak
+Brokenshield
+Thistledown
+Longshanks
+the Tall
+the Short
+the Stout
+the Thin
+the Hungry
+the Unbowed
+the Forgetful
+the Gentle
+the Cruel
+the Generous
+the Miser
+the Laughing
+the Weeping
+the Sleepless
+the Blind
+the Deaf
+the One-eyed
+Hook-hand
+Wooden-leg
+Ink-fingers
+the Scribe
+the Smith
+the Tanner
+the Hedge-witch
+the Herald
+the Mapmaker
+of the Hundred Doors
+of the Burnt Hall
+of the Ford
+of the Drowned Bells
+of the Three Rivers
+of the High Pasture
+of the Black Fen
+of the Glass Isles
+of Nowhere in Particular
+Who Walked Back
+Who Came Too Late
+Who Owes Nothing
+Who Was Promised
+Who Kept the Bridge
+Twice-Crowned
+Thrice-Wed
+Never-Wed
+Oath-sworn
+Ring-giver
+Breadgiver
+Truthsayer
+Liar's Child
+Saltblood
+Goldtooth
+Silvertongue
+Leadfoot
+Quickfingers
+Sure-foot
+Mossback
+Barefoot
+Ragged-cloak
+the Penitent
+the Heretic
+the Apostate
+the Saint
+the Martyr
+the Unburied
+the Returned
+the Ghost-touched
+the Moon-mad
+the Mad
+the Wise
+the Fool
+the Clever
+the Bold
+the Fearful
+the Calm
+the Restless
+the Wanderer
+the Exile
+the Pretender
+the Rightful
+the Usurper
+the Peacemaker
+the Hammer
+the Anvil
+the Lantern
+the Thorn
+the Rose of Kell
+the Lion of the Marches
+the Fox
+the Hare
+the Owl
+the Raven
+Dog-brother
+Horse-thief
+Sheep-stealer
+Goose-girl
+Swineherd
+the Shepherd
+Far-traveller
+Seldom-seen
+Ever-late
+Slow-to-anger
+Quick-to-laugh
+Hard-to-kill
+Fireproof
+of the Winter Road
+of the Narrow Sea
+of the Old Faith
+of the Lost Tower
+of the Second Sons
+Ten-winters
+Bloodaxe
+Shieldmaiden
+Spear-Shaker
+Bramblebeard
+Kettlebelly
+Tallowmaker
+the Debtor
+
+## place_fronts
+# used as: {}ford  (first element of an English-style place name, capitalised, joined to a back with no space)
+== all
+Ash
+Oak
+Thorn
+Elm
+Birch
+Alder
+Haw
+Holly
+Yew
+Rowan
+Willow
+Hazel
+Lind
+Apple
+Pear
+Bramble
+Fern
+Moss
+Reed
+Rush
+Sedge
+Heath
+Broom
+Gorse
+Whin
+Ling
+Clover
+Barley
+Wheat
+Rye
+Oat
+Bean
+Flax
+Hemp
+Brad
+Brom
+Wick
+Stan
+Sand
+Chalk
+Flint
+Stone
+Clay
+Marl
+Gravel
+Salt
+Iron
+Copper
+Lead
+Tin
+Gold
+Silver
+Coal
+Black
+White
+Red
+Green
+Brown
+Grey
+Blue
+Yellow
+Long
+Short
+Broad
+Narrow
+High
+Low
+Nether
+Upper
+Middle
+Old
+New
+North
+South
+East
+West
+Sut
+Nor
+Wes
+Kings
+Queens
+Bishops
+Abbots
+Monks
+Priors
+Canons
+Friars
+Knights
+Earls
+Barons
+Swin
+Shep
+Ship
+Horse
+Hors
+Cow
+Bull
+Ox
+Calf
+Lamb
+Ram
+Goat
+Gos
+Duck
+Hen
+Crow
+Raven
+Rook
+Hawk
+Kite
+Swan
+Heron
+Crane
+Fox
+Wolf
+Hart
+Buck
+Doe
+Hare
+Badger
+Brock
+Otter
+Beaver
+Eel
+Fish
+Mill
+Wind
+Water
+Well
+Spring
+Brook
+Burn
+Beck
+Marsh
+Moor
+Fen
+Mere
+Pool
+Lake
+Cold
+Warm
+Sunny
+Dark
+Bright
+Fair
+Foul
+Mud
+Dun
+Ald
+Ber
+Chester
+Ely
+Cran
+Hamble
+Pen
+Tre
+Ux
+Wyn
+Crick
+Ather
+Bas
+Bur
+Ever
+Hather
+Lang
+Mick
+Pick
+Stam
+Twy
+Wim
+
+## place_backs
+# used as: Ash{}  (last element of an English-style place name, lowercase, e.g. ford, wick, mere)
+== all
+ford
+wick
+wich
+mere
+ton
+ham
+by
+thorpe
+thwaite
+stead
+stow
+stoke
+bury
+borough
+burgh
+chester
+caster
+cester
+den
+dean
+dale
+field
+ley
+leigh
+lea
+hurst
+holt
+wood
+grove
+shaw
+well
+wells
+brook
+bourne
+burn
+beck
+bridge
+gate
+moor
+marsh
+fen
+combe
+coombe
+cott
+cote
+worth
+worthy
+wardine
+hithe
+hythe
+haven
+port
+mouth
+ness
+sea
+wold
+don
+down
+downs
+hill
+ridge
+edge
+cliffe
+rock
+stone
+cross
+church
+minster
+kirk
+pool
+water
+mill
+low
+howe
+knoll
+stock
+staple
+ing
+ingham
+ington
+over
+nor
+sett
+side
+hope
+garth
+toft
+
+## modern_place_suffixes
+# used as: Ashford {}  (word(s) after a town name, e.g. Falls, on Sea, Junction)
+== all
+Falls
+on Sea
+Junction
+Springs
+Heights
+Park
+Crossing
+Landing
+Bay
+Harbour
+Bridge
+Green
+Common
+Vale
+Valley
+Ridge
+Hills
+Lakes
+Point
+Creek
+Mills
+Station
+Centre
+Village
+Town
+City
+Gardens
+Estates
+Meadows
+Fields
+Grove
+Woods
+Forest
+Marsh
+Beach
+Sands
+Cove
+Quay
+Wharf
+Docks
+upon Thames
+under Edge
+in the Marsh
+St Mary
+Magna
+Parva
+Regis
+New Town
+Garden City
+Parkway
+Interchange
+Services
+Retail Park
+Business Park
+Industrial Estate
+Spa
+Rapids
+Hollow
+
+## sf_namesakes
+# used as: {} Station  (surname of a real scientist, explorer or engineer, any era and country, now dead)
+== all
+Kepler
+Galileo
+Copernicus
+Newton
+Herschel
+Curie
+Meitner
+Noether
+Lovelace
+Babbage
+Turing
+Hopper
+Franklin
+Hodgkin
+Lonsdale
+Leavitt
+Cannon
+Payne
+Mitchell
+Somerville
+Hypatia
+Germain
+Kovalevskaya
+Gagarin
+Korolev
+Tsiolkovsky
+Leonov
+Komarov
+Armstrong
+Collins
+Shepard
+Glenn
+Ride
+McAuliffe
+Chawla
+Ramon
+Goddard
+Oberth
+Sagan
+Hubble
+Lemaître
+Chandrasekhar
+Raman
+Bose
+Saha
+Ramanujan
+Bhabha
+Sarabhai
+Kalam
+Yukawa
+Tomonaga
+Seki
+Noguchi
+Kitasato
+Ibn Sina
+Al-Biruni
+Al-Khwarizmi
+Ibn al-Haytham
+Al-Battani
+Ulugh Beg
+Tusi
+Khayyam
+Zhang Heng
+Shen Kuo
+Zheng He
+Wu
+Hua
+Abdus Salam
+Hadid
+Banneker
+Carver
+Drew
+Johnson
+Vaughan
+Jackson
+Bouchet
+Imhotep
+Henson
+Shackleton
+Amundsen
+Nansen
+Scott
+Peary
+Bering
+Cook
+Magellan
+Tasman
+Vespucci
+Polo
+Battuta
+Cabot
+Champlain
+Tenzing
+Hillary
+Bird
+Bell
+Kingsley
+Earhart
+Coleman
+Lindbergh
+Brunel
+Telford
+Stephenson
+Watt
+Faraday
+Maxwell
+Edison
+Westinghouse
+Marconi
+Volta
+Ampère
+Ohm
+Fermi
+Bohr
+Heisenberg
+Schrödinger
+Pauli
+Dirac
+Planck
+Einstein
+Rutherford
+Hawking
+Feynman
+Oppenheimer
+Szilard
+Wigner
+Von Neumann
+Lamarr
+Darwin
+Wallace
+Mendel
+Pasteur
+Lister
+Nightingale
+Seacole
+Anning
+Carson
+Fossey
+Humboldt
+Linnaeus
+Celsius
+Lagrange
+Laplace
+Euler
+Gauss
+Riemann
+Hilbert
+Cantor
+Poincaré
+Mirzakhani
+Bolyai
+Lobachevsky
+Mendeleev
+Pavlov
+Lomonosov
+Sklodowska
+Tesla
+Pupin
+Milanković
+Bošković
+Stefan
+Hipparchus
+Ptolemy
+Eratosthenes
+Archimedes
+Euclid
+Aristarchus
+Brahe
+Rømer
+Ørsted
+Bjerknes
+Birkeland
+Ångström
+Nobel
+Arrhenius
+Sievert
+Agnesi
+Bassi
+Levi-Montalcini
+Cajal
+Ochoa
+Houssay
+Leloir
+Chagas
+Cruz
+Santos-Dumont
+Maathai
+Thomson
+Mayer
+
+## sf_place_kinds
+# used as: Kepler {}  (what a space settlement is called, e.g. Station, Deep, Reach)
+== all
+Station
+Deep
+Reach
+Ring
+Hab
+Habitat
+Colony
+Outpost
+Anchorage
+Yards
+Shipyards
+Drydock
+Spindle
+Wheel
+Torus
+Cylinder
+Spire
+Tether
+Elevator
+Terminus
+Relay
+Beacon
+Waypoint
+Crossing
+Gate
+Haven
+Harbour
+Landing
+Base
+Camp
+Dome
+Domes
+Warrens
+Burrow
+Crater
+Rift
+Fields
+Array
+Observatory
+Platform
+Rig
+Refinery
+Foundry
+Works
+Depot
+Exchange
+Market
+Hold
+Keep
+Bastion
+Redoubt
+Lighthouse
+Drift
+Hollow
+Spur
+Rock
+Cluster
+Belt
+Settlement
+Freehold
+Commons
+Cradle
+Arcology
+Orbital
+Ascension
+
+## sf_hopes
+# used as: {}  (a hopeful name for a ship or colony, one to three words, e.g. Second Chance)
+== all
+Second Chance
+New Dawn
+Good Harvest
+Safe Harbour
+Fair Wind
+Long Patience
+Better Days
+Clean Slate
+Homecoming
+Promise Kept
+Open Door
+Kind Landing
+Morning Star
+First Light
+Last Best Hope
+Steady Hand
+Faith in Strangers
+Whole Again
+Plenty
+Bread and Roses
+Common Ground
+Small Mercies
+Golden Mean
+Green Again
+Rain at Last
+Still Here
+Against the Odds
+Room to Breathe
+Every Child Fed
+Welcome Table
+Hearth
+Lantern
+Providence
+Deliverance
+Covenant
+Jubilee
+Concord
+Harmony
+Amity
+Felicity
+Serenity
+Endurance
+Perseverance
+Fortitude
+Resolve
+Tenacity
+Diligence
+Gratitude
+Generosity
+Mercy
+Grace
+Charity
+Temperance
+Constance
+Prosperity
+Bounty
+Abundance
+Fruitful
+Seedbank
+Orchard
+Wellspring
+Fresh Start
+Turning Point
+New Leaf
+Bright Water
+Quiet Shore
+Far Meadow
+Hope Rising
+Unbroken
+Undaunted
+Unafraid
+Ever Onward
+Still Climbing
+Keep Faith
+Hold Fast
+Carry On
+Make Do
+Mend and Make
+Come What May
+All Hands
+Shared Load
+Many Hands
+Built to Last
+Our Own Two Feet
+Patience Rewarded
+Tomorrow's Child
+Grandmother's Garden
+Ninth Life
+Fair Exchange
+Good Neighbour
+Open Sky
+Long Summer
+Spring Thaw
+Daybreak
+Landfall
+Safe Passage
+Welcome Home

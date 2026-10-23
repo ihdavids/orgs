@@ -1,0 +1,3093 @@
+# Word tables for characters and relationships (storygen).
+# Each table's frame is the sentence its entries are dropped into.
+
+## occupations
+# used as: "{name}, 34, a/an {}."  (job, lowercase, no article)
+== all
+cook
+midwife
+gravedigger
+letter-writer [fantasy]
+debt collector
+ferry pilot
+glassblower
+beekeeper
+nurse
+thief
+baker
+carpenter
+schoolteacher
+fisher
+shepherd
+tailor
+butcher
+laundress [fantasy]
+night watchman
+cobbler [fantasy, modern]
+undertaker
+gardener
+brewer
+bookbinder [fantasy, modern]
+potter
+locksmith
+street musician
+dockworker
+moneylender
+fortune-teller
+pickpocket
+widowed shopkeeper
+travelling preacher
+translator
+bodyguard
+wet nurse [fantasy]
+chimney sweep [fantasy]
+saddler [fantasy, modern]
+cartographer's assistant
+housekeeper
+hangman's apprentice [fantasy]
+seamstress
+stonemason
+forger
+pawnbroker
+gambler
+retired soldier
+ship's carpenter [fantasy]
+messenger
+dancer
+painter of portraits
+tutor to a rich family
+cheesemaker
+mortician's assistant
+== fantasy
+hedge witch
+border guard
+relic seller
+falconer
+tax assessor
+mapmaker
+ex-mercenary
+temple novice
+chandler
+river smuggler
+court musician
+rat-catcher
+herbalist
+disgraced knight
+bone-setter
+scribe
+salt merchant
+wandering judge
+stablehand
+inn-keeper's heir
+blacksmith
+alchemist's apprentice
+wyvern keeper
+royal food-taster
+lamplighter
+ferryman of the dead
+bell-ringer
+illuminator of manuscripts
+siege engineer
+tanner
+dyer
+cooper
+miller
+charcoal burner
+swordsmith
+fletcher
+armourer
+toll-bridge keeper
+pilgrim guide
+troubadour
+jester
+herald
+master of hounds
+castle steward
+chamberlain
+lady-in-waiting
+squire
+hedge knight
+witch-finder
+oracle's interpreter
+dream reader
+runecarver
+weather-caller
+grave warden
+monster hunter
+bounty hunter
+cutpurse
+poisoner
+retired assassin
+spy for a foreign court
+glove-maker to the nobility
+ink-maker
+parchment maker
+bard who can't sing
+village elder
+reeve
+bailiff
+abbess
+hermit
+mendicant friar
+heretic in hiding
+inquisitor
+temple archivist
+cloistered astronomer
+court wizard
+failed wizard
+familiar breeder
+potion seller
+apothecary
+leech-doctor
+plague doctor
+midwife to the nobility
+oath-keeper
+shipwright
+pearl diver
+caravan master
+camel driver
+spice trader
+silk merchant
+sword-for-hire
+duellist
+arena fighter
+beast tamer
+mushroom forager
+truffle hunter
+goatherd
+swineherd
+cartwright
+wheelwright
+thatcher
+mason of cathedrals
+gargoyle carver
+stained-glass maker
+clockmaker to the duke
+mapper of the underdark
+tomb robber
+grave-goods dealer
+lich's housekeeper
+dragon-scale polisher
+summoner's apprentice
+banished prince
+pretender to a throne
+royal bastard
+exiled bishop
+bandit chief
+smuggler of holy relics
+debt-slave
+galley oarsman
+lighthouse keeper on a cursed coast
+riddle-keeper
+keeper of the royal menagerie
+hedgerow priest
+storyteller
+puppeteer
+tavern bouncer
+ghost-layer
+ward-sigil painter
+seller of love charms
+eel-catcher
+salt-marsh guide
+== sf
+hull welder
+xenobotanist
+orbital traffic controller
+data broker
+terraforming surveyor
+ship's cook
+salvage diver
+synth technician
+colony magistrate
+freight pilot
+memory archivist
+medic on a mining crew
+union organiser
+customs inspector
+corporate fixer
+comms officer
+hydroponics farmer
+first-contact linguist
+deserter
+ice hauler
+asteroid prospector
+airlock inspector
+cryo-bay attendant
+gene-tailor
+clone wrangler
+android repair tech
+drone swarm operator
+reactor engineer
+navigator
+quartermaster on a generation ship
+station chaplain
+habitat psychologist
+water reclamation tech
+oxygen farmer
+dome glazier
+rover mechanic
+dust-storm forecaster
+planetary geologist
+exobiologist
+quarantine officer
+bounty tracker
+smuggler of seed stock
+black-market surgeon
+cyberneticist
+neural-interface tester
+dream designer
+memory editor
+debt-bonded labourer
+corporate auditor
+mercenary pilot
+fleet admiral who was demoted
+marine on garrison duty
+military AI handler
+drop-ship pilot
+signal analyst
+cryptographer
+VR architect
+holo-performer
+celebrity's body double
+sim-game champion
+orbital elevator operator
+zero-g construction rigger
+tether climber
+solar sail rigger
+cargo loader
+dockmaster
+spaceport bartender
+pleasure-liner steward
+long-haul hibernation monitor
+generation-ship schoolteacher
+seed-vault keeper
+archaeologist of a dead alien city
+artefact appraiser
+alien-language teacher
+embassy aide
+diplomatic interpreter
+envoy to the machine minds
+colonial governor
+union steward on a mining moon
+strike leader
+company-town doctor
+methane miner
+helium-3 harvester
+ring-system pilot
+comet chaser
+deep-space courier
+mail runner between stations
+debris sweeper
+satellite repairer
+weather-control technician
+climate refugee coordinator
+sea-wall engineer
+vertical-farm manager
+lab-meat butcher
+protein-vat cook
+recycling sorter
+scrap dealer
+junkyard roboticist
+patent thief
+corporate spy
+wetware hacker
+encryption breaker
+surveillance analyst
+predictive-policing officer
+parole drone supervisor
+prison-ship guard
+penal-colony foreman
+labour-camp escapee
+war-crimes investigator
+grief counsellor for uploaded minds
+upload technician
+consciousness insurer
+body-swap broker
+organ printer
+prosthetics fitter
+longevity clinic nurse
+centenarian heiress
+child prodigy pilot
+test subject
+lab technician on a moon base
+gravity-well physicist
+wormhole cartographer
+jump-drive mechanic
+FTL calibration tech
+ship's AI's only friend
+telepathy screener
+psi-dampener engineer
+customs dog handler
+xeno-veterinarian
+alien livestock rancher
+terrarium keeper
+crop geneticist
+fungus farmer under the ice
+habitat plumber
+pressure-suit tailor
+vacuum welder
+station mayor
+pirate
+reformed pirate
+salvage-rights lawyer
+interplanetary tax collector
+== modern
+night-shift paramedic
+estate agent
+line cook
+public defender
+high-school chemistry teacher
+crane operator
+wedding photographer
+piano tuner
+insurance investigator
+barista
+retired detective
+app developer
+hospice nurse
+long-haul trucker
+librarian
+forensic accountant
+hairdresser
+vet
+radio host
+plumber
+electrician
+bus driver
+taxi driver
+delivery rider
+warehouse picker
+supermarket cashier
+call-centre worker
+care-home assistant
+primary school teacher
+teaching assistant
+social worker
+probation officer
+police constable
+firefighter
+lifeguard
+dentist
+dental hygienist
+pharmacist
+GP
+A&E consultant
+surgeon
+anaesthetist
+midwife on a labour ward
+physiotherapist
+speech therapist
+psychiatrist
+therapist
+marriage counsellor
+divorce lawyer
+barrister
+paralegal
+court stenographer
+judge
+bailiff for a debt company
+debt adviser
+bank teller
+stockbroker
+hedge-fund analyst
+actuary
+tax inspector
+civil servant
+council planning officer
+parish councillor
+local journalist
+investigative reporter
+news photographer
+copy editor
+literary agent
+novelist
+ghostwriter
+translator of crime fiction
+stand-up comedian
+session musician
+church organist
+choir director
+dance teacher
+personal trainer
+yoga instructor
+football coach
+groundskeeper
+golf caddie
+jockey
+racehorse groom
+dog walker
+dog groomer
+zookeeper
+farmer
+dairy farmer
+fruit picker
+fishmonger
+butcher in a family shop
+baker who opens at four
+restaurant owner
+sommelier
+food critic
+café owner
+pub landlord
+nightclub bouncer
+security guard
+hotel night porter
+cleaner
+window cleaner
+removal man
+scaffolder
+roofer
+bricklayer
+tiler
+painter and decorator
+landscape gardener
+tree surgeon
+car mechanic
+tyre fitter
+used-car salesman
+driving instructor
+airline pilot
+cabin crew
+air traffic controller
+train driver
+ferry deckhand
+oil-rig worker
+offshore wind technician
+lorry mechanic
+civil engineer
+architect
+quantity surveyor
+structural engineer
+software tester
+data scientist
+cybersecurity consultant
+IT support technician
+video-game designer
+content moderator
+social-media manager
+influencer
+PR consultant
+political aide
+charity fundraiser
+campaign volunteer
+vicar
+imam
+rabbi
+funeral director
+embalmer
+coroner's officer
+crime-scene cleaner
+locksmith on call all night
+private investigator
+process server
+bounty hunter for a bail bondsman
+repo man
+pawnshop owner
+antiques dealer
+auctioneer
+art restorer
+museum curator
+archivist
+archaeologist
+university lecturer
+PhD student
+lab technician
+marine biologist
+meteorologist
+park ranger
+mountain rescue volunteer
+lighthouse keeper
+tattoo artist
+nail technician
+barber
+florist
+wedding planner
+estate-sale organiser
+hoarder's house clearer
+interpreter for asylum hearings
+immigration officer
+prison officer
+soldier just back from deployment
+army reservist
+sign-language interpreter
+puppeteer for children's television
+
+## builds
+# used as: "{}, with ink-stained fingers."  (body build or bearing, adjective phrase)
+== all
+tall and stooped
+short and broad
+wiry
+heavy-set and light on their feet
+rail-thin
+round-faced and soft
+barrel-chested
+long-limbed and awkward
+compact and muscular
+plump
+gaunt
+big-boned
+slight
+lanky
+stocky
+broad-shouldered
+narrow-shouldered
+thick-necked
+small and quick
+tall and graceful
+heavy and slow-moving
+bow-legged
+pot-bellied
+willowy
+athletic, going soft
+hunched from desk work
+straight-backed as a soldier
+frail
+sturdy
+delicate-boned
+big and gentle
+fat and proud of it
+muscular in a working way
+thin as a whip
+stout
+leggy
+square-built
+pear-shaped
+top-heavy
+small for their age
+tall for their age
+running to fat
+weathered and lean
+hollow-cheeked
+soft-bellied
+strong-armed
+heavily pregnant
+stiff-jointed
+bent with age
+spry for their years
+loose-limbed
+long-waisted
+short-legged
+built like a door
+built like a heron
+compact as a boxer
+ungainly
+elegant
+rangy
+burly
+bony
+fleshy
+apple-cheeked
+lean as a greyhound
+a wheelchair user with shoulders like a rower
+missing a leg below the knee
+slump-shouldered
+unusually still
+restless in every limb
+small and fierce
+tall and apologetic about it
+thick-waisted
+fine-boned and tough
+
+## looks
+# used as: "Look: {}; ..."  (a physical detail as a noun phrase: 'a crooked nose, broken once', 'ink-stained fingers')
+== all
+a crooked nose, broken once and badly set
+ink-stained fingers
+a laugh too loud for the room
+grey at the temples too early
+one eyebrow cut through by a scar
+hands that never stay still
+clothes a size too big
+a careful, upright way of standing
+freckles everywhere
+a gap between the front teeth
+very pale eyes
+a slow, rolling walk
+close-bitten nails
+a voice lower than you expect
+hair cropped short and uneven
+a faded tattoo on one wrist
+always slightly sunburnt
+a limp worse in the cold
+expensive shoes, worn down
+a smile that arrives late
+deep laugh lines
+a burn scar across the back of one hand
+a missing front tooth
+heavy-lidded eyes
+a wine-stain birthmark on the neck
+one ear that sticks out
+thick, dark eyebrows that meet
+eyes of two different colours
+a nose like a hawk's
+a weak chin hidden in a beard
+a square jaw
+a long, horse-like face
+round spectacles mended with thread
+a shaved head
+hair down to the waist
+tight grey curls
+a widow's peak
+a bald spot they try to hide
+dreadlocks tied back with string
+a single long plait
+hair dyed a colour it never was
+a white streak through dark hair
+salt-and-pepper stubble
+a beard trimmed to the millimetre [sf, modern]
+a moustache from another decade
+smooth, unlined skin at sixty
+a face older than its years
+dark brown skin with a sheen of sweat
+olive skin and bitten lips
+pale, blue-veined wrists
+a scattering of moles on one cheek
+acne scars across both cheeks
+pockmarked skin
+a cleft lip, neatly repaired
+a lazy eye
+a squint
+a glass eye that doesn't quite match
+a hearing aid, often switched off [sf, modern]
+calloused palms
+long, elegant fingers
+stubby fingers
+a missing little finger
+knuckles swollen with arthritis
+nails painted and chipped
+dirt under the nails, always
+a wedding ring worn on a chain
+a signet ring too big for the finger
+rough red hands
+soft hands that have never worked
+a tremor in the right hand
+a scar from ear to jaw
+a nose broken more than once
+cauliflower ears
+a split lip, healing
+a black eye, fading yellow
+a cast on one arm [sf, modern]
+a walking stick they don't need
+a walking stick they do need
+a stoop
+a duck-footed walk
+a soldier's stride
+a way of walking as if late
+a way of sitting on the edge of chairs
+perfect posture
+slumped shoulders
+a head always tilted, listening
+hands always in pockets
+arms folded, always
+a nervous blink
+a tic at the corner of the mouth
+a wide, crooked grin
+a smile that shows no teeth
+very white, very straight teeth
+crooked teeth
+a gold tooth
+dimples
+a double chin
+sharp cheekbones
+heavy jowls
+a pointed chin
+a flat, broad nose
+a turned-up nose
+thin lips
+full lips
+ears pierced many times
+a stretched earlobe
+a ring through one eyebrow
+a tattoo of a name, crossed out
+a tattoo they won't explain
+a sleeve of faded tattoos
+freckled shoulders
+a sunburnt neck
+a farmer's tan
+pale as paper
+rosy cheeks
+a permanent flush
+dark circles under the eyes
+eyes that water in wind
+eyes the colour of weak tea
+very dark, very still eyes
+long eyelashes
+no eyebrows to speak of
+a bushy beard with crumbs in it
+a neat little goatee
+hair that sticks up at the back
+hair slicked flat
+a hat, always, even indoors
+a scarf in every weather
+the same coat every day
+a coat with too many pockets
+clothes ironed to a crease
+clothes that have been slept in
+mismatched socks
+bare feet whenever possible
+boots polished to a shine
+boots held together with tape [sf, modern]
+a uniform worn out of habit
+clothes from a dead relative
+a cardigan with holes at the elbows [sf, modern]
+a single earring
+a locket that never opens
+a cheap watch on an expensive wrist [sf, modern]
+the smell of tobacco
+the smell of soap
+the smell of horses [fantasy, modern]
+a faint smell of oil
+a sweet smell of cloves
+a cough that never clears
+a lisp
+a stammer that comes and goes
+a hoarse voice
+a voice like a child's
+a booming voice
+a whisper of a voice
+a sing-song accent
+a regional accent they've tried to lose
+a habit of touching a scar
+a face that's hard to remember
+a face you'd trust
+a face that looks permanently amused
+a face that looks permanently worried
+an open, sunny face
+a resting scowl
+a big belly and small hands
+a thick neck and a soft voice
+huge feet
+tiny, neat feet
+hands too big for the body
+a body full of old breaks
+skin weathered like leather
+liver spots on the backs of the hands
+the hands of a pianist [sf, modern]
+the shoulders of a swimmer
+the knees of a gardener
+the build of a jockey
+a chipped front tooth
+a scar through the lip
+stitches still in the scalp
+a neck brace [sf, modern]
+a missing earlobe
+an eyepatch
+fingers yellowed by smoke
+a front tooth that's slightly grey
+hair greying in one patch
+a face scrubbed raw
+make-up applied with great care
+no make-up, ever
+eyebrows drawn on
+a fresh haircut, badly done
+a tan line where a ring used to be
+== fantasy
+a ring on every finger
+the smell of woodsmoke
+a cloak mended many times
+hair braided with copper wire
+one milky eye
+a brand on the shoulder
+a guild mark tattooed on the palm
+pointed ears, clipped short
+eyes that catch the light like a cat's
+silver hair at twenty
+a holy symbol worn smooth by thumbs
+a sword belt with no sword
+a hand burned by a spell gone wrong
+a tongue stained blue by herbs
+blackened fingertips from alchemy
+a beard woven with bones
+a circlet they shouldn't own
+a nobleman's boots on a beggar
+a tonsure growing out
+a face painted for a festival
+a necklace of teeth
+a falconer's glove, always on
+rope scars on the wrists
+a slave collar's pale ring on the neck
+hair cropped as penance
+a veil
+a hood never lowered
+skin faintly scaled at the throat
+a third eye, closed and tattooed shut
+wolf-grey eyes
+a hand that's colder than it should be
+a shadow that lags a little
+a scar shaped like a rune
+a bandage that never comes off
+breath that smells of iron
+fingers stained with saffron
+a pilgrim's shell sewn on the hat
+armour polished but dented
+chainmail rusted at the joints
+a fur cloak too warm for the season
+a court dress three seasons out of date
+a jester's bell on one boot
+a quill behind the ear
+a pouch of herbs at the belt
+a mapmaker's squint
+a sailor's tar-black hands
+a smith's forearms
+a miller's floury eyebrows
+wax-stained sleeves
+a necklace of old coins
+a staff carved with names
+a lute strapped across the back
+eyes that change colour with the weather
+teeth filed to points
+a crown-shaped scar on the forehead
+dried blood on the cuffs
+a cloak of patched-together feathers
+a wooden hand
+moss growing in the beard
+a dragon-tooth earring
+an oath-cord tied around one wrist
+== sf
+a cheap ocular implant that flickers
+spacer's pallor
+a shaved head with an old port behind the ear
+mag-boot calluses
+a pressure-suit tan line
+a prosthetic arm in bare metal
+a skin-tone prosthetic that doesn't quite match
+a barcode tattooed behind the ear
+long bones from a low-g childhood
+a heavy-world stockiness
+radiation freckles
+skin grafts on the cheek
+eyes too perfect to be original
+a voice modulator at the throat
+a subdermal display glowing under the wrist
+lenses that turn the eyes silver
+hair grown in a lab colour
+an air filter worn around the neck
+an old ration-bar paleness
+vacuum-burn scars on the hands
+ears popped too many times
+a slight sway from years on ships
+a uniform with the insignia unpicked
+a company jumpsuit, faded
+a flight jacket with mission patches
+a neural crown hidden under a hat
+a gene-mod tint to the skin
+gills scarred shut
+night-adapted eyes behind dark glasses
+tremors from cryo-sickness
+fingertips worn smooth from touchscreens
+a cooling vest under the shirt
+a respirator mask pushed up on the forehead
+a nosebleed that comes with gravity changes
+a medical tag clipped to the collar
+corporate-standard teeth
+an augmented jaw that clicks
+a face rebuilt after an accident
+a perfectly symmetrical face, bought
+an anti-surveillance face paint
+a hood lined against scanners
+a tracker anklet
+a wrist screen cracked down the middle
+earbuds that never come out
+an implant scar along the hairline
+old-fashioned paper glasses, as a statement
+a borrowed body that doesn't fit their walk
+a clone's unlined hands
+skin flushed from a stim habit
+pupils that don't react to light
+a breathing tube taped to the cheek
+a station-born stoop under gravity
+hair that floats a little, out of habit
+a smell of ozone
+a smell of recycled air
+hands blue from cold-storage work
+a ceremonial alien scar
+synthetic skin peeling at the knuckles
+a lightweight exoskeleton at the knees
+a sleeve of glowing ink
+a face tattoo of a defunct colony's flag
+an eye replaced with a camera lens
+== modern
+reading glasses pushed up into the hair
+a phone screen cracked corner to corner
+a hi-vis jacket over a good suit
+running shoes with everything
+a lanyard they forget to take off
+paint on their jeans
+a fitness tracker and a cigarette
+a nose ring and a cardigan
+a suit that cost more than a car
+a charity-shop suit, well chosen
+scrubs under a winter coat
+a football shirt, every day
+headphones round the neck
+a tote bag full of papers
+a baby sling, empty
+a cycle helmet clipped to the bag
+chef's whites with a burn on the sleeve
+gym clothes at all hours
+a fake tan and real tiredness
+a fresh tattoo still in cling film
+blue-light glasses
+a bluetooth earpiece that blinks
+a hoodie with the strings chewed
+a name badge with someone else's name
+a hospital wristband they haven't cut off
+lip filler, slightly overdone
+veneers too white for the face
+greying hair dyed at home
+a man bun
+a buzz cut grown out
+box braids
+a silk headscarf
+a turban, immaculate
+a hijab pinned with care
+a kippah held on with a clip
+a crucifix on a thin chain
+a wedding ring and a pale band beside it
+dirty trainers and a clean shirt
+a work fleece with the logo peeling
+a stab vest
+a nurse's watch pinned upside down
+a lawyer's tired eyes and good shoes
+a builder's hands and a poet's scarf
+hair smelling of the chip shop
+a smoker's voice and nicotine gum
+an oversized parka
+a padded jacket in July
+a vintage dress from a market stall
+an engagement ring they twist constantly
+a sports bandage on one knee
+a scar from a knee replacement
+a chewed biro behind the ear
+nail varnish half picked off
+a cast covered in signatures
+a lanyard full of keys
+a smartwatch they check every minute
+a carrier bag instead of a briefcase
+a uniform cap folded in a back pocket
+a faded festival wristband
+a hearing loop and a quick smile
+
+## manners
+# used as: "{name} {}."  (third person verb phrase or adjective phrase, how they behave: 'answers questions with questions')
+== all
+answers questions with questions
+apologises constantly
+never sits with their back to a door
+hums when nervous
+remembers everyone's name
+speaks in short, flat sentences
+tells long stories that go nowhere
+jokes at the worst moments
+is unfailingly polite to people they despise
+touches people's arms when talking
+goes very still when angry
+corrects other people's grammar
+stands too close
+counts things under their breath
+is generous to strangers and mean to friends
+swears inventively
+goes quiet in groups
+laughs before the punchline
+can't stand silence
+interrupts, then apologises, then interrupts again
+listens with their whole face
+looks at the floor when lying
+looks you dead in the eye when lying
+agrees with everyone and does what they like
+never says thank you, but always remembers a favour
+treats waiters better than bosses [sf, modern]
+treats bosses better than waiters [sf, modern]
+gives advice nobody asked for
+asks about your mother by name
+flirts with everyone, meaning nothing
+never flirts, and is baffled when others do
+fills every pause with a question
+waits a long time before answering
+talks with their hands
+keeps their hands folded on the table
+fidgets with whatever is nearest
+shakes hands too hard
+won't shake hands at all
+hugs people they've just met
+keeps everyone at arm's length
+calls everyone love
+calls everyone by their surname
+uses nicknames nobody else uses
+gets your name slightly wrong, every time
+laughs at their own jokes
+never laughs, but smiles with the eyes
+cries easily and isn't ashamed of it
+hasn't cried in front of anyone in twenty years
+argues for sport
+avoids every argument, even necessary ones
+takes offence where none was meant
+can't take a compliment
+fishes for compliments shamelessly
+brags about small things and hides big ones
+underplays everything
+exaggerates every story a little more each telling
+quotes scripture, or something like it
+quotes their dead father
+speaks of themselves in the third person when cross
+is relentlessly cheerful in a crisis
+falls apart over small things and holds firm over big ones
+always has a plan, rarely a good one
+makes decisions instantly and never revisits them
+can't choose from a menu [sf, modern]
+orders for other people
+eats off other people's plates
+never eats in front of others
+cleans up while others are still eating
+leaves without saying goodbye
+says goodbye three times before leaving
+is always the last to leave a party
+is first out of any room that gets tense
+keeps checking the exits
+sits facing the window
+reads other people's letters upside down
+is nosy and makes no secret of it
+pretends not to listen and hears everything
+repeats the last words of what you said
+finishes other people's sentences
+never finishes their own sentences
+loses track mid-story and starts another
+speaks to children as equals
+speaks to adults as if they were children
+is shy until the second drink
+is loud until the second drink, then sad
+gets formal when frightened
+gets silly when frightened
+gets very practical in an emergency
+has an opinion on everything and changes it daily
+holds grudges with care, like heirlooms
+forgives quickly and forgets nothing
+keeps score in every friendship
+lends money and never asks for it back
+borrows things and forgets them
+returns borrowed things cleaner than they were
+is suspicious of kindness
+mistakes politeness for affection
+mistakes rudeness for honesty
+tells the truth even when it costs them
+lies when the truth would do just as well
+is charming to a degree that makes people uneasy
+makes people feel like the only person in the room
+makes people feel faintly judged
+is easy to underestimate and likes it that way
+works hard to seem casual
+works hard to seem busy
+always seems to be on the way somewhere else
+is never in a hurry, even when they should be
+is punctual to the minute
+is late to everything, cheerfully
+takes charge without being asked
+waits to be told what to do
+volunteers for everything and finishes nothing
+quietly does the jobs nobody wants
+picks fights with people bigger than them
+backs down the moment anyone pushes
+is gentle with animals and short with people
+talks to animals in a different voice
+mimics accents without meaning to
+picks up other people's phrases
+mispronounces words they've only read
+uses long words slightly wrong
+explains things nobody asked about
+says sorry when someone else bumps into them
+blames the weather for everything
+blames themselves for everything
+takes credit easily and blame poorly
+deflects every personal question
+overshares with strangers
+treats every conversation as a negotiation
+haggles even when the price is fixed
+pays for everyone and resents it later
+always offers to pay and never has their wallet [sf, modern]
+remembers birthdays and forgets anniversaries
+is sentimental about objects and cool about people
+keeps a straight face through anything
+blushes at the slightest thing
+goes pale instead of red
+laughs too long at other people's jokes
+claps once, sharply, when pleased
+sighs before every answer
+starts every sentence with "honestly"
+says "we'll see" and means no
+says yes to everything and turns up to half
+asks permission for small things and none for big ones
+has perfect manners and uses them as a weapon
+is rude to everyone equally, which some find restful
+treats strangers like old friends
+treats old friends like strangers after a slight
+watches people the way a cat watches birds
+smiles at babies on buses [sf, modern]
+gives up their seat with a flourish
+is kind in private and brusque in public
+is brusque in private and charming in public
+prays before meals, quietly, even alone
+crosses themselves at funerals and near dogs [sf, modern]
+is superstitious and pretends otherwise
+is a stickler for rules that don't matter
+ignores rules that do
+won't sit still in meetings
+sits so still people forget they're there
+paces when thinking
+thinks aloud
+writes notes during conversations
+tidies other people's desks
+straightens pictures in strangers' houses
+looks at their own reflection mid-sentence
+avoids mirrors
+is mortally afraid of being a bother
+assumes they're welcome everywhere
+gives presents too big for the occasion
+never gives presents but always comes when called
+can't keep a secret but keeps their own
+tells everyone everything except what matters
+is warm with the sick and awkward with the grieving
+is good at funerals and bad at weddings
+goes out of their way to be fair to people they dislike
+sides with the underdog by reflex
+admires power and won't admit it
+sneers at money and counts it carefully
+is courteous to a fault, and the fault is coldness
+is endlessly patient with machines and none with people [sf, modern]
+pretends to be busier than they are
+pretends to be stupider than they are
+pretends to understand when they don't
+asks the obvious question everyone else was afraid to
+nods along, then does the opposite
+keeps people waiting on purpose
+answers letters the day they arrive
+doesn't answer messages for weeks
+is chatty in the morning and silent by night
+comes alive after midnight
+puts their feet on other people's furniture
+takes their shoes off in other people's houses
+sniffs food before eating it
+can't resist touching things in shops
+kneels to talk to children and dogs
+makes eye contact for slightly too long
+won't make eye contact at all
+treats every setback as a personal insult
+treats every setback as a joke
+whistles while they work, badly
+narrates what they're doing as they do it
+is ruthlessly honest about others and blind about themselves
+argues with the radio [sf, modern]
+salutes things that don't need saluting
+mothers everyone, whatever their age
+speaks very softly so people lean in
+leaves conversations at the best moment
+
+## voices
+# used as: "Speaks {}."  (how they talk: 'slowly, as if paying by the word')
+== all
+slowly, as if paying by the word
+quickly, in long breathless runs
+softly, so people lean in
+loudly, as if across a field
+in a flat, careful monotone
+with a stammer that vanishes when angry
+with a lisp they've stopped minding
+in a voice hoarse from shouting
+with a smoker's rasp
+in a high, sweet voice that surprises people
+in a bass rumble you feel in your chest
+with an accent from somewhere nobody's heard of
+in an accent they've worked hard to lose
+in a borrowed posh accent that slips when tired
+in the clipped way of an old soldier
+like a schoolteacher, waiting for the class to settle
+like a salesman, never quite stopping
+like a preacher, building to something
+like a child reciting a lesson
+like someone reading from a script
+in questions, mostly
+in proverbs, half of them made up
+in long, perfect sentences with semicolons
+in fragments, never finishing a thought
+in a whisper, even when it isn't needed
+in bursts, with long silences between
+with a laugh tucked into every sentence
+without ever raising their voice
+with every sentence rising at the end
+with a drawl that makes everything sound like a joke
+precisely, pronouncing every consonant
+with a mouth full of food, usually
+through their teeth
+around a pipe stem
+with a lot of sighing
+in a sing-song lilt
+with a nervous little cough before each answer
+with too many apologies
+with a tremor that wasn't there last year
+with the pauses of someone translating in their head
+in two languages at once
+in slang a decade out of date
+in jargon nobody else understands
+with old-fashioned courtesy
+bluntly, with no softening at all
+gently, as if to a frightened horse
+coldly, choosing each word
+warmly, like an old friend
+with exaggerated patience
+as if everything were confidential
+as if they'd been interrupted, even when they hadn't
+as if they'd rehearsed it
+as if every sentence might be their last
+as if they're doing you a favour
+in a murmur that drops at the ends of sentences
+in a booming voice that fills the room
+with a catch in the throat on certain names
+with a giggle they can't control
+in a low, dry deadpan
+like a sports commentator [sf, modern]
+like someone giving evidence
+like someone telling a bedtime story
+with a hint of a lisp on the letter s
+with long, thoughtful vowels
+very fast when lying
+very slowly when lying
+in the third person, sometimes
+mostly in quotations from books
+in rhyme when drunk
+with a regional burr
+with a foreign lilt, though born here
+with a voice cracked from singing
+huskily, after years of shouting orders
+in a reedy, uncertain tenor
+with a rich contralto that stops conversations
+in a voice too young for their face
+in a voice too old for their face
+with a whistle through a missing tooth
+with a mumble that hides how clever they are
+in formal phrases, as if writing a letter
+with endless qualifications and caveats
+in absolutes, never maybe
+with a huff of breath before disagreeing
+with a smile you can hear
+with a sneer you can hear
+as if reading the weather forecast [sf, modern]
+like a nurse, calm and practical
+like a bored civil servant [sf, modern]
+like an auctioneer, building pace
+like a magician, distracting you
+with their eyes closed, sometimes
+to the floor, never to your face
+over your shoulder, to someone who isn't there
+with a long wind-up before the point
+straight to the point and no further
+in technical terms, then translates
+with sudden bursts of swearing
+without contractions, very properly
+like someone who learned the language from old films [sf, modern]
+with the lazy vowels of the south
+with the hard consonants of the north
+in a voice ruined by a fire
+with a slight echo of a lost accent
+carefully, as if the room were bugged [sf, modern]
+cheerfully, whatever the news
+grimly, whatever the news
+like a radio announcer, rounded and warm [sf, modern]
+like someone used to being obeyed
+like someone used to being ignored
+
+## wants
+# used as: "Wants {}."  ('to buy back the family home', 'revenge, slowly'); sections: all, lead, antagonist, supporting
+== all
+to be forgiven by someone who is dead
+to buy back the family home
+to get a sibling out of trouble
+to be taken seriously
+to leave and never come back
+to find out who their father was
+to win, just once
+a quiet life, and can't have one
+to make up for one bad night years ago
+to be loved without having to earn it
+to finish the work a mentor started
+to prove an old rumour about them true
+revenge, slowly
+to keep a promise they regret making
+to be somewhere else
+to see the sea before they die
+to be left alone
+to be the one people call first
+to pay off a debt they inherited
+to get their child back
+to be famous for the right thing
+to be forgotten by the wrong people
+to retire somewhere warm
+to make their mother proud, though she's gone
+to make their father sorry
+to be the best at one thing
+to understand why it happened
+to sleep through the night
+to stop being afraid
+to fall in love before it's too late
+to get out of a marriage without hurting anyone
+to keep the marriage together for the children
+to own something outright
+to be believed
+to say sorry and have it accepted
+to hear one particular person say sorry
+to get back to who they were before
+to start over under a new name
+to go home, if home still exists
+to find a place they belong
+to know what the letter said
+to be paid what they're owed
+to be good, and isn't sure how
+to be thought of as kind
+to outlive a rival
+to beat a rival fairly
+to beat a rival by any means
+to marry for love against everyone's advice
+to marry for money and not feel bad about it
+a child
+to stop wanting a child
+to be needed again
+to stop being needed for five minutes
+to get through the winter
+to see their name in print
+to see their name on a door
+to put a building up that will outlast them
+to learn to read
+to learn the truth about their own past
+to bury someone properly
+to find the body
+to protect the family secret
+to tell the family secret at last
+to save the farm
+to save the shop
+to sell the shop and go travelling
+to keep their younger sibling from making their mistakes
+to be young again, for one evening
+to grow old with someone
+to be remembered as better than they were
+to give the money away before anyone finds it
+to keep the money and keep quiet
+to win back a friend they betrayed
+to be invited
+to be forgiven by their children
+to forgive their parents
+to escape the family business
+to inherit the family business
+to make something beautiful
+to make something useful
+to be thanked, publicly, just once
+a dog
+a home with a door that locks
+to be safe
+to feel something again
+to stop feeling so much
+to tell someone the truth about the night of the accident
+to keep a dying friend company to the end
+to see justice done, or at least something like it
+to be the hero of their own story
+to get away with it
+to stop getting away with it
+to get caught, secretly
+to know they mattered
+to change one decision
+to read every book in a particular library
+to finish a long journey their grandparent began
+to see a particular face again
+to be beautiful, or at least to be looked at
+to be invisible
+to pass for someone else
+to be accepted by people who once laughed at them
+to take care of an ageing parent without losing themselves
+to put a ghost to rest
+to repay a kindness from long ago
+to win a bet they made at seventeen
+to break a family curse, real or not
+to keep their hands busy so their mind stays quiet
+to be free of an old vow
+to buy their freedom
+to buy someone else's freedom
+to get one more season out of the boat
+to keep a dying trade alive
+to make one perfect thing
+to stop drinking
+to drink without consequences
+peace with their brother
+peace with God, or whatever stands in for God
+to find a cure
+to raise the money by the end of the month
+to marry off a difficult child
+to see a grandchild born
+to clear a debt of honour
+to be good enough
+to be better than good enough
+to know whether they were loved
+to hold a position no one like them has held
+to make the powerful afraid
+to make the powerful laugh
+to win an argument that ended twenty years ago
+to keep a garden alive through a drought
+to bring the band back together [sf, modern]
+to finish the book
+to burn the book
+to find a lost recording of their mother's voice [sf, modern]
+to get even with a teacher
+to stay out of prison
+to get someone else out of prison
+to escape a reputation
+to live up to a reputation
+to be loved by a whole room
+to stop running
+to keep moving
+a second chance with someone who gave them a first
+to be asked, instead of told
+to see what's on the other side
+to keep a child from learning the truth
+a friend who won't leave
+to be the one who leaves, for once
+to hold on to a house full of memories
+to empty a house full of memories
+to dance at their own child's wedding
+to keep the peace at any cost
+to win, whatever it costs
+to be useful in a crisis
+to win their father's watch back at cards
+a grave with their real name on it
+to do one brave thing
+to stop someone else's mistake becoming their own
+to give their life a shape
+their old job back
+the last word
+to be understood by one person
+to see a wrong put right in their lifetime
+to make peace with a body that's failing
+to grow something that outlives them
+to be one of the good ones
+fresh air and no questions
+a fortune, and a quiet way to spend it
+to escape the town without ever leaving it
+to prove that it wasn't their fault
+to admit that it was their fault
+someone to blame
+to be on the right side when it's over
+to repair what they broke
+to be trusted with something important
+== lead
+to clear their name
+to find someone who vanished
+to stop what they started
+to protect a child who isn't theirs
+to get the truth out before it's buried
+to find out who killed their friend
+to bring a stolen thing home
+to get everyone out alive
+to hold the town together until help arrives
+to finish what their mother died trying to do
+to stop a war no one else believes is coming
+to find the person who wrote the letters
+to keep a promise made to a dying stranger
+to break someone out
+to expose the lie everyone lives by
+to get home before it's too late
+to prove they're more than their worst mistake
+to learn who they really are
+to rescue someone who doesn't want rescuing
+to keep their crew together
+to win back the trust of the people they let down
+to beat the clock
+to protect a secret that could save lives
+to deliver a message across a hostile country
+to stand up, just once, when it counts
+to keep a witness alive until the trial
+to undo a bargain they made in desperation
+to bring a murderer to justice without becoming one
+to save a place that's being erased
+to stop a friend from becoming a monster
+to find a missing sister
+to reach the coast before the borders close
+to survive the season and come out still themselves
+to live up to the name they were given
+to make an enemy into an ally
+to find a way home for someone who's lost
+to win a contest that's rigged against them
+to tell the story the right way
+to choose between duty and the person they love
+to find the cure before the city falls
+to prove the dead man was innocent
+to stop being the one who runs
+to keep their family fed without crossing a line
+to find out what really happened on the expedition
+to pay their way out of an old debt with one last job
+to wake someone up from a long sleep
+to bring down the people who ruined their family
+to keep a fragile peace from breaking
+to stay honest in a dishonest trade
+to be the person their child thinks they are
+to find the map their grandfather hid
+to carry a burden no one else will
+== antagonist
+to take back what was stolen from them
+order, at any price
+to be feared as they were once mocked
+to save everyone, whether they like it or not
+to be remembered
+to burn down the thing that made them
+to protect their family, even if every other family suffers
+to rebuild the world as it was before the fall
+to end suffering, and has decided how
+to be acknowledged as the rightful heir
+to make the people who ignored them understand
+to prevent a greater catastrophe they alone foresee
+to purge the corruption, starting with the corrupt
+to win back a lost child, at any price
+to bring back someone from the dead
+to live forever, because they've seen what dying is like
+to keep the old ways from being forgotten
+to drag the old ways into the grave
+to punish the city that let their family starve
+to keep power, because they truly believe no one else can hold it
+to prove they were right all along
+to correct a mistake history made
+to be loved by the crowd, whatever it takes
+to never be poor again
+to make sure no one else goes through what they did
+to tear down a system they once served faithfully
+to make an example of the hero
+to finish the work their master was killed for
+to protect a secret that would ruin their god
+to unite the country, by force if need be
+to make the strong pay
+to make the weak stop dragging everyone down
+to buy the whole town, street by street
+to be free of every obligation and every person
+to win the war their father lost
+to see the prophecy fulfilled, exactly as written
+to stop the prophecy, even if the cure is worse
+to get back the years prison took from them
+to hold on to the one thing they've built
+to clean the streets, and decides who counts as dirt
+to keep the peace by keeping everyone afraid
+to be the last one standing
+to silence the one witness left
+to make a monster of the hero, as they were made
+to be chosen, after being passed over all their life
+to rescue their people from a slow decline nobody else sees
+to tear the truth out of everyone, whatever it costs
+to undo the treaty that shamed their nation
+to prove that anyone can be bought
+to keep a promise to a dead lover
+to replace the gods
+to inherit the earth before the meek do
+to make their own child into their successor, willing or not
+to stop a change they believe will destroy everything
+to own the future outright
+to make sure no one ever leaves them again
+to win a game only they know is being played
+to be thanked for the terrible things they've done
+to restore the honour of a fallen house
+to keep the colony alive by deciding who doesn't eat [fantasy, sf]
+to repay a betrayal in kind
+== supporting
+to be thanked for once
+to stay out of it
+to keep the business afloat
+to be part of something
+to get paid and go home
+to be asked to come along
+to keep their head down until it's over
+to be the one who saves the day for once
+to protect the lead from themselves
+to impress someone in the group
+to get out of debt to the wrong people
+to keep a friend from finding out what they did
+to find a husband or a wife, ideally this week
+to make sure everyone eats
+to keep the peace between the others
+to be promoted
+to be noticed by their hero
+to see what all the fuss is about
+to finish their shift
+to settle an old score with someone on the other side
+to learn the trade from the best
+to win a bet about how this ends
+to keep the inn open through the trouble [fantasy, modern]
+to get their cut
+to make sure the kids are all right
+to retire, with a gold watch or without one [sf, modern]
+to be useful
+to stay loyal to a friend who doesn't deserve it
+to escape their own family for a while
+to have a story to tell afterwards
+to be invited back
+to keep their pet alive through all this
+to make their small shop famous
+to sell a few things along the way
+to prove they're not just comic relief
+to finally say what they think
+to be forgiven for something no one remembers
+to be left a little something in the will
+to find out what's going on, out of plain nosiness
+to be braver than they were last time
+to get the gossip first
+to know they made a difference
+to marry the boss's child
+to see their old commander one last time
+to keep doing the job they love, whatever happens
+to stop the lead from repeating their mistake
+to get to the end without being noticed
+to earn back their old place in the crew
+to bring their brother home
+to cook one decent meal for everyone
+
+## fears
+# used as: "Afraid of {}."  (noun or -ing phrase)
+== all
+deep water
+being forgotten
+turning into their mother
+turning into their father
+hospitals
+being found out
+the dark, still
+losing their memory
+crowds
+their own temper
+being needed
+being alone at night
+heights
+dogs
+debt
+being touched
+failing in public
+the sea
+being ordinary
+fire
+having already wasted it
+small spaces
+open spaces
+spiders
+birds, especially large ones
+horses [fantasy, modern]
+thunder
+the telephone ringing late at night [sf, modern]
+letters with official stamps
+doctors
+dentists [sf, modern]
+needles
+blood
+vomiting
+illness, theirs or anyone's
+growing old
+dying before they've done anything
+dying alone
+outliving everyone
+being buried alive
+graveyards
+ghosts, though they say they don't believe
+the house they grew up in
+their own reflection
+silence
+loud noises
+being laughed at
+being pitied
+being ignored
+being looked at
+speaking in public
+making the wrong choice
+choosing at all
+commitment
+abandonment
+being left behind
+being the one who leaves
+poverty
+going back to how things were
+success, oddly
+being happy, in case it ends
+their father's voice
+the police [sf, modern]
+officials of any kind
+being questioned
+being trusted
+disappointing a child
+having children
+never having children
+losing a child
+losing their faith
+finding out God is real
+the woods after dark
+the countryside
+cities
+bridges
+tunnels
+lifts [sf, modern]
+flying [sf, modern]
+falling
+sleep, and what comes in it
+dreams that repeat
+waking up somewhere strange
+madness running in the family
+their own thoughts
+being alone with themselves
+being bored
+change
+nothing ever changing
+the future
+the past catching up
+one particular person
+someone they've never met coming back
+being recognised
+being replaced
+being found wanting
+losing their looks
+losing their hands
+losing their sight
+going deaf
+going mad slowly
+cancer
+pain
+other people's pain
+violence
+their own capacity for violence
+guns [sf, modern]
+knives
+cars [sf, modern]
+the sound of sirens [sf, modern]
+storms at sea
+ice on a lake
+mud
+snakes
+rats
+insects in the food
+germs [sf, modern]
+dirt
+mess
+mirrors in dark rooms
+masks
+clowns
+dolls
+the colour red
+the number thirteen
+wasting food
+wasting time
+running out of money
+running out of time
+getting what they want
+not getting what they want
+love
+being loved and not deserving it
+their own cowardice
+being a hypocrite
+being told the truth
+the truth coming out
+saying the wrong thing
+saying nothing when it mattered
+hurting someone without meaning to
+being like everyone else
+standing out
+being forgotten by their children
+being remembered for the wrong thing
+being seen crying
+crying and not being able to stop
+weddings
+funerals
+birthdays
+Christmas [modern]
+the anniversary of a death
+an empty house
+a full house
+strangers at the door
+knocking at night
+footsteps behind them
+being followed
+being watched
+being photographed [sf, modern]
+being written about
+paperwork
+machines that think [sf, modern]
+the sky, if they look up too long
+the stars
+the old gods
+the new gods
+the dead coming back
+the dead not coming back
+the person they were at twenty
+becoming bitter
+becoming soft
+having peaked
+
+## strengths
+# used as: "{}, but proud."  (a virtue, adjective phrase: 'loyal', 'brave when it matters')
+== all
+loyal
+unflappable
+kind to animals and children
+brilliant with their hands
+a good listener
+brave when it matters
+funny
+patient
+honest to a fault
+resourceful
+observant
+quick to forgive
+a natural leader
+relentless
+good with money
+persuasive
+steady under pressure
+curious
+a fine cook
+generous
+gentle
+fair-minded
+hard-working
+clever
+wise beyond their years
+practical
+calm in a crisis
+good in a fight
+quick-witted
+determined
+disciplined
+modest
+cheerful
+warm-hearted
+dependable
+punctual to the minute
+tactful
+discreet
+good at keeping secrets
+a born teacher
+good with the dying
+good with the newly bereaved
+good with machines [sf, modern]
+good with horses [fantasy, modern]
+good with numbers
+good at reading people
+a gifted mimic
+a fine singer
+a natural storyteller
+a talented artist
+a strong swimmer
+tireless
+tough
+hardy
+strong as an ox
+light on their feet
+a quick study
+a gifted linguist
+endlessly forgiving
+devoted to their family
+devoted to their friends
+true to their word
+principled
+idealistic
+hopeful against all evidence
+optimistic
+humble
+open-minded
+tolerant
+humane
+compassionate
+empathetic
+sensitive to others' moods
+diplomatic
+charming
+charismatic
+witty
+imaginative
+inventive
+creative
+artistic
+musical
+well read
+learned
+methodical
+meticulous
+thorough
+organised
+efficient
+frugal
+thrifty
+self-reliant
+independent
+adventurous
+bold
+daring
+fearless with heights
+fearless with words
+unshockable
+unselfish
+self-sacrificing
+protective
+nurturing
+good with children
+good with difficult people
+good at saying no
+good at apologising
+quick to admit a mistake
+uncomplaining
+stoic
+resilient
+hard to discourage
+hard to fool
+shrewd
+canny
+street-smart
+worldly
+experienced
+skilled in a dying craft
+a superb shot
+a fast runner
+a steady hand with a needle
+a natural with plants
+a good judge of character
+a peacemaker
+a good neighbour
+a faithful correspondent
+the kind of friend who turns up with soup
+good in a kitchen and better at a table
+reliable in small things and great ones
+willing to go first
+willing to wait
+gracious in defeat
+gracious in victory
+good-humoured about their own failings
+selfless with credit
+quietly generous
+truthful even when it hurts
+brave about pain
+clear-eyed
+unpretentious
+
+## flaws
+# used as: "Loyal, but {}."  (a vice, adjective phrase: 'jealous', 'a liar of small things')
+== all
+proud
+jealous
+reckless
+a liar of small things
+cowardly in the moment
+cruel when cornered
+stubborn past reason
+vain
+greedy
+unable to say no
+quick to judge
+self-pitying
+a gossip
+secretive
+lazy
+hot-tempered
+naive
+controlling
+a drinker
+unable to apologise
+arrogant
+boastful
+envious
+petty
+spiteful
+vindictive
+resentful
+bitter about old wounds
+suspicious of everyone
+paranoid
+anxious to the point of paralysis
+indecisive
+impulsive
+impatient
+rude
+tactless
+blunt to the point of cruelty
+sharp-tongued
+sarcastic
+cynical
+pessimistic
+gloomy
+moody
+sulky
+short-tempered
+violent when drunk
+a gambler
+an addict
+a compulsive spender
+miserly
+mean with money
+careless with money
+careless with other people's feelings
+careless with secrets
+unreliable
+always late
+forgetful
+disorganised
+easily distracted
+easily bored
+easily led
+gullible
+credulous
+superstitious
+snobbish
+prejudiced
+condescending
+patronising
+self-righteous
+sanctimonious
+preachy
+judgemental
+intolerant
+rigid
+inflexible
+obsessive
+perfectionist
+a workaholic
+neglectful of their family
+selfish
+self-absorbed
+self-destructive
+self-sabotaging
+attention-seeking
+needy
+clingy
+possessive
+manipulative
+calculating
+cold
+aloof
+distant
+emotionally closed
+unable to trust
+unable to ask for help
+too proud to accept charity
+too eager to please
+a people-pleaser
+a doormat
+a coward about confrontation
+a bully to those below them
+servile to those above them
+ambitious beyond their talent
+lacking ambition
+complacent
+smug
+conceited
+a show-off
+a braggart
+a hypocrite
+a fair-weather friend
+fickle
+flighty
+irresponsible
+a quitter
+defeatist
+a martyr
+a bad loser
+a bad winner
+obsessed with status
+obsessed with the past
+in denial
+easily offended
+thin-skinned
+quick to take offence and slow to forgive
+a grudge-holder
+prone to sulking for days
+cruel when bored
+prone to self-pity after a drink
+a thief when tempted
+a cheat at cards
+a flatterer
+helpless in the face of anyone's tears
+unable to keep a secret
+nosy
+meddling
+interfering
+bossy
+domineering
+lustful
+gluttonous
+vulgar
+crude
+unwashed
+slovenly
+a hoarder
+hopeless with paperwork
+blind to their own children's faults
+blind to their own faults
+
+## habits
+# used as: "{name} {}."  (third person verb phrase: 'keeps a lucky coin')
+== all
+cracks their knuckles
+keeps a lucky coin
+eats the same breakfast every day
+talks to their plants
+is always early
+never finishes a drink
+sketches people without asking
+rereads one book every year
+walks everywhere
+collects keys
+wears a dead person's watch
+can't pass a mirror without looking
+writes letters they never send
+feeds stray cats
+rearranges other people's shelves
+keeps a diary in a private code
+bites the inside of their cheek
+twirls a ring when thinking
+chews on pen lids [sf, modern]
+taps the table before standing up
+counts the stairs in every building
+checks the stove three times before leaving
+sleeps with the light on
+sleeps with a knife under the pillow
+sleeps in a chair, never a bed
+gets up before dawn
+stays up until three
+naps every afternoon at exactly two
+drinks their tea black and stewed
+puts too much sugar in everything
+salts food before tasting it
+eats standing up
+eats dessert first
+saves the best bite for last
+hoards sugar packets [sf, modern]
+keeps the receipts for everything
+keeps every letter they've ever been sent
+burns letters after reading them
+throws nothing away
+throws everything away
+cleans when anxious
+bakes when sad
+runs when angry
+swims every morning in cold water
+walks the dog at midnight
+visits the same grave every Sunday
+lights a candle for someone every week
+goes to church and sits at the back [fantasy, modern]
+reads the obituaries first [sf, modern]
+does the crossword in pen [sf, modern]
+cheats at patience
+plays the same song over and over [sf, modern]
+sings in the bath
+whistles the same three notes
+hums hymns without noticing
+taps out rhythms on every surface
+reads with a finger under the line
+dog-ears every page
+writes in the margins of other people's books
+underlines everything
+borrows books and never returns them
+carries a book everywhere and never opens it
+carries a notebook and writes down overheard lines
+collects stones from every place they visit
+collects matchbooks from bars they've never been in [sf, modern]
+collects broken clocks
+keeps a jar of buttons
+keeps a photograph of a stranger in their wallet [sf, modern]
+keeps a packed bag by the door
+keeps money hidden in the freezer [sf, modern]
+keeps a spare key in a place everyone knows
+locks every door behind them
+leaves every door open
+sits in the same seat every time
+always orders the second-cheapest thing
+tips far too much
+never tips
+haggles at market stalls
+gives money to every beggar
+crosses the road to avoid people they know
+waves at every passing train [sf, modern]
+names their cars [sf, modern]
+names inanimate objects
+talks to the dead out loud
+argues with the television [sf, modern]
+tells the cat about their day
+reads horoscopes and pretends not to
+throws salt over their shoulder
+touches wood
+knocks three times before entering
+won't walk under ladders
+counts magpies [fantasy, modern]
+won't say a dead person's name
+says goodnight to the house
+checks on sleeping children twice
+calls their mother every Sunday at six [sf, modern]
+never calls back [sf, modern]
+answers the phone with a question [sf, modern]
+lets every call go to voicemail [sf, modern]
+writes lists and loses them
+writes the date at the top of everything
+signs their name with a flourish
+doodles spirals in meetings
+folds paper into tiny animals
+picks at the label on bottles [sf, modern]
+peels oranges in one long spiral
+flosses at the table [sf, modern]
+cleans their glasses on their shirt
+pushes their hair back when lying
+tugs their earlobe when thinking
+rubs their eyes when tired, which is always
+cracks their neck before hard conversations
+taps their foot to music only they can hear
+paces while on the phone [sf, modern]
+walks with their hands behind their back
+stands with their back to the wall
+sits on the floor rather than a chair
+takes the stairs, never the lift [sf, modern]
+takes the long way home
+drives with the windows down in winter [sf, modern]
+walks in the rain without a coat
+wears sunglasses indoors [sf, modern]
+wears the same jumper every Tuesday
+changes clothes three times before going out
+irons their socks
+polishes their shoes every night
+keeps their nails very short
+bites their nails when reading
+chews gum when nervous [sf, modern]
+smokes one cigarette a day, at dusk [sf, modern]
+quit smoking but still holds a pen like one [sf, modern]
+drinks a single whisky before bed
+never drinks at all, and doesn't explain
+drinks coffee until their hands shake
+eats sweets from a paper bag in their pocket
+feeds the birds on the windowsill
+keeps bees in the back garden
+grows tomatoes in every flat they live in
+fixes things that aren't broken
+takes apart clocks to see how they work
+mends clothes rather than buying new
+gives away anything that's admired
+re-gifts presents without shame
+remembers every birthday and sends nothing
+sends postcards from places they haven't been
+keeps a list of everyone who has wronged them
+keeps a list of everyone who has been kind to them
+practises arguments in the mirror
+rehearses conversations in the shower
+sleeps with the radio on [sf, modern]
+listens to the shipping forecast to fall asleep [modern]
+reads in bed by torchlight [sf, modern]
+wakes at the same minute every night
+leaves notes in library books
+hides small gifts for people to find
+steals sugar cubes from cafés [sf, modern]
+pockets hotel soaps [sf, modern]
+counts their change twice
+keeps the corner of every lottery ticket [sf, modern]
+buys a lottery ticket every week with the same numbers [sf, modern]
+plays chess against themselves
+plays cards for matches
+reads palms at parties
+quotes poetry when drunk
+cries at adverts [sf, modern]
+laughs at funerals and can't stop
+falls asleep in cinemas [sf, modern]
+leaves parties without saying goodbye
+arrives at parties with flowers from someone's garden
+walks barefoot in the house and on the lawn
+carries a handkerchief and offers it
+carries a penknife and uses it for everything
+carries snacks for other people's children
+keeps their keys on a string around their neck
+checks the weather four times a day [sf, modern]
+reads the last page of a book first
+skips to the end of every film [sf, modern]
+always sits facing the door
+
+## secrets
+# used as: "Secret: {}."  (third person verb phrase: 'once let someone else take the blame')
+== all
+once let someone else take the blame
+is not who they claim to be
+has a child no one knows about
+is in love with a friend's spouse
+owes money to the wrong people
+can't read
+was there the night it happened
+is dying, slowly
+stole what they're famous for
+informs on their friends
+is married already, elsewhere
+started the fire
+never actually finished their training
+burned the letter that would have changed everything
+is being blackmailed
+is blackmailing someone
+knows where the body is
+moved the body
+was paid to look the other way
+has been lying about their age for decades
+was adopted and found out by accident
+has a twin they've never met
+had a sibling who died, and was blamed
+caused the accident that crippled their brother
+let a friend drown rather than risk themselves
+ran from a fight that killed their unit
+deserted, once, and was never caught
+was never in the war they talk about
+wrote the anonymous letters
+reads other people's diaries
+steals from their employer, a little each week
+gambled away their children's savings
+is in love with their best friend
+still loves their first spouse
+has been planning to leave for years
+has already left, in every way that counts
+is secretly very rich
+is secretly penniless
+lives on the charity of an enemy
+is the real author of a famous book
+plagiarised the work that made their name
+lied under oath
+testified against an innocent person
+helped a murderer escape
+is the reason the family fell apart
+poisoned a dog that bit their child
+poisoned someone, and it worked
+poisoned someone, and it didn't work
+keeps a lock of hair from someone they wronged
+visits a grave no one knows they're connected to
+has been writing to a prisoner for years
+was once in prison
+was once in an asylum
+hears voices and has learned not to answer
+sleepwalks, and has woken up in strange places
+doesn't remember a whole year of their life
+remembers a life that wasn't theirs
+was the one who called the authorities
+paid a stranger for their silence long ago
+gave a child away
+sold a family heirloom and replaced it with a fake
+knows their father wasn't their father
+knows who really owns the house
+has a key to a room nobody else enters
+keeps a gun they've never fired [sf, modern]
+keeps a gun they have fired [sf, modern]
+once killed a man in self-defence and never told
+once killed someone and it wasn't self-defence
+falsified the test results [sf, modern]
+sabotaged a rival's work
+knows a rival is innocent and says nothing
+had an affair with their sister-in-law
+had an affair with their brother-in-law
+was the third person in a famous marriage
+is not as devout as they appear
+lost their faith years ago and preaches anyway
+is terrified of the job they're best at
+is planning to kill someone
+has been stealing medicines for a sick friend
+is sending money to a family nobody knows about
+has a gambling debt that would ruin the family
+has never been to the country they claim to come from
+speaks a language they pretend not to know
+understood every word of the conversation
+can't swim
+can't ride, though they pretend [fantasy, modern]
+is going blind
+is going deaf
+has a heart that might stop any day
+has been told they have a year left
+faked their own death once already
+survived something everyone else died in
+was the last person to see the missing girl
+knows what was in the box
+destroyed the will
+forged the will
+rewrote the will on the deathbed
+let the old man die
+helped the old woman die, at her request
+is not the parent they're registered as
+switched two babies at birth
+took the credit for a rescue someone else performed
+was a coward on the day everyone calls them brave
+started the rumour that ruined a neighbour
+was the reason the engagement was broken off
+sends anonymous gifts to someone who hates them
+loves someone who doesn't know they exist
+still sleeps with a childhood toy
+can't stand their own children
+prefers one child and everyone knows but them
+is being slowly poisoned and suspects who
+knows the business is about to collapse
+has already sold the business
+signed the papers without reading them
+signed the papers having read them very carefully
+takes bribes, small ones
+takes bribes, very large ones
+sold out the union [sf, modern]
+was the one who leaked it
+was once very famous under another name
+was once a child star and burns the photos [sf, modern]
+was a member of a cult
+still believes what the cult taught
+is in contact with the people who hurt them
+forgave the person who hurt them and tells no one
+never forgave anyone
+keeps a list of people they will outlive
+kept the money from a robbery
+committed a robbery as a teenager and got away with it
+is the getaway driver everyone is looking for [sf, modern]
+has a criminal record under their maiden name [sf, modern]
+is wanted in another town
+swapped identities with a dead friend
+married for a visa [sf, modern]
+married for money and stayed for love
+married for love and stayed for money
+caused a death through drunk driving [sf, modern]
+was driving, not the person who took the blame [sf, modern]
+burned down their own shop for the insurance [sf, modern]
+has never told their partner they can't have children
+has a terminal diagnosis they're keeping from the family [sf, modern]
+is the beneficiary of the policy [sf, modern]
+knows exactly why the dog barks at night
+has a lover in the next village
+writes romantic novels under a pen name [sf, modern]
+writes nasty reviews under a pen name [sf, modern]
+is the person behind the anonymous account [sf, modern]
+pays someone to take their exams
+pays someone to visit their mother
+hasn't opened their post in a year
+is losing the house
+lost the house already and pretends they still live there
+lives in their car [sf, modern]
+eats out of bins some weeks
+sold their medals
+stole their medals
+was a guard at a place of terrible things
+helped build something used for evil
+designed the bridge that fell
+signed off on the dam that broke
+lost someone else's child for an hour, long ago
+is the reason the family moved
+is the one the ghost is looking for
+can't stand music and pretends to love it
+keeps a box of letters from a dead lover in the attic
+hasn't spoken to their mother in a decade but tells everyone she's well
+dreams about the same stranger every night
+was once very cruel to someone they now work for
+saved a life and regrets it
+let a guilty person go free on purpose
+voted to convict an innocent person [sf, modern]
+was the jury member who held out [sf, modern]
+has been reporting everything to the landlord
+has been in love with the same person since school
+broke a vow made to a dying parent
+promised the same thing to two people
+knows the ending and won't say
+== fantasy
+carries a curse that skips a generation
+is a bastard of the old king
+made a bargain with something under the hill
+can hear the dead
+was a changeling left in a cradle
+is the heir the usurper failed to kill
+knows the true name of a demon
+owes a fae lord their firstborn
+is a werewolf, three nights a month
+has a dragon's egg buried in the orchard
+was a priest of a forbidden god
+still worships the old gods at night
+has been dead for a year and doesn't age
+sold their shadow for a fortune
+is wanted by the Inquisition
+killed the knight whose armour they wear
+was once a familiar in human shape
+can't use magic any more and fakes it
+learned magic from a book they stole
+broke a sacred oath to the order
+is a spy for the enemy kingdom
+poisoned the old duke
+let the prince die on the battlefield
+forged the royal seal
+hid the crown jewels in a well
+knows the prophecy is a forgery
+wrote the prophecy themselves
+is the chosen one and has refused it
+was the chosen one before this one, and failed
+carries a fragment of a god in their blood
+sees the future in dreams and hasn't told
+let a dragon into the valley
+opened the gate that let the plague in
+burned the witch who was innocent
+is a witch who burned another witch to save themselves
+is the last of a murdered bloodline
+has elvish blood and hides the ears
+is older than the kingdom
+cast the spell that ended the war, and the harvests
+is bound to serve whoever holds their ring
+has a ghost living in their sword
+trades secrets with the crows
+was raised by wolves until the age of nine
+can turn into a hare
+married a selkie and hid her skin
+is the selkie, and is looking for their stolen skin
+stole a page from the forbidden library
+trapped a soul in a lantern
+knows the way into the hollow hills
+murdered a unicorn for its horn
+is the silent partner of the thieves' guild
+is the guildmaster's informant
+made the golem that killed the alderman
+was cursed to tell only lies on holy days
+hears their dead twin through the mirror
+fled the temple with its holiest relic
+has a demon tutor
+has a brother who is a lich
+signed a pact in their own blood at fourteen
+is the dragon in human form
+knows the queen's true lover
+== sf
+is a clone, and only half suspects it
+sold the colony's survey data
+has an illegal neural mod
+was never on the manifest
+is an android passing as human
+was grown in a corporate lab
+had their memories edited after the incident
+is running on a backup copy of themselves
+knows the ship is off course
+sabotaged the reactor to get off the contract
+is a corporate plant in the union
+is the AI's secret confidant
+taught the station AI to lie
+left a crewmate outside the airlock
+falsified the oxygen numbers
+stowed away as a child
+is a deserter from the colonial marines
+was a war criminal in the moon war
+is the hacker who crashed the exchange
+sells crew medical records
+smuggles seeds from the forbidden vault
+knows the planet is already inhabited
+made first contact and told no one
+is in regular contact with the aliens
+is partly alien
+is carrying an alien parasite
+caught the quarantine illness and hid it
+knows the terraforming will fail
+signed off on the hull that cracked
+is the original, and the famous one is the copy
+murdered their own clone
+is older than the ship
+slept through the mutiny in cryo, or says so
+started the mutiny
+reprogrammed a combat drone to protect a child
+can hear radio signals in their head
+has an implant that reports to the company
+keeps an illegal pet in the ventilation shafts
+is on the run from a debt-bondage contract
+bought their citizenship with stolen credits
+is a refugee from Earth with fake papers
+helped hide the colony's disaster from the board
+erased a whole station from the records
+is wanted on six worlds under six names
+was a test subject and escaped
+has a body that isn't the one they were born in
+traded their memories for passage
+is the last person who knows the jump coordinates
+deleted the distress call
+was the one who answered the distress call too late
+has been talking to the dead through an old archive
+is a sleeper agent who has started waking up
+has been collecting the ship's secrets in case of mutiny
+lied about the gene scan
+is immune to the plague and hasn't said why
+knows the captain is an AI-generated persona
+sold the ship's AI to a rival
+took the last lifeboat
+built the weapon that ended the war
+is the reason the colony lost contact with Earth
+== modern
+has a second phone
+faked their degree
+was in prison under another name
+is still being paid by their old employer
+runs a fake charity
+has a second family two towns over
+is in witness protection
+sold their kidney to pay a debt
+lied on their CV about everything
+has been embezzling from the school fund
+is the anonymous blogger the council hates
+has a gambling app open at all hours
+took out loans in their partner's name
+cheated in the final exam that made their career
+leaked the documents to the press
+reported their neighbour to immigration
+has a criminal record they never declared
+was the hit-and-run driver
+is on a dating app while married
+has been stalking an ex online
+pays for followers
+ghostwrote their famous boss's memoir
+writes essays for students for money
+hides empty bottles in the recycling of other houses
+has been signed off sick for a year and works elsewhere
+is the reason the company was fined
+shredded the files before the audit
+has a burner account full of rage
+has been sending money to a scammer for years
+knows the school covered it up
+covered it up
+is dealing from the café
+grows cannabis in the loft
+has a foreign bank account
+crashed the company car and blamed a colleague
+is a police informant
+was once a police informant and the gang knows
+has a restraining order against them
+has a restraining order against someone else
+failed the drugs test and switched samples
+paid for the planning permission
+knows the building isn't safe
+cancelled the safety inspection
+put their mother in a home and tells people she's travelling
+hasn't told anyone they lost their job
+dresses for the office every morning and goes to the library
+has a heart condition and still runs marathons
+is quietly going bankrupt
+took a DNA test and learned their father isn't their father
+found a half-sibling online
+is in a band nobody at work knows about
+is the voice of a famous cartoon character
+won the lottery and told no one
+secretly owns the building they complain about
+is the landlord everyone hates, through a company
+was a teenage runaway
+changed their name by deed poll after a scandal
+deleted the footage
+falsified the care home's records
+has been reading their teenager's messages
+is being investigated by the tax office
+was fired for something they didn't do, and something they did
+
+## bonds
+# used as: "They are {}."  (plural noun phrase for two people: 'siblings who haven't spoken in years')
+== all
+siblings who haven't spoken in years
+old school friends
+former lovers
+business partners
+rivals since childhood
+twins who couldn't be more different
+a parent and the child who left
+a parent and the child who stayed
+a mentor and the student who surpassed them
+neighbours at war over a hedge [fantasy, modern]
+neighbours who share everything but their names
+cellmates
+former cellmates
+comrades from the same war
+soldiers from opposite sides of the same war
+an old married couple
+newlyweds already having doubts
+divorced and still sharing a house
+step-siblings forced together
+half-siblings who just found each other
+cousins raised as siblings
+best friends since the age of five
+best friends who fell out over a wedding
+colleagues who can't stand each other
+colleagues who are secretly together
+a boss and the assistant who runs everything
+a landlord and a tenant
+a doctor and a patient
+a lawyer and a client with something to hide
+a detective and their informant [sf, modern]
+a priest and the person who confesses to them [fantasy, modern]
+a teacher and a pupil, years later
+an employer and a servant of thirty years
+a widow and her late husband's lover
+a widower and his late wife's best friend
+a grandparent and the grandchild raising them
+a grandchild caring for a grandparent
+foster siblings
+a foster parent and a grown foster child
+an adoptive parent and a birth parent
+the two survivors of a disaster
+the two people who know what really happened
+partners in crime
+partners in a failing band [sf, modern]
+a double act on the comedy circuit [sf, modern]
+a pair of con artists
+a thief and the person they robbed
+a killer and the one witness
+a victim and the person who saved them
+a rescuer and the person they failed to save
+pen pals who have never met
+strangers who have met every day on the same train [sf, modern]
+an author and their biggest fan
+a famous person and their double
+a famous person and the friend who knew them before
+an exiled ruler and their last loyal servant
+a hostage and their guard
+captain and first mate
+pilot and navigator
+a chef and the sous-chef who wants their kitchen [sf, modern]
+a coach and the athlete they made [sf, modern]
+two candidates for the same job
+two suitors for the same hand
+two heirs to the same fortune
+two widows of the same man
+the two people who loved the same dead person
+the bride's mother and the groom's mother
+in-laws who pretend to get along
+in-laws who genuinely do
+ex-spouses with a child between them
+godparent and godchild
+blood brothers by a childhood oath
+sworn enemies who need each other
+allies of convenience
+a debtor and a creditor
+a blackmailer and their victim
+a spy and their handler
+a defector and the agent who turned them
+a scientist and their test subject [sf, modern]
+a bodyguard and the person they guard
+a nurse and a dying patient
+a carer and the person who resents needing care
+a parent and a child who has become a stranger
+a mother and daughter who are too alike
+a father and son who never learned how to talk
+two old men on the same park bench
+two old women who run the village between them [fantasy, modern]
+roommates who share nothing but rent
+a musician and the singer who left the band [sf, modern]
+a widow and the young lodger
+travelling companions thrown together by chance
+two survivors of the same shipwreck
+a writer and the editor who saved their book [sf, modern]
+a painter and the model who became their muse
+a master and an apprentice
+a knight and their squire [fantasy]
+a wizard and a reluctant pupil [fantasy]
+a queen and her spymaster [fantasy, sf]
+a king and his fool [fantasy]
+an android and the family that bought it [sf]
+a ship's captain and the ship's AI [sf]
+a refugee and the official deciding their case
+a judge and the defendant they once knew
+two officers who covered for each other
+childhood sweethearts who married other people
+an old flame and the one who never got over it
+the one who stayed in the village and the one who left
+a parent and the child who took the other side
+a hero and the person they stepped on to get there
+a ghost and the person who can see them [fantasy, modern]
+an addict and the sibling who keeps bailing them out
+a gambler and the friend who holds the money
+the last two members of a dying congregation
+
+## ties
+# used as: "Tied by {}."  (noun phrase)
+== all
+blood
+a shared secret
+a debt that can never be repaid
+a promise made at a deathbed
+a child they both love
+a crime they both committed
+a crime one of them committed and the other witnessed
+a house neither will give up
+a will that names them both
+a business that would fail without either
+a lie told to protect them both
+a body buried in the woods
+an old photograph [sf, modern]
+a childhood oath
+a marriage that died years ago
+a grudge older than either of them
+love, of a sort
+habit
+the memory of someone they both lost
+a war they both survived
+a disaster neither talks about
+a contract signed in haste
+a boat they own between them
+a dog neither will give up
+a farm that needs both of them
+a stolen fortune
+an unpaid loan
+a favour owed
+a life saved
+a life lost
+a shared enemy
+a shared addiction
+a shared faith
+a shared exile
+a family feud
+a family name
+a forbidden friendship
+an inheritance that hasn't been divided
+a letter neither has opened
+a song they wrote together
+a book they wrote together
+a band that broke up [sf, modern]
+a court case still in appeal [sf, modern]
+a prophecy that names them both [fantasy]
+a curse laid on both families [fantasy, modern]
+a ship they crewed together
+a mission no one else remembers
+a vow taken in a temple
+a wedding ring one of them still wears
+a grave they both visit
+a hospital ward they both waited in
+a night neither will describe
+a summer when everything changed
+a fire that took both their homes
+a pact made at sixteen
+a mortgage [sf, modern]
+a shop on the high street [fantasy, modern]
+a quarrel nobody remembers starting
+an unfinished game of chess
+a long correspondence
+a single kiss, years ago
+the same piece of land
+the same piece of music
+the same street, all their lives
+the same addiction to winning
+the same mother, different fathers
+the same father, different mothers
+a child given up for adoption
+a dead child
+a missing sibling
+a share of the reward
+a share of the blame
+a pawned heirloom
+a pair of matching tattoos
+a key that opens something they both fear
+a recording that could ruin them [sf, modern]
+a name they both changed
+an oath of fealty [fantasy]
+a bargain with something not human
+a legal custody arrangement [sf, modern]
+a joint bank account [sf, modern]
+a horse they raised from a foal [fantasy, modern]
+a garden planted together
+an argument that never finished
+a debt of honour
+a contract that ends at one of their deaths
+a scar they gave each other
+a sister in common
+a shared cell, once
+a lie the whole town believes
+a ghost that haunts them both [fantasy, modern]
+the knowledge of what's under the floor
+nothing but stubbornness
+
+## strains
+# used as: "Now {}."  (clause: 'one of them is about to marry')
+== all
+one of them is about to marry
+one of them is dying
+one of them has found a new friend
+one of them has fallen in love with the other
+one of them has fallen in love with someone unsuitable
+one of them is moving away
+one of them has come back after years away
+one of them has been promoted over the other
+one of them has lost their job
+one of them has come into money
+one of them is in debt and hasn't said
+one of them has found religion
+one of them has lost their faith
+one of them is pregnant
+one of them wants a child and the other doesn't
+one of them has started drinking again
+one of them has been arrested
+one of them has been accused of something they didn't do
+one of them has been accused of something they did
+one of them has been offered a way out
+one of them has written a book about the other
+one of them has told someone the secret
+one of them is about to tell the secret
+one of them has found the letters
+one of them has started lying
+one of them has stopped lying, which is worse
+one of them is ill and won't see a doctor
+one of them is losing their memory
+one of them needs a kidney [sf, modern]
+one of them needs money urgently
+one of them has been offered a bribe
+one of them has joined the other side
+one of them has been asked to choose
+one of them is being followed
+one of them is being blackmailed
+one of them has a new partner the other can't stand
+one of them has been left everything in a will
+one of them has been left nothing
+the house is being sold
+the business is failing
+the business is suddenly very successful
+the war has reached them
+the harvest has failed
+the town is being flooded for a reservoir [modern]
+the plague has come
+the police are asking questions [sf, modern]
+a stranger is asking about the past
+a body has been found
+the old case has been reopened
+their child has gone missing
+their child has started asking questions
+their parent has moved in with one of them
+the person they both loved has come back
+the person they both wronged has come back
+an old enemy has turned up in town
+a journalist is writing a story [sf, modern]
+a famous person is visiting
+a wedding is coming that one of them won't attend
+a funeral is coming that both must attend
+a birthday party is planned that one of them dreads
+the anniversary of the accident is next week
+one of them has been asked to testify
+one of them has been called up
+one of them has been elected
+one of them has lost an election to the other
+one of them is leaving the order
+one of them is leaving the ship
+one of them has been offered a place on the expedition
+there is only room for one
+there is only enough money for one
+there is only one ticket [sf, modern]
+there is only one cure
+one of them has cheated
+one of them suspects the other has cheated
+one of them has stopped speaking
+one of them has started a fight with the neighbours
+one of them has taken in a stray child
+one of them has adopted a dangerous dog
+one of them has started seeing a therapist [sf, modern]
+one of them has started seeing a fortune-teller
+one of them has inherited a title
+one of them has been disinherited
+one of them has been cursed [fantasy]
+one of them has been chosen
+one of them has been replaced by a copy [sf]
+one of them has had their memories altered [fantasy, sf]
+one of them has quietly started a new life online [sf, modern]
+one of them has signed something without asking
+one of them has borrowed money from the other's family
+one of them has been seen with a rival
+one of them has a new job in the other's old firm [sf, modern]
+the land is being claimed by someone else
+the will is being contested
+the debt has been called in
+the lease is up
+the ship is running out of air [sf]
+the winter is coming early
+the river has changed its course
+a child has been born who looks like neither of them
+one of them has decided to leave and hasn't said
+one of them has already packed
+one of them has started keeping a gun in the house [sf, modern]
+one of them has stopped sleeping
+one of them has been having the same dream
+one of them has found a photograph that shouldn't exist [sf, modern]
+one of them is getting better and the other isn't
+one of them is famous and the other isn't
+one of them has forgiven and the other hasn't
+one of them wants to go to the police [sf, modern]
+one of them wants to go back
+neither of them can afford to stay
+someone has offered to buy them both out
+the person who kept the peace between them has died
+the dog has died
+their only witness has changed their story
+the children have grown up and gone
+
+## unsaid
+# used as: What neither says: "{}."  (a short spoken line, no final punctuation)
+== all
+I never forgave you
+I'm sorry
+I was there that night
+It should have been me
+I loved her too
+I loved him too
+I knew all along
+I'm leaving
+I'm scared
+I need you
+I don't need you any more
+You were right
+I was wrong
+I'm proud of you
+I'm ashamed of you
+I'm ashamed of myself
+I lied about the money
+I read your letters
+I saw you with them
+I wanted you to fail
+I'm glad you came back
+I wish you hadn't come back
+I still think about it
+I don't remember it the way you do
+It wasn't an accident
+It wasn't your fault
+It was your fault
+I took it
+I told them
+I could have stopped it
+I didn't try hard enough
+I tried, I really did
+I'm not well
+I'm dying
+I'm happy without you
+I've never been happy
+You're the only one who knows me
+You don't know me at all
+I'm jealous
+I miss how we used to be
+I never liked you
+I always liked you more than I said
+I think about leaving every day
+I'd do it again
+I wouldn't do it again
+I don't know how to fix this
+Please don't go
+Go, then
+I chose you
+I chose them
+You owe me
+I owe you everything
+I'm tired
+I can't keep doing this
+I want to come home
+This was never home
+I'm not who you think I am
+I know what you did
+I know what you're going to do
+I've already decided
+I'm waiting for you to ask
+I wish you'd asked
+I kept it all these years
+I threw it away
+I still have the ring
+I wish we'd had children
+I'm glad we didn't have children
+She wasn't yours
+He wasn't yours
+Your mother told me everything
+Dad knew
+I was afraid of you
+I'm still afraid of you
+I'd die for you
+I'd let you die for me
+I don't believe in it any more
+I prayed for you
+I prayed for you to go
+Thank you
+I forgive you
+I need you to forgive me
+I want what you have
+You made me this way
+We should have run
+We should have stayed
+It's too late now
+It's not too late
+I'm sorry about the dog
+I'm the one who called them
+I never stopped looking for you

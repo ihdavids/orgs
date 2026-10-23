@@ -1,0 +1,2921 @@
+# Word tables for places: settlements (runSettlement) and scene settings (runPlace).
+# A settlement reads: "X, a fishing village known for K, run by R. It lives on I.
+# It smells and sounds of S, and L stands over it. Here C. Lately T, and people say U."
+# A scene reads: "A launderette at 2 a.m.: <sight>; <sound>. It smells of <smell>,
+# <touch>. Something is off: <odd>." with "What could go wrong: <go_wrong>."
+
+## settlement_kinds
+# used as: "a/an {} known for ..." (format: kind|size where size is tiny, small, medium, large or huge)
+== fantasy
+hamlet|tiny
+village|small
+market town|medium
+walled town|medium
+river port|medium
+city|large
+mining camp|small
+monastery town|small
+fishing village|small
+crossroads town|medium
+charcoal burners' clearing|tiny
+shepherds' summer steading|tiny
+toll bridge settlement|small
+salt-marsh village|small
+hill fort|small
+castle town|medium
+cathedral city|large
+free city|large
+imperial capital|huge
+pilgrim stop|small
+lake village on stilts|small
+quarry town|small
+logging camp|tiny
+border keep and its village|small
+abbey grange|tiny
+ferry landing|tiny
+canal town|medium
+island hold|small
+cliffside eyrie town|small
+caravanserai|small
+oasis town|medium
+tin-mining village|small
+fen village|small
+fortified manor and its hamlet|tiny
+whaling station|small
+dwarf-hold gate town|medium
+elven treehold|small
+goblin market town|medium
+pass town|small
+harbour city|large
+university town|medium
+ruined city resettled|medium
+holy city|huge
+plague-walled quarter|medium
+hermitage|tiny
+crossroads inn and its cottages|tiny
+mill village|small
+== sf
+outpost|tiny
+domed colony|medium
+orbital station|large
+asteroid mining town|small
+generation-ship deck|medium
+frontier landing|small
+floating ocean platform|medium
+arcology|huge
+relay station|tiny
+terraforming camp|small
+lunar crater town|medium
+ice-moon borehole settlement|small
+cloud city on a gas giant|large
+tidally locked twilight town|medium
+lava-tube colony|small
+derelict ship squat|small
+shipbreaking yard|medium
+customs station at a jump point|small
+research base|tiny
+penal colony|medium
+agri-dome cluster|small
+orbital habitat cylinder|huge
+refuelling depot|tiny
+crawler town on treads|small
+seabed habitat|small
+hollowed-out comet|small
+ring city|huge
+lighthouse beacon station|tiny
+company town under a dome|medium
+quarantine moon settlement|small
+spaceport city|large
+data-haven barge|small
+pilgrim hulk|medium
+desert condensation farm|tiny
+storm-planet bunker town|small
+tethered sky-hook base town|medium
+mobile mining rig|small
+sleeper-ship crash site, resettled|medium
+diplomatic enclave|small
+ecumenopolis sector|huge
+deep-space listening post|tiny
+water-world raft flotilla|medium
+cyborg commune|small
+military garrison moon|medium
+megastructure maintenance village|small
+tourist resort station|medium
+== modern
+chocolate-box village|small
+seaside town|medium
+commuter suburb|medium
+former mill town|medium
+island town|small
+city district|large
+redbrick university city|large
+border town|medium
+ski resort|small
+farming town|small
+minster town|medium
+new town|large
+market town with a bypass|medium
+fishing harbour|small
+pit village|small
+holiday caravan park|tiny
+canal-side estate|medium
+spa town|medium
+garrison town|medium
+port city|huge
+capital city|huge
+dormitory village|small
+crofting township|tiny
+retirement town|medium
+steel town|large
+estuary town|medium
+tower-block estate|medium
+gated community|small
+hill village|tiny
+railway junction town|medium
+retail park town|medium
+expat enclave|small
+oil town|medium
+tourist island|small
+inland ferry town|small
+lakeside resort|small
+motorway service town|small
+market-garden village|small
+industrial city|large
+mountain hamlet|tiny
+riverside allotment colony|tiny
+satellite town|medium
+container port|large
+post-industrial city|large
+festival town|small
+pilgrimage town|small
+model village built by a factory owner|small
+
+## known_for
+# used as: "a fishing village known for {}" (noun phrase)
+== all
+a festival everyone outside it finds strange
+the best bread for a hundred miles
+a famous murder
+its stubbornness
+a disaster no one talks about
+an odd number of twins
+its bells
+a feud between two families
+being where the famous one was born
+its hospitality to strangers, and what it asks back
+cheese that keeps for ten years
+its widows
+a choir that sings at every funeral, invited or not
+the ugliest building anyone has seen
+losing its founder on the first night
+a dish no outsider can finish
+liars, in the nicest way
+having changed its name four times
+its old women, who run everything
+a cure that may or may not work
+the people who left and became important
+a recipe kept under lock and key
+a strike that lasted three years
+its insistence on doing everything the slow way
+poisoners, once
+a perfect safety record, until last year
+a woman who lived to a hundred and twelve
+its gardens, which are a competition
+its locksmiths
+a riot over the price of bread
+being impossible to find on the second visit
+its long memory for slights
+a marriage market once a year [fantasy, sf]
+its singers
+the worst-tempered dogs anywhere
+a crop of geniuses one generation and none since
+taxes paid in kind [fantasy, sf]
+the duel that ended both families
+a miracle nobody official will confirm
+lace so fine it is sold by the inch
+being the last place the expedition was seen
+weddings that last three days
+its clocks, all of them
+cheap rooms and no questions
+an execution that went wrong
+fine glass
+its quarrel with the next town over
+its tradition of the open table
+its gossip
+hiding a fugitive for twenty years
+the oldest surviving book of accounts
+its exports of honey
+a plague it survived and its neighbours didn't
+the sound its streets make at night
+its very short memory for crimes
+twin sisters who married the same man
+its debating society, which has caused two wars
+an unbeaten wrestler
+its cowardice in the last war
+its bravery in the last war, depending who you ask
+the last public hanging, which took three tries [fantasy, modern]
+its pickles
+an annual race that kills somebody most years
+its smugglers
+tea made from something no one will name
+musicians who will not play outside it
+being dry, absolutely and by law
+the poet who hated it and wrote it famous
+its arguments about where the boundary runs
+a curse on the eldest sons
+being friendly to the point of suspicion
+a lost child who came back grown
+the flood marks on every wall
+a library nobody is allowed to use
+an inventor who blew up his house
+its tradition of public confession
+weavers who weave no two pieces alike
+the longest-serving schoolteacher in the land
+a game played with a pig's bladder and no rules [fantasy, modern]
+running out of water every summer
+a witch trial it would rather forget [fantasy, modern]
+its fireworks [sf, modern]
+its feast of fools [fantasy]
+an orphanage with a terrible reputation
+its spiced sausage
+fierce, unbeatable chess players
+being the setting of a ghost story that turns out to be true
+its silence on the matter of the old works
+mushrooms, and the people who die picking them
+a strange accent
+its brass band [sf, modern]
+its stubborn refusal to modernise
+== fantasy
+a shrine to a forgotten saint
+dyers whose cloth sells in the capital
+horses
+a bridge older than the kingdom
+the lord's madness
+ghost lights on the marsh
+a dragon it paid tribute to for a century
+its unicorn tapestries
+dwarven ironwork in every gate
+a sword in a stone that nobody has tried to pull
+the summer it rained frogs
+its witches, who are respectable here
+hawks trained for kings
+a fairy ring nobody mows
+pardoners who sell forgiveness by weight
+the hermit who prophesies in riddles
+a giant's grave
+mead brewed with something from the barrow
+dwarf-cut gemstones
+an inn where a king once hid
+banishing its wizards
+its alchemists' guild and the fires that come with it
+being on no map the crown has made
+the battle fought in its high street
+its annual blessing of the bees
+a well that answers questions
+an order of knights who are mostly retired
+illuminated manuscripts
+shipwrights who build with charmed oak
+the troll under the bridge, who is a member of the council
+its werewolf trial
+its fortune-tellers
+a bell cast from a defeated army's swords
+wool from black sheep only
+being the birthplace of the usurper
+the knight who never came back from the crusade
+salt mined by the bucketful
+an abbey that brews the strongest ale
+its tithe barns
+rope that never rots
+being haunted by its own founder
+a vow of silence kept by the whole town for a week each year
+a dragon's skull in the market square
+its relic, a saint's finger, of which there are four elsewhere
+being where the elves trade with men
+warhorses bred for the king's cavalry
+glass eyes for the wealthy one-eyed
+a forest that moves a little each winter
+the dancing plague of fifty years ago
+being a safe harbour for exiled princes
+its gargoyles, which are said to be portraits
+== sf
+its water, which tastes of iron
+the only shipyard in the system
+a fungus delicacy
+its refusal to join the Compact
+a crashed ship turned into a church
+the long night every eleven years
+being the first human settlement in the sector
+gene-tailored orchids
+its zero-gravity ballet
+synthetic diamonds sold as natural
+the best black-market surgeons on the frontier
+pilots who fly without nav assist
+a mass cryo-revival that went wrong
+its two suns
+a mutiny the history books call a founding
+weather it can program, mostly
+its alien ruins, which tourists are not allowed near
+a vintage of wine grown under artificial light
+the first contact that didn't happen here
+its clones, of which nobody speaks
+salvage rights it fought a war over
+holding out during the blockade
+an AI that writes the local newspaper
+its radiation-scarred heroes
+rationing so strict it is a point of pride
+a drug distilled from the planet's moss
+a station-wide lottery for children's licences
+the slowest bureaucracy in settled space
+the colony ship that is still officially in transit
+cheap memory editing
+an orbital elevator that has never quite been finished
+its luminous sea
+its refusal to use AI for anything
+the deaths in the first winter
+spectacular auroras
+a cult that worships the colony charter
+couriers who never open the package
+a vat-grown beef that tastes almost right
+an asteroid strike that missed by two kilometres
+the scandal of the falsified survey
+a children's choir broadcast across three systems
+its neutrality in every war
+custom spacesuits made to fit like gloves
+being the last stop before the dark
+a sky that is mostly the gas giant
+its ancient, eccentric caretaker robot
+duels fought in vacuum
+its archive of Earth seeds
+tides strong enough to move houses
+bioluminescent tattoos
+a strike that shut down the jump gate
+== modern
+a closed-down factory
+a film shot here in the eighties
+an annual regatta
+a football team that always loses
+a lighthouse museum
+its farmers' market
+a serial killer in the seventies
+the best fish and chips on the coast
+a bypass that took twenty years to build
+being twinned with somewhere nobody can pronounce
+a crop circle that turned out to be students
+a scarecrow festival
+its record-breaking pumpkin
+a pop star's childhood home
+a pier fire
+the most traffic wardens per head
+the worst-performing school in the county
+a cheese-rolling race
+being on the shortlist for city status, again
+a carnival that once made the national news
+a sinkhole that swallowed a car
+its pottery
+being a speed trap
+a royal visit in 1953
+a nuclear power station on the horizon
+the curry houses on one street
+its charity shops
+a prize-winning brass band
+a wartime evacuation everyone still talks about
+its seafront, which is mostly in the sea now
+a rugby club older than the town hall
+a tidal causeway that catches tourists
+a dog show
+its folk festival
+a radio mast that interferes with every television
+the man who built a castle in his back garden
+its outlet village
+a commune in the sixties
+a mining disaster
+the first supermarket in the region
+coach parties
+an unsolved disappearance
+an oyster festival
+having the most listed buildings per street
+the reality show filmed on its main road
+a ferris wheel that hasn't turned in years
+a local election decided by a coin toss
+its traffic
+an industrial estate that never filled
+a pie shop that has queues every morning
+being where the motorway ends
+its marching season
+
+## run_by
+# used as: "run by {}" (noun phrase)
+== fantasy
+a council of guild masters
+an absent lord's reeve
+the abbess
+whoever holds the mill
+an elected headman
+a merchant prince
+the garrison captain
+a boy-king's regent, badly
+the widow of the last lord, who has not remarried on purpose
+three sisters who agree on nothing
+a hedge wizard who was elected as a joke
+the temple's high priest and his nephews
+a bishop who has never visited
+a retired mercenary company
+the eldest woman in the oldest family
+the thieves' guild, openly
+a dwarf clan that owns the mines
+a knight too old to fight and too proud to stop
+a bailiff who answers to a duke three weeks' ride away
+the moot, which meets under an oak
+the brewers' guild
+a dragon's appointed steward
+the lord's bastard son
+a magistrate who takes bribes in eggs
+the order of the grey friars
+a council of elders that has not met in a year
+whoever won the last tournament
+an elven envoy nobody voted for
+a sheriff hunting outlaws who are his cousins
+the harbour master
+a queen in exile
+a man who claims to be the true heir
+a lottery among the freeholders
+a court of hedge-witches
+the ferryman's family
+a burgomaster with a gold chain and a gambling debt
+the master of the salt works
+a prince-bishop
+the castellan, while the lord is at war
+a goblin chief who is surprisingly good at it
+a council of nine, one of whom is a ghost
+== sf
+the corporation's site manager
+an elected council nobody trusts
+the ship's AI, in theory
+the miners' union
+a retired admiral
+a lottery, every year
+the descendants of the original crew
+a governor appointed from a planet she has never left
+a consensus algorithm
+the quartermaster, since the captain died
+a cooperative of hydroponic farmers
+an insurance company's local adjuster
+the dock bosses
+a teenage prodigy the founders left in charge
+a planetary trust that answers to shareholders
+a theocracy of engineers
+the colony doctor, by default
+a military junta that calls itself a caretaker government
+a cartel pretending to be a chamber of commerce
+a clone of the founder, the fourth so far
+the last person who knows how the reactor works
+an alien embassy, quietly
+a committee with forty-one members and no quorum
+the life-support crew, who can turn off the air
+a charismatic preacher with a repair shop
+a mayor elected by a two-vote margin and a recount
+the terraforming authority
+a smugglers' syndicate in respectable suits
+the chief of security and her drones
+an uploaded mind that refuses to retire
+a board of directors on a twelve-minute light delay
+the pilots' guild
+a family that owns the water
+a station AI that has started holding elections
+a court-appointed receiver
+a council of the oldest cryo-sleepers
+the customs office, in every practical sense
+whoever has the codes this week
+a nun who used to be a fleet commander
+a mining foreman nobody dares cross
+== modern
+a mayor in their fourth term
+the family that owns the factory
+a parish council at war with itself
+a property developer, in practice
+whoever runs the pub
+a town clerk who has outlasted six councils
+a residents' association with a terrifying chair
+a local businessman with a lot of signs up
+the landlord of most of the high street
+an absentee lord of the manor
+a county council forty miles away
+the vicar and the head teacher, between them
+an independent councillor who won on potholes
+a housing association
+a retired police superintendent
+a golf club committee
+the harbour trust
+a cooperative that bought the village shop
+a mayor who used to be a weather presenter
+a regeneration board with a logo and no money
+a fishing family that owns the quay
+the university, in effect
+a gang everyone pretends not to see
+a planning committee nobody understands
+an MP who lives in the capital
+a businesswoman who saved the bus route
+the estate management company
+the shop owners' association
+the oil company, more or less
+a farmer who owns all the land
+a mayor who was elected unopposed
+a trust set up by a dead philanthropist
+the local newspaper's owner
+a caretaker administration after the scandal
+a former footballer with a hotel
+a community council that meets in the library
+the hospital board, which employs everyone
+a couple who moved here last year and joined everything
+the national park authority
+a man known only as the Chairman
+
+## industries
+# used as: "It lives on {}." (trade or work: 'salt pans and smuggling')
+== fantasy
+salt pans and smuggling
+wool, and the tolls on the bridge
+iron from the hill mines
+the pilgrims and what they'll pay for a candle
+herring, salted and barrelled
+timber floated down the river
+horse fairs and horse thieving
+the abbey's vineyards
+peat cutting and eel traps
+the king's road and the inns along it
+dye works that turn the river red
+quarrying stone for the cathedral
+rope-making for the navy
+amber dug from the dunes
+mercenaries' wages, sent home
+silver, until it runs out
+honey, wax and candles
+the garrison's custom
+tanning, and the stink that comes with it
+copying books for the university
+smithing swords for anyone who pays
+the ferry and the ferryman's monopoly
+sheep, and nothing but sheep
+fur trapping in the north woods
+charcoal for the forges
+grain and the mill that grinds it
+a market every seventh day
+shipbuilding for whoever wins the war
+apples and cider
+bell-founding
+glassblowing in great smoky sheds
+wrecking ships on the rocks, though nobody says so
+the tin trade with the dwarves
+selling relics, some of them real
+falconry for the nobility
+a famous school of swordsmanship
+mushrooms from the deep caves
+cloth fulling at the water mills
+pearls and pearl divers
+breeding hunting hounds
+the potions trade, licensed and otherwise
+whaling and whale oil
+spices from the caravans
+oysters and the oyster beds' tithes
+carving gravestones for half the province
+ransoms
+== sf
+ice mined from the rings
+the shipyard and the contracts it can't lose
+refuelling ships that never stay
+hydroponic vegetables for the stations
+rare-earth mining and the fines that come with it
+data storage for people who want it forgotten
+tourism to the alien ruins
+salvaging wrecks in the debris field
+helium-3 skimmed from the gas giant
+gene-tailored crops under licence
+medical trials no planet would allow
+a customs post and its bribes
+the military base and its payroll
+algae farming in long green tanks
+printing spare parts for the whole sector
+training pilots
+refining fuel in the orbital cracker
+repairing drones and selling the scrap
+smuggling past the blockade
+water hauled from the comet
+selling air to new arrivals
+breeding livestock that can live in low gravity
+terraforming contracts
+archaeological digs paid for by universities
+low-gravity manufacturing
+the orbital elevator's freight charges
+quarantine fees
+cryo-storage of colonists waiting for a planet
+mercenary contracts in the border wars
+water-recycling patents
+radiation-hardened electronics
+luxury tourism for the rich and bored
+synthetic-meat vats
+shipping lane tolls at the jump point
+recording deep-space signals for the navy
+asteroid prospecting, mostly failed
+cloned labour, quietly
+pharmaceuticals brewed from local fungi
+bootleg memory chips
+dismantling decommissioned warships
+carbon capture credits
+crystal growing in microgravity
+a company store and the debts it keeps
+reactor maintenance for half the system
+pilgrim traffic to the first landing site
+== modern
+fishing, and less of it every year
+a call centre and the council
+tourists in July and August
+the hospital, which employs a third of the town
+the university and its students
+a car plant on three-day weeks
+dairy farming and subsidies
+a container port that runs all night
+retired people's pensions
+the oil rigs offshore
+second-home owners who are never here
+a prison on the edge of town
+a data centre that employs eleven people
+quarrying and the lorries that go with it
+the army base
+logistics warehouses along the bypass
+ice cream, arcades and a lot of rain
+the racecourse
+an annual music festival
+the casino
+the power station
+commuting into the city
+sheep farming and the hill subsidy
+the ferry to the islands
+a chemical works with a long and colourful record
+fruit picking by seasonal workers
+antique shops and tea rooms
+the airport
+whisky distilling
+selling houses to people from the city
+care homes
+a pharmaceutical plant
+the shipyard, on and off
+craft beer and bike tours
+shellfish exported to restaurants abroad
+a ski lift and hope
+golf courses
+the shopping centre
+the motorway services
+film shoots now and then
+a brewery older than the town hall
+dredging the estuary
+the cathedral and the visitors it brings
+software start-ups in a converted mill
+odd jobs and benefits
+a wind farm and its maintenance crews
+
+## landmarks
+# used as: "{} stands over it" (noun phrase with article)
+== all
+a clock that stopped years ago
+a statue no one can name
+a statue of the founder with the face worn off
+a tower that was never finished
+a monument to a victory that was really a defeat
+a memorial wall with one name chiselled out
+a great house nobody has lived in for years
+the founder's tomb, much too big
+a beacon that is lit for every birth
+a crooked spire
+a bell tower with no bell
+a wall of names of the drowned, the lost and the missing
+a mural of the first settlers, all looking the wrong way
+an arch built for a visit that never happened
+a prison, now a hotel [sf, modern]
+a tree planted on the first day, now enormous
+a house shaped like a ship
+an observatory with a cracked lens
+the ruin of the first settlement
+a scaffold left up so long it has become part of the skyline
+a bright red tower everyone uses for directions
+a temple to a god no one worships any more
+a hanging garden gone wild
+a column with a figure on top too high to make out
+a fortress built against an enemy that never came
+an empty plinth
+a great rusted machine nobody can explain
+the old hospital on the hill
+a water tank painted with a face [sf, modern]
+a schoolhouse that burned and was never rebuilt
+a watchtower nobody has manned in living memory
+== fantasy
+a drowned church
+a stone circle
+a ruined tower
+a gallows hill
+a great hollow oak
+a bridge with a toll-troll's house
+the old lord's tomb
+a market cross
+a wizard's tower with no door
+a castle on a crag, half-fallen
+a white horse cut into the chalk
+the abbey's bell tower
+a windmill with sails painted blue
+a dragon's skeleton propped up as a gate
+a giant's chair carved out of the cliff
+a burial mound with a door
+a standing stone with a hole through it
+a cathedral two centuries from finished
+the keep of the marcher lord
+a beacon tower on the headland
+a temple of the old gods, roofless
+a siege tower left from the last war
+a gibbet with an iron cage
+an elven bridge of living wood
+a dwarf-built aqueduct
+the hermit's pillar
+a moon-shaped arch of grey stone
+a watchtower with a weathercock shaped like a fish
+a shrine in a cave mouth
+a hill fort ringed with ditches
+the guildhall with its gilded roof
+a great water wheel
+a tithe barn bigger than the church
+a ruined palace of the old empire
+a tower of bones from the plague year
+a bell-founder's chimney
+a tree hung with ribbons and wishes
+a stone king with a broken sword
+a mage college with a glass dome
+the duke's summer palace
+a tomb sealed with nine locks
+a mill that turns without wind or water
+a pillar of black glass from the sky
+a minaret where the time is sung
+a fortified bridge with houses on it
+a mountain shaped like a sleeping woman
+a high gate in a wall that no longer exists
+a twisted spire said to have been bent by a demon
+a chapel of skulls
+a chalk giant with a club
+a tower of the old wardens, its light long out
+a rookery of a thousand birds in one elm
+a great cage that once held a griffin
+a toppled colossus
+a scriptorium with a hundred windows
+a lone stone seat on the hilltop where the kings were made
+== sf
+the original landing pod, kept as a shrine
+a viewing dome onto the gas giant
+the dead reactor
+a garden in a decommissioned tank
+the cargo lift to orbit
+the space elevator's tether, vanishing upwards
+a crashed freighter grown over with lichen
+a radio telescope dish the size of a lake
+an atmospheric processor that never stops
+the governor's tower, mirrored glass
+a hollow alien spire
+a launch gantry left from the first expedition
+a wind turbine as tall as a mountain
+the hydroponic tower, glowing green at night
+a statue of the ship's AI as a woman
+a solar mirror that turns night into dusk
+a monolith nobody put there
+the shipyard cranes
+a cooling tower painted with colony slogans
+a derelict warship parked in orbit, visible by day
+a memorial to the lost colony ship
+an orbital ring like a silver scar across the sky
+the docking spindle
+a cathedral printed from the planet's own rock
+the ice drill, a kilometre high
+a holographic flag that glitches in the wind
+a quarantine dome sealed since the outbreak
+the weather control mast
+a crater ridge lined with antennae
+a gigantic tree imported from Earth, under its own dome
+the cryo-vault where the founders still sleep
+a sphere of alien metal that hums
+the corporate headquarters, lit all night
+a habitat ring turning slowly overhead
+the terraforming engine, belching steam
+a beacon that pings every eleven seconds
+the wreck of a mining mech
+a black obelisk taken from the ruins
+a mass driver aimed at the stars
+the first greenhouse, kept as a museum
+a statue of the first child born here
+the planet's moon, close enough to see the mines
+a fusion torch that lights the whole valley
+the military listening post on the ridge
+a tower of stacked shipping containers
+a water condenser shaped like a flower
+a cylinder of glass full of the planet's first fish
+a broken gate to nowhere left by whoever came before
+an arcology so tall its top is in cloud
+the beacon of the jump gate, blinking
+a skeleton of scaffolding where the second dome was meant to go
+a satellite dish turned to face the homeworld
+the lander's heat shield, mounted like a sun
+a statue of a dog that went into space
+a vertical farm with a ruined top floor
+== modern
+a water tower painted like a hot-air balloon
+the pier
+a twenty-four-hour diner
+an empty shopping centre
+a war memorial
+a cooling tower from the power station
+a church with a satellite dish on the steeple
+a multi-storey car park everyone hates
+a pit-head winding wheel
+a viaduct the trains no longer use
+a radio mast with a red light on top
+a tower block named after a poet
+a giant fibreglass cow
+a Victorian clock tower with four different times
+a ferris wheel that stopped turning in 1998
+a gasometer frame
+a motorway flyover
+a supermarket the size of an aircraft hangar
+a cathedral covered in scaffolding
+a wind turbine on the ridge
+a castle that is now a wedding venue
+a mill chimney with a tree growing out of the top
+a concrete church that looks like a spaceship
+a lighthouse painted in stripes
+a bandstand
+an abandoned hospital
+a hotel that has been closing down for years
+a crane over a building that will never be finished
+a sign spelling the town's name across the hill
+a folly built by a bankrupt lord
+a nuclear power station on the skyline
+a steel sculpture people call the Toast Rack
+an old cinema with half its lettering gone
+a racecourse grandstand
+a war-time pillbox on the cliff
+the floodlights of the football ground
+a statue of a famous greyhound
+a church spire that leans
+a disused lido
+a glass office tower nobody works in
+a bridge with padlocks all over it
+a giant ice-cream cone outside the café
+a railway bridge painted with graffiti
+the town hall's copper dome
+an oak with a bench around it
+a disused colliery's slag heap, now grassed over
+a seafront hotel with all the windows boarded
+a phone mast disguised badly as a pine tree
+a white horse on the hillside
+a grain silo with a mural of a farmer
+a distillery's pagoda roof
+a crumbling art deco cinema
+the bypass on its stilts
+a football stadium half the size it needs
+a giant lit-up cross on the hill
+
+## troubles
+# used as: "Lately {}." (clause)
+== all
+children have started going missing
+the water's going bad
+a stranger has bought the biggest house
+two families are close to bloodshed
+the harvest failed
+someone is poisoning dogs
+the young are all leaving
+debts are being called in
+a sickness no one will name
+the old ruler died and the will is missing [fantasy, sf]
+someone has been leaving gifts on doorsteps, and the people who get them fall ill
+the dead have been turning up in the wrong graves
+a preacher has arrived and half the young follow her
+the best families are quietly selling up
+people keep dreaming the same dream
+a murder has gone unpunished and everyone knows who did it
+a wedding was called off at the altar and both families want blood
+the night watch has stopped coming back at dawn [fantasy, sf]
+money's turning up that nobody can explain
+the bridge, the only way out, is cracking
+a fire took a whole street and nobody will pay to rebuild
+nobody can agree who owns the commons
+a girl came back from the woods and won't say a word
+someone has been stealing the town's records
+the price of bread has doubled
+a beloved old man has been accused of something terrible
+the cemetery is full
+outsiders keep asking about the founder
+there have been three deaths in one house in a month
+a famous son came home and won't say why
+the lights have been flickering in a pattern [sf, modern]
+every clock in town is running slow
+the rats have gone, all at once
+someone painted the same symbol on every door overnight
+the council has stopped meeting
+the town's only doctor has vanished
+a child prophet is drawing crowds
+a lot of people have started sleepwalking
+nobody has been able to sleep through the night
+a long-lost heir has turned up with papers
+everything keeps shaking, just a little
+a feud over a boundary stone has turned to arson
+the newcomers are outnumbering the old families
+a famous visitor is coming and everything must be perfect
+the animals have been behaving strangely
+a debt from two generations ago has been called in
+a sinkhole has opened in the market place
+somebody poisoned the well, or says they did
+a strike has shut everything down
+the young have formed a gang and the old are afraid of it
+a rival town is stealing their trade
+a confession was found in a dead woman's papers
+the elected leader is plainly going mad
+food has been going missing from every larder
+a spy has been caught and no one knows who sent her
+the festival has been cancelled for the first time in centuries
+a beloved animal has died and people are taking it badly
+a duel is set for the end of the month [fantasy, sf]
+the tax collectors are early this year
+a woman claims her husband was replaced
+lights have been seen in the empty house
+a collapse took the lower town
+everyone has been receiving anonymous letters
+the old quarry has started filling with something that isn't water
+a wedding party went missing on the road
+the eldest daughter of the leading family has eloped
+the town's records show a year that nobody remembers
+a famous criminal has been released and come home
+there's a shortage of everything at once
+someone is stealing children's names, somehow
+a trial has split the place in two
+the founder's statue was found smashed
+newcomers are buying up the land through a third party
+a cult has bought the old schoolhouse
+a run of stillbirths has everyone frightened
+an outbreak of fevers among the old
+people have started leaving their doors locked
+a merchant is cornering the market in salt [fantasy, sf]
+the orphanage is overflowing
+the gravediggers are on strike
+a beast has been killing livestock
+a ceremony has gone wrong and someone died
+someone keeps ringing the bell at night
+a much-loved teacher was dismissed without a reason
+there's been an outbreak of honesty, and it's causing havoc
+a new law forbids gatherings of more than five
+the guards have started charging for protection
+rival healers are at each other's throats
+an old treaty has expired and nobody renewed it
+the drinking water tastes of salt
+the leader's son killed a man and walked free
+== fantasy
+bandits on the road in
+a dragon's been seen in the hills, or so they say
+the lord is raising taxes for a war
+the dead won't stay buried
+the faerie folk have been stealing babies again
+the king's men are pressing every boy over twelve
+the river has changed course in the night
+a witch-finder has come to town
+the wolves are back, and bolder
+the harvest rotted on the stalk overnight
+the abbey's relic has been stolen
+an army is camped two days away and nobody knows whose
+the barrow on the hill has been opened
+a plague of ravens
+the lord's heir has been taken by giants
+the mill wheel turns backwards at midnight
+an heir with a dragon-mark on his shoulder has been born
+the bells ring by themselves
+the wizard's tower has gone dark
+goblins have been seen at the forest edge
+a knight has challenged the whole town to single combat
+the ferryman is demanding payment in teeth
+the old god's priests have come back into the open
+the forest has started creeping into the fields
+a great beast has been killing cattle on the moor
+a prince is hiding here in disguise and someone has noticed
+the stars are wrong
+a curse is turning the milk sour
+the dwarves have closed the mine and won't say why
+pilgrims bring stories of a holy child in the hills
+the king is dead and three claimants want the crown
+the trolls are demanding a bigger toll
+a ghost ship has been seen on the river
+the duke wants the abbey's lands
+mages are being arrested on sight
+the healers' herbs have stopped working
+the swan-knight's grave is empty
+a crusade is recruiting and the young are going
+the magic in the well has run dry
+the lord has married a woman who casts no reflection
+a tournament has brought a hundred armed strangers
+the elves have closed the old road
+the toll bridge has been seized by an outlaw
+a comet hangs over the castle every night
+an inquisitor is reading the parish registers
+the lady's hounds came back without her
+== sf
+the air scrubbers are failing
+supply ships have stopped coming
+an unknown signal from the ice
+the corporation is about to pull out
+the station's orbit is decaying
+an outbreak in the cryo ward
+the AI has started refusing orders
+a solar storm cut communications
+somebody has been tampering with the water reclamation
+the oxygen ration has been cut again
+the reactor is running hot and nobody knows why
+a ship has docked that is forty years overdue
+the native fauna has started coming closer to the dome
+a hull breach on deck nine
+the terraforming has stopped working
+the gene-locked crops are failing
+a jump gate has gone silent
+the navy wants to requisition the station
+synthetic workers are going on strike
+memory wipes are being done without consent
+the colony charter has expired and Earth won't renew it
+dust storms have buried the solar arrays
+people are hearing voices on the comms
+an alien artefact was brought up from the dig
+the founders' ship is waking up
+a clone has claimed to be the real administrator
+a drug is spreading through the lower decks
+the radiation shielding is thinner than anyone was told
+the gravity on the outer ring fluctuates
+a rival corporation has filed a claim on the moon
+a pirate fleet is sitting just outside sensor range
+the cryo-sleepers' families want them woken
+the water table under the colony has dropped
+someone is buying up everyone's debt contracts
+the security drones have started following children
+a vote to declare independence has been called
+a ship crashed into the outer dock and no one claimed it
+the medical bay's printer is producing the wrong drugs
+an inspection team from the homeworld is coming
+someone has hacked the life-support logs
+the planet's long winter is coming early
+a quake has opened a fissure under the habitat
+the last shuttle off has been sold to the highest bidder
+the station's spin is slowing
+an old war satellite has woken up overhead
+a mining drone came back carrying something it shouldn't have
+== modern
+a motorway is going to cut it in half
+the plant's closing
+a body was found in the reservoir
+property prices have driven everyone out
+the last bank has closed
+a fracking company wants to drill on the common
+the secondary school has failed its inspection
+a TV crew has been asking questions
+the bus service has been cut to twice a day
+the cliffs are crumbling and houses are going over the edge
+the post office closed and nobody knows where to get a stamp
+a supermarket wants to build on the playing fields
+there's been a spate of burglaries
+the river flooded the high street again
+county lines gangs have moved in
+the GP surgery is closing
+a holiday company has bought half the cottages
+a councillor was caught taking backhanders
+the local paper has folded
+the pub has been sold to a chain
+there's talk of a new prison
+the hospital's A&E is being downgraded
+a teenager has gone missing after a party
+fly-tipping has got out of hand
+the football club has gone into administration
+a wind farm application has split the village
+someone keeps vandalising the war memorial
+the mobile signal has gone and nobody will fix it
+the factory owner's son is standing for parliament
+a sewage leak has closed the beach
+the church roof needs a fortune
+a reality show wants to film here
+a sinkhole has swallowed the car park
+the ferry company is going bust
+anti-social behaviour on the estate is all anyone talks about
+there have been two fatal crashes on the same bend
+the last farm is being sold for housing
+an influencer has made the place go viral
+the library is going to be sold off
+a youth club worker has been arrested
+the town has been chosen for a refugee centre and opinion is split
+the high street is half charity shops and half boarded
+a power cut lasted a week
+the castle's owner wants to close the footpath
+a developer bought the allotments
+
+## senses
+# used as: "It smells and sounds of {}." (noun phrase)
+== all
+baking bread before dawn
+frying onions and arguments
+wet stone and children shouting
+boiled cabbage and a hundred voices at once
+damp laundry and gossip
+dust and distant hammering
+spices, smoke and haggling
+cold metal and footsteps
+rot, and somebody singing
+burnt sugar and laughter
+mildew and quiet
+blood from the slaughterhouse and the squeal of the pens
+sour beer and old quarrels
+hot fat and a crowd
+sweat, and drums at night
+crushed herbs and wind chimes
+vinegar and a baby crying somewhere
+ash and wailing
+yeast, copper and slamming doors
+too many people in too little space
+== fantasy
+woodsmoke and wet dogs
+bells every hour
+the river, always
+tanneries downwind
+the hammer of the smithy
+pigs in the streets
+incense from the temple steps
+horse dung and harness bells
+fish guts and gulls
+peat smoke and fiddles
+hot wax and chanting
+malt from the brewhouse and a mill wheel's creak
+sheep and their bells
+pine sap and axes
+sulphur from the alchemists' quarter
+roasting chestnuts and a town crier
+seaweed and rigging slapping masts
+lavender in the fields and bees in the hedges
+the dye vats, sharp as vinegar
+mud and hooves
+apple mash and cider presses
+tallow candles and a lute in every tavern
+fresh rushes and barking hounds
+the market's cheeses and cockerels at all hours
+lime kilns and stonemasons' chisels
+river weed and the creak of the ferry rope
+mulled wine and carols
+manure on the fields and larks above them
+the quarry's dust and blasting powder
+gunpowder and parade drums
+frankincense and monks at their offices
+cooking fires and sheep being driven
+wet thatch and a blacksmith's bellows
+roses on every wall and a fountain
+herring smoke and the shouts of the fishwives
+moulting goose feathers and the poultry market
+hay and a threshing flail
+ale-house vomit and singing
+cold ashes and the watchman's rattle
+bread ovens and the cathedral choir
+cut oak and shipwrights' mallets
+a tannery's stink and a busker's pipe
+hot iron and the clatter of looms
+fox musk and owls at night
+the ropewalk's tar and its endless chanting
+== sf
+the hum of recyclers
+ozone and hot metal
+announcements no one listens to
+hydroponic green, too sweet
+burnt coolant and klaxons
+printed food and air pumps
+soy frying and the clatter of maglev cars
+plastic warming in the sun and drones overhead
+algae tanks and gurgling pipes
+welding torches and shift whistles
+nothing at all, and the ventilation's sigh
+disinfectant and the beep of scanners
+methane leaks and the creak of the hull
+rock dust and a thousand drills
+ion engines warming up in the dock
+synthetic flowers and piped music
+sweat in pressure suits and heavy boots
+hot circuit boards and a server farm's whine
+the sea through the sea wall and the pumps keeping it out
+lubricant and the whirr of servo arms
+fried fungus and street vendors calling in twelve languages
+recycled water and a radio preacher
+the dome's filters and the wind outside them
+burning dust as the sun comes up
+rubber gaskets and the thump of airlocks
+ammonia from the vats and a vending machine song
+cinnamon pumped in to hide the smell of people
+coffee substitute and the clack of mag-boots
+cleaning bots and their little chimes
+the reactor's tang and a constant low thrum
+fresh paint over rust and loud advertising
+hot sand and rattling dome panels
+fermenting yeast and the gurgle of the brewing vats
+fuel vapour and the roar of launches
+the sweet rot of alien plants and their clicking pods
+cold air from the vents and arguments in the corridors
+ozone, ozone and more ozone
+cheap noodles and a crowd's chatter in the ring market
+scrubbed air with a hint of feet
+cryo-gel and the hiss of thawing pods
+burnt toast from a hundred galley printers
+lichen and dripping condensation
+grinding ore and conveyor belts
+mag-rail sparks and the morning crush
+alien rain on the dome and its endless drumming
+== modern
+gulls and diesel
+traffic on the bypass
+chip fat and sea air
+church bells and car alarms
+cut grass and two-stroke engines
+burnt coffee and buses braking
+kebab vans and drum and bass
+silage and tractors
+low tide and rigging
+bus exhaust and a busker's guitar
+curry houses and nightclub bass
+wet tarmac and seagulls
+fresh bread from the supermarket and its tannoy
+bonfire smoke and fireworks
+diesel from the ferry and its horn
+cigarettes outside the pub and laughter
+the brewery's malt and lorries reversing
+pollen, lawnmowers and ice-cream vans
+the sewage works and the ring road
+new carpets and a shopping centre's muzak
+doughnuts, candyfloss and screams from the fairground
+hot brakes and trains
+the chemical plant and its sirens on Wednesdays
+wood smoke and dogs barking
+rain on concrete and helicopters
+burnt rubber and boy racers
+fish market ice and forklifts
+a bakery's vents and early-morning bin lorries
+hops, sheep and church bells
+suncream and the arcade
+pine needles and chainsaws
+onions from the burger stall and the football crowd
+coal smoke and the colliery band
+garlic and scooters
+the river at low water and a motorway's hum
+manure and quad bikes
+hot tarmac and roadworks
+bleach and a hospital car park
+whisky mash and the distillery's steam
+drains in summer and street parties
+cut flowers outside the station and the announcements
+salt marsh and wild geese
+pizza ovens and teenagers on scooters
+the gasworks and rattling shutters
+lilacs in back gardens and a train every eight minutes
+
+## customs
+# used as: "Here {}." (clause: 'no one whistles after dark')
+== all
+strangers are offered salt at the gate
+no one whistles after dark
+every door is painted blue
+a bride must steal something on her wedding day
+a bell is rung when anyone leaves for good
+debts are forgiven on midsummer
+children are named by a lottery
+nobody eats on the first day of the month
+the oldest resident has a vote on everything
+a candle is left in the window for the missing
+newcomers must plant something and keep it alive for a year
+the dead are buried with their shoes on the wrong feet [fantasy, modern]
+you knock three times even on an open door
+nobody says the founder's name aloud
+every child is given a second, secret name
+a guest who refuses food is asked to leave
+weddings happen at midnight
+the dead keep their places at the table for a year
+nobody sits with their back to the door
+the last person to arrive at a meeting must speak first
+people wear their coats inside out to funerals
+lovers exchange keys instead of rings
+everyone owns a knife and nobody draws one indoors
+nobody counts the children aloud
+the youngest child pours every drink
+mirrors are covered when somebody dies
+quarrels are settled by a singing contest
+the town's leader must eat in public once a week
+a thief is made to wear what she stole for a month [fantasy, sf]
+a newborn is passed around the whole street before its mother holds it again
+you don't cut your hair until you've lost someone
+people leave a coin on the step for whoever needs it
+a man is forbidden to cook for his own wedding
+anyone may demand the truth once a year, and must be answered
+the dead are not mentioned for a month, then talked about constantly
+no one buys anything on the last day of the week
+strangers are asked for a story before they're given a bed
+every house keeps one room nobody uses
+at the turn of the year everyone swaps houses for a night
+children choose their own surnames at twelve
+it is rude to finish your plate
+names of the dead are written on the ceiling
+nobody walks alone past the old house
+the first fruit of the year is buried, not eaten
+grudges are written down and burned once a year
+a stranger who arrives on a feast day is treated as royalty
+every newborn is weighed against bread, and the bread given away
+the dead are dressed in white, the mourners in yellow
+no one may refuse a dance
+people greet each other by asking what they dreamt
+nobody lends a knife without asking for a coin back
+lying to a child is a crime
+marriage is a seven-year contract, renewable [fantasy, sf]
+each family keeps a book of its shames
+spitting on a doorstep is a declaration of war
+widows take over their husbands' trades and seats
+if two people say the same word at once they must kiss
+the town's quarrels are aired on a public board
+the oldest dog is given the best seat at the feast
+travellers must leave something behind when they go
+nobody sleeps with their feet towards the door
+an empty chair is kept at every council meeting
+children are taught to bow to the founders' portraits
+a gift must be returned with something smaller
+people keep the hair of their dead in lockets
+once a year everybody fasts in silence for a day
+the losing side of an argument buys the next round
+nobody may marry until they've lived alone for a year
+no one burns bread
+there is a holiday for an event nobody remembers
+announcements are sung, never spoken
+the dead are given a day each year when they may return, and doors are left open
+anyone who breaks a cup must tell a secret
+lovers are publicly announced by a ribbon on the door
+there's no word for goodbye, only see you later
+everyone wears a token of their trade at all times
+new arrivals are given a sponsor who answers for them
+children are allowed to give orders on one day a year
+nobody wears red unless they're in mourning
+gossiping about the dead costs a fine
+a promise made over bread can't be broken
+the leader must be chosen from those who don't want the job
+hands are washed before entering any home
+the town's bell is rung for every birth, but not for every death
+people sign their names with a drawing
+it's bad luck to say thank you
+the dead are cremated and their ashes mixed into the mortar
+anyone may sleep in the common hall without asking
+people turn their plates upside down when they're done
+brides carry knives and grooms carry needles
+nobody is allowed to be alone on their birthday
+a person is not considered grown until they've told a lie in public and confessed it
+children are punished by being made to sit with the elders
+names are never written on graves [fantasy, modern]
+people tie a thread around their wrist for each person they've lost
+the best room in every house is kept for a stranger
+neighbours inherit before family does [fantasy, sf]
+people apologise to the walls when they move house
+every argument must end with both people eating together
+a broken engagement is marked by a party, not a wake
+the anniversary of the founding is a week of feasting and settling scores
+you never step on anyone's shadow
+people salt their thresholds every evening
+nobody accepts a gift with the left hand
+the dead are given a vote in council for a year after they die [fantasy, sf]
+each child is given a pet to raise and must answer for it
+every stranger is asked their mother's name
+anyone may claim sanctuary in the meeting hall for three days
+weddings are held with the couple's backs to each other
+people only hum, never sing, outside feast days
+the youngest adult must learn the oldest songs by heart
+people make sure to whistle when walking past a grave [fantasy, modern]
+an unpaid debt is written on the debtor's door [fantasy, sf]
+nobody marries in the month of the founding
+the first word a baby says is carved above the door
+births are kept secret for a week
+lost things are hung on a post in the square for anyone to claim
+people never shake hands, they touch foreheads
+the whole place falls silent at noon for a minute
+a person may ask for one free meal at any house, once in their life
+it's thought rude to ask anyone their age
+houses are never locked, and theft is punished severely
+marriages are arranged by the grandmothers
+everyone takes a turn as judge [fantasy, sf]
+the dead are buried standing up [fantasy, modern]
+people give their children away to be fostered for a year [fantasy, sf]
+a dead man's boots are worn by the next person to arrive
+nobody ever sits in the chair at the head of the table
+people walk backwards through the door on the first day of the year
+a quarrel ends if either party laughs
+the town keeps a bell that only rings for lies [fantasy]
+nobody wears a hat indoors, even a crown [fantasy]
+weddings are announced by a burned-out lamp in the window
+gifts are wrapped in black
+every new building must contain a stone from an old one
+people bow to the person they are about to argue with
+the children are counted every night at the bell
+nobody owns their home, and homes are redrawn by lot every year [fantasy, sf]
+
+## rumours
+# used as: "people say {}." (clause)
+== all
+the mayor's money came from something terrible
+a body is bricked up in the old works
+the well is cursed
+someone here isn't who they say
+there's treasure under the oldest building
+the last newcomer never left
+the twins were switched at birth
+the founder never died, only went away
+the leader's wife is the one really in charge
+a child was born here who will change everything
+the old woman at the end of the street has buried four husbands, and not by accident
+the town was built on a burial ground
+there's a tunnel from the leader's house to somewhere nobody knows
+the last fire was set on purpose
+the doctor is not really a doctor
+two of the founding families are secretly one
+the town owes a debt it can never pay
+someone saw the dead man walking last week
+the recent stranger is an inspector in disguise
+the head of the council has a second family elsewhere
+the schoolteacher was once a famous criminal
+the town's water makes people forget things
+the clocks were set wrong on purpose
+a body is buried under every new building
+the town's luck is bought, and the price is due
+the missing boy ran away to join something worse
+the old house is not empty
+the local hero was a coward and the coward a hero
+the town was meant to be somewhere else
+someone has been reading everyone's letters
+the leading family is broke
+the festival was invented to cover up a massacre
+the town's founder murdered the first settler
+there's a room in the hall that has no door
+nobody who has been born in the last month has cried
+the miller can't die [fantasy, modern]
+the dogs know something
+there are more graves than people who have died
+the guards take orders from someone else
+the last election was rigged
+the baker puts something in the bread
+there's a list, and your name might be on it
+a famous person is buried in an unmarked grave here
+the town once sold its children
+the priest and the poisoner are the same person
+the old ruler's will named a stranger [fantasy, sf]
+the town has been moved, building by building, once before
+something lives in the drains
+the widow knows who killed her husband and is glad
+there's an entire street that isn't on any map
+the leader hasn't aged in twenty years
+the empty house was bought by someone who never comes
+two people who hate each other are secretly married
+the gravedigger takes things from the graves
+the town was cursed by a beggar who was refused
+everyone who reads the old records goes a little strange
+the treasure was found decades ago and spent on the town hall
+the wedding last spring was not a wedding
+someone sends the leader a letter every year that makes her weep
+the oldest building was not built by people
+the new arrivals are fleeing something that will follow them
+the plague was brought deliberately
+the town's mascot animal is the same one, still alive, for a century
+the cook who feeds half the town has killed a man
+there's no such person as the owner
+the fountain is worth more than the town
+the sickness started after the stranger's visit
+a child here can see the future, and nobody is happy about it
+the town's charter is a forgery
+someone has been watching the main road every night
+the founder's diary was burned for good reason
+the two families' feud started over a single egg
+the last executioner still lives here under another name [fantasy, sf]
+the town's records were swapped with another town's
+the healer is slowly poisoning her patients, but only the cruel ones
+there's money buried in every garden
+someone has been building something in the cellars
+the leader's twin died at birth, or did he
+the stars here are different from anywhere else
+the night watch is in league with the thieves [fantasy, sf]
+the old songs are instructions
+the abandoned quarter was not abandoned willingly
+the bell will ring by itself when the town is about to fall
+the oldest woman in town remembers the founding
+there's a door that only opens to people born here
+a stranger's grave in the cemetery is visited by someone every week
+the town is being slowly bought by one person
+the ones who left all came to bad ends
+somebody here knows exactly where the missing girl is
+the best guest room is kept for someone who has been dead fifty years
+the council's minutes are written before the meetings
+the eldest son is not his father's
+== fantasy
+the abbess is a witch
+the king's heir is hiding here
+there's a door in the hill that opens once a year
+the lord sold his soul for a son
+the river is a sleeping goddess
+the knights' order worships something in the crypt
+the miller's wife is a selkie and wants her skin back
+the elves take one child every seventh year
+the old wizard is still alive in the walled-up tower
+the dragon's hoard is under the cathedral
+the queen's ring was pawned here and never redeemed
+the bridge was built with a dwarf's bones in the foundation
+the bishop is a vampire
+the forest was a city once
+the inn's owner is a retired assassin
+the lord's hounds are men under a curse
+the saint's relic is a pig's bone
+the lake has a castle at the bottom
+the goblin market will come again this midsummer
+the castle has a ghost that guards a will
+the shepherd boy is a prince under an enchantment
+the lord's new advisor came from the barrow
+the witch on the hill cured the lord's madness, and he paid her with a child
+the swords in the armoury sing when war is coming
+a god walked through the market last spring
+the duke poisoned his brother
+the crown jewels in the capital are glass, and the real ones are here
+the old battlefield's dead march on the anniversary
+the werewolf trial hanged the wrong man
+the black monks keep a demon in a bottle
+the mine broke into a dwarf city and nobody came back
+the ferryman has been ferrying for three hundred years
+the giant in the hills is just very lonely
+the abbey's wine is made with blood
+there's a mage in the guard
+the stone circle grows one stone every century
+the falconer can speak to birds
+the old lord's ghost has been asking for his son
+the inn's cellar connects to the faerie roads
+the heretic who was burned here was right
+the dragon-slayer bought the skull at a fair
+the cathedral was built to keep something in
+the tower's new tenant is the king's court magician in disgrace
+the wells were poisoned by the elves in the war and never forgotten
+the alchemist turned his apprentice into gold
+== sf
+the colony's founders were convicts
+the AI talks to someone off-world
+the mine broke into something old
+the colony's real mission is classified
+the administrator is an android
+the founders' ship is still under power
+the cryo-sleepers are being sold off one by one
+the planet's native life is intelligent
+the homeworld has been silent for years and they're hiding it
+the water is dosed with something to keep everyone calm
+there is a second colony on the far side that nobody mentions
+the oxygen numbers are fake
+the jump gate was built by someone else
+the corporation will leave and take the life support with it
+the station's AI is grieving someone
+the alien ruins are a warning
+the doctor's medical licence was issued on a planet that doesn't exist
+a ship came in last month with no crew aboard
+the last colonists who tried to leave are still in orbit, dead
+the ration chits are tracked
+half of the founders were clones
+the terraforming is a cover for a weapon test
+the first winter's deaths were murders
+the navy has a secret base in the asteroid belt
+the governor was elected by an algorithm she controls
+the security chief is somebody's backup copy
+there's a sealed deck where the children of the first crew still live
+the medical scanners record your thoughts
+the comet hauler's crew found a body in the ice
+the pilot who discovered the planet never landed and never left
+the station is slowly being moved
+somebody is broadcasting on the colony's frequency from deep space
+the gene-crops are changing the people who eat them
+the alien spire turned on for an hour last week
+the dock workers have been building a ship of their own
+the original survey team found something and buried it
+the stars outside the viewport are a projection
+the reactor's designer lives here under another name
+the old robot remembers Earth
+the corporation planted the bomb that started the war
+the ship's archive has been edited
+the colony's founder had herself uploaded into the walls
+the pirates are being paid by the administration
+the shuttle crash was not an accident
+the colony is a lab and the people the experiment
+== modern
+the factory dumped something in the lake
+the teacher was in a cult
+a famous singer lives here under another name
+the council leader's brother got all the building contracts
+the vicar was a bank robber in the seventies
+the new estate is built over a plague pit
+the old manor was a secret wartime laboratory
+the nuclear plant leaks
+there's a body in the foundations of the bypass
+the local MP has a flat above the chip shop for reasons
+the supermarket opened because the mayor owns the land
+the missing girl from 1983 is alive and living abroad
+the lighthouse keeper's wife pushed him
+the reservoir covers a whole drowned village, church and all
+a lottery winner lives in the bungalow by the bus stop
+the closed-down cinema is used for something every Friday
+the pub landlord was in witness protection
+the hospital is closing to make way for flats
+there's a bunker under the town hall
+the film shot here was cursed
+the head teacher fiddled the exam results
+the football club's new owner is laundering money
+the big house is owned by a foreign oligarch
+the crop circles were made by the farmer for the tourists
+the old asylum still has patients
+the policeman's son is behind the burglaries
+a famous spy grew up on Station Road
+the wind farm makes people ill
+the art teacher painted the forged painting in the gallery
+the vanishing hitchhiker on the A road is real
+the dog walker found more than she told the police
+the chemist sells more than he should
+the old mine is still connected to the cellars
+the factory closure was planned years ago
+the vicar knows who the arsonist was
+a celebrity chef's first restaurant failed here and he still has debts
+the town was a target in the Cold War plans
+the parish council meets at the golf club for a reason
+the couple at number nine are spies
+the bridge was built with the wrong concrete
+the quarry hides a dumped car with someone in the boot
+the river was diverted to flood the wrong side of town
+the mayor fixed the best-kept village competition
+the new café is a front
+the last landlord of the pub is buried in the beer garden
+
+## scene_spots
+# used as: "{}: ..." (a place for a scene, noun phrase with article: 'a launderette at 2 a.m.')
+== all
+a wedding that's gone wrong
+an attic full of someone else's things
+a kitchen after a funeral
+a sickroom at night
+a crowded market at closing time
+a prison cell with two prisoners and one blanket
+a child's bedroom, kept exactly as it was
+a wake where nobody is grieving
+a burned-out house the morning after
+a courtroom during the verdict
+a birthday party nobody wanted
+a schoolroom after the last lesson
+a cellar with the door locked from outside
+a rooftop at the end of a long night
+a waiting room with a bad clock [sf, modern]
+a back kitchen during a feast
+a stairwell between two floors
+a bathhouse after hours
+a locked library
+a nursery with an empty cradle
+a cramped office stacked with ledgers
+a gambling den on a losing night
+a dance where nobody is dancing
+a meeting hall packed for a vote
+an interrogation room
+a dormitory after lights out
+a workshop full of half-finished things
+a barracks on the eve of deployment
+a quarantine ward
+a theatre during a performance that goes wrong
+a corridor of closed doors
+a pawnshop at closing
+an empty house on the day of the sale
+a street fight's aftermath
+a banquet hall with one seat empty
+a storeroom where someone is hiding
+a cramped boarding house room
+a negotiation table, the second day
+a cramped room where a family is being told the news
+a public toilet with a broken lock [sf, modern]
+a laundry full of steam
+a refugee camp's queue for water
+a lost-property office [sf, modern]
+a reading of a will
+a doctor's surgery with the doctor gone [sf, modern]
+a black market in a basement
+a museum after closing [sf, modern]
+a gaol's visiting hour
+a kitchen garden at dawn
+a roof garden with a view of everything
+a hall of mirrors
+a long table at a family dinner with an unexpected guest
+a deathbed with too many visitors
+a children's party with no children
+a classroom during an exam
+a bakery before opening
+a crossroads where three people meet by chance
+a ceremony that is running late
+a cramped vehicle on a long journey [sf, modern]
+a bridal chamber on the wedding night, with nobody in it
+a guardroom at the end of a long shift
+== fantasy
+a ruined chapel
+a smoky inn's back room
+a ferry crossing in fog
+the cellars under a keep
+a midsummer fair
+a hermit's tower
+a frozen pass
+a library of chained books
+the morning after a battle
+a river barge
+a hay barn in a thunderstorm
+a scriptorium at vespers
+a throne room after the king has left
+a gibbet at crossroads
+a witch's kitchen
+a cave behind a waterfall
+a dragon's empty lair
+a monastery's bathhouse
+a tournament field at dawn
+a castle kitchen on a feast day
+a lord's solar with the shutters closed
+an alchemist's cellar
+a siege camp in the rain
+a burial barrow, opened
+a faerie market at the edge of a wood
+a ship's hold on a pilgrim galley
+a tannery yard
+a guildhall's counting room
+a mill at midnight
+a ruined bathhouse of the old empire
+a mountain shrine in the snow
+a hunting lodge in deep winter
+a smithy with the forge just lit
+a hedge maze in the palace gardens
+a cathedral's bell loft
+a tithe barn at harvest supper
+a dungeon's lowest cell
+a beggar's camp under the bridge
+a moonlit stone circle
+a highway inn on a night of storms
+a plague-house with a red cross on the door
+a merchant's warehouse on the quay
+a fortune-teller's tent
+a wizard's study with the wizard missing
+a ruined watchtower on the border
+a convent's herb garden
+a palace kitchen at midnight
+a king's privy council in session
+a shrine of the old gods, freshly used
+a whaling ship's deck in a gale
+a dwarf-mine's lowest gallery
+an elven grove at dusk
+a goblin warren
+a crypt beneath the abbey
+a ferryman's hut
+a hall of the dead in a hill
+a frozen lake with a fair on it
+a market square on hanging day
+a queen's dressing room
+a bandit camp in the hills
+a scholar's garret in the university town
+a shipwreck on the rocks at low tide
+a hayloft with someone hiding in it
+an armoury the night before war
+a pilgrims' hostel
+a weaver's cottage with the loom going
+a stable during a foaling
+a dungeon kitchen
+a besieged gatehouse
+a cell in a wizard's college
+a riverside laundry with washerwomen
+a fen island with a single hut
+a smoke-filled cartographer's shop
+a palace ballroom during a masque
+a lepers' chapel outside the walls
+a wolf pit in the forest
+a summer pavilion on the lord's lake
+a border toll-house at night
+a cooper's yard full of barrels
+a counting house with the shutters drawn
+a gallows tree on a windy hill
+a huntsman's camp
+a cloister garden in the rain
+a moot under the old oak
+a rope bridge over a gorge
+a giant's abandoned hall
+a beekeeper's orchard
+a candle-lit chapter house
+a sinking boat on a lake
+a dungeon cell with an open door
+a sea cave full of smugglers' kegs
+a court of law with a dragon as witness
+a wedding feast in a great hall
+a night watch on the city wall
+== sf
+a cargo bay at shift change
+a hydroponics deck
+an observation blister
+a derelict ship's bridge
+a spaceport bar
+the colony's only chapel
+a cryo ward
+a market in a docking ring
+a zero-g gym
+a quarantine module
+an airlock mid-cycle
+an escape pod with too many people in it
+a mining shaft on an asteroid
+a server room kept at freezing
+a medical bay during a power cut
+a recycling plant's sorting floor
+a botanical dome with a cracked pane
+a mess hall at the end of a long rotation
+a command bridge on red alert
+a crew lounge with the viewport shutters stuck open
+a cloning lab after hours
+a desert outpost at dusk
+a crashed shuttle in an alien forest
+a ring station's rotating promenade
+a shipping container turned into a home
+a lift car climbing the space elevator
+a holding cell on a patrol cruiser
+a radiation shelter during a solar storm
+a tunnel under the dome
+a pilots' ready room before a launch
+a water reclamation plant
+an engine room with the reactor running hot
+an alien ruin lit by floodlights
+a terraforming tower in a dust storm
+a ballroom on a luxury liner
+a virtual-reality parlour in a slum deck
+a customs inspection hall
+a colony school with a view of the gas giant
+a pressurised greenhouse at night
+a garage full of broken drones
+a crater rim at sunrise
+an orbital chapel with a view of the planet
+a black-market clinic
+a hydrofoil crossing an alien sea
+a floating city's lower walkways
+a decompressed corridor
+an ice-drill station on a frozen moon
+an asteroid prospector's cabin
+an archive of frozen embryos
+a cockpit with one seat
+a vat farm's catwalks
+a generation ship's forest deck
+a robotics assembly line
+a bunker on a storm planet
+a sealed lab with the lights still on
+a docking clamp's control booth
+a refugee ship's crowded hold
+an embassy reception with three species
+a broadcasting studio on a pirate station
+a scientists' camp beside an alien monolith
+a solar farm at the station's dark side
+a waste chute with a body in it
+a crawler crossing a salt flat
+a cryo-pod bay with one pod open
+a habitat module on the sea floor
+a mag-train between domes
+a station's maintenance crawlspace
+a smugglers' hideout inside a hollow asteroid
+an abandoned theme park on a terraformed moon
+a hospital ship after a battle
+a rooftop garden of an arcology
+a jump-gate control room
+a lunar observatory at the edge of the dark side
+a mining town's union hall
+a holographic theatre showing old Earth
+a pressure suit locker room
+a drone traffic tower
+a neural clinic's recovery ward
+a crash site in a methane swamp
+a morgue on a warship
+a rest stop on a lonely trade route
+a seed vault
+a zero-g bar where drinks float
+a cargo hauler's galley
+a long-range scanner room
+a domed park with a fake sky
+a gravity well training centrifuge
+a shipyard's welding bay
+a bio-lab with something loose
+an orbital hotel's suite
+a ventilation shaft
+a temple built inside a dead reactor
+an evacuation shuttle's boarding gate
+a courtroom where the judge is an AI
+== modern
+a launderette at 2 a.m.
+a motorway services
+a school gym after a dance
+an all-night diner
+a multi-storey car park
+a hospital chapel
+a closing-down shop
+a rooftop bar
+a delayed train
+a lock-up garage
+a petrol station in the rain
+a seaside B&B out of season
+a caravan in a storm
+a bingo hall
+a night bus
+a cash-and-carry warehouse
+a ferry's empty bar
+a hotel corridor at 4 a.m.
+a garden centre on a bank holiday
+an airport gate after the last flight is cancelled
+a crematorium car park
+a seafront shelter in a gale
+a karaoke booth
+a building site at night
+a barbershop on a Saturday morning
+a supermarket at closing time
+a police station front desk
+a motorway hard shoulder
+a nightclub when the lights come up
+a church hall jumble sale
+a twenty-four-hour gym
+an allotment shed
+a hospital car park at 3 a.m.
+a wedding reception in a golf club
+a council flat's balcony
+a beach hut in winter
+a recording studio at the end of a session
+a tattoo parlour
+a funfair being packed up
+a back office in a chip shop
+a ski lift stuck in the wind
+an estate agent's showhome
+a railway station waiting room
+a self-storage unit
+a canal boat in winter
+a pub quiz
+a hotel swimming pool after dark
+a kebab shop at closing
+a primary school nativity play
+a hen do in a seaside town
+a community centre during a power cut
+a lay-by on a moor
+a call centre on the night shift
+a dentist's waiting room
+a betting shop on derby day
+a village fete in the rain
+a closing-time taxi rank
+a student flat after a party
+a newsagent at dawn
+a tower block lift
+a used car lot
+a coach on a school trip
+a cinema during the trailers
+a holiday camp ballroom
+an office Christmas party
+a minicab office
+a park bench at 6 a.m.
+a motel on a ring road
+a magistrates' court corridor
+a fishing boat's wheelhouse
+a skate park
+a nail bar
+a picnic in a layby
+a takeaway's kitchen
+a boxing gym
+a hospice garden
+a cash machine queue on a Friday night
+a cricket pavilion in the rain
+a museum's storage basement
+a farm kitchen during lambing
+a service lift in a hotel
+a ferry terminal at dawn
+a youth club disco
+a coffee shop just before closing
+a church on the night before a funeral
+a parents' evening
+a disused swimming baths
+a garden shed full of tools
+a marina in a storm
+a launderette with one machine running
+a tube train stuck in a tunnel
+a theatre dressing room on opening night
+an off-licence counter at midnight
+
+## sights
+# used as: "you see {}" (noun phrase)
+== all
+one light flickering
+dust in a shaft of light
+a chair knocked over
+frost on the inside of the glass
+a child's shoe
+fresh flowers no one admits to bringing
+a half-eaten meal going cold
+a coat on a hook that nobody claims
+a trail of wet footprints
+handprints on the window at child height
+a bed slept on but not in
+a stain someone has scrubbed pale
+a dozen people pretending not to watch
+a cat watching from a high shelf
+a letter in the fire, not quite burned
+blood dried brown on a doorframe
+a doll sitting upright facing the wall
+ash drifting like snow
+a bottle with a candle stub in its neck
+two cups on the table, one untouched
+a lot of shoes by the door
+a rope coiled neatly, too neatly
+an open book with a page torn out
+someone's teeth marks in a pencil
+dust everywhere except one chair
+a crowd of moths at a lamp
+a smear of lipstick on a glass [sf, modern]
+a broken window mended with paper
+a rash of scratch marks on the inside of a door
+a queue that isn't moving
+a portrait with the eyes painted over
+mould blooming in one corner
+a single glove on the floor
+cobwebs thick as cloth
+a map pinned to the wall, with pins
+an empty cage with the door open
+a puddle spreading from under a door
+a guard asleep on a stool
+keys left in a lock
+a jar of coins nobody has stolen
+a pile of letters, all unopened
+a bowl of fruit gone soft
+a figure at the far end who doesn't move
+breath smoking in the cold
+a game board mid-game
+shadows longer than they should be
+a smashed lamp
+a list of names, some crossed out
+a woman asleep sitting up
+water dripping into a bucket
+a pair of boots, muddy and new
+a drawing of this room, by a child
+a cloth over something the size of a body
+a table laid for twelve
+a basket of washing, half-folded
+a long scratch along the floor
+an old man counting under his breath
+rust running down the walls in stripes
+broken glass swept into a neat pile
+a ladder up to a hatch that's open
+soot around a keyhole
+a carved name, freshly gouged
+a knife stuck in the tabletop
+a heap of blankets that might be someone
+a dog sitting by the door, waiting
+tally marks on the wall
+a wedding dress hanging in the window
+a newborn asleep in a drawer
+a row of jars with things floating in them
+a sleeper twitching in a dream
+somebody's bags packed by the door
+== fantasy
+candles guttering in niches
+a tapestry slashed through
+banners grey with smoke
+a dog asleep across the doorway
+a suit of armour missing its helm
+rushes on the floor gone black
+a hawk hooded on a perch
+a sword hung over the fire, rusted into its scabbard
+a holy sign hung upside down
+herbs hanging in bunches from the rafters
+a hearth with a cauldron that hasn't been scrubbed
+wax seals, broken, scattered on the floor
+mud-spattered riders' cloaks steaming by the fire
+a spinning wheel turning slowly on its own
+a horse's skull nailed above the door
+a crown of straw left on a chair
+straw pallets lined up like graves
+an illuminated page with the gold scraped off
+a chain on the wall ending in an empty manacle
+a lute with one string left
+a heraldic shield with the device scratched out
+rats in the grain sacks
+a long table scarred with knife marks
+a stuffed bear with one glass eye
+a pewter tankard rolled under a bench
+a corn dolly hanging in the window
+a broken lance propped in the corner
+an inkwell spilled across a parchment
+a pentagram chalked half-out
+rust-red water in a stone basin
+a flock of crows on the roof ridge
+a rack of drying furs
+a beggar's bowl with a gold coin in it
+a ribbon tied to every bedpost
+a king's portrait with his face blacked out
+a cracked crystal ball on a velvet cloth
+a falcon's jesses with no falcon
+pilgrims' badges nailed around the door
+a scrying bowl full of black water
+a gauntlet left on the altar
+a bell rope tied off with a noose
+== sf
+warning lights pulsing amber
+condensation beading on the ducts
+a hologram stuck mid-advert
+a mural of the homeworld, peeling
+cables taped across the floor
+a cleaning bot bumping against a wall
+a pressure gauge in the red
+a screen flashing a countdown nobody explains
+frost blooming on a viewport
+a dead plant in a hydroponic tube
+a helmet with a cracked visor
+a stack of ration packs past their date
+a robot arm frozen mid-reach
+a cryo pod with its lid fogged
+emergency tape across a doorway
+a drone circling, recording
+stars wheeling past the window as the station turns
+a vending machine dispensing nothing
+a crew roster with three names greyed out
+blood globules floating in zero-g
+a 3D printer still printing something
+a smear of grease shaped like a handprint on the bulkhead
+an air duct grille unscrewed and leaning against the wall
+an old paper book, absurdly valuable here
+a uniform patch from a ship that was lost
+a heads-up display ghosting on the glass
+a sleeping bag strapped to the wall
+a dust storm pressed against the dome
+a medical scanner showing a heartbeat for an empty bed
+a tangle of wires spilling from a panel
+the gas giant filling the whole window
+a child's drawing of a sky with clouds
+a pet snake in a pressurised tank
+a hull-breach patch slapped over the wall
+a flickering AI avatar with its face half-rendered
+a tray of synthetic food in neon colours
+a mag-boot left stuck to the ceiling
+an old flag from Earth folded in a case
+a cargo crate stencilled with a warning in six languages
+hydroponic lights making everyone look purple
+== modern
+a TV on mute showing the news
+posters for a missing cat
+strip lights that buzz
+a vending machine with one thing left
+a phone face down on the table, lighting up
+a pile of takeaway menus
+a plastic bag snagged in a tree
+a shopping trolley on its side
+a police car with its lights going and no one in it
+a laptop open on a spreadsheet
+a carrier bag full of lottery tickets
+a calendar three months behind
+a child's car seat with no car
+a fridge covered in magnets and photographs
+a sofa on the pavement
+a dog's lead tied to a railing, no dog
+a dashboard with every warning light on
+a mug that says World's Best Dad
+a bouquet taped to a lamppost
+a security camera with its lens sprayed over
+an ashtray full on a no-smoking table
+a hospital bracelet on the floor
+chewing gum dotting the pavement
+a wedding invitation pinned to a corkboard
+an air freshener shaped like a pine tree
+a burnt-out car
+a mobility scooter parked across the doorway
+a puddle of something under the vending machine
+a teenager filming everything on his phone
+a smart speaker blinking blue
+an unfinished jigsaw on the coffee table
+a parking ticket under a wiper
+a fluorescent jacket on the back of a chair
+a defibrillator cabinet with the door open
+a microwave clock flashing 00:00
+a printed sign: back in 5 mins
+a radiator with socks drying on it
+a pair of trainers hanging from a phone line
+a row of empty wine bottles by the bin
+a stack of unpaid bills with a red stamp
+
+## sounds
+# used as: "you hear {}" (noun phrase)
+== all
+dripping somewhere
+a dog barking far off
+someone crying quietly
+wind finding every gap
+a clock louder than it should be
+laughter from another room
+a door banging, over and over
+a lullaby hummed off-key
+footsteps overhead, pacing
+a high whistle building to a shriek
+two voices arguing in whispers
+a child counting to a hundred
+a cough that won't stop
+glass crunching underfoot
+someone snoring like a saw
+the scrape of a chair
+a name called out, then silence
+the creak of something heavy settling
+coins being counted
+a knife on a whetstone
+a baby wailing two walls away
+the rustle of paper being torn into pieces
+a long, low groan from the walls
+water gurgling in hidden pipes
+someone whistling the same four notes
+a fly bumping against a window
+a slow handclap
+heavy breathing behind a door
+a cat yowling
+a muffled thump from below
+a bell, once
+a bolt sliding home
+somebody practising an instrument badly
+nails scratching at wood
+a cheer from a crowd somewhere
+rats in the walls
+someone eating noisily
+an argument cut off mid-word
+a high hum just at the edge of hearing
+the patter of small feet
+shouting in a language nobody here speaks
+a hammer, three blows and a pause
+something drumming softly on the roof
+a song from far off that stops when you listen
+dice rattling in a cup
+a man reading aloud, slowly
+a sob turned into a laugh
+the hiss of something boiling over
+pages turning
+a lock being picked
+a sneeze, and nobody says bless you
+music from a party you weren't invited to
+the creak of a rope under weight
+the clink of chains
+someone dragging something heavy
+a door opening, but no one comes in
+a loud, nervous laugh
+your own heartbeat
+a whistle blown three times
+cloth tearing
+a crowd going quiet all at once
+a kiss
+a rhythmic thud from next door
+a lid being prised off
+wheels on a hard floor
+somebody praying under their breath
+a fire crackling and spitting
+a moth flapping in a lampshade
+a squeaky hinge
+a drinking song with a verse you have never heard
+== fantasy
+a lute badly played
+rooks in the eaves
+chains
+the bell for the dead
+a horse stamping in the stable
+monks chanting through the wall
+a sword being drawn
+the hiss of a torch in its sconce
+the town crier's bell
+hounds baying in the kennels
+a cartwheel squealing on its axle
+the clang of a portcullis
+a hurdy-gurdy droning
+geese in the yard
+a blacksmith's hammer, ringing
+a curse in a dead language
+the swish of a scythe
+an owl calling three times
+the rattle of armour on the stairs
+the crack of a whip
+pilgrims singing a hymn on the road
+a scroll being unrolled
+the whine of a crossbow being cranked
+the toll of a monastery bell
+a wolf howling nearer than it should be
+the crackle of a spell gone wrong
+a raven speaking a word
+mill wheels grinding
+a herald's trumpet
+the clatter of a loom
+an anvil, faintly, from below the ground
+a rush of wings in the rafters
+the snap of a banner in the wind
+oxen lowing on the road
+a woman keening at a wake
+a drawbridge chain grinding
+ale being drawn from a cask
+the splash of the moat
+bees in a straw skep
+a hunting horn from deep in the forest
+== sf
+the air recycler's cough
+the hull ticking as it cools
+an alarm someone muted
+a pressure door cycling
+a ship's AI speaking too calmly
+the thrum of the engines through the floor
+a hiss of escaping air, very faint
+magnetic boots clanking down a corridor
+a drone's whine passing overhead
+a radio burst of static and one word
+the beep of a heart monitor
+a hatch sealing with a thunk
+the soft chimes of a security scan
+a voice on the intercom, mid-sentence
+servos whirring in an empty room
+coolant gurgling in the pipes
+a countdown in a pleasant voice
+the crackle of a plasma torch
+micrometeorites pinging off the hull
+a cleaning robot humming a tune
+the station's spin groaning in its bearings
+rain against the dome, which never happens here
+a docking clamp locking on with a boom
+an alien bird's call through the filters
+a translator glitching mid-word
+the roar of a launch far away
+an announcement repeating in five languages
+footsteps above, on what should be the outer hull
+a printer's nozzle chattering
+the ping of a sonar sweep
+someone breathing hard over a suit radio
+a cryo pod's lid unsealing
+the snap of a breaker tripping
+a child's laugh piped in as ambient noise
+the dull thud of something hitting the outer wall
+a repair drone's welding arc crackling
+the whoosh of a tube train between domes
+a med-bot reciting the time of death
+static from the long-range array that sounds like singing
+the clatter of a dropped tool skittering in low gravity
+== modern
+a fridge hum
+sirens
+a phone ringing unanswered
+a radio between stations
+a car alarm two streets away
+a microwave pinging
+the tinny leak of someone's headphones
+traffic on wet tarmac
+a TV game show audience applauding
+a helicopter circling
+a bin lorry's reversing beep
+a dishwasher's churn
+a notification sound, then another
+a football crowd from the pub's telly
+a lawnmower, endlessly
+the ice-cream van's tune slowed down
+a hand dryer roaring
+bass through the floor from next door
+a toddler's tablet playing cartoons
+a scooter whining up the hill
+an automated voice saying unexpected item in bagging area
+a smoke alarm chirping for a battery
+the hiss of an espresso machine
+a train announcement apologising
+a printer jamming
+a church bell competing with a car stereo
+the slap of trainers on a pavement
+a voice message played aloud on speaker
+a can being kicked down the street
+an answerphone message from someone who has died
+fireworks, though it isn't a holiday
+a boiler firing up
+a buzzer at the front door, held down
+the drone of a motorway
+keys jangling on a lanyard
+a till drawer slamming
+someone on speakerphone, very loudly
+a dog yapping at the letterbox
+a karaoke ballad through the wall
+the clatter of a shopping trolley
+
+## smells
+# used as: "It smells of {}" (noun phrase, short)
+== all
+wet wool
+old smoke
+lilies
+bleach [sf, modern]
+something burnt
+oranges
+damp
+vomit and vinegar
+boiled milk
+a stranger's sweat
+cold fat
+mouse droppings
+fresh-cut wood
+lye soap
+wet dog
+burnt hair
+sour milk
+blood, faintly
+cloves
+mildewed paper
+onions and feet
+hot dust
+lavender over something worse
+cat
+old blankets
+yeast
+copper
+rotting fruit
+urine
+mint
+spilled wine
+scorched sugar
+honey
+rust
+someone's perfume, recently
+mothballs [sf, modern]
+new bread
+fish left too long
+vinegar
+garlic
+roses, too many of them
+sickness
+cheap soap
+hot oil
+leather
+ash
+wax
+cinnamon
+mould
+camphor
+violets
+pepper
+the sea, impossibly
+tar
+burnt toast
+apples
+wet plaster
+spent matches [sf, modern]
+old meat
+fear
+== fantasy
+tallow
+horse
+spilled ale
+pine resin
+peat smoke
+pig muck
+rushes gone sour
+incense
+pitch and wet rope
+tanned hides
+mead
+wet thatch
+the midden
+juniper
+goat
+herbs drying in bunches
+brimstone
+musty vellum
+hot iron from the forge
+mutton fat
+roasting boar
+dog kennels
+sheep dip
+holy oil
+dragon's blood resin
+woad
+lamp oil
+straw and dung
+pease pottage
+myrrh
+hawthorn blossom
+cider apples
+quicklime
+cooling bread in a stone oven
+wolfsbane
+== sf
+ozone
+recycled air
+coolant
+printed food
+hot plastic
+machine oil
+sterile foam
+algae
+burnt wiring
+nutrient paste
+rocket fuel
+industrial solvent
+the inside of a helmet
+synthetic vanilla
+cryo-gel
+ammonia
+scorched ceramic
+alien pollen
+static
+filtered water
+moon dust, like spent gunpowder
+air that has been breathed too often
+fungus farms
+reactor coolant
+grease and heat-shielding
+rubber seals
+vat-grown meat
+antiseptic
+something chemical and sweet
+the hydroponic tanks
+fried circuitry
+hot metal shavings
+a sealed room opened for the first time
+methane
+lubricant
+== modern
+coffee
+petrol
+cheap perfume
+fried onions
+chip fat
+new carpet
+air freshener
+diesel
+hot tarmac
+weed
+car exhaust
+instant noodles
+vape smoke, strawberry
+hand sanitiser
+sun cream
+kebab meat
+laundry detergent
+microwave popcorn
+printer toner
+wet cardboard
+chlorine
+a hospital
+cigarette ash
+energy drinks
+nail varnish
+burnt rubber
+spray paint
+fabric softener
+gravy granules
+takeaway curry
+disinfected toilets
+cut grass
+oven chips
+cola
+a new car
+
+## touches
+# used as: "It smells of oranges, {}." (what the air/room feels like: 'cold enough to see breath')
+== all
+cold enough to see breath
+close and too warm
+a floor sticky underfoot
+a draught at the ankles
+everything faintly damp
+grit on every surface
+the floor tilting very slightly
+a vibration you feel in your teeth
+an itch of static
+air so dry it cracks the lips
+heat pressing down like a hand
+a chill that comes up through the soles
+the walls sweating
+a breeze from nowhere
+cold on one side and hot on the other
+air thick enough to chew
+a floor that gives a little too much underfoot
+everything slightly greasy to the touch
+dust that settles on the tongue
+handrails worn smooth and warm
+a ceiling so low you stoop
+damp that gets into the bones
+the air humming against the skin
+cold metal under every hand
+a wet chill that clings to clothes
+benches still warm from someone else
+smoke stinging the eyes
+the pressure of too many bodies
+warmth leaking from the walls
+cold drafts that come and go like breathing
+a fine mist that beads on the hair
+everything coated with a skin of soot
+a hum through the soles of the feet
+air that tastes of metal
+a stickiness on every door handle
+no air moving at all
+heat from a fire that never reaches the corners
+a floor gritty with sand
+splinters waiting in every surface
+upholstery damp to sit on
+the cold give of a wet floor underfoot
+a chill sharp enough to ache
+a fug of breath and bodies
+heat shimmering above the floor
+fingers numb within minutes
+everything faintly tacky
+the air oddly still, as though holding its breath
+a weight in the air before a storm
+the warmth of a room someone just left
+cold water seeping into the shoes
+the stale warmth of a sickroom
+a crackle of frost underfoot
+a tightness in the ears
+cobwebs brushing the face
+a sudden cold spot by the door
+dampness like a wet cloth on the neck
+skin prickling for no reason
+heat that makes clothes cling
+a gentle sway, like being at sea
+the floor uneven, every step a guess
+a bite in the air that makes noses run
+air so humid the walls drip
+every surface cold as a grave
+a stale heaviness that makes everyone yawn
+the pleasant warmth of a kitchen
+air that leaves a film on the skin
+a wind that never quite stops
+a thick, padded hush that swallows footsteps
+the smell clinging to clothes afterwards
+the air faintly electric
+a constant small shudder in the walls
+a closeness that makes it hard to think
+a floor that is warm, which is wrong
+hair standing on end
+a coolness that is welcome at first
+everything crusted with salt
+gloves of cold around the fingers
+heat radiating from the stones
+the slick of condensation on every rail
+sweat starting at the hairline
+air that catches in the throat
+a lightness, as though gravity has eased
+a heaviness, as though gravity has doubled
+soft carpet that hides the footsteps
+dryness that makes the eyes sting
+a clammy, cellar cold
+the walls so thin you feel the neighbours move
+a welcome breeze that smells of somewhere else
+cold radiating off the windows
+a draught strong enough to lift papers
+everything slightly too small for an adult
+
+## odd_details
+# used as: "Something is off: {}." (noun phrase)
+== all
+a place set at the table for someone who isn't coming
+a mirror turned to face the wall
+a door with too many locks
+a portrait with one face scratched out
+a cup still warm
+footprints that go in and don't come out
+a song everyone seems to know but you
+a clock running backwards
+a name carved fresh into the wood
+a bird indoors
+every curtain closed
+a smell of someone who died here
+a lock on the outside of a bedroom door
+the same stranger in every crowd
+children who don't laugh
+a calendar with every date crossed out up to tomorrow
+nobody's shadow quite matching them
+a coat dripping wet on a dry day
+a fresh grave with no name
+every chair turned towards one window
+a baby's cry with no baby
+the dog refusing to go into one room
+a guest book signed by the same hand on every page
+a bed made up with the sheets on backwards
+a staircase that seems to have one more step going down than up
+a lit candle in a room nobody has entered
+someone's handwriting identical to yours
+a photograph of this room, taken from inside a wall [sf, modern]
+a missing step everyone avoids without looking
+salt poured along every threshold
+a key that fits every lock
+flowers that haven't wilted in weeks
+an extra door on the outside of the building that isn't there on the inside
+the water running warm from the cold tap [sf, modern]
+a child who knows your name
+everybody here wearing gloves
+a room where sounds don't echo
+a telltale ring of white around every window
+a staff list with one more name than staff
+a smile on a corpse
+a wall newer than the rest
+a draught from a wall with no window
+a clean square on a dusty floor, as if something was just moved
+a whisper that stops when you turn round
+all the clocks stopped at the same time
+an animal staring at an empty corner
+a scratching from inside the ceiling
+a smell of bread with no bread
+a woman who doesn't blink
+a voice answering from an empty room
+a doll that has moved since you last looked
+a room that is colder every time you come back
+a wedding ring left in a dish
+the newest building in the place being the one that's falling down
+a scream every night at the same minute
+fresh paint over something written on the wall
+everybody stopping talking at the same moment
+two people who are clearly the same person
+a stain shaped like a hand that comes back after scrubbing
+a hole in the floor everyone steps over without comment
+a name on a memorial of someone who is standing right there
+a letter addressed to you, dated next year
+a bell rope cut short
+a chair that is warm when nobody has sat in it
+nobody using the left-hand door
+a gap in the row of doors where one should be
+the guard who was here yesterday, but not according to anyone
+ash on the windowsill, inside
+a cage built for something bigger than any animal here
+a man digging, every night, the same hole
+the absence of any mirrors
+water falling on one spot only
+food left out for something
+a sign over the door in a language nobody admits to reading
+a hundred small handprints on a high ceiling
+a person sitting in the corner whom nobody else seems to see
+the smell of the sea where there isn't one
+a lullaby in an old woman's voice from a child's mouth
+every book with the last page torn out
+the beds all a little too short
+a knot tied in every curtain cord
+a tooth in the bread
+a list on the wall of everyone in the room, including you
+three locks on the inside of the wardrobe
+all the windows painted shut
+the oldest person here acting like a child
+a wall of portraits with one empty frame
+a smell of burning that nobody else notices
+a room that is bigger than the building
+a scorch mark the shape of a person
+a stopped music box that starts when you leave
+the hosts never eating
+an empty pram rolling slowly by itself [sf, modern]
+someone weeping behind a door that opens onto nothing
+the floorboards nailed down from below
+everyone avoiding the light
+a portrait whose subject has aged since it was painted
+a tidemark halfway up the walls
+a single shoe, still laced, on the doorstep
+a puddle that never dries
+a map with this place left off it
+a chimney smoking above a cold hearth
+the faint sound of digging under the floor
+names of the dead in a child's exercise book
+fingernail marks in the paint around a window
+an apology written on a wall, again and again
+a cot in a house with no children
+the same visitor's name in the register every week for a hundred years
+a crack that has grown since this morning
+servants who answer to the wrong names
+a bowl of milk set out at every door
+bandages on everyone's left hand
+a garden of graves, each with a toy on it
+the town's dogs all facing the same way
+a plate of food nobody touches, replaced every morning
+all the keys hung up but one
+footsteps that stop when yours do
+a thin line of blood along the hem of a curtain
+the reflection lagging a moment behind
+a door handle on the wrong side
+every lamp burning a different colour
+a cold cup of tea left by every bed
+a recording of a voice that belongs to no one here [sf, modern]
+an extra name on every gravestone
+a sound of someone breathing in the wall
+a stranger who knows the family's secrets
+a sealed letter on the mantel, marked do not open
+a single rose on a pillow
+a bed with the impression of a body still in it
+a funeral wreath on the front door with no funeral
+a meal that tastes of nothing
+a child's drawing showing one person too many
+a dinner bell ringing for a meal nobody cooked
+the smell of fresh earth in an upstairs room
+a long-dead person's coat, still damp
+the cat that only appears when someone is about to die
+a smile on every face that doesn't reach the eyes
+
+## go_wrong
+# used as: "What could go wrong: {}." (clause: 'the lights go out')
+== all
+the lights go out
+someone recognises someone
+the door locks
+a fire starts
+the floor gives way
+someone arrives who shouldn't be here
+a fight breaks out
+an alarm goes off
+a child goes missing
+someone collapses
+the authorities arrive
+the food is poisoned
+a body is found in the next room
+the only way out is blocked
+someone confesses, loudly and to the wrong person
+the money goes missing
+a secret letter is read aloud
+an animal gets loose
+the guest of honour never arrives
+two people discover they're engaged to the same person
+someone starts screaming and won't stop
+the roof starts leaking, then pouring
+the water runs out
+a stranger claims the place belongs to them
+someone is accused of theft and the stolen thing is in their bag
+an old enemy walks in
+the music stops and someone is still talking
+the cook walks out
+the wrong person is arrested
+the host drops dead
+somebody goes into labour
+a weapon is drawn
+someone faints and is found to be someone else
+a lie is exposed in front of everyone
+the floor floods
+a child says something they shouldn't have heard
+someone is sick in public
+the heating fails [sf, modern]
+a riot spills in from outside
+someone's past catches up with them
+the wrong name is called
+a wall collapses
+someone is found hiding under a table
+the place is locked down and nobody may leave
+a test comes back positive [sf, modern]
+an accomplice loses their nerve
+the deal goes sour at the last moment
+the bride runs
+an old wound reopens
+the stairs collapse behind them
+a letter arrives addressed to someone dead
+the guards change sides
+someone mistakes them for someone else
+the hostage gets free on their own
+the smell turns out to be gas, or worse [sf, modern]
+someone sets off the trap they were warning everyone about
+a message is delivered to the wrong person
+a quarantine is declared
+a scream comes from upstairs
+the person they came to see is already dead
+the evidence burns
+someone says the forbidden word
+an injured stranger staggers in
+a heavy object falls
+the floor turns out to be thinner than it looks
+someone is taken hostage
+an argument over the bill turns violent
+the ceiling comes down
+a long-lost relative turns up
+a duel is demanded [fantasy, sf]
+an old superstition is broken by accident
+the hosts lock the doors from outside
+someone recognises a stolen ring
+the crowd panics
+the winner turns out to have cheated
+the guest of honour is an impostor
+the cellar door is found open
+a rival group arrives at the same time
+someone is stabbed in the dark
+a vital key snaps in the lock
+someone's disguise slips
+the wrong box is opened
+the child who went missing walks back in, changed
+the only bridge gives out
+everyone falls ill at once
+someone overhears exactly the wrong thing
+a death is announced
+the ally they were counting on doesn't show
+the meeting is a trap
+an innocent bystander is hurt
+the wine is drugged
+somebody's hand is caught in something
+everyone's purse is gone
+the person in charge loses their temper
+someone starts a rumour that spreads in minutes
+a wedding ring goes missing
+a beloved pet dies on the spot
+two old lovers meet again
+someone is mistaken for a ghost
+a forged document is spotted
+the place starts to burn from the bottom up
+everybody has the same nightmare and wakes at once
+the wrong person drinks from the cup
+a guard is found asleep, or dead
+someone opens the door they were told never to open
+a long-buried body is dug up
+the hosts reveal what they really want
+somebody's child is sick on the guest of honour
+the alarm empties the building into the dark
+the person keeping watch falls asleep
+a toast goes horribly wrong
+the stolen goods turn out to be traceable
+someone they trusted sells them out

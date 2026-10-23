@@ -883,6 +883,83 @@ func PostVoiceTranscribe(w http.ResponseWriter, r *http.Request) {
 }
 
 /* SDOC: API
+* POST /voice/dictate — Transcribe a Moment of Dictation
+	For worg's dictation in writing mode: one short clip (a phrase, cut at a
+	pause), transcribed and answered at once. Unlike a voice note the audio
+	is not kept - it goes to a temporary file for whisper and is removed - so
+	dictating a chapter does not leave a thousand recordings behind.
+
+	*Method:* =POST=, a multipart form.
+
+	| Field      | Required | Description                                                      |
+	|------------+----------+------------------------------------------------------------------|
+	| =audio=    | yes      | The clip, in whatever the browser records (webm, ogg, m4a).      |
+	| =prompt=   | no       | The text just before the cursor: whisper carries its spelling,   |
+	|            |          | names and punctuation on, and joins the clip to it more cleanly. |
+	| =language= | no       | Two letter code; else the configured one, else detected.         |
+	| =model=    | no       | A whisper model other than the configured one.                   |
+
+	*Response:* A =VoiceTranscription=. =502= when whisper cannot be reached
+	or fails, with its reason in =Msg=.
+EDOC */
+func PostVoiceDictate(w http.ResponseWriter, r *http.Request) {
+	const limit = 25 << 20 // minutes of opus; a clip is seconds
+	r.Body = http.MaxBytesReader(w, r.Body, limit+(1<<20))
+	if err := r.ParseMultipartForm(8 << 20); err != nil {
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		voiceJson(w, common.VoiceTranscription{Ok: false, Msg: "that clip is too big for dictation"})
+		return
+	}
+	file, header, err := r.FormFile("audio")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		voiceJson(w, common.VoiceTranscription{Ok: false, Msg: "no audio was sent"})
+		return
+	}
+	defer file.Close()
+	mime, name := "", ""
+	if header != nil {
+		mime, name = header.Header.Get("Content-Type"), header.Filename
+	}
+	tmp, err := os.CreateTemp("", "orgs-dictate-*"+voiceExt(mime, name))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		voiceJson(w, common.VoiceTranscription{Ok: false, Msg: err.Error()})
+		return
+	}
+	defer os.Remove(tmp.Name())
+	_, cerr := io.Copy(tmp, io.LimitReader(file, limit))
+	tmp.Close()
+	if cerr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		voiceJson(w, common.VoiceTranscription{Ok: false, Msg: cerr.Error()})
+		return
+	}
+	model, err := whisperModel(r.FormValue("model"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
+		voiceJson(w, common.VoiceTranscription{Ok: false, Msg: fmt.Sprintf("no answer from the whisper server at %s - %s", voiceSettings().Url, whisperReason(err))})
+		return
+	}
+	lang := strings.TrimSpace(r.FormValue("language"))
+	if lang == "" {
+		lang = voiceSettings().Language
+	}
+	// Whisper reads at most a couple of hundred tokens of prompt.
+	prompt := r.FormValue("prompt")
+	if len(prompt) > 600 {
+		prompt = prompt[len(prompt)-600:]
+	}
+	t, err := whisperTranscribe(tmp.Name(), model, lang, prompt)
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
+		voiceJson(w, common.VoiceTranscription{Ok: false, Msg: err.Error(), Model: model})
+		return
+	}
+	voiceJson(w, t)
+}
+
+/* SDOC: API
 * POST /voice/note — File a Voice Note as an Org Heading
 	Writes the note into an org file: a heading, a property drawer carrying the link
 	to the recording and what transcribed it, and the text underneath.

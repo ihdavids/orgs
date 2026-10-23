@@ -381,6 +381,42 @@ says about them.
   scene's =WHEN= year; a character in a scene whose =WHEN= is before they
   were born. Click one in the manuscript to go to it.
 
+** Ideas
+The light bulb on the writing bar opens the ideas pane: things made up on
+the spot to get a stuck scene moving or fill in a world. Nothing is sent
+anywhere and no AI is involved; the server rolls them from its own tables.
+
+- *What it makes*: under People, a /Character/ (age, work, looks, manner,
+  wants, fears, strength, flaw, habit, secret), /Names/ that sound as if
+  they come from one place, and a /Relationship/ between two people. Under
+  Places, a /Settlement/, a /Scene setting/ (what you see, hear, smell and
+  feel there, something off, something that could go wrong) and a /Tavern/
+  (keeper, drink, regulars, tonight, the house rule and the talk). Under
+  Societies, a /Culture/, a /Religion/ and an /Organisation/. Under Story, a
+  /Premise/, a /Complication/, a /Conflict/ (by kind), an /Opening/, an
+  /Object/ with a past, /Treasure/ (where it was found, in what, what's in
+  it, and the catch) and /Weather/ (sky, wind, how it feels, now and then
+  something remarkable, the light and the mood, by season).
+- *Genre*: fantasy, science fiction, contemporary or any. It is chosen once
+  for the pane, since a book is in one genre; each generator's other options
+  (role, names, season) are remembered on their own. Invented names come
+  from a small made-up language for each result, so a culture's people,
+  towns and gods sound related.
+- *Using one*: a card shows the idea as a short paragraph; click its title
+  for the details. The buttons under it put the paragraph into the text at
+  the cursor (undo takes it out), leave it as a revision note on the
+  cursor's paragraph, file it in the compendium (characters, places,
+  cultures, faiths, organisations and objects; each detail becomes a
+  property, the paragraph its notes), or copy the details.
+- The tables are orgs' own: over seventeen thousand entries in plain text
+  files (=internal/common/storygen/data/*.txt=) compiled into the binary, so
+  nothing ships beside it. Each table says at its top the sentence its
+  entries are dropped into; to add to one, add lines and rebuild. An entry
+  under === all= that suits only some genres ends with them in brackets:
+  =a crewmate left outside [sf]=, =the vicar's bicycle [modern]=. =GET= and
+  =POST /writing/ideas= are the same generators for anything else that wants
+  them.
+
 ** Harper
 [[https://github.com/automattic/harper][Harper]] is a grammar checker that runs in the browser itself, so like the
 built-in checker nothing you write is sent anywhere. It is on unless you turn
@@ -457,6 +493,34 @@ both see only what they say they send.
   there), says what is wrong, and quotes the earlier text it contradicts.
   Nothing in the file is changed. It is an AI reading: it can miss things and
   can be wrong.
+
+** Dictation
+The microphone on the writing bar (or F9) lets you talk instead of type: what
+you say is written in at the cursor, a phrase at a time, by the whisper the
+server already uses for voice notes (=voice:= in =orgs.yaml=).
+
+- Talk naturally. Each time you pause (most of a second) the phrase just said
+  is sent off and appears at the cursor a moment later, while you go on. A
+  long run without a pause is sent every twenty-five seconds anyway.
+- Phrases join the text sensibly: a space before them unless the cursor is
+  after one or at the start of a line, a capital after a full stop or on a
+  new line. The text before the cursor goes along as whisper's prompt, so it
+  keeps your spelling of names and carries a sentence on across a pause.
+- Say *“new paragraph”* or *“new line”* (on their own) for a break, *“scratch
+  that”* to take the last phrase out again, and *“stop dictating”*, F9 or
+  /Stop/ to finish. Stopping writes down what you were in the middle of
+  saying first.
+- Everything goes in as ordinary typing: undo takes it out, and nothing is
+  saved until you save.
+- The strip at the foot of the text shows that it is listening, how loud you
+  are, how many phrases are waiting to be written down, and the last one.
+  Whisper's noise for silence (=[BLANK_AUDIO]=, a lone “Thank you.”) is
+  dropped. A noisy room raises the level that counts as talking.
+- The audio is not kept: each phrase is transcribed and thrown away (voice
+  notes keep theirs).
+
+The browser needs to be allowed the microphone, which it only allows over
+https or on =localhost=. On a phone it works the same way.
 
 ** The assistant
 The sparkle on the writing bar opens an AI assistant in a pane down the left

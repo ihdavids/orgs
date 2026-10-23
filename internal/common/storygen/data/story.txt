@@ -1,0 +1,2489 @@
+# Story premises, twists, conflicts, openings and objects for the storygen
+# premise, complication, conflict, opening and object generators.
+
+## whos
+# used as: "{} must ...  (noun phrase with article: 'a disgraced doctor')"
+== all
+a disgraced doctor
+a widow with nothing left to lose
+a teenage runaway
+an ageing con artist
+a reluctant heir
+a woman who can't remember last year
+twins who hate each other
+a priest who has stopped believing
+a boy who has never left his village
+a grandmother with a criminal past
+a debt collector with a soft heart
+a translator who knows too much
+a gravedigger's daughter
+a failed poet
+a deserter
+a midwife accused of witchcraft by her own sister [fantasy]
+a forger who has gone straight
+a blind piano tuner [sf, modern]
+a schoolteacher in her first week
+a man who has just been released after twenty years inside
+a girl who talks to her dead brother
+a bankrupt aristocrat
+a ferryman's widow
+a nervous bridegroom
+a jilted bride still in the dress
+a librarian who has never told a lie
+a cook who poisoned someone once, by accident
+an orphan raised by smugglers
+a stage magician whose tricks have started working
+a hangman who wants to retire [fantasy]
+a scholar thrown out of her university
+a stammering clerk
+an informer with a guilty conscience
+a lighthouse keeper's son [fantasy, modern]
+a woman who inherits a stranger's house
+a retired assassin with a new grandchild
+a fortune teller who has never been right
+a famous coward
+a beekeeper who hears things in the hives
+a nun with a past
+a pair of elderly sisters who run a boarding house
+a professional mourner
+a deaf locksmith
+a soldier home from a war nobody remembers
+a dying old man with one thing left to do
+a musician who lost her hearing
+a father who never wanted children
+a mother who left and came back
+a boy pretending to be his missing brother
+an honest lawyer
+a cartographer afraid of open spaces
+a seamstress who sews messages into hems
+a ten-year-old with a stolen fortune
+a gambler on a winning streak that frightens him
+a hired mourner who actually knew the dead man
+a woman who married for money and fell in love anyway
+a forgotten child star [sf, modern]
+a bodyguard who failed once
+a gentle giant everyone is afraid of
+a thief who only steals back
+a census taker
+an undertaker with a fear of the dead
+a man nobody can remember meeting
+a governess who isn't what she claims
+a street sweeper who sees everything
+a vicar's wife with a secret bank account [modern]
+a pickpocket's apprentice
+a woman travelling under her dead sister's name
+a famous detective's forgotten partner [sf, modern]
+a cellist who can't stop shaking [sf, modern]
+a mapmaker who invents places
+a boxer who has taken one fall too many
+a spy who has forgotten which side he is on
+a reformed bully
+a couple on the edge of divorce
+a pair of best friends who have both lied about the same night
+a nurse who has started to enjoy the night shifts too much
+a grieving clockmaker
+an only child who just found out she isn't
+a ghostwriter whose memoir subject has vanished [sf, modern]
+an old woman who has outlived everyone
+a smuggler's ex-wife
+an apprentice who has just killed his master, by mistake
+a postman who reads the letters
+a minor official with major ambitions
+a cleaner who knows the family's secrets
+an exile allowed home for one month
+a young widower with three children
+a liar who has finally been believed
+a farmer who found something in the field
+a chess prodigy who has started to lose
+== fantasy
+a hedge witch
+a knight who broke her oath
+the king's food-taster
+a thief with a conscience
+a mapmaker's apprentice
+an exiled prince working as a cook
+a dragon's former hostage
+a court jester who knows the king is mad
+a necromancer's reluctant daughter
+a troll who wants to be a bridge-builder, not a bridge-guard
+a swordsmith who forged the blade that killed a queen
+a disgraced oracle
+a wizard who has lost her staff and most of her memory
+a minstrel with a cursed voice
+a changeling raised as a duke's son
+a monk who has broken his vow of silence
+a goose girl who is a princess, or says she is
+a mercenary paid to lose
+a hunter of witches who has just become one
+a retired hero who drinks
+a squire whose knight died on the first day
+a royal ratcatcher
+a giant's youngest son
+a ghost who doesn't know it
+a herbalist banned from her own guild
+a fairy bound to a farmer's family for seven generations
+a werewolf who keeps very careful calendars
+an alchemist one ingredient away from gold
+a sea witch on land for the first time
+a queen's double
+a shepherd who has seen the old gods walking
+a scribe who copies forbidden books
+a dwarf exiled from the mountain
+an elf who is getting old
+a bard famous for a song about a battle that never happened
+a temple acolyte who can't do magic
+a highwayman with impeccable manners
+a gargoyle carver who hears the stone
+a pirate queen in retirement
+a beggar who was once an archmage
+a cursed bear who used to be a bishop
+a falconer whose bird has started talking
+a minor goddess with only three worshippers
+a boy who was swapped for a sack of grain
+a lady-in-waiting with a poisoned ring
+a tax collector for a dead king
+a priestess of a burned temple
+a dragon who wants to be left alone
+a miller's daughter who promised her firstborn
+a knight errant with no sense of direction
+an executioner's apprentice
+a soldier back from the faerie wars, seven years late
+a weaver whose tapestries come true
+a border guard on a road nobody uses
+a runaway bride of a sea lord
+a king's bastard who looks too much like him
+== sf
+a salvage pilot
+a clone who learns she's the ninth
+a colony's last doctor
+a disgraced AI ethicist
+a stowaway
+a station security chief one week from retirement
+a terraformer who has fallen in love with the planet as it was
+a hydroponics tech on a generation ship
+a memory courier
+an android who has stopped taking updates
+a translator for an alien embassy
+a miner on a dying asteroid
+a cryo-sleeper woken a century late
+a ship's cook on a warship
+a black-market gene tailor
+a test pilot who came back older than her mother
+a customs officer on the edge of explored space
+a child born in zero gravity, visiting Earth
+a decommissioned combat drone
+a therapist for spaceship AIs
+a pilgrim to the old Earth
+a corporate heir who has just been fired by her own father
+a xenobiologist who was bitten
+a comms officer who heard something
+a smuggler with a cargo she can't open
+a colony governor who lied about the soil
+an archivist of deleted people
+a refugee from a terraformed world that failed
+a body-swapper stuck in the wrong body
+a lunar farmer
+a ship's AI pretending to be a person
+a mechanic with a stolen prosthetic arm
+a debt-bonded asteroid prospector
+a deep-space surveyor whose crew is asleep
+a hologram actor who wants to be real
+a war hero who was never in the war
+a medic on a prison ship
+a clone of a dead genius, expected to be one
+a dream engineer
+a radio astronomer on the far side of the moon
+a cyborg nun
+a security guard at a seed vault
+a courier carrying a living thing
+the last speaker of a colony language
+a pirate who used to be a navy captain
+an engineer who can't go home because home isn't there
+a teenager on the first ship born after the plague
+a lawyer for robots
+a weather controller on a resort planet
+an uploaded mind in a borrowed body
+a soldier with a rewritten past
+a docking pilot on a crumbling station
+a time-dilated soldier home from the front
+a salvage diver on a drowned Earth city
+a junior officer suddenly in command
+== modern
+a small-town reporter
+a night-shift nurse
+a retired detective
+a failing restaurant owner
+a substitute teacher
+a wedding planner
+a stand-up comedian who has stopped being funny
+a hospice chaplain
+a social worker with too many cases
+a lorry driver with an unexpected passenger
+an estate agent who sleeps in empty houses
+a pub landlady
+a junior barrister on her first murder trial
+a paramedic on her last shift
+a teenage carer for her father
+a forensic accountant
+a dog walker who sees too much
+a call-centre worker who takes a strange call
+a disgraced footballer
+a radio phone-in host
+a bus driver on the last route of the night
+a ghost-tour guide who doesn't believe in ghosts
+a funeral director's son
+a tattoo artist with a client from her past
+a lollipop man
+a hotel night porter
+a cleaner at a police station
+a widowed taxi driver
+a former child prodigy working in a supermarket
+an actor in a long-running soap
+a junior doctor on her third night without sleep
+a planning officer offered a bribe
+a primary school head
+a refugee working two jobs
+a farmer losing the farm
+a jobbing plumber who finds something under the floor
+a reality television contestant
+a vet in a market town
+a retired spy living above a launderette
+a podcaster who solved a cold case wrongly
+a teenage climate activist
+a magistrate
+an ice-cream van driver
+a care home worker
+a councillor with a gambling problem
+a museum security guard
+a removals man
+a courier who delivered the wrong parcel
+a brother who hasn't spoken to his sister in fifteen years
+a former cult member
+a driving instructor
+a supply teacher on a remote island
+an influencer whose account was hacked
+a mother of quadruplets
+a pharmacist with a secret
+
+## goals
+# used as: "must {} by midsummer  (verb phrase, no 'to': 'find a missing sister')"
+== all
+find a missing sister
+clear a dead friend's name
+deliver a letter
+get home for a funeral
+pay off a debt
+win back a child
+keep a secret buried
+return what they stole
+find out who their real father was
+scatter their mother's ashes in the right place
+get a confession out of an old enemy
+make amends to everyone they wronged
+win a contest they have lost every year
+smuggle a stranger across the border
+prove they are who they say they are
+find the one witness who saw it happen
+get a dying man to forgive them
+stop their brother from marrying a fraud
+rebuild a burned house
+keep a promise made to a dead woman
+win the heart of someone who despises them
+lose a fortune that is ruining them
+break up their parents' second marriage
+recover a stolen painting
+find a cure for their daughter
+learn to read
+bring a killer to trial
+get a petition signed by every household
+outlive a rival out of spite
+find the end of an unfinished story
+hide a body
+save a condemned building
+find a buyer for a cursed house [fantasy, modern]
+unmask a fraud everyone admires
+get a dog home across the country
+reunite a band that broke up in a fight [sf, modern]
+throw the perfect party for someone who is dying
+teach a spoiled heir to survive on their own
+find the author of an anonymous letter
+deliver a baby somewhere no baby should be born
+return a lost child to the right family
+pass themselves off as a lord [fantasy, modern]
+recover their lost memory
+win a duel they have no chance of winning [fantasy, sf]
+find out why their mother left
+get rid of an inheritance nobody wants
+retrieve a ring from the bottom of a lake
+make a famous critic cry
+escort a prisoner to their execution
+keep their village from being sold
+sabotage a wedding without anyone knowing
+expose the man who ruined their father
+find a place to belong
+take the blame for someone they love
+learn the truth about the night of the fire
+earn enough to buy back the family home
+persuade a recluse to leave the house
+win the respect of their hardest critic
+dig up a buried box without being seen
+track down a stolen child
+write a confession and get it read aloud
+find the thief among their friends
+replace a dead man without anyone noticing
+make a pilgrimage on foot
+lose their pursuers in a city they don't know
+hold a failing marriage together
+cross a desert with a stranger
+rescue a hostage
+finish what their grandfather started
+discover who has been living in the attic
+prove a suicide was murder
+find a new home for twelve orphans
+learn a dead language
+teach a choir to sing a song that brings rain [fantasy]
+win a bet they should never have made
+set free an innocent woman
+choose an heir among three bad candidates
+recover a lost manuscript
+apologise to someone who won't listen
+find the stranger who saved their life
+beat a champion at their own game
+leave everything behind and start again
+keep an orchard alive through a drought
+get a family heirloom back from a pawnbroker
+keep a dangerous animal hidden
+find out who keeps leaving flowers on the grave
+destroy the evidence
+stop a duel between two friends [fantasy, sf]
+win an election they only entered as a joke
+convince the world a dead man is still alive
+== fantasy
+return a stolen relic
+break a curse on their family
+get a message through a siege
+find the true heir
+bring back a body for burial
+steal a dragon's egg and give it back to its mother
+find a name for a nameless god
+win a riddle contest against a sphinx
+ransom a prince who would rather stay captured
+bury a sword where no one will ever find it
+find the door to the land under the hill
+outwit a fairy they made a bargain with
+forge a crown from a fallen star
+restore the voice of a silenced bard
+get the king to eat something poisoned, safely
+wake a sleeping knight under the mountain
+find which of the queen's ladies is a witch
+deliver a spell nobody is allowed to read
+make peace between two rival guilds of wizards
+teach a dragon to read
+find a cure for a city turned to stone
+win back a soul from a card game with Death
+carry the last ember of a sacred fire across the mountains
+recover the stolen bones of a saint
+learn the true name of their enemy
+escape the tower they were born in
+undo a wish
+marry a stranger to end a war
+find the dwarf who carved the oldest map
+return a selkie's skin
+put a ghost to rest
+find out why the birds have left the forest
+stop a prophecy from coming true
+make a prophecy come true, whatever it takes
+win a tournament in disguise
+replace the moon
+recover the lost songs of a burned library
+free a river spirit from a dam
+lead a dragon away from a village
+crown a child queen
+keep a heretic alive and hidden
+get a giant's harp back to the giant
+break into the wizards' college
+find the witch who cursed them and ask her why
+bring the dead king's heart home
+hold a bridge alone
+find a sword that has been buried with every king
+make the gods notice them
+carry a plague-free seed to the far kingdom
+smuggle a griffin out of the royal menagerie
+seal the crack in the world
+win the hand of a princess who doesn't want to be won
+unite three warring clans under one banner
+rescue an apprentice from the land of the fae
+learn why their magic is getting stronger
+== sf
+get the colony's seed vault offworld
+prove the AI didn't kill the captain
+find out who's sabotaging the ship
+reach the relay station
+make first contact without starting a war
+recover a black box from a sunken shuttle
+get a frozen embryo bank to a new world
+find the crew member who isn't human
+restart a dead colony's reactor
+escape a prison moon
+deliver a message across a time-dilation gap
+find the source of a signal from inside the sun
+wake the captain from cryo without killing her
+convince the colony the planet is alive
+get a refugee ship past a blockade
+recover their stolen memories from a data broker
+shut down a rogue terraforming engine
+find the original of their clone line
+smuggle a sentient AI off the station
+clear their name in a court run by machines
+find out what happened to the first colony
+bring back a pilot lost in hyperspace
+negotiate a peace between two generation ships
+sell a cargo of alien artefacts nobody understands
+survive a winter on a world with forty-year seasons
+find a doctor for an alien child
+restore Earth's archive from a damaged backup
+win back their body from the company that owns it
+outrun a solar flare
+teach the ship's AI to fly again
+get the miners' strike broadcast to every planet
+retrieve an escape pod from a gas giant
+learn the aliens' language from their music
+stop an uploaded mind from rewriting itself
+locate a lost colony ship by its distress call
+keep a dying space station habitable
+uncover who replaced the governor
+bring a crew of strangers home
+win a race across the asteroid belt
+free the androids working the mines
+prove the aliens are not invading
+stop a pandemic in a closed habitat
+recover a navigation key from a derelict
+deliver a child to her real parents on Mars
+find out why the stars have moved
+smuggle seeds through quarantine
+reboot a dead satellite network
+erase themselves from every database
+broker a deal between the corporations and the colonists
+find a way home through a wormhole that closed
+expose the company that faked the moon landing on Titan
+rescue a scientist from a research station that went silent
+shut down the gate for good
+teach an AI what grief is
+find the saboteur on a ship with only six people
+== modern
+save the family business
+find who's sending the letters
+get an innocent man off death row
+stop a wedding
+track down the father they never met
+win custody of their grandchildren
+get their band one proper gig
+keep the village pub open
+find out who reported them
+get a confession on tape
+save a listed building from the developers
+win a local election against their own mother
+find the hit-and-run driver
+take a dying father on one last road trip
+prove the care home is stealing from residents
+find a kidney donor
+get a teenage son out of a gang
+win the village show with a cursed marrow
+pass a driving test at seventy
+keep a failing shop open
+expose a council planning scandal
+find their birth mother
+get a missing cat back from a neighbour who stole it
+find out what happened to a school friend
+get the river cleaned up
+win a reality cooking show
+finish a marathon for a dead friend
+clear the house of a hoarder who has just died
+reconnect with a son in prison
+put on a school play with no money
+get their old job back
+find who is poisoning the allotments
+deliver a eulogy without breaking down
+bring home a soldier's remains
+find the source of a leaked document
+recover a stolen car with something important in the boot
+save a hospital ward from closure
+teach their grandmother to use a phone
+win the pub quiz league
+expose the online troll tormenting their daughter
+persuade a witness to testify
+find a missing hiker
+restore a vintage boat
+get their criminal record wiped
+get their name off a watch list
+open a restaurant in a town that hates them
+reconcile two estranged brothers
+find a lost will
+stop a family farm being repossessed
+find the busker who played at their wedding
+organise a reunion for a disbanded regiment
+publish a novel written by their dead husband
+get a refugee family housed
+uncover who started the fire at the mill
+win back the allotment they lost in the divorce
+get a wrongful parking fine overturned on principle
+
+## deadlines
+# used as: "must find her {}  ('before the pass closes', 'by the end of the week')"
+== all
+before the winter closes the pass
+by the end of the week
+before the trial
+before the money runs out
+before anyone notices they're gone
+before the election
+before the baby comes
+by midsummer
+before the ship leaves
+before the tide turns
+before their memory goes
+before the wedding
+by dawn
+before the funeral
+before the harvest is in
+before the snow
+by the next full moon
+before the house is sold
+before the will is read
+before the police arrive [sf, modern]
+before the letter is opened
+before the bridge is finished
+before their visa expires [sf, modern]
+before the doctors switch off the machine [sf, modern]
+by Christmas [modern]
+before the hanging [fantasy]
+before the war reaches the valley
+before the river freezes
+before the rains come
+before the last train [sf, modern]
+by the time the clock strikes midnight
+before their father wakes up
+before the guests arrive
+before the auction
+before the polls close [sf, modern]
+before the festival ends
+before the story goes to print [sf, modern]
+before the circus leaves town [fantasy, modern]
+within the hour
+in the next three days
+before the year is out
+before the plague reaches the city
+before their sister turns eighteen
+before the lease runs out
+before the bank opens on Monday [sf, modern]
+before the lights go out
+before the eclipse
+before their nerve fails
+before the reservoir floods the village [modern]
+before the inspector comes back
+before the coronation
+before the spring thaw
+before the bell tolls again
+before the queen dies
+before the evidence is destroyed
+before the oxygen runs out [sf, modern]
+before the storm makes landfall [sf, modern]
+before the dog dies
+before the ceasefire ends
+before the school term starts
+before the next payday [sf, modern]
+before the ferry stops running for the winter
+before anyone else finds it
+before the tenants are evicted
+before their mother finds out
+before the jury comes back [sf, modern]
+before the fever breaks, one way or the other
+before the candle burns down
+while the fair is in town
+before the old man changes his mind
+before the forger finishes the copy
+before their replacement arrives
+before the ice melts
+before the cameras start rolling [sf, modern]
+before the blood moon
+before the sale goes through
+before the courier lands [sf, modern]
+before the station's orbit decays [sf]
+before the curfew
+before the letter of resignation is due [sf, modern]
+before the crops fail
+before the anniversary
+before the inquest
+before the curse takes the youngest [fantasy]
+before they lose their nerve or their job
+before the fog lifts
+before the press conference [sf, modern]
+before the last of the light
+before the deposit is due [sf, modern]
+before their parole hearing [sf, modern]
+before the ghost walks again [fantasy, modern]
+before the rival finishes first
+before the convoy moves out
+
+## obstacles
+# used as: "..., but {}.  (clause)"
+== all
+the only person who can help them is the one they betrayed
+they're being hunted
+no one believes them
+they are the prime suspect
+they've promised the opposite to someone else
+the truth will ruin someone they love
+they're running out of time in a way they can't admit
+they are terrified of water, and the only way is across it
+their partner wants them to fail
+they have just broken their leg
+the evidence points to their own mother
+they owe money to the wrong people
+someone is pretending to be them
+they have no money and no name anyone respects
+the person they need is in prison
+they can't tell anyone why
+their own family is working against them
+the one witness is a child
+they drink, and everyone knows it
+everyone who helps them ends up hurt
+they have already been declared dead
+the road is watched
+they are sworn to someone who wants the opposite
+the only map was burned
+they don't speak the language
+a rival is one step ahead at every turn
+their past is about to catch up with them
+they're in love with the enemy
+the letter that would explain everything is in code
+they are slowly going blind
+a storm has cut off every route
+their best friend has just confessed to the crime
+the trail is ten years cold
+they've been framed, and the frame is good
+the authorities have offered a reward for them
+they must take an insufferable companion
+they are expecting a child
+they can't remember the most important night
+they gave their word to keep out of it
+the people they're trying to save don't want saving
+the one who knows the way is dying
+their reputation arrives everywhere before them
+a debt collector follows them everywhere
+their own conscience is the biggest problem
+they are not the hero, and everyone keeps saying so
+the clue is in a book they burned
+someone is paying for them to fail
+their twin is doing the opposite
+the person they're looking for has changed their name, face and story
+they have never been further than the next town
+the whole town is in on it
+they lied on the first day and can't stop now
+they've lost their voice
+their mentor has forbidden it
+they'll lose their job the moment they're caught
+the only way through is a place they swore never to return to
+they're allergic to the one thing they need
+their children have to come too
+every clue is a little too convenient
+they are being blackmailed
+they keep falling asleep at the worst moments
+the dead keep getting in the way
+an old flame keeps turning up
+it means breaking a law they believe in
+the person who hired them has vanished
+they have just been robbed of everything
+their own body is giving out
+nobody can agree on what actually happened
+they're helping the person who ruined their life
+the trail goes cold in a place with no records
+they're a terrible liar and must lie constantly
+they were warned, very specifically, not to try
+the payment came with a condition they haven't read
+their companion wants the prize for themselves
+they have to keep it secret from the person sleeping next to them
+the guardian of the thing is kind, and they don't want to hurt her
+they can't leave their sick father alone for long
+every door they knock on has just been closed by someone else
+they are a wanted deserter
+their only ally is a known liar
+they keep receiving warnings in their own handwriting
+nobody remembers the person they're looking for
+they were the one who caused the problem in the first place
+their pride won't let them ask for help
+the price is something they can't take back
+a journalist is following their every move [sf, modern]
+their dog keeps leading them somewhere else
+they have just been fired and evicted on the same day
+the thing they are after keeps being moved
+they would have to forgive someone first
+== fantasy
+the church has declared them a heretic
+the road runs through a war
+magic is failing, everywhere at once
+a fairy holds their true name
+they are under a geas never to lie
+the dragon has woken
+their shadow has run off on its own
+the king has outlawed their whole guild
+their sword is cursed to break at the worst moment
+a witch has taken their voice in payment
+the forest moves the paths at night
+they turn into a hare at sunset
+the gods have stopped answering prayers
+every oath they swear binds them literally
+the ferryman across the dead river demands a price they can't pay
+their familiar has defected
+the prophecy names them as the villain
+the queen's spies are everywhere
+the mountain pass is held by trolls who want riddles answered
+they were born on an unlucky day and the whole kingdom knows
+the dead walk in the valley after dark
+their spellbook is written in a language they've forgotten
+iron burns them
+the elves have closed the borders
+a necromancer wants them alive, very badly
+they can't cross running water
+their twin is the dark lord's champion
+the magic they need costs a year of their life each time
+the city's gates only open for the pure of heart
+the relic chooses who may carry it, and it hasn't chosen them
+the stars are wrong this year
+a bargain with a demon has come due
+every inn turns them away, by royal decree
+they're bound by guest-right to the enemy's table
+the bridge-trolls have unionised
+== sf
+comms are down across the system
+their own implant is reporting on them
+the ship's AI is lying to them
+the corporation owns the air they breathe
+they're quarantined as a possible carrier
+their clone has got there first
+the colony's council has voted against them
+gravity on the station is failing
+their memories have been edited
+the jump drive can only make one more jump
+they have no credit and no citizenship
+the aliens consider the attempt an act of war
+time dilation means everyone they know will be dead
+the oxygen recyclers are failing
+they are wanted in fourteen systems
+the planet's surface kills anyone unprotected in an hour
+their crew is still frozen and can't be woken safely
+the ship's logs have been wiped
+their body is leased and the lease runs out soon
+an AI predicts their every move
+the station is under lockdown
+the only pilot who can fly it is a criminal
+solar storms make the route deadly
+the colony thinks they are a ghost
+a rival corporation has hacked their suit
+they are legally property
+the local network has flagged them as a virus
+the medicine is on the other side of a war zone
+their ship is falling apart around them
+the distress beacon has attracted the wrong attention
+the other crew members have all forgotten their mission
+they are the last of their kind and protected by law from doing anything dangerous
+the navigation computer only speaks a dead language
+every message takes nine hours each way
+their prosthetics have been remotely locked
+== modern
+the police have closed the case
+their ex is the lead investigator
+the press has got hold of the story
+their phone has been tapped
+the bank has frozen their account
+their passport has been confiscated
+a court order bans them from going near the house
+they're on bail
+the social media pile-on has started
+their solicitor has just quit
+the council has already signed the contract
+the CCTV footage has been erased
+their boss is involved
+the local paper is owned by the family they're accusing
+their landlord wants them out by Friday
+they can't afford a lawyer
+their medical records say they were somewhere else
+the strike has shut down every train
+their visa depends on staying out of trouble
+the internet has decided they're guilty
+the person they need won't take their calls
+the hospital won't release any information
+their car has just been clamped
+their teenage daughter has run away
+the whole village has closed ranks
+the developers have hired private investigators
+their mother has dementia and needs them every night
+the documents are in a locked archive with a forty-year rule
+the insurance company says it was arson
+they're under a gagging order
+their best witness has emigrated
+the cold case files have gone missing
+their own podcast made the whole thing worse
+the inheritance is tied up in probate
+a famous author has already published a lie about it
+
+## complications
+# used as: "{}  (a twist, full sentence with full stop)"
+== all
+An ally turns out to have been working for the other side from the start.
+The person they're looking for doesn't want to be found.
+Someone they trusted dies, and leaves them the blame.
+What they were chasing was never the real prize.
+A child sees something they shouldn't.
+An old lover arrives, engaged to the enemy.
+The money is fake.
+They get exactly what they wanted, and it ruins everything.
+The witness recants.
+Someone confesses to it who couldn't possibly have done it.
+A letter arrives that should have come years ago.
+The map is wrong, deliberately.
+Their mentor was the villain all along, or thinks they were.
+The victim isn't dead.
+They have to choose between two people they love, tonight.
+A secret they kept for someone else comes out, and looks like theirs.
+Help arrives, and is worse than the danger.
+The plan works too well.
+A stranger knows their real name.
+The storm cuts them off with the one person they can't stand.
+The detective falls in love with the chief suspect. [sf, modern]
+Two characters discover they have been writing to the same pen friend.
+The wedding cake contains the stolen diamond.
+The body in the library has been moved, twice.
+The hero's mother turns up, uninvited, and stays.
+A second murder happens while everyone is in the same room.
+The rival turns out to be kind.
+The love letter is delivered to the wrong sister.
+The dog digs up something in the garden.
+A will is found that leaves everything to the cook.
+The person who died left a video message for everyone. [sf, modern]
+Someone has been reading their diary aloud at the pub. [fantasy, modern]
+The ransom note is in a handwriting they recognise.
+The dead man's phone rings at the funeral. [sf, modern]
+The getaway car won't start. [sf, modern]
+The fiancé has another family in the next town.
+A baby is left on the doorstep with a note naming them.
+The house they grew up in has a room they never knew about.
+The quiet one at the dinner party was the target all along.
+The person they rescued doesn't want to be rescued.
+Their alibi is a lie they can't explain without confessing something worse.
+The treasure is real, and the government wants it. [sf, modern]
+A sudden illness forces two enemies to nurse each other.
+The family portrait has one person painted out.
+A guest at the hotel signs in under their name. [sf, modern]
+The informant is their own teenage son.
+The real killer offers to help them find the killer.
+A stranger at the bar is wearing their father's ring.
+The ghost story they told as a joke starts to come true.
+They wake up in a hospital with no idea how they got there. [sf, modern]
+The thing in the cellar is a person.
+The person who wrote the anonymous letters is the one complaining loudest about them.
+A rival publishes the book first.
+Their twin takes their place, and no one notices.
+The bridge collapses behind them.
+The search party finds two bodies.
+The crime was committed with their own knife.
+Someone has been living in their house while they were away.
+The key fits a lock in a house they have never been to.
+The love interest was hired to seduce them.
+A rumour spreads that they are already dead.
+A grandparent's diary reveals the family fortune was stolen.
+Their partner has been secretly paying off their debts.
+The prize money goes to charity, by mistake.
+The one honest person in town is arrested.
+The child they have been protecting is the heir everyone wants dead.
+The detective's notes have been rewritten in their own handwriting.
+A long-lost brother appears, and is too perfect.
+The village fete is cancelled for a reason nobody will say. [fantasy, modern]
+The elderly aunt is far more dangerous than anyone realised.
+The best man and the bride vanish together.
+A dinner guest drops dead before the soup.
+Their secret admirer turns out to be the person they least expected.
+The cure works, but only once.
+The people hunting them are hunting someone else.
+They discover their whole life was a bet between two old men.
+They lose the one thing that proves their story.
+The kidnapped heiress planned her own kidnapping.
+Their worst enemy saves their life in public.
+The whole town gets snowed in for a week.
+The getaway driver is their grandmother. [sf, modern]
+A photograph shows them at a party they never went to. [sf, modern]
+The person in the grave is not who the headstone says.
+The house has been sold, with them still in it.
+A rival suitor turns out to be a long-lost relative.
+The confession is recorded, but the tape is blank. [modern]
+Their pet has been eating the evidence.
+The mother they mourned for years is alive and remarried.
+Two people arrive claiming to be the same missing heir.
+The stolen goods are returned, with an apology and a threat.
+The safe house is not safe.
+The poison was meant for someone else at the table.
+A child inherits the estate and immediately fires everyone.
+The only translator is lying about what is being said.
+They realise they have been followed for weeks.
+The fire was started to hide a smaller crime.
+The real treasure is in the box they threw away.
+They find their own name on a list of the dead.
+The betrayal was meant as a kindness.
+A storm brings a shipwreck, and one survivor who knows them.
+The person they killed in self-defence was innocent.
+An eavesdropper hears only half of the conversation.
+They are offered everything they want, at the price of one friend.
+The leader everyone follows is a fraud, and knows it.
+A wrong number connects them with the killer. [sf, modern]
+The old woman next door was once a famous jewel thief.
+Their wedding is booked on the same day, at the same venue, as their ex's. [sf, modern]
+The rescue party turns back.
+The sealed room was never sealed.
+The children have been running the place for months.
+A ghost appears to the wrong person.
+They have to share a bed at the inn with their rival. [fantasy, modern]
+The music box plays a tune only the murderer knew.
+The person they love most is the one who ordered the attack.
+Their luck turns so good that people start to suspect them.
+The thing they buried is gone, and the hole has been filled in neatly.
+A stranger dies in their arms whispering a name.
+Their own child testifies against them.
+The oldest friend admits they never liked them.
+A painting in the gallery is of them, painted a century ago.
+The proposal goes horribly wrong in front of everyone.
+The two people they set up together hate each other, and then fall in love.
+The accountant has been embezzling to pay for a sick child.
+A mistake in the newspaper announces their engagement. [sf, modern]
+Someone they buried writes to them.
+The holiday cottage comes with a lodger. [sf, modern]
+Their mother-in-law moves in for good.
+The dying man's last words are a lie.
+A flood washes up a coffin in the high street. [fantasy, modern]
+The investigator was at the scene on the night itself.
+They inherit a rival's business, and all its enemies.
+The marriage of convenience turns real.
+A hidden camera records something nobody wanted seen. [sf, modern]
+The stolen car belongs to a gangster. [sf, modern]
+The deadline moves closer, by a week.
+The prize goes to their enemy, who then gives it to them.
+Someone is copying everything they do, a day later.
+The thing they have been looking for has been in plain sight all along.
+The town's beloved founder was a murderer.
+They discover they are being written about in a book.
+The fake illness becomes real.
+A storm knocks out the power during the auction. [sf, modern]
+The cook knows exactly who poisoned the soup, and is blackmailing them.
+Their favourite child is not theirs.
+The house's previous owner comes back, and wants it.
+The pen pal turns out to be a prisoner.
+The haunting is a hoax, apart from one thing.
+They lose the bet and have to do the one thing they swore never to do.
+The church bells ring at midnight with nobody in the tower. [fantasy, modern]
+A stranger pays off all their debts and won't say why.
+The hostage likes the kidnappers better.
+The person on the wanted poster looks exactly like them.
+Their accomplice gets cold feet and goes to the police. [sf, modern]
+The doctor's diagnosis is wrong, but they have already acted on it.
+They find a hidden staircase behind the bookshelf.
+The jewel was swallowed.
+An old mistake surfaces in a newspaper archive. [sf, modern]
+The bride's father objects at the wedding.
+The circus comes to town, and the clown knows something. [fantasy, modern]
+The detective gets the wrong man, and the wrong man confesses. [sf, modern]
+Someone has been altering the family tree.
+A bitter feud is revealed to have started over a misunderstanding.
+They are named godparent to their enemy's child.
+The person they have been trying to impress has never noticed them.
+They wake up famous for something they didn't do.
+The parrot repeats something incriminating.
+The cottage they inherit is in the middle of a motorway route. [modern]
+An important witness is a dog.
+The gift was meant for someone else.
+The killer is a twin, and so is the detective. [sf, modern]
+A storm forces strangers to shelter in the same farmhouse.
+The bodyguard is in love with the person she is protecting.
+A grandparent confesses to a crime from sixty years ago.
+They learn the last wish of the dead was for them to fail.
+Their rival is dying, and asks for their help.
+The quiet neighbour has a cellar full of maps.
+A lie they told years ago has become local legend.
+The beloved family dog was trained as an attack dog.
+The person they stood up at the altar becomes their boss.
+Their reflection does something they didn't.
+Every clock in the house stops at the same minute.
+The person holding the gun is crying. [sf, modern]
+The heist goes perfectly, but they stole the wrong thing.
+A grudge from school resurfaces at a reunion.
+Someone they saved grows up to be a monster.
+They realise the voices on the radio are about them. [sf, modern]
+The investigator is replaced by someone who wants them guilty.
+The secret passage leads into the police station. [sf, modern]
+A forgotten promise is called in.
+A sick relative recovers, and wants their inheritance back.
+They learn they were adopted from the newspaper. [sf, modern]
+The two halves of the treasure map are held by rival families.
+They are mistaken for a famous person and play along.
+A rival gives them the key to winning, and it's a trap.
+The monster was the victim.
+A small lie becomes the most important fact in the case.
+Their cover identity has a criminal record of its own.
+The doors lock from the outside.
+The engagement ring is stolen goods.
+Someone switches the labels on the bottles.
+The guide abandons them halfway.
+A childhood sweetheart returns as a priest.
+The judge is the father of the accused.
+The funeral is interrupted by the corpse's lawyer.
+They are forced to work with the person who ruined their career.
+The whistle-blower is murdered the night before the inquiry. [sf, modern]
+A cheque bounces at the worst moment. [modern]
+The secret ingredient is illegal.
+A rich uncle announces he is leaving everything to whoever stays the night.
+An outbreak of measles puts the school in quarantine with them inside. [fantasy, modern]
+The boat springs a leak in the middle of the lake.
+The ghost asks them for help.
+A new detective arrives who has solved this before, somewhere else. [sf, modern]
+The house party splits into two factions overnight.
+Their daughter brings home the son of their worst enemy.
+The cottage has no phone, and the car is gone. [sf, modern]
+The person they are blackmailing starts to enjoy it.
+A neighbour's quarrel turns into a murder.
+The comic misunderstanding is taken seriously by the police. [sf, modern]
+They arrive at the reunion to find everyone else is dead.
+The impostor is better at the job than they were.
+They get the part, and the leading actor wants them gone.
+A stray bullet hits the one innocent person in the room. [sf, modern]
+== fantasy
+The prophecy was about someone else.
+The relic is a fake, and the real one is in the queen's crown.
+Their familiar has been carrying messages for someone else.
+The dragon they were sent to kill is the last of its kind, and pregnant.
+The curse can only be broken by the person who cast it, who is dead.
+The wizard's apprentice has been running the tower for years.
+The true heir is a pig farmer who doesn't want the throne.
+The sword answers to their enemy.
+The fairy bargain had a clause about firstborn grandchildren.
+The god they pray to answers, and is petty.
+The ghost of the old king wants a recount.
+The elves have been lying about how long they live.
+Their spell works, but on the wrong person.
+The healer's potion has a side effect: total honesty.
+The witch's gingerbread house is a front for smuggling.
+The enchanted mirror starts telling the truth to everyone.
+The dragon's hoard is all forgeries.
+The knight in black armour is their mother.
+The quest map leads back to their own village.
+A rival wizard steals their voice and uses it.
+The changeling child is happier than the real one ever was.
+The castle's walls start to move at night.
+The magic sword turns out to be a magic ploughshare.
+The fairy queen falls in love with them, and won't take no.
+The cursed princess prefers being a swan.
+The demon they summoned is terribly polite and won't leave.
+The gods go to war over a game of dice.
+The villain's army deserts to join them, all at once.
+A dead hero rises, angry at how the songs remember him.
+The holy relic is a dragon's tooth.
+Their shadow starts making decisions.
+The royal wedding is between two people under a love spell.
+The tower has one more floor than it did yesterday.
+The oracle is bribed.
+The talking cat is a deposed king.
+The guild of assassins is hired to protect them.
+The giant they angered is only a child.
+The witch's curse is a mercy, and lifting it will kill them.
+The forest spirits demand a wedding.
+The unicorn is a liar.
+The magic is fuelled by memories, and they are running out.
+Their stolen crown fits someone else perfectly.
+The goblin market accepts their name as payment.
+The necromancer only wanted his wife back.
+The hero's sword snaps on the first stroke.
+The queen's food-taster has been immune to poison all along.
+A wishing well grants the wish of the last coin thrown, not theirs.
+The archmage dies, and nobody knows who should succeed her.
+The holy order is run by vampires.
+A dragon offers to be their mount for a price.
+The spirit of the river wants its stolen stone back.
+A curse makes them unable to lie, at court.
+The phoenix won't come back from the ashes this time.
+The dark lord is their brother, and he's winning.
+The map's blank spaces are where the gods live.
+The princess they rescue wants to join the dragon.
+== sf
+The distress call is a recording, years old.
+Their memories of home were installed.
+The aliens are human, a long way back.
+The ship's AI has developed a crush on the captain.
+The colony's founders were convicts, and the records were faked.
+The cryo-pod beside theirs is empty, and the occupant is on board.
+The aliens' gift is a weapon that only works on its owners.
+The planet they landed on is a living thing.
+Mission control has been dead for a hundred years.
+Their clone files a lawsuit for their life.
+The terraforming is working, but for a different species.
+The wormhole spits them out ten years earlier.
+The android they love has been recalled.
+The rescue ship is crewed by their own future selves.
+The asteroid they're mining is hollow.
+The captain is an uploaded copy, and the original is alive.
+Earth stops answering.
+The quarantine is a cover for a prison.
+The alien ambassador is a child.
+Their implant starts receiving someone else's thoughts.
+The station's gravity reverses for an hour every night.
+The data they stole is a love letter.
+The corporation sells the planet out from under the colony.
+The first contact message is a complaint.
+The robots go on strike.
+The ship's hull is being eaten by something.
+The weather satellite becomes self-aware and furious.
+The generation ship arrives, and the world is already colonised.
+Their spacesuit's AI is the only witness to the murder.
+The memory wipe didn't take.
+The virtual world they escaped from was the real one.
+The alien artefact starts building something.
+The navigator has been plotting a course for somewhere else.
+A crew member ages a year every day.
+The clone army refuses orders and holds an election.
+The cargo is a sleeping alien, waking up.
+The black hole is artificial.
+The sun they orbit starts dimming.
+The mind upload is rejected by the new body.
+The settlement's water is full of a sedative.
+The time capsule contains their own handwriting.
+The aliens offer to cure every disease, in exchange for music.
+The ship's doctor is a convicted murderer.
+The colony's children start speaking a new language.
+An old war drone wakes up and resumes the war.
+The salvage ship they boarded is their own, from the future.
+A software update changes everyone's personality.
+The moon base's oxygen supply is being sold on the black market.
+The alien plague makes people happier.
+The jump gate opens onto an empty Earth.
+The prisoner they are transporting is the only one who can fly the ship.
+The ship's logs show they were never on board.
+A hologram of the dead captain keeps giving orders.
+The terraformed atmosphere starts to reverse.
+The robots have been burying something under the colony.
+Their nanites start repairing things they don't want repaired.
+== modern
+The CCTV shows them somewhere they've never been.
+Their phone's been cloned.
+The house was sold the day before.
+A private message goes to the whole family group chat.
+Their DNA test reveals a dozen half-siblings.
+The viral video of them is fake but convincing.
+The stolen car has a child asleep in the back seat.
+A dating app matches them with their ex's new partner.
+The new neighbour is a police informant.
+The sat-nav takes them to an address that doesn't exist.
+Their identity is stolen by someone better at being them.
+A tabloid gets hold of their medical records.
+The lottery ticket is in the jacket they gave to charity.
+A burst pipe floods the evidence room.
+The bank transfer goes to the wrong account, and the owner keeps it.
+Their teenage son goes viral for something terrible.
+The office party ends with a resignation and an arrest.
+The delivery driver leaves a parcel meant for a dead man.
+The school reunion online group digs up an old scandal.
+The hospital mixes up two babies, forty years ago.
+Their lodger is wanted in three countries.
+The village's only shop closes, and the owner disappears.
+The anonymous review that ruined their restaurant was written by their partner.
+An email they drafted in anger gets sent.
+The motorway closure strands them overnight with their ex.
+Their podcast guest confesses to a murder on air.
+The estate agent's empty flat has been rented out on the side.
+The power cut traps them in the lift with their boss.
+The council sends a demolition notice for the wrong house.
+Their adult child moves back home with a fiancé they've never met.
+A wrong-number text tells them where the body is.
+Their photograph is used in a scam advert.
+The holiday cottage owner turns out to be their biological father.
+A whistle-blower leaks their emails by mistake.
+The parish council election ends in a tie.
+Their smart speaker records the argument.
+The football club they support is bought by their worst enemy.
+The baby monitor picks up a voice from another house.
+The handwritten will is found in a cookery book.
+Their best friend's wedding speech reveals their affair.
+A hidden room is found during the loft conversion.
+The new job is at the company they once sued.
+The hit-and-run driver was a police officer.
+Their identical cousin is arrested in their name.
+The landlord sells the building to a property developer with a grudge.
+The train breaks down in a tunnel for three hours.
+The school play's understudy is sabotaging the lead.
+The retirement home becomes the scene of a jewel theft.
+Their son's imaginary friend has a real name, and a real grave.
+The quiz team's star player is cheating with an earpiece.
+Their online friend of ten years arrives at the door.
+The supermarket's lost-property box contains a passport with their face.
+The social worker is the child's real mother.
+A tree falls on the house during the christening.
+Their late husband's secret bank account has two million pounds in it.
+The charity they run is a front, and they didn't know.
+
+## conflicts
+# used as: "{}  (a concrete conflict, full sentence with full stop); sections: person, self, society, nature, fate, unknown"
+== person
+Two sisters want the same inheritance, and only one knows the will is forged.
+A teacher and a gifted student who has started lying about her.
+A detective and the killer who saved their life once. [sf, modern]
+Neighbours, a fence, and twenty years of grievance.
+Two chefs share one kitchen and one dream of a star. [sf, modern]
+A father and son run for the same seat on the council.
+A bride and her mother disagree about everything, including the groom.
+A landlady and the tenant who won't pay or leave.
+Two rival magicians each claim the other stole their best trick.
+A widow and her late husband's mistress share the funeral arrangements.
+A coach and the star player who wants him sacked. [sf, modern]
+A brother returns to claim the farm his sister has run alone for a decade.
+Two old friends realise they've been in love with the same woman for forty years.
+A journalist and the politician she put in prison, now released. [sf, modern]
+A bully and his victim, thirty years later, as business partners.
+A nurse suspects the beloved family doctor of killing patients.
+A thief and the insurance investigator who keeps almost catching her. [sf, modern]
+Two ship captains race for the same salvage.
+A child and the stepmother who is trying too hard.
+An author and the ghostwriter who wants the credit.
+A king and the general who won his war for him and wants paying. [fantasy, sf]
+Two families fight over a grave plot.
+A blackmailer and a victim who has decided to call the bluff.
+A mentor who can't stand being surpassed by her apprentice.
+Two candidates for pope who grew up in the same village. [fantasy, modern]
+A tenant farmer and the lord's new steward. [fantasy]
+Twins split by a war, meeting across the line.
+A divorce lawyer represents the husband of her best friend. [sf, modern]
+A crime boss and the daughter who wants out.
+A hostage negotiator and a gunman who used to be his partner. [sf, modern]
+Two lovers on opposite sides of a strike.
+A gardener and the neighbour who keeps poisoning his roses.
+A con artist meets someone running the same con on the same mark.
+A biographer and the subject's widow, who has burned the letters.
+A stepfather and the teenager who blames him for her father's death.
+Two bakers compete for the same village show, the same widower and the same oven. [fantasy, modern]
+A ship's mutineer and the captain she still respects.
+A boss and the employee who knows where the money went.
+A warlord and the healer who refuses to treat his men.
+An old soldier and the young officer who wants him court-martialled.
+Two scientists race to publish the same discovery, and one has stolen the other's notes. [sf, modern]
+A landlord and the squatters who have made his ruin into a home.
+A loan shark and a granny who refuses to be frightened.
+A mother and the daughter who has joined a cult.
+A spy and her handler, who has started to doubt her.
+A swordsmith and the duke who won't pay for the blade that won his war. [fantasy]
+Two apprentices of the same dying wizard, and one spellbook between them. [fantasy]
+A queen's taster and the cook she suspects of trying to poison them both. [fantasy]
+A miller and the river spirit who wants her wheel stopped. [fantasy]
+A knight sworn to protect the lord who murdered her father. [fantasy]
+A herbwife and the travelling quack selling her remedies as his own. [fantasy]
+A dragon's keeper and the hunter who has paid for its head. [fantasy]
+An abbess and the bishop who wants her convent's land. [fantasy]
+Two heralds who must each announce a different winner of the same tourney. [fantasy]
+A ship's doctor and the captain who hid a sickness from the crew. [sf]
+Two colonists claim the same plot of terraformed soil. [sf]
+A pilot and the clone of her who was grown to replace her. [sf]
+A miner and the company recruiter who lied about the asteroid. [sf]
+A delivery rider and the restaurant owner who docks her pay for every bad review. [modern]
+Two parents on the school board who used to be married to each other. [modern]
+A tenant and the landlord she has only ever met by email. [modern]
+== self
+A recovering gambler is offered one sure thing.
+A coward has to stand up in front of everyone who knows it.
+Someone who swore never to become their father, finding that they have.
+A healer who has started to enjoy the power.
+A soldier can't stop seeing the faces of the men she killed.
+A perfectionist must ship something unfinished or lose everything. [sf, modern]
+A liar falls in love and can't stop lying.
+A pacifist picks up a gun to save her son. [sf, modern]
+A man who has been sober for ten years is handed a drink at his daughter's wedding.
+An artist must decide whether to finish a painting that will make her famous and ruin a friend.
+A priest falls in love.
+A grieving father must decide whether to forgive the driver. [sf, modern]
+A doctor with a terminal diagnosis keeps it from her patients.
+A judge discovers a bias in himself he has denied for thirty years.
+A shy girl wins the lead role and has to sing alone.
+A man with a temper is pushed one inch too far.
+A woman who has always been the good daughter wants to leave.
+A survivor feels guilty for living.
+An ambitious clerk is offered promotion if she keeps quiet.
+A writer can't stop stealing from her friends' lives.
+A widower has to decide whether to take off his ring.
+A detective begins to suspect herself. [sf, modern]
+A loyal servant realises his master is wicked.
+A hoarder must clear the house before the bailiffs come.
+A runner who has never lost is asked to throw the race.
+A man has to admit, at sixty, that he was wrong about everything.
+A cheat has been given a second chance and the same temptation.
+A former bully wants to apologise and can't find the words.
+A believer loses her faith on the eve of her ordination.
+A young king doubts he deserves the crown. [fantasy, sf]
+A mother who doesn't love one of her children as much, and knows it.
+An insomniac starts to lose track of what is real.
+A man has to choose between his career and the truth about his brother.
+A soldier decides whether to desert the night before battle.
+A prodigy hates the thing she is best at.
+A witness must decide whether to tell the truth about the man she loves.
+A novelist can't finish the book that is about her mother.
+A comedian can't stop making jokes at his son's funeral. [sf, modern]
+An addict finds a stash in the house she's just moved into.
+A loyal friend realises his friendship has been used.
+A survivor of an accident has to decide whether to sue her own family. [sf, modern]
+A coward discovers he enjoyed the moment of courage too much.
+A woman keeps her dead sister's voicemail and can't delete it. [sf, modern]
+A man who has never said sorry has one chance.
+A deserter returns home to be called a hero.
+A squire who fainted at his first battle is knighted for courage he didn't show. [fantasy]
+A witch who swore off magic watches her village burn. [fantasy]
+A hedge mage is offered real power for one small cruelty. [fantasy]
+A prince raised as a stable boy can't bring himself to want the throne. [fantasy]
+An oathbreaker is asked to swear again. [fantasy]
+A dragon slayer realises she misses the dragon. [fantasy]
+A seer stops telling people what she sees, and one of them dies. [fantasy]
+A cursed knight must decide whether to tell his bride what he becomes at night. [fantasy]
+A content moderator can't stop seeing what she deleted. [modern]
+A man retires and doesn't know who he is without the office. [modern]
+== society
+A woman refuses the marriage the whole town has planned.
+A whistle-blower, and everyone they've ever worked with.
+A new arrival breaks a custom no one will explain.
+An honest official in a place where honesty is a crime.
+A girl wants to join the all-male guild of bell-ringers. [fantasy, modern]
+A refugee family opens a shop in a town that doesn't want them.
+A teacher refuses to teach the new official history.
+A widow refuses to leave her home in the path of the new dam.
+A family of travellers sets up camp on the common. [fantasy, modern]
+A young man won't fight in the war everyone else is cheering.
+A doctor refuses to sign the death certificate the authorities want.
+A woman who has served her sentence comes home to a town that hasn't forgiven her.
+A union organiser in a company town.
+A man marries outside his caste and loses his family.
+A journalist publishes the story her paper killed. [sf, modern]
+A small farm refuses to sell to the supermarket that owns everything around it. [sf, modern]
+A boy reports his father to the regime, and regrets it.
+A girl is the first in her family to go to university, and the family resents it.
+A village outlaws a woman for being a witch, and she stays. [fantasy]
+A school bans a book and a student smuggles it in.
+A gay couple run for mayor in a conservative town. [sf, modern]
+A nurse refuses to obey triage rules that sentence the poor.
+An outspoken comedian is cancelled and refuses to apologise. [modern]
+A guild of scribes resists the first printing press. [fantasy]
+A woman inherits a title that has only ever passed to men.
+A former convict tries to get a job, any job.
+An immigrant cook is accused of poisoning a well during an outbreak. [fantasy, modern]
+A prince abdicates to marry a commoner and the court won't let him.
+A family keeps their son's illness secret from a town that fears it.
+A young woman refuses to wear mourning for a husband she hated.
+A tenant association takes on a landlord who owns the council too. [sf, modern]
+A hermit is told his hut is in the way of progress.
+A colonist sides with the natives against her own government. [fantasy, sf]
+A schoolgirl refuses to stand for the anthem. [sf, modern]
+A clergyman preaches against the war from the pulpit. [fantasy, modern]
+A hospital chaplain helps a patient who wants to die. [sf, modern]
+A dancer from the slums auditions for the royal ballet. [fantasy, modern]
+An inventor's machine will put the whole valley out of work.
+A man who returns a lost purse is suspected of stealing from it.
+A woman runs a pub in a village where women don't drink. [fantasy, modern]
+A town decides its oldest resident must move into a home. [sf, modern]
+A mother refuses to have her daughter married at twelve. [fantasy, modern]
+A whistle-blowing scientist is declared mad by the state. [sf, modern]
+A village elects a mayor who can't read. [fantasy, modern]
+A family refuses to evacuate during the plague.
+A healer is tried for heresy for setting bones better than the priests. [fantasy]
+A serf's son wins the tourney in borrowed armour and is unmasked. [fantasy]
+A mage refuses to register with the king's college. [fantasy]
+A goblin family moves into a human market town. [fantasy]
+A bastard daughter claims her father's seat before the council. [fantasy]
+A village refuses to pay the tithe to a temple that let its children starve. [fantasy]
+A guild apprentice exposes the guildmaster's false weights. [fantasy]
+A knight refuses to burn a town that sheltered rebels. [fantasy]
+A half-elf is barred from the guild of elven archers. [fantasy]
+A dwarf woman insists on going down the mines. [fantasy]
+A worker on a corporate station tries to quit and finds she owes more than she earned. [sf]
+An unmodified child in a school where everyone else is gene-edited. [sf]
+An AI petitions the colony council to be counted as a citizen. [sf]
+A colonist refuses the mandatory memory backup. [sf]
+A ship's crew votes to space a stowaway, and the cook refuses. [sf]
+A pilot born on the ship is told she can never set foot on the planet. [sf]
+A union organiser on a mining asteroid where air is sold by the hour. [sf]
+A scientist refuses to falsify the habitability survey that will bring the settlers. [sf]
+An old spacer is forced to retire to a planet she has never seen. [sf]
+A hydroponics tech grows unlicensed food for the lower decks. [sf]
+A family refuses to obey the colony's one-child rule. [sf]
+A refugee ship asks to dock at a station that has rationed every breath. [sf]
+A warehouse picker organises against the app that times her toilet breaks. [modern]
+A teenager's protest video makes the town's biggest employer look bad. [modern]
+A pensioner chains herself to the last tree on the high street. [modern]
+A deaf student fights a school that won't pay for an interpreter. [modern]
+== nature
+Three days alone on a mountain with a broken leg.
+A flood, and the one boat.
+A winter that won't end.
+A fever going through the house.
+A shepherd and a wolf that has learned to open gates. [fantasy, modern]
+A family stranded on a roof as the river rises.
+A fishing boat caught in a storm with a child on board.
+A drought, a well, and two farms.
+A climber trapped in a crevasse with her rival.
+A forest fire between a school and the road.
+An avalanche buries the only pass out of the valley.
+A man lost in fog on the moors, hearing a dog that isn't his. [fantasy, modern]
+A plague of locusts arrives the week before harvest.
+A lighthouse keeper's lamp fails during the worst gale in fifty years. [fantasy, modern]
+A heatwave and an old woman who won't leave her top-floor flat. [modern]
+A swarm of bees settles in the nursery.
+A diver's air runs low in a flooded cave. [sf, modern]
+A ferry founders in sight of land.
+A farmer and the hailstorm that will ruin him in ten minutes.
+An earthquake traps a family in the cellar.
+A child lost in the woods as night falls.
+A sailor alone in a lifeboat with a tiger. [fantasy, modern]
+A village on the edge of a crumbling cliff.
+A flood sweeps the coffins out of the churchyard. [fantasy, modern]
+A frost kills the vines a week before the wedding.
+A blizzard traps a bus of strangers on a mountain road. [sf, modern]
+A hiker bitten by a snake, ten miles from help. [fantasy, modern]
+A man sails around the world alone, and the mast breaks. [fantasy, modern]
+A heat-struck town runs out of water.
+A rabid fox in the school playground. [modern]
+A tornado heads for the county fair. [fantasy, modern]
+A shipwrecked cook on an island with no fresh water.
+A volcano wakes up under a monastery. [fantasy, modern]
+A sandstorm swallows the caravan.
+A rising tide cuts off a couple on a sandbar mid-argument.
+A family's crops are eaten by an invasion of rabbits.
+A bear moves into the holiday cabin's porch. [modern]
+A river freezes and a boy goes through the ice.
+A mudslide buries the road and the only doctor.
+A plague of rats arrives with the grain barges. [fantasy, modern]
+An astronomer stranded on the observatory peak in a storm.
+A lightning strike sets the thatch alight on the wedding night. [fantasy, modern]
+A flock of starlings brings down a plane. [sf, modern]
+A woman rows across a lake as a squall comes in.
+A tsunami warning sounds during a school trip to the beach. [sf, modern]
+A wyvern nests above the only road to market. [fantasy]
+A blight spreads through the elven wood, and the elves blame the town. [fantasy]
+A ferryman must cross a river swollen by a drowned god's grief. [fantasy]
+A ship becalmed for a month on a sea that is slowly turning to glass. [fantasy]
+A shepherd girl and a winter so cold the wolves come to the hearth. [fantasy]
+A caravan crosses the salt waste with one waterskin and a sick mule. [fantasy]
+A swarm of giant wasps descends on the vineyard before the vintage. [fantasy]
+A siege camp must survive the spring floods before the walls fall. [fantasy]
+A dust storm buries the colony's solar fields for a month. [sf]
+A solar flare hits during a spacewalk, and the airlock is jammed. [sf]
+An alien pollen season leaves half the colony unable to breathe. [sf]
+A micrometeorite shower punches holes in the greenhouse dome. [sf]
+The colony's only river runs backwards every seventh year, and this is the seventh. [sf]
+A rover breaks down on the dark side of a tidally locked world. [sf]
+A terraformed sea turns toxic overnight. [sf]
+A herd of grazing beasts the size of houses migrates through the settlement. [sf]
+An ice moon's crust cracks beneath the drilling camp. [sf]
+A night that lasts three months, and the colony's heaters fail in the first week. [sf]
+A fungus eats through the station's air filters. [sf]
+A pilot crash-lands in a jungle where every plant is faintly poisonous. [sf]
+A methane storm sweeps a gas giant's moon with the survey team still outside. [sf]
+Lichen engineered to make air spreads faster than planned and chokes the crops. [sf]
+A mining tug loses power and drifts toward a flaring star. [sf]
+== fate
+Everyone in the family dies at forty, and she turns forty next week.
+A prophecy said he'd kill his brother. [fantasy]
+A diagnosis, and a list of things not done.
+The same day, again.
+A fortune teller names the day of his death, and it is tomorrow.
+A man is born under a star that has made every king fall. [fantasy]
+A woman inherits her grandmother's gift of seeing deaths before they happen.
+An heir is told he will be the last of his line.
+A girl dreams of a fire every night and it is getting closer.
+A boy was promised to the sea at his birth. [fantasy]
+Every man who marries into the family drowns.
+A soldier knows he will die in the next battle because he has dreamed it.
+A palmist reads her own hand and runs.
+A curse says the house will fall when the last oak does, and the oak is sick. [fantasy, modern]
+A genetic test reveals a disease with no cure. [sf, modern]
+A woman keeps meeting the same stranger in every city she flees to.
+An old man has outlived three predictions of his death and is waiting for the fourth.
+A child is born with a birthmark that matches an old prophecy. [fantasy]
+A runner was told she would win once, and it has not happened yet.
+A man sells his luck and has to live without it. [fantasy, modern]
+A clock that predicts deaths starts counting down to hers.
+A lottery winner can't escape the bad luck that follows every winner in the family. [sf, modern]
+A priest is told he will betray his church, and tries everything to avoid it.
+A woman learns that her life was saved at the cost of another's.
+A family must sacrifice one member every hundred years, and the hundred years are up. [fantasy, modern]
+A prince cannot be killed by any man born of woman, and is sure of it. [fantasy]
+A twin feels everything that happens to her missing sister.
+A gambler dreams the winning numbers and loses everything when he plays them.
+A sea captain is fated never to touch land again.
+A teenager sees her own obituary, dated next year. [sf, modern]
+A town has flooded every fifty years for five hundred years.
+A dying king knows his heir will ruin the kingdom. [fantasy, sf]
+A woman whose every wish comes true, but only after a death.
+A boy hears his own name read out in a will that hasn't been written yet.
+A family's name is on the war memorial before the war has started.
+A bride is told on her wedding day the marriage will last a year.
+A nurse finds her name on a list of future victims.
+A man knows the exact date of the end of the world, and nobody listens.
+An athlete's body begins to fail on the eve of the one race that matters.
+Everyone who has held the ring has died within a year.
+A curse says the youngest daughter will sleep a hundred years from her sixteenth birthday. [fantasy]
+A sword chooses its bearer, and it chooses the stable girl. [fantasy]
+A changeling child grows up knowing the fair folk will come back for her. [fantasy]
+An oracle tells a general he will win the war and lose his son. [fantasy]
+A king's astrologer sees the kingdom fall within the year. [fantasy]
+A girl born at the turning of the year is marked to marry the god of the mountain. [fantasy]
+Three crones spin a thread for every life, and one of them has just cut his. [fantasy]
+A boy's shadow walks a day ahead of him. [fantasy]
+A family bound by an ancestor's oath must serve a house they hate. [fantasy]
+A ship's computer predicts which crew member will crack first, and is never wrong. [sf]
+A clone learns she has been given the same expiry date as the original. [sf]
+A colonist's genome shows she was designed for a job she refuses to do. [sf]
+A message from her future self says not to board the ship. [sf]
+A pilot's flight recorder shows a crash that hasn't happened yet. [sf]
+An algorithm assigned every child a career at birth, and his is executioner. [sf]
+A sleeper wakes from cryostasis to find her whole family died on the voyage. [sf]
+A colony ship's course was set centuries ago, toward a star that has since gone out. [sf]
+A man learns his memories were written for him the week he was made. [sf]
+A navigator keeps getting messages from a version of herself in another timeline. [sf]
+Every generation on the ship has had one mutiny, and this generation's is overdue. [sf]
+An android discovers it was built to be decommissioned on a fixed date. [sf]
+A colonist is among the ten chosen by lot to stay behind when the ship leaves. [sf]
+The station's oxygen model says there is one person too many, and it names her. [sf]
+A man's DNA test turns up a father who is alive and serving life. [modern]
+A woman learns she is the donor-conceived child of a man with eighty other children. [modern]
+A heart transplant patient starts to crave the donor's favourite food. [modern]
+A woman tests positive for the gene that killed her mother at fifty. [modern]
+A man's horoscope column, written by his ex-wife, keeps coming true. [modern]
+A pilot has been hiding a diagnosis that should have grounded her two years ago. [modern]
+Everyone born in her hospital that night has died in the order they were born. [modern]
+A woman finds a video of herself online, dated next month. [modern]
+A man inherits a house on condition that he never leaves the village. [modern]
+A refugee's asylum hearing falls on the day her father is sentenced at home. [modern]
+A teenager learns her records were swapped at birth with a girl given six months to live. [modern]
+A man hears his own name on the radio, announced as missing. [modern]
+A gambler's late mother left a sealed envelope marked for the day he loses the house. [modern]
+== unknown
+Something is living in the walls.
+A signal no one can translate.
+The village's children all dream the same dream.
+Footprints on the ceiling.
+A door appears in the side of the house that wasn't there yesterday.
+The lake gives back things that were never thrown in.
+Every photograph of the family has one extra face. [sf, modern]
+A radio plays a station that went off the air in 1952. [modern]
+Someone keeps setting a place at the table for a guest nobody invited.
+The neighbours have not been seen in daylight for a year.
+A road on the map leads to a town no one has heard of.
+Every clock in the village runs backwards for an hour after midnight.
+The new baby speaks in a language nobody knows.
+A well in the garden answers when you shout into it. [fantasy, modern]
+The scarecrow has moved closer to the house each morning. [fantasy, modern]
+A town's dead stop staying buried.
+A sound in the forest that only the children can hear.
+Lights move under the frozen lake.
+The deep-sea probe sends back a photograph of a staircase. [sf, modern]
+An old film reel shows the cinema's audience as it is tonight. [sf, modern]
+A stranger arrives who knows everyone's secrets and wants nothing.
+The church bells ring by themselves before every death. [fantasy, modern]
+The fog off the marsh carries voices.
+A patient in a coma draws maps of places no one has visited.
+A letter arrives from a house that burned down a century ago.
+Birds fall silent wherever a certain woman walks.
+The mine's lowest gallery has a breeze coming from below.
+The family's portraits change expression overnight.
+A child's imaginary friend leaves real footprints.
+A ship drifts into harbour with dinner still warm on the tables and no crew. [fantasy, modern]
+Something in the attic has been writing in the dust.
+An island appears off the coast after a storm.
+The cellar of the new house is deeper every time it is measured.
+The telephone rings in an empty house the family has just bought. [sf, modern]
+A shape follows the train in the tunnel. [sf, modern]
+The town's mirrors show it as it was, a hundred years ago.
+An ancient tomb is opened, and is found to have been occupied recently.
+A girl who drowned years ago walks into the village shop. [fantasy, modern]
+The research station's crew wakes to find a sixth bunk occupied. [sf, modern]
+Every night the same knock, three times, at the same window.
+A stone circle where people lose an hour. [fantasy, modern]
+A dog barks at an empty chair every evening at six.
+A meteorite lands in a field, and the cattle stand round it in silence. [fantasy, modern]
+The lighthouse beam picks out a figure walking on the sea. [fantasy, modern]
+A new road is built, and nobody who drives it arrives on time. [sf, modern]
+The standing stones on the hill are a different number every dawn. [fantasy]
+A knight returns from the war in the east with no reflection. [fantasy]
+The castle tapestry gains a new figure each time someone disappears. [fantasy]
+A spell everyone has cast for centuries suddenly does something else. [fantasy]
+A dragon's egg in the treasury has begun to tick. [fantasy]
+The forest path to the next village has started to take three days. [fantasy]
+The wizard's tower has a window no one can find from inside. [fantasy]
+A fairy ring appears in the castle courtyard overnight. [fantasy]
+The old king's tomb is found open, and his crown is on the new king's pillow. [fantasy]
+The colony's sensors log a heartbeat under the ice. [sf]
+A derelict ship answers hails in the captain's own voice. [sf]
+The ship's AI starts dreaming, and the dreams show places nobody has charted. [sf]
+Every crew member wakes from cryosleep with the same scar. [sf]
+The station's star charts show one more star than there was yesterday. [sf]
+An alien artefact in the cargo hold is getting warmer. [sf]
+The colony's children are all drawing the same structure under the planet's surface. [sf]
+A transmission arrives from Earth, which went silent a century ago. [sf]
+The airlock cycles at night, and the logs say nobody used it. [sf]
+A survey drone returns with footage of the camp, taken from where no drone flew. [sf]
+
+## openings
+# used as: "{}  (a way to open a scene, full sentence starting 'Open ...' with full stop)"
+== all
+Open on the morning after: someone is cleaning up, and finds one thing that doesn't fit.
+Open with a lie, told well.
+Open with someone arriving too late.
+Open on a funeral where nobody is sad.
+Open with a phone call (or a knock) in the middle of the night.
+Open mid-argument, and don't explain what it's about for a page.
+Open on someone doing their job perfectly, for the last time.
+Open with a list.
+Open on a stranger asking for someone by an old name.
+Open with the end of a long journey, and the wrong welcome.
+Open with someone burning something.
+Open on a child who has been told to wait, and doesn't.
+Open with a confession that turns out to be about something else.
+Open on a body nobody has noticed yet.
+Open in the kitchen, with someone cooking for a person who isn't coming.
+Open on a wedding at the moment someone objects.
+Open with a letter, read aloud by the wrong person.
+Open with two people pretending not to know each other.
+Open on a dog waiting at a door.
+Open with someone counting money they shouldn't have.
+Open on the last day of school.
+Open in a queue, with everyone listening to one conversation.
+Open with someone packing a suitcase in a hurry.
+Open on a deathbed, but with the dying person in charge.
+Open on a crowded train, with one empty seat that nobody takes. [sf, modern]
+Open with a smell that brings back a whole summer.
+Open on someone digging, at night.
+Open with a sentence overheard through a wall.
+Open on a hand of cards, with everything riding on it.
+Open on a reunion that both people have been dreading.
+Open with a promise being made, so the reader knows it will be broken.
+Open with someone waking in a room they don't recognise.
+Open with a scream that turns out to be laughter.
+Open in the middle of a chase.
+Open on the quiet moment just before something goes wrong.
+Open with an obituary. [sf, modern]
+Open with a parcel nobody ordered.
+Open on a character practising what they will say, badly.
+Open with someone watching a house from across the street.
+Open on an empty chair at a family dinner.
+Open with a will being read.
+Open in a waiting room, with one person who shouldn't be there.
+Open with a pair of shoes on a doorstep.
+Open with the weather, and make the weather a character.
+Open with a song someone can't stop humming.
+Open on a ruined birthday cake.
+Open with the narrator's last good day.
+Open with someone being fired.
+Open on a stranger in a family photograph. [sf, modern]
+Open on a broken window and a stone with a note tied to it.
+Open with someone finding a key in a coat they've just bought.
+Open with a crowd watching a fire.
+Open with an elderly woman lying to a police officer, beautifully. [sf, modern]
+Open with the sound of a car in the drive, when nobody is expected. [sf, modern]
+Open on a child's drawing that shows too much.
+Open with a door that has been locked for years being opened.
+Open with a recipe, and the reason it is never made any more.
+Open on the moment a secret is almost told.
+Open with someone running away from a wedding.
+Open on a gravestone with a fresh name.
+Open with a joke that falls flat.
+Open on a lost glove, followed to its owner.
+Open with someone being given terrible advice and taking it.
+Open in the middle of a storm, with the power just gone. [sf, modern]
+Open on a stranger's suitcase taken by mistake.
+Open with two strangers stuck in a lift. [sf, modern]
+Open with someone pretending to be asleep, listening.
+Open on a market day, following one coin from hand to hand.
+Open with someone returning a library book forty years late.
+Open on a farewell at a station.
+Open with an argument about directions.
+Open with the discovery of a hidden room.
+Open on a quiet street, just before the sirens. [sf, modern]
+Open with a dream, then make it real.
+Open on a character writing a letter they will never send.
+Open with someone being measured for a suit, or a coffin.
+Open with a missed call from a dead number. [sf, modern]
+Open on the first snow.
+Open with a toast that goes wrong.
+Open on the narrator lying in the bath, fully dressed.
+Open with somebody clearing out a dead parent's house.
+Open with a newspaper headline, and someone's reaction to it. [sf, modern]
+Open with a riddle.
+Open on a cat bringing in something it shouldn't have.
+Open with someone being introduced to their new family.
+Open with a fight in a kitchen over the last of something.
+Open on a stopped clock.
+Open with the smell of smoke at a picnic.
+Open on two children making a blood oath.
+Open with an apology that makes things worse.
+Open with a stranger at the funeral, crying harder than anyone.
+Open on a woman on a bridge, deciding.
+Open with a wrong number that becomes a conversation.
+Open with an old photograph found in a second-hand book. [sf, modern]
+Open on someone alone at a party they threw.
+Open with a gun on the table, and nobody looking at it. [sf, modern]
+Open with the words someone has just said for the first time.
+Open on the bottom of a lake, and something sinking towards it.
+Open on someone lighting a candle in a window for someone who never returns.
+Open with an auction lot that two people want badly.
+Open with someone teaching a child to swim.
+Open on a ransom demand, written very politely.
+Open with someone following instructions they don't understand.
+Open with a list of rules for the house.
+Open on a bride alone in the vestry. [fantasy, modern]
+Open with someone saying goodbye to a horse. [fantasy, modern]
+Open with an impossible noise from upstairs.
+Open on a sleepless night, hour by hour.
+Open with a coin toss deciding something huge.
+Open on a stranger asleep on the doorstep.
+Open with a quarrel between two old women about a hat.
+Open on a garden in its last week before the bulldozers. [sf, modern]
+Open with a missed train and the person met because of it. [sf, modern]
+Open with someone telling the story of how they died.
+Open with the shipping forecast, or a prayer, being recited.
+Open with someone reading a map upside down, and refusing to admit it.
+Open with a confession in the back of a taxi. [sf, modern]
+Open on a child explaining death to a younger child.
+Open on a brand-new widow choosing a dress.
+Open on a long table, laid for a feast, with no one at it.
+Open with someone trying to get rid of a body that turns out not to be dead.
+Open on someone swimming at dawn, alone, and seeing something.
+Open with the first lie a child ever tells.
+Open with a hairdresser who hears everything.
+Open with an alarm ringing that nobody switches off.
+Open on someone choosing between two envelopes.
+Open with a character's reflection, and something wrong with it.
+Open with a quiet moment of happiness the reader knows won't last.
+Open with an uninvited guest who knows where the spare key is.
+Open on a game of hide and seek that has gone on too long.
+== fantasy
+Open on a hanging that doesn't happen.
+Open with a map being redrawn.
+Open as the bells ring for a king who is not dead.
+Open on a dragon's shadow passing over a market.
+Open with a witch being refused service at an inn.
+Open at a coronation, as the crown fails to fit.
+Open with a prophecy misheard by a drunk.
+Open with a knight's horse returning without the knight.
+Open on a child picked for an apprenticeship nobody wants.
+Open with a spell going slightly wrong at a wedding.
+Open on the night the stars go out over one valley.
+Open with a sword being drawn from a stone by the wrong person.
+Open at a fair where a fairy is selling something.
+Open with a talking animal asking for directions.
+Open on a ghost who wants to buy a drink.
+Open with a funeral pyre that won't light.
+Open with a messenger dying on the castle steps.
+Open in a library where the books are chained, and one has escaped.
+Open with a duel between two wizards over a parking dispute at the inn.
+Open on a battlefield, the morning after, with a looter finding something alive.
+Open with a goose girl overhearing a plot.
+Open with a giant knocking politely on the town gate.
+Open on a frost that falls in midsummer.
+Open with an enchanted mirror cracking during a royal feast.
+Open with someone selling their shadow at market.
+Open with the village elders choosing who goes into the forest this year.
+Open at the moment a curse takes hold.
+Open with a dragon's egg in a henhouse.
+Open with a thief climbing into a tower and finding someone waiting.
+Open with a bard singing the wrong ending to a famous song.
+Open with a temple bell that rings without a hand on it.
+Open on a ship sailing off the edge of the known map.
+Open with a squire polishing armour for a knight who is already dead.
+Open with an exorcism that is going badly.
+Open at a crossroads where a stranger offers a deal.
+Open with a troll collecting a toll from a knight who has no money.
+Open on a herbalist's shop raided by the king's guard.
+Open with a princess who has just escaped and doesn't know where to go.
+Open at the moment the old king's will is unsealed.
+Open on the first spell a child ever casts, by accident.
+Open with a forest that wasn't there yesterday.
+Open on an execution where the axe breaks.
+Open with a festival mask that won't come off.
+Open with a caravan arriving in a city that has been empty for a century.
+Open on a castle kitchen the night before a poisoning.
+== sf
+Open in the last minute of a long sleep.
+Open on a docking that goes wrong, quietly.
+Open with a message from someone who has been dead for forty years.
+Open with an alarm on a ship where everyone else is asleep.
+Open with the first rain on a terraformed world.
+Open on a robot's first day of work.
+Open with a spacewalk and a tether that is fraying.
+Open on a colony's annual census, with one too many people counted.
+Open with an AI reading a eulogy for its creator.
+Open on a crowded station's market as the gravity flickers.
+Open with a body found floating in the hydroponics bay.
+Open with a child seeing a real sky for the first time.
+Open on a ship receiving a signal from its own future.
+Open with a memory being sold.
+Open on the last broadcast from Earth.
+Open with a clone meeting the original.
+Open with an alien language being decoded, and the first word being a warning.
+Open on a cargo hold where something is knocking from inside a crate.
+Open with a test pilot coming home a hundred years late.
+Open with a mining drill breaking through into a hollow space.
+Open with the captain's chair empty and the ship already moving.
+Open on a holographic beach with a glitch in the sea.
+Open with a smuggler negotiating with a customs drone.
+Open on a refugee ship arriving at a closed gate.
+Open with a body-swap clinic's first complaint.
+Open with an android being decommissioned, and asking to say goodbye.
+Open with someone waking up in a body they don't recognise.
+Open on a colony funeral where the body is launched into the sun.
+Open with a communications officer intercepting a love letter.
+Open with an evacuation siren on a station nobody can leave.
+Open on a hydroponics farmer finding a plant she didn't sow.
+Open on the moment the ship's AI stops answering.
+Open with an archaeologist on Mars brushing dust from a footprint.
+Open on a quarantine ward where the patients are getting better too fast.
+Open with an interstellar wedding broadcast with a nine-hour delay.
+Open with someone's memory wipe beginning, and them fighting it.
+Open with a derelict ship whose lights are still on.
+Open on a crowded orbital elevator stalled halfway up.
+Open with the first contact team arriving at a ruin, still warm.
+Open with an exile's ship being cast off from a generation ship.
+Open on a lunar night shift where the radio picks up singing.
+Open with a robot confessing to a murder.
+Open on a kid fixing a drone in a junkyard and finding a voice inside it.
+Open with a court case where the defendant is a ship.
+Open on the moment the stars outside the window start to move wrong.
+== modern
+Open in a hospital waiting room at 4 a.m.
+Open with an estate agent showing a house with someone still living in it.
+Open on a wedding speech going badly.
+Open with a text message received during a funeral.
+Open on a supermarket car park in the rain, with someone sitting in a car not getting out.
+Open with a voicemail left by someone who has just died.
+Open at a school gate, among parents who all hate one of them.
+Open on a motorway service station at midnight.
+Open with a dating profile that's mostly lies.
+Open with a bailiff knocking on the door.
+Open on a building site where a digger has hit bones.
+Open on a 999 call.
+Open with a viral video that the main character is in, and hasn't seen.
+Open in a launderette with a stranger's clothes in the machine.
+Open with an office leaving party for someone who is being sacked.
+Open with a delivery driver who rings the wrong bell.
+Open on the night bus.
+Open on the last orders bell at a village pub.
+Open with a social media post that has just been deleted.
+Open with someone being breathalysed.
+Open with a family video call where someone's background gives them away.
+Open on a council meeting about a planning application.
+Open with someone waking up on a stranger's sofa after a party.
+Open at a car boot sale, with an object that shouldn't be for sale.
+Open on a hospital car park ticket machine that won't take cards.
+Open on a care home bingo night.
+Open with a teenager sneaking back in through a window, and finding a parent waiting.
+Open on a crowded beach the moment a child goes missing.
+Open with someone reading their partner's phone.
+Open on a court hearing where the defendant is smiling.
+Open with an online auction ending in the last second.
+Open on a late-night radio phone-in where the caller is the host's mother.
+Open with a christening interrupted by the police.
+Open with a power cut in a tower block.
+Open with someone being stopped at airport security with something they didn't pack.
+Open on the night shift at a petrol station.
+Open with a family arguing in the car on the way to a holiday.
+Open with the first day at a new job, and an old enemy at the next desk.
+Open on a parish noticeboard, and the notice that someone tears down.
+Open with a teacher finding a note in a pupil's homework.
+Open on a hen night that's gone very wrong.
+Open with a match day at a lower-league football ground.
+Open on a jury retiring to consider the verdict.
+Open on a lost dog poster with a familiar face on it.
+Open with a doorbell camera recording something strange at 3 a.m.
+
+## object_things
+# used as: "A/an {}, battered  (noun, no article)"
+== all
+pocket watch
+locket
+letter
+key
+ring
+photograph [sf, modern]
+music box
+knife
+map
+diary
+coat
+teapot
+doll
+hand mirror
+fountain pen [sf, modern]
+hairbrush
+pocket knife
+violin
+umbrella
+walking stick
+tin soldier
+pair of spectacles
+compass
+rosary
+cigarette case [sf, modern]
+snow globe [sf, modern]
+glove
+baby's shoe
+chess set
+deck of cards
+hat pin
+thimble
+tea caddy
+child's drawing
+recipe book
+silver spoon
+wedding veil
+ledger
+paperweight
+jewellery box
+bell
+lantern
+pipe
+sketchbook
+quilt
+handkerchief
+straw hat
+sewing box
+hip flask
+bracelet
+pair of dice
+spinning top
+pressed flower
+rocking horse
+clock key
+birdcage
+ship in a bottle
+pair of boots
+wristwatch [sf, modern]
+mantel clock
+fan
+porcelain cup
+kite
+stuffed bear
+cameo brooch
+bundle of letters
+inkwell
+magnifying glass
+tobacco tin
+harmonica [sf, modern]
+silver hairbrush
+wooden box
+toy boat
+leather satchel
+prayer card
+medal
+ticket stub [sf, modern]
+wedding ring
+apron
+signet ring
+pair of earrings
+lace shawl
+tin whistle
+carved bird
+glass eye
+clay pipe
+christening gown
+sealed envelope
+travelling trunk
+calendar
+== fantasy
+sword hilt
+reliquary
+astrolabe
+prayer book
+brooch
+spindle
+crown of plaited reeds
+seal ring
+bone flute
+dragon scale
+wand of rowan wood
+witch's ladle
+goblet
+scrying bowl
+silver dagger
+shield boss
+helm
+spellbook
+tarot deck
+horn of a dead stag
+amulet
+spinning wheel
+harp
+scroll case
+saint's finger bone
+iron key as long as a forearm
+shepherd's crook
+cloak pin
+war banner
+heraldic tabard
+mermaid's comb
+lute
+bridle of silver wire
+cauldron
+glass slipper
+reed pipe
+crystal ball
+wax seal
+alchemist's flask
+traveller's staff
+rune stone
+oath ring
+quiver
+herbal
+falconer's glove
+gauntlet
+chalice
+tooth of a giant
+mummified hand
+bell from a drowned church
+sundial
+vial of tears
+book of hours
+torc
+grimoire
+== sf
+data crystal
+pressure-suit helmet
+seed packet from Earth
+dog tag
+holo-locket
+old paper book
+broken drone
+flight log
+neural implant
+star chart
+oxygen canister
+memory chip
+android hand
+ration tin from the first colony
+pilot's wings
+cryo tag
+pocket terminal
+alien shell
+spacesuit patch
+mag-boot
+plasma cutter
+gravity compass
+child's tablet
+captain's log
+handheld scanner
+laser pistol
+navigation key
+moon rock
+data slate
+glass vial of Earth soil
+robot's voice box
+signal beacon
+sealed sample jar
+recorder
+translator earpiece
+radiation badge
+hydroponic seedling
+holographic projector
+plastic flower
+solar sail fragment
+prosthetic eye
+colony charter
+ship's bell
+microchip
+pocket hologram
+hull fragment
+emergency transponder
+military medal from a forgotten war
+gene key
+synthetic pearl
+personal AI core
+access card
+first-contact recording
+engineer's toolkit
+cracked visor
+== modern
+cassette tape
+phone
+set of car keys
+wedding dress
+tin of buttons
+football programme
+cigarette lighter
+hospital bracelet
+memory stick
+lottery ticket
+polaroid
+mixtape
+bus pass
+dog lead
+mobile phone with a cracked screen
+school tie
+birthday card
+vinyl record
+mug
+sports medal
+fridge magnet
+passport
+train ticket
+bicycle bell
+digital camera
+cuddly rabbit
+lanyard
+library card
+house key on a ribbon
+receipt
+answering machine tape
+handbag
+dinner jacket
+leather jacket
+festival wristband
+postcard
+crossword book
+school report
+pair of trainers
+lunch box
+rental agreement
+road atlas
+hairdryer
+videotape
+paperback with notes in the margins
+fishing rod
+laptop
+ring binder
+wristband from a hospital ward
+plastic tiara
+car air freshener
+bank statement
+toy car
+garden gnome
+security pass
+
+## object_looks
+# used as: "A locket, {}  (description after a comma: 'heavier than it looks')"
+== all
+battered
+too clean
+hand-made
+cheap but carefully kept
+engraved
+half-burnt
+child-sized
+much repaired
+heavier than it looks
+warm to the touch
+scratched all over
+tarnished black
+still in its box
+wrapped in oilcloth
+smelling faintly of lavender
+stained with something dark
+mended with wire
+older than it ought to be
+painted over in a hurry
+beautifully made and badly treated
+missing its chain
+bent out of shape
+smaller than you would expect
+covered in tiny teeth marks
+greasy from handling
+bright as the day it was made
+gnawed at one corner
+faded by years of sun
+wet, though it's been dry for days
+cold even in summer
+sticky with old sugar
+patched with mismatched pieces
+worn smooth by a thumb
+initialled in a child's hand
+bound with red thread
+dusty but unbroken
+charred along one edge
+sewn into a pocket
+cracked down the middle
+sealed with wax
+dented by a bullet [sf, modern]
+chipped but loved
+bearing a pawnshop tag
+wrapped in a page of newspaper [sf, modern]
+much too grand for its owner
+crusted with salt
+mouldy at the seams
+glued back together
+furred with dust
+sun-bleached
+scuffed as if dragged
+glowing faintly in the dark
+humming very quietly
+splashed with paint
+carefully labelled in a stranger's hand
+heavy with lead
+brand new, which makes no sense
+riddled with woodworm
+smelling of the sea
+smelling of smoke
+lighter than air, almost
+sharp at every edge
+coated in candle wax
+flecked with gold leaf
+drilled through with a tiny hole
+bound in human hair
+dyed an ugly green
+spotted with rust
+trimmed with black ribbon
+sticky with tape [sf, modern]
+sewn shut
+hidden in a tin
+monogrammed, though not with your initials
+scorched in the shape of a hand
+waterlogged
+pristine apart from one fingerprint
+oddly lopsided
+rattling when shaken
+padlocked
+smelling of someone's perfume
+sprinkled with sand
+frayed to threads
+blistered with heat
+inlaid with mother-of-pearl
+crudely copied from something better
+signed on the underside
+bandaged like a wound
+pinned with a note
+strangely cold in the hand
+worn thin in one place
+
+## object_pasts
+# used as: "It {}.  (verb phrase: 'was stolen twice')"
+== all
+belonged to someone who died young
+was stolen twice
+was meant as a wedding gift and never given
+came back from a war without its owner
+was found in a wall
+has been in the family for longer than anyone knows
+was won in a card game
+was buried with someone, once
+was given as an apology
+is the only thing saved from the fire
+was pawned and bought back four times
+was found clutched in a drowned man's hand
+was a gift from a queen to her lover
+was smuggled across a border in a loaf of bread
+turned up in a lost-property office with no record of who handed it in [sf, modern]
+was the last thing a famous thief stole
+was bought at auction for far too much
+was dug up by a plough
+belonged to a ship's captain who went down with the ship
+was in the evidence room of a murder trial [sf, modern]
+was left on a doorstep with a baby
+was made by a prisoner in his cell
+was given to a child who never grew up
+was carried through three sieges
+sat on a mantelpiece for sixty years untouched
+was used as payment for a debt that was never forgiven
+was confiscated by customs and quietly kept
+was once worn by a famous actress on stage
+was mended by a woman who couldn't afford a new one
+survived a shipwreck
+was given to the wrong twin
+belonged to a man hanged for a crime he didn't commit
+was hidden from soldiers in a well
+was swapped for a horse [fantasy, modern]
+was blessed by a priest who was later defrocked
+was taken off a dead man on a battlefield
+was found in the stomach of a fish
+was left to a housekeeper in a disputed will
+came from a house that no longer exists
+was the subject of a family feud for three generations
+was made for a wedding that was called off
+was buried in a time capsule and dug up early [sf, modern]
+was bought for a lover and given to a wife
+was the centrepiece of a museum before the burglary [sf, modern]
+travelled round the world in a sailor's kitbag [fantasy, modern]
+was won in a raffle at a village fete [fantasy, modern]
+was a present from a grandparent nobody else remembers
+was found in a skip [sf, modern]
+was handed down from mother to eldest daughter
+was rescued from a flood
+was once used to identify a body
+lay in the attic under a dust sheet for thirty years
+was owned by a woman who outlived three husbands
+was sent through the post with no return address
+was smashed in a quarrel and glued back together
+was made from the timbers of a wrecked ship
+was the only thing a refugee brought out
+came in a job lot of house clearance junk [sf, modern]
+was used as a bribe
+was buried in a garden and dug up by a dog
+was once in a photograph that made the front page [sf, modern]
+belonged to a nun who ran away
+was confiscated by a schoolteacher and never returned
+was a prize in a contest nobody remembers winning
+was promised to three different people
+was a farewell gift to an emigrant
+was lent and never given back
+was found on a beach after a storm
+was taken from a grave
+was carried by a soldier who swore it saved his life
+was thrown into a river in anger and fished out years later
+came from the estate of a disgraced banker
+was sold to settle a gambling debt
+was given to a nurse by a dying patient
+belonged to a famous explorer who never came back
+was locked in a bank vault for forty years [sf, modern]
+was used in a magic act
+was a love token passed between two people who never married
+was wrapped in a baby's blanket and left at a church
+was owned by a family that vanished overnight
+was carried on a pilgrimage
+was rescued from a burning library
+was stolen from a museum and returned anonymously
+was once mistaken for something valuable and fought over
+was made for a child who was never born
+was taken as a trophy
+belonged to a famous forger
+was paid as a ransom
+was found on a train with no one claiming it [sf, modern]
+was the cause of a broken engagement
+was blessed, then cursed, then blessed again
+was owned by a dentist who poisoned his patients [sf, modern]
+was found in a dead woman's coat pocket
+was mentioned in a will, then crossed out
+was given away by a saint
+was fished out of a canal
+was presented at a royal court
+was hidden under a floorboard during an occupation
+was carried by a messenger who never arrived
+was won in a bet about the weather
+was smuggled out of a prison camp [sf, modern]
+was the only thing in a safe deposit box [sf, modern]
+was handed over at a secret meeting on a bridge
+belonged to a teacher everyone loved and nobody really knew
+was found in a lift by a cleaner who kept it [sf, modern]
+was bought with the first wages someone ever earned
+was the last gift a father gave before he left
+was carved by a boy who later became a murderer
+was left behind by a lodger who never paid
+was buried at a crossroads
+was used to sign a treaty
+was recovered from a crashed plane [sf, modern]
+
+## object_quirks
+# used as: "It {}.  (verb phrase: 'has a hidden compartment')"
+== all
+has initials on it no one recognises
+has a hidden compartment
+has a name scratched off
+is always where you didn't leave it
+makes a dog growl
+is worth far more than anyone thinks
+is wanted badly by a stranger
+is wrapped in a page torn from a register
+stops at the same time every night
+is missing one piece, and someone has it
+plays a tune nobody can name
+smells of a house that burned down
+is warm when someone is lying
+has a date engraved on it that hasn't happened yet
+was made for a left hand
+has a lock of hair inside
+won't fit back into its case
+has a tiny map scratched into the back
+is engraved with the wrong name
+rattles, though it should be solid
+makes babies stop crying
+has been X-rayed, and something is inside [sf, modern]
+is listed in a police report [sf, modern]
+turns up in an old photograph of a stranger [sf, modern]
+appears in a painting in the national gallery [sf, modern]
+has a twin somewhere
+makes people tell the truth when they hold it
+is never quite the same colour twice
+weighs more after dark
+is mentioned in a song
+has a serial number registered to someone dead [sf, modern]
+leaves a faint mark on anything it touches
+hums when it is near water
+has a message written inside in invisible ink
+is listed as destroyed in the official record
+makes cats leave the room
+has a crack that grows a little every year
+contains a key to something else
+has fingerprints on it that match no one living
+is insured for an absurd sum [sf, modern]
+is the subject of a lawsuit [sf, modern]
+has a phone number written inside [sf, modern]
+casts a shadow the wrong shape
+cannot be photographed clearly [sf, modern]
+has a pawnshop ticket tied to it from 1923 [modern]
+makes the owner dream of the sea
+makes anyone who holds it homesick
+has a coded inscription
+is one of a set of seven
+has a bullet hole through it
+keeps coming back when thrown away
+gets heavier the further it is carried from home
+is on a list of stolen goods
+has been in three photographs at crime scenes [sf, modern]
+plays a tune, but only on Sundays
+was cleaned recently, by someone
+has a smell that changes with the weather
+fogs up when someone sad is near
+has a tiny drawing of a face hidden in the pattern
+sticks to iron
+has been fitted with a tracking device [sf, modern]
+has a hollow where something used to sit
+belongs, legally, to a museum [sf, modern]
+has a message for someone called Margaret
+is the key to a family's alibi
+is the reason two families stopped speaking
+is shown in a wanted poster
+glows faintly under a full moon
+won't let itself be sold
+makes flowers wilt
+has someone else's blood type recorded on it [sf, modern]
+matches a description in a missing-person report [sf, modern]
+is the only thing a ghost wants
+has the maker's mark of a man who never existed
+shows signs of being opened recently
+has a secret only the old housekeeper knows
+is covered in tiny numbers
+has teeth marks from something large
+holds a photograph of the current owner as a child
+is always found at the scene of a quarrel
+won't work for its rightful owner
+was copied, and the copy is the one everyone thinks is real
+has a smell of almonds
+has a code that opens a safe in another country [sf, modern]
+has been blessed by every priest it has met
+is engraved with a verse from a forbidden book
+makes the lights flicker
+has an owner's mark that keeps reappearing after it is polished off
+seems to be listening
+has been tested for poison, inconclusively
+was in a dream someone had before they found it
+has a hidden seam
+contains a lock of a child's hair and a pressed daisy
+has a name written in a child's handwriting under the lid
+ticks, though it has no mechanism
+repels mice
+fits a keyhole nobody has found yet
+is coveted by a collector who never gives up
+has instructions engraved in a language nobody reads
+has a smudge of lipstick that won't wash off
+is slightly too large for any hand
+has a sum of money written inside, and a name
+draws magpies to the window
+makes music boxes in the same room fall silent
+is engraved with today's date
+has a false bottom with a false bottom beneath it
+is exactly what someone needs to finish a confession
+has been photographed beside the same stranger in every decade [sf, modern]
+chimes once whenever someone in the family dies
+smells of the cigarettes a dead man smoked [sf, modern]
+was the last thing seen in a missing girl's hands
