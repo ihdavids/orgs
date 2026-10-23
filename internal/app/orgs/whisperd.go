@@ -214,6 +214,7 @@ func StartWhisper() {
 			// Both handlers see the signal; whichever exits first stops
 			// LanguageTool's child too (languagetool.go).
 			StopLanguageTool()
+			StopOllama()
 			os.Exit(0)
 		}()
 	})

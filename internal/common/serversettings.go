@@ -138,8 +138,12 @@ type AssistantSettings struct {
 	Gemini  AssistantBackend `yaml:"gemini"`
 	// Claude through the Claude Code command on the server's machine, signed
 	// in with a Claude subscription (internal/app/orgs/assistantcode.go).
-	// Off unless enabled; the only backend that can read and edit files.
+	// Off unless enabled; with ollama, the backends that can read and edit
+	// files.
 	ClaudeCode AssistantBackend `yaml:"claudecode"`
+	// A local model through Ollama (internal/app/orgs/ollama.go), which orgs
+	// can install, start and fill with models from worg. Off unless enabled.
+	Ollama OllamaSettings `yaml:"ollama"`
 	// The most of a file sent as context, in characters (default 400000).
 	MaxContext int `yaml:"maxContext"`
 }
@@ -166,6 +170,33 @@ type AssistantBackend struct {
 	// claude command if it is not on the server's PATH.
 	Enabled bool   `yaml:"enabled"`
 	Command string `yaml:"command"`
+}
+
+// OllamaSettings is the ollama backend: AssistantBackend's model, models,
+// url (default http://127.0.0.1:11434), command (the ollama binary, else the
+// PATH, Ollama.app, or the copy orgs installed) and enabled, and how orgs
+// runs it.
+type OllamaSettings struct {
+	AssistantBackend `yaml:",inline"`
+	// The context window asked for, in tokens (default 16384); worg may ask
+	// for another per request. Also the server's OLLAMA_CONTEXT_LENGTH when
+	// orgs starts it.
+	ContextLength int `yaml:"contextLength"`
+	// Start `ollama serve` when nothing answers at url (default true; only
+	// for a url on this machine).
+	Serve *bool `yaml:"serve"`
+	// Let an administrator install Ollama from worg (default true): the
+	// latest release from GitHub, into the user cache.
+	Download *bool `yaml:"download"`
+	// Where models are kept (OLLAMA_MODELS), when orgs starts it; empty is
+	// Ollama's own (~/.ollama/models).
+	ModelDir string `yaml:"modelDir"`
+	// How long a model stays loaded after a request (Ollama's keep_alive,
+	// e.g. 10m, 1h; -1 for always).
+	KeepAlive string `yaml:"keepAlive"`
+	// Thinking for models that can (true or false); unset is the model's
+	// own default.
+	Think *bool `yaml:"think"`
 }
 
 // HarperServerSettings runs Harper (https://github.com/automattic/harper) on

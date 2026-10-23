@@ -408,6 +408,7 @@ func StartServer(sets *common.ServerSettings) {
 	StopWhisper()
 	StopLanguageTool()
 	StopHarper()
+	StopOllama()
 	StopTrigramIndex()
 	StopBabelSessions()
 	stopPlugins(sets)

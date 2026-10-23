@@ -407,6 +407,53 @@ server:
 writing on your own server: a subscription is one person's, so do not turn it
 on for a server other people use.
 
+*** Local models, with Ollama
+/Ollama (local)/ runs a model on the server's own machine through [[https://ollama.com][Ollama]]:
+nothing you write leaves it and nothing is billed. Local models are slower
+than Claude and the small ones write less well, but those that can use tools
+read and edit your files exactly as Claude Code does above (the pencils, the
+notes over each answer, undo).
+
+The chip button at the top of the assistant pane opens *Local models*:
+
+- *Ollama*: whether it is installed and running. With none installed, /Install
+  Ollama/ fetches the latest release from GitHub (about 200 MB) into the
+  server's cache and starts it; one already running (Ollama.app, =brew
+  services=) is used as it is. orgs starts =ollama serve= itself when it is
+  needed and stops it with the server; /Stop/ keeps it down until /Start/.
+- *Context length*: how much text the model holds at once - the
+  instructions, what it sees of the file, what it reads. More takes more
+  memory and is slower to load; a model's own limit is never passed. Kept in
+  this browser; /Server default/ is =contextLength= below. When what is sent
+  will not fit, the answer says so rather than losing the start of it.
+- *Installed*: each model with its size and what it can do: /tools/ (can read
+  and edit files), /no tools/ (sees only what is sent), /thinks/, /loaded/ (in
+  memory now). /Use/ picks it for the pane (the model menu in the pane does
+  too); the bin deletes it from the server, after a second click.
+- *Add a model*: any name from the [[https://ollama.com/search?c=tools][Ollama library]] (=qwen3:8b=,
+  =gpt-oss:20b=), or one of the suggestions. Downloads run on the server, so
+  closing the page does not stop one; each shows its progress and can be
+  stopped. A model needs roughly its size in free memory to run.
+
+Installing, starting, stopping and changing models are for an administrator
+of the server (anyone, with =noAuth=); everyone can pick among the models.
+
+#+BEGIN_SRC yaml
+server:
+  assistant:
+    ollama:
+      enabled: true              # off until this is set
+      model: qwen3:8b            # the default, if installed (else the first one)
+      contextLength: 16384       # tokens; also OLLAMA_CONTEXT_LENGTH for an Ollama orgs starts
+      url: http://127.0.0.1:11434   # another machine's Ollama works too (orgs only starts a local one)
+      serve: true                # start ollama serve when nothing answers
+      download: true             # allow Install Ollama from worg
+      command: ""                # the ollama binary, if not on the PATH or in Ollama.app
+      modelDir: ""               # where models are kept (default ~/.ollama/models)
+      keepAlive: 30m             # how long a model stays loaded after a question
+      think: false               # thinking on or off for models that can (unset: the model's default)
+#+END_SRC
+
 Nothing is sent until you ask. The conversation is about this file and goes
 when you open another.
 

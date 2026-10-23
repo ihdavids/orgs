@@ -167,6 +167,7 @@ func StartLanguageTool() {
 			fmt.Fprintf(os.Stderr, "\n[languagetool] stopping\n")
 			StopLanguageTool()
 			StopWhisper()
+			StopOllama()
 			os.Exit(0)
 		}()
 	})

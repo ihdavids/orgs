@@ -98,6 +98,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/assistant/status", RequestAssistantStatus).Methods("GET") // the writing assistant's backends
 	api.HandleFunc("/assistant/chat", PostAssistantChat).Methods("POST")
 	api.HandleFunc("/assistant/key", PostAssistantKey).Methods("POST") // set a backend's key from worg
+	api.HandleFunc("/ollama/status", RequestOllamaStatus).Methods("GET") // ollama.go: the assistant's local models
+	api.HandleFunc("/ollama/{action:install|start|stop|pull|cancel|delete}", PostOllamaAction).Methods("POST")
 	api.HandleFunc("/harper/lint", PostHarperLint).Methods("POST")     // Harper run on the server, for phones
 	api.HandleFunc("/harper/status", RequestHarperStatus).Methods("GET")
 	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file

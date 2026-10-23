@@ -38,9 +38,14 @@ var assistantDefaults = map[string]struct{ label, model, env string }{
 	// Its "key" is optional: a `claude setup-token` token, for a server whose
 	// user has not run `claude login`.
 	"claudecode": {"Claude Code (subscription)", "opus", "CLAUDE_CODE_OAUTH_TOKEN"},
+	// No key: a model on this machine (ollama.go, assistantollama.go).
+	"ollama": {"Ollama (local)", "", ""},
 }
 
-var assistantOrder = []string{"claudecode", "claude", "chatgpt", "gemini"}
+var assistantOrder = []string{"claudecode", "ollama", "claude", "chatgpt", "gemini"}
+
+// The backends that read and edit files themselves, through orgs's tools.
+func assistantHasTools(name string) bool { return name == "claudecode" || name == "ollama" }
 
 func assistantBackend(name string) *common.AssistantBackend {
 	a := &Conf().Server.Assistant
@@ -53,16 +58,19 @@ func assistantBackend(name string) *common.AssistantBackend {
 		return &a.Gemini
 	case "claudecode":
 		return &a.ClaudeCode
+	case "ollama":
+		return &a.Ollama.AssistantBackend
 	}
 	return nil
 }
 
-// Whether worg is offered the backend at all: claudecode only when enabled.
+// Whether worg is offered the backend at all: claudecode and ollama only
+// when enabled.
 func assistantOffered(name string, b *common.AssistantBackend) bool {
 	if b.Disabled {
 		return false
 	}
-	return name != "claudecode" || b.Enabled
+	return !assistantHasTools(name) || b.Enabled
 }
 
 // The key for a backend: one set from worg (assistantkeys.go), else written
@@ -71,6 +79,9 @@ func assistantOffered(name string, b *common.AssistantBackend) bool {
 func assistantKey(name string, b *common.AssistantBackend) (string, error) {
 	if name == "claudecode" {
 		return claudeCodeKey(b)
+	}
+	if name == "ollama" {
+		return "", ollamaReady(b)
 	}
 	if k := assistantStoredKey(name); k != "" {
 		return k, nil
@@ -130,6 +141,10 @@ func anthropicProfile() bool {
 }
 
 func assistantModel(name string, b *common.AssistantBackend) string {
+	if name == "ollama" {
+		def, _ := ollamaModelFor(b)
+		return def
+	}
 	if b.Model != "" {
 		return b.Model
 	}
@@ -139,6 +154,16 @@ func assistantModel(name string, b *common.AssistantBackend) string {
 // The other models the writer may pick: the yaml's, or for claudecode the
 // claude command's own names for the rest of the family.
 func assistantModels(name string, b *common.AssistantBackend) []string {
+	if name == "ollama" {
+		def, names := ollamaModelFor(b)
+		out := []string{}
+		for _, n := range names {
+			if n != def {
+				out = append(out, n)
+			}
+		}
+		return out
+	}
 	if len(b.Models) == 0 && name == "claudecode" {
 		out := []string{}
 		for _, m := range []string{"opus", "sonnet", "haiku"} {
@@ -169,6 +194,9 @@ type assistantBackendStatus struct {
 func assistantKeySource(name string, b *common.AssistantBackend) string {
 	if name == "claudecode" {
 		return claudeCodeSource(b)
+	}
+	if name == "ollama" {
+		return "local"
 	}
 	switch {
 	case assistantStoredKey(name) != "":
@@ -211,9 +239,12 @@ func RequestAssistantStatus(w http.ResponseWriter, r *http.Request) {
 		if !assistantOffered(n, b) {
 			continue
 		}
-		s := assistantBackendStatus{Name: n, Label: assistantDefaults[n].label, Model: assistantModel(n, b), Tools: n == "claudecode"}
+		// The key first: for ollama it is what starts the server the model
+		// list comes from.
+		_, keyErr := assistantKey(n, b)
+		s := assistantBackendStatus{Name: n, Label: assistantDefaults[n].label, Model: assistantModel(n, b), Tools: assistantHasTools(n)}
 		s.Models = append([]string{s.Model}, assistantModels(n, b)...)
-		if _, err := assistantKey(n, b); err != nil {
+		if err := keyErr; err != nil {
 			s.Msg = err.Error()
 		} else {
 			s.Ready = true
@@ -260,6 +291,9 @@ type assistantReq struct {
 	// files (File and any of Others) the writer has let it change.
 	Doc  string
 	Edit []string
+	// ollama only: the context window to ask for, in tokens (else
+	// assistant.ollama.contextLength).
+	NumCtx int
 }
 
 // The other files' text, each named, in the order asked for. Refuses a file
@@ -406,7 +440,7 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 	// A backend with tools reads the other files when it needs them, rather
 	// than having them all in every turn's prompt.
 	inPrompt := req
-	if name == "claudecode" {
+	if assistantHasTools(name) {
 		inPrompt.Others = nil
 	}
 	docs, err := assistantContextText(&inPrompt)
@@ -415,7 +449,7 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var files *codeFiles
-	if name == "claudecode" {
+	if assistantHasTools(name) {
 		if files, err = newCodeFiles(&req); err != nil {
 			writingJson(w, common.ResultMsg{Ok: false, Msg: err.Error()})
 			return
@@ -453,6 +487,8 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		stop, err = assistantGemini(ctx, key, b, model, docs, req.Messages, emit)
 	case "claudecode":
 		stop, err = assistantClaudeCode(ctx, key, b, model, docs, req.Messages, files, emit, send)
+	case "ollama":
+		stop, err = assistantOllama(ctx, b, model, docs, req.Messages, files, req.NumCtx, emit, send)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ASSISTANT %s: %v\n", name, err)
