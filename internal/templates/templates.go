@@ -335,13 +335,19 @@ func (self *TemplateManager) Initialize() {
 	pongo2.RegisterFilter("orgWordWrap", wordWrap)
 	pongo2.RegisterFilter("commaList", commaList)
 	pongo2.RegisterFilter("sepList", sepList)
+	registerOrgFilters()
 }
 
 func (self *TemplateManager) resolveTemplate(name string, context map[string]interface{}) string {
 	if _, err := os.Stat(name); err != nil {
 		return err.Error()
 	}
-	tpl, _ := pongo2.FromFile(name)
+	// A template that does not parse writes the complaint, as when() does,
+	// rather than taking the request down with a nil template.
+	tpl, err := pongo2.FromFile(name)
+	if err != nil {
+		return err.Error()
+	}
 	ctx := pongo2.Context{}
 	self.standardContext(&ctx)
 	for k, v := range context {
@@ -444,6 +450,7 @@ func (self *TemplateManager) standardContext(context *pongo2.Context) {
 	ctx["when"] = func(spec string, as ...string) *pongo2.Value {
 		return pongo2.AsSafeValue(w(spec, as...))
 	}
+	ctx["days"] = days(now) // funcs.go
 }
 
 // currentUser is the account running the server: its login, and its full name

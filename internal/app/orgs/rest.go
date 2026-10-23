@@ -75,6 +75,13 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/file", CreateFile).Methods("POST")
 	api.HandleFunc("/dirs", RequestDirs)
 	api.HandleFunc("/newtemplates", RequestNewTemplates)
+	api.HandleFunc("/newtemplate/list", RequestFileTemplateList).Methods("GET") // filetemplates.go: the template editor
+	api.HandleFunc("/newtemplate/words", RequestFileTemplateWords).Methods("GET")
+	api.HandleFunc("/newtemplate/preview", PostFileTemplatePreview).Methods("POST")
+	api.HandleFunc("/newtemplate/fields", RequestFileTemplateFields).Methods("GET")
+	api.HandleFunc("/newtemplate", RequestFileTemplate).Methods("GET")
+	api.HandleFunc("/newtemplate", PostFileTemplate).Methods("POST")
+	api.HandleFunc("/newtemplate", DeleteFileTemplate).Methods("DELETE")
 	api.HandleFunc("/file/{type}", RequestFile)                   // html etc
 	api.HandleFunc("/pandoc", RequestPandoc).Methods("GET")
 	api.HandleFunc("/book", RequestBook).Methods("GET") // export.go: a manuscript (docx) or an ebook (epub), written natively
@@ -359,6 +366,9 @@ func RestApi(router *mux.Router) {
 
 	// Per-user extensions: capture templates
 	api.HandleFunc("/ext/capture/templates", RequestUserCaptureTemplates).Methods("GET")
+	api.HandleFunc("/ext/capture/templates/all", RequestAllCaptureTemplates).Methods("GET") // capturetemplates.go: the capture template editor
+	api.HandleFunc("/capture/target/check", RequestCaptureTargetCheck).Methods("POST")
+	api.HandleFunc("/capture/words", RequestCaptureWords).Methods("GET")
 	api.HandleFunc("/ext/capture/template", PostUserCaptureTemplate).Methods("POST")
 	api.HandleFunc("/ext/capture/template", DeleteUserCaptureTemplate).Methods("DELETE")
 
@@ -1115,7 +1125,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 	if title == "" {
 		title = strings.TrimSuffix(filepath.Base(req.Filename), filepath.Ext(req.Filename))
 	}
-	file := GetDb().CreateOrgFileFromTemplate(req.Filename, title, req.Template)
+	file := GetDb().CreateOrgFileFromTemplate(req.Filename, title, req.Template, req.Answers)
 	if file != nil {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(common.FileList{file.Filename})

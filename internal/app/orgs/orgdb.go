@@ -16,6 +16,7 @@ import (
 	"time"
 
 	//"github.com/fsnotify/fsnotify"
+	"github.com/flosch/pongo2/v5"
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/internal/common/rfsnotify"
@@ -849,7 +850,7 @@ func (self *OrgDb) CreateOrgFile(fname string, title string) *common.OrgFile {
 	return self.CreateOrgFileFromTemplate(fname, title, "")
 }
 
-func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templateName string) *common.OrgFile {
+func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templateName string, answers ...map[string]string) *common.OrgFile {
 	if _, err := os.Stat(fname); err != nil {
 		if strings.TrimSpace(title) == "" {
 			title = titleFromFilename(fname)
@@ -858,13 +859,11 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		if template == "" {
 			template = Conf().NewFileTemplate
 		}
-		// {{author}}, the clock and the rest come from the standard context.
-		var context map[string]interface{} = make(map[string]interface{})
-		context["day_page_title"] = title
-		context["title"] = title
-		context["filename"] = fname
-		context["basename"] = strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname))
-		data := Conf().PlugManager.Tempo.RenderTemplate(template, context)
+		var given map[string]string
+		if len(answers) > 0 {
+			given = answers[0]
+		}
+		data := Conf().PlugManager.Tempo.RenderTemplate(template, newFileContext(fname, title, given, false))
 		fmt.Fprintf(os.Stderr, "WRITING ORG FILE %s\n", fname)
 		// A capture filename may name a folder that is not there yet
 		// (tmp/{{shortuid}}.org).
@@ -874,6 +873,47 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 	} else {
 		fmt.Fprintf(os.Stderr, "RELOAD ATTEMPT: %s\n", fname)
 		return self.ReloadFile(fname)
+	}
+}
+
+// What a new file's template is given beyond the standard context ({{author}},
+// the clock and the rest). The template editor's preview renders with the same.
+//
+// ask("Client") is answered from answers, the boxes the New File dialog showed
+// for the template's questions; an unanswered one is its default, or nothing.
+// A preview writes an unanswered question with no default as ‹Client›, so the
+// author sees where the answer will go.
+func newFileContext(fname, title string, answers map[string]string, preview bool) map[string]interface{} {
+	ask := func(name string, dflt ...string) *pongo2.Value {
+		if v, ok := answers[name]; ok && strings.TrimSpace(v) != "" {
+			return pongo2.AsSafeValue(v)
+		}
+		if len(dflt) > 0 && dflt[0] != "" {
+			return pongo2.AsSafeValue(dflt[0])
+		}
+		if preview {
+			return pongo2.AsSafeValue("‹" + name + "›")
+		}
+		return pongo2.AsSafeValue("")
+	}
+	daypage := ""
+	if Conf().Server != nil && len(Conf().Server.OrgDirs) > 0 {
+		if dp, _ := getDayPageFilename(time.Now()); dp != "" {
+			if abs, err := filepath.Abs(dp); err == nil {
+				if rel, err := filepath.Rel(filepath.Dir(fname), abs); err == nil {
+					daypage = filepath.ToSlash(rel)
+				}
+			}
+		}
+	}
+	return map[string]interface{}{
+		"day_page_title": title,
+		"title":          title,
+		"filename":       fname,
+		"basename":       strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname)),
+		"folder":         filepath.Base(filepath.Dir(fname)),
+		"daypage":        daypage,
+		"ask":            ask,
 	}
 }
 

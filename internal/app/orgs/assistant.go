@@ -8,7 +8,9 @@ package orgs
 // talk to orgs from anywhere it can reach it.
 //
 // Claude goes through the official Go SDK; ChatGPT (and any
-// OpenAI-compatible server) and Gemini through their REST streaming APIs.
+// OpenAI-compatible server) and Gemini through their REST streaming APIs;
+// claudecode through the claude command, on a Claude subscription, with tools
+// to read and edit the files the writer allows (assistantcode.go).
 
 import (
 	"bufio"
@@ -20,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/anthropics/anthropic-sdk-go"
@@ -32,9 +35,12 @@ var assistantDefaults = map[string]struct{ label, model, env string }{
 	"claude":  {"Claude", "claude-opus-5-5", "ANTHROPIC_API_KEY"},
 	"chatgpt": {"ChatGPT", "gpt-5", "OPENAI_API_KEY"},
 	"gemini":  {"Gemini", "gemini-flash-latest", "GEMINI_API_KEY"},
+	// Its "key" is optional: a `claude setup-token` token, for a server whose
+	// user has not run `claude login`.
+	"claudecode": {"Claude Code (subscription)", "opus", "CLAUDE_CODE_OAUTH_TOKEN"},
 }
 
-var assistantOrder = []string{"claude", "chatgpt", "gemini"}
+var assistantOrder = []string{"claudecode", "claude", "chatgpt", "gemini"}
 
 func assistantBackend(name string) *common.AssistantBackend {
 	a := &Conf().Server.Assistant
@@ -45,14 +51,27 @@ func assistantBackend(name string) *common.AssistantBackend {
 		return &a.ChatGPT
 	case "gemini":
 		return &a.Gemini
+	case "claudecode":
+		return &a.ClaudeCode
 	}
 	return nil
+}
+
+// Whether worg is offered the backend at all: claudecode only when enabled.
+func assistantOffered(name string, b *common.AssistantBackend) bool {
+	if b.Disabled {
+		return false
+	}
+	return name != "claudecode" || b.Enabled
 }
 
 // The key for a backend: one set from worg (assistantkeys.go), else written
 // in the yaml, read from the environment or the keyring, else the service's
 // usual variable.
 func assistantKey(name string, b *common.AssistantBackend) (string, error) {
+	if name == "claudecode" {
+		return claudeCodeKey(b)
+	}
 	if k := assistantStoredKey(name); k != "" {
 		return k, nil
 	}
@@ -117,6 +136,21 @@ func assistantModel(name string, b *common.AssistantBackend) string {
 	return assistantDefaults[name].model
 }
 
+// The other models the writer may pick: the yaml's, or for claudecode the
+// claude command's own names for the rest of the family.
+func assistantModels(name string, b *common.AssistantBackend) []string {
+	if len(b.Models) == 0 && name == "claudecode" {
+		out := []string{}
+		for _, m := range []string{"opus", "sonnet", "haiku"} {
+			if m != assistantModel(name, b) {
+				out = append(out, m)
+			}
+		}
+		return out
+	}
+	return b.Models
+}
+
 type assistantBackendStatus struct {
 	Name   string
 	Label  string
@@ -125,11 +159,17 @@ type assistantBackendStatus struct {
 	Ready  bool
 	Msg    string
 	// Where its key comes from: worg (set in the key helper), orgs.yaml,
-	// environment, profile (`ant auth login`), or "" for none.
+	// environment, profile (`ant auth login`), or "" for none. For
+	// claudecode, subscription (`claude login`), token or api.
 	Source string
+	// It can read and edit the files the writer allows (claudecode).
+	Tools bool
 }
 
 func assistantKeySource(name string, b *common.AssistantBackend) string {
+	if name == "claudecode" {
+		return claudeCodeSource(b)
+	}
 	switch {
 	case assistantStoredKey(name) != "":
 		return "worg"
@@ -168,11 +208,11 @@ func RequestAssistantStatus(w http.ResponseWriter, r *http.Request) {
 	def := ""
 	for _, n := range assistantOrder {
 		b := assistantBackend(n)
-		if b.Disabled {
+		if !assistantOffered(n, b) {
 			continue
 		}
-		s := assistantBackendStatus{Name: n, Label: assistantDefaults[n].label, Model: assistantModel(n, b)}
-		s.Models = append([]string{s.Model}, b.Models...)
+		s := assistantBackendStatus{Name: n, Label: assistantDefaults[n].label, Model: assistantModel(n, b), Tools: n == "claudecode"}
+		s.Models = append([]string{s.Model}, assistantModels(n, b)...)
 		if _, err := assistantKey(n, b); err != nil {
 			s.Msg = err.Error()
 		} else {
@@ -215,6 +255,11 @@ type assistantReq struct {
 	// Nothing else is ever read: the assistant has no way to ask for a file,
 	// and each of these must be one the OrgDb knows.
 	Others []string
+	// For a backend with tools (claudecode) only: the editor's text of File
+	// as it is now, which it reads and edits in place of the disk's, and the
+	// files (File and any of Others) the writer has let it change.
+	Doc  string
+	Edit []string
 }
 
 // The other files' text, each named, in the order asked for. Refuses a file
@@ -300,8 +345,18 @@ func assistantContextText(req *assistantReq) (string, error) {
 	org files the writer has allowed it to read (each must be one the server
 	knows, or the request is refused); nothing else is read.
 
+	For =claudecode= (Claude Code on a subscription, which has tools): =Doc=
+	is the editor's text of =File=, which it reads and edits instead of the
+	disk's, and =Edit= the files (=File= and any of =Others=) it may change.
+	=Others= are read by it when needed rather than sent in the prompt.
+
 	*Response:* newline-delimited JSON, as it arrives: ={"t": "text"}= pieces,
 	then ={"done": true, "model": ..., "stop": ...}= or ={"error": "..."}=.
+	=claudecode= also sends ={"tool": "Read notes.org"}= for each look and
+	write (with ="wrote": file= when a file on disk changed) and
+	={"edit": {"file", "old", "changes": [{from, to, insert}]}}= for a change to
+	=File=, positions in UTF-16 units of the text as it last saw it, for the
+	editor to make.
 EDOC */
 func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 	var req assistantReq
@@ -322,7 +377,7 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		name = "claude"
 	}
 	b := assistantBackend(name)
-	if b == nil || b.Disabled {
+	if b == nil || !assistantOffered(name, b) {
 		writingJson(w, common.ResultMsg{Ok: false, Msg: "no backend " + name})
 		return
 	}
@@ -338,7 +393,7 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 	model := assistantModel(name, b)
 	if req.Model != "" {
 		ok := req.Model == model
-		for _, m := range b.Models {
+		for _, m := range assistantModels(name, b) {
 			ok = ok || m == req.Model
 		}
 		if !ok {
@@ -348,10 +403,23 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		model = req.Model
 	}
 
-	docs, err := assistantContextText(&req)
+	// A backend with tools reads the other files when it needs them, rather
+	// than having them all in every turn's prompt.
+	inPrompt := req
+	if name == "claudecode" {
+		inPrompt.Others = nil
+	}
+	docs, err := assistantContextText(&inPrompt)
 	if err != nil {
 		writingJson(w, common.ResultMsg{Ok: false, Msg: err.Error()})
 		return
+	}
+	var files *codeFiles
+	if name == "claudecode" {
+		if files, err = newCodeFiles(&req); err != nil {
+			writingJson(w, common.ResultMsg{Ok: false, Msg: err.Error()})
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/x-ndjson")
@@ -359,7 +427,10 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Accel-Buffering", "no")
 	flusher, _ := w.(http.Flusher)
 	enc := json.NewEncoder(w)
+	var sendMu sync.Mutex // claudecode's tools send from their own goroutines
 	send := func(v any) {
+		sendMu.Lock()
+		defer sendMu.Unlock()
 		enc.Encode(v)
 		if flusher != nil {
 			flusher.Flush()
@@ -380,6 +451,8 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		stop, err = assistantOpenAI(ctx, key, b, model, docs, req.Messages, emit)
 	case "gemini":
 		stop, err = assistantGemini(ctx, key, b, model, docs, req.Messages, emit)
+	case "claudecode":
+		stop, err = assistantClaudeCode(ctx, key, b, model, docs, req.Messages, files, emit, send)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ASSISTANT %s: %v\n", name, err)

@@ -129,13 +129,17 @@ type LanguageToolSettings struct {
 // (internal/app/orgs/assistant.go): which AI backends it may use and the keys
 // for them. The keys stay on the server; the browser only ever talks to orgs.
 type AssistantSettings struct {
-	// The backend worg uses unless the writer picks another: claude, chatgpt
-	// or gemini. "off" turns the assistant off for everyone. Empty takes the
-	// first one that has a key.
-	Backend string `yaml:"backend"`
+	// The backend worg uses unless the writer picks another: claude, chatgpt,
+	// gemini or claudecode. "off" turns the assistant off for everyone. Empty
+	// takes the first one that has a key.
+	Backend string           `yaml:"backend"`
 	Claude  AssistantBackend `yaml:"claude"`
 	ChatGPT AssistantBackend `yaml:"chatgpt"`
 	Gemini  AssistantBackend `yaml:"gemini"`
+	// Claude through the Claude Code command on the server's machine, signed
+	// in with a Claude subscription (internal/app/orgs/assistantcode.go).
+	// Off unless enabled; the only backend that can read and edit files.
+	ClaudeCode AssistantBackend `yaml:"claudecode"`
 	// The most of a file sent as context, in characters (default 400000).
 	MaxContext int `yaml:"maxContext"`
 }
@@ -158,6 +162,10 @@ type AssistantBackend struct {
 	Url string `yaml:"url"`
 	// Claude only: how hard it thinks - low, medium, high, xhigh or max.
 	Effort string `yaml:"effort"`
+	// claudecode only: offer it at all (it is off by default), and the
+	// claude command if it is not on the server's PATH.
+	Enabled bool   `yaml:"enabled"`
+	Command string `yaml:"command"`
 }
 
 // HarperServerSettings runs Harper (https://github.com/automattic/harper) on

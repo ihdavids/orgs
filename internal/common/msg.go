@@ -54,6 +54,8 @@ type NewFileRequest struct {
 	// Refuse rather than reload when the file is already there: a "new
 	// file" form must not quietly hand back somebody's existing notes.
 	MustBeNew bool `json:"mustBeNew"`
+	// The answers to the template's ask("...") questions, by question.
+	Answers map[string]string `json:"answers,omitempty"`
 }
 
 // Date is YYYY-DD-MM (day before month): the format GET /daypage/{date}

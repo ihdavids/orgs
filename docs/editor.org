@@ -366,6 +366,47 @@ arrow at its top folds it to a strip; the sparkle again puts it away.
   ordinary edits, so undo takes them out again. *Stop* ends an answer part
   way; the bin starts a new conversation.
 
+*** Claude Code, on a subscription
+The /Claude Code (subscription)/ backend runs the =claude= command on the
+server's machine, signed in with your Claude Pro or Max plan, so nothing is
+billed as API use. It is also the one backend that can look things up and
+make changes itself:
+
+- It reads the files under *Can read* when it needs them (they are not sent
+  whole with every question), and can search them. It sees no other file.
+- The *pencil* on a file's chip lets it change that file; all are read only
+  until you click one. Changes to the file you are editing go into the
+  editor, unsaved, and one undo takes each back; changes to another file are
+  saved to disk straight away. Pencils are remembered per file in this
+  browser.
+- What it read and changed is listed above its answer. An edit that no longer
+  fits the text (you changed that passage while it worked) is not made, and
+  says so.
+- Each question starts the =claude= command afresh with its own tools, files,
+  settings, hooks and =CLAUDE.md= all turned off, so it can do nothing else on
+  the machine.
+
+To set it up, sign in once on the server's machine as the user orgs runs as
+(=claude login=), or make a long-lived token with =claude setup-token= and give
+it as =apiKey=, then turn it on:
+
+#+BEGIN_SRC yaml
+server:
+  assistant:
+    backend: claudecode          # make it the default
+    claudecode:
+      enabled: true              # it is off until this is set
+      model: opus                # the claude command's names: opus, sonnet, haiku (the others are offered)
+      effort: medium
+      command: ""                # the claude command, if the server's PATH does not have it
+      apiKey: "env:CLAUDE_CODE_OAUTH_TOKEN"   # only for a token from claude setup-token
+#+END_SRC
+
+=ANTHROPIC_API_KEY= is taken out of its environment, since with it set the
+=claude= command would bill the API instead. It is meant for your own
+writing on your own server: a subscription is one person's, so do not turn it
+on for a server other people use.
+
 Nothing is sent until you ask. The conversation is about this file and goes
 when you open another.
 

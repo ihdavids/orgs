@@ -67,6 +67,30 @@ package templates
     #+TITLE: Week of {{week_start}} - {{week_end}}
   #+END_SRC
 
+  A new file's template can also ask whoever makes it, and work with dates
+  and text:
+
+  | Name                              | Becomes                                          |
+  |-----------------------------------+--------------------------------------------------|
+  | ={{ ask("Client") }}=             | a box in the New File dialog, and its answer     |
+  | ={{ ask("Rate", "120") }}=        | the same, the box starting at =120=              |
+  | ={{folder}}=                      | the folder the file goes into: =acme=            |
+  | ={{daypage}}=                     | today's day page, as a path from the new file    |
+  | ={% for d in days("mon", 5) %}=   | five days from next Monday; each is its          |
+  |                                   | timestamp, with =d.weekday=, =d.date=, ...       |
+
+  and filters for dates and text:
+
+  #+BEGIN_SRC org
+    DEADLINE: {{ today|plus:"2w" }}         ->  <2026-10-17 Sat>  (3d, -1m, 1y, 2h, 30min)
+    {{ week_start|format:"date" }}           ->  2026-09-28        (any clock value)
+    :CUSTOM_ID: {{ title|slug }}             ->  q4-plans
+    #+FILETAGS: {{ "work, q4 plans"|tags }}  ->  :work:q4_plans:
+  #+END_SRC
+
+  =days(week_start, 5)= is the days of this week; =days= reads its start the
+  way =when= does, so ="mon"= is the next Monday.
+
   A date =when= cannot read is written into the file as the complaint, so it
   shows where it went wrong. Values come through unescaped, so an org
   timestamp keeps its =<>=; an html template putting one on a page wants
