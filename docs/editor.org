@@ -300,6 +300,87 @@ Mara) - with the common one as its fix, and stops calling the common one a
 misspelling. Under style, a word used again within 25 words of the last time
 is marked (dotted), names and common words left alone.
 
+** Revision
+Notes to yourself about the text, kept in the file as comment lines under the
+paragraph they are about:
+
+#+BEGIN_SRC org
+The letter was waiting when Mara came in from the boats.
+# NOTE: too slow, start with the letter itself
+# NOTE "the boats": which boats? set this up in chapter one
+# NOTE[done]: check the tide tables
+#+END_SRC
+
+A comment line is never exported - not by orgs, not by Emacs - and *Compile*
+leaves notes out of the org and plain text it makes too, so a note cannot end
+up in the book. Type them by hand, or:
+
+- *Add a note*: =⌘⌥M= (=Ctrl-Alt-M=) in either key set, =SPC r= in vim,
+  =C-c r= in emacs, or the Revision menu (the speech-bubble icon on the
+  writing bar). The selected words, if they are on one line, become the
+  note's quoted words and are lit in the paragraph.
+- In writing mode each note is a card in a margin beside its paragraph (the
+  margin is there only while the file has notes; the Revision menu turns it
+  off). A card's box marks it done, its × deletes it, a click on its words
+  changes them - Enter keeps, Esc leaves. Note lines are folded out of the
+  text, except the line the cursor is on, so a note typed by hand stays in
+  view. On a phone, or with the margin off, notes fold to a pill at the end of
+  their paragraph that opens them in place.
+- The status line counts the notes still to fix; click it (or *Every note* in
+  the menu) for all of them, under their headings, to tick off or jump to.
+
+*Show changes since* (in the Revision menu) compares the text with an earlier
+one - when the file was opened, the last save, or a snapshot of a heading -
+and lights the words put in, strikes through the words taken out where they
+were, marks lines added and shows lines taken out struck through above where
+they were. It is worked out a second after you stop typing.
+
+** Compendium
+The book on the writing bar opens the compendium: the people, places and
+things the story is about, kept in an org file beside it, and what the text
+says about them.
+
+- *Where it is*: the files named by =#+COMPENDIUM:= at the top of the
+  manuscript (several, separated by spaces, relative to it), else
+  =<manuscript>.compendium.org= beside it, else =compendium.org= in the same
+  folder. With none, the pane offers to make =<manuscript>.compendium.org=.
+- *Entries*: a heading with a =KIND= property (=character=, =place=,
+  =thing=, =group=, =other=), or any heading straight under a top-level
+  =* People=, =* Places=, =* Things= or =* Groups= heading. =ALIASES= are
+  its other names (commas between); every other property is a fact (=EYES=,
+  =BORN=, =ROLE=...); the text under it is its notes.
+  #+BEGIN_SRC org
+  ,* People
+  ,** Mara Vell
+  :PROPERTIES:
+  :ALIASES: the harbourmaster's girl
+  :EYES: grey
+  :BORN: 1032
+  :END:
+  Grew up on the fishing boats.
+  #+END_SRC
+- *Names* are found as whole words in the prose (not headings, drawers or
+  blocks): a name with a capital letter as written, an all-lowercase one
+  ("the salt road") in any case. A character is also known by each
+  capitalised word of its name (Mara Vell is Mara and Vell) unless that word
+  names something else. The speller and Harper never flag a compendium name.
+- *The pane*: entries by kind, with a search. Click one for its facts (click
+  a value to change it, empty removes it; the last row adds one), its notes,
+  and the scenes it is in - click a scene to go to its first mention, or
+  /Next mention/ for the next after the cursor. The count beside each entry
+  is how often the text names it; amber 0 is never. *+* adds an entry, named
+  from the selected words if any. Every change is written to the compendium
+  file as a small edit, refused if the file changed meanwhile.
+- *Hover*: rest on a name in the text for its card - kind, facts, notes,
+  how often it is mentioned. The setting =compendiumUnderline= adds a faint
+  dotted underline under every name it knows.
+- *Things to check*: one name given to two entries; a fact written two ways
+  (the same entry in two compendium files, or a scene's =FACT= property, such
+  as =:FACT: Mara.eyes = green; Tobin.age = 40=, against the compendium or an
+  earlier scene); an age in a =FACT= that does not fit =BORN= and the
+  scene's =WHEN= year; a character in a scene whose =WHEN= is before they
+  were born. Click one in the manuscript to go to it.
+
 ** Harper
 [[https://github.com/automattic/harper][Harper]] is a grammar checker that runs in the browser itself, so like the
 built-in checker nothing you write is sent anywhere. It is on unless you turn
@@ -333,6 +414,49 @@ it off in the menu by *Check* (▾), and is used whenever LanguageTool is off.
   a check asks for it. One installed (=brew install harper=, =cargo install
   harper-ls=) is used; otherwise orgs downloads the release for this machine
   from GitHub once (=download: false= stops it, =path:= names one).
+
+** Prose
+The chart-with-a-magnifier on the writing bar shows the whole file in
+numbers, prose only (drawers, planning lines, code and link targets are left
+out). Every finding is a click from its place in the text.
+
+- The totals: words, sentences, words a sentence, sentences over forty
+  words, reading ease (Flesch: 60-70 is plain English, higher is easier)
+  and grade level, and how much is dialogue.
+- *Sentence rhythm*: a bar for each sentence in reading order, as tall as
+  it is long and shaded short to very long; dashes mark the scenes. A run of
+  bars all the same height is prose that drones; click a bar to go there.
+- *Readability by chapter* and *dialogue and narration by scene* (dialogue
+  is what is inside quotation marks).
+- *Words worth a second look*: -ly adverbs, filter words (saw, heard, felt,
+  noticed - the reader one step behind the character's eyes), weak words
+  (very, really, just, suddenly), dialogue tags other than said and asked,
+  your most used words (names and small words left out) and three-word
+  phrases used three times or more. Open one to see every place it is used.
+
+None of it is a rule; it says how often and where. The refresh button counts
+again after you have written more.
+
+** Scene synopses and the continuity check
+Two more uses of the assistant (below), each with its own button on the
+writing bar. Both use the backend and model picked in the assistant pane, and
+both see only what they say they send.
+
+- *Scene synopses* (the short lines): tick the scenes - those with no
+  synopsis are ticked to begin with - and the assistant writes an index-card
+  synopsis for each, two at a time, from that scene's text alone. Read them,
+  change any, untick what you do not want; *Save* writes the rest as the
+  scenes' =SYNOPSIS=, which the outline and corkboard show. Undo takes them
+  back.
+- *Continuity check* (the ticked list): the assistant reads the scene the
+  cursor is in, its chapter, or the selection, against everything before it
+  in the file, your compendium, and the files you have let the assistant
+  read, and lists what contradicts it: names, looks, ages,
+  relationships, who knows what, where people and things are, times and the
+  order of events. Each item quotes the words in the passage (click to go
+  there), says what is wrong, and quotes the earlier text it contradicts.
+  Nothing in the file is changed. It is an AI reading: it can miss things and
+  can be wrong.
 
 ** The assistant
 The sparkle on the writing bar opens an AI assistant in a pane down the left
