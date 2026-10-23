@@ -342,7 +342,7 @@ func PostWritingGoals(w http.ResponseWriter, r *http.Request) {
 type compileReq struct {
 	File  string // the file it came from: pictures, the preamble and the name
 	Text  string // the org text to export
-	To    string // docx, epub, or an exporter's name (html, markdown, ...)
+	To    string // docx, epub, pdf, or an exporter's name (html, markdown, ...)
 	Style string
 	Paper string
 	Theme string
@@ -353,8 +353,9 @@ type compileReq struct {
 	Body ={File, Text, To, Style, Paper, Theme}=. =Text= is org (worg's writing
 	mode builds it from the headings picked) and is exported as though it were
 	=File=, without being written anywhere. =To= is =docx= or =epub= (written by
-	orgs itself, see =GET /book=) or the name of a configured exporter, such as
-	=html=.
+	orgs itself, see =GET /book=), =pdf= (typeset by Typst, see
+	=GET /typst/pdf=; =Theme= is the typst template and =Paper= its paper), or
+	the name of a configured exporter, such as =html=.
 
 	*Response:* the exported file's bytes, named for =File=.
 EDOC */
@@ -387,6 +388,18 @@ func PostCompile(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", typ)
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", base+"."+ext))
+		w.Write(b)
+		return
+	case "pdf":
+		// Typst rather than the pdf exporter, which only writes a file it
+		// reads from the database, not text that is on no disk.
+		b, err := typstExporter().PDF(doc, map[string]string{"template": req.Theme, "paper": req.Paper})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/pdf")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", base+".pdf"))
 		w.Write(b)
 		return
 	}
