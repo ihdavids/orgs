@@ -472,6 +472,9 @@ func codeTools(c *codeFiles) []codeTool {
 	return t
 }
 
+// As an assistantToolset, for the OpenAI tool loop.
+func (c *codeFiles) toolDefs() []codeTool { return codeTools(c) }
+
 func (c *codeFiles) call(name string, args json.RawMessage) (string, error) {
 	var a struct {
 		File       string `json:"file"`

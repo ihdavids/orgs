@@ -106,6 +106,7 @@ Each of these comes up in several features below. They are stated once here, and
   - focus countdown and status wording (`🍅 12:31 Write the report`, `☕ 4:59 break`): `cmd/oc/commands/focus/format.go` ↔ `worg/src/focus.ts`
   - a play session's timeline (fights, beats, how annotations hang on blocks, midnight): `tlEvents` and its helpers in `templates/dnd_character_html.tpl` ↔ `worg/src/timeline.ts` (the session in `dndtimeline_test.go` is the one in `timeline.test.ts`)
   - the 3D dice (solids, numbering, physics, marble, melt, knock): the sheet's `DiceBoard` ↔ `worg/src/dice3d.ts` (worg's also turns the top numeral upright and has no spell flourishes). The sheet's casting effects are **not** copied: `tools/dicefx/extract.py` lifts the dice board, elements, spell flourishes and sounds out of the template by their section comments into `worg/public/dicefx.js` (`window.OrgsFx`) on every `buildworg.sh`, and fails if a section is renamed. Fix an effect in the sheet
+  - a local model name each runtime takes: `llamaRefRe`/`hfRepoRe`/`lmsKeyRe` (`locallamacpp.go`, `localhf.go`, `locallmstudio.go`) ↔ `validName` in `worg/src/localllm.ts` (the server checks again, so drift only shows as a refusal with a different wording)
   - kinds of light and their reach: `randgen.LightKinds` (`lights.go`) ↔ `LIGHT_KINDS` in `worg/src/dungeon.ts`; a map's scale for measuring (125 miles across a region, `shores.go`'s scale bar) ↔ `unitOf` in `worg/src/measure.ts`
 
 ### Where the rest of the notes live

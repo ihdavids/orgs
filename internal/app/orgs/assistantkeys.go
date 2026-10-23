@@ -156,10 +156,10 @@ func tryAssistantKey(ctx context.Context, name string, b *common.AssistantBacken
 	case "gemini":
 		base := strings.TrimRight(b.Url, "/")
 		if base == "" {
-			base = "https://generativelanguage.googleapis.com/v1beta"
+			base = geminiOpenAIBase
 		}
-		req, _ := http.NewRequestWithContext(ctx, "GET", base+"/models?pageSize=1", nil)
-		req.Header.Set("x-goog-api-key", key)
+		req, _ := http.NewRequestWithContext(ctx, "GET", base+"/models", nil)
+		req.Header.Set("Authorization", "Bearer "+key)
 		return keyCheckResponse(req)
 	}
 	return fmt.Errorf("no backend %s", name)

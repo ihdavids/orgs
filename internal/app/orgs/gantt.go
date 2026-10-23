@@ -376,47 +376,45 @@ func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var args common.GanttAdd
 	res := common.ResultMsg{Ok: false}
+	w.Header().Set("Content-Type", "application/json")
 	if err := json.Unmarshal(body, &args); err != nil {
 		res.Msg = "gantt add: could not read request: " + err.Error()
-		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(res)
 		return
 	}
-	if strings.TrimSpace(args.Headline) == "" {
-		res.Msg = "gantt add: a task needs a headline"
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
-		return
+	if _, err := ganttAdd(&args); err != nil {
+		res.Msg = "gantt add: " + err.Error()
+	} else {
+		res.Ok, res.Msg = true, "added"
 	}
+	json.NewEncoder(w).Encode(res)
+}
 
+// ganttAdd writes a new heading where args says (after a heading, under one,
+// or at the end of a file) and gives the file it went into: PostGanttAdd
+// and the assistant's view tools.
+func ganttAdd(args *common.GanttAdd) (string, error) {
+	if strings.TrimSpace(args.Headline) == "" {
+		return "", fmt.Errorf("a task needs a headline")
+	}
 	var filename string
-	var row int
-	var lvl int
+	var row, lvl int
 	if args.AfterHash != "" {
 		// A sibling, straight after the heading and its subtree: what the
 		// column view's N and the chart's N mean by "a new one after this".
 		sec := GetDb().FindByHash(args.AfterHash)
 		if sec == nil || sec.Headline == nil {
-			res.Msg = "gantt add: no heading with that hash to go after"
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+			return "", fmt.Errorf("no heading with that hash to go after")
 		}
 		f := GetDb().FileFromSection(sec)
 		if f == nil {
-			res.Msg = "gantt add: could not find the file that heading is in"
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+			return "", fmt.Errorf("could not find the file that heading is in")
 		}
 		filename = f.Doc.Path
 		lvl = sec.Headline.Lvl
-		lines, lerr := ganttFileLines(filename)
-		if lerr != nil {
-			res.Msg = "gantt add: " + lerr.Error()
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+		lines, err := ganttFileLines(filename)
+		if err != nil {
+			return "", err
 		}
 		row = subtreeEndRow(lines, sec.Headline.Pos.Row, sec.Headline.Lvl, sec.Headline.Pos.Row)
 		// Not after the blank lines that close the subtree: the new heading
@@ -428,17 +426,11 @@ func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 	} else if args.ParentHash != "" {
 		sec := GetDb().FindByHash(args.ParentHash)
 		if sec == nil || sec.Headline == nil {
-			res.Msg = "gantt add: no heading with that hash"
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+			return "", fmt.Errorf("no heading with that hash")
 		}
 		f := GetDb().FileFromSection(sec)
 		if f == nil {
-			res.Msg = "gantt add: could not find the file that heading is in"
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+			return "", fmt.Errorf("could not find the file that heading is in")
 		}
 		filename = f.Doc.Path
 		lvl = sec.Headline.Lvl + 1
@@ -447,41 +439,27 @@ func PostGanttAdd(w http.ResponseWriter, r *http.Request) {
 		// the planning line for a heading whose body is only a SCHEDULED and a
 		// property drawer, and inserting there writes the new task *into* the
 		// last child, between its date and its drawer.
-		lines, lerr := ganttFileLines(filename)
-		if lerr != nil {
-			res.Msg = "gantt add: " + lerr.Error()
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+		lines, err := ganttFileLines(filename)
+		if err != nil {
+			return "", err
 		}
 		row = subtreeEndRow(lines, sec.Headline.Pos.Row, sec.Headline.Lvl, sec.Headline.Pos.Row)
 	} else if args.Filename != "" {
 		target := common.Target{Type: "file", Filename: args.Filename}
 		f, _ := GetDb().GetFromTarget(&target, false)
 		if f == nil {
-			res.Msg = fmt.Sprintf("gantt add: no file [%s]", args.Filename)
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(res)
-			return
+			return "", fmt.Errorf("no file [%s]", args.Filename)
 		}
 		filename = f.Doc.Path
 		lvl = 1
 		row = ganttLastRow(filename)
 	} else {
-		res.Msg = "gantt add: need a ParentHash or a Filename to add to"
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
-		return
+		return "", fmt.Errorf("need a ParentHash or a Filename to add to")
 	}
-
-	if _, err := insertLinesAt(filename, row, ganttNewLines(lvl, &args)); err != nil {
-		res.Msg = "gantt add: " + err.Error()
-	} else {
-		res.Ok = true
-		res.Msg = "added"
+	if _, err := insertLinesAt(filename, row, ganttNewLines(lvl, args)); err != nil {
+		return "", err
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	return filename, nil
 }
 
 func ganttFileLines(filename string) ([]string, error) {

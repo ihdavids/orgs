@@ -144,6 +144,11 @@ type AssistantSettings struct {
 	// A local model through Ollama (internal/app/orgs/ollama.go), which orgs
 	// can install, start and fill with models from worg. Off unless enabled.
 	Ollama OllamaSettings `yaml:"ollama"`
+	// Local models through OpenAI-compatible runtimes (llama.cpp, LM Studio,
+	// MLX) that orgs can install and fill with models from worg, plus any
+	// other such server named under servers (internal/app/orgs/localrt.go).
+	// Off unless enabled.
+	Local LocalSettings `yaml:"local"`
 	// The most of a file sent as context, in characters (default 400000).
 	MaxContext int `yaml:"maxContext"`
 }
@@ -162,7 +167,8 @@ type AssistantBackend struct {
 	// Other models the writer may pick from in worg.
 	Models []string `yaml:"models"`
 	// A different endpoint: an OpenAI-compatible server (a local model, a
-	// proxy) for chatgpt, or a gateway for the others.
+	// proxy) for chatgpt, Google's OpenAI-compatible endpoint or a proxy of
+	// it for gemini, or a gateway for claude.
 	Url string `yaml:"url"`
 	// Claude only: how hard it thinks - low, medium, high, xhigh or max.
 	Effort string `yaml:"effort"`
@@ -170,6 +176,65 @@ type AssistantBackend struct {
 	// claude command if it is not on the server's PATH.
 	Enabled bool   `yaml:"enabled"`
 	Command string `yaml:"command"`
+	// chatgpt, gemini and local: let it use orgs's tools (OpenAI tool calls)
+	// - read and edit the files the writer allows, and in the views, read
+	// and change headings. On by default; false sends only the text.
+	Tools *bool `yaml:"tools"`
+}
+
+// LocalSettings is the local backend: OpenAI-compatible runtimes on this
+// machine that orgs installs, runs and fills with models. Its model is
+// "runtime:name" (llamacpp:Qwen3-8B-Q4_K_M, mlx:mlx-community/Qwen3-8B-4bit).
+type LocalSettings struct {
+	AssistantBackend `yaml:",inline"`
+	// The runtime worg offers first: llamacpp, lmstudio or mlx.
+	Runtime string `yaml:"runtime"`
+	// The context window, in tokens (default 16384): llama.cpp's -c when orgs
+	// starts it, LM Studio's context_length when orgs loads a model.
+	ContextLength int `yaml:"contextLength"`
+	// The longest answer, in tokens (default 8192). MLX stops at 512 unless
+	// told.
+	MaxTokens int `yaml:"maxTokens"`
+	// Let an administrator install runtimes from worg (default true).
+	Download *bool `yaml:"download"`
+	// Start a runtime when nothing answers at its url (default true; only for
+	// a url on this machine).
+	Serve    *bool                `yaml:"serve"`
+	Llamacpp LocalRuntimeSettings `yaml:"llamacpp"`
+	LMStudio LocalRuntimeSettings `yaml:"lmstudio"`
+	MLX      LocalRuntimeSettings `yaml:"mlx"`
+	// Other OpenAI-compatible servers orgs only talks to (vLLM, LocalAI,
+	// Jan, llamafile...): never installed, started or given models.
+	Servers []LocalServer `yaml:"servers"`
+}
+
+// LocalRuntimeSettings is one runtime of the local backend.
+type LocalRuntimeSettings struct {
+	// Leave it out of what worg offers.
+	Disabled bool `yaml:"disabled"`
+	// Where it answers (defaults: llamacpp http://127.0.0.1:8091, lmstudio
+	// http://127.0.0.1:1234, mlx http://127.0.0.1:8092).
+	Url string `yaml:"url"`
+	// Its program, if not the one on the PATH or the copy orgs installed:
+	// llama-server, lms, or mlx_lm.server.
+	Command string `yaml:"command"`
+	// Where orgs keeps the models it downloads (llamacpp and mlx; default
+	// under the user cache).
+	ModelDir string `yaml:"modelDir"`
+	// llamacpp only: which build to install on Linux and Windows - cpu
+	// (default), vulkan, or a name from the release such as cuda-12.8.
+	Variant string `yaml:"variant"`
+	// mlx only: the python to make its environment with (default python3).
+	Python string `yaml:"python"`
+}
+
+// LocalServer is an OpenAI-compatible server the local backend only talks to.
+type LocalServer struct {
+	// Its name in worg, and the runtime part of its models' names.
+	Name   string   `yaml:"name"`
+	Url    string   `yaml:"url"` // up to /v1
+	ApiKey string   `yaml:"apiKey"`
+	Models []string `yaml:"models"` // else what /v1/models says
 }
 
 // OllamaSettings is the ollama backend: AssistantBackend's model, models,
@@ -669,7 +734,27 @@ type ServerSettings struct {
 	    gemini:
 	      apiKey: "env:GEMINI_API_KEY"
 	      model: gemini-flash-latest
+	    local:                           # models on this machine, no key
+	      enabled: true
+	      runtime: llamacpp              # llamacpp, lmstudio or mlx
+	      model: "llamacpp:Qwen3-8B-Q4_K_M"
+	      contextLength: 16384
+	      llamacpp: { variant: cpu }     # or vulkan, cuda-12.8 (Linux, Windows)
+	      servers:                       # others orgs only talks to
+	        - { name: vllm, url: "http://gpubox:8000/v1" }
 		#+END_SRC
+
+		=local= runs models through llama.cpp, LM Studio or MLX (Apple Silicon),
+		each installed from worg's Local runtimes dialog: llama.cpp from its
+		GitHub release, LM Studio by its own installer (llmster, the headless
+		LM Studio), MLX into a python environment of its own. Models come from
+		Hugging Face (llama.cpp's =.gguf= files, MLX's =safetensors=; nothing
+		that runs code) or LM Studio's catalogue. Models are named
+		=runtime:name=. With =tools= (on by default) a model can read and edit
+		the files the writer allows, as =claudecode= and =ollama= can.
+		=chatgpt= and =gemini= go through the same OpenAI-compatible tool loop
+		(Gemini through Google's OpenAI-compatible endpoint), with tools on
+		unless =tools: false=; their =url= is an OpenAI-compatible base.
 
 		A backend with no key is offered as not set up. =backend: off= turns the
 		assistant off for everyone; =disabled: true= on one hides just that one.

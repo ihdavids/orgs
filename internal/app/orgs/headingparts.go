@@ -3,6 +3,7 @@ package orgs
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"regexp"
@@ -154,30 +155,31 @@ func PostHeadingParts(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(res)
 		return
 	}
-	sec := GetDb().FindByHash(req.Hash)
-	if sec == nil || sec.Headline == nil {
-		res.Msg = "no heading with that hash - it may have moved; refresh and try again"
-		json.NewEncoder(w).Encode(res)
-		return
-	}
-	f := GetDb().FileFromSection(sec)
-	if f == nil {
-		res.Msg = "could not find the file that heading is in"
-		json.NewEncoder(w).Encode(res)
-		return
-	}
-	lines, from, _, ok := recordLines(f.Doc.Path, sec)
-	if !ok {
-		res.Msg = "could not read " + f.Doc.Path
-		json.NewEncoder(w).Encode(res)
-		return
-	}
-	lines[from] = setHeadlineParts(lines[from], sec.Headline.Status, req.Priority, req.Tags)
-	if err := writeLines(f.Doc.Path, lines); err != nil {
+	if err := setHeadingParts(req.Hash, req.Priority, req.Tags); err != nil {
 		res.Msg = err.Error()
 		json.NewEncoder(w).Encode(res)
 		return
 	}
 	res.Ok, res.Msg = true, "updated"
 	json.NewEncoder(w).Encode(res)
+}
+
+// setHeadingParts sets a heading's priority and/or tags (nil leaves one as
+// it is) as a line edit of its headline: PostHeadingParts and the
+// assistant's view tools.
+func setHeadingParts(hash string, prio *string, tags *[]string) error {
+	sec := GetDb().FindByHash(hash)
+	if sec == nil || sec.Headline == nil {
+		return fmt.Errorf("no heading with that hash - it may have moved; refresh and try again")
+	}
+	f := GetDb().FileFromSection(sec)
+	if f == nil {
+		return fmt.Errorf("could not find the file that heading is in")
+	}
+	lines, from, _, ok := recordLines(f.Doc.Path, sec)
+	if !ok {
+		return fmt.Errorf("could not read %s", f.Doc.Path)
+	}
+	lines[from] = setHeadlineParts(lines[from], sec.Headline.Status, prio, tags)
+	return writeLines(f.Doc.Path, lines)
 }

@@ -8,9 +8,13 @@ package orgs
 // talk to orgs from anywhere it can reach it.
 //
 // Claude goes through the official Go SDK; ChatGPT (and any
-// OpenAI-compatible server) and Gemini through their REST streaming APIs;
+// OpenAI-compatible server) and Gemini (Google's OpenAI-compatible endpoint)
+// through openAIChat, the OpenAI tool loop, with orgs's tools unless their
+// tools setting is off;
 // claudecode through the claude command, on a Claude subscription, with tools
-// to read and edit the files the writer allows (assistantcode.go).
+// to read and edit the files the writer allows (assistantcode.go). local is
+// the OpenAI-compatible runtimes orgs installs and runs (localrt.go), through
+// the same OpenAI tool loop (openAIChat) chatgpt takes with tools on.
 
 import (
 	"bufio"
@@ -40,12 +44,34 @@ var assistantDefaults = map[string]struct{ label, model, env string }{
 	"claudecode": {"Claude Code (subscription)", "opus", "CLAUDE_CODE_OAUTH_TOKEN"},
 	// No key: a model on this machine (ollama.go, assistantollama.go).
 	"ollama": {"Ollama (local)", "", ""},
+	// No key: llama.cpp, LM Studio or MLX on this machine (localrt.go).
+	"local": {"Local runtimes", "", ""},
 }
 
-var assistantOrder = []string{"claudecode", "ollama", "claude", "chatgpt", "gemini"}
+var assistantOrder = []string{"claudecode", "ollama", "local", "claude", "chatgpt", "gemini"}
 
 // The backends that read and edit files themselves, through orgs's tools.
-func assistantHasTools(name string) bool { return name == "claudecode" || name == "ollama" }
+func assistantHasTools(name string) bool {
+	switch name {
+	case "claudecode", "ollama":
+		return true
+	case "chatgpt":
+		t := Conf().Server.Assistant.ChatGPT.Tools
+		return t == nil || *t
+	case "gemini":
+		t := Conf().Server.Assistant.Gemini.Tools
+		return t == nil || *t
+	case "local":
+		t := Conf().Server.Assistant.Local.Tools
+		return t == nil || *t
+	}
+	return false
+}
+
+// The backends offered only when turned on.
+func assistantOptIn(name string) bool {
+	return name == "claudecode" || name == "ollama" || name == "local"
+}
 
 func assistantBackend(name string) *common.AssistantBackend {
 	a := &Conf().Server.Assistant
@@ -60,17 +86,19 @@ func assistantBackend(name string) *common.AssistantBackend {
 		return &a.ClaudeCode
 	case "ollama":
 		return &a.Ollama.AssistantBackend
+	case "local":
+		return &a.Local.AssistantBackend
 	}
 	return nil
 }
 
-// Whether worg is offered the backend at all: claudecode and ollama only
-// when enabled.
+// Whether worg is offered the backend at all: claudecode, ollama and local
+// only when enabled.
 func assistantOffered(name string, b *common.AssistantBackend) bool {
 	if b.Disabled {
 		return false
 	}
-	return !assistantHasTools(name) || b.Enabled
+	return !assistantOptIn(name) || b.Enabled
 }
 
 // The key for a backend: one set from worg (assistantkeys.go), else written
@@ -82,6 +110,9 @@ func assistantKey(name string, b *common.AssistantBackend) (string, error) {
 	}
 	if name == "ollama" {
 		return "", ollamaReady(b)
+	}
+	if name == "local" {
+		return "", localReady(b)
 	}
 	if k := assistantStoredKey(name); k != "" {
 		return k, nil
@@ -145,6 +176,10 @@ func assistantModel(name string, b *common.AssistantBackend) string {
 		def, _ := ollamaModelFor(b)
 		return def
 	}
+	if name == "local" {
+		def, _ := localModelFor(b)
+		return def
+	}
 	if b.Model != "" {
 		return b.Model
 	}
@@ -154,8 +189,11 @@ func assistantModel(name string, b *common.AssistantBackend) string {
 // The other models the writer may pick: the yaml's, or for claudecode the
 // claude command's own names for the rest of the family.
 func assistantModels(name string, b *common.AssistantBackend) []string {
-	if name == "ollama" {
+	if name == "ollama" || name == "local" {
 		def, names := ollamaModelFor(b)
+		if name == "local" {
+			def, names = localModelFor(b)
+		}
 		out := []string{}
 		for _, n := range names {
 			if n != def {
@@ -189,13 +227,22 @@ type assistantBackendStatus struct {
 	Source string
 	// It can read and edit the files the writer allows (claudecode).
 	Tools bool
+	// Where the writer's text goes: machine (this one), network (another
+	// machine named in the yaml) or cloud (the service's own); for local,
+	// each model's own in ModelWhere.
+	Where      string
+	ModelWhere map[string]string `json:",omitempty"`
+	// It may be used in worg's views (column view, gantt, kanban, search),
+	// and there it can look headings up and change them (assistantview.go).
+	Views     bool
+	ViewTools bool
 }
 
 func assistantKeySource(name string, b *common.AssistantBackend) string {
 	if name == "claudecode" {
 		return claudeCodeSource(b)
 	}
-	if name == "ollama" {
+	if name == "ollama" || name == "local" {
 		return "local"
 	}
 	switch {
@@ -217,7 +264,13 @@ func assistantKeySource(name string, b *common.AssistantBackend) string {
 * GET /assistant/status — The Writing Assistant's Backends
 	Which AI backends the server offers worg's writing assistant, whether each
 	has a key, its models, and the default:
-	={Ok, Off, Default, Backends: [{Name, Label, Model, Models, Ready, Msg}]}=.
+	={Ok, Off, Default, Backends: [{Name, Label, Model, Models, Ready, Msg,
+	Tools, Where, ModelWhere, Views, ViewTools}]}=. =Views= says it may be
+	used in worg's views and =ViewTools= that it can look up and change
+	headings there. =Where= is where the writer's text is sent:
+	=machine= (this one), =network= (another machine, by a private address
+	or local name) or =cloud=; =ModelWhere= gives it per model for =local=,
+	whose models may be on servers elsewhere.
 	=Off= is true when =assistant.backend= is =off=. Keys are never sent;
 	=Source= says where each one comes from (=worg=, =orgs.yaml=,
 	=environment=, =profile=), and =CanSetKeys= whether this user may set
@@ -244,6 +297,8 @@ func RequestAssistantStatus(w http.ResponseWriter, r *http.Request) {
 		_, keyErr := assistantKey(n, b)
 		s := assistantBackendStatus{Name: n, Label: assistantDefaults[n].label, Model: assistantModel(n, b), Tools: assistantHasTools(n)}
 		s.Models = append([]string{s.Model}, assistantModels(n, b)...)
+		s.Where, s.ModelWhere = assistantWhere(n, b, s.Models)
+		s.Views, s.ViewTools = assistantViewOffered(n), assistantViewTools(n)
 		if err := keyErr; err != nil {
 			s.Msg = err.Error()
 		} else {
@@ -291,9 +346,14 @@ type assistantReq struct {
 	// files (File and any of Others) the writer has let it change.
 	Doc  string
 	Edit []string
-	// ollama only: the context window to ask for, in tokens (else
-	// assistant.ollama.contextLength).
+	// ollama and local only: the context window to ask for, in tokens (else
+	// assistant.ollama.contextLength or assistant.local.contextLength).
 	NumCtx int
+	// Set when the conversation is about one of worg's views (the column
+	// view, a gantt chart, a kanban board, search results) rather than a
+	// file in writing mode: assistantview.go. File, Scope, Context, Others,
+	// Doc and Edit are then unused.
+	View *assistantView
 }
 
 // The other files' text, each named, in the order asked for. Refuses a file
@@ -391,6 +451,16 @@ func assistantContextText(req *assistantReq) (string, error) {
 	={"edit": {"file", "old", "changes": [{from, to, insert}]}}= for a change to
 	=File=, positions in UTF-16 units of the text as it last saw it, for the
 	editor to make.
+
+	With =View= ={Kind, Title, Query, File, Columns, About, Edit, Selected}=
+	the conversation is about one of worg's views instead (=Kind= is
+	=columns= with a =File=, or =gantt=, =kanban= or =search= with a
+	=Query=): see assistantview.go. =claude=, =chatgpt=, =gemini= and
+	=local= may be used (the status says =Views=); the last three get tools
+	to look headings up and, with =Edit=, change them (=ViewTools=). It
+	sends ={"tool", "wrote": file}= for each change, ={"query", "why",
+	"count"}= for a query offered to the view, and ends with ="undo": token=
+	when it changed anything (=POST /assistant/undo=).
 EDOC */
 func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 	var req assistantReq
@@ -424,6 +494,10 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		writingJson(w, common.ResultMsg{Ok: false, Msg: "the last message must be the writer's"})
 		return
 	}
+	if req.View != nil && !assistantViewOffered(name) {
+		writingJson(w, common.ResultMsg{Ok: false, Msg: assistantDefaults[name].label + " is for writing mode only; pick another backend"})
+		return
+	}
 	model := assistantModel(name, b)
 	if req.Model != "" {
 		ok := req.Model == model
@@ -435,6 +509,10 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		model = req.Model
+	}
+	if req.View != nil {
+		assistantViewTurn(w, r, name, b, key, model, &req)
+		return
 	}
 
 	// A backend with tools reads the other files when it needs them, rather
@@ -456,15 +534,54 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	send, emit := ndjsonSender(w)
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Minute)
+	defer cancel()
+	var stop string
+	switch name {
+	case "claude":
+		stop, err = assistantClaude(ctx, key, b, model, assistantSystem, docs, req.Messages, emit)
+	case "chatgpt":
+		stop, err = assistantOpenAI(ctx, key, b, model, docs, req.Messages, files, emit, send)
+	case "gemini":
+		stop, err = assistantGemini(ctx, key, b, model, docs, req.Messages, files, emit, send)
+	case "claudecode":
+		stop, err = assistantClaudeCode(ctx, key, b, model, docs, req.Messages, files, emit, send)
+	case "ollama":
+		stop, err = assistantOllama(ctx, b, model, docs, req.Messages, files, req.NumCtx, emit, send)
+	case "local":
+		stop, err = assistantLocal(ctx, model, docs, req.Messages, files, req.NumCtx, emit, send)
+	}
+	if err != nil {
+		send(map[string]string{"error": assistantErrMsg(name, err)})
+		return
+	}
+	send(map[string]any{"done": true, "model": model, "stop": stop})
+}
+
+func assistantErrMsg(name string, err error) string {
+	fmt.Fprintf(os.Stderr, "ASSISTANT %s: %v\n", name, err)
+	msg := err.Error()
+	// An API key is billed from API credits, which a Claude (or ChatGPT)
+	// subscription does not include.
+	if l := strings.ToLower(msg); strings.Contains(l, "credit balance") || strings.Contains(l, "insufficient_quota") || strings.Contains(l, "billing") {
+		msg += " - API keys are billed from the service's API credits, which are separate from a Claude Pro/Max (or ChatGPT Plus) subscription. Add credits on the service's billing page, or pick another backend."
+	}
+	return msg
+}
+
+// The answer as newline-delimited JSON, flushed as it goes: send for any
+// event, emit for a piece of text.
+func ndjsonSender(w http.ResponseWriter) (func(any), func(string)) {
 	w.Header().Set("Content-Type", "application/x-ndjson")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("X-Accel-Buffering", "no")
 	flusher, _ := w.(http.Flusher)
 	enc := json.NewEncoder(w)
-	var sendMu sync.Mutex // claudecode's tools send from their own goroutines
+	var mu sync.Mutex // claudecode's tools send from their own goroutines
 	send := func(v any) {
-		sendMu.Lock()
-		defer sendMu.Unlock()
+		mu.Lock()
+		defer mu.Unlock()
 		enc.Encode(v)
 		if flusher != nil {
 			flusher.Flush()
@@ -475,40 +592,14 @@ func PostAssistantChat(w http.ResponseWriter, r *http.Request) {
 			send(map[string]string{"t": t})
 		}
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Minute)
-	defer cancel()
-	var stop string
-	switch name {
-	case "claude":
-		stop, err = assistantClaude(ctx, key, b, model, docs, req.Messages, emit)
-	case "chatgpt":
-		stop, err = assistantOpenAI(ctx, key, b, model, docs, req.Messages, emit)
-	case "gemini":
-		stop, err = assistantGemini(ctx, key, b, model, docs, req.Messages, emit)
-	case "claudecode":
-		stop, err = assistantClaudeCode(ctx, key, b, model, docs, req.Messages, files, emit, send)
-	case "ollama":
-		stop, err = assistantOllama(ctx, b, model, docs, req.Messages, files, req.NumCtx, emit, send)
-	}
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ASSISTANT %s: %v\n", name, err)
-		msg := err.Error()
-		// An API key is billed from API credits, which a Claude (or ChatGPT)
-		// subscription does not include.
-		if l := strings.ToLower(msg); strings.Contains(l, "credit balance") || strings.Contains(l, "insufficient_quota") || strings.Contains(l, "billing") {
-			msg += " - API keys are billed from the service's API credits, which are separate from a Claude Pro/Max (or ChatGPT Plus) subscription. Add credits on the service's billing page, or pick another backend."
-		}
-		send(map[string]string{"error": msg})
-		return
-	}
-	send(map[string]any{"done": true, "model": model, "stop": stop})
+	return send, emit
 }
 
 // ---------------------------------------------------------------------------
 // Claude
 // ---------------------------------------------------------------------------
 
-func assistantClaude(ctx context.Context, key string, b *common.AssistantBackend, model, docs string, msgs []assistantMsg, emit func(string)) (string, error) {
+func assistantClaude(ctx context.Context, key string, b *common.AssistantBackend, model, system, docs string, msgs []assistantMsg, emit func(string)) (string, error) {
 	opts := []option.RequestOption{}
 	if key != "" {
 		opts = append(opts, option.WithAPIKey(key))
@@ -523,7 +614,7 @@ func assistantClaude(ctx context.Context, key string, b *common.AssistantBackend
 		// The instructions and then the writer's text, cached together: a
 		// conversation about one file sends the same prefix every turn.
 		System: []anthropic.BetaTextBlockParam{
-			{Text: assistantSystem},
+			{Text: system},
 			{Text: docs, CacheControl: anthropic.NewBetaCacheControlEphemeralParam()},
 		},
 		// A policy decline is retried on the model's default fallback
@@ -579,124 +670,322 @@ func ifNotEmpty(pre, s string) string {
 // ChatGPT, and OpenAI-compatible servers
 // ---------------------------------------------------------------------------
 
-func assistantOpenAI(ctx context.Context, key string, b *common.AssistantBackend, model, docs string, msgs []assistantMsg, emit func(string)) (string, error) {
+// chatgpt: the hosted service (or the one at url), with orgs's tools when
+// assistant.chatgpt.tools is on (files is nil otherwise).
+func assistantOpenAI(ctx context.Context, key string, b *common.AssistantBackend, model, docs string, msgs []assistantMsg, files *codeFiles, emit func(string), send func(any)) (string, error) {
 	base := strings.TrimRight(b.Url, "/")
 	if base == "" {
 		base = "https://api.openai.com/v1"
 	}
-	type m struct {
-		Role    string `json:"role"`
-		Content string `json:"content"`
+	sys := assistantSystem + "\n\n"
+	var ts assistantToolset
+	if files != nil {
+		files.send = send
+		ts = files
+		sys += codeToolsPrompt(files) + "\n"
 	}
-	all := []m{{"system", assistantSystem + "\n\n" + docs}}
-	for _, x := range msgs {
-		all = append(all, m{x.Role, x.Text})
+	return openAIChat(ctx, openAIConn{base: base, key: key, model: model}, sys+docs, msgs, ts, emit, send)
+}
+
+// assistantToolset is what a tool loop may offer the model and call: the
+// writer's files (codeFiles) today; anything else that can name its tools
+// and run them by name (a query, a board) the same way.
+type assistantToolset interface {
+	toolDefs() []codeTool
+	call(name string, args json.RawMessage) (string, error)
+}
+
+// One OpenAI-compatible server and model: the hosted service, a local
+// runtime (localrt.go), or a server named under assistant.local.servers.
+type openAIConn struct {
+	base  string // up to and including /v1
+	key   string
+	model string
+	extra map[string]any // more request fields (max_tokens)
+}
+
+type openAIToolCall struct {
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Function struct {
+		Name      string `json:"name"`
+		Arguments string `json:"arguments"`
+	} `json:"function"`
+	// Anything else the server put on the call, sent back as it came:
+	// Gemini refuses the next turn without its thought signature
+	// (extra_content), and other servers have their own.
+	Extra map[string]json.RawMessage `json:"-"`
+}
+
+func (tc openAIToolCall) MarshalJSON() ([]byte, error) {
+	out := map[string]any{"id": tc.ID, "type": tc.Type, "function": tc.Function}
+	for k, v := range tc.Extra {
+		if _, taken := out[k]; !taken {
+			out[k] = v
+		}
 	}
-	body, _ := json.Marshal(map[string]any{"model": model, "messages": all, "stream": true})
-	hreq, _ := http.NewRequestWithContext(ctx, "POST", base+"/chat/completions", bytes.NewReader(body))
+	return json.Marshal(out)
+}
+
+type openAIMsg struct {
+	Role       string           `json:"role"`
+	Content    string           `json:"content"`
+	ToolCalls  []openAIToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string           `json:"tool_call_id,omitempty"`
+}
+
+const openAIRounds = 24
+
+// openAIChat is the tool loop for OpenAI's chat completions, as
+// assistantOllama is for Ollama's /api/chat: ask (streaming, text to emit as
+// it comes), run the tool calls asked for, send their results back as role
+// "tool" messages, and ask again until an answer calls no tools. With ts nil
+// it is one plain request.
+func openAIChat(ctx context.Context, c openAIConn, system string, msgs []assistantMsg, ts assistantToolset, emit func(string), send func(any)) (string, error) {
+	all := []openAIMsg{{Role: "system", Content: system}}
+	for _, m := range msgs {
+		all = append(all, openAIMsg{Role: m.Role, Content: m.Text})
+	}
+	var tools []map[string]any
+	if ts != nil {
+		for _, t := range ts.toolDefs() {
+			tools = append(tools, map[string]any{"type": "function", "function": map[string]any{
+				"name": t.Name, "description": t.Description, "parameters": t.InputSchema,
+			}})
+		}
+	}
+	wrote, stop := false, ""
+	for round := 0; round < openAIRounds; round++ {
+		body := map[string]any{"model": c.model, "messages": all, "stream": true}
+		for k, v := range c.extra {
+			body[k] = v
+		}
+		if tools != nil {
+			body["tools"] = tools
+		}
+		first := true
+		text, calls, why, err := openAIOnce(ctx, c, body, func(t string) {
+			if first {
+				// Thinking models leave the blank lines around their (empty,
+				// or separately sent) thoughts at the start.
+				t = strings.TrimLeft(t, " \t\r\n")
+			}
+			if t == "" {
+				return
+			}
+			if first && wrote {
+				// The first words after a tool call start a new paragraph.
+				emit("\n\n")
+			}
+			first, wrote = false, true
+			emit(t)
+		})
+		if err != nil && tools != nil && openAINoTools(err) {
+			send(map[string]any{"tool": c.model + " cannot use tools here: it sees only what was sent, and cannot read or change files", "warn": true})
+			tools = nil
+			round--
+			continue
+		}
+		if err != nil {
+			return stop, err
+		}
+		stop = why
+		if len(calls) == 0 || ts == nil {
+			return stop, nil
+		}
+		all = append(all, openAIMsg{Role: "assistant", Content: text, ToolCalls: calls})
+		for _, tc := range calls {
+			args := strings.TrimSpace(tc.Function.Arguments)
+			if args == "" {
+				args = "{}"
+			}
+			var out string
+			if !json.Valid([]byte(args)) {
+				out = "Error: the arguments were not JSON: " + args
+			} else if res, err := ts.call(tc.Function.Name, json.RawMessage(args)); err != nil {
+				out = "Error: " + err.Error()
+			} else {
+				out = res
+			}
+			all = append(all, openAIMsg{Role: "tool", ToolCallID: tc.ID, Content: out})
+		}
+	}
+	return stop, fmt.Errorf("stopped after %d rounds of tool calls without an answer", openAIRounds)
+}
+
+// A server refusing tools for this model, rather than failing outright.
+func openAINoTools(err error) bool {
+	l := strings.ToLower(err.Error())
+	return strings.Contains(l, "tool") && (strings.Contains(l, "not support") || strings.Contains(l, "jinja") || strings.Contains(l, "unsupported"))
+}
+
+// One streamed request: the text, the tool calls asked for and why it
+// stopped.
+func openAIOnce(ctx context.Context, c openAIConn, body map[string]any, emit func(string)) (string, []openAIToolCall, string, error) {
+	raw, _ := json.Marshal(body)
+	hreq, _ := http.NewRequestWithContext(ctx, "POST", strings.TrimRight(c.base, "/")+"/chat/completions", bytes.NewReader(raw))
 	hreq.Header.Set("Content-Type", "application/json")
-	if key != "" {
-		hreq.Header.Set("Authorization", "Bearer "+key)
+	if c.key != "" {
+		hreq.Header.Set("Authorization", "Bearer "+c.key)
 	}
-	stop := ""
+	var acc openAIStream
 	err := sseLines(hreq, func(data string) (bool, error) {
 		if data == "[DONE]" {
 			return true, nil
 		}
-		var ev struct {
-			Choices []struct {
-				Delta struct {
-					Content string `json:"content"`
-				} `json:"delta"`
-				FinishReason string `json:"finish_reason"`
-			} `json:"choices"`
-			Error *struct {
-				Message string `json:"message"`
-			} `json:"error"`
-		}
-		if err := json.Unmarshal([]byte(data), &ev); err != nil {
-			return false, nil
-		}
-		if ev.Error != nil {
-			return true, fmt.Errorf("%s", ev.Error.Message)
-		}
-		for _, c := range ev.Choices {
-			emit(c.Delta.Content)
-			if c.FinishReason != "" {
-				stop = c.FinishReason
+		t, err := acc.add([]byte(data))
+		emit(t)
+		return false, err
+	})
+	return acc.text.String(), acc.calls(), acc.stop, err
+}
+
+// openAIStream gathers one streamed answer. Tool calls arrive in pieces
+// (llama.cpp sends a call's name and then its arguments a few characters at a
+// time, by index) or whole (MLX, OpenAI for short ones), so pieces are joined
+// by index; a piece with an id that is not the one at its index starts a new
+// call, for servers that number every call 0.
+type openAIStream struct {
+	text  strings.Builder
+	stop  string
+	order []*openAIToolCall
+	at    map[int]*openAIToolCall
+}
+
+func (s *openAIStream) add(data []byte) (string, error) {
+	var ev struct {
+		Choices []struct {
+			Delta struct {
+				Content   string `json:"content"`
+				ToolCalls []openAIDelta `json:"tool_calls"`
+			} `json:"delta"`
+			FinishReason string `json:"finish_reason"`
+		} `json:"choices"`
+		Error *struct {
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(data, &ev); err != nil {
+		return "", nil
+	}
+	if ev.Error != nil {
+		return "", fmt.Errorf("%s", ev.Error.Message)
+	}
+	if s.at == nil {
+		s.at = map[int]*openAIToolCall{}
+	}
+	text := ""
+	for _, c := range ev.Choices {
+		text += c.Delta.Content
+		for _, d := range c.Delta.ToolCalls {
+			i := len(s.order)
+			if d.Index != nil {
+				i = *d.Index
+			}
+			tc := s.at[i]
+			if tc == nil || (d.ID != "" && tc.ID != "" && d.ID != tc.ID) {
+				tc = &openAIToolCall{Type: "function"}
+				s.at[i] = tc
+				s.order = append(s.order, tc)
+			}
+			if d.ID != "" {
+				tc.ID = d.ID
+			}
+			tc.Function.Name += d.Function.Name
+			tc.Function.Arguments += d.Function.Arguments
+			for k, v := range d.rest {
+				if tc.Extra == nil {
+					tc.Extra = map[string]json.RawMessage{}
+				}
+				tc.Extra[k] = v
 			}
 		}
-		return false, nil
-	})
-	return stop, err
+		if c.FinishReason != "" {
+			s.stop = c.FinishReason
+		}
+	}
+	s.text.WriteString(text)
+	return text, nil
+}
+
+// One piece of a streamed tool call, keeping the fields it does not know.
+type openAIDelta struct {
+	Index    *int
+	ID       string
+	Function struct {
+		Name      string `json:"name"`
+		Arguments string `json:"arguments"`
+	}
+	rest map[string]json.RawMessage
+}
+
+func (d *openAIDelta) UnmarshalJSON(b []byte) error {
+	var all map[string]json.RawMessage
+	if err := json.Unmarshal(b, &all); err != nil {
+		return err
+	}
+	for k, v := range all {
+		var err error
+		switch k {
+		case "index":
+			err = json.Unmarshal(v, &d.Index)
+		case "id":
+			err = json.Unmarshal(v, &d.ID)
+		case "function":
+			err = json.Unmarshal(v, &d.Function)
+		case "type":
+		default:
+			if d.rest == nil {
+				d.rest = map[string]json.RawMessage{}
+			}
+			d.rest[k] = v
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *openAIStream) calls() []openAIToolCall {
+	out := []openAIToolCall{}
+	for i, tc := range s.order {
+		if tc.Function.Name == "" {
+			continue
+		}
+		c := *tc
+		if c.ID == "" {
+			c.ID = fmt.Sprintf("call_%d", i)
+		}
+		out = append(out, c)
+	}
+	return out
 }
 
 // ---------------------------------------------------------------------------
 // Gemini
 // ---------------------------------------------------------------------------
 
-func assistantGemini(ctx context.Context, key string, b *common.AssistantBackend, model, docs string, msgs []assistantMsg, emit func(string)) (string, error) {
+const geminiOpenAIBase = "https://generativelanguage.googleapis.com/v1beta/openai"
+
+// gemini: Google's OpenAI-compatible endpoint, through the same tool loop as
+// chatgpt and local (files is nil when assistant.gemini.tools is off).
+func assistantGemini(ctx context.Context, key string, b *common.AssistantBackend, model, docs string, msgs []assistantMsg, files *codeFiles, emit func(string), send func(any)) (string, error) {
 	base := strings.TrimRight(b.Url, "/")
 	if base == "" {
-		base = "https://generativelanguage.googleapis.com/v1beta"
+		base = geminiOpenAIBase
 	}
-	type part struct {
-		Text string `json:"text"`
+	sys := assistantSystem + "\n\n"
+	var ts assistantToolset
+	if files != nil {
+		files.send = send
+		ts = files
+		sys += codeToolsPrompt(files) + "\n"
 	}
-	type content struct {
-		Role  string `json:"role,omitempty"`
-		Parts []part `json:"parts"`
+	stop, err := openAIChat(ctx, openAIConn{base: base, key: key, model: model}, sys+docs, msgs, ts, emit, send)
+	if err == nil && stop == "content_filter" {
+		return stop, fmt.Errorf("Gemini declined to answer")
 	}
-	all := []content{}
-	for _, x := range msgs {
-		role := "user"
-		if x.Role == "assistant" {
-			role = "model"
-		}
-		all = append(all, content{role, []part{{x.Text}}})
-	}
-	body, _ := json.Marshal(map[string]any{
-		"systemInstruction": content{Parts: []part{{assistantSystem + "\n\n" + docs}}},
-		"contents":          all,
-	})
-	hreq, _ := http.NewRequestWithContext(ctx, "POST", base+"/models/"+model+":streamGenerateContent?alt=sse", bytes.NewReader(body))
-	hreq.Header.Set("Content-Type", "application/json")
-	hreq.Header.Set("x-goog-api-key", key)
-	stop := ""
-	err := sseLines(hreq, func(data string) (bool, error) {
-		var ev struct {
-			Candidates []struct {
-				Content struct {
-					Parts []part `json:"parts"`
-				} `json:"content"`
-				FinishReason string `json:"finishReason"`
-			} `json:"candidates"`
-			PromptFeedback *struct {
-				BlockReason string `json:"blockReason"`
-			} `json:"promptFeedback"`
-			Error *struct {
-				Message string `json:"message"`
-			} `json:"error"`
-		}
-		if err := json.Unmarshal([]byte(data), &ev); err != nil {
-			return false, nil
-		}
-		if ev.Error != nil {
-			return true, fmt.Errorf("%s", ev.Error.Message)
-		}
-		if ev.PromptFeedback != nil && ev.PromptFeedback.BlockReason != "" {
-			return true, fmt.Errorf("Gemini declined to answer: %s", ev.PromptFeedback.BlockReason)
-		}
-		for _, c := range ev.Candidates {
-			for _, p := range c.Content.Parts {
-				emit(p.Text)
-			}
-			if c.FinishReason != "" {
-				stop = c.FinishReason
-			}
-		}
-		return false, nil
-	})
 	return stop, err
 }
 
@@ -718,6 +1007,15 @@ func sseLines(req *http.Request, each func(data string) (bool, error)) error {
 		}
 		if json.Unmarshal(raw, &e) == nil && e.Error.Message != "" {
 			return fmt.Errorf("%s (%d)", e.Error.Message, res.StatusCode)
+		}
+		// Gemini's OpenAI endpoint wraps its error in a list.
+		var list []struct {
+			Error struct {
+				Message string `json:"message"`
+			} `json:"error"`
+		}
+		if json.Unmarshal(raw, &list) == nil && len(list) > 0 && list[0].Error.Message != "" {
+			return fmt.Errorf("%s (%d)", list[0].Error.Message, res.StatusCode)
 		}
 		return fmt.Errorf("%s: %s", res.Status, strings.TrimSpace(string(raw)))
 	}

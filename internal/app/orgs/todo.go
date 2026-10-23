@@ -88,7 +88,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ihdavids/go-org/org"
@@ -508,7 +510,28 @@ type Expr struct {
 // type, so the half-written call reaches the server on every keystroke and
 // each one took a request down. Recovering here covers every function,
 // including ones written later, rather than an arity check in each.
+// The query language's function names, kept as the map is first built, for
+// the assistant to be told (assistantview.go): from the map itself, so the
+// list cannot drift from what a query may call.
+var queryFnNames struct {
+	once  sync.Once
+	names []string
+}
+
+func queryFunctionNames() []string {
+	if queryFnNames.names == nil {
+		ParseString(&common.StringQuery{Query: "true"})
+	}
+	return queryFnNames.names
+}
+
 func guardQueryFunctions(exp *Expr, functions map[string]govaluate.ExpressionFunction) {
+	queryFnNames.once.Do(func() {
+		for name := range functions {
+			queryFnNames.names = append(queryFnNames.names, name)
+		}
+		sort.Strings(queryFnNames.names)
+	})
 	for name, fn := range functions {
 		name, fn := name, fn
 		functions[name] = func(args ...interface{}) (res interface{}, err error) {

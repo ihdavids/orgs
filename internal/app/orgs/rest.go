@@ -102,6 +102,9 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/assistant/key", PostAssistantKey).Methods("POST") // set a backend's key from worg
 	api.HandleFunc("/ollama/status", RequestOllamaStatus).Methods("GET") // ollama.go: the assistant's local models
 	api.HandleFunc("/ollama/{action:install|start|stop|pull|cancel|delete}", PostOllamaAction).Methods("POST")
+	api.HandleFunc("/assistant/undo", PostAssistantUndo).Methods("POST") // assistantview.go: put back what a view turn changed
+	api.HandleFunc("/local/status", RequestLocalStatus).Methods("GET") // localrt.go: llama.cpp, LM Studio, MLX
+	api.HandleFunc("/local/{runtime}/{action:install|start|stop|pull|cancel|delete}", PostLocalAction).Methods("POST")
 	api.HandleFunc("/harper/lint", PostHarperLint).Methods("POST")     // Harper run on the server, for phones
 	api.HandleFunc("/harper/status", RequestHarperStatus).Methods("GET")
 	api.HandleFunc("/filecontents/headings", RequestHeadings)     // Get all todos in file
