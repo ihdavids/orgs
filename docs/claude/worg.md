@@ -236,6 +236,10 @@ The Contacts tab's **Import** button opens `components/ContactImport.tsx`; pure 
 - **Undo** is the server's (`POST /review/undo` with the token `/review/act` handed back); the stack is module-level per list, so it survives leaving the tab.
 - **The wizard** keeps its step and running tally on the server (`/review/step`), so it resumes where it was left in either client; steps 1 and 6 embed `Triage`, 2/3/5 are lists with inline actions, 4 is a table with clocked/planned bars (`timeBar`), 7 records it (`/review/done`). The waiting threshold is `worg.weeklyReviewWaitingDays` in localStorage, defaulting to the server's.
 
+## Deleting files
+
+The Files tree's checklist button (only drawn when `GET /file/delete` says `CanDelete`; `useMayDeleteFiles` in `components/FileDelete.tsx`) turns on picking: a click ticks a file instead of opening it, ⌘/ctrl-click starts picking, and a folder's box ticks every file under it that the tree is showing. The bar's Delete opens `DeleteFilesDialog`, which lists the files and posts `/file/delete`; files that failed stay listed with the reason. Deleting the open file closes it (editor text dropped) and the list is fetched again.
+
 ## New org file
 
 The rail's note-add button and the palette's "New org file" open `components/NewFileDialog.tsx`. Logic is in `src/newfile.ts` (tested): `rootsOf`/`dirLabel` (folders shown from the org directory's own name down), `rankDirs` (fuzzy, a match on the folder's own name counts double, shallowest first when nothing is typed), `matchPositions` for fzf-style highlighting, `nameError`, `newFilePath`. Server: `GET /newtemplates` (the `new/*.tpl` under the template path), `GET /dirs?all=t` (every folder under the orgDirs, hidden and node_modules skipped), `POST /file`. `/file` now only writes `.org` files inside an org directory (`insideOrgDirs`), only takes `new/*.tpl` templates, and with `mustBeNew` answers 409 rather than reloading an existing file. A new folder is just part of the path: `CreateOrgFileFromTemplate` makes the folders on the way. The last folder and template used are remembered in localStorage.

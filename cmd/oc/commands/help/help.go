@@ -47,12 +47,13 @@ var groups = []struct {
 	Name string
 	Cmds []string
 }{
-	{"Finding things", []string{"search", "q", "find", "grep", "agenda", "tui", "outline",
+	{"Finding things", []string{"p", "search", "q", "find", "grep", "agenda", "tui", "outline",
 		"projects", "gantt", "kanban", "cols", "filter", "filters", "tags", "taggroups", "show", "log"}},
 	{"Changing a heading", []string{"todo", "sched", "deadline", "tag", "prop", "rename",
-		"note", "check", "archive", "rm", "ref", "cap", "listcap", "new", "daypage"}},
+		"note", "check", "archive", "rm", "ref", "cap", "listcap", "new", "daypage", "paste"}},
 	{"The clock", []string{"clockin", "clockout", "clocks", "clocktable", "timesheet", "invoice"}},
 	{"Habits", []string{"habits"}},
+	{"Writing", []string{"write", "lint", "ask", "models"}},
 	{"Files and code", []string{"files", "fmt", "dblock", "tangle", "detangle", "code", "tables", "export", "site", "import", "csv", "refresh", "links", "go"}},
 	{"Records", []string{"rec", "record", "contact"}},
 	{"Watching", []string{"watch"}},

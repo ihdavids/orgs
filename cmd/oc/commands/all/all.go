@@ -70,4 +70,9 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/voice"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/watch"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/worg"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/assistant"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/lint"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/palette"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/paste"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/writing"
 )

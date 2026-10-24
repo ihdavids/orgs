@@ -15,6 +15,8 @@ package code
 //	                                  write its result, as C-c C-c does
 //	orgs code all notes.org           everything in the file, top to bottom
 //	orgs code ls -json | jq '.[].Lang'
+//	orgs code sessions                the python sessions :session started
+//	orgs code sessions stop analysis  restart that kernel (-all: every one)
 //
 // A block is worth an endpoint rather than a grep because of its *variables*.
 // `:var data=monthly` and `:var scale=2` are the same shape and mean entirely
@@ -59,6 +61,7 @@ type Code struct {
 	Limit   int
 	Write   bool
 	NoWrite bool
+	All     bool
 }
 
 func (self *Code) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -81,6 +84,7 @@ func (self *Code) SetupParameters(fset *flag.FlagSet) {
 	fset.IntVar(&self.Limit, "limit", 0, "keep only the first n")
 	fset.BoolVar(&self.Write, "w", false, "run: write the result into the file as #+RESULTS:")
 	fset.BoolVar(&self.NoWrite, "no-write", false, "at, all: run without writing results into the file")
+	fset.BoolVar(&self.All, "all", false, "sessions stop: stop every session (or every one in -file)")
 }
 
 func (self *Code) Exec(core *commands.Core) {
@@ -113,13 +117,15 @@ func (self *Code) Exec(core *commands.Core) {
 		self.at(core, words, false)
 	case "all":
 		self.at(core, words, true)
+	case "sessions", "session", "kernels":
+		self.sessions(core, words)
 	case "preview":
 		// What fzf shells out to. Harmless to run by hand, and the easiest way
 		// to see what the pane is doing when it is doing the wrong thing.
 		self.preview(core)
 	default:
 		// `orgs code python` should narrow the picker rather than complain -
-		// the first word is only a subcommand when it is one of the five.
+		// the first word is only a subcommand when it is one of the above.
 		self.pick(core, strings.TrimSpace(sub+" "+free))
 	}
 }

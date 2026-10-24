@@ -142,7 +142,7 @@ func (self *Doctor) Exec(core *commands.Core) {
 		add(Check{"editor", ok, strings.Join(core.EditorTemplate, " "), ""})
 	}
 
-	self.report(checks)
+	self.report(core, checks)
 }
 
 // serverChecks are the ones only worth asking a server that is answering.
@@ -238,7 +238,14 @@ func (self *Doctor) serverChecks(core *commands.Core, add func(Check)) {
 	}
 }
 
-func (self *Doctor) report(checks []Check) {
+func (self *Doctor) report(core *commands.Core, checks []Check) {
+	if commands.QuickfixFormat() {
+		commands.RenderDiagnostics(self.diagnostics(core, checks), nil)
+		if worst(checks) == fail {
+			os.Exit(1)
+		}
+		return
+	}
 	if commands.Render(checks, nil) {
 		// Exit code says whether anything failed, so a script can branch on it
 		// without reading the json back.
@@ -279,6 +286,31 @@ func (self *Doctor) report(checks []Check) {
 	if worst(checks) == fail {
 		os.Exit(1)
 	}
+}
+
+// diagnostics is -format quickfix. None of these findings is about a line of
+// an org file, so each points at the config file, which is where nearly every
+// fix goes; with no config file the name it would have is used, since a
+// quickfix line without a file is one an editor drops. Passing checks are left
+// out unless -v, the same as the listing.
+func (self *Doctor) diagnostics(core *commands.Core, checks []Check) []commands.Diagnostic {
+	file := core.ConfigFile
+	if file == "" {
+		file = "orgs.yaml"
+	}
+	out := []commands.Diagnostic{}
+	for _, c := range checks {
+		if c.Level == ok && !self.Verbose {
+			continue
+		}
+		sev := map[string]string{fail: "error", warn: "warning", note: "info", ok: "info"}[c.Level]
+		msg := c.Detail
+		if c.Fix != "" && c.Level != ok {
+			msg += " (" + c.Fix + ")"
+		}
+		out = append(out, commands.Diagnostic{File: file, Severity: sev, Rule: c.Name, Msg: msg})
+	}
+	return out
 }
 
 func worst(checks []Check) string {

@@ -45,6 +45,7 @@ type UserCmd struct {
 type userRow struct {
 	Name      string
 	Admin     bool
+	Delete    bool
 	Password  string
 	LastLogin string
 }
@@ -105,8 +106,12 @@ func (self *UserCmd) Exec(core *commands.Core) {
 		self.setAdmin(ks, path, words, true)
 	case "noadmin":
 		self.setAdmin(ks, path, words, false)
+	case "candelete":
+		self.setDelete(ks, path, words, true)
+	case "nodelete":
+		self.setDelete(ks, path, words, false)
 	default:
-		commands.Fail("user: unknown subcommand %q. One of: ls, add, passwd, rm, admin, noadmin", sub)
+		commands.Fail("user: unknown subcommand %q. One of: ls, add, passwd, rm, admin, noadmin, candelete, nodelete", sub)
 	}
 }
 
@@ -148,7 +153,7 @@ func (self *UserCmd) list(ks *common.YamlKeystore) {
 		if t, ok := ks.LastLogin(n); ok {
 			last = t.Local().Format(time.RFC822)
 		}
-		rows = append(rows, userRow{Name: n, Admin: ks.Creds[n].Admin,
+		rows = append(rows, userRow{Name: n, Admin: ks.Creds[n].Admin, Delete: ks.MayDelete(n),
 			Password: passwordState(ks, n, isDefault), LastLogin: last})
 	}
 	commands.Render(rows, func() {
@@ -163,7 +168,7 @@ func (self *UserCmd) list(ks *common.YamlKeystore) {
 				w = len(r.Name)
 			}
 		}
-		fmt.Printf("%s%-*s  %-5s  %-20s  %s%s\n", commands.C(commands.AnsiBold), w, "USER", "ADMIN", "PASSWORD", "LAST LOGIN", commands.C(commands.AnsiReset))
+		fmt.Printf("%s%-*s  %-5s  %-6s  %-20s  %s%s\n", commands.C(commands.AnsiBold), w, "USER", "ADMIN", "DELETE", "PASSWORD", "LAST LOGIN", commands.C(commands.AnsiReset))
 		for _, r := range rows {
 			colour := ""
 			switch r.Password {
@@ -179,7 +184,11 @@ func (self *UserCmd) list(ks *common.YamlKeystore) {
 			if r.Admin {
 				admin = "yes"
 			}
-			fmt.Printf("%-*s  %-5s  %s%-20s%s  %s\n", w, r.Name, admin, colour, r.Password, commands.C(commands.AnsiReset), r.LastLogin)
+			del := ""
+			if r.Delete {
+				del = "yes"
+			}
+			fmt.Printf("%-*s  %-5s  %-6s  %s%-20s%s  %s\n", w, r.Name, admin, del, colour, r.Password, commands.C(commands.AnsiReset), r.LastLogin)
 		}
 	})
 }
@@ -316,6 +325,42 @@ func (self *UserCmd) setAdmin(ks *common.YamlKeystore, path string, words []stri
 	fmt.Println("Restart the server to pick this up.")
 }
 
+// setDelete grants or removes the permission to delete org files from worg.
+// Like the administrator flag, it is granted here and nowhere else.
+func (self *UserCmd) setDelete(ks *common.YamlKeystore, path string, words []string, del bool) {
+	sub := "candelete"
+	if !del {
+		sub = "nodelete"
+	}
+	name := oneName(sub, words)
+	c, ok := ks.Creds[name]
+	if !ok {
+		commands.Fail("user %s: there is no user %q in %s", sub, name, path)
+	}
+	if c.Delete == del {
+		if del {
+			fmt.Printf("%s may already delete org files.\n", name)
+		} else {
+			fmt.Printf("%s has no delete permission of their own.\n", name)
+		}
+		return
+	}
+	ks.SetDelete(name, del)
+	if commands.Wrote(fmt.Sprintf("%s %q in %s", sub, name, path), nil) {
+		return
+	}
+	save(ks, path)
+	switch {
+	case del:
+		fmt.Printf("%s may now delete org files\n", name)
+	case c.Admin:
+		fmt.Printf("%s no longer has the delete permission, but as an administrator may still delete org files\n", name)
+	default:
+		fmt.Printf("%s may no longer delete org files\n", name)
+	}
+	fmt.Println("Restart the server to pick this up.")
+}
+
 func oneName(sub string, words []string) string {
 	switch len(words) {
 	case 0:
@@ -345,7 +390,7 @@ func confirm(question string) bool {
 
 // init function is called at boot
 func init() {
-	commands.AddCmd("user", "add, list, remove, re-password and promote the users that may log in",
+	commands.AddCmd("user", "add, list, remove, re-password and promote the users that may log in, and say who may delete files",
 		func() commands.Cmd {
 			return &UserCmd{}
 		})

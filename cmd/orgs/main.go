@@ -265,6 +265,14 @@ func main() {
 
 	args = expandAliases(args)
 
+	// `orgs` on its own, with somebody at a terminal, is the palette: a list
+	// to search rather than a page to read. Decided here rather than where
+	// nothing matched, so -local starts its server for it like any command.
+	// Anywhere else - a pipe, a script - it is still the help below.
+	if len(args) == 0 && commands.Interactive() && commands.Find("p") != nil {
+		args = []string{"p"}
+	}
+
 	// -local (or -orgdir, which implies it) puts the server in this process.
 	// Not for `serve`, which *is* the server, and not for `login`, which has
 	// nothing to log in to.

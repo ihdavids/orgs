@@ -235,3 +235,55 @@ Markdown (a file, or a folder = an Obsidian vault), todo.txt (by whole name: `to
 ## `orgs detangle`
 
 `orgtools/detangle.go`: reads each named file here and sends its text and absolute path to `POST /detangle` (server notes under **Tangle, detangle, auto-tangle** in `internal/app/orgs/CLAUDE.md`). `-dry-run` is the server's dry run (called through `common.RestPost`, not `SendReceivePost`, whose echo would only print the request), listing which blocks would change (`~`). Exits 1 when a section could not go back.
+
+## `-format quickfix`: one spelling for problems
+
+`commands.Diagnostic` / `RenderDiagnostics` (`diagnostics.go`) print `file:line:col: severity: msg [rule]`, which vim quickfix, Emacs `compile` and VS Code problem matchers read as is. `quickfix` is a magic value of `-format` (a template with no `{{` is useless anyway), so a command checks `QuickfixFormat()` **before** its template path. A path under the working directory prints relative to it (CI annotators match checkout paths); `-json` keeps it absolute. Each older checker keeps its own `-json`; quickfix is an extra mode, not a replacement.
+
+- `review`: a warning per heading at its `LineNum`, rule = the check's name. Exit 0, as before.
+- `deps`: rule = the kind; points at the heading holding the AFTER (last in the chain), except `blocked-chain`, which points at the root blocker. `-check` exit unchanged.
+- `fmt -check`: error, rule `fmt`, line = first line where the file differs from the writer's text (a second `GET /reformat` with the text, only for unformatted files; line 1 when the file is not on this disk).
+- `doctor`: no org file to point at, so findings point at the config file (`orgs.yaml` if none); passing checks only with `-v`.
+
+## `orgs lint`
+
+`lint/`: writing mode's checkers as compiler output. Harper (`/harper/lint`, needs `harper: enabled: true`; harper-ls downloads on first use) and LanguageTool (`/languagetool/check`, form encoded because the server passes LanguageTool's `/v2/check` form through). Target: files (a word ending `.org` or naming a file, `-file`), a heading through `commands.Resolve` (its subtree, from `LineNum` - 0 based - to the next heading at its level or above), or stdin (hashes if every line is one, text otherwise, reported as `<stdin>`).
+
+1. **Only prose is sent** (`prose.go`): a simplified Go copy of worg's `proseSpans`/`paragraphsOf` (see **Traps: logic said twice**). A hole becomes one space and never a second one, or Harper's `Spaces` rule flags a double space nobody typed.
+2. **Offsets come back in UTF-16** from both checkers; `para.place` walks them back to a rune, then to the line and **byte** column (what vim `%c` and Emacs count).
+3. LanguageTool gets paragraphs joined by blank lines (~20k chars a request), each match mapped back to its paragraph; Harper gets 100 paragraphs a request (server cap 200).
+4. Not through `SendReceivePostErr`: the POSTs write nothing, so `-dry-run` must not stop them.
+5. `-check` exits 1 on any problem; `-ignore` goes to both servers and is filtered here too.
+
+## `orgs write`
+
+`writing/`: writing mode minus the editor. Bare (or `today`): today/week/month against `/writing/goals`, streak, a spark line of `-days`, today's files; `-short` is a status-bar line (`✍ 412/500 · 6d`). `log`, `goals [-daily -weekly -monthly -rest]`, `ideas [generator] [-n -seed -genre -set k=v -org]`, `snapshot <heading> [-title]`, `snapshots <file.org|heading> [-delete ID]`.
+
+- **The log is only read here.** worg posts each file's count as it edits, by its own prose rules (`writing.ts countWords`); a terminal count would be a second answer, so this side never posts one.
+- **The streak and sums are worg's `rhythm.ts`, ported** (`rhythm.go`, same cases in `rhythm_test.go`).
+- **A snapshot is keyed the way writing mode keys it**: the NUL-joined title path from `headingsOf` (empty strings for skipped levels; keyword, COMMENT, priority and tags stripped, using the file's own keywords from `/status/{hash}`), Text = the subtree's lines, Words by `\p{L}[\p{L}'’]*`. Otherwise worg lists it under "other headings". Pinned by `outline_test.go`.
+- `goals` sends the whole set back (the endpoint replaces it), changing only the flags given (`fset.Visit`).
+- `ideas` posts through `common.RestPost`, not `SendReceivePost`: making ideas writes nothing. There is no save endpoint; `-org` prints them ready to paste or capture.
+
+## `orgs ask` and `orgs models` (`assistant/`)
+
+- **`ask`** is `POST /assistant/chat`, worg's assistant pane and view assistant. Scope: `-on` (a heading's subtree, Scope `section`), `-file` (Scope `file`), stdin (the `Selection`), `-read` (`Others`), `-view search|gantt|kanban|columns -q … [-edit]` (a view turn; only these write). The answer is ndjson, read by hand rather than through `RestPost` so text reaches stdout as it arrives; tool notes, warnings and offered queries go to stderr. `-json`/`-format` get one `Answer`.
+- **`-read all`** (mixable with names: `-read all,notes.org`) sends every file `/files` lists as `Others`, minus the file in scope. A tool backend is only given the names and reads what it needs (`list_files`/`read_file`/`find`), so this is cheap; one without tools gets every file's text in every turn's prompt, cut at `assistant.maxContext`, and a warning on stderr says so. Paths are kept whole (`distinct`, not the display helper `uniq`, which takes base names): the server resolves a bare name to the first file with that base name.
+- **The last conversation and its undo token** live in `<user cache>/orgs/ask-last.json`: `-c` carries it on, `orgs ask undo` takes the token from there. Under `-local` undo cannot work - the undo map dies with the process.
+- **A tool backend needs a File.** `newCodeFiles` refuses an empty one (worg always has a file open), so a turn with no scope sends the first known file as an anchor (Scope `none`, no `Edit`): `anchorFile`. Letting the server accept an empty `File` would remove this.
+- **`models`** puts `/ollama/*` and `/local/{runtime}/*` in one table, ollama as runtime `ollama`. Names are not checked here (the server and worg's `validName` already do). Pull and install poll the status for progress; ctrl-c leaves the pull running. `delete` goes through `commands.Confirm`.
+- `GET /ollama/status` starts Ollama when it is installed and stopped, so `orgs models` can too, as worg's manager does.
+
+## `orgs p`, the palette
+
+`palette/`: one fzf list of aliases (`aliases:` read from `core.ConfigFile`; the settings can't be imported), saved queries (`/ext/queries`, run as `orgs q NAME`), filters (`/filters`, run as `search '{{Name}}'`; their command rows are dropped so they don't appear twice) and every command in `orgs help`'s group order. Bare `orgs` becomes `p` in `main.go` when `commands.Interactive()`, decided *before* the `-local` check so the in-process server starts for it; a pipe still gets help.
+
+- **Groups come from `help -json` run in-process** (stdout borrowed through a pipe), so the group table stays in `help.go`. Falls back to the registry, ungrouped.
+- **Enter on a command asks for the rest of the line** (usage above the prompt, shell-style splitting in `splitWords`). alt-enter runs it bare; ctrl-y or `-print` prints `orgs …` for a shell widget. `-print` counts as interactive with stdin a terminal, because fzf draws on the tty while stdout is `$(…)`.
+- **The chosen line runs as a child** with `-config`/`-url`, not `syscall.Exec`: under `-local` this process *is* the server the child talks to.
+- The pane is `orgs p preview <kind> <name>` (see **The pickers**).
+
+## `orgs code sessions` and `orgs paste`
+
+- **`orgs code sessions [ls|stop]`** (`code/sessions.go`): `/babel/sessions` and `/babel/sessions/stop`, worg's restart-kernel button. Sessions live only in a long-running server, so `-local` never has any; test against a throwaway `serve` with `babel.enable`. `stop` takes a name, `-file f -all` or `-all`; several matches with no name is a multi-select picker for a person and a refusal for a pipe.
+- **`orgs paste`** (`paste/`): `/image/paste` (multipart: `image`, `type`, then `hash` | `filename`+`afterLine` | `stash`). `afterLine` is the **zero-based index of the line to go after**, so `-line N` sends N-1, and no `-line` sends a huge number the server clamps to the end of the file. With no target it stashes and prints only `[[file:…]]` (stdout is the answer), for `:r !orgs paste`. Hashes on stdin need an explicit `-`: an editor's stdin is not a terminal. Clipboard: `pngpaste` or AppleScript (`«class PNGf»`) on a mac, `wl-paste` or `xclip` elsewhere; the bytes are sniffed so text on the clipboard is refused. The server names the file (`paste-<stamp>.png`, under the org root's `images/`, so its url really is `/images/images/…`).

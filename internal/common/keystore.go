@@ -99,6 +99,14 @@ import (
 	orgs user add dana -admin  # added as an administrator
 	#+END_SRC
 
+	Deleting org files from worg's Files tab is for an administrator, or for
+	an account given that one permission (=delete: true= in the keystore):
+
+	#+BEGIN_SRC sh
+	orgs user candelete dana   # dana may now delete org files
+	orgs user nodelete dana    # and now may not
+	#+END_SRC
+
 	The server will not add a user when it is running on its built-in
 	admin/default account, because that keystore has no file behind it and
 	there would be nowhere to write. It says so rather than appearing to work.
@@ -149,6 +157,9 @@ type Cred struct {
 	// one thing, adding another account through POST /users/add. Written
 	// omitempty so that a keystore full of ordinary users reads as one.
 	Admin bool `json:"admin,omitempty" yaml:"admin,omitempty"`
+	// Whether this account may delete org files (worg's Files tab). An
+	// administrator may whether or not this is set.
+	Delete bool `json:"delete,omitempty" yaml:"delete,omitempty"`
 }
 
 type KeyStore interface {
@@ -166,6 +177,9 @@ type KeyStore interface {
 	// false for a user that does not exist, so a caller never has to ask
 	// twice.
 	IsAdmin(user string) bool
+	// MayDelete answers whether this account may delete org files: an
+	// administrator, or an account marked =delete: true=.
+	MayDelete(user string) bool
 	// DefaultCredentialUsers names the accounts whose password is still the
 	// built-in default, and PlaintextUsers those whose password is stored as
 	// cleartext. Both are for the startup warning; both should be empty.
@@ -396,6 +410,7 @@ func (s *YamlKeystore) SetPassword(user, password string) error {
 		Password: StoredHash(salt, s.OrgSalt, ClientHash(user, salt, password)),
 		Salt:     salt,
 		Admin:    s.Creds[user].Admin,
+		Delete:   s.Creds[user].Delete,
 	}
 	return nil
 }
@@ -451,6 +466,28 @@ func (s *YamlKeystore) IsAdmin(user string) bool {
 	defer s.mu.Unlock()
 	c, ok := s.Creds[user]
 	return ok && c.Admin
+}
+
+// SetDelete turns a user's permission to delete org files on or off, and
+// answers whether there was a user to do it to.
+func (s *YamlKeystore) SetDelete(user string, del bool) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, ok := s.Creds[user]
+	if !ok {
+		return false
+	}
+	c.Delete = del
+	s.Creds[user] = c
+	return true
+}
+
+// MayDelete answers whether this user may delete org files.
+func (s *YamlKeystore) MayDelete(user string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c, ok := s.Creds[user]
+	return ok && (c.Admin || c.Delete)
 }
 
 // HasUser answers whether an account exists.

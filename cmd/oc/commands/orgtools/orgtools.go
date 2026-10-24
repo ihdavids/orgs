@@ -269,6 +269,23 @@ func (self *Fmt) check(core *commands.Core, files []string) {
 		}
 		rows = append(rows, row{Filename: f, Formatted: res.Formatted})
 	}
+	if commands.QuickfixFormat() {
+		diags := []commands.Diagnostic{}
+		for _, r := range rows {
+			if r.Formatted {
+				continue
+			}
+			ln, msg := firstChange(core, r.Filename)
+			diags = append(diags, commands.Diagnostic{
+				File: r.Filename, Line: ln, Severity: "error", Rule: "fmt", Msg: msg,
+			})
+		}
+		commands.RenderDiagnostics(diags, nil)
+		if bad > 0 {
+			os.Exit(1)
+		}
+		return
+	}
 	commands.Render(rows, func() {
 		for _, r := range rows {
 			if r.Formatted {
@@ -285,6 +302,39 @@ func (self *Fmt) check(core *commands.Core, files []string) {
 	if bad > 0 {
 		os.Exit(1)
 	}
+}
+
+// firstChange is where in a file the writer's text first parts from what is on
+// disk, so an editor jumping to the quickfix line lands on the change rather
+// than at the top. It costs a second request carrying the formatted text,
+// which is why only files already known to be unformatted ask for it. A file
+// this side cannot read (the server is on another disk) points at line 1.
+func firstChange(core *commands.Core, file string) (int, string) {
+	const msg = "not formatted (orgs fmt to rewrite it)"
+	have, err := os.ReadFile(file)
+	if err != nil {
+		return 1, msg
+	}
+	res, err := commands.SendReceiveGetErr[common.ReformatCheck](core, "reformat",
+		map[string]string{"filename": file})
+	if err != nil || !res.Ok {
+		return 1, msg
+	}
+	a := strings.Split(string(have), "\n")
+	b := strings.Split(res.Text, "\n")
+	for i := 0; i < len(a) || i < len(b); i++ {
+		if i >= len(a) || i >= len(b) || a[i] != b[i] {
+			want := ""
+			if i < len(b) {
+				want = strings.TrimSpace(b[i])
+			}
+			if want == "" {
+				return i + 1, msg
+			}
+			return i + 1, fmt.Sprintf("not formatted: would be %q (orgs fmt to rewrite it)", want)
+		}
+	}
+	return 1, msg
 }
 
 // resolve turns the words into org files: a path as given, or a name matched

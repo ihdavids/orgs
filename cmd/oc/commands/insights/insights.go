@@ -342,7 +342,9 @@ func (self *Deps) Exec(core *commands.Core) {
 			errors++
 		}
 	}
-	if commands.JsonOut {
+	if commands.QuickfixFormat() {
+		commands.RenderDiagnostics(depDiagnostics(res.Problems), nil)
+	} else if commands.JsonOut {
 		commands.RenderOne(res, nil)
 	} else if !commands.Render(res.Problems, nil) {
 		printDeps(res)
@@ -350,6 +352,45 @@ func (self *Deps) Exec(core *commands.Core) {
 	if self.Check && errors > 0 {
 		os.Exit(1)
 	}
+}
+
+// depDiagnostics is -format quickfix: one line per problem, at the heading
+// somebody has to edit. That is the heading holding the AFTER (the last in the
+// chain, since what is waited on comes first) for everything except a blocked
+// chain, whose fix is the root blocker at its head. The other headings go in
+// the message, so a cycle reads whole on one line.
+func depDiagnostics(ps []common.DepProblem) []commands.Diagnostic {
+	out := []commands.Diagnostic{}
+	for _, p := range ps {
+		if len(p.Chain) == 0 {
+			continue
+		}
+		at := p.Chain[len(p.Chain)-1]
+		if p.Kind == "blocked-chain" {
+			at = p.Chain[0]
+		}
+		sev := p.Severity
+		if sev == "warn" {
+			sev = "warning"
+		}
+		names := []string{}
+		for _, h := range p.Chain {
+			names = append(names, h.Headline)
+		}
+		msg := p.Title
+		if len(names) > 1 {
+			msg += ": " + strings.Join(names, " -> ")
+		} else if p.Kind == "dangling" && p.Missing != "" {
+			msg += ": " + p.Missing + " ?"
+		}
+		if p.Suggestion != "" {
+			msg += " (" + p.Suggestion + ")"
+		}
+		out = append(out, commands.Diagnostic{
+			File: at.Filename, Line: at.LineNum + 1, Severity: sev, Rule: p.Kind, Msg: msg, // LineNum is 0 based
+		})
+	}
+	return out
 }
 
 func severityMark(s string) string {

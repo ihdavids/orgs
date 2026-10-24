@@ -125,6 +125,8 @@ The exception to 6 is `orgs adduser` (`cmd/oc/commands/adduser/`, `internal/app/
 4. **An add never replaces**; resetting an existing password would be a takeover.
 5. **`SetPassword` keeps `Admin`** (it used to replace the whole `Cred`, silently demoting). `TestPasswordChangeKeepsAdmin` pins it.
 
+**Deleting org files** (`deletefile.go`, `GET`/`POST /file/delete`) is for an administrator or an account with `delete: true` (`Cred.Delete`, `MayDelete`; granted only on the server's machine with `orgs user candelete <name>` / `nodelete` - `orgs user delete` already meant removing a user). `SetPassword` keeps `Delete` as it keeps `Admin`. A path must be **exactly** one the OrgDb holds (`FindByFile` also answers for a lower-cased or similar name, which must not choose what gets deleted) and inside `orgDirs`; each file goes with `os.Remove` + `UnloadFile`, and one failure does not stop the rest.
+
 `YamlKeystore` has a mutex: handlers already mutated it (each login records a time and saves), and a second writer made concurrent map writes likely.
 
 `WarnOnInsecureCredentials` prints a block, not a line (to stand out from startup chatter), when any account has the default password, any is cleartext, or `noAuth` is set, naming the accounts and the three fixing commands. A configured keystore that is absent, unreadable or empty falls back to the built-in account rather than refusing to start (an unstartable server cannot be set up), and the block states this as `Why:`.

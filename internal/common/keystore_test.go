@@ -432,3 +432,39 @@ func TestValidUsername(t *testing.T) {
 		}
 	}
 }
+
+// Deleting files is for an administrator or an account given the permission,
+// and changing a password must not take the permission away.
+func TestMayDelete(t *testing.T) {
+	ks := NewKeystore("", testOrgSalt)
+	for _, u := range []string{"ian", "dana", "sam"} {
+		if err := ks.SetPassword(u, "correct horse"); err != nil {
+			t.Fatalf("SetPassword: %v", err)
+		}
+	}
+	ks.SetAdmin("sam", true)
+	if ks.MayDelete("ian") {
+		t.Error("an ordinary account may delete")
+	}
+	if !ks.MayDelete("sam") {
+		t.Error("an administrator may not delete")
+	}
+	if ks.MayDelete("nobody") {
+		t.Error("an account that does not exist may delete")
+	}
+	if !ks.SetDelete("dana", true) || !ks.MayDelete("dana") {
+		t.Error("SetDelete did not grant the permission")
+	}
+	if err := ks.SetPassword("dana", "battery staple"); err != nil {
+		t.Fatalf("SetPassword: %v", err)
+	}
+	if !ks.MayDelete("dana") {
+		t.Error("changing the password took the delete permission away")
+	}
+	if !ks.SetDelete("dana", false) || ks.MayDelete("dana") {
+		t.Error("SetDelete could not take the permission off")
+	}
+	if ks.SetDelete("nobody", true) {
+		t.Error("SetDelete granted a user that does not exist")
+	}
+}

@@ -73,6 +73,9 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/findfile", RequestFindFileInDb)
 	api.HandleFunc("/files", RequestFiles)
 	api.HandleFunc("/file", CreateFile).Methods("POST")
+	// Deleting org files: administrators and accounts with delete: true (deletefile.go).
+	api.HandleFunc("/file/delete", RequestMayDeleteFiles).Methods("GET")
+	api.HandleFunc("/file/delete", PostDeleteFiles).Methods("POST")
 	api.HandleFunc("/dirs", RequestDirs)
 	api.HandleFunc("/newtemplates", RequestNewTemplates)
 	api.HandleFunc("/newtemplate/list", RequestFileTemplateList).Methods("GET") // filetemplates.go: the template editor

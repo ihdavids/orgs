@@ -181,11 +181,39 @@ func (self *Review) Exec(core *commands.Core) {
 		findings = append(findings, f)
 	}
 
+	if commands.QuickfixFormat() {
+		commands.RenderDiagnostics(diagnostics(findings), nil)
+		return
+	}
 	if commands.JsonOut || commands.FormatOut != "" {
 		commands.Render(findings, nil)
 		return
 	}
 	self.print(core, findings)
+}
+
+// diagnostics is the findings as one problem per heading, for -format quickfix:
+// an editor walks them with :cnext rather than a picker. Nothing here fails a
+// build, so every one is a warning. A check the server cannot evaluate has no
+// place to point at; it is said on stderr rather than dropped.
+func diagnostics(findings []Finding) []commands.Diagnostic {
+	out := []commands.Diagnostic{}
+	for _, f := range findings {
+		if f.Unsupported {
+			fmt.Fprintf(os.Stderr, "review: this server cannot evaluate %s (%s)\n", f.Check, f.Query)
+			continue
+		}
+		for _, t := range f.Headings {
+			out = append(out, commands.Diagnostic{
+				File:     t.Filename,
+				Line:     t.LineNum + 1, // LineNum is 0 based, quickfix 1 based
+				Severity: "warning",
+				Rule:     f.Check,
+				Msg:      fmt.Sprintf("%s: %s (%s)", t.Headline, f.What, f.Fix),
+			})
+		}
+	}
+	return out
 }
 
 func (self *Review) print(core *commands.Core, findings []Finding) {
