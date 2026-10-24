@@ -12,6 +12,8 @@ set -e
 cd "$(dirname "$0")/.."
 go build -o docex ./cmd/docex
 ./docex -src . -out docs.org -start docs/overview.org
+# The part `orgs help` and the man pages carry in the binary.
+./docex -src . -bundle cmd/oc/commands/help/docs.json
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT

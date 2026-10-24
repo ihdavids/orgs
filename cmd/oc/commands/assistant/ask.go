@@ -10,6 +10,7 @@ package assistant
 //	orgs ask -view search -q 'IsTask()' -edit "tag the stale ones :stale:"
 //	orgs ask undo                                               put back what it changed
 //	orgs ask status                                             which backends there are
+//	orgs ask use ollama qwen3:8b                                 the default backend (and its model), kept in orgs.yaml
 //
 // It is one request to `POST /assistant/chat`, the endpoint worg's assistant
 // pane and its view assistant already use. The prompt, the backends, the keys
@@ -142,6 +143,15 @@ func (self *Ask) Exec(core *commands.Core) {
 			tok = words[1]
 		}
 		undo(core, tok)
+		return
+	}
+	// Only when the next word is a backend: `orgs ask use active voice?` is a question.
+	if len(words) >= 2 && len(words) <= 3 && words[0] == "use" && backends[strings.ToLower(words[1])] {
+		model := ""
+		if len(words) == 3 {
+			model = words[2]
+		}
+		use(core, words[1], model)
 		return
 	}
 
@@ -521,6 +531,29 @@ func chat(core *commands.Core, req *chatReq) Answer {
 	return ans
 }
 
+var backends = map[string]bool{"claude": true, "chatgpt": true, "gemini": true, "claudecode": true, "ollama": true, "local": true}
+
+func use(core *commands.Core, backend, model string) {
+	req := struct{ Backend, Model string }{backend, model}
+	res, err := commands.SendReceivePostErr[struct{ Backend, Model string }, common.ResultMsg](core, "assistant/default", &req)
+	if err == commands.ErrDryRun {
+		return
+	}
+	if err != nil {
+		commands.Fail("%v", err)
+	}
+	if commands.RenderOne(res, nil) {
+		if !res.Ok {
+			os.Exit(1)
+		}
+		return
+	}
+	if !res.Ok {
+		commands.Fail("%s", res.Msg)
+	}
+	fmt.Println(res.Msg)
+}
+
 func undo(core *commands.Core, tok string) {
 	last := loadLast()
 	if tok == "" && last != nil {
@@ -715,7 +748,7 @@ func uniq(in []string) []string {
 }
 
 func init() {
-	commands.AddCmd("ask", "ask the writing assistant about a heading, a file, stdin or a view; undo, status",
+	commands.AddCmd("ask", "ask the writing assistant about a heading, a file, stdin or a view; undo, status, use",
 		func() commands.Cmd { return &Ask{} })
 	commands.AddCmd("models", "the assistant's local models: list, pull, start, stop, delete",
 		func() commands.Cmd { return &Models{} })

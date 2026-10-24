@@ -60,6 +60,8 @@ Load-bearing rules:
 
 `commands.Grouped` (`HelpGroup()`) lets a runtime-registered command name its listing group - every yaml filter is a command, and the group table in `help.go` cannot name them.
 
+`orgs help <cmd>` adds the command's documentation from the embedded `help/docs.json` (see **Documentation extraction** in the root CLAUDE.md), drawn by a small org reader (`orgtext.go`) written two ways, terminal (`term.go`) and roff (`roff.go`). A command that takes a query (`takesQuery`) also gets the query language, its functions from **`commands.QueryFunctions`**, which `internal/app/orgs/queryhelp.go` points at the real function map, so the list is whatever the binary can evaluate. `-man [cmd]` prints a page, `-man-dir DIR` writes them all; on a disk that ignores case the filter `Projects` would overwrite `orgs-projects.1`, so the lower-case command keeps the name. `help` runs with no config file (`ParseConfig` lets it through, as `version`).
+
 ## The commands that were endpoints with nobody to call them
 
 `cmd/oc/commands/orgtools/` = `tangle`, `fmt`, `tags`, `outline`, `log`; `savedq/` = `orgs q`; `voice/` = `orgs voice`. Each is one request to an existing endpoint.

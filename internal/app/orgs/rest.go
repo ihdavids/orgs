@@ -100,9 +100,11 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/writing/goals", PostWritingGoals).Methods("POST") // daily, weekly, monthly word goals
 	api.HandleFunc("/writing/ideas", RequestStoryIdeas).Methods("GET") // storyideas.go: the Ideas pane's generators
 	api.HandleFunc("/writing/ideas", PostStoryIdeas).Methods("POST")
+	api.HandleFunc("/recap", RequestRecap).Methods("GET") // recap.go: closed, clocked, written, today and held up - orgs standup / recap
 	api.HandleFunc("/assistant/status", RequestAssistantStatus).Methods("GET") // the writing assistant's backends
 	api.HandleFunc("/assistant/chat", PostAssistantChat).Methods("POST")
 	api.HandleFunc("/assistant/key", PostAssistantKey).Methods("POST") // set a backend's key from worg
+	api.HandleFunc("/assistant/default", PostAssistantDefault).Methods("POST") // assistantdefault.go: the default backend and model, into orgs.yaml
 	api.HandleFunc("/ollama/status", RequestOllamaStatus).Methods("GET") // ollama.go: the assistant's local models
 	api.HandleFunc("/ollama/{action:install|start|stop|pull|cancel|delete}", PostOllamaAction).Methods("POST")
 	api.HandleFunc("/assistant/undo", PostAssistantUndo).Methods("POST") // assistantview.go: put back what a view turn changed

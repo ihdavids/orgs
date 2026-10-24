@@ -1,0 +1,693 @@
+{
+ "Commands": {
+  "agenda": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* The agenda: =orgs agenda=\n\n  Three months of calendar, today's entries, and the week underneath. =,= and\n  =.= step a day, =n= comes back to today, =t= changes the keyword of the\n  entry under the cursor, =m= opens the month.\n\n  [[file:docs/images/cli-agenda.png]]\n"
+   }
+  ],
+  "cols": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Column view: =orgs cols=\n\n  org's column view of a file, from its =#+COLUMNS:= line. Parents total the\n  columns that ask for it (=%EFFORT{:}=), enter edits a value in place, =s=\n  sorts within each parent.\n\n  [[file:docs/images/cli-cols.png]]\n"
+   }
+  ],
+  "dnd": [
+   {
+    "From": "Commands :: Dnd",
+    "Text": "\n* Dnd\n\n  The =dnd= command is the client side of the D\u0026D character module. It talks to\n  the server over the =/dnd/*= REST API, so the rules, the ruleset modules and\n  the character sheet renderers all live on the server.\n\n  #+BEGIN_SRC bash\n  orgs dnd new                          # guided character creation\n  orgs dnd new -level 3 -name Lyra      # with a head start\n  orgs dnd random -level 5 -out npc.org # roll a whole character\n  orgs dnd list classes                 # browse a ruleset\n  orgs dnd info -kind class -id wizard  # read one entry in full\n  orgs dnd characters                   # every sheet the server knows about\n  orgs dnd show -file lyra.org          # print a sheet in the terminal\n  orgs dnd sheet -file lyra.org -format pdf -out lyra.pdf\n  orgs dnd levelup -file lyra.org       # take the level you just earned\n  orgs dnd refresh -file lyra.org       # recompute after hand editing\n  orgs dnd rulesets                     # what content is loaded\n  orgs dnd import -ddb 12345678         # bring a character over from d\u0026d beyond\n  #+END_SRC\n\n  =orgs dnd new= walks you through creation the way a character builder does:\n  every prompt lists the valid choices with a one line summary, marks the ones\n  that suit your class with a star, and lets you ask for the full rules text,\n  roll the choice randomly, or step back to change your mind.\n\n  On a wide enough terminal the chooser is drawn in two panes: the list on the\n  left, and the full rules text of whatever the cursor is on - the spell, item,\n  feat or feature - on the right, so you can read before you commit. When a\n  question takes several answers the header keeps a running count of what you\n  have ticked (\"selected 1 of 2\") along with their names, and if you confirm the\n  wrong number the list comes back with your picks still selected so you only\n  have to correct them.\n\n  Long lists are filtered by typing. The match is fuzzy on the name of an\n  option, so =eldbl= finds Eldritch Blast, and a plain word also matches the\n  summary beside it, so =fire= finds the spells that only mention it. The\n  filter is editable: backspace takes a character off and the list widens\n  again, =ctrl+w= takes a word, and escape clears it. The count beside the\n  question says how much of the list you are looking at.\n\n** Importing from D\u0026D Beyond\n\n  =orgs dnd import= converts a character you already have on D\u0026D Beyond into an\n  org character sheet, the same sheet =orgs dnd new= writes.\n\n  #+BEGIN_SRC bash\n  orgs dnd import -ddb https://www.dndbeyond.com/characters/12345678\n  orgs dnd import -ddb 12345678 -out characters/lyra.org -force\n  orgs dnd import -ddb 12345678 -preview      # convert and print, write nothing\n  orgs dnd import -json saved.json            # from a payload you saved yourself\n  orgs dnd import -forget                     # clear the saved session cookie\n  #+END_SRC\n\n  D\u0026D Beyond has no login api, so a character whose privacy is set to public\n  imports with no credential at all, and a private one asks for the\n  =CobaltSession= cookie your browser is already holding - the prompt says where\n  to find it. The cookie is traded for a short lived token by D\u0026D Beyond's own\n  auth service and can be kept in your system keyring so you are only asked\n  once; it is never sent to your orgs server, which only ever sees the\n  character json. =-cookie= and the =ORGS_DDB_COBALT= environment variable pass\n  it in without a prompt for scripting.\n\n  Everything is matched onto your ruleset by name, and anything that does not\n  match - a subclass from a book the srd does not carry, a homebrew item - is\n  still written onto the sheet under its own name and listed afterwards as\n  something to check, so nothing is quietly dropped. Importing over a sheet\n  that is already there keeps that sheet's identity and its inventory history,\n  which D\u0026D Beyond has no equivalent of.\n\n  The appearance questions - age, height, weight, eyes, skin and hair - come\n  with suggestions drawn from your race and your class, so a hill dwarf druid\n  is offered warm hazel eyes and leaf tangled hair, and a tiefling warlock is\n  offered eyes that are a solid orb of colour. You can still type your own, but\n  it has to make sense: heights and weights are read in either imperial or\n  metric and have to land somewhere your race could plausibly be, and a colour\n  has to be a word rather than a number.\n"
+   }
+  ],
+  "drill": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Flashcards: =orgs drill=\n\n  Spaced repetition over your notes, org-drill style: the same cards, the same\n  algorithms, the same =DRILL_*= properties. See [[*Flashcards — drilling your notes, org-drill style][Flashcards]] for how to write\n  cards.\n\n  [[file:docs/images/cli-drill.png]]\n"
+   },
+   {
+    "From": "Commands :: Drill",
+    "Text": "\n* Drill\n\n  =orgs drill= drills a deck of flashcards at the command line: the decks of\n  worg's Flashcards tab, the same cards, the same scheduling. Ratings are\n  written by the server into the cards' =DRILL_*= properties, org-drill's\n  way, so a deck can be drilled here, in worg and with Emacs' =org-drill= by\n  turns. The user guide is =docs/drill.org=.\n\n  #+BEGIN_SRC bash\n  orgs drill                          # pick a deck, drill it\n  orgs drill Spanish                  # a deck by name (or the start of one)\n  orgs drill Spanish -cram            # everything not seen in 12 hours; nothing rescheduled\n  orgs drill -q 'HasTags(\"drill\")'    # any query, without saving a deck\n  orgs drill Spanish -max 10 -minutes 5   # a shorter session than the deck's\n  orgs drill -resume                  # carry on where q left off\n  orgs drill ls                       # the decks and what each has due\n  orgs drill stats Spanish            # one deck at a glance\n  orgs drill cards Spanish            # every card: status, next review, ease, failures\n  #+END_SRC\n\n  =ls=, =stats= and =cards= take =-json= and =-format= for scripts; drilling\n  needs a person at a terminal.\n\n** The screen\n\n   Across the top is org-drill's prompt line: the time so far, the card's\n   status letter (=N= new, =Y= young, =o= old, =!= overdue, =F= failed, =C=\n   cram) and how many are done, failed, mature and new. Under it, a rule shows\n   how far through the session's limit you are.\n\n   The card is drawn the way =orgs pres= draws a slide: tables, source blocks\n   and pictures as they are written, in a slide theme's colours (=-theme=).\n   Hidden clozes show as =[...]= or =[hint...]=; in the answer they are bold.\n\n   | Key          | Question                   | Answer                       |\n   |--------------+----------------------------+------------------------------|\n   | space, any   | show the answer            |                              |\n   | =0= - =5=    |                            | rate it; each button says when the card comes back |\n   | =e=          | edit the card in =$EDITOR= | edit the card                |\n   | =s=          | skip it                    |                              |\n   | =?=          |                            | what the ratings mean        |\n   | ↑ ↓ PgUp PgDn | scroll a tall card        | scroll                       |\n   | =q=, esc     | stop                       | stop                         |\n\n   A failed card comes back later in the session until you pass it. At the end\n   you get org-drill's report, and its warning if too much was failed; *k*\n   keeps going on what is left.\n\n   =q= saves where you were, and =orgs drill -resume= carries on - reading the\n   cards again, in case you edited them. Editing a card with =e= reads it again\n   when the editor closes, so the card asked is the card as it now reads.\n\n   A deck that asks for typed answers (in worg's deck settings) has a line to\n   type into before the answer is shown, and your answer is shown beside it.\n"
+   }
+  ],
+  "gantt": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Schedules: =orgs gantt=\n\n  A saved query drawn as a gantt chart, the same plan worg draws: =EFFORT=\n  sizes a bar, =AFTER= and =ORDERED= chain them, weekends are skipped, and\n  =-crit= marks the critical path.\n\n  [[file:docs/images/cli-gantt.png]]\n"
+   }
+  ],
+  "habits": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Habits: =orgs habits=\n\n  Every habit's last month at a glance: =█= kept, =░= missed, =·= not due.\n  =orgs habits done \u003cname\u003e= ticks one off.\n\n  [[file:docs/images/cli-habits.png]]\n"
+   }
+  ],
+  "kanban": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Boards: =orgs kanban=\n\n  worg's kanban boards, the same boards, editable from the terminal. =H= and\n  =L= move a card between columns (which changes its keyword), =J= and =K=\n  reorder it, =t= picks a keyword, =c= clocks in.\n\n  [[file:docs/images/cli-kanban.png]]\n"
+   }
+  ],
+  "plan": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Planning the day: =orgs plan=\n\n  The day as hours: what is booked, what is free, and the tasks waiting for a\n  slot, most urgent first. It is the agenda's day planner in worg, at a prompt.\n\n  [[file:docs/images/cli-plan.png]]\n"
+   }
+  ],
+  "pres": [
+   {
+    "From": "Commands :: Pres",
+    "Text": "\n* Pres\n\n  =orgs pres= gives an org file as a slideshow in the terminal: the deck worg's\n  Presentations tab shows through reveal.js, drawn in box characters, colour and\n  half-block pictures, for the talk given over ssh, in tmux beside the code, or\n  from a laptop with no browser worth trusting on the projector.\n\n  #+BEGIN_SRC bash\n  orgs pres talk.org                  # present it\n  orgs pres talk.org -presenter       # in a second terminal: notes, next slide, time\n  orgs pres talk.org -theme linen     # any slide theme; builtin and term too\n  orgs pres talk.org -at 12           # start on slide 12\n  orgs pres talk.org -print | less -R # every slide, every step, printed\n  orgs pres talk.org -json            # the outline, for a program\n  orgs pres -list-themes\n  #+END_SRC\n\n  A name that is not a path is looked for in the configured org directories, and\n  no server is needed: the file is read where you are.\n\n** The deck\n\n   The same rules as the html presentation exporters, because it is the same\n   code deciding them:\n\n   - =#+SLIDE_LEVEL: 2= makes level-2 headlines the slides and level-1 headlines\n     the sections; a section with nothing of its own is drawn as a divider in\n     large type. Without it every headline is a slide.\n   - =#+TITLE:=, =#+SUBTITLE:=, =#+AUTHOR:=, =#+DATE:= and anything written\n     above the first headline make the title page.\n   - Speaker notes - a =:NOTES:= drawer, a =#+begin_notes= block, or a child\n     heading called Notes - never reach the slide.\n   - =:noexport:= or =:noslide:= leaves a heading out.\n   - =:FRAGMENT: t= on a slide reveals its top-level list one item at a time;\n     =#+ATTR_SLIDE: :frag= above any element makes that element a step.\n   - =:BACKGROUND: #f4efe4= colours one slide, and its text turns light or dark\n     to suit, as in the browser.\n   - =:ALIGN: center= centres a slide; =:TRANSITION: fade= changes how it arrives.\n\n   Settings are read with the presentation ladder: a slide's =:TERM_FOO:=, its\n   =:SLIDE_FOO:=, its =:FOO:=, then the document's =#+TERM_FOO:= and\n   =#+SLIDE_FOO:=. The =TERM_= forms are for this renderer only.\n\n   | Setting               | Meaning                                       | Default  |\n   |-----------------------+-----------------------------------------------+----------|\n   | =#+SLIDE_THEME:=      | palette, from =templates/slides_theme_*.css=  | built in |\n   | =#+TERM_TRANSITION:=  | =slide=, =fade= or =none=                     | slide    |\n   | =#+TERM_WIDTH:=       | widest a column of text gets                  | 88       |\n   | =#+TERM_FOOTER: nil=  | no footer or progress rule                    | shown    |\n\n   A theme is the same file the html decks use: its =--slide-bg=, =--slide-ink=,\n   =--slide-accent= and the rest become the terminal's colours, and its\n   =@hljs:= style picks the nearest code colouring. =term= uses the terminal's\n   own colours, for transparent terminals.\n\n** What is drawn\n\n   Paragraphs with bold, italic, underline, strike, =code=, links, sub- and\n   superscripts (H_{2}O as H₂O) and smart dashes; lists with checkboxes;\n   tables in a rounded box with columns of numbers right-aligned; source blocks\n   coloured by language, with line numbers for =-n=; quotes, verse, centred\n   text, special blocks (=#+begin_tip=) as labelled cards; footnotes at the foot\n   of their slide; and pictures (png, jpeg, gif) in half blocks, with their\n   =#+CAPTION:=. An svg or a web image is drawn as a labelled frame.\n\n   A slide too tall for the terminal gives up its blank lines first, then\n   scrolls with the arrow keys; a marker says there is more.\n\n** Keys\n\n   | Key                      | Does                                      |\n   |--------------------------+-------------------------------------------|\n   | → space l PgDn ⏎         | next step, or next slide                  |\n   | ← h PgUp ⌫               | back                                      |\n   | N P                      | next or previous slide, skipping steps    |\n   | ↓ ↑ j k                  | scroll a slide too tall for the screen    |\n   | g G                      | first or last slide                       |\n   | 12 then ⏎                | slide 12                                  |\n   | o tab                    | every slide, to pick from                 |\n   | n                        | speaker notes under the slide             |\n   | t r                      | show the timer, restart it                |\n   | f                        | footer and progress rule                  |\n   | T                        | next theme                                |\n   | b .                      | black screen                              |\n   | e                        | edit this slide in =$EDITOR=              |\n   | R                        | reload now                                |\n   | ? q                      | keys, quit                                |\n\n   The file is reloaded whenever it is saved, keeping your place, so a deck can\n   be written in one window and watched in another.\n\n** Presenting with two windows\n\n   =orgs pres talk.org -presenter= in a second terminal shows the speaker's\n   view: this slide's notes, the step you are on, what comes next, the time\n   since you started and the clock. The two windows follow each other, and\n   either can drive.\n"
+   }
+  ],
+  "review": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* The weekly review: =orgs review=\n\n  Everything that wants a decision: projects with nothing to do next, deadlines\n  nobody scheduled, things waiting on somebody else, time booked against open\n  tasks. =orgs review -fix= walks them one at a time.\n\n  [[file:docs/images/cli-review.png]]\n"
+   }
+  ],
+  "search": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Asking questions: =orgs search=\n\n  The same query language worg's Search tab uses. Plain words match headlines;\n  an expression can ask anything the database knows.\n\n  #+BEGIN_SRC sh\n  orgs search 'IsTask() \u0026\u0026 HasTags(\"work\")'\n  orgs search 'DeadlineWithin(\"7d\")' -json | jq '.[].Headline'\n  #+END_SRC\n\n  [[file:docs/images/cli-search.png]]\n"
+   }
+  ],
+  "snip": [
+   {
+    "From": "Commands :: Snip",
+    "Text": "\n* Snip\n\n  =orgs snip= keeps the command lines worth keeping - and finds the ones you\n  wrote down and forgot - in your org files. It does what [[https://github.com/knqyf263/pet][pet]]\n  does, with org source blocks for snippets: a heading says what the command\n  does, its tags file it, the block is the command. Every shell block in your\n  notes is a snippet, so a command written into a project's notes months ago\n  turns up beside the ones saved on purpose.\n\n  #+BEGIN_SRC bash\n  orgs snip                          # find one, fill in its parameters, run it\n  orgs snip docker logs              # start the search on those words\n  orgs snip print [words]            # print it instead (what the shell key uses)\n  orgs snip copy [words]             # put it on the clipboard\n  orgs snip run backup -set dest=/mnt -y   # no questions: for scripts and cron\n  orgs snip new 'rsync -av \u003csrc\u003e \u003cdest=/backup\u003e'   # save one\n  orgs snip ls -t docker             # list, by tag (comma separated: any of them)\n  orgs snip show [words]             # what it is and what it asks for\n  orgs snip edit [words]             # open it where it is written\n  orgs snip shell zsh                # the ctrl-s key and snip-prev\n  #+END_SRC\n\n** A snippet\n\n   #+BEGIN_SRC org\n   ,* Docker                                                     :docker:\n   ,** Tail a container's logs\n   ,#+begin_src bash\n   docker logs -f --tail \u003clines=100\u003e \u003ccontainer=web\u003e\n   ,#+end_src\n   #+END_SRC\n\n   Any =sh=, =bash=, =zsh= or =fish= block is a snippet (=-all= takes every\n   language). Its title is its heading, plus its =#+NAME:= when it has one; its\n   tags are its heading's and the ones it inherits. A =:dir= header argument is\n   where it runs. Its last =#+RESULTS:= is shown beside it.\n\n** Parameters\n\n   | Written                          | Means                                              |\n   |----------------------------------+----------------------------------------------------|\n   | =\u003cname\u003e=                         | a value to fill in                                 |\n   | =\u003cname=default\u003e=                 | with a default (an === in it is fine)              |\n   | =\u003cflags?\u003e=                       | optional: left empty, it is left out               |\n   | =\\\u003cb\u003e=                           | a literal =\u003cb\u003e=, not a parameter                   |\n   | =:var host=\"db.internal\"=        | babel's way: a parameter where the body says =$host= |\n   | =:var env='(\"dev\" \"prod\")=       | babel's way, with choices                          |\n\n   A choice is written as pet writes it, and the first is the default:\n\n   #+BEGIN_SRC sh\n   kubectl -n \u003cns=|_dev_||_staging_||_prod_|\u003e get pods\n   #+END_SRC\n\n   The =:var= form keeps the block runnable with =C-c C-c= in Emacs. A name\n   used twice is one parameter.\n\n   Values are quoted for the shell as much as where they land needs: inside the\n   command's own quotes they are escaped for those quotes; elsewhere a value is\n   single-quoted only if it has a space or something the shell would act on.\n   A glob or a =$VAR= in a value is left alone, because that is somebody asking\n   for one.\n\n** The form\n\n   With parameters to fill in, a form shows the finished command - redrawn as\n   you type, values in colour - above a field for each one, defaults already\n   in. *Tab* and *shift-tab* move between fields, *↑ ↓* cycle a choice,\n   *ctrl-u* clears, *enter* runs (or prints, or copies), *esc* cancels and runs\n   nothing. =-set name=value= fills one in without asking.\n\n   A snippet with no parameters is shown and asked about before it runs;\n   =-y= skips the question. Commands run here, in your shell - never on the\n   server.\n\n** The picker\n\n   Snippets you used recently come first. The pane shows the command coloured,\n   its parameters and defaults, where it runs and what it last printed.\n   *enter* does what the command was asked to do; *ctrl-p* prints, *ctrl-y*\n   copies, *ctrl-e* edits, *ctrl-/* hides the pane.\n\n** Saving one\n\n   #+BEGIN_SRC bash\n   orgs snip new 'du -ah \u003cdir=.\u003e | sort -rh | head -n \u003ccount=20\u003e'   # asks what it does, and tags\n   orgs snip new -d 'Find big files' -t disk,find 'du -ah ...'      # asks nothing\n   pbpaste | orgs snip new -d 'From the clipboard'                   # the command on stdin\n   orgs snip new                                                     # type it, several lines if need be\n   #+END_SRC\n\n   It is filed under \"Snippets\" in =snippets.org= in your first org directory,\n   through the server's built-in =Snippet= capture template - which is also in\n   worg's capture dialog and =orgs cap=. Define a capture template of your own\n   called =Snippet= to file them somewhere else. A command already saved is\n   refused (=-force= saves it again).\n\n** In your shell\n\n   #+BEGIN_SRC bash\n   eval \"$(orgs snip shell zsh)\"      # in ~/.zshrc\n   eval \"$(orgs snip shell bash)\"     # in ~/.bashrc\n   orgs snip shell fish | source      # in config.fish\n   #+END_SRC\n\n   *ctrl-s* opens the picker on what you have typed so far and puts the chosen\n   command, filled in, on your command line - to edit, run, and keep in your\n   history like anything you typed. =ORGS_SNIP_KEY= picks another key.\n   =snip-prev= saves the command you just ran (=snip-prev -d 'what' -t tags=).\n"
+   }
+  ],
+  "stats": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* What is in there: =orgs stats=\n\n  [[file:docs/images/cli-stats.png]]\n"
+   }
+  ],
+  "tables": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Tables: =orgs tables=\n\n  Every org table in your notes, in a picker with the table drawn beside it.\n  =ctrl-e= runs its =#+TBLFM= formulas.\n\n  [[file:docs/images/cli-tables.png]]\n"
+   }
+  ],
+  "tui": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* One screen for everything: =orgs tui=\n\n  A query's results in a list, with the heading's body beside it. =:= changes\n  the query, =/= filters what is there, =t= changes a keyword, enter opens the\n  heading in your editor.\n\n  [[file:docs/images/cli-tui.png]]\n"
+   }
+  ]
+ },
+ "Querying": "* Overview\n\n  Many operations in orgs require you to select the nodes that the operation applies to.\n  - Agendas\n  - Filtered Tabular Lists\n  - Various Exporters\n  - Etc\n\n  Lots of these things require a filtered list of nodes to operate. Orgs does this through\n  a node filter. This is an expression that is applied to nodes in the DB and returns only those\n  nodes that pass the query.\n\n  The most common expression starts with:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsTodo()\n   #+END_SRC\n\n   This will select all active nodes that have an active TODO status on them throughout all of your org mode files.\n   Note the negation on IsArchive() these expressions support most common operators\n\n   Agenda views will often add a date query:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 OnDate('\u003cspecific date\u003e')\n   #+END_SRC\n\n   People who follow GTD will often want lists that follow the common patterns:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsProject()\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 IsStatus('NEXT')\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 ( IsStatus('WAITING') || IsStatus('BLOCKED') )\n   #+END_SRC\n\n   This represents some of your common lists that you need to review regularly:\n   - Projects List\n   - Next Actions List\n   - Waiting On List\n",
+ "QueryFuncs": {
+  "BacklinkCount": "how many links point at this heading, as a number to compare: BacklinkCount() == 0 finds the orphans",
+  "ChecklistCount": "how many checkboxes the node's own text has, as a number to compare",
+  "ChecklistDone": "returns true if the node has checkboxes and every one is ticked",
+  "ChecklistLeft": "how many of the node's checkboxes are still open, as a number to compare",
+  "DaysOld": "how many days ago the node's newest date (SCHEDULED, DEADLINE, CLOSED or timestamp) was, as a number to compare; -1 with no date",
+  "DeadlinePast": "returns true if the DEADLINE is before today: overdue, where a deadline of today is only due",
+  "DeadlineWithin": "DeadlineWithin(N) is true when the DEADLINE falls between today and N days ahead, in calendar days",
+  "HabitStreak": "how many times in a row a habit has been kept, as a number to compare: IsHabit() \u0026\u0026 HabitStreak() \u003e 7; 0 once the run is broken",
+  "HasAStatus": "returns true if a node has a valid status",
+  "HasAnyDate": "returns true if the node has a SCHEDULED date, a DEADLINE or a timestamp",
+  "HasBacklinks": "returns true when something else links at this heading; HasBacklinks(2) asks for at least two",
+  "HasBlock": "Checks if the node contains a block object.",
+  "HasBrokenLinks": "returns true when a link under this heading resolves to nothing",
+  "HasChecklist": "returns true if the node's own text has checkboxes",
+  "HasClock": "returns true if time has ever been clocked against the node",
+  "HasDeadline": "returns true if the node has a DEADLINE",
+  "HasDrawer": "Checks if the node contains a drawer.",
+  "HasLinks": "returns true when this heading links out at all",
+  "HasProperty": "Returns true if the headline has the specific property",
+  "HasScheduled": "returns true if the node has a SCHEDULED date",
+  "HasTable": "Checks if the node contains a table.",
+  "HasTagMatching": "returns true if any tag on the node, its parents or the file matches a regular expression: HasTagMatching(\"^M[0-9]+$\")",
+  "HasTags": "returns true if a node has any tags",
+  "HasTimestamp": "returns true if the node has a plain timestamp of its own",
+  "InCollection": "InCollection(\"contact\") is true for anything filed in that collection - the records, the container, and anything written under it",
+  "InFile": "InFile(REGEX) is true when the path of the node's file matches, its absolute path included: InFile(\"work\")",
+  "InTagGroup": "cheat, returns true if any tags in a tag group are applied to a node",
+  "IsActive": "returns true if the status of a node is an active status (IE not DONE)",
+  "IsArchived": "Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)",
+  "IsBlockedProject": "Check if this is a project heading and it DOES NOT have a child marked NEXT.",
+  "IsCollection": "returns true for the container heading a collection files its records under",
+  "IsDone": "returns true if the node's keyword is a finished one (DONE and kin), by the keywords of its own file",
+  "IsHabit": "returns true for a habit (a :STYLE: habit heading)",
+  "IsNextTask": "Check if a headline has a NEXT action status. This is GTD support and uses the defaultNextStatus value and #+NEXT comment",
+  "IsPartOfProject": "returns true if a task is a subnode of a project node",
+  "IsPriority": "Check if the priority matches a specific value.",
+  "IsProject": "returns true for nodes that are defined as a project (see project definition)",
+  "IsRecord": "returns true for a record heading (anything with a RECORD property); IsRecord(\"contact\") asks about one collection",
+  "IsStatus": "returns true if a node has a given status",
+  "IsTask": "Syntatical sugar for the following: \"!IsArchived() \u0026\u0026 IsTodo() \u0026\u0026 !IsProject()\"",
+  "IsTodo": "returns true if a node has an active status (the same as IsActive currently)",
+  "LinksTo": "LinksTo(REGEX) is true when a link under this heading points at something matching - the target as written, its description, or the file and headline it lands on",
+  "MatchContent": "MatchContent(REGEX) runs an RE over the headline and the text under it",
+  "MatchHeadline": "Run an RE against each headline and check for a match",
+  "MatchProperty": "MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex",
+  "MissedHabit": "returns true when a habit has gone longer since it was last done than its repeater allows",
+  "NoTags": "returns true if a node does not have any tags on it",
+  "OlderThan": "OlderThan(N) is true when the node's newest date is at least N days ago; never true for a node with no date",
+  "OnDate": "OnDate(\"2026 30 01\") (year, day, month) is true when the heading lands on that day in the agenda: a timestamp, SCHEDULED or DEADLINE on it, a repeat of one, a range spanning it, and on today also an overdue SCHEDULED and a DEADLINE inside its warning period or past it (the rules of GET /agenda)",
+  "ScheduledPast": "returns true if the SCHEDULED date is before today (today itself is not past)",
+  "ScheduledWithin": "ScheduledWithin(N) is true when the SCHEDULED date falls between today and N days ahead, in calendar days",
+  "ThisWeek": "returns true if a node lands in the agenda on any day of the last seven, today included",
+  "Today": "returns true if a node is scheduled for today",
+  "Yesterday": "returns true if a node is scheduled for yesterday"
+ },
+ "Examples": {
+  "archive": [
+   "orgs archive                        to the archive file"
+  ],
+  "ask": [
+   "orgs ask \"what is weak about this scene\" -on 'the ferry'   a heading in scope",
+   "orgs ask \"summarise it\" -file novel.org                     the whole file",
+   "orgs ask -c \"and shorter still\"                             carry on the last talk",
+   "orgs ask -view search -q 'IsStatus(\"NEXT\")' \"which are stale?\"",
+   "orgs ask -view search -q 'IsTask()' -edit \"tag the stale ones :stale:\"",
+   "orgs ask undo                                               put back what it changed",
+   "orgs ask status                                             which backends there are",
+   "orgs ask use ollama qwen3:8b                                 the default backend (and its model), kept in orgs.yaml"
+  ],
+  "backlinks": [
+   "orgs backlinks Apollo                 links into and out of a heading",
+   "orgs backlinks notes.org              ... or a file"
+  ],
+  "blame": [
+   "orgs blame 'the migration'   when that heading became what it is"
+  ],
+  "check": [
+   "orgs check 2                        a checkbox"
+  ],
+  "clocks": [
+   "orgs clocks              the running clock, or that there is none",
+   "orgs clocks -w           redraw it as it changes, for a status line",
+   "orgs clocks -short       one line: \"2h14m Write the thing\"",
+   "orgs clocks -json        for a program to read"
+  ],
+  "code": [
+   "orgs code ls                      every source block",
+   "orgs code ls -lang python         the python ones",
+   "orgs code ls chart                the ones matching \"chart\"",
+   "orgs code show monthly-report     the code, coloured by nothing",
+   "orgs code run monthly-report      run it and print what it produced",
+   "orgs code run notes.org:3         run the fourth block in that file",
+   "orgs code run -pick               choose one and run it",
+   "orgs code run -w chart            run it and write #+RESULTS: under it",
+   "orgs code at notes.org:42         run what is at line 42 - a block, a",
+   "orgs code all notes.org           everything in the file, top to bottom",
+   "orgs code ls -json | jq '.[].Lang'",
+   "orgs code sessions                the python sessions :session started",
+   "orgs code sessions stop analysis  restart that kernel (-all: every one)",
+   "orgs code sessions                    what is running, file by file",
+   "orgs code sessions stop analysis      stop that one (a notebook's restart)",
+   "orgs code sessions stop -file a.org   every session of a file",
+   "orgs code sessions stop -all          all of them"
+  ],
+  "cols": [
+   "orgs cols                      the file looked at last (or pick one)",
+   "orgs cols plan.org             that file (a name, or part of one, will do)",
+   "orgs cols plan.org -columns '%ITEM %TODO %EFFORT{:} %OWNER'",
+   "orgs cols plan.org -print      draw it once and exit (also what a pipe gets)",
+   "orgs cols plan.org -json       the rows and their cells, rollups worked out"
+  ],
+  "completion": [
+   "orgs completion zsh  \u003e ~/.zsh/completions/_orgs",
+   "orgs completion bash \u003e /etc/bash_completion.d/orgs",
+   "orgs completion fish \u003e ~/.config/fish/completions/orgs.fish"
+  ],
+  "contact": [
+   "orgs contact                     everybody, one line each",
+   "orgs contact find jane           the ones matching \"jane\"",
+   "orgs contact show jane           one contact in full",
+   "orgs contact add                 asked for, field by field",
+   "orgs contact edit jane           change a field on one",
+   "orgs contact birthdays           who is next, and how long",
+   "orgs contact collections         what else is being kept",
+   "orgs contact import a.vcf        people from Apple, Google or Outlook",
+   "orgs contact import contacts.vcf                 add the new, fill in the known",
+   "orgs contact import contacts.vcf -dry-run        what it would do, nothing written",
+   "orgs contact import a.vcf b.vcf -mode skip       leave people already there alone",
+   "orgs contact import old.vcf -mode overwrite      the card wins where they differ"
+  ],
+  "crypt": [
+   "orgs crypt                      the headings tagged :crypt:, locked or not",
+   "orgs crypt ls -plain            only the ones sitting in the clear",
+   "orgs crypt status               is the server holding a passphrase",
+   "orgs crypt show [heading]       print one heading's plaintext",
+   "orgs crypt encrypt [heading]    encrypt one heading (tagging it if need be)",
+   "orgs crypt sweep                encrypt every tagged heading in the clear",
+   "orgs crypt lock                 make the server forget a held passphrase"
+  ],
+  "csv": [
+   "orgs csv project.org                       the file's column view, rollups and all",
+   "orgs csv project.org -columns '%ITEM %EFFORT{:} %CLOCKSUM'",
+   "orgs csv 'IsTodo() \u0026\u0026 HasTag(\"work\")'      every heading a query finds",
+   "orgs csv -q stale -out stale.csv           a saved query (orgs q / worg)",
+   "orgs csv tasks.org -excel -out tasks.csv   with the mark Excel needs for utf-8"
+  ],
+  "dash": [
+   "orgs dash          today, what is running, what is late, habits, the inbox",
+   "orgs dash -w       the same, kept current",
+   "orgs dash -json    every section as data"
+  ],
+  "deadline": [
+   "orgs deadline fri                   DEADLINE"
+  ],
+  "deps": [
+   "orgs deps                           every dependency problem",
+   "orgs deps -kind cycle -check        for a hook: exit 1 on an error"
+  ],
+  "detangle": [
+   "orgs detangle install.sh            put the edits back",
+   "orgs detangle install.sh -dry-run   say which blocks would change",
+   "orgs detangle bin/*.sh              several at once"
+  ],
+  "diff": [
+   "orgs diff                    what changed since the last commit",
+   "orgs diff HEAD~5             since five commits ago",
+   "orgs diff -staged            what is about to be committed"
+  ],
+  "doctor": [
+   "orgs doctor          check everything and say what is wrong",
+   "orgs doctor -json    for a script"
+  ],
+  "drill": [
+   "orgs drill                    pick a deck and drill it",
+   "orgs drill Spanish            drill the deck called Spanish",
+   "orgs drill Spanish -cram      everything not seen in 12 hours, nothing rescheduled",
+   "orgs drill -q 'HasTags(\"drill\")'    a deck that is not saved: any query",
+   "orgs drill -resume            carry on where q left off",
+   "orgs drill ls                 the decks, and what each has due",
+   "orgs drill cards Spanish      every card: status, next review, ease"
+  ],
+  "estimates": [
+   "orgs estimates                      every finished task, grouped by tag",
+   "orgs estimates -by project -from -90d",
+   "orgs estimates -by person -block lastmonth -day 8",
+   "orgs estimates 'HasTags(\"work\")'    only what a query finds"
+  ],
+  "export": [
+   "orgs export -f html notes.org -out notes.html",
+   "orgs export -f html notes.org -theme docs -stdout",
+   "orgs export -f pdf adventure.org -out adventure.pdf",
+   "orgs export -f html docs.org -out docs/docs.html -rel   pictures as images/x.png",
+   "orgs export -f mermaid -query 'IsTask()' -out plan.mmd",
+   "orgs export -list                    what this server can export to",
+   "orgs export -list-themes             what the html exporter can wear",
+   "orgs export -f manuscript story.org  a docx in manuscript format (-style novel)",
+   "orgs export -f epub novel.org        an ebook (-theme literary)"
+  ],
+  "find": [
+   "orgs find 'migration'",
+   "orgs find -i 'jira-\\d+'",
+   "orgs find 'TODO' -file notes.org",
+   "orgs find 'plot' -json | jq '.[].Text'",
+   "orgs find 'migration' -open"
+  ],
+  "fmt": [
+   "orgs fmt                   normalise an org file - and -check it"
+  ],
+  "focus": [
+   "orgs focus                  the session running now, live; a picker when idle",
+   "orgs focus 'IsStatus(\"NEXT\")'   a query, a hash, or - for a hash on stdin",
+   "orgs focus -work 50 -break 10   the lengths (remembered by the server)",
+   "orgs focus status           one line for tmux or a prompt: 🍅 12:31 Write the report",
+   "orgs focus bar              xbar / SwiftBar plugin output (see barHelp)",
+   "orgs focus stop | skip | extend [N] | again | today"
+  ],
+  "forge": [
+   "orgs forge                 poll now (the same as orgs forge sync)",
+   "orgs forge check           does each token work, and whose is it",
+   "orgs forge token github    put a token in the keyring, asked for unechoed"
+  ],
+  "gantt": [
+   "orgs gantt                      pick a saved query and draw it",
+   "orgs gantt launch               draw the saved query called launch",
+   "orgs gantt 'IsProject()'        draw a query written out",
+   "orgs gantt launch -color resource -lane OWNER -crit",
+   "orgs gantt launch -from today -to +6w",
+   "orgs gantt launch -csv -out plan.csv     the schedule as a spreadsheet",
+   "orgs gantt launch -jira -out jira.csv    for Jira's Import issues from CSV"
+  ],
+  "go": [
+   "orgs go                  a picker over every link with a description",
+   "orgs go go spec          the link whose description starts \"go spec\"",
+   "orgs go jira -print      say where it goes rather than going there",
+   "orgs go jira -json       the matches, for a program"
+  ],
+  "gocap": [
+   "orgs gocap                                  asks for the link, then the description",
+   "orgs gocap https://go.dev/ref/spec          asks for the description",
+   "orgs gocap https://go.dev/ref/spec Go spec  asks nothing"
+  ],
+  "habits": [
+   "orgs habits                     the tracker",
+   "orgs habits -due                only what wants doing today",
+   "orgs habits -short              one line, for a status bar",
+   "orgs habits -w                  redraw it as the files change",
+   "orgs habits show meditate       one habit, as a calendar",
+   "orgs habits done meditate       tick it off",
+   "orgs habits done -all           tick off everything due today",
+   "orgs habits untick meditate     take today's tick off again",
+   "orgs habits pick                fzf, with the habit drawn beside the list",
+   "orgs habits -json               for a program to read"
+  ],
+  "help": [
+   "orgs help              every command, grouped",
+   "orgs help todo         what `orgs todo` takes",
+   "orgs help -all         every command with every flag",
+   "orgs help -man search  search's man page (roff); with no command, orgs(1)",
+   "orgs help -man-dir ~/.local/share/man/man1   every page, for man to find"
+  ],
+  "import": [
+   "orgs import analysis.ipynb                     beside the others, in the first org directory",
+   "orgs import analysis.ipynb -o science/penguins.org",
+   "orgs import analysis.ipynb -overwrite -run     import again, then run every block",
+   "orgs import analysis.ipynb -print              the org text, and nothing written",
+   "orgs import ~/Obsidian/Vault -o vault          a whole vault, folders kept",
+   "orgs import note.md                            one markdown file",
+   "orgs import todo.txt -o inbox.org -append      todo.txt tasks onto a file",
+   "orgs import work.ics -o calendar.org -append -since -30d"
+  ],
+  "invoice": [
+   "orgs invoice                                last month, one invoice per client",
+   "orgs invoice -client acme -f pdf            Acme's, as ACME-202609.pdf",
+   "orgs invoice -f pdf -theme letterpress -accent '#335c67' -paper a4",
+   "orgs invoice -by tag -tags acme,globex -round 6 -f csv \u003e lines.csv",
+   "orgs invoice -f pdf -split -out invoices/   a pdf a client",
+   "orgs invoice -list-themes"
+  ],
+  "kanban": [
+   "orgs kanban sprint -html                    sprint.html, here",
+   "orgs kanban sprint -html -out - | mail …    to stdout",
+   "orgs kanban sprint -html -theme paper -open",
+   "orgs kanban                 open the first board (tab between them)",
+   "orgs kanban sprint          open the board called sprint (a prefix will do)",
+   "orgs kanban ls              the boards there are",
+   "orgs kanban sprint -print   draw it once and exit (also what a pipe gets)",
+   "orgs kanban sprint -json    the columns and their cards, for a program",
+   "orgs kanban sprint -html    the board as one html page (html.go)",
+   "orgs kanban new sprint -q 'IsTodo() \u0026\u0026 HasTags(\"sprint\")'",
+   "orgs kanban new sprint -saved mine",
+   "orgs kanban rm sprint"
+  ],
+  "links": [
+   "orgs links                       every link, grouped by service",
+   "orgs links jira                  the ones matching the pattern",
+   "orgs links -service GitHub       one service",
+   "orgs links -broken               the ones that point at nothing",
+   "orgs links -in notes.org         what points at that file",
+   "orgs links -out notes.org        what that file points at",
+   "orgs links -stats                per file counts",
+   "orgs links -json | jq '.[].Raw'"
+  ],
+  "lint": [
+   "orgs lint chapter1.org              a file",
+   "orgs lint 'MatchHeadline(\"Draft\")'  a heading and what is under it",
+   "orgs lint -                         text on stdin (or hashes, one a line)",
+   "orgs lint notes.org -format quickfix   file:line:col: lines for an editor",
+   "orgs lint *.org -check              for a hook: exit 1 on any problem"
+  ],
+  "list2headings": [
+   "orgs list2headings Shopping          a list in a heading's text into child headings",
+   "orgs list2headings Shopping -line 12 ... the list at that line (1 based)"
+  ],
+  "log": [
+   "orgs log                   a heading's clock entries"
+  ],
+  "mcp": [
+   "orgs mcp                    speak MCP on stdin and stdout",
+   "orgs mcp -read-only         offer only the tools that read",
+   "orgs mcp -list              what it would offer, and exit"
+  ],
+  "mentions": [
+   "orgs mentions Apollo                  where \"Apollo\" is written but not linked",
+   "orgs mentions Apollo -link            pick which of them become links (fzf, tab marks)",
+   "orgs mentions Apollo -link -only 1,3  link the first and third, no picker",
+   "orgs mentions Apollo -link -yes       link every one of them",
+   "orgs mentions -file notes.org -line 40   the heading line 40 is under",
+   "orgs mentions 'IsProject()' -json"
+  ],
+  "merge": [
+   "orgs merge Rocket Booster            Booster (and its children) into Rocket"
+  ],
+  "models": [
+   "orgs models                         every runtime, its state, its models",
+   "orgs models suggested               what each runtime suggests pulling",
+   "orgs models pull qwen3:8b           fetch one (progress until it is done)",
+   "orgs models pull -runtime llamacpp unsloth/Qwen3-8B-GGUF:Q4_K_M",
+   "orgs models start|stop [-runtime r]",
+   "orgs models install -runtime mlx",
+   "orgs models cancel \u003cmodel\u003e          stop a pull",
+   "orgs models delete \u003cmodel\u003e          asks first; -yes to not"
+  ],
+  "note": [
+   "orgs note 'rang back, no answer'    a line onto the body"
+  ],
+  "notifications": [
+   "orgs notifications              the list, newest first, unread marked",
+   "orgs notifications -unread      only those not yet read",
+   "orgs notifications -read        the list, then mark them all read",
+   "orgs notifications -clear       remove them all",
+   "orgs notifications -follow      say each new one as it happens (ctrl-c ends)",
+   "orgs notifications -json        for a program"
+  ],
+  "notify": [
+   "orgs notify status          what the server does: reminders, digest, quiet",
+   "orgs notify test            one notification through the server's own path",
+   "orgs notify test -here      one shown on this machine, no server involved",
+   "orgs notify listen          show the server's notifications on this machine"
+  ],
+  "outline": [
+   "orgs outline notes.org     the tree, which nothing else in the CLI showed"
+  ],
+  "p": [
+   "orgs p                 pick a command, a saved query, a filter or an alias",
+   "orgs p -print          print the chosen command line instead of running it",
+   "orgs p -json           the list, for a program"
+  ],
+  "paste": [
+   "orgs paste 'MatchHeadline(\"Q3 report\")'   under that heading's body",
+   "orgs paste hOpOB7vIg6oiYz5sMVS=            under the heading with that hash",
+   "orgs paste -pick                           choose the heading",
+   "orgs paste -file notes.org -line 42        after line 42 (a table's last row)",
+   "orgs paste -file notes.org                 at the end of the file",
+   "orgs paste                                 keep it, print [[file:…]] to stdout",
+   "orgs paste -template todo                  …relative to where that capture goes",
+   "orgs paste -in chart.png 'IsProject()'     a file instead of the clipboard"
+  ],
+  "plan": [
+   "orgs plan                          today: the hours as a timeline, then what is left to place",
+   "orgs plan -date tomorrow           another day (any date `orgs sched` reads)",
+   "orgs plan report 10:00             put the task matching \"report\" at 10:00, for its EFFORT (else an hour)",
+   "orgs plan report 10:00-11:30       ... for exactly that long",
+   "orgs plan report next              ... in the first free gap long enough",
+   "orgs plan 10:00                    pick the task (fzf), then place it",
+   "orgs plan 'IsStatus(\"NEXT\")' 14    a query or a hash names the task, as for every write verb",
+   "orgs plan unblock report           take it off the day (a repeating task keeps its date)"
+  ],
+  "pres": [
+   "orgs pres talk.org                 present it",
+   "orgs pres talk.org -presenter      the speaker's window: notes, next, time",
+   "orgs pres talk.org -theme linen    any slide theme, or builtin / term",
+   "orgs pres talk.org | less -R       every slide, printed",
+   "orgs pres talk.org -json           the outline, for a program"
+  ],
+  "print": [
+   "orgs print                         this week, a4 landscape, written to week-2026-10-12.html",
+   "orgs print week -from mon -weeks 4 -f pdf",
+   "orgs print day -from tomorrow -theme minimal -f pdf -open",
+   "orgs print month -from +1m -paper letter -out november.pdf",
+   "orgs print -list-themes"
+  ],
+  "prop": [
+   "orgs prop EFFORT=2h                 the property drawer"
+  ],
+  "q": [
+   "orgs q                      pick one and run it",
+   "orgs q stale                run the one called stale",
+   "orgs q ls                   what is saved",
+   "orgs q save stale 'IsStatus(\"NEXT\") \u0026\u0026 OlderThan(\"30d\")'",
+   "orgs q rm stale",
+   "orgs q edit stale           change it in $EDITOR",
+   "orgs q watch stale          say when it finds something new (watch.go)",
+   "orgs q unwatch stale",
+   "orgs q watches              what is being watched",
+   "orgs q stale -csv -out stale.csv   its headings as a spreadsheet (csvout)",
+   "orgs q watch blocked                  tell me when \"blocked\" finds something new",
+   "orgs q watch blocked -left -desktop   ...and when something leaves it, with a popup",
+   "orgs q watch soon 'DeadlineWithin(2) \u0026\u0026 IsTodo()'",
+   "orgs q unwatch blocked",
+   "orgs q watches"
+  ],
+  "rec": [
+   "orgs rec                           every record there is",
+   "orgs rec ls -type equipment        one collection",
+   "orgs rec find thinkpad             the ones matching",
+   "orgs rec show thinkpad             one, in full",
+   "orgs rec add -type equipment       asked for, field by field",
+   "orgs rec set thinkpad WARRANTY=2027",
+   "orgs rec fields -type equipment    what that collection uses",
+   "orgs rec collections               what is being kept",
+   "orgs rec new-collection wine -file cellar.org",
+   "orgs rec birthdays",
+   "orgs rec ls -json | jq '.[].Props.EMAIL'"
+  ],
+  "recap": [
+   "orgs recap                    the last seven days",
+   "orgs recap -month             this month so far",
+   "orgs recap -last -week        last week, Monday to Sunday",
+   "orgs recap -from 2026-10-01 -to 2026-10-15"
+  ],
+  "refresh": [
+   "orgs refresh                    everything on a timer: what, how often, last run, next, how it went",
+   "orgs refresh run 2              run the second of those now (or its key)",
+   "orgs refresh run due            whatever is due",
+   "orgs refresh run all            everything",
+   "orgs refresh dash.org           that file's dynamic blocks and table formulas, now",
+   "orgs refresh dash.org -blocks   and its :schedule source blocks"
+  ],
+  "rename": [
+   "orgs rename 'a better title'        the headline text"
+  ],
+  "retag": [
+   "orgs retag work job                  rename a tag everywhere (a merge when job exists)",
+   "orgs retag -delete stale             take a tag off everything",
+   "orgs retag work job -query 'IsProject()'   only the headlines a query matches",
+   "orgs retag work job -file a.org,b.org      only some files"
+  ],
+  "review": [
+   "orgs review                 everything that wants a decision",
+   "orgs review stale           just that check",
+   "orgs review -fix            walk them, and change them as you go",
+   "orgs review week            the weekly review wizard (week.go)",
+   "orgs review week            the seven steps, one at a time",
+   "orgs review week -restart   from the top, whatever step was left",
+   "orgs review week -days 14   waiting items older than a fortnight",
+   "orgs review week -json      what each step would ask about, as json"
+  ],
+  "rm": [
+   "orgs rm                             gone"
+  ],
+  "sched": [
+   "orgs sched tomorrow                 SCHEDULED"
+  ],
+  "search": [
+   "orgs search 'IsTask() \u0026\u0026 IsStatus(\"NEXT\")'",
+   "orgs search '{{ WorkTasks }}' -sort date",
+   "orgs search 'IsTask()' -json | jq '.[].Headline'",
+   "orgs search 'IsTask()' -format '{{.Filename}}:{{.LineNum}}\\t{{.Headline}}'",
+   "orgs search 'IsProject()' -open",
+   "orgs search 'IsStatus(\"NEXT\") \u0026\u0026 OlderThan(\"30d\")' -json \\\n  | jq -r .Hash | orgs tag +stale -"
+  ],
+  "show": [
+   "orgs show                       pick one and read it",
+   "orgs show 'IsStatus(\"NEXT\")'    the first match, or a picker over them",
+   "orgs show -hash hOpO…           by hash",
+   "orgs show -log                  with the clock entries",
+   "orgs show -raw                  the body text and nothing else",
+   "orgs show -edit                 open it where it lives"
+  ],
+  "site": [
+   "orgs site blog -out ./public                 the site, written here",
+   "orgs site blog -out ./public -theme journal  in another theme",
+   "orgs site . -out ~/www -base-url https://me.example -clean -open",
+   "orgs site blog -local -out /srv/www          written on the server's disk",
+   "orgs site -list-themes"
+  ],
+  "snip": [
+   "orgs snip shell fish | source     in config.fish",
+   "orgs snip                       find one, fill in its parameters, run it",
+   "orgs snip docker logs           the same, starting on those words",
+   "orgs snip print [words]         ... and print it instead (for a shell key)",
+   "orgs snip copy [words]          ... and put it on the clipboard",
+   "orgs snip run backup -set dest=/mnt -y     no questions, for scripts",
+   "orgs snip new 'rsync -av \u003csrc\u003e \u003cdest\u003e'     save one",
+   "orgs snip ls [-t docker]        list them",
+   "orgs snip edit [words]          open one where it is written",
+   "orgs snip shell zsh             the ctrl-s key and `snip-prev`, for your shell"
+  ],
+  "split": [
+   "orgs split Apollo                    a heading out to a file of its own",
+   "orgs split Apollo -to projects/      ... into a folder, or -to path/name.org"
+  ],
+  "standup": [
+   "orgs standup                  since the last working day (Friday, on a Monday)",
+   "orgs standup -since mon       from a day of your choosing",
+   "orgs standup -md -copy        GitHub Markdown, and onto the clipboard"
+  ],
+  "stats": [
+   "orgs stats                  keywords, tags, files, clocked time",
+   "orgs stats -by tag"
+  ],
+  "tables": [
+   "orgs tables                       pick one, with it drawn beside the list",
+   "orgs tables ls                    the listing",
+   "orgs tables ls -file budget.org   one file's tables",
+   "orgs tables show expenses         one table, drawn",
+   "orgs tables eval expenses         run its formulas and write the result back",
+   "orgs tables ls -json              for a program to read",
+   "orgs tables import data.csv notes.org -header -name sales"
+  ],
+  "tag": [
+   "orgs tag +work -someday             the tags"
+  ],
+  "tags": [
+   "orgs tags                  the tag vocabulary, and what uses each one"
+  ],
+  "tangle": [
+   "orgs tangle notes.org      write the source blocks out as files"
+  ],
+  "timesheet": [
+   "orgs timesheet -block thisweek -f pdf       this week's sittings, signed off",
+   "orgs timesheet -block 2026-10 -f csv        a row a sitting, for a spreadsheet"
+  ],
+  "todo": [
+   "orgs todo DONE 'IsStatus(\"NEXT\")'   the keyword",
+   "orgs todo DONE                       a picker, when there is somebody to pick",
+   "orgs todo DONE 'IsStatus(\"NEXT\")'    a query, the same language /search takes",
+   "orgs todo DONE hOpOB7vIg6oiYz5sMVS=  one heading, by hash"
+  ],
+  "triage": [
+   "orgs triage              each inbox item in turn: r refile, s schedule, t tag,",
+   "orgs triage -someday     the someday pile: k keep, p promote, s schedule,",
+   "orgs triage -json        the items, listed"
+  ],
+  "tui": [
+   "orgs tui                          the default query",
+   "orgs tui 'IsTask() \u0026\u0026 Today()'    start on something else",
+   "orgs tui -query '{{ WorkTasks }}' a filter from the yaml"
+  ],
+  "voice": [
+   "orgs voice                     record until you press enter, then file it",
+   "orgs voice -on 'the migration' append to that heading instead",
+   "orgs voice -f take.m4a         a recording you already have",
+   "orgs voice ls                  what the server is holding",
+   "orgs voice rm \u003cid\u003e             throw one away",
+   "orgs voice config              what transcription is available"
+  ],
+  "watch": [
+   "orgs watch                          print each change as it happens",
+   "orgs watch -exec 'make notes'       run that when anything changes",
+   "orgs watch -exec 'orgs tangle {}' -file lit.org",
+   "orgs watch -kinds clockin,clockout  only the clock",
+   "orgs watch -once                    wait for one change and exit",
+   "orgs watch -json                    one json object per line, for a program"
+  ],
+  "worg": [
+   "orgs worg            the agenda, or whatever worg opens on",
+   "orgs worg Kanban     a view by the name worg switches on",
+   "orgs worg -print     the link instead of opening it"
+  ],
+  "write": [
+   "orgs write                      today against the goals, the streak, the last 14 days",
+   "orgs write -short               one line for a status bar: ✍ 412/500 · 6d",
+   "orgs write log -days 30         words per day, and the files they went into",
+   "orgs write goals                what they are",
+   "orgs write goals -daily 500 -rest 1",
+   "orgs write ideas                the idea generators",
+   "orgs write ideas character -n 3 -genre sf -set role=villain",
+   "orgs write snapshot 'Chapter 3' -title 'Before the rewrite'",
+   "orgs write snapshots draft.org  (or a heading) newest first",
+   "orgs write snapshots draft.org -delete 3fa2c1d09b7e"
+  ]
+ }
+}

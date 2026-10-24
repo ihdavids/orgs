@@ -123,6 +123,11 @@ type CmdCreatorThunk struct {
 
 var CmdRegistry = map[string]*CmdCreatorThunk{}
 
+// QueryFunctions names the functions a query may call, from the server's own
+// function map (set by internal/app/orgs, which this package cannot import).
+// nil in a binary without the server.
+var QueryFunctions func() []string
+
 func AddCmd(name string, usage string, creator CmdCreator) {
 	//fmt.Printf("ADDING PLUGIN: %s\n", name)
 	CmdRegistry[name] = &CmdCreatorThunk{Name: name, Cmd: creator() /*Args: new(CmdArgs),*/, Usage: usage}

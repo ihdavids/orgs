@@ -838,44 +838,11 @@ func PostDndSpotifySetup(w http.ResponseWriter, r *http.Request) {
 		dndError(w, http.StatusBadRequest, "a Spotify client id is 32 letters and digits (0-9, a-f): that one is not")
 		return
 	}
-	file := Conf().loadedFrom
-	if file == "" {
-		dndError(w, http.StatusBadRequest, "this server was not started from a configuration file, so there is nothing to write it into")
-		return
-	}
-	st, err := os.Stat(file)
+	file, code, err := editConfigFile(".before-spotify", func(lines []string) ([]string, error) {
+		return setYamlKey(lines, "spotifyClientId", strings.ToLower(id), "dndMusicPath")
+	})
 	if err != nil {
-		dndError(w, http.StatusInternalServerError, "%s", err)
-		return
-	}
-	data, err := os.ReadFile(file)
-	if err != nil {
-		dndError(w, http.StatusInternalServerError, "%s", err)
-		return
-	}
-	text := string(data)
-	nl := "\n"
-	if strings.Contains(text, "\r\n") {
-		nl = "\r\n"
-	}
-	lines, err := setYamlKey(strings.Split(strings.TrimSuffix(text, nl), nl), "spotifyClientId", strings.ToLower(id), "dndMusicPath")
-	if err != nil {
-		dndError(w, http.StatusBadRequest, "%s: %s", filepath.Base(file), err)
-		return
-	}
-	// The file as it was, then the new one written whole or not at all.
-	if err := os.WriteFile(file+".before-spotify", data, st.Mode().Perm()); err != nil {
-		dndError(w, http.StatusInternalServerError, "keeping a copy: %s", err)
-		return
-	}
-	tmp := file + ".writing"
-	if err := os.WriteFile(tmp, []byte(strings.Join(lines, nl)+nl), st.Mode().Perm()); err != nil {
-		dndError(w, http.StatusInternalServerError, "%s", err)
-		return
-	}
-	if err := os.Rename(tmp, file); err != nil {
-		os.Remove(tmp)
-		dndError(w, http.StatusInternalServerError, "%s", err)
+		dndError(w, code, "%s: %s", filepath.Base(file), err)
 		return
 	}
 	if _, err := ReloadConfig(); err != nil {

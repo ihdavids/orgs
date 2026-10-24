@@ -391,9 +391,10 @@ func (self *Config) ParseConfig() {
 			// is a working config in hand; the only thing missing is the file,
 			// and nothing here needs one.
 			filename = ""
-		} else if flag.Arg(0) == "version" {
+		} else if flag.Arg(0) == "version" || flag.Arg(0) == "help" {
 			// Asked straight after an install, before there is any config:
-			// the defaults are enough to print this binary's version.
+			// the defaults are enough to print this binary's version, and
+			// the help and man pages are carried in the binary.
 			filename = ""
 		} else {
 			fmt.Fprintf(os.Stderr, "Looks like you do not have a [%s] configuration file. Please add one!\n", self.Config)

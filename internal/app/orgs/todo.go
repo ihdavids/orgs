@@ -78,6 +78,27 @@ package orgs
   - *Today* - returns true if a node is scheduled for today
   - *Yesterday* - returns true if a node is scheduled for yesterday
   - *ThisWeek* - returns true if a node lands in the agenda on any day of the last seven, today included
+  - *IsDone* - returns true if the node's keyword is a finished one (DONE and kin), by the keywords of its own file
+  - *InFile* - InFile(REGEX) is true when the path of the node's file matches, its absolute path included: InFile("work")
+  - *MatchContent* - MatchContent(REGEX) runs an RE over the headline and the text under it
+  - *HasScheduled* - returns true if the node has a SCHEDULED date
+  - *HasDeadline* - returns true if the node has a DEADLINE
+  - *HasTimestamp* - returns true if the node has a plain timestamp of its own
+  - *HasAnyDate* - returns true if the node has a SCHEDULED date, a DEADLINE or a timestamp
+  - *ScheduledPast* - returns true if the SCHEDULED date is before today (today itself is not past)
+  - *DeadlinePast* - returns true if the DEADLINE is before today: overdue, where a deadline of today is only due
+  - *ScheduledWithin* - ScheduledWithin(N) is true when the SCHEDULED date falls between today and N days ahead, in calendar days
+  - *DeadlineWithin* - DeadlineWithin(N) is true when the DEADLINE falls between today and N days ahead, in calendar days
+  - *HasClock* - returns true if time has ever been clocked against the node
+  - *DaysOld* - how many days ago the node's newest date (SCHEDULED, DEADLINE, CLOSED or timestamp) was, as a number to compare; -1 with no date
+  - *OlderThan* - OlderThan(N) is true when the node's newest date is at least N days ago; never true for a node with no date
+  - *HasChecklist* - returns true if the node's own text has checkboxes
+  - *ChecklistDone* - returns true if the node has checkboxes and every one is ticked
+  - *ChecklistCount* - how many checkboxes the node's own text has, as a number to compare
+  - *ChecklistLeft* - how many of the node's checkboxes are still open, as a number to compare
+  - *IsHabit* - returns true for a habit (a :STYLE: habit heading)
+  - *HabitStreak* - how many times in a row a habit has been kept, as a number to compare: IsHabit() && HabitStreak() > 7; 0 once the run is broken
+  - *MissedHabit* - returns true when a habit has gone longer since it was last done than its repeater allows
 EDOC */
 
 import (

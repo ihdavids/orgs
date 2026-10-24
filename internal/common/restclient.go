@@ -101,7 +101,19 @@ func (self *Rest) Post(api string, data []byte) ([]byte, error) {
 	if rerr != nil {
 		log.Println(rerr)
 	}
+	if missingRoute(resp.StatusCode, body) {
+		return nil, fmt.Errorf("the server at %s has no POST /%s: it is probably older than this orgs, so restart it", self.Url, api)
+	}
 	return body, nil
+}
+
+// missingRoute is the router's own "404 page not found", as opposed to a
+// handler answering 404 with json: without it the caller's json decoder
+// reads the 404 as a number and says "invalid character 'p' after top-level
+// value", which is how a client newer than its server shows.
+func missingRoute(status int, body []byte) bool {
+	t := bytes.TrimSpace(body)
+	return status == http.StatusNotFound && (len(t) == 0 || (t[0] != '{' && t[0] != '['))
 }
 
 // Delete is the fourth verb. Several endpoints answer to it and nothing on this

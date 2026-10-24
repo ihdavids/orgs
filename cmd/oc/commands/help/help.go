@@ -5,6 +5,14 @@ package help
 //	orgs help              every command, grouped
 //	orgs help todo         what `orgs todo` takes
 //	orgs help -all         every command with every flag
+//	orgs help -man search  search's man page (roff); with no command, orgs(1)
+//	orgs help -man-dir ~/.local/share/man/man1   every page, for man to find
+//
+// Beside a command's flags it shows what the documentation says about it -
+// the guides' =orgs NAME= headings, the SDOC Commands sections, the usage
+// lines the command's package opens with - from docs.json, carried in the
+// binary (docs.go). A command that takes a query also gets the query
+// language, with every function the binary's query map has.
 //
 // There was no help command. `orgs` with nothing printed the registry, in *map
 // order* - a different order every run, which is unreadable for a list of forty
@@ -29,13 +37,17 @@ import (
 )
 
 type Help struct {
-	All bool
+	All    bool
+	Man    bool
+	ManDir string
 }
 
 func (self *Help) Unmarshal(u func(interface{}) error) error { return u(self) }
 func (self *Help) StartPlugin(m *common.PluginManager)       {}
 func (self *Help) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.All, "all", false, "every command with all of its flags")
+	fset.BoolVar(&self.Man, "man", false, "print a man page (roff): orgs(1), or the command's")
+	fset.StringVar(&self.ManDir, "man-dir", "", "write orgs.1 and an orgs-<command>.1 for every command into this folder")
 }
 
 // NeedsNoServer: the registry is in this binary.
@@ -47,11 +59,12 @@ var groups = []struct {
 	Name string
 	Cmds []string
 }{
-	{"Finding things", []string{"p", "search", "q", "find", "grep", "agenda", "tui", "outline",
+	{"Finding things", []string{"dash", "p", "search", "q", "find", "grep", "agenda", "tui", "outline",
 		"projects", "gantt", "kanban", "cols", "filter", "filters", "tags", "taggroups", "show", "log"}},
 	{"Changing a heading", []string{"todo", "sched", "deadline", "tag", "prop", "rename",
 		"note", "check", "archive", "rm", "ref", "cap", "listcap", "new", "daypage", "paste"}},
 	{"The clock", []string{"clockin", "clockout", "clocks", "clocktable", "timesheet", "invoice"}},
+	{"Reports", []string{"standup", "recap"}},
 	{"Habits", []string{"habits"}},
 	{"Writing", []string{"write", "lint", "ask", "models"}},
 	{"Files and code", []string{"files", "fmt", "dblock", "tangle", "detangle", "code", "tables", "export", "site", "import", "csv", "refresh", "links", "go"}},
@@ -64,13 +77,25 @@ var groups = []struct {
 
 func (self *Help) Exec(core *commands.Core) {
 	words := commands.FreeArgs(commands.Find("help").Flags)
+	if self.ManDir != "" {
+		writeManDir(self.ManDir)
+		return
+	}
+	if self.Man {
+		if len(words) > 0 {
+			fmt.Print(manPage(mustFind(words[0])))
+		} else {
+			fmt.Print(manIndex())
+		}
+		return
+	}
 	if len(words) > 0 {
-		self.one(words[0])
+		self.one(words[0], true)
 		return
 	}
 	if self.All {
 		for _, name := range sortedNames() {
-			self.one(name)
+			self.one(name, false)
 			fmt.Println()
 		}
 		return
@@ -90,22 +115,27 @@ func sortedNames() []string {
 	return out
 }
 
-func (self *Help) list() {
-	// -json is a table of every command, which is what a wrapper or a
-	// documentation build wants and what `orgs` printing prose never gave it.
-	type row struct {
-		Name  string
-		Group string
-		Usage string
-	}
+type group struct {
+	Name  string
+	Names []string
+}
+
+// helpGroups is every command under the heading it is listed under: the
+// table's groups in their order, then the groups commands ask for themselves
+// (or "Other"), alphabetically. rows is the same in -json's order.
+func helpGroups() (out []group, rows []helpRow) {
 	placed := map[string]bool{}
-	rows := []row{}
 	for _, g := range groups {
+		names := []string{}
 		for _, name := range g.Cmds {
 			if c := commands.Find(name); c != nil {
 				placed[name] = true
-				rows = append(rows, row{Name: name, Group: g.Name, Usage: c.Usage})
+				names = append(names, name)
+				rows = append(rows, helpRow{Name: name, Group: g.Name, Usage: c.Usage})
 			}
+		}
+		if len(names) > 0 {
+			out = append(out, group{g.Name, names})
 		}
 	}
 	// Anything the table did not name goes under the group it asks for, or
@@ -118,16 +148,33 @@ func (self *Help) list() {
 			continue
 		}
 		c := commands.Find(name)
-		group := "Other"
-		if g, ok := c.Cmd.(commands.Grouped); ok && g.HelpGroup() != "" {
-			group = g.HelpGroup()
+		g := "Other"
+		if gr, ok := c.Cmd.(commands.Grouped); ok && gr.HelpGroup() != "" {
+			g = gr.HelpGroup()
 		}
-		if _, seen := extra[group]; !seen {
-			extraOrder = append(extraOrder, group)
+		if _, seen := extra[g]; !seen {
+			extraOrder = append(extraOrder, g)
 		}
-		extra[group] = append(extra[group], name)
-		rows = append(rows, row{Name: name, Group: group, Usage: c.Usage})
+		extra[g] = append(extra[g], name)
+		rows = append(rows, helpRow{Name: name, Group: g, Usage: c.Usage})
 	}
+	sort.Strings(extraOrder)
+	for _, g := range extraOrder {
+		out = append(out, group{g, extra[g]})
+	}
+	return out, rows
+}
+
+// -json is a table of every command, which is what a wrapper or a
+// documentation build wants and what `orgs` printing prose never gave it.
+type helpRow struct {
+	Name  string
+	Group string
+	Usage string
+}
+
+func (self *Help) list() {
+	grouped, rows := helpGroups()
 	if commands.Render(rows, nil) {
 		return
 	}
@@ -142,37 +189,11 @@ func (self *Help) list() {
 			width = len(name)
 		}
 	}
-	show := func(name string) {
-		c := commands.Find(name)
-		if c == nil {
-			return
-		}
-		fmt.Printf("  %s%-*s%s  %s\n", commands.C(commands.AnsiBold), width, name,
-			commands.C(commands.AnsiReset), c.Usage)
-	}
-	for _, g := range groups {
-		any := false
-		for _, name := range g.Cmds {
-			if commands.Find(name) != nil {
-				any = true
-				break
-			}
-		}
-		if !any {
-			continue
-		}
+	for _, g := range grouped {
 		fmt.Printf("%s%s%s\n", commands.C(commands.AnsiGold), g.Name, commands.C(commands.AnsiReset))
-		for _, name := range g.Cmds {
-			show(name)
-		}
-		fmt.Println()
-	}
-	sort.Strings(extraOrder)
-	for _, group := range extraOrder {
-		fmt.Printf("%s%s%s\n", commands.C(commands.AnsiGold), group,
-			commands.C(commands.AnsiReset))
-		for _, name := range extra[group] {
-			show(name)
+		for _, name := range g.Names {
+			fmt.Printf("  %s%-*s%s  %s\n", commands.C(commands.AnsiBold), width, name,
+				commands.C(commands.AnsiReset), commands.Find(name).Usage)
 		}
 		fmt.Println()
 	}
@@ -182,7 +203,9 @@ func (self *Help) list() {
 		commands.C(commands.AnsiDim), commands.C(commands.AnsiReset))
 }
 
-func (self *Help) one(name string) {
+// mustFind is the command, or the reason there is none (with the names it
+// may have meant) and an exit.
+func mustFind(name string) *commands.CmdCreatorThunk {
 	c := commands.Find(name)
 	if c == nil {
 		near := []string{}
@@ -196,9 +219,17 @@ func (self *Help) one(name string) {
 		}
 		commands.Fail("no command called %q - orgs help for the list", name)
 	}
+	return c
+}
 
+// one is a command's usage and flags, and with docs what is written about it.
+func (self *Help) one(name string, docs bool) {
+	c := mustFind(name)
 	fmt.Printf("%sorgs %s%s  %s\n", commands.C(commands.AnsiBold), name,
 		commands.C(commands.AnsiReset), c.Usage)
+	if docs {
+		defer showDocs(c)
+	}
 	if c.Flags == nil {
 		return
 	}
