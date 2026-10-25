@@ -1,0 +1,70 @@
+#+TITLE: Home
+#+FILETAGS: :home:
+
+* Habits
+** TODO Morning run                                                   :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 07:10]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 07:10]
+   - State "DONE"       from "TODO"       [{{D-2}} 07:05]
+   - State "DONE"       from "TODO"       [{{D-3}} 07:20]
+   - State "DONE"       from "TODO"       [{{D-5}} 07:00]
+   - State "DONE"       from "TODO"       [{{D-6}} 07:15]
+   - State "DONE"       from "TODO"       [{{D-7}} 07:00]
+   - State "DONE"       from "TODO"       [{{D-9}} 07:30]
+   - State "DONE"       from "TODO"       [{{D-10}} 07:00]
+   - State "DONE"       from "TODO"       [{{D-11}} 07:10]
+   - State "DONE"       from "TODO"       [{{D-12}} 07:10]
+   - State "DONE"       from "TODO"       [{{D-14}} 07:10]
+   - State "DONE"       from "TODO"       [{{D-15}} 07:10]
+   - State "DONE"       from "TODO"       [{{D-16}} 07:10]
+   :END:
+** TODO Read for 30 minutes                                           :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 21:30]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-2}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-3}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-4}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-6}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-7}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-8}} 21:30]
+   - State "DONE"       from "TODO"       [{{D-13}} 21:30]
+   :END:
+** TODO Water the plants                                              :habit:
+   SCHEDULED: <{{D+1}} .+3d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-2}} 18:00]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-2}} 18:00]
+   - State "DONE"       from "TODO"       [{{D-5}} 18:00]
+   - State "DONE"       from "TODO"       [{{D-8}} 18:00]
+   - State "DONE"       from "TODO"       [{{D-12}} 18:00]
+   :END:
+
+* Errands
+** TODO Book the car service
+   DEADLINE: <{{D+4}}>
+** TODO [#A] Pay the property tax
+   DEADLINE: <{{D+1}}>
+** TODO Pick up the dry cleaning
+   SCHEDULED: <{{D+0}} 17:30>
+** DONE Return the library books
+   CLOSED: [{{D-1}} 12:00]
+
+* Trip to Lisbon                                                       :trip:
+  <{{D+20}}>--<{{D+25}}>
+** TODO Book flights
+   DEADLINE: <{{D+6}}>
+** TODO Find a place to stay
+** TODO Make a list of restaurants

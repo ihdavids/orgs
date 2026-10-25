@@ -1,0 +1,12 @@
+# The writer story's orgs_extensions.yaml: its saved queries. A noAuth
+# server's user is "local". The writing goals and log are posted by the
+# story's setup (the log is keyed by the server's absolute path).
+users:
+  local:
+    storedQueries:
+    - name: Novel
+      query: 'InFile("novel.org")'
+    - name: Scenes
+      query: 'HasProperty("POV")'
+    - name: Book tasks
+      query: 'IsTask() && !IsArchived() && HasTags("book") && !HasTags("habit")'

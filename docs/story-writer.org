@@ -1,0 +1,264 @@
+#+TITLE: A writer's book, start to finish
+#+DOC_SECTION: Stories
+#+OPTIONS: toc:2 num:nil
+
+* The writer and the book
+
+  Owen Hale is writing his second novel, /The Tidewater Clock/: a harbour
+  town in 1912, a clock that runs two minutes ahead of the sea, and the
+  engine under the tower that explains why. He wants 85,000 words by spring.
+  He writes in the mornings, aims for 500 words a day and takes Sundays
+  off. The rest of the day goes on what every book also needs: an agent who
+  wants three chapters by Tuesday, an editor's notes he is waiting for,
+  research to chase, a reading at the library.
+
+  He keeps all of it in org files: the manuscript, a compendium of the
+  people and places in it, and a file of tasks about the book. One orgs
+  server reads them, so the writing tools, the agenda, the clock and the
+  inbox all see the same notes.
+
+  [[file:images/diagram-writer-book.svg]]
+
+  This guide follows him through the life of the book: planning it,
+  drafting it a day at a time, revising, running the business side the GTD
+  way, and compiling a manuscript to send. [[*Writing mode][Writing mode]] in the editing
+  guide is the reference for every tool shown here.
+
+* Where he writes
+
+  [[file:images/diagram-clients.svg]]
+
+  Owen drafts in worg's writing mode, because that is where the writing
+  tools are. He is not tied to it:
+
+  - *In VS Code*, with [[https://github.com/ihdavids/vscode-org-everywhere][vscode-org-everywhere]], the manuscript is an ordinary
+    org file: headings fold, links follow, and with the server it clocks in on
+    the heading under the cursor and runs a focus timer in the status bar. worg's
+    views (Files, the agenda, the clock report, the mind map…) open as editor
+    panels, so the corkboard is a tab away from the text.
+  - *In Sublime Text*, with [[https://github.com/ihdavids/orgeverywhere][Org Everywhere]], editing stays in Sublime and
+    the agenda, clocking, capture and refile go through the same server.
+    *Org: orgs Open Web UI* opens worg on any of its views.
+  - *At the command line*, =orgs write= and =orgs recap= read the same writing
+    log worg keeps, and =orgs focus= runs the same pomodoro timer.
+
+  Whichever he uses, a word counted, a task ticked or a clock started in one
+  shows up in the others.
+
+* Planning the book
+
+** Chapters as index cards
+
+   The corkboard shows each heading as a card: its synopsis, its status and
+   its words against its target. Owen plans a part by writing the synopses
+   first, then drags the cards until the order feels right. Moving a card
+   moves the heading, with everything under it, in the file.
+
+   [[file:images/writer-corkboard.png]]
+
+** Who is in which scene
+
+   The storyline draws a line for each character through the scenes, joined
+   where they meet, under an arc of each scene's tension. It shows Owen at a
+   glance that Ada disappears after the second chapter, and that Part One
+   climbs steadily but never drops to give the reader a breath.
+
+   [[file:images/writer-storyline.png]]
+
+** A character bible
+
+   The compendium is a second org file of people, places and things, named
+   by the manuscript's =#+COMPENDIUM:= line. Every property on an entry is a
+   fact. In the text, every name it knows is underlined, and resting on one
+   shows its card. It also catches mistakes without anyone reading for them:
+   a fact written two ways, a character in a scene set before they were born.
+
+   [[file:images/writer-compendium.png]]
+
+   The entries are records too (=RECORD: character=), so =orgs rec ls -type character=
+   and worg's Collections tab list the same cast.
+
+** Names and places when he is stuck
+
+   The Ideas pane in writing mode, and =orgs write ideas= at a prompt, make up
+   characters, names, places, taverns, cultures, premises, complications and
+   weather from word tables in the binary. Nothing is sent anywhere.
+   =-seed= makes the same idea again, and =-org= prints it as a heading ready
+   to capture.
+
+   [[file:images/writer-cli-ideas.png]]
+
+* The structure the tools read
+
+  None of this needs a special file format. The tools read ordinary org:
+  keywords at the top, parts and chapters as headings, and properties on
+  them. Emacs, VS Code and Sublime see the same text.
+
+  [[file:images/diagram-writer-structure.svg]]
+
+  #+BEGIN_SRC org
+  ,#+TITLE: The Tidewater Clock
+  ,#+WORD_TARGET: 85000
+  ,#+COMPENDIUM: novel.compendium.org
+  ,#+CHAPTER_NUMBERS: words
+  ,#+SCENE_BREAK: * * *
+
+  ,* Part One: The Wrong Tide                                    :part:
+  ,** The Apprentice
+  :PROPERTIES:
+  :SYNOPSIS: Wren winds the harbour clock and finds it two minutes ahead of the sea.
+  :STATUS: Final draft
+  :WORD_TARGET: 3000
+  :END:
+  ,*** The tower at dawn
+  :PROPERTIES:
+  :POV: Wren
+  :CHARACTERS: Wren, Silas
+  :TENSION: 2
+  :WHEN: 1912
+  :END:
+  The harbour clock of Saltmere had kept the town's time for ninety years…
+  # NOTE: Silas's silence lands better if we see him check his own watch first
+  #+END_SRC
+
+  The statuses are /To do/, /First draft/, /Revised draft/, /Final draft/,
+  /Done/ and /Notes/, each with its own colour on the cards and in the outline.
+
+* A writing day
+
+  [[file:images/diagram-writer-day.svg]]
+
+** The session
+
+   Owen opens the manuscript in writing mode, goes full screen, and writes.
+   The outline down the side shows where every chapter stands; the status
+   line counts the words in the file, the words written this session and
+   the words in the heading he is in. The checkers underline as he types
+   (spelling and Harper's grammar run in the browser, offline), and his
+   revision notes wait in the margin.
+
+   [[file:images/writer-writing.png]]
+
+   The speller knows American spelling. Owen chose /Add to dictionary/ on
+   /harbour/, /grey/ and his characters' names the first time they were
+   underlined, and it has not complained since (the list is kept in his
+   browser).
+
+** Pomodoros, when they help
+
+   On days the words come slowly, Owen works in pomodoros: =orgs focus -work 50 -break 10=
+   picks a task ("Finish /The Breakwater/"), clocks in, and calls a
+   break when the time is up. The same session shows in worg's Focus tab, in
+   VS Code's status bar if he is there, and as =🍅 32:10 Finish "The Breakwater"=
+   from =orgs focus status= in his terminal's status line. The time lands in
+   the task's logbook, so the week's recap knows where the hours went.
+
+** How the week is going
+
+   Every count the editor makes goes into the writing log on the server. The
+   goals dialog (the chart button on the writing bar, or a click on the
+   status line) reads it: today, this week and this month against his goals,
+   his streak, and a heatmap of every day he has written.
+
+   [[file:images/writer-goals.png]]
+
+   =orgs write= shows the same numbers at a prompt, and =orgs write -short=
+   prints one line (=✍ 437/500 · 19d=) for a status bar. Goals are set with
+   =orgs write goals -daily 500 -weekly 3000 -monthly 12000 -rest 1=, or under
+   /Goals and look/ in the dialog.
+
+   [[file:images/writer-cli-write.png]]
+
+* Revising
+
+** Notes, snapshots and what changed
+
+   When he finishes a pass, Owen leaves notes for the next one as =# NOTE:=
+   lines under the paragraph they are about. They are org comments, so they
+   are in the file for him and never in the book. Before a big rewrite he
+   takes a snapshot of the chapter from its section dialog in the outline
+   (or with =orgs write snapshot 'The Apprentice' -title 'Before the second pass'=).
+   Afterwards, /Show changes since/ in the Revision menu lights what he put
+   in and strikes through what he took out.
+
+   [[file:images/writer-revision.png]]
+
+** The prose in numbers
+
+   The Prose pane reads the whole manuscript: sentence lengths, readability
+   by chapter, how much of each scene is dialogue, and the words worth a
+   second look. Each one opens to the places it is used.
+
+   [[file:images/writer-prose.png]]
+
+** What needs more than orgs
+
+   Some tools in writing mode call out to something else. They are worth
+   knowing about, and the editing guide says how to set each one up:
+
+   - *The assistant*, *scene synopses* and the *continuity check* ask a
+     language model: Claude, ChatGPT or Gemini with a key, or a model running
+     on the server under Ollama, llama.cpp, LM Studio or MLX (=orgs models=).
+     It sees only the file, and only when asked.
+   - *Dictation* is transcribed by whisper on the server.
+   - *=orgs lint=* runs the same grammar checker at the command line, and
+     needs =harper-ls= on the server (or LanguageTool).
+   - *The thesaurus* looks words up online.
+
+* The business of the book
+
+  Owen runs the rest of his writing life the GTD way, in =book.org= beside the
+  manuscript: a heading for the draft, one for the agent and editor, one
+  for research, one for admin, and two habits ("Write 500 words", "Walk
+  before writing").
+
+  - *Capture*: an idea for the last chapter at 11 at night goes into the inbox
+    (=orgs cap=, worg's =c=, VS Code's capture), not into the manuscript.
+  - *Clarify*: the inbox is emptied one item at a time with =orgs triage= or
+    worg's Inbox: refile it, schedule it, or let it go.
+  - *Organise*: the agent's deadline is a =DEADLINE=, the editor's notes a
+    =WAITING= task, the reading an appointment on the agenda.
+  - *Reflect*: on Friday, the weekly review walks what is stuck, waiting or
+    stale. =orgs recap= is the week on one page, words included, ready to
+    paste to his writing group.
+  - *Engage*: in the morning, =orgs dash= says what is due before he opens
+    the manuscript and forgets everything else.
+
+  [[file:images/writer-cli-recap.png]]
+
+* Compiling the manuscript
+
+  When Part One is ready for the agent, Owen opens /Compile/ from the
+  writing bar, picks the headings to include, and chooses a format. The
+  research notes start out unticked, because they are tagged =:noexport:=. His
+  file is not changed.
+
+  [[file:images/writer-compile.png]]
+
+  The same books come from the command line:
+
+  #+BEGIN_SRC sh
+  orgs export -f manuscript novel.org -style shunn -out tidewater.docx
+  orgs export -f epub novel.org -theme literary -out tidewater.epub
+  orgs export -f manuscript -list-themes      # modern, novel, reader, shunn
+  #+END_SRC
+
+  The Word manuscript is the one to submit: chapters numbered as
+  =#+CHAPTER_NUMBERS= says, scenes broken with =#+SCENE_BREAK=, a title page from
+  the keywords. The PDF is typeset by Typst (it needs =typst= on the server)
+  with the article, report or notes template. It makes a good reading copy,
+  but it is laid out like a document, not a book.
+
+* Taking these pictures again
+
+  The pictures come from their own notebook, =docs/screenshots/writer=: the
+  manuscript, its compendium, =book.org= and an inbox. A month and a half of
+  writing log, the goals and a snapshot are posted when the server starts.
+
+  #+BEGIN_SRC sh
+  cd tools/screenshots
+  node capture.mjs -story writer                    # every picture here
+  node capture.mjs -story writer writer-goals       # just the ones named
+  #+END_SRC
+
+  The shots are in =tools/screenshots/stories/writer.mjs=.

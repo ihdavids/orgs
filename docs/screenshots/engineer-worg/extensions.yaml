@@ -1,0 +1,31 @@
+# The engineer-worg story's orgs_extensions.yaml: the base demo's saved
+# queries, board and deck, plus the next actions and the blocked list Marco
+# watches. A noAuth server's user is "local".
+users:
+  local:
+    storedQueries:
+    - name: Next actions
+      query: 'IsStatus("NEXT") && !IsArchived()'
+    - name: Blocked
+      query: 'IsTask() && !IsArchived() && (IsStatus("BLOCKED") || IsStatus("WAITING"))'
+    - name: Plan
+      query: 'IsTask() && InFile("work.org") && HasProperty("EFFORT")'
+    - name: Open work
+      query: 'IsTask() && !IsArchived() && HasTags("work")'
+    - name: Errands
+      query: 'IsTask() && !IsArchived() && HasTags("home") && !HasTags("habit")'
+    kanbanBoards:
+    - name: Work
+      storedQuery: Open work
+      groupBy: status
+      columns:
+      - {value: TODO, color: blue}
+      - {value: NEXT, color: violet}
+      - {value: INPROGRESS, color: indigo}
+      - {value: WAITING, color: orange}
+      - {value: BLOCKED, color: pink}
+      - {value: DONE, color: green}
+    drillDecks:
+    - name: Spanish
+      description: Everyday phrases
+      query: 'HasTags("spanish") && HasTags("drill")'

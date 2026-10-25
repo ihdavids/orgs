@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" width="960" height="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>One orgs server, many ways in</title>
+  <desc>VS Code with vscode-org-everywhere, Sublime Text with Org Everywhere, worg in a browser, the orgs command line and the menu bar all talk to one orgs server, which reads and writes a folder of org files.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="470" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">One server, many ways in</text>
+
+  <!-- clients -->
+  <g font-size="12" fill="#6b7079" text-anchor="middle">
+    <rect x="20" y="60" width="172" height="80" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="106" y="86" font-size="14" font-weight="700" fill="#2b2f36">VS Code</text>
+    <text x="106" y="106">vscode-org-everywhere</text>
+    <text x="106" y="124">editing + worg panels</text>
+
+    <rect x="205" y="60" width="172" height="80" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="291" y="86" font-size="14" font-weight="700" fill="#2b2f36">Sublime Text</text>
+    <text x="291" y="106">Org Everywhere</text>
+    <text x="291" y="124">editing + agenda, clock</text>
+
+    <rect x="390" y="60" width="172" height="80" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="476" y="86" font-size="14" font-weight="700" fill="#2b2f36">worg</text>
+    <text x="476" y="106">any browser, a phone</text>
+    <text x="476" y="124">every view, drag and drop</text>
+
+    <rect x="575" y="60" width="172" height="80" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="661" y="86" font-size="14" font-weight="700" fill="#2b2f36">orgs command line</text>
+    <text x="661" y="106">terminal, scripts, hooks</text>
+    <text x="661" y="124">dash, focus, triage…</text>
+
+    <rect x="760" y="60" width="172" height="80" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="846" y="86" font-size="14" font-weight="700" fill="#2b2f36">Menu bar</text>
+    <text x="846" y="106">orgs focus bar</text>
+    <text x="846" y="124">the pomodoro countdown</text>
+  </g>
+
+  <!-- links to the server -->
+  <g stroke="#8a8f98" stroke-width="1.6" fill="none" marker-start="url(#a)" marker-end="url(#a)">
+    <path d="M106,142 C106,180 250,180 250,208"/>
+    <path d="M291,142 C291,180 365,180 365,208"/>
+    <path d="M476,142 L476,208"/>
+    <path d="M661,142 C661,180 590,180 590,208"/>
+    <path d="M846,142 C846,180 705,180 705,208"/>
+  </g>
+  <text x="790" y="186" font-size="11" fill="#8a8f98" font-style="italic">REST + live events</text>
+
+  <!-- server -->
+  <rect x="150" y="210" width="660" height="112" rx="12" fill="#fff4e0" stroke="#f5a623" stroke-width="1.8"/>
+  <text x="480" y="242" text-anchor="middle" font-size="16" font-weight="700" fill="#2b2f36">orgs server</text>
+  <text x="480" y="268" text-anchor="middle" font-size="13" fill="#4a4f57">agenda · clock and focus timer · capture and refile · queries and watches</text>
+  <text x="480" y="290" text-anchor="middle" font-size="13" fill="#4a4f57">habits · weekly review · writing goals · insights · exporting</text>
+  <text x="480" y="310" text-anchor="middle" font-size="11.5" fill="#8a6a2c" font-style="italic">one clock, one inbox, one set of saved queries for every client</text>
+
+  <!-- files -->
+  <path d="M480,324 L480,380" stroke="#8a8f98" stroke-width="1.6" fill="none" marker-start="url(#a)" marker-end="url(#a)"/>
+  <text x="492" y="356" font-size="11" fill="#8a8f98" font-style="italic">watches, reads, writes only the lines it changes</text>
+  <rect x="300" y="382" width="360" height="62" rx="10" fill="#ffffff" stroke="#c9c3b5" stroke-dasharray="5 4"/>
+  <text x="480" y="408" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">your folder of org files</text>
+  <text x="480" y="428" text-anchor="middle" font-size="12" fill="#6b7079">plain text: keep it in git, edit it in Emacs too</text>
+</svg>

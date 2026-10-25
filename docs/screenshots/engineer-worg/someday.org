@@ -1,0 +1,7 @@
+#+TITLE: Someday
+#+FILETAGS: :someday:
+
+* Learn Rust properly
+* Give a talk at the local meetup
+* Rewrite the deploy scripts in Go
+* Build a home lab for testing upgrades

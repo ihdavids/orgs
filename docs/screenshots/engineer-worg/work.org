@@ -1,0 +1,160 @@
+#+TITLE: Work
+#+FILETAGS: :work:
+#+COLUMNS: %40ITEM(Task) %TODO %EFFORT(Effort){:} %ASSIGNEE(Who) %PRIORITY(P)
+
+* Website relaunch                                                  :project:
+  :PROPERTIES:
+  :ORDERED:  t
+  :END:
+  Move the marketing site to the new design system before the autumn campaign.
+  Planning notes are in [[file:notes.org::*Design system][Design system]].
+
+** DONE Audit the current pages
+   CLOSED: [{{D-9}} 16:40] SCHEDULED: <{{D-10}}>
+   :PROPERTIES:
+   :EFFORT:   12h
+   :ASSIGNEE: Maya
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-10}} 09:00]--[{{D-10}} 12:30] =>  3:30
+   CLOCK: [{{D-9}} 13:00]--[{{D-9}} 16:40] =>  3:40
+   :END:
+** INPROGRESS [#A] Build the component library
+   SCHEDULED: <{{D-4}}>
+   :PROPERTIES:
+   :EFFORT:   5d
+   :ASSIGNEE: Marco
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-2}} 09:10]--[{{D-2}} 11:55] =>  2:45
+   CLOCK: [{{D-7}} 16:40]--[{{D-7}} 18:10] =>  1:30
+   CLOCK: [{{D-1}} 14:00]--[{{D-1}} 17:20] =>  3:20
+   :END:
+   - [X] Buttons and links
+   - [X] Typography scale
+   - [ ] Cards
+   - [ ] Navigation bar
+** TODO [#B] Migrate the blog templates
+   :PROPERTIES:
+   :EFFORT:   3d
+   :ASSIGNEE: Marco
+   :END:
+** TODO Content review with marketing                               :meeting:
+   SCHEDULED: <{{D+1}} 10:00-11:00>
+   :PROPERTIES:
+   :EFFORT:   1h
+   :ASSIGNEE: Priya
+   :END:
+** TODO [#A] Launch
+   DEADLINE: <{{D+14}}>
+   :PROPERTIES:
+   :EFFORT:   1d
+   :ASSIGNEE: Maya
+   :END:
+
+* Quarterly planning                                                :project:
+** DONE Gather team input
+   CLOSED: [{{D-6}} 11:00]
+   :PROPERTIES:
+   :EFFORT:   1d
+   :ASSIGNEE: Priya
+   :END:
+** NEXT Draft the Q4 goals
+   DEADLINE: <{{D+2}}>
+   :PROPERTIES:
+   :ID:       q4-goals
+   :EFFORT:   2d
+   :ASSIGNEE: Marco
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D+0}} 08:30]--[{{D+0}} 09:45] =>  1:15
+   :END:
+** WAITING Budget sign-off from finance
+   :PROPERTIES:
+   :EFFORT:   1d
+   :ASSIGNEE: Priya
+   :AFTER:    q4-goals
+   :END:
+** TODO Share the plan with the team
+   SCHEDULED: <{{D+5}} 15:00>
+   :PROPERTIES:
+   :EFFORT:   2h
+   :ASSIGNEE: Marco
+   :END:
+
+* Billing service                                          :project:backend:
+  Invoices as PDFs, and the money adding up to the cent.
+
+** DONE Add the invoice PDF endpoint
+   CLOSED: [{{D-7}} 16:30] SCHEDULED: <{{D-7}}>
+   :PROPERTIES:
+   :EFFORT:   4h
+   :ASSIGNEE: Marco
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-7}} 09:00]--[{{D-7}} 12:30] =>  3:30
+   CLOCK: [{{D-7}} 13:30]--[{{D-7}} 16:30] =>  3:00
+   :END:
+** DONE Fix rounding in the tax totals
+   CLOSED: [{{D-12}} 15:10]
+   :PROPERTIES:
+   :EFFORT:   3h
+   :ASSIGNEE: Marco
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-12}} 13:30]--[{{D-12}} 15:10] =>  1:40
+   :END:
+** DONE Write the currency migration
+   CLOSED: [{{D-20}} 11:50]
+   :PROPERTIES:
+   :EFFORT:   2h
+   :ASSIGNEE: Priya
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-20}} 09:30]--[{{D-20}} 11:50] =>  2:20
+   :END:
+** DONE Load test the export job
+   CLOSED: [{{D-15}} 17:00]
+   :PROPERTIES:
+   :ID:       load-test
+   :EFFORT:   4h
+   :ASSIGNEE: Marco
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-15}} 10:00]--[{{D-15}} 15:10] =>  5:10
+   :END:
+** WAITING Deploy the billing service
+   :PROPERTIES:
+   :EFFORT:   1h
+   :ASSIGNEE: Marco
+   :AFTER:    load-test
+   :END:
+** NEXT Add retries to the webhook sender
+   :PROPERTIES:
+   :EFFORT:   3h
+   :ASSIGNEE: Marco
+   :END:
+   - exponential backoff, capped at a minute
+   - give up after a day, and say so in the log
+   - a metric for every retry
+** TODO Update the API docs
+   SCHEDULED: <{{D-6}}>
+   :PROPERTIES:
+   :EFFORT:   2h
+   :ASSIGNEE: Marco
+   :END:
+
+* Operations
+** TODO Renew the TLS certificates                                     :ops:
+   DEADLINE: <{{D+0}}>
+** BLOCKED Upgrade the database cluster                                :ops:
+   :PROPERTIES:
+   :EFFORT:   2d
+   :END:
+   Waiting on the vendor's maintenance window.
+** TODO [#C] Tidy the on-call runbook                                  :ops:
+   SCHEDULED: <{{D+3}}>
+** TODO 1:1 with Maya                                                :meeting:
+   SCHEDULED: <{{D+0}} 13:30-14:00>
+** TODO Standup                                                      :meeting:
+   SCHEDULED: <{{D+0}} 09:30-09:45 +1d>

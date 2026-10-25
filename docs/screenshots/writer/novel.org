@@ -1,0 +1,191 @@
+#+TITLE: The Tidewater Clock
+#+SUBTITLE: A Novel
+#+AUTHOR: Owen Hale
+#+EMAIL: owen@example.com
+#+ADDRESS: 4 Quay Steps, Saltmere
+#+AGENT: Example & Pine Literary
+#+DEDICATION: For my father, who wound every clock in the house on Sundays.
+#+WORD_TARGET: 85000
+#+COMPENDIUM: novel.compendium.org
+#+CHAPTER_NUMBERS: words
+#+SCENE_BREAK: * * *
+
+* Dedication                                                     :dedication:
+For my father, who wound every clock in the house on Sundays.
+
+* Part One: The Wrong Tide                                             :part:
+:PROPERTIES:
+:SYNOPSIS: The tide comes early, and the town has spent twenty years deciding not to notice.
+:END:
+** The Apprentice
+:PROPERTIES:
+:SYNOPSIS: Wren winds the harbour clock and finds it two minutes ahead of the sea.
+:STATUS: Final draft
+:WORD_TARGET: 3000
+:END:
+*** The tower at dawn
+:PROPERTIES:
+:POV: Wren
+:CHARACTERS: Wren, Silas
+:TENSION: 2
+:WHEN: 1912
+:END:
+The harbour clock of Saltmere had kept the town's time for ninety years, and for the last three of them Wren Aldous had kept the clock. She climbed the tower before the gulls were up, one hundred and twelve stone steps, counting them the way Silas had taught her, because a person who counts does not think about how far down the bottom is.
+
+At the top the air smelled of oil and cold brass. The great wheels turned in the dark like slow thoughts. She lit the lamp, opened the ledger and wrote the date in her careful hand, then the reading from the barometer, then the height of the water against the painted marks on the harbour wall below.
+
+"You are early," said a voice from the stairs.
+
+Silas Marr came up the last steps with his hand flat against the wall. He was seventy, or near it, and he had built half the clocks in the county and mended the rest. He did not like to be helped, so Wren did not help him. She held the lamp a little higher, which was not the same thing.
+
+"The tide is early," she said. "I wanted to see it."
+
+He looked at her for a long moment, the way he looked at a movement he did not trust. Then he looked out of the east window at the grey water creeping over the sand, and he said nothing at all.
+# NOTE: Silas's silence lands better if we see him check his own watch first
+# NOTE[done] "one hundred and twelve": make the step count match chapter five
+
+*** A tide that came early
+:PROPERTIES:
+:POV: Wren
+:CHARACTERS: Wren, Jory, Ada
+:TENSION: 5
+:FACT: Wren.eyes = grey
+:END:
+By seven the whole quay knew. The fishing boats that should have floated off at half past sat on the mud with their keels bared, and the ones that had gone out at dawn came back to a harbour already full. Men stood on the wall and argued about the moon.
+
+Jory found her on the steps of the Customs House. Her brother was fourteen and all elbows, and he ran everywhere as if the ground might change its mind.
+
+"Ada wants you," he said. "Ada wants the ledger. She says the tables are wrong."
+
+"The tables are never wrong," Wren said. "The tables are printed in Bristol."
+
+"She says they are wrong today."
+
+Ada Penhallow, the harbourmaster, was in her office with the tide tables open on the desk and a pencil behind each ear. She had very strong opinions about pencils. She took the ledger from Wren without a word and ran her finger down the column of readings, and Wren saw her mouth tighten at the bottom of the page.
+
+"Two minutes," Ada said. "Your clock is two minutes ahead of the sea."
+
+"The clock is right. I checked it against the railway telegraph."
+
+"Then the sea is wrong," said Ada, "and I have never yet won an argument with the sea."
+# NOTE "very strong opinions": cut, or make it funnier
+
+** The Harbourmaster
+:PROPERTIES:
+:SYNOPSIS: Ada shows Wren forty years of ledgers; every one of them drifts the same way.
+:STATUS: Revised draft
+:WORD_TARGET: 3000
+:END:
+*** Ledgers
+:PROPERTIES:
+:POV: Wren
+:CHARACTERS: Wren, Ada
+:TENSION: 4
+:END:
+The ledgers lived in the cellar under the Customs House, on shelves that had been dry once. Ada carried the lamp and Wren carried the book of the year she was born, because Ada said a person should start with something that belongs to them.
+
+They read until the lamp needed filling. Every year the readings drifted. It was never much, a few seconds in a season, the kind of difference a keeper writes down and then forgets. But it always went the same way, and it always went faster in the autumn, and in the last ten years it had begun to go faster still.
+
+"Somebody noticed," Wren said quietly. She felt the cold of the cellar in her hands. "Somebody must have noticed."
+
+Ada turned a page and pointed. In the margin, in a small slanted hand Wren knew as well as her own, someone had written the word /again/, and underlined it twice.
+
+"Silas," Wren said.
+
+"Silas," said Ada.
+
+*** What Silas would not say
+:PROPERTIES:
+:POV: Wren
+:CHARACTERS: Wren, Silas
+:TENSION: 6
+:END:
+She found him in the workshop with a pocket watch in pieces on a square of green felt. He did not look up when she came in, and she noticed that his hands were not quite steady, which she had never seen before.
+
+"You knew," she said.
+
+"I knew the tide was early," Silas said. "Everyone in Saltmere who can read a clock has known that for twenty years. They just decided not to know it. It is very easy, not knowing something. You should try it some time."
+
+"Why is it early?"
+
+He set down the tweezers. For a moment she thought he would tell her, and then she saw him decide not to, the way you see a door close at the end of a long corridor.
+
+"Go home, Wren," he said softly. "Wind the clock in the morning. Write down what you see. That is the whole of the job, and it is enough."
+
+She did not go home. She went up the tower and sat with the great wheels turning in the dark, and she listened, the way he had taught her, for the sound a clock makes when something inside it is wrong.
+# NOTE: this is the emotional turn of Part One - slow it down, give it one more beat
+
+** The Breakwater
+:PROPERTIES:
+:SYNOPSIS: A night storm, a lantern on the breakwater, and something under the tower that answers the tide.
+:STATUS: First draft
+:WORD_TARGET: 3500
+:END:
+*** Night watch
+:PROPERTIES:
+:POV: Jory
+:CHARACTERS: Jory, Wren
+:TENSION: 8
+:END:
+The storm came in after dark and Jory went out to the breakwater because Wren told him not to. He took the lantern from the hook by the door and his father's oilskin, which was too big, and he ran the whole length of the quay with the rain coming sideways.
+
+At the end of the breakwater the sea was enormous. It reared up and fell on the stones and ran back hissing, and every time it ran back Jory felt the stones under his boots shiver, just slightly, as if something under them had taken a breath.
+
+Then he saw the light.
+
+It was under the water, at the foot of the clock tower, where the old harbour wall went down into the deep. It was green and steady and it was not a reflection of anything. It pulsed, slow, slow, slow, and Jory counted without meaning to, the way his sister counted the steps. Sixty counts. One pulse. Sixty counts.
+
+"Wren," he whispered, though she was half a mile away. "Wren, the tower is ticking."
+
+He did not hear her come up behind him. She had run the whole way and she was soaked through and she was suddenly holding his arm so hard it hurt.
+
+"I know," she said. "I can hear it too. It has been ticking teh whole time."
+
+* Part Two: The Engine                                                 :part:
+:PROPERTIES:
+:SYNOPSIS: Under the tower, the machine that keeps the sea's time, and the man who has kept it running.
+:END:
+** The Drowned Room
+:PROPERTIES:
+:SYNOPSIS: Wren and Jory find the stair under the tower and the brass engine at the bottom of it.
+:STATUS: First draft
+:WORD_TARGET: 4000
+:END:
+*** Below the tower
+:PROPERTIES:
+:POV: Wren
+:CHARACTERS: Wren, Jory, Silas
+:TENSION: 7
+:END:
+The stair was behind the coal store, under a sheet of tin that had been nailed down a long time ago and pried up very recently. Wren held the lamp and Jory held the rope, and they went down into a cold that smelled of salt and old iron.
+
+At the bottom the room was full of water to the height of her knees, and in the middle of the water stood the engine.
+
+It was brass, and it was the size of a cottage, and it was turning. Wheels within wheels, a pendulum as long as a ship's mast swinging in a slot cut into the rock, and in the heart of it a sphere of green glass that brightened and dimmed, brightened and dimmed, with the slow breath of the sea.
+
+"Somebody built this," Jory said.
+
+"Somebody is still winding it," said Wren, and she pointed at the oil can on the step, which was new, and the footprints in the silt, which were fresh, and the small slanted letters scratched into the brass beside the dial. /Again./
+
+** The Reckoning
+:PROPERTIES:
+:SYNOPSIS: Silas tells them what the engine is for, and what happens if it stops.
+:STATUS: To do
+:WORD_TARGET: 4000
+:END:
+
+** The Last Winding
+:PROPERTIES:
+:SYNOPSIS: The storm tide; Wren chooses whether to wind the engine one more time.
+:STATUS: To do
+:WORD_TARGET: 4500
+:END:
+
+* Research notes                                                   :noexport:
+:PROPERTIES:
+:STATUS: Notes
+:END:
+** Tide tables, 1912
+Admiralty tables were printed a year ahead. Local harbourmasters kept their own corrections in the margins; check the Falmouth ledgers at the record office.
+** Clock escapements
+A turret clock's gravity escapement keeps time whatever the wind does to the hands. Silas would scorn anything else.

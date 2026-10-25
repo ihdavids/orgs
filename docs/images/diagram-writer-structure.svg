@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>What the writing tools read</title>
+  <desc>A manuscript in org, line by line, and which tool reads each part: keywords at the top feed compile and the compendium, part and chapter headings with SYNOPSIS, STATUS and WORD_TARGET feed the outline and corkboard, scenes with POV, CHARACTERS and TENSION feed the storyline, NOTE comments feed revision, and noexport research is left out of compile.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="560" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">What the writing tools read in novel.org</text>
+
+  <!-- the file -->
+  <rect x="24" y="56" width="452" height="480" rx="10" fill="#ffffff" stroke="#c9c3b5"/>
+  <g font-family="Menlo, 'SF Mono', Consolas, monospace" font-size="12" fill="#2b2f36">
+    <text x="40" y="82" fill="#2f7d5b">#+TITLE: The Tidewater Clock</text>
+    <text x="40" y="100" fill="#2f7d5b">#+AUTHOR: Owen Hale</text>
+    <text x="40" y="118" fill="#2f7d5b">#+WORD_TARGET: 85000</text>
+    <text x="40" y="136" fill="#2f7d5b">#+COMPENDIUM: novel.compendium.org</text>
+    <text x="40" y="154" fill="#2f7d5b">#+CHAPTER_NUMBERS: words</text>
+    <text x="40" y="172" fill="#2f7d5b">#+SCENE_BREAK: * * *</text>
+
+    <text x="40" y="202" font-weight="700" fill="#1f4fbf">* Part One: The Wrong Tide     <tspan fill="#2f7d5b">:part:</tspan></text>
+    <text x="40" y="226" font-weight="700" fill="#1f6b3a">** The Apprentice</text>
+    <text x="56" y="244" fill="#7a3fbf">:SYNOPSIS:</text><text x="140" y="244">Wren winds the…</text>
+    <text x="56" y="262" fill="#7a3fbf">:STATUS:</text><text x="140" y="262">Final draft</text>
+    <text x="56" y="280" fill="#7a3fbf">:WORD_TARGET:</text><text x="160" y="280">3000</text>
+
+    <text x="40" y="306" font-weight="700" fill="#a8641a">*** The tower at dawn</text>
+    <text x="56" y="324" fill="#7a3fbf">:POV:</text><text x="140" y="324">Wren</text>
+    <text x="56" y="342" fill="#7a3fbf">:CHARACTERS:</text><text x="160" y="342">Wren, Silas</text>
+    <text x="56" y="360" fill="#7a3fbf">:TENSION:</text><text x="140" y="360">2</text>
+    <text x="56" y="378" fill="#7a3fbf">:FACT:</text><text x="140" y="378">Wren.eyes = grey</text>
+    <text x="40" y="400">The harbour clock of Saltmere had kept…</text>
+    <text x="40" y="420" fill="#8a8f98"># NOTE: check his own watch first</text>
+
+    <text x="40" y="450" font-weight="700" fill="#1f4fbf">* Part Two: The Engine         <tspan fill="#2f7d5b">:part:</tspan></text>
+    <text x="40" y="472" fill="#8a8f98">  …</text>
+    <text x="40" y="500" font-weight="700" fill="#1f4fbf">* Research notes           <tspan fill="#2f7d5b">:noexport:</tspan></text>
+    <text x="56" y="518" fill="#7a3fbf">:STATUS:</text><text x="140" y="518">Notes</text>
+  </g>
+
+  <!-- the tools -->
+  <g font-size="12" fill="#4a4f57">
+    <rect x="600" y="64" width="336" height="76" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="616" y="88" font-size="14" font-weight="700" fill="#2b2f36">Compile and orgs export</text>
+    <text x="616" y="108">the title page, chapter numbers, scene breaks;</text>
+    <text x="616" y="126">:part: makes its children chapters</text>
+
+    <rect x="600" y="152" width="336" height="58" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="616" y="176" font-size="14" font-weight="700" fill="#2b2f36">Compendium</text>
+    <text x="616" y="196">the file it names: KIND, ALIASES, facts</text>
+
+    <rect x="600" y="222" width="336" height="76" rx="10" fill="#fff4e0" stroke="#f5a623" stroke-width="1.6"/>
+    <text x="616" y="246" font-size="14" font-weight="700" fill="#2b2f36">Outline, corkboard, word targets</text>
+    <text x="616" y="266">a card a heading: synopsis, status colour,</text>
+    <text x="616" y="284">words against the target</text>
+
+    <rect x="600" y="310" width="336" height="76" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="616" y="334" font-size="14" font-weight="700" fill="#2b2f36">Storyline and continuity</text>
+    <text x="616" y="354">a line per character, the tension arc;</text>
+    <text x="616" y="372">FACT checked against the compendium</text>
+
+    <rect x="600" y="398" width="336" height="58" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="616" y="422" font-size="14" font-weight="700" fill="#2b2f36">Revision</text>
+    <text x="616" y="442">margin cards; never exported</text>
+
+    <rect x="600" y="468" width="336" height="58" rx="10" fill="#ffffff" stroke="#c9c3b5" stroke-dasharray="5 4"/>
+    <text x="616" y="492" font-size="14" font-weight="700" fill="#2b2f36">Left out of the book</text>
+    <text x="616" y="512">:noexport:, or the status Notes</text>
+  </g>
+
+  <!-- links -->
+  <g stroke="#8a8f98" stroke-width="1.4" fill="none" marker-end="url(#a)">
+    <path d="M478,112 C530,112 550,100 598,100"/>
+    <path d="M478,132 C530,132 550,180 598,180"/>
+    <path d="M478,252 C530,252 550,258 598,258"/>
+    <path d="M478,342 C530,342 550,346 598,346"/>
+    <path d="M478,416 C530,416 550,426 598,426"/>
+    <path d="M478,506 C530,506 550,496 598,496"/>
+  </g>
+</svg>

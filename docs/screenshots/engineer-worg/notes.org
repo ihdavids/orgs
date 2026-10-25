@@ -1,0 +1,51 @@
+#+TITLE: Notes
+#+FILETAGS: :notes:
+
+* Design system
+  Our components follow the [[file:work.org::*Build the component library][component library]] plan.
+  Colours come from a single token file so light and dark themes stay in step.
+
+** Colour tokens
+   | Token      | Light   | Dark    | Use                  |
+   |------------+---------+---------+----------------------|
+   | surface    | #ffffff | #1b1d22 | page background      |
+   | ink        | #1f2328 | #e6e6e6 | body text            |
+   | accent     | #2f6feb | #6ea8fe | links, focus rings   |
+   | danger     | #cf222e | #ff7b72 | destructive actions  |
+
+** Spacing
+   Everything sits on a 4px grid. See [[*Colour tokens][Colour tokens]] for the palette.
+
+* Snippets                                                          :snippet:
+** Find large files
+   #+BEGIN_SRC sh
+   find . -type f -size +100M -exec ls -lh {} \; | sort -k5 -h
+   #+END_SRC
+** Fibonacci in Go
+   #+BEGIN_SRC go
+   func fib(n int) int {
+       if n < 2 {
+           return n
+       }
+       return fib(n-1) + fib(n-2)
+   }
+   #+END_SRC
+** Quick http server
+   #+BEGIN_SRC python
+   import http.server, socketserver
+   with socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler) as s:
+       s.serve_forever()
+   #+END_SRC
+
+* Reading list
+** DONE The Pragmatic Programmer                                      :book:
+   CLOSED: [{{D-30}} 20:00]
+** INPROGRESS A Philosophy of Software Design                         :book:
+** TODO Designing Data-Intensive Applications                         :book:
+
+* Meeting notes
+** Q4 kickoff
+   Attendees: [[file:contacts.org::*Maya Chen][Maya Chen]], [[file:contacts.org::*Priya Natarajan][Priya Natarajan]]
+   - Launch the new website before the campaign
+   - Hire one more designer
+   - Revisit the on-call rotation

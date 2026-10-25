@@ -1,0 +1,224 @@
+#+TITLE: An engineer's week in worg
+#+DOC_SECTION: Stories
+#+OPTIONS: toc:2 num:nil
+
+* The idea
+
+  Marco is a backend engineer. He keeps his work the way /Getting Things
+  Done/ says to: everything that comes in goes into an inbox, every inbox
+  item gets a decision, every project has a next action, and once a week he
+  reviews the lot. He does the work itself in pomodoros: twenty-five minutes
+  on one thing, five off, a long break after the fourth.
+
+  This is his week in worg, the web front end every =orgs serve= hands out.
+  Each tab here reads the same notes through the same server as the command
+  line and the editor plugins, so whatever he does in one shows up in the
+  others straight away.
+
+  [[file:images/diagram-eng-worg-week.svg]]
+
+  GTD has five steps, and each has a tab or two to itself:
+
+  [[file:images/diagram-eng-worg-gtd.svg]]
+
+  The pictures are of a demo notebook kept in
+  =docs/screenshots/engineer-worg=; =tools/screenshots= takes them again
+  (=node capture.mjs -story engineer-worg=).
+
+* Monday morning: the weekly review
+
+  Marco starts the week where GTD says to start it, with the review. He opens
+  *Weekly Review* and works down the seven steps. Each step is one list and
+  one decision per item, and the step he is on is kept on the server: if a
+  meeting cuts him off half way, he picks up where he left off, in worg or in
+  =orgs review week= at a prompt.
+
+  Step one empties the inbox. It is the Inbox tab's triage, inside the review:
+
+  [[file:images/eng-worg-review-inbox.png]]
+
+  Step two finds the projects that have stopped moving. /Website relaunch/ has
+  four open tasks and not one of them NEXT, so nothing in it will get done
+  until he decides what comes first. One click on *Make it NEXT* is nearly
+  always the whole answer:
+
+  [[file:images/eng-worg-review-projects.png]]
+
+  Step three is what he is waiting on other people for, oldest first, with
+  *Chase* beside each. Step four is last week's time, against what he planned:
+
+  [[file:images/eng-worg-review-time.png]]
+
+  The billing service took more than he planned and the relaunch less. Step
+  five sweeps up anything scheduled that went past with nothing done to it
+  (here the API docs he never got to), step six the someday pile, and step
+  seven records the review, so next Monday's first screen says how long it has
+  been.
+
+** Calibrating the estimates
+
+  Before he plans the week he checks how far off his estimates usually are.
+  *Insights*, *Estimates*, grouped by project, with a working day of eight
+  hours:
+
+  [[file:images/eng-worg-estimates.png]]
+
+  Work takes him about 1.2 times what he estimates, and the over-runs are all
+  on the billing service. When he puts an EFFORT on this week's billing tasks,
+  he adds a fifth.
+
+** Planning the day
+
+  The *Agenda* opens on today. Its day planner is the day as hours: the
+  meetings already fixed, and down the side the open tasks with no time yet,
+  the late and the soon-due first. Marco drags /Add retries to the webhook
+  sender/ onto ten o'clock and the API docs onto quarter past two. Each drop
+  writes a SCHEDULED time range into the task's file.
+
+  [[file:images/eng-worg-planner.png]]
+
+  The bar at the top keeps him honest: once what is planned plus the meetings
+  fills the working day, the rest waits for tomorrow.
+
+* Tuesday: heads down
+
+  Tuesday is for the work itself. Marco opens *Focus*, picks the webhook
+  retries from the list (the tasks he worked on lately come first) and
+  presses *Start*.
+
+  [[file:images/eng-worg-focus.png]]
+
+  The timer is the server's, not the browser's. Starting it clocks him in on
+  the task. When the twenty-five minutes are up the server clocks him out,
+  notes the pomodoro in the task's logbook and starts the break, whether or
+  not any tab is open. This is his third today; the fourth earns the long
+  break.
+
+  [[file:images/diagram-eng-worg-pomodoro.svg]]
+
+  He doesn't have to keep the Focus tab open. While a pomodoro or a break runs,
+  every tab has the chip in its header, and clicking it gives him the controls
+  without leaving what he is looking at:
+
+  [[file:images/eng-worg-focus-chip.png]]
+
+** Interruptions go in the inbox
+
+  Halfway through a pomodoro Priya messages him: the export test is flaky
+  again. GTD's answer is not to switch, and not to forget either. He presses
+  =c= in whatever tab he is on, picks his *Interruption* template, and types it
+  in:
+
+  [[file:images/eng-worg-capture.png]]
+
+  The template asks who it came from, because his template has a
+  ={{from|Who asked?}}= in it. The entry goes into =inbox.org= and he goes back
+  to the retries. The pomodoro never stopped. Capture templates live in the
+  server's settings (=captureTemplates:=), so the same ones are offered at
+  =orgs cap= and in both editor plugins.
+
+* Wednesday: cleaning up the plan
+
+** A list becomes tasks
+
+  The webhook retries turned out bigger than one task. The heading has a list
+  of what it involves, and each item deserves its own TODO, effort and clock.
+  *Refactor*, *List to headings*, finds the heading by a few letters of its
+  name and shows what it would do before it does it:
+
+  [[file:images/eng-worg-refactor.png]]
+
+  Nothing is written until *Apply*. The same tab renames or merges a tag
+  across every file (and lists the saved queries that still name the old one),
+  splits a subtree into a file of its own, or merges two headings. The Diff &
+  History tab can take any of them back.
+
+** What waits on what
+
+  The relaunch's tasks are ORDERED, and the billing deploy waits on the load
+  test with an AFTER. *Insights*, *Dependencies*, checks every such link:
+
+  [[file:images/eng-worg-deps.png]]
+
+  The deploy is still WAITING on a load test that finished a fortnight ago, so
+  he unlinks it and makes it NEXT. The blocked chain is the honest picture of
+  the relaunch: three tasks queued behind the component library. The *Gantt
+  Chart* shows the same plan in time, each bar sized by its EFFORT and
+  chained by the same links:
+
+  [[file:images/worg-gantt.png]]
+
+* Thursday: unblocking
+
+** A watch on the blocked list
+
+  Marco keeps a saved query, /Blocked/, of everything WAITING or BLOCKED. On
+  Monday he turned on its watch with the bell on its row in *Saved Queries*.
+  Now when something joins the list or leaves it, worg's bell says so. On
+  Thursday the on-call runbook goes WAITING:
+
+  [[file:images/eng-worg-bell.png]]
+
+  A watch can also pop up as a browser alert, on the server's desktop, or in a
+  terminal with =orgs notifications -follow=.
+
+** The board
+
+  For the team's standup he shares *Kanban*: the same open work, a column per
+  keyword. Dragging a card to another column changes the keyword in its file.
+
+  [[file:images/worg-kanban.png]]
+
+* Friday: closing the week
+
+  Friday afternoon Marco empties the inbox for real: everything captured
+  since Monday, one item at a time, one key each.
+
+  [[file:images/eng-worg-inbox.png]]
+
+  The flaky test gets =n=, making it NEXT for Monday. The standing desk goes
+  to the someday pile with a tag. The plumber gets scheduled for Saturday
+  (=s=, then /sat/). When the last one is decided worg says /Inbox zero/.
+
+  Then a look back. *Clock Report*, /This Week/, shows where the hours went,
+  pomodoros included, since each one was clocked. The habit strip at the top
+  of the Agenda shows whether the morning runs survived the week. At a prompt,
+  =orgs recap -copy= writes the same week as a message for the team channel.
+
+* The editors
+
+  Marco writes code in VS Code, and his notes are open there too. Two editor
+  plugins work with orgs, and either one makes the editor one more client of
+  the same server:
+
+  [[file:images/diagram-clients.svg]]
+
+  - *VS Code: Org Everywhere* ([[https://github.com/ihdavids/vscode-org-everywhere][vscode-org-everywhere]]). Org editing
+    (folding, TODO keywords, tables, links) works on its own; the agenda,
+    clock, capture, refile and the rest come from the server. Commands like
+    *Org: Show Kanban*, *Org: Show Clock Report*, *Org: Show Saved Queries*
+    and *Org: Show Agenda* open worg's views as editor tabs, already logged
+    in. A heading opened from one of those panels opens in VS Code's editor,
+    not worg's, and as he moves between headings in the editor the panel
+    follows. For the tabs that aren't on its list (Focus, Inbox, Weekly
+    Review, Insights, Refactor), *Org: Open worg in Browser* opens worg
+    logged in.
+
+    Clocking is the server's, so it is the same clock everywhere:
+    =Ctrl+Alt+O Ctrl+I= clocks in on the heading under the cursor, and the
+    status bar shows the running clock whoever started it, worg's Focus tab
+    included. The plugin also has a pomodoro timer of its own in the status
+    bar (*Start Timer*). Started under a heading, it clocks in there through
+    the server, so that time lands in the same logbook and the same Clock
+    Report.
+
+  - *Sublime Text: Org Everywhere* ([[https://github.com/ihdavids/orgeverywhere][orgeverywhere]]), a fork of
+    OrgExtended backed by the orgs server. Editing a buffer happens in the
+    plugin; the agenda, the clock, capture templates, refile, ids and
+    backlinks, search and exporting are the server's. *Org: orgs Open Web UI*
+    opens worg in the browser on the tab you pick. Clock in from Sublime and
+    the clock is running in worg and at the command line too.
+
+  Either way his inbox, his clock, his saved queries and his capture
+  templates are the ones worg has, because there is only one copy of each:
+  the server's.

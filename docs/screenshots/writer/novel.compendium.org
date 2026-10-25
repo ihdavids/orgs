@@ -1,0 +1,80 @@
+#+TITLE: The Tidewater Clock: compendium
+
+* People
+** Wren Aldous
+:PROPERTIES:
+:KIND: character
+:RECORD: character
+:ALIASES: Wren, the keeper
+:EYES: grey
+:BORN: 1893
+:ROLE: protagonist
+:END:
+Keeper of the harbour clock for three years. Counts everything. Afraid of heights and climbs the tower every morning anyway.
+
+** Silas Marr
+:PROPERTIES:
+:KIND: character
+:RECORD: character
+:ALIASES: Silas, the old man
+:BORN: 1842
+:ROLE: mentor
+:END:
+Clockmaker. Built half the clocks in the county. Has been winding the engine under the tower for forty years and has told no one.
+
+** Jory Aldous
+:PROPERTIES:
+:KIND: character
+:RECORD: character
+:ALIASES: Jory
+:BORN: 1898
+:ROLE: Wren's brother
+:END:
+Fourteen, all elbows, runs everywhere. Goes where he is told not to.
+
+** Ada Penhallow
+:PROPERTIES:
+:KIND: character
+:RECORD: character
+:ALIASES: Ada, the harbourmaster
+:BORN: 1866
+:ROLE: harbourmaster
+:END:
+Keeps two pencils behind her ears and forty years of ledgers in a damp cellar.
+
+* Places
+** Saltmere
+:PROPERTIES:
+:KIND: place
+:ALIASES: the town
+:END:
+A harbour town on a coast that is not quite Cornwall. One quay, one breakwater, one clock.
+
+** The clock tower
+:PROPERTIES:
+:KIND: place
+:ALIASES: the tower
+:STEPS: 112
+:END:
+One hundred and twelve stone steps. The coal store at its foot hides the stair down.
+
+** The breakwater
+:PROPERTIES:
+:KIND: place
+:ALIASES: breakwater
+:END:
+Half a mile of granite. The stones shiver when the tide turns.
+
+* Things
+** The tide engine
+:PROPERTIES:
+:KIND: thing
+:ALIASES: the engine, the drowned engine
+:END:
+Brass, the size of a cottage, with a green glass sphere at its heart. It keeps the sea's time, not the town's.
+
+** The ledgers
+:PROPERTIES:
+:KIND: thing
+:END:
+Forty years of tide readings in the Customs House cellar. Silas wrote /again/ in the margins.

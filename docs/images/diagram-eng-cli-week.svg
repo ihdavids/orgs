@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" width="960" height="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>The shape of the week</title>
+  <desc>Monday starts with the weekly review and planning, Tuesday to Thursday are for making things, Friday ends with a wrap-up; under every day runs the same daily loop of dash, standup, pomodoros, capture and triage.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="470" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">The shape of the week</text>
+
+  <!-- day labels -->
+  <g font-size="13" font-weight="700" fill="#6b7079" text-anchor="middle">
+    <text x="106" y="70">Monday</text>
+    <text x="291" y="70">Tuesday</text>
+    <text x="476" y="70">Wednesday</text>
+    <text x="661" y="70">Thursday</text>
+    <text x="846" y="70">Friday</text>
+  </g>
+
+  <!-- Monday: review and plan -->
+  <rect x="20" y="82" width="172" height="150" rx="10" fill="#fff4e0" stroke="#f5a623" stroke-width="1.6"/>
+  <text x="106" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">Review and plan</text>
+  <g font-size="12" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">
+    <text x="34" y="132">orgs review week</text>
+    <text x="34" y="152">orgs triage</text>
+    <text x="34" y="172">orgs kanban</text>
+    <text x="34" y="192">orgs gantt -crit</text>
+    <text x="34" y="212">orgs deps</text>
+  </g>
+
+  <!-- Tue to Thu: make -->
+  <rect x="205" y="82" width="542" height="150" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+  <text x="476" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">Make things</text>
+  <text x="476" y="130" text-anchor="middle" font-size="12.5" fill="#4a4f57">Mornings of pomodoros on the week's NEXT actions; meetings in the afternoon.</text>
+  <text x="476" y="150" text-anchor="middle" font-size="12.5" fill="#4a4f57">A watch says when something he is waiting on moves.</text>
+  <g font-size="12" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace" text-anchor="middle">
+    <text x="340" y="190">orgs focus</text>
+    <text x="476" y="190">orgs q watch</text>
+    <text x="612" y="190">orgs notifications</text>
+    <text x="340" y="212">orgs plan</text>
+    <text x="476" y="212">orgs agenda</text>
+    <text x="612" y="212">orgs habits</text>
+  </g>
+
+  <!-- Friday: wrap up -->
+  <rect x="760" y="82" width="172" height="150" rx="10" fill="#fff4e0" stroke="#f5a623" stroke-width="1.6"/>
+  <text x="846" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">Wrap up</text>
+  <g font-size="12" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">
+    <text x="774" y="132">orgs focus today</text>
+    <text x="774" y="152">orgs timesheet</text>
+    <text x="774" y="172">orgs recap -copy</text>
+    <text x="774" y="192">orgs estimates</text>
+    <text x="774" y="212">orgs review</text>
+  </g>
+
+  <!-- every day -->
+  <text x="20" y="270" font-size="13" font-weight="700" fill="#6b7079">Every day</text>
+  <rect x="20" y="280" width="912" height="150" rx="10" fill="#ffffff" stroke="#c9c3b5" stroke-dasharray="5 4"/>
+  <g font-size="12" text-anchor="middle">
+    <rect x="36" y="300" width="150" height="58" rx="8" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="111" y="322" font-weight="700" fill="#2b2f36">09:00 the glance</text>
+    <text x="111" y="343" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">orgs dash</text>
+
+    <rect x="214" y="300" width="150" height="58" rx="8" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="289" y="322" font-weight="700" fill="#2b2f36">09:25 standup</text>
+    <text x="289" y="343" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">orgs standup -copy</text>
+
+    <rect x="392" y="300" width="150" height="58" rx="8" fill="#fdeceb" stroke="#e88b84"/>
+    <text x="467" y="322" font-weight="700" fill="#2b2f36">pomodoros</text>
+    <text x="467" y="343" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">orgs focus</text>
+
+    <rect x="570" y="300" width="150" height="58" rx="8" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="645" y="322" font-weight="700" fill="#2b2f36">interruptions</text>
+    <text x="645" y="343" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">orgs cap</text>
+
+    <rect x="748" y="300" width="168" height="58" rx="8" fill="#eaf6ea" stroke="#8cc58c"/>
+    <text x="832" y="322" font-weight="700" fill="#2b2f36">17:00 inbox to zero</text>
+    <text x="832" y="343" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace">orgs triage</text>
+  </g>
+  <g stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M188,329 L210,329"/>
+    <path d="M366,329 L388,329"/>
+    <path d="M544,329 L566,329"/>
+    <path d="M722,329 L744,329"/>
+  </g>
+  <!-- loop back: an interruption is captured, then back to the pomodoro -->
+  <path d="M645,360 C645,392 467,392 467,362" stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  <text x="556" y="404" text-anchor="middle" font-size="11" fill="#8a8f98" font-style="italic">captured in seconds, back to the timer</text>
+</svg>

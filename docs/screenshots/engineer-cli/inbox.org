@@ -1,0 +1,18 @@
+#+TITLE: Inbox
+
+* TODO Ask Priya why the staging deploy took 40 minutes
+  :PROPERTIES:
+  :CREATED:  [{{D-1}} 10:12]
+  :END:
+* Idea: replay production traffic against staging before a release
+  :PROPERTIES:
+  :CREATED:  [{{D-1}} 11:31]
+  :END:
+* TODO Update the on-call rota for November
+  :PROPERTIES:
+  :CREATED:  [{{D-1}} 15:02]
+  :END:
+* TODO Read Dana's notes on the Q1 roadmap
+  :PROPERTIES:
+  :CREATED:  [{{D+0}} 08:40]
+  :END:

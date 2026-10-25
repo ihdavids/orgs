@@ -15,6 +15,49 @@
   Every command also takes =-json=, =-format=, =-dry-run= and =-no-color=,
   so what is drawn here for a person can be read by a program instead.
 
+* The day at a glance: =orgs dash=
+
+  One screen that answers "what does today want from me": the agenda, the
+  clock, the focus timer, the habits, the inbox and your watches, read
+  together. It only reads; each card names the command that acts on it.
+  =orgs dash -w= keeps it on screen, redrawn as things change, and
+  =orgs dash -json= gives every card as data.
+
+  [[file:images/cli-dash.png]]
+
+  A card whose part of the server is missing or broken says so in one dim
+  line, and the others still draw.
+
+* The morning standup: =orgs standup=
+
+  What you did since the last working day (Friday, on a Monday), what is on
+  today and what is in the way, written in Slack's markup so it can be pasted
+  straight into a channel. =-copy= puts it on the clipboard as well, =-md=
+  writes GitHub Markdown instead, =-since mon= starts from a day of your
+  choosing and =-n= caps each section (the rest are counted).
+
+  [[file:images/cli-standup.png]]
+
+  Every part is read by the view it comes from (the agenda, the clock table,
+  the weekly review's waiting list, the dependency check), so a standup never
+  says something the agenda would contradict.
+
+* The week in review: =orgs recap=
+
+  A week or a month on one page: what was finished, where the time went, how
+  the habits held up, words written and what is still blocked. Like
+  =orgs standup= it is Slack's markup unless you ask for =-md=.
+
+  #+BEGIN_SRC sh
+  orgs recap                        # the last seven days
+  orgs recap -last -week            # last week, Monday to Sunday
+  orgs recap -month                 # this month so far
+  orgs recap -from 2026-10-01 -to 2026-10-15
+  orgs recap -block 2026-Q3 -md     # a clock table range, as Markdown
+  #+END_SRC
+
+  [[file:images/cli-recap.png]]
+
 * The agenda: =orgs agenda=
 
   Three months of calendar, today's entries, and the week underneath. =,= and
@@ -108,6 +151,46 @@
 
   [[file:images/cli-stats.png]]
 
+* Finding your way: =orgs help=
+
+  Everything the command line can do is described by the binary itself, so
+  the help always matches the version you are running. It needs no server.
+
+  | You type                          | You get                                                                   |
+  |-----------------------------------+---------------------------------------------------------------------------|
+  | =orgs help=                       | every command, grouped by what it is for, in the order worth reading      |
+  | =orgs help standup=               | one command: what it does, its flags, examples and what the guides say     |
+  | =orgs help stand=                 | no such command, so the names it might have meant (=standup=)              |
+  | =orgs help -all=                  | every command with every flag, one after another, for searching           |
+  | =orgs help -json=                 | the command list as a table (name, group, usage), for a script            |
+  | =orgs help -man search=           | a command's man page (roff); with no command, =orgs(1)=                    |
+  | =orgs help -man-dir DIR=          | =orgs.1= and an =orgs-<command>.1= for every command, written into =DIR= |
+  | =orgs completion zsh=             | tab completion for your shell                                             |
+
+  A command's page reads top to bottom like this:
+
+  [[file:images/cli-help.png]]
+
+  Some ways to use it:
+
+  #+BEGIN_SRC sh
+  # Which command has a flag for this?
+  orgs help -all | grep -B20 -- '-since' | grep '^orgs '
+
+  # Read a long page in a pager (search has the whole query language)
+  orgs help search | less -R
+
+  # Real man pages: write them once, then `man orgs-search`
+  orgs help -man-dir ~/.local/share/man/man1
+
+  # The list for a launcher or a wrapper script
+  orgs help -json | jq -r '.[] | "\(.Name)\t\(.Usage)"'
+  #+END_SRC
+
+  Commands you add yourself show up too: every filter in your yaml is a
+  command, listed under its own group (or "Other"). =orgs p= is the same list
+  as a fuzzy picker, together with your saved queries and aliases.
+
 * Taking the pictures again
 
   The pictures are taken by a script, against a demo server with its own
@@ -125,3 +208,15 @@
   ={{D+3}}= and filled in when the script runs, so the agenda is always about
   today. Terminal pictures run each command in a pseudo terminal and draw the
   screen with xterm.js; worg pictures drive Chrome with puppeteer.
+
+  An annotated picture (=cli-dash=) is a terminal picture with numbered badges
+  and a legend. Its notes find their parts by text on the screen (a card's top
+  edge, or a line), so the badges follow the layout, and a renamed card fails
+  the shot instead of putting a badge in the wrong place. These shots are taken
+  last, because they set the demo up first (a pomodoro, a ticked habit, a
+  watch that fires) and the other pictures shouldn't show that.
+
+  The stories' pictures live in =tools/screenshots/stories/=, one module a
+  story. Each brings its own notebook (=docs/screenshots/<story>/=) and runs on
+  a server of its own after the pictures above, so nothing one story sets up
+  shows in another. =node capture.mjs -story writer= takes just one story's.

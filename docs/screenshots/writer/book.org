@@ -1,0 +1,90 @@
+#+TITLE: The Tidewater Clock: the business of it
+#+FILETAGS: :book:
+
+* Habits
+** TODO Write 500 words                                               :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 10:40]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 10:40]
+   - State "DONE"       from "TODO"       [{{D-2}} 11:05]
+   - State "DONE"       from "TODO"       [{{D-3}} 10:20]
+   - State "DONE"       from "TODO"       [{{D-4}} 10:55]
+   - State "DONE"       from "TODO"       [{{D-5}} 11:30]
+   - State "DONE"       from "TODO"       [{{D-7}} 10:15]
+   - State "DONE"       from "TODO"       [{{D-8}} 10:45]
+   - State "DONE"       from "TODO"       [{{D-9}} 10:30]
+   - State "DONE"       from "TODO"       [{{D-10}} 11:00]
+   - State "DONE"       from "TODO"       [{{D-11}} 10:50]
+   - State "DONE"       from "TODO"       [{{D-12}} 10:35]
+   :END:
+** TODO Walk before writing                                           :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 08:00]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 08:00]
+   - State "DONE"       from "TODO"       [{{D-3}} 08:10]
+   - State "DONE"       from "TODO"       [{{D-4}} 08:05]
+   - State "DONE"       from "TODO"       [{{D-6}} 08:00]
+   - State "DONE"       from "TODO"       [{{D-9}} 08:20]
+   :END:
+
+* Draft
+** NEXT Finish "The Breakwater"
+   SCHEDULED: <{{D+0}}>
+   :LOGBOOK:
+   CLOCK: [{{D-1}} 09:00]--[{{D-1}} 10:40] =>  1:40
+   CLOCK: [{{D-2}} 09:15]--[{{D-2}} 11:05] =>  1:50
+   :END:
+** TODO Outline "The Reckoning" on the corkboard
+** TODO Rewrite the opening of "The Apprentice"
+   :PROPERTIES:
+   :EFFORT:   2:00
+   :END:
+** DONE Revise "The Harbourmaster"
+   CLOSED: [{{D-3}} 16:20]
+   :LOGBOOK:
+   CLOCK: [{{D-3}} 13:00]--[{{D-3}} 16:20] =>  3:20
+   CLOCK: [{{D-4}} 09:30]--[{{D-4}} 11:00] =>  1:30
+   :END:
+** DONE Second pass on "The Apprentice"
+   CLOSED: [{{D-5}} 15:00]
+   :LOGBOOK:
+   CLOCK: [{{D-5}} 09:00]--[{{D-5}} 11:30] =>  2:30
+   :END:
+
+* Agent and editor
+** WAITING Notes on Part One from Hannah (editor)
+   :PROPERTIES:
+   :WAITING_SINCE: [{{D-6}}]
+   :END:
+   :LOGBOOK:
+   - State "WAITING"    from "TODO"       [{{D-6}} 17:00]
+   :END:
+** TODO [#A] Send the first three chapters to the agent
+   DEADLINE: <{{D+3}}>
+** TODO Write the one-page synopsis
+   DEADLINE: <{{D+3}}>
+   :PROPERTIES:
+   :EFFORT:   1:30
+   :END:
+** TODO Reading at the Saltmere library
+   <{{D+9}} 19:00-20:30>
+
+* Research
+** TODO Visit the record office for the 1912 harbour ledgers
+** TODO Ask a clockmaker about gravity escapements
+** DONE Read up on turret clocks
+   CLOSED: [{{D-2}} 20:10]
+
+* Admin
+** TODO Invoice the magazine for the short story
+   DEADLINE: <{{D+6}}>
+** TODO Renew the writers' society membership
+   SCHEDULED: <{{D+2}}>

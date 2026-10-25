@@ -1,0 +1,160 @@
+#+TITLE: Work
+#+FILETAGS: :work:
+#+COLUMNS: %40ITEM(Task) %TODO %EFFORT(Effort){:} %PRIORITY(P)
+
+* Payments API v2                                                   :project:
+  Idempotent payments, so a retried request never charges twice.
+
+** DONE Write the RFC                                              :backend:
+   CLOSED: [{{D-3}} 15:10]
+   :PROPERTIES:
+   :EFFORT:   4h
+   :ID:       payments-rfc
+   :END:
+   :LOGBOOK:
+   - Pomodoro: 25 min focus, 5 min break [{{D-3}} 14:55]
+   CLOCK: [{{D-3}} 14:30]--[{{D-3}} 14:55] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-3}} 14:25]
+   CLOCK: [{{D-3}} 14:00]--[{{D-3}} 14:25] =>  0:25
+   - Pomodoro: 25 min focus, 15 min break [{{D-4}} 11:15]
+   CLOCK: [{{D-4}} 10:50]--[{{D-4}} 11:15] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-4}} 10:45]
+   CLOCK: [{{D-4}} 10:20]--[{{D-4}} 10:45] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-4}} 10:15]
+   CLOCK: [{{D-4}} 09:50]--[{{D-4}} 10:15] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-4}} 09:45]
+   CLOCK: [{{D-4}} 09:20]--[{{D-4}} 09:45] =>  0:25
+   :END:
+** NEXT [#A] Implement idempotency keys                            :backend:
+   SCHEDULED: <{{D+0}}>
+   :PROPERTIES:
+   :EFFORT:   6h
+   :ID:       idempotency-keys
+   :END:
+   :LOGBOOK:
+   - Pomodoro: 25 min focus, 5 min break [{{D-1}} 11:25]
+   CLOCK: [{{D-1}} 11:00]--[{{D-1}} 11:25] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-1}} 10:55]
+   CLOCK: [{{D-1}} 10:30]--[{{D-1}} 10:55] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-1}} 10:25]
+   CLOCK: [{{D-1}} 10:00]--[{{D-1}} 10:25] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-2}} 15:55]
+   CLOCK: [{{D-2}} 15:30]--[{{D-2}} 15:55] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-2}} 15:25]
+   CLOCK: [{{D-2}} 15:00]--[{{D-2}} 15:25] =>  0:25
+   :END:
+   - [X] Key table and expiry
+   - [X] Middleware that replays a stored response
+   - [ ] Conflict when the body differs
+   - [ ] Metrics
+** TODO Load test the new endpoints                                :backend:
+   :PROPERTIES:
+   :EFFORT:   3h
+   :AFTER:    idempotency-keys
+   :ID:       load-test
+   :END:
+** TODO Roll out behind a feature flag                             :backend:
+   DEADLINE: <{{D+9}}>
+   :PROPERTIES:
+   :EFFORT:   2h
+   :AFTER:    load-test
+   :END:
+
+* Search reindex                                                    :project:
+** NEXT Profile the slow queries                                   :backend:
+   :PROPERTIES:
+   :EFFORT:   3h
+   :END:
+   :LOGBOOK:
+   - Pomodoro: 25 min focus, 5 min break [{{D-2}} 10:25]
+   CLOCK: [{{D-2}} 10:00]--[{{D-2}} 10:25] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-2}} 09:55]
+   CLOCK: [{{D-2}} 09:30]--[{{D-2}} 09:55] =>  0:25
+   :END:
+** WAITING Read access to the production replica                       :ops:
+   :PROPERTIES:
+   :EFFORT:   1h
+   :DELEGATED: Priya
+   :END:
+   :LOGBOOK:
+   - State "WAITING"    from "TODO"       [{{D-9}} 16:20] \\
+     Asked Priya in #ops.
+   :END:
+** TODO Write the reindex migration                                :backend:
+   :PROPERTIES:
+   :EFFORT:   4h
+   :END:
+
+* Developer portal                                                  :project:
+  Nobody has said what happens next here: the weekly review asks.
+** TODO Draft the getting-started guide                               :docs:
+   :PROPERTIES:
+   :EFFORT:   3h
+   :END:
+** TODO Record a five-minute demo                                     :docs:
+
+* Operations                                                           :ops:
+** TODO Renew the TLS certificates
+   DEADLINE: <{{D+0}}>
+** BLOCKED Upgrade Postgres to 17
+   :PROPERTIES:
+   :EFFORT:   4h
+   :END:
+   Waiting on the vendor's maintenance window.
+** TODO Rotate the API keys
+   SCHEDULED: <{{D-2}}>
+** DONE Fix the flaky checkout test                                :backend:
+   CLOSED: [{{D-1}} 16:40]
+   :PROPERTIES:
+   :EFFORT:   2h
+   :END:
+   :LOGBOOK:
+   - Pomodoro: 25 min focus, 5 min break [{{D-1}} 16:35]
+   CLOCK: [{{D-1}} 16:10]--[{{D-1}} 16:35] =>  0:25
+   - Pomodoro: 25 min focus, 5 min break [{{D-1}} 16:05]
+   CLOCK: [{{D-1}} 15:40]--[{{D-1}} 16:05] =>  0:25
+   - Pomodoro: 25 min focus, 15 min break [{{D-1}} 15:35]
+   CLOCK: [{{D-1}} 15:10]--[{{D-1}} 15:35] =>  0:25
+   :END:
+** DONE Alert on payment webhook failures                              :ops:
+   CLOSED: [{{D-12}} 17:00]
+   :PROPERTIES:
+   :EFFORT:   2h
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-12}} 13:30]--[{{D-12}} 16:55] =>  3:25
+   :END:
+
+* Code review                                                       :review:
+** DONE Review the rate limiter change                              :review:
+   CLOSED: [{{D-2}} 11:40]
+   :PROPERTIES:
+   :EFFORT:   1h
+   :END:
+   :LOGBOOK:
+   - Pomodoro: 25 min focus, 5 min break [{{D-2}} 11:25]
+   CLOCK: [{{D-2}} 11:00]--[{{D-2}} 11:25] =>  0:25
+   :END:
+** DONE Review the search ranking tweak                             :review:
+   CLOSED: [{{D-8}} 14:30]
+   :PROPERTIES:
+   :EFFORT:   1h
+   :END:
+   :LOGBOOK:
+   CLOCK: [{{D-8}} 13:40]--[{{D-8}} 14:30] =>  0:50
+   :END:
+
+* Hiring
+** TODO Review the backend candidate's take-home
+   DEADLINE: <{{D+1}}>
+   :PROPERTIES:
+   :EFFORT:   1h
+   :END:
+
+* Meetings                                                         :meeting:
+** TODO Standup
+   SCHEDULED: <{{D+0}} 09:30-09:45 +1d>
+** TODO 1:1 with Dana
+   SCHEDULED: <{{D+0}} 14:00-14:30>
+** TODO Architecture review: payments
+   SCHEDULED: <{{D+2}} 15:00-16:00>

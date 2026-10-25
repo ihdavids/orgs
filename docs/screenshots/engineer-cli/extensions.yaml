@@ -1,0 +1,21 @@
+# Seeds the engineer-cli story's orgs_extensions.yaml: its saved queries and
+# kanban board. A noAuth server's user is "local".
+users:
+  local:
+    storedQueries:
+    - name: Next actions
+      query: 'IsStatus("NEXT") && !IsArchived()'
+    - name: Payments
+      query: 'IsTask() && InFile("work.org") && HasProperty("EFFORT") && !IsDone() && HasTags("backend")'
+    - name: Sprint
+      query: 'IsTask() && !IsArchived() && InFile("work.org") && !HasTags("meeting")'
+    kanbanBoards:
+    - name: Sprint
+      storedQuery: Sprint
+      groupBy: status
+      columns:
+      - {value: TODO, color: blue}
+      - {value: NEXT, color: violet}
+      - {value: WAITING, color: orange}
+      - {value: BLOCKED, color: pink}
+      - {value: DONE, color: green}

@@ -1,0 +1,51 @@
+#+TITLE: Habits
+
+* Habits
+** TODO Inbox to zero                                                 :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 17:30]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-2}} 17:20]
+   - State "DONE"       from "TODO"       [{{D-3}} 17:45]
+   - State "DONE"       from "TODO"       [{{D-4}} 17:10]
+   - State "DONE"       from "TODO"       [{{D-7}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-8}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-9}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-10}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-11}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-14}} 17:30]
+   - State "DONE"       from "TODO"       [{{D-15}} 17:30]
+   :END:
+** TODO Walk at lunch                                                 :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 12:30]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-2}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-4}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-5}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-6}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-8}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-9}} 12:30]
+   - State "DONE"       from "TODO"       [{{D-11}} 12:30]
+   :END:
+** TODO Eight pomodoros of deep work                                  :habit:
+   SCHEDULED: <{{D+0}} .+1d>
+   :PROPERTIES:
+   :STYLE:    habit
+   :LAST_REPEAT: [{{D-1}} 17:00]
+   :END:
+   :LOGBOOK:
+   - State "DONE"       from "TODO"       [{{D-1}} 17:00]
+   - State "DONE"       from "TODO"       [{{D-2}} 17:00]
+   - State "DONE"       from "TODO"       [{{D-4}} 17:00]
+   - State "DONE"       from "TODO"       [{{D-8}} 17:00]
+   - State "DONE"       from "TODO"       [{{D-9}} 17:00]
+   :END:

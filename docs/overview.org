@@ -57,6 +57,37 @@
    	- command line access to your org files.
 
 
+** Your editor, your browser and your terminal on the same notes
+
+   [[file:images/diagram-clients.svg]]
+
+   Every client talks to the one server, so they share one clock, one inbox,
+   one set of saved queries and one focus timer. Clock in from your editor and
+   the clock is running in worg and at the command line; tick a task off on
+   your phone and your editor's agenda shows it done.
+
+   - *VS Code: [[https://github.com/ihdavids/vscode-org-everywhere][vscode-org-everywhere]] (Org Everywhere).* Org mode editing
+     (folding, TODO keywords, tables, links, dates) works on its own. With an
+     orgs server it adds the agenda and the clock in the side bar, clocking
+     in on the heading under the cursor, a focus timer in the status bar that
+     clocks in through the server, capture through the server's templates,
+     refile and archive, table formulas, running code and exporting. Every
+     worg view (kanban, gantt, clock report, search…) opens as an editor
+     panel, and a heading picked in one opens in the editor.
+   - *Sublime Text: [[https://github.com/ihdavids/orgeverywhere][Org Everywhere]].* A fork of OrgExtended where editing
+     stays in the plugin and everything that spans files (the agenda,
+     clocking, capture, refile and archive, ids and backlinks, search,
+     exporting) is done by orgs. *Org: Set Up a Local orgs Server* downloads
+     orgs and runs it on your folder of notes; *Org: orgs Open Web UI* opens
+     worg on one of its views.
+   - *worg*, the web front end the server hands out at =/=: every view,
+     in any browser, including a phone's. See [[*worg, in pictures][worg, in pictures]].
+   - *The =orgs= command line*: the same views at a prompt, for scripts, git
+     hooks and ssh. See [[*The command line, in pictures][The command line, in pictures]].
+
+   The stories show them working together over a whole week: an engineer at
+   the command line and in worg, and a writer working on a book.
+
 ** Plans
    - Mu4E style imap email synchronization and exposure of your emails as part of your
      org repository.

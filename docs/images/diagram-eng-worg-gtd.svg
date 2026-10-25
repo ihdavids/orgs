@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>GTD's five steps, in worg</title>
+  <desc>Capture with the c modal, Voice Notes or an editor plugin. Clarify in the Inbox. Organise with refile and schedule, the Agenda's day planner, Kanban and Refactor. Reflect in the Weekly Review, Insights, the Clock Report and Habits. Engage with the Agenda, Focus and the Next actions saved query. Then round again.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="520" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">GTD's five steps, in worg</text>
+
+  <!-- centre -->
+  <circle cx="480" cy="282" r="76" fill="#fff4e0" stroke="#f5a623" stroke-width="1.8"/>
+  <text x="480" y="276" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">one server</text>
+  <text x="480" y="296" text-anchor="middle" font-size="12" fill="#6b7079">every tab sees</text>
+  <text x="480" y="312" text-anchor="middle" font-size="12" fill="#6b7079">the same notes</text>
+
+  <g font-size="12" fill="#6b7079" text-anchor="middle">
+    <!-- 1 Capture (top) -->
+    <rect x="370" y="58" width="220" height="92" rx="11" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="480" y="82" font-size="14.5" font-weight="700" fill="#2b2f36">1 · Capture</text>
+    <text x="480" y="102">c, from any tab</text>
+    <text x="480" y="119">Voice Notes</text>
+    <text x="480" y="136">Org: Capture in VS Code, Sublime</text>
+
+    <!-- 2 Clarify (right top) -->
+    <rect x="700" y="168" width="230" height="92" rx="11" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="815" y="192" font-size="14.5" font-weight="700" fill="#2b2f36">2 · Clarify</text>
+    <text x="815" y="212">Inbox: one item, one key</text>
+    <text x="815" y="229">refile · schedule · tag · done</text>
+    <text x="815" y="246">or next, if it is a task</text>
+
+    <!-- 3 Organise (right bottom) -->
+    <rect x="620" y="378" width="250" height="110" rx="11" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="745" y="402" font-size="14.5" font-weight="700" fill="#2b2f36">3 · Organise</text>
+    <text x="745" y="422">Agenda: tasks onto hours</text>
+    <text x="745" y="439">Kanban: keyword by column</text>
+    <text x="745" y="456">Refactor: lists into tasks,</text>
+    <text x="745" y="473">tags renamed, files split</text>
+
+    <!-- 4 Reflect (left bottom) -->
+    <rect x="90" y="378" width="250" height="110" rx="11" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="215" y="402" font-size="14.5" font-weight="700" fill="#2b2f36">4 · Reflect</text>
+    <text x="215" y="422">Weekly Review: the seven steps</text>
+    <text x="215" y="439">Insights: estimates, dependencies</text>
+    <text x="215" y="456">Clock Report, Habits</text>
+    <text x="215" y="473">the bell: what a watch found</text>
+
+    <!-- 5 Engage (left top) -->
+    <rect x="30" y="168" width="230" height="92" rx="11" fill="#fff4e0" stroke="#f5a623"/>
+    <text x="145" y="192" font-size="14.5" font-weight="700" fill="#2b2f36">5 · Engage</text>
+    <text x="145" y="212">Focus: a pomodoro on it</text>
+    <text x="145" y="229">the Agenda's day, in order</text>
+    <text x="145" y="246">Saved Queries: Next actions</text>
+  </g>
+
+  <!-- the loop -->
+  <g stroke="#8a8f98" stroke-width="1.7" fill="none" marker-end="url(#a)">
+    <path d="M592,112 C680,118 760,135 795,164"/>
+    <path d="M830,262 C840,310 815,350 790,374"/>
+    <path d="M616,440 L344,440"/>
+    <path d="M150,374 C120,330 125,295 138,264"/>
+    <path d="M190,164 C230,125 300,108 366,106"/>
+  </g>
+</svg>

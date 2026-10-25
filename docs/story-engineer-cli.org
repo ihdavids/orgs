@@ -1,0 +1,403 @@
+#+TITLE: An engineer's week at the command line
+#+DOC_SECTION: Stories
+#+OPTIONS: toc:2 num:nil
+
+* Who this is about
+
+  Marcus is a backend engineer on a payments team. He lives in a terminal
+  and an editor, and he runs his week on two simple rules:
+
+  - *Getting Things Done.* Anything that wants his attention goes into an
+    inbox first and is decided about later. Every project always has one
+    =NEXT= action. Once a week he reviews the lot, so he can trust it.
+  - *Pomodoros.* He works on one next action for 25 minutes, then takes a
+    five minute break. Every fourth break is fifteen minutes. Interruptions
+    are written down, not acted on.
+
+  This page follows him from Monday to Friday. Every step is an =orgs=
+  command against one =orgs serve=, so his terminal, his editor, worg on
+  his phone and the menu bar on his laptop all show the same clock, the
+  same inbox and the same pomodoro.
+
+  The pictures were taken against his notebook, kept in
+  =docs/screenshots/engineer-cli= (=node capture.mjs -story engineer-cli= in
+  =tools/screenshots= takes them again). The three borrowed from
+  [[*The command line, in pictures][The command line, in pictures]] (the dashboard, the standup and the recap) show the
+  smaller demo notebook those pages use.
+
+* The shape of the week
+
+  [[file:images/diagram-eng-cli-week.svg]]
+
+  Monday is for deciding: the weekly review, then a plan for the week.
+  Tuesday to Thursday are for making things. Friday is for looking back.
+  The same short loop runs under every day: a glance in the morning, the
+  standup, pomodoros, interruptions captured as they come, and the inbox
+  emptied before he leaves.
+
+* The loop he keeps
+
+  GTD has five steps, and each one has a command:
+
+  [[file:images/diagram-eng-cli-gtd.svg]]
+
+  | Step     | What it means                              | orgs                                      |
+  |----------+--------------------------------------------+-------------------------------------------|
+  | Capture  | get it out of your head, now               | =orgs cap=, or capture from the editor     |
+  | Clarify  | what is it, and is it mine to do?          | =orgs triage=                             |
+  | Organise | put it where it will be seen               | =orgs ref=, =orgs sched=, =orgs todo=, =orgs kanban= |
+  | Reflect  | keep the system worth trusting             | =orgs dash=, =orgs review week=, =orgs recap= |
+  | Engage   | do the next action, 25 minutes at a time   | =orgs focus=, =orgs plan=                  |
+
+  The inbox in the middle is what holds the loop together. A capture never
+  asks where something belongs, so it takes seconds. Triage asks later, one
+  item at a time.
+
+* Setting it up once
+
+  Marcus set this up once, the week he started.
+
+** One template that files into the inbox
+
+   An inbox is the top level of any file called =inbox.org= (the
+   =review.inbox= setting can make it a query instead). His capture template
+   files there, so the editor, worg and the command line all capture the
+   same way:
+
+   #+BEGIN_SRC yaml
+   server:
+     captureTemplates:
+       - name: "Inbox"
+         type: "entry"
+         target:
+           type: "file"
+           filename: "inbox.org"
+         template: |-
+           :PROPERTIES:
+           :CREATED: {{now}}
+           :END:
+           {{CONTENT}}
+   #+END_SRC
+
+   The template is the body. At the command line the headline is its own
+   box, and the keyword goes in it: =orgs cap Inbox -head "TODO Call the
+   bank"=.
+
+** Saved queries, and a watch
+
+   #+BEGIN_SRC sh
+   orgs q save next 'IsStatus("NEXT") && !IsArchived()'
+   orgs q save waiting 'IsStatus("WAITING") || IsStatus("BLOCKED")'
+   orgs q watch waiting -left      # tell me when something stops waiting
+   #+END_SRC
+
+   Saved queries are shared with worg and the editors, so the same =next=
+   list is in every one of them.
+
+** The pomodoro where he can see it
+
+   The timer runs on the server, so anything can show it. He has it in his
+   tmux status line and in the macOS menu bar:
+
+   #+BEGIN_SRC sh
+   # ~/.tmux.conf
+   set -g status-right '#(orgs focus status)'
+   set -g status-interval 5
+
+   # SwiftBar (brew install swiftbar); use xbar's plugins folder for xbar
+   orgs focus bar install "$HOME/Library/Application Support/SwiftBar/Plugins"
+   #+END_SRC
+
+   =orgs focus status= prints one line, =🍅 12:31 Implement idempotency keys=,
+   and nothing when no session is running. The menu bar's menu can stop the
+   session, add five minutes, skip to the break, and open worg's Focus tab.
+
+** His editors
+
+   Marcus writes code in VS Code and keeps Sublime Text for long notes.
+   Both talk to the same server; see [[*His editors, all week][His editors, all week]] below.
+
+* Monday morning: the weekly review
+
+  The review comes first, before email, while the week is still his.
+
+** What wants a decision
+
+   =orgs review= lists everything that needs deciding, each check with a
+   sentence saying what to do about it: projects with no next action,
+   deadlines nobody scheduled, things waiting on other people, time clocked
+   against something still open, notes nothing links to. A check that finds
+   nothing prints a green line. "No NEXT actions untouched in a month" is
+   worth hearing too.
+
+** Walking it: the review, step by step
+
+   =orgs review week= turns the list into seven steps, in GTD's order. Each
+   step is the same screen, one item and one key per decision, and =u=
+   takes the last decision back:
+
+   1. *Empty the inbox.* The triage screen, below.
+   2. *Projects with no next action.* The Developer portal has two open
+      tasks and nothing marked =NEXT=. Marcus presses =1= and the guide
+      becomes its next action.
+   3. *Waiting for.* Read access to the production replica has waited nine
+      days. =c= chases it, and the note goes into the item's logbook so the
+      count starts again.
+   4. *Last week's time.* Clocked against planned, by project and by tag.
+      There is nothing to decide here, only something to look at.
+   5. *Stale scheduled items.* Scheduled days ago, and nothing has happened
+      since. Reschedule them, or admit they aren't happening.
+   6. *The someday pile.* Keep, promote, schedule or drop.
+   7. *Done.* The review is recorded, and the next one's first screen says
+      how long ago this was.
+
+   [[file:images/eng-cli-review-week.png]]
+
+   The step he is on is kept on the server, so he can stop halfway, get
+   coffee, and finish it in worg's Weekly Review tab on his phone.
+
+** Emptying the inbox: triage
+
+   Step 1 is =orgs triage=, and he runs it on its own most evenings too:
+
+   [[file:images/eng-cli-triage.png]]
+
+   "Ask Priya why the staging deploy took 40 minutes" takes him less than
+   two minutes, so he does it and presses =d=. "Update the on-call rota for
+   November" gets =s fri=. The replay-traffic idea gets =r=, filed under
+   Search reindex as something to bring up at the architecture review.
+
+* Monday afternoon: planning the week
+
+** The board and the chain
+
+   =orgs kanban= shows his Sprint board, a saved query grouped by keyword.
+   =H= and =L= move a card between columns, which changes its keyword. A
+   board is only a query and a layout, so it never goes stale.
+
+   Then he checks the order things have to happen in. Load testing waits
+   on the idempotency work (=AFTER: idempotency-keys=), and the rollout waits
+   on load testing:
+
+   #+BEGIN_SRC sh
+   orgs deps
+   #+END_SRC
+
+   [[file:images/eng-cli-deps.png]]
+
+   One blocked chain, and he already knew about it: the idempotency keys
+   are his priority this week. For projects measured in days rather than
+   hours, =orgs gantt <saved query> -crit= draws the same chain as a chart
+   with the critical path marked (see [[*Schedules: =orgs gantt=][Schedules]]).
+
+* Every morning
+
+** The glance: the dashboard
+
+   At nine he opens a terminal and runs =orgs dash=: today's appointments
+   and the line where now is, what is late, the habits, the inbox, what his
+   watches found, and the command for each card that wants something.
+   =orgs dash -w= keeps it on a spare screen, redrawn as things change.
+
+   [[file:images/cli-dash.png]]
+
+** The standup, ready to paste
+
+   Five minutes before the standup:
+
+   #+BEGIN_SRC sh
+   orgs standup -copy
+   #+END_SRC
+
+   It lists what he finished since the last working day (Friday's, on a
+   Monday), what he has clocked, what is on today and what is in the way,
+   written in Slack's markup and put on the clipboard. He pastes it into the
+   team channel and says the same thing out loud.
+
+   [[file:images/cli-standup.png]]
+
+** Blocking the day
+
+   After the standup he gives the morning to the one task that matters and
+   puts the take-home review after his 1:1:
+
+   #+BEGIN_SRC sh
+   orgs plan idempotency 10:00-12:00
+   orgs plan take-home 15:00-16:00
+   orgs plan                          # the day, and what is left
+   #+END_SRC
+
+   [[file:images/eng-cli-plan.png]]
+
+   A block is only a time range on the task's =SCHEDULED=. Emacs and every
+   agenda see the plan, and worg's day planner shows the same blocks. Drag
+   one there and =orgs plan= agrees.
+
+* Working in pomodoros
+
+** Starting one
+
+   At ten he starts the first pomodoro on a next action:
+
+   #+BEGIN_SRC sh
+   orgs focus 'IsStatus("NEXT")'      # pick from his next actions
+   orgs focus idempotency             # or name it
+   #+END_SRC
+
+   [[file:images/eng-cli-focus.png]]
+
+   The server clocks in on the heading and counts down. When the 25 minutes
+   are up it clocks out, writes the =CLOCK= line, notes the pomodoro beside
+   it and starts the break. It does this whether or not anything is
+   watching. Marcus usually presses =d= to get his terminal back and
+   watches the countdown in tmux instead.
+
+   [[file:images/diagram-eng-cli-pomodoro.svg]]
+
+   A finished pomodoro leaves a line in the heading's logbook:
+
+   #+BEGIN_SRC org
+   ** NEXT [#A] Implement idempotency keys
+      :LOGBOOK:
+      - Pomodoro: 25 min focus, 5 min break [2026-10-23 Fri 11:25]
+      CLOCK: [2026-10-23 Fri 11:00]--[2026-10-23 Fri 11:25] =>  0:25
+      :END:
+   #+END_SRC
+
+   So "how many pomodoros did this take?" can be answered from the file
+   itself, in Emacs, years later.
+
+** The lengths
+
+   #+BEGIN_SRC sh
+   orgs focus -work 50 -break 10      # longer rounds for deep work
+   orgs focus -auto                   # start the next one when a break ends
+   orgs focus stop | skip | extend 5  # from any terminal
+   #+END_SRC
+
+   The server remembers the lengths, so worg and the menu bar start with
+   the same ones next time. Stopping early clocks the time but doesn't count
+   the pomodoro. Clocking out or clocking in somewhere else, from any
+   client, ends the work phase: two timers that disagree about what you are
+   doing are worse than one.
+
+** When something interrupts
+
+   Twenty minutes in, the on-call channel mentions that the nightly backup
+   paged at 3am. It isn't his to fix this minute, but it mustn't be lost:
+
+   #+BEGIN_SRC sh
+   orgs cap Inbox
+   #+END_SRC
+
+   [[file:images/eng-cli-cap.png]]
+
+   He types the headline and a tag, presses =ctrl-s=, and is back on the
+   timer in under ten seconds. In VS Code the same capture is
+   =Ctrl+Alt+O Q=. When there is nothing to fill in, it is one line:
+
+   #+BEGIN_SRC sh
+   orgs cap Inbox -no-form -head "TODO Check why the nightly backup paged at 3am"
+   #+END_SRC
+
+   At five he empties the inbox with =orgs triage=, then ticks off his
+   habit: =orgs habits done "Inbox to zero"=.
+
+* Waiting on other people
+
+  The reindex work can't go on without read access to the production
+  replica, and that is Priya's to give. Rather than check every hour, he
+  lets the server watch: the =waiting= query is watched with =-left=, so he
+  hears when something stops waiting. On Wednesday afternoon:
+
+  [[file:images/eng-cli-notifications.png]]
+
+  Priya has moved the item on. It shows in the dashboard's "Waiting for you"
+  card, in =orgs notifications=, and with =-desktop= on the watch, as a
+  notification on his screen. =orgs notifications -follow= prints each new
+  one as it happens.
+
+* Friday afternoon: the wrap-up
+
+** Where the time went
+
+   #+BEGIN_SRC sh
+   orgs focus today -days 5           # pomodoros, day by day
+   orgs timesheet                     # this week, sitting by sitting
+   #+END_SRC
+
+   Because every pomodoro clocked in and out, the timesheet is already
+   correct. Most of his week is 25-minute sittings, with the meetings in
+   between.
+
+** The recap for the week
+
+   For his Friday note to Dana:
+
+   #+BEGIN_SRC sh
+   orgs recap -copy                   # the last seven days
+   orgs recap -last -week -md         # Monday to Sunday, as Markdown
+   #+END_SRC
+
+   [[file:images/cli-recap.png]]
+
+** How good were the estimates?
+
+   Once a month he checks how far off his =EFFORT= estimates are:
+
+   #+BEGIN_SRC sh
+   orgs estimates -day 8
+   #+END_SRC
+
+   [[file:images/eng-cli-estimates.png]]
+
+   His backend work takes 0.6× what he estimates, while ops work runs over.
+   Next week he will plan backend tasks a little smaller and leave room
+   around ops work.
+
+* His editors, all week
+
+  [[file:images/diagram-clients.svg]]
+
+  None of the above needs the command line in particular. It is the server
+  that keeps the clock, the inbox, the saved queries and the pomodoro, and
+  every client is a window onto it:
+
+  - *VS Code, with [[https://github.com/ihdavids/vscode-org-everywhere][vscode-org-everywhere]].* The agenda is in the Org side
+    bar, with today's and the week's clocked time under it. =Ctrl+Alt+O
+    Ctrl+I= clocks in on the heading under the cursor and the status bar
+    shows it running (=⏱ 0:42 Implement idempotency keys=). A clock started
+    anywhere else, a pomodoro from =orgs focus= included, shows up there
+    within a couple of minutes. =Ctrl+Alt+O Q= captures through the server's
+    templates, and =Ctrl+Alt+O W= refiles. worg's views (Kanban, Gantt Chart,
+    Clock Report, Saved Queries and the rest) open in editor panels, and a
+    heading clicked in one opens in the editor. The extension also has a
+    status bar timer of its own (*Start Timer*, =Ctrl+Alt+O Shift+T=) that
+    clocks in on the server when started under a heading. Marcus uses
+    =orgs focus= instead, so the session is the one his menu bar and tmux
+    show.
+  - *Sublime Text, with [[https://github.com/ihdavids/orgeverywhere][Org Everywhere]].* A fork of OrgExtended where
+    everything that spans more than one file goes through the server: the
+    agenda, clocking, capture, refile and archive, search, exporting. Clock
+    in from Sublime and the clock is running in worg and at the command line.
+    *Org Capture* lists the server's templates as =orgs: Inbox=. *Org: orgs
+    Open Web UI* opens worg on any of its apps.
+  - *worg* in a browser, a phone included, for the Weekly Review tab on the
+    train and the agenda's day planner with drag and drop.
+
+  So the clock he starts in VS Code is the one =orgs dash= shows. A thought
+  captured in Sublime is in Monday's =orgs triage=. A review stopped in the
+  terminal carries on in worg.
+
+* The week on a card
+
+  | When               | He runs                                       |
+  |--------------------+-----------------------------------------------|
+  | Monday, first      | =orgs review week= (triage included)          |
+  | Monday, after      | =orgs kanban=, =orgs deps=, =orgs gantt -crit= |
+  | Every morning      | =orgs dash=, =orgs standup -copy=, =orgs plan= |
+  | All day            | =orgs focus=, =orgs cap Inbox=                |
+  | Every evening      | =orgs triage=, =orgs habits done …=           |
+  | When told          | =orgs notifications=                          |
+  | Friday             | =orgs timesheet=, =orgs recap -copy=, =orgs review= |
+  | Monthly            | =orgs estimates -day 8=                       |

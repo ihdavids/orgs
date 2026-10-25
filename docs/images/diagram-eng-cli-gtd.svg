@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>The GTD loop, at the command line</title>
+  <desc>Capture, clarify, organise, reflect and engage, each with the orgs commands that do it, around an inbox where everything lands first.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="560" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">The GTD loop, at the command line</text>
+
+  <!-- the inbox in the middle -->
+  <circle cx="480" cy="300" r="78" fill="#fff4e0" stroke="#f5a623" stroke-width="1.8"/>
+  <text x="480" y="292" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">inbox.org</text>
+  <text x="480" y="313" text-anchor="middle" font-size="11.5" fill="#8a6a2c" font-style="italic">everything lands</text>
+  <text x="480" y="328" text-anchor="middle" font-size="11.5" fill="#8a6a2c" font-style="italic">here first</text>
+
+  <!-- 1 capture: top -->
+  <rect x="355" y="58" width="250" height="104" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+  <text x="480" y="82" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">1 · Capture</text>
+  <text x="480" y="101" text-anchor="middle" font-size="11.5" fill="#6b7079">get it out of your head, now</text>
+  <g font-size="11.5" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace" text-anchor="middle">
+    <text x="480" y="122">orgs cap</text>
+    <text x="480" y="140">VS Code Ctrl+Alt+O Q</text>
+    <text x="480" y="156">Sublime: Org Capture</text>
+  </g>
+
+  <!-- 2 clarify: right -->
+  <rect x="686" y="196" width="250" height="104" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+  <text x="811" y="220" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">2 · Clarify</text>
+  <text x="811" y="239" text-anchor="middle" font-size="11.5" fill="#6b7079">what is it, and is it mine to do?</text>
+  <g font-size="11.5" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace" text-anchor="middle">
+    <text x="811" y="262">orgs triage</text>
+    <text x="811" y="280">one item, one key: r s t a d n</text>
+  </g>
+
+  <!-- 3 organise: bottom right -->
+  <rect x="610" y="404" width="270" height="118" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+  <text x="745" y="428" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">3 · Organise</text>
+  <text x="745" y="447" text-anchor="middle" font-size="11.5" fill="#6b7079">put it where it will be seen</text>
+  <g font-size="11.5" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace" text-anchor="middle">
+    <text x="745" y="469">orgs ref · orgs sched</text>
+    <text x="745" y="487">orgs todo … NEXT</text>
+    <text x="745" y="505">orgs kanban · orgs gantt</text>
+  </g>
+
+  <!-- 4 reflect: bottom left -->
+  <rect x="80" y="404" width="270" height="118" rx="10" fill="#eef4fb" stroke="#9cbbe0"/>
+  <text x="215" y="428" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">4 · Reflect</text>
+  <text x="215" y="447" text-anchor="middle" font-size="11.5" fill="#6b7079">keep the system worth trusting</text>
+  <g font-size="11.5" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace" text-anchor="middle">
+    <text x="215" y="469">orgs dash (daily)</text>
+    <text x="215" y="487">orgs review week (Monday)</text>
+    <text x="215" y="505">orgs recap (Friday)</text>
+  </g>
+
+  <!-- 5 engage: left -->
+  <rect x="24" y="196" width="250" height="104" rx="10" fill="#fdeceb" stroke="#e88b84"/>
+  <text x="149" y="220" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">5 · Engage</text>
+  <text x="149" y="239" text-anchor="middle" font-size="11.5" fill="#6b7079">do the next action, 25 minutes at a time</text>
+  <g font-size="11.5" fill="#4a4f57" font-family="Menlo, 'SF Mono', Consolas, monospace" text-anchor="middle">
+    <text x="149" y="262">orgs focus 'IsStatus("NEXT")'</text>
+    <text x="149" y="280">orgs plan · orgs agenda</text>
+  </g>
+
+  <!-- the loop -->
+  <g stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M607,112 C700,112 790,140 806,192"/>
+    <path d="M806,302 C806,350 780,380 760,400"/>
+    <path d="M606,470 L354,470"/>
+    <path d="M160,400 C140,370 140,330 145,304"/>
+    <path d="M153,194 C170,140 260,112 351,112"/>
+  </g>
+  <!-- capture feeds the inbox, clarify reads it -->
+  <g stroke="#d8a54a" stroke-width="1.4" fill="none" stroke-dasharray="4 4" marker-end="url(#a)">
+    <path d="M480,164 L480,220"/>
+    <path d="M556,290 L682,256"/>
+  </g>
+  <text x="570" y="196" font-size="11" fill="#8a6a2c" font-style="italic">files it</text>
+  <text x="600" y="300" font-size="11" fill="#8a6a2c" font-style="italic">empties it</text>
+</svg>

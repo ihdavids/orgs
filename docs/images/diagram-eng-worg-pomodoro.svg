@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" width="960" height="500" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>A pomodoro, through the server</title>
+  <desc>Start a pomodoro from the Focus tab or orgs focus, or let the next one start by itself after a break. The server's timer clocks in, runs the work phase, clocks out and notes the pomodoro in the task's logbook, then runs the break: a long one every fourth. Every view follows it: the Focus tab, the focus chip and the tab title, the menu bar, orgs dash, the Clock Report, and the running clock in VS Code and Sublime Text.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="500" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">A pomodoro, through the server</text>
+
+  <!-- start -->
+  <g font-size="12" fill="#6b7079" text-anchor="middle">
+    <text x="130" y="72" font-size="13" font-weight="700" fill="#2b2f36">Start it from</text>
+    <rect x="30" y="84" width="200" height="40" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="130" y="108" fill="#2b2f36">the Focus tab: Start</text>
+    <rect x="30" y="132" width="200" height="40" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="130" y="156" fill="#2b2f36">the end of a break, by itself</text>
+    <rect x="30" y="180" width="200" height="40" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="130" y="204" fill="#2b2f36">orgs focus, at a prompt</text>
+  </g>
+  <g stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M232,104 C262,104 262,150 292,150"/>
+    <path d="M232,152 L292,152"/>
+    <path d="M232,200 C262,200 262,154 292,154"/>
+  </g>
+
+  <!-- server cycle -->
+  <rect x="296" y="62" width="400" height="300" rx="12" fill="#fff4e0" stroke="#f5a623" stroke-width="1.8"/>
+  <text x="496" y="88" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">the server's focus timer</text>
+  <g font-size="12.5" fill="#2b2f36" text-anchor="middle">
+    <rect x="326" y="104" width="160" height="50" rx="9" fill="#ffffff" stroke="#f5a623"/>
+    <text x="406" y="126" font-weight="700">clock in</text>
+    <text x="406" y="143" font-size="11.5" fill="#6b7079">on the task you picked</text>
+
+    <rect x="506" y="104" width="160" height="50" rx="9" fill="#ffffff" stroke="#e06c75"/>
+    <text x="586" y="126" font-weight="700">🍅 work · 25 min</text>
+    <text x="586" y="143" font-size="11.5" fill="#6b7079">stop, + 5 min, done</text>
+
+    <rect x="506" y="194" width="160" height="62" rx="9" fill="#ffffff" stroke="#f5a623"/>
+    <text x="586" y="216" font-weight="700">clock out</text>
+    <text x="586" y="233" font-size="11.5" fill="#6b7079">a CLOCK line, and the</text>
+    <text x="586" y="248" font-size="11.5" fill="#6b7079">pomodoro in the logbook</text>
+
+    <rect x="326" y="194" width="160" height="62" rx="9" fill="#ffffff" stroke="#98c379"/>
+    <text x="406" y="216" font-weight="700">☕ break · 5 min</text>
+    <text x="406" y="233" font-size="11.5" fill="#6b7079">every 4th: 15 min</text>
+    <text x="406" y="248" font-size="11.5" fill="#6b7079">skip, + 5 min, end</text>
+  </g>
+  <g stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M488,129 L502,129"/>
+    <path d="M586,156 L586,190"/>
+    <path d="M504,225 L490,225"/>
+    <path d="M406,192 L406,158"/>
+  </g>
+  <text x="496" y="290" text-anchor="middle" font-size="12" fill="#6b7079">runs whether or not anything is watching:</text>
+  <text x="496" y="307" text-anchor="middle" font-size="12" fill="#6b7079">close the tab, or the laptop, and it carries on</text>
+  <text x="496" y="338" text-anchor="middle" font-size="11.5" fill="#8a6a2c" font-style="italic">a pomodoro stopped early is kept too, marked stopped</text>
+
+  <!-- outputs -->
+  <path d="M496,364 L496,398" stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)"/>
+  <text x="508" y="388" font-size="11" fill="#8a8f98" font-style="italic">live events</text>
+  <g font-size="12" fill="#6b7079" text-anchor="middle">
+    <rect x="22" y="402" width="146" height="72" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="95" y="426" font-weight="700" fill="#2b2f36">Focus tab</text>
+    <text x="95" y="444">the ring, today's</text>
+    <text x="95" y="460">pomodoros</text>
+    <rect x="178" y="402" width="146" height="72" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="251" y="426" font-weight="700" fill="#2b2f36">focus chip</text>
+    <text x="251" y="444">on every tab, and</text>
+    <text x="251" y="460">the tab's title</text>
+    <rect x="334" y="402" width="146" height="72" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="407" y="426" font-weight="700" fill="#2b2f36">menu bar</text>
+    <text x="407" y="444">orgs focus bar</text>
+    <text x="407" y="460">(xbar, SwiftBar)</text>
+    <rect x="490" y="402" width="146" height="72" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="563" y="426" font-weight="700" fill="#2b2f36">orgs dash</text>
+    <text x="563" y="444">the Now card</text>
+    <text x="563" y="460">orgs focus status</text>
+    <rect x="646" y="402" width="146" height="72" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="719" y="426" font-weight="700" fill="#2b2f36">Clock Report</text>
+    <text x="719" y="444">Clocked in, and</text>
+    <text x="719" y="460">the time, after</text>
+    <rect x="802" y="402" width="136" height="72" rx="9" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="870" y="426" font-weight="700" fill="#2b2f36">your editor</text>
+    <text x="870" y="444">VS Code, Sublime:</text>
+    <text x="870" y="460">the running clock</text>
+  </g>
+</svg>

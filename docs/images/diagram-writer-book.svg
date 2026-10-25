@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" width="960" height="470" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>The life of a book in orgs</title>
+  <desc>Four stages, plan, draft, revise and compile, each with the orgs and worg tools used in it, over a band for the business of the book: the inbox, the agenda, the weekly review and the recap.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,1 L9,5 L0,9 z" fill="#8a8f98"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="470" rx="14" fill="#fbfaf7" stroke="#e2ddd1"/>
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="700" fill="#2b2f36">The life of a book</text>
+
+  <!-- stages -->
+  <g font-size="12.5" fill="#4a4f57">
+    <rect x="24" y="62" width="208" height="236" rx="12" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="128" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">1 · Plan</text>
+    <text x="40" y="118">Corkboard: a card a chapter</text>
+    <text x="40" y="140">Outline: statuses, targets</text>
+    <text x="40" y="162">Storyline: who, where, tension</text>
+    <text x="40" y="184">Compendium: the cast</text>
+    <text x="40" y="206">Ideas pane, orgs write ideas</text>
+    <text x="40" y="228">Mind map of the novel</text>
+    <text x="128" y="276" text-anchor="middle" font-size="11.5" fill="#6b7079" font-style="italic">SYNOPSIS · STATUS · WORD_TARGET</text>
+
+    <rect x="256" y="62" width="208" height="236" rx="12" fill="#fff4e0" stroke="#f5a623" stroke-width="1.6"/>
+    <text x="360" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">2 · Draft</text>
+    <text x="272" y="118">Writing mode, full screen</text>
+    <text x="272" y="140">Session target, typewriter</text>
+    <text x="272" y="162">Pomodoros: orgs focus</text>
+    <text x="272" y="184">The writing log, as you type</text>
+    <text x="272" y="206">Goals, streak, heatmap</text>
+    <text x="272" y="228">orgs write -short in a bar</text>
+    <text x="360" y="276" text-anchor="middle" font-size="11.5" fill="#8a6a2c" font-style="italic">500 words a day, most days</text>
+
+    <rect x="488" y="62" width="208" height="236" rx="12" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="592" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">3 · Revise</text>
+    <text x="504" y="118"># NOTE: revision notes</text>
+    <text x="504" y="140">Snapshots, changes since</text>
+    <text x="504" y="162">Prose: rhythm, readability</text>
+    <text x="504" y="184">Checkers: spelling, Harper</text>
+    <text x="504" y="206">Continuity: FACT against BORN</text>
+    <text x="504" y="228">Assistant (needs a model)</text>
+    <text x="592" y="276" text-anchor="middle" font-size="11.5" fill="#6b7079" font-style="italic">nothing here reaches the book</text>
+
+    <rect x="720" y="62" width="216" height="236" rx="12" fill="#eef4fb" stroke="#9cbbe0"/>
+    <text x="828" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#2b2f36">4 · Compile</text>
+    <text x="736" y="118">Compile dialog: pick headings</text>
+    <text x="736" y="140">Word manuscript (.docx)</text>
+    <text x="736" y="162">Ebook (.epub)</text>
+    <text x="736" y="184">PDF by Typst, web page</text>
+    <text x="736" y="206">orgs export -f manuscript</text>
+    <text x="736" y="228">orgs export -f epub</text>
+    <text x="828" y="276" text-anchor="middle" font-size="11.5" fill="#6b7079" font-style="italic">#+TITLE, :part:, SCENE_BREAK</text>
+  </g>
+
+  <!-- flow -->
+  <g stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)">
+    <path d="M233,180 L254,180"/>
+    <path d="M465,180 L486,180"/>
+    <path d="M697,180 L718,180"/>
+    <path d="M592,300 C592,330 360,330 360,302"/>
+  </g>
+  <text x="476" y="338" text-anchor="middle" font-size="11" fill="#8a8f98" font-style="italic">and back again, chapter by chapter</text>
+
+  <!-- business band -->
+  <rect x="24" y="360" width="912" height="84" rx="12" fill="#ffffff" stroke="#c9c3b5" stroke-dasharray="5 4"/>
+  <text x="480" y="388" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2f36">The business of the book, all the way through</text>
+  <text x="480" y="412" text-anchor="middle" font-size="12.5" fill="#4a4f57">tasks for the agent and the editor · deadlines on the agenda · the inbox, emptied with triage</text>
+  <text x="480" y="432" text-anchor="middle" font-size="12.5" fill="#4a4f57">the weekly review · habits · orgs recap for the week's words, hours and what is waiting</text>
+</svg>
