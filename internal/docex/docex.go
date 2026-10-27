@@ -272,14 +272,21 @@ func (t *Tree) RebaseLinks(line, fromDir string) string {
 	})
 }
 
+// Sections written after everything else: the API reference is long and
+// read by looking things up, so it closes the document.
+var lastSections = map[string]bool{"API": true}
+
 // SortedKeys is the order sections are written in: guides first, then by
-// #+DOC_ORDER, then alphabetically.
+// #+DOC_ORDER, then alphabetically, with lastSections at the end.
 func SortedKeys(gr map[string]*DocNode) []string {
 	keys := []string{}
 	for k := range gr {
 		keys = append(keys, k)
 	}
 	sort.Slice(keys, func(i, j int) bool {
+		if lastSections[keys[i]] != lastSections[keys[j]] {
+			return lastSections[keys[j]]
+		}
 		if gr[keys[i]].Guide != gr[keys[j]].Guide {
 			return gr[keys[i]].Guide
 		}
