@@ -10,43 +10,131 @@
   roots in many common methodologies like GTD, while at the same time
   using org mode files for almost everything in your life.
 
-  OrgS is a server that manages a collection of org files.
-  It offers:
+  OrgS is a server that manages a collection of org files. It watches them,
+  parses them, and lets every client (worg in the browser, the =orgs= command
+  line, editor plugins and AI agents) work on the same notes at once. It
+  offers:
 
-  - A flexible extensible module based architecture.
-  - An exporter framework that can convert an org file to a variety of outputs
-  	- gantt     - Export an org file as a gantt chart
- 	- mermaid   - Export a diagram in an org file using mermaid js
-  	- mindmap   - Generate a mind map from an org file
- 	- html      - Convert an org file to an html file
-  	- revealjs  - Convert an org file to a revealjs presentation
-  	- impressjs - Convert an org file to an impressjs presentation
-  	- latex     - Export an org file to a latex file (pdf)
-  	- dndsheet  - Render a D&D character sheet as html
-  	- dndlatex  - Render a D&D character sheet as latex
-  	- dndpdf    - Render a D&D character sheet as a pdf
-  - An importer framework for syncing periodically with 3rd party services
-  	- git
-  	- google calendar
-  	- ics files
-  	- jira
-  	- todoist
-  - Quick capture methods - capture input in a variety of ways
-  - Refiling and archiving capabilities
+  - A flexible, extensible, plugin based architecture.
+  - A query language over every heading in every file, with saved queries
+    that can watch for matches and notify you.
+  - Getting things done: an agenda and day planner, quick capture from
+    templates (and voice notes), refiling and archiving, a weekly review,
+    inbox triage, habits, a standup and recap for Slack, and a dashboard
+    of the day.
+  - Clocking in and out, a pomodoro focus timer, clock reports, timesheets
+    and invoices, and effort estimates compared with what was clocked.
+  - Planning views: kanban boards, gantt charts with dependencies and a
+    critical path, a column view, a mind map, and a dependency checker.
+  - Fast table evaluation, dynamic blocks (clocktable, columnview, query),
+    and source blocks you can run, tangle and detangle.
+  - Records: contacts and anything else worth a list, kept as headings.
+  - Flashcards with spaced repetition, org-drill style.
+  - Links and backlinks, unlinked mentions, encrypted headings, and
+    refactoring (rename, retag, merge, split, move).
+  - A writing mode: word count goals, snapshots, prose checkers and an
+    optional writing assistant that can use cloud or local models.
+  - An exporter framework that turns an org file into a variety of outputs
+    - html, markdown, pdf, latex, typst, pandoc - documents
+    - revealjs, impressjs, deckjs, webslides, beamer - presentations
+    - manuscript (.docx), epub - for editors and ebook readers
+    - gantt, mermaid, mindmap - charts and diagrams
+    - ics, todotxt - calendars and task lists for other tools
+    - confluence - publish a file as a confluence page
+    - tangle - write source blocks out as files
+    - dndsheet, dndlatex, dndpdf - D&D character sheets
+  - A static site generator (=orgs site=): a folder of org files as a web
+    site, in a theme.
+  - Importers
+    - plugins that sync periodically with 3rd party services: google
+      calendar, ics calendars, jira, todoist, trello, github and gitlab
+    - =orgs import= for Jupyter notebooks, markdown and Obsidian vaults,
+      todo.txt and .ics files
+  - Background plugins: git sync of your notes, notifications of what is
+    coming up, and automatic clock out.
   - Generators
-  	- daypage - Create and jump to a daily log file
-  	- dnd     - Build Dungeons & Dragons characters and render their sheets
-  - Fast table evaluation
-  - A flexible query language
-  - Clocking in and out
-  - A flexible notification system.
+    - daypage - Create and jump to a daily log file
+    - dnd     - Dungeons & Dragons characters, sheets, a DM's screen,
+      generated dungeons and maps, music and dice
+  - Users, logins and administrators, over http or https.
+  - An MCP server, so an AI agent can read and change your notes.
 
-  A command line interface for interacting with your org files
-  from the command line
+  worg, a web front end built into the server, has a view for nearly all of
+  this and works in any browser, a phone's included.
+
+  A command line interface covers the same ground from a prompt, for
+  scripts, git hooks and ssh, with or without a running server (=-local=).
 
   [[file:docs/images/worg-agenda.png]]
 
   [[file:docs/images/cli-agenda.png]]
+
+** Creating an admin user
+   A server nobody has set up has one account, =admin= with the password
+   =default=, built in so that it can be logged into at all. It prints a
+   large warning on every startup until you replace it with an account of
+   your own.
+
+*** Create the user from the command line
+   Users live in a keystore file. Name one under =server:= in the config
+   (a relative path is taken relative to the config file):
+
+   #+BEGIN_SRC yaml
+   server:
+     keystore: "orgs_keystore.yaml"
+   #+END_SRC
+
+   Then, *on the machine the server runs on*, add yourself:
+
+   #+BEGIN_SRC sh
+   orgs user add ian -admin   # prompts for a password, twice
+   #+END_SRC
+
+   =orgs user= edits the keystore file directly and never talks to the
+   server, so it works with no server running. The first account written to
+   a new keystore replaces the built-in admin/default one. Restart the server
+   to pick the change up.
+
+*** Make sure the user is an admin
+   =-admin= on =orgs user add= makes the account an administrator. For an
+   account that already exists, promote it on the server's machine and
+   restart:
+
+   #+BEGIN_SRC sh
+   orgs user admin ian        # ian is now an administrator
+   orgs user ls               # check: the ADMIN column says true
+   #+END_SRC
+
+   An administrator can add more users from anywhere they can log in, and
+   those accounts work at once, with no restart:
+
+   #+BEGIN_SRC sh
+   orgs adduser dana          # an ordinary user
+   orgs adduser sam -admin    # another administrator
+   #+END_SRC
+
+   Promoting an account can only be done on the server's own disk, never over
+   the wire, so nobody who can add users can make themselves an
+   administrator. See [[*Users and the keystore][Users and the keystore]] for the rest.
+
+*** Log in from a client
+   Point the command line at the server (=url:= in its config, or =-url=) and
+   log in:
+
+   #+BEGIN_SRC sh
+   orgs -url https://myserver:8010 login -user ian   # prompts for the password
+   #+END_SRC
+
+   The token it gets back is saved as =token:= in the client's config and
+   sent with every later command, until it expires (=server.tokenExpiry=,
+   an hour by default); then run =orgs login= again. The password itself
+   never leaves the client: it is hashed with the user's salt first.
+
+*** Log in from the web page
+   Open the server's address in a browser (=https://myserver:8010/=). worg
+   shows a login screen until you are signed in: enter the username and
+   password and press *Log In*. The session is kept in a cookie, so other tabs
+   on the same server are signed in too.
 
 ** Uses
    	OrgS is intended to be like the Language Server Protocol of org files.
