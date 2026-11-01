@@ -5,7 +5,7 @@ package orgs
 * POST /reloadconfig — Reload The Configuration
 	Reads the server's yaml file again and takes from it everything that can
 	change under a running server: capture templates, filters, tag groups,
-	refile targets, goLinksFile/goLinksHeading, todo states, day page, archive, date tree and clock
+	refile targets, goLinksFile/goLinksHeading, checklistsFile/checklistsHeading, todo states, day page, archive, date tree and clock
 	settings, the template path, babel, columns, log and the dnd paths.
 
 	What a running server is built around is left as it is, and named in
@@ -113,6 +113,8 @@ func ReloadConfig() (common.ReloadResult, error) {
 	o.RefileTargets = n.RefileTargets
 	o.GoLinksFile = n.GoLinksFile
 	o.GoLinksHeading = n.GoLinksHeading
+	o.ChecklistsFile = n.ChecklistsFile
+	o.ChecklistsHeading = n.ChecklistsHeading
 	o.DefaultTodoStates = n.DefaultTodoStates
 	o.DefaultNextStates = n.DefaultNextStates
 	o.UseTagForProjects = n.UseTagForProjects

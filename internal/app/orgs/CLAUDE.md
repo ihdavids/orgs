@@ -55,6 +55,17 @@ Deliberate:
 - **Past means before today**, counted in days not instants, so a deadline of today is due, not overdue.
 - A dateless heading has `DaysOld() == -1`, so `OlderThan` is never true for it.
 
+## Short queries
+
+`shortquery.go` (pinned by `shortquery_test.go`): `todo :work: due:<3d -:home:` is translated into the govaluate form and nothing else - it has no functions of its own, so the function map, `guardQueryFunctions` and the assistant's function list are shared. SDOC `Querying::Short Queries` is the user reference; `GET /query/explain` and `orgs search -explain` show the translation.
+
+- **Detection keeps old queries meaning what they did**: a query is the full form when it has a capitalised call (`Name(`), `&&` or `||` outside quotes, is only `{{ filters }}`, or is `true`/`false`. A short query would otherwise gain the `!IsArchived()` default.
+- **Translate before expanding filters.** `expandQueryFilters` translates first, so `{{ WorkTasks }} :urgent:` keeps the filter as one bracketed term; expanded first, the filter's `&&` makes the query read as the full form and the rest fails to parse. `ParseString` translates too, for callers that never expand. The output always contains a call, so translating twice is harmless.
+- **Dates are read when the query is parsed** (`on:fri`, `before:+2w` become fixed `OnDate("2026 30 10")` days); watches re-parse every check, so they move with the day.
+- `before:`/`after:` are `DateBefore`/`DateAfter` (in `todo.go`): any SCHEDULED, DEADLINE or own active timestamp (not CLOSED) on a calendar day strictly before / after; a range counts by its end for after. Day arguments are OnDate's `"2006 02 01"`, because govaluate turns an ISO-looking string literal into a time (the functions accept that too).
+- Values are literal and case-insensitive (`(?i)` + `QuoteMeta`); `/regex/` is used as written. Strings are written with backslashes doubled, since govaluate's lexer treats `\` as an escape.
+- No worg twin yet: worg sends the text and the server translates, so a search box takes either form. Completion of short-query keys would need one.
+
 ## Voice notes and go-whisper
 
 `internal/app/orgs/voice.go` neither records nor transcribes: a client records, the server keeps the audio, and transcription is a request to a [go-whisper](https://github.com/mutablelogic/go-whisper) server (`/api/whisper/model`, `/api/whisper/transcribe`).

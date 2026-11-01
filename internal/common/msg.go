@@ -140,6 +140,19 @@ type Todos []Todo
 type StringQuery struct {
 	Query string `yaml:"query"`
 }
+
+// QueryExplain is GET /query/explain: what a query becomes on the server. A
+// short query (`todo :work:`) is translated into the full form (Full), then
+// {{ filters }} are expanded (Expanded). Ok is false, with Msg saying why and
+// where, when it would not parse.
+type QueryExplain struct {
+	Ok       bool
+	Query    string
+	Short    bool
+	Full     string
+	Expanded string
+	Msg      string `json:",omitempty"`
+}
 type Result struct {
 	Ok bool `yaml:"status"`
 	// Something the server wants said about a write that worked but did not do

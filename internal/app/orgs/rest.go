@@ -122,6 +122,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/properties", RequestProperties).Methods("GET") // property names in use, for the query box (propnames.go)
 	api.HandleFunc("/grep", RequestGrep)
 	api.HandleFunc("/search", RequestTodosExpr)
+	api.HandleFunc("/query/explain", RequestQueryExplain).Methods("GET") // shortquery.go
 	api.HandleFunc("/agenda", RequestAgenda).Methods("GET")            // what lands on each day (agenda.go)
 	api.HandleFunc("/agenda/nodes", RequestAgendaNodes).Methods("GET") // a query's headings with their agenda facts
 	api.HandleFunc("/lookuphash", RequestHash)
@@ -142,6 +143,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/body/change", PostChangeBody).Methods("POST")
 	api.HandleFunc("/body/{hash}", RequestTodoBody).Methods("GET")
 	api.HandleFunc("/checklist", PostChecklistToggle).Methods("POST")
+	api.HandleFunc("/checklist/edit", PostChecklistEdit).Methods("POST")
 	api.HandleFunc("/addresses", RequestServerAddresses).Methods("GET")
 	api.HandleFunc("/events", RequestEvents).Methods("GET")
 	api.HandleFunc("/status", RequestDefaultStatus).Methods("GET")

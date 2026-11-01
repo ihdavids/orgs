@@ -303,7 +303,32 @@ func builtinCaptureTemplates() []common.CaptureTemplate {
 		Type:      "entry",
 		CapTarget: common.Target{Type: "file+headline", Filename: goLinksFile(), Id: goLinksHeading()},
 		Template:  ":PROPERTIES:\n:ADDED:    {{now}}\n:END:\n[[{{url|URL}}][{{name|Description}}]]",
+	}, {
+		Name:      ChecklistTemplate,
+		Type:      "entry",
+		CapTarget: common.Target{Type: "file+headline", Filename: checklistsFile(), Id: checklistsHeading()},
+		// An ID, so a list refiled anywhere can still be linked to.
+		Template: ":PROPERTIES:\n:ID:       {{uuid}}\n:CREATED:  {{now}}\n:END:\n{{CONTENT}}",
 	}}
+}
+
+// ChecklistTemplate is the template `orgs list new` files a new checklist
+// through: a heading named by its title holding its first boxes. Target from
+// checklistsFile and checklistsHeading - an inbox, to refile from later.
+const ChecklistTemplate = "Checklist"
+
+func checklistsFile() string {
+	if s := Conf().Server; s != nil && s.ChecklistsFile != "" {
+		return s.ChecklistsFile
+	}
+	return "inbox.org"
+}
+
+func checklistsHeading() string {
+	if s := Conf().Server; s != nil && s.ChecklistsHeading != "" {
+		return s.ChecklistsHeading
+	}
+	return "Checklists"
 }
 
 func goLinksFile() string {

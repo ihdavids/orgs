@@ -77,8 +77,7 @@ type drillHit struct {
 // heading somewhere under them. Which of those are cards is decided once their
 // text has been read (see RequestDrillCards).
 func drillSections(query string) ([]drillHit, map[*org.Section]bool, error) {
-	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
-	expanded := Conf().PlugManager.Tempo.ExecuteTemplateString(query, ctx)
+	expanded := expandQueryFilters(query)
 	exp, err := ParseString(&common.StringQuery{Query: expanded})
 	if err != nil {
 		return nil, nil, err

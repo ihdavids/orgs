@@ -576,6 +576,25 @@ type ServerSettings struct {
 	GoLinksFile    string `yaml:"goLinksFile"`
 	GoLinksHeading string `yaml:"goLinksHeading"`
 	/* SDOC: Settings
+	* Checklists
+		Where =orgs list new= files a new checklist, and the heading it goes
+		under. Both are optional; these are the defaults.
+
+		#+BEGIN_SRC yaml
+		server:
+		  checklistsFile:    "inbox.org"
+		  checklistsHeading: "Checklists"
+		#+END_SRC
+
+		The file is relative to the first of the orgDirs. It is meant as an
+		inbox: refile a list somewhere better once it has earned a home, and
+		=orgs list= still finds it, since it looks for checkboxes everywhere.
+		It is the built in =Checklist= capture template's target, so a capture
+		template of your own called =Checklist= replaces the whole thing.
+	EDOC */
+	ChecklistsFile    string `yaml:"checklistsFile"`
+	ChecklistsHeading string `yaml:"checklistsHeading"`
+	/* SDOC: Settings
 	* Link Protocols
 		Teach orgs your own link protocols. A link written =[[jira:ABC-123]]=
 		(or =jira://ABC-123=) is then followed wherever you say: either to a
@@ -1180,6 +1199,8 @@ func (self *ServerSettings) Init() {
 	self.DayPageModeWeekDay = "Monday"
 	self.GoLinksFile = "links.org"
 	self.GoLinksHeading = "Links"
+	self.ChecklistsFile = "inbox.org"
+	self.ChecklistsHeading = "Checklists"
 	self.DayPageMaxSearchBack = 30 // How many weeks back should we look to pull last weeks tasks from.
 	self.UseTagForProjects = true
 	self.CaptureTemplates = []CaptureTemplate{}

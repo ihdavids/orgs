@@ -36,6 +36,16 @@ Load-bearing rules:
 4. **`orgs note` strips the property drawer and planning line** (`proseOnly`) from `/body/{hash}` before writing via `/body/change`: the body comes back with its drawer, and the drawer is regenerated from the headline, so it was written twice.
 5. **A dash-word is a value.** `orgs tag -someday` removes a tag, but Go's flag package exits on undefined flags. For `commands.DashWords` commands, `main.go` lifts such words out *before* parsing - only words not defined as flags, so `-json` stays a flag with no list to maintain.
 
+## `orgs list` (and `orgs tb`)
+
+`checklist/`: checklists in taskbook's style. A list is any heading with boxes in its own body (`HasChecklist()`), so a list refiled out of the inbox is still found. Bare: fzf over the lists (`-pane HASH` draws the pane, a flag so a list called "preview" still works), Enter opens a tcell board (`board.go`; `v` opens the editor on the item's line via `tuikit.Editor`, suspending the screen for a terminal editor), `q` comes back to the picker with that list first. `new` files through the built-in **`Checklist`** capture template (`server.checklistsFile`/`checklistsHeading`, default `inbox.org` / `Checklists`) and opens the board with the add prompt up; it re-opens after each item until esc. `ls`/`show`/`add`/`check`/`uncheck`/`edit`/`rm` take the list with `-l` and items by the numbers `show` prints (1-based, nested items counted, same as the server's index + 1).
+
+- Ticking is `POST /checklist`; add, reword and delete are **`POST /checklist/edit`** (`Op`), line edits like the toggle. A deleted item takes its continuation lines and sub-items with it; an add copies its neighbour's indent and bullet.
+- **The new heading is found as the one with its title that was not there before the capture.** Capture answers only Ok, and an id chosen here does not survive: the server answers `{{uuid}}` itself when it files the entry.
+- `-l` words that match no heading with boxes fall back to any heading, so an empty list (made, then left) can still be added to.
+- **Space in the picker opens the heading in the editor** (`PickKey` with `space`, so fzf closes first and a terminal editor has the screen; the picker comes back after). The price: space no longer types into fzf's query, so multi-word search terms are out.
+- `-print` draws the board once through a `SimulationScreen`.
+
 ## Tab completion
 
 `orgs completion zsh|bash|fish` prints a script that shells out to **`orgs __complete <words…>`**, so logic lives once in Go and new commands need no script edits. Completes files, tags, *this heading's file's* keywords, saved queries, filters, exporters, themes, collections.

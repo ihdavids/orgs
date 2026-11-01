@@ -7,6 +7,8 @@ package search
 //	orgs search 'IsTask()' -json | jq '.[].Headline'
 //	orgs search 'IsTask()' -format '{{.Filename}}:{{.LineNum}}\t{{.Headline}}'
 //	orgs search 'IsProject()' -open
+//	orgs search 'NEXT :work: due:<3d'
+//	orgs search 'todo before:fri' -explain
 //
 // This is /search, which queries the *parsed* database and understands
 // headings, keywords, tags, properties and dates. `orgs find` is the other
@@ -37,7 +39,8 @@ type Search struct {
 	Limit int
 	Count bool
 	Open  bool
-	Group bool
+	Group   bool
+	Explain bool
 }
 
 func (self *Search) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -51,6 +54,7 @@ func (self *Search) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.Count, "count", false, "how many matched, and nothing else")
 	fset.BoolVar(&self.Open, "open", false, "pick one and open it in your editor")
 	fset.BoolVar(&self.Group, "group", false, "gather the results under a band per file")
+	fset.BoolVar(&self.Explain, "explain", false, "print the full expression the query becomes, and run nothing")
 }
 
 func (self *Search) Exec(core *commands.Core) {
@@ -64,6 +68,11 @@ func (self *Search) Exec(core *commands.Core) {
 	}
 	if strings.TrimSpace(query) == "" {
 		commands.Fail("orgs search: no query.\n\n%s", usage)
+	}
+
+	if self.Explain {
+		self.explain(core, query)
+		return
 	}
 
 	todos, err := commands.SendReceiveGetErr[common.Todos](core, "search",
@@ -89,6 +98,30 @@ func (self *Search) Exec(core *commands.Core) {
 	}
 
 	commands.Render(rows, func() { self.print(rows) })
+}
+
+// explain shows what the server makes of the query: a short one translated,
+// then its filters written in.
+func (self *Search) explain(core *commands.Core, query string) {
+	res, err := commands.SendReceiveGetErr[common.QueryExplain](core, "query/explain",
+		map[string]string{"query": query})
+	if err != nil {
+		commands.Fail("orgs search: %v", err)
+	}
+	commands.RenderOne(res, func() {
+		if res.Full != "" {
+			fmt.Println(res.Full)
+		}
+		if res.Expanded != "" && res.Expanded != res.Full {
+			fmt.Printf("%s= %s%s\n", commands.C(commands.AnsiDim), res.Expanded, commands.C(commands.AnsiReset))
+		}
+		if !res.Ok {
+			fmt.Fprintf(os.Stderr, "orgs search: %s\n", res.Msg)
+		}
+	})
+	if !res.Ok {
+		os.Exit(1)
+	}
 }
 
 func (self *Search) print(rows []common.Todo) {
@@ -193,11 +226,25 @@ const usage = `  orgs search '<query>'            headings matching the expressi
   orgs search '<query>' -sort date  in date order
   orgs search '<query>' -open       pick one and open it
   orgs search '<query>' -json       for a program to read
+  orgs search '<query>' -explain    the full expression it becomes
 
 The expression is the server's own - IsTask(), IsStatus("NEXT"),
 HasProperty("EFFORT"), MatchHeadline("re"), Today(), InCollection("contact"),
 HasBacklinks(), LinksTo("re") and the rest - and a {{ Filter }} from the yaml
-is expanded before it is parsed.`
+is expanded before it is parsed.
+
+A short form is read too, for typing: words side by side must all match,
+| is or, - is not, and archived headings are left out unless you say
+archived.
+
+  orgs search 'NEXT :work:'                IsStatus("NEXT") && HasTags("work")
+  orgs search 'todo due:<3d -:home:'       due within three days, not at home
+  orgs search 'todo after:today before:+2w'  dated in the next two weeks
+  orgs search 'WAITING old:>14 | stuck'    waiting a fortnight, or stuck
+  orgs search 'client:acme report'         a property, and headline text
+
+A query that starts with - looks like a flag: write it after -q
+(orgs search -q '-:home: todo'), or start with another word.`
 
 func init() {
 	commands.AddCmd("search", "query the parsed database with an expression",

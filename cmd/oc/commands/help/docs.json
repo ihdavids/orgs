@@ -119,12 +119,14 @@
    }
   ]
  },
- "Querying": "* Overview\n\n  Many operations in orgs require you to select the nodes that the operation applies to.\n  - Agendas\n  - Filtered Tabular Lists\n  - Various Exporters\n  - Etc\n\n  Lots of these things require a filtered list of nodes to operate. Orgs does this through\n  a node filter. This is an expression that is applied to nodes in the DB and returns only those\n  nodes that pass the query.\n\n  The most common expression starts with:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsTodo()\n   #+END_SRC\n\n   This will select all active nodes that have an active TODO status on them throughout all of your org mode files.\n   Note the negation on IsArchive() these expressions support most common operators\n\n   Agenda views will often add a date query:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 OnDate('\u003cspecific date\u003e')\n   #+END_SRC\n\n   People who follow GTD will often want lists that follow the common patterns:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsProject()\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 IsStatus('NEXT')\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 ( IsStatus('WAITING') || IsStatus('BLOCKED') )\n   #+END_SRC\n\n   This represents some of your common lists that you need to review regularly:\n   - Projects List\n   - Next Actions List\n   - Waiting On List\n",
+ "Querying": "* Overview\n\n  Many operations in orgs require you to select the nodes that the operation applies to.\n  - Agendas\n  - Filtered Tabular Lists\n  - Various Exporters\n  - Etc\n\n  Lots of these things require a filtered list of nodes to operate. Orgs does this through\n  a node filter. This is an expression that is applied to nodes in the DB and returns only those\n  nodes that pass the query.\n\n  The most common expression starts with:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsTodo()\n   #+END_SRC\n\n   This will select all active nodes that have an active TODO status on them throughout all of your org mode files.\n   Note the negation on IsArchive() these expressions support most common operators\n\n   Agenda views will often add a date query:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 OnDate('\u003cspecific date\u003e')\n   #+END_SRC\n\n   People who follow GTD will often want lists that follow the common patterns:\n\n   #+BEGIN_SRC cpp\n   !IsArchive() \u0026\u0026 IsProject()\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 IsStatus('NEXT')\n   !IsArchive() \u0026\u0026 IsTodo() \u0026\u0026 ( IsStatus('WAITING') || IsStatus('BLOCKED') )\n   #+END_SRC\n\n   This represents some of your common lists that you need to review regularly:\n   - Projects List\n   - Next Actions List\n   - Waiting On List\n\n\n** Orgs Expression Methods Reference\n\n  A second way to write a query, for typing into a search box. It is turned\n  into the full expression on the server, so it can ask everything the full\n  form can ask through the functions above, and the two can be used anywhere\n  a query is taken.\n\n  #+BEGIN_SRC sh\n  orgs search 'NEXT :work:'\n  orgs search 'todo due:\u003c3d -:home:'\n  orgs search 'project stuck | WAITING old:\u003e14'\n  #+END_SRC\n\n  - Words side by side must all match; =|= (or =or=) means either.\n  - =-= (or =not=) in front of a term turns it round; brackets group.\n  - Archived headings are left out unless the query says =archived=.\n  - A plain word, =\"quoted phrase\"= or =/regex/= searches headlines. Words and\n    phrases match anywhere and ignore case; a regex is used as written.\n\n  | Term                          | Means                                       |\n  |-------------------------------+---------------------------------------------|\n  | =todo= =done= =task= =project= | IsTodo IsDone IsTask IsProject             |\n  | =next= =stuck= =habit= =missed= | IsNextTask IsBlockedProject IsHabit MissedHabit |\n  | =archived= =record= =collection= | IsArchived IsRecord IsCollection         |\n  | =tagged= =untagged=           | has tags / NoTags                           |\n  | =scheduled= =deadline= =dated= | HasScheduled HasDeadline HasAnyDate        |\n  | =clocked= =linked= =broken= =orphan= | HasClock HasLinks HasBrokenLinks, no backlinks |\n  | =checklist= =table= =drawer= =block= | HasChecklist HasTable HasDrawer HasBlock |\n  | =NEXT= (any word in capitals) | IsStatus(\"NEXT\")                            |\n  | =:work:= =:work:urgent:=      | HasTags(\"work\") - every tag named           |\n  | =:/^M[0-9]+$/:=               | HasTagMatching                              |\n  | =#A=                          | IsPriority(\"A\")                             |\n  | =due:past= =due:today= =due:\u003c3d= =due:fri= | DeadlinePast, DeadlineWithin(0/3/days to friday) |\n  | =due:any= =due:none=          | HasDeadline, !HasDeadline                   |\n  | =sched:...=                   | the same for SCHEDULED                      |\n  | =on:today= =on:fri= =on:2026-10-30= | OnDate                                |\n  | =before:today= =after:fri= =before:-2w= | a SCHEDULED, DEADLINE or timestamp of its own before / after that day (DateBefore DateAfter) |\n  | =old:\u003e30= =old:\u003c7=            | OlderThan(30), DaysOld under 7              |\n  | =streak:\u003e7= =backlinks:0= =left:\u003e0= =items:\u003e5= =age:\u003c3= | HabitStreak BacklinkCount ChecklistLeft ChecklistCount DaysOld, compared |\n  | =file:work= =in:contact= =record:contact= | InFile InCollection IsRecord     |\n  | =group:WORK= =text:word= =title:word= =link:word= =tag:work= | InTagGroup MatchContent MatchHeadline LinksTo HasTags |\n  | =status:next= =priority:a=    | IsStatus(\"NEXT\") IsPriority(\"A\")            |\n  | =client:acme=                 | any other key is a property: MatchProperty(\"CLIENT\", ...) |\n  | =client:*=                    | HasProperty(\"CLIENT\")                       |\n  | ={{ WorkTasks }}=             | a yaml filter, as in the full form          |\n\n  A query is read as the full form when it calls a function (=IsTodo()=) or\n  uses =\u0026\u0026= or =||=, so every query written before keeps its meaning.\n  =orgs search -explain= prints the full form a short query becomes.\n",
  "QueryFuncs": {
   "BacklinkCount": "how many links point at this heading, as a number to compare: BacklinkCount() == 0 finds the orphans",
   "ChecklistCount": "how many checkboxes the node's own text has, as a number to compare",
   "ChecklistDone": "returns true if the node has checkboxes and every one is ticked",
   "ChecklistLeft": "how many of the node's checkboxes are still open, as a number to compare",
+  "DateAfter": "DateAfter(\"2026 30 10\") is true when one of those dates falls on a day after it; a range counts by its end",
+  "DateBefore": "DateBefore(\"2026 30 10\") (year, day, month, as OnDate) is true when the node's SCHEDULED, DEADLINE or an active timestamp of its own falls on a day before that one",
   "DaysOld": "how many days ago the node's newest date (SCHEDULED, DEADLINE, CLOSED or timestamp) was, as a number to compare; -1 with no date",
   "DeadlinePast": "returns true if the DEADLINE is before today: overdue, where a deadline of today is only due",
   "DeadlineWithin": "DeadlineWithin(N) is true when the DEADLINE falls between today and N days ahead, in calendar days",
@@ -430,6 +432,19 @@
    "orgs lint notes.org -format quickfix   file:line:col: lines for an editor",
    "orgs lint *.org -check              for a hook: exit 1 on any problem"
   ],
+  "list": [
+   "orgs list                      pick a list (fzf, the list drawn in the pane),",
+   "orgs list groceries            the same, narrowed to lists matching \"groceries\"",
+   "orgs list new                  asks for a title, files a new list in the",
+   "orgs list new Packing for Oslo the same, title given",
+   "orgs list ls                   every list, taskbook's board view",
+   "orgs list ls -open             only the lists with something left to do",
+   "orgs list show groceries       one list",
+   "orgs list add -l groceries milk        add an item",
+   "orgs list check -l groceries 2 3       tick items 2 and 3 (uncheck clears)",
+   "orgs list edit -l groceries 2 oat milk reword item 2",
+   "orgs list rm -l groceries 4            delete item 4"
+  ],
   "list2headings": [
    "orgs list2headings Shopping          a list in a heading's text into child headings",
    "orgs list2headings Shopping -line 12 ... the list at that line (1 based)"
@@ -600,6 +615,8 @@
    "orgs search 'IsTask()' -json | jq '.[].Headline'",
    "orgs search 'IsTask()' -format '{{.Filename}}:{{.LineNum}}\\t{{.Headline}}'",
    "orgs search 'IsProject()' -open",
+   "orgs search 'NEXT :work: due:\u003c3d'",
+   "orgs search 'todo before:fri' -explain",
    "orgs search 'IsStatus(\"NEXT\") \u0026\u0026 OlderThan(\"30d\")' -json \\\n  | jq -r .Hash | orgs tag +stale -"
   ],
   "show": [

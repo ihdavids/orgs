@@ -955,7 +955,14 @@ func dynQuery(c *dynCtx) ([]string, error) {
 }
 
 // A query with the yaml's {{ Filters }} written into it, as /search does.
+//
+// A short query is translated first, so a {{ filter }} in it stays one
+// bracketed term; one that does not translate is left for ParseString to
+// report.
 func expandQueryFilters(q string) string {
+	if full, err := shortToFull(q); err == nil {
+		q = full
+	}
 	tempo := Conf().PlugManager.Tempo
 	if tempo == nil {
 		return q

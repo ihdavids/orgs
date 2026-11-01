@@ -448,3 +448,185 @@ func ChecklistCounts(p *org.Section, f *common.OrgFile) (done int, total int) {
 	}
 	return done, total
 }
+
+// ---------------------------------------------------------------------------
+// Adding, rewording and taking out an item
+// ---------------------------------------------------------------------------
+
+/*
+		SDOC: API
+
+	  - POST /checklist/edit — Add, Reword or Delete a Checklist Item
+	    Changes one checkbox item in a heading's own body as a line edit: only the
+	    lines of that item are touched, so nothing else in the file is reformatted.
+	    =POST /checklist= ticks and clears a box; this does everything else.
+
+	    *Method:* =POST=
+
+	    *Body:*
+	    | Field   | Type   | Description                                                                 |
+	    |---------+--------+-----------------------------------------------------------------------------|
+	    | =Hash=  | string | The heading.                                                                |
+	    | =Op=    | string | =add=, =set= (reword) or =delete=.                                          |
+	    | =Index= | int    | set, delete: which item, counting from 0 as =POST /checklist= does.         |
+	    | =Text=  | string | set, delete: what the client believes the item says; a mismatch is refused. |
+	    | =New=   | string | add, set: the item's text.                                                  |
+	    | =At=    | int    | add: the position the new item takes, from 1; 0 or past the end appends.    |
+	    | =Done=  | bool   | add: write it ticked.                                                       |
+
+	    A new item copies the indent and bullet of its neighbour. An item's
+	    continuation lines and sub-items travel with it: deleting an item deletes
+	    them, and adding after one goes below them.
+
+	    *Response:* =ResultMsg=.
+	    EDOC
+*/
+
+type ChecklistEdit struct {
+	Hash  string
+	Op    string
+	Index int
+	Text  string
+	New   string
+	At    int
+	Done  bool
+}
+
+// The lines of one item: its own, and every line under it indented deeper
+// than its bullet - wrapped text and sub-items. Ends at a blank line, a line
+// back at the item's indent or less, or the end of the body.
+func checkItemEnd(lines []string, row, to int, indent string) int {
+	end := row
+	for i := row + 1; i <= to && i < len(lines); i++ {
+		if strings.TrimSpace(lines[i]) == "" {
+			break
+		}
+		lead := len(lines[i]) - len(strings.TrimLeft(lines[i], " \t"))
+		if lead <= len(indent) {
+			break
+		}
+		end = i
+	}
+	return end
+}
+
+func PostChecklistEdit(w http.ResponseWriter, r *http.Request) {
+	var res common.ResultMsg
+	body, _ := io.ReadAll(r.Body)
+	var args ChecklistEdit
+	if err := json.Unmarshal(body, &args); err != nil {
+		res.Msg = err.Error()
+		checklistJson(w, res)
+		return
+	}
+	newText := strings.TrimSpace(strings.ReplaceAll(args.New, "\n", " "))
+	if (args.Op == "add" || args.Op == "set") && newText == "" {
+		res.Msg = "an item needs some text"
+		checklistJson(w, res)
+		return
+	}
+
+	filename, lines, from, to, err := headingBodyLines(args.Hash)
+	if err != nil {
+		res.Msg = err.Error()
+		checklistJson(w, res)
+		return
+	}
+	if to >= len(lines) {
+		to = len(lines) - 1
+	}
+
+	type item struct {
+		row int
+		m   []string
+	}
+	items := []item{}
+	for i := from; i <= to; i++ {
+		if m := checkItem(lines[i]); m != nil {
+			items = append(items, item{i, m})
+		}
+	}
+
+	switch args.Op {
+	case "add":
+		box := " "
+		if args.Done {
+			box = "X"
+		}
+		var at int
+		var line string
+		switch {
+		case len(items) == 0:
+			// Under whatever is already written - drawer, planning line, a
+			// paragraph - at the indent the body already uses.
+			at = from
+			for i := to; i >= from; i-- {
+				if strings.TrimSpace(lines[i]) != "" {
+					at = i + 1
+					break
+				}
+			}
+			indent := ""
+			for i := from; i <= to; i++ {
+				if t := strings.TrimLeft(lines[i], " \t"); t != "" {
+					indent = lines[i][:len(lines[i])-len(t)]
+					break
+				}
+			}
+			line = fmt.Sprintf("%s- [%s] %s", indent, box, newText)
+		case args.At >= 1 && args.At <= len(items):
+			// In front of the item now at that position, shaped like it.
+			it := items[args.At-1]
+			at = it.row
+			line = fmt.Sprintf("%s%s [%s] %s", it.m[1], bulletLike(it.m[2]), box, newText)
+		default:
+			it := items[len(items)-1]
+			at = checkItemEnd(lines, it.row, to, it.m[1]) + 1
+			line = fmt.Sprintf("%s%s [%s] %s", it.m[1], bulletLike(it.m[2]), box, newText)
+		}
+		lines = append(lines[:at], append([]string{line}, lines[at:]...)...)
+
+	case "set", "delete":
+		if args.Index < 0 || args.Index >= len(items) {
+			res.Msg = "that heading has no checklist item there any more"
+			checklistJson(w, res)
+			return
+		}
+		it := items[args.Index]
+		if strings.TrimSpace(it.m[4]) != strings.TrimSpace(args.Text) {
+			res.Msg = "that item has changed since it was read"
+			checklistJson(w, res)
+			return
+		}
+		if args.Op == "set" {
+			lines[it.row] = fmt.Sprintf("%s%s [%s] %s", it.m[1], it.m[2], it.m[3], newText)
+		} else {
+			end := checkItemEnd(lines, it.row, to, it.m[1])
+			lines = append(lines[:it.row], lines[end+1:]...)
+		}
+
+	default:
+		res.Msg = fmt.Sprintf("unknown op %q: add, set or delete", args.Op)
+		checklistJson(w, res)
+		return
+	}
+
+	if err := os.WriteFile(filename, []byte(strings.Join(lines, "\n")+"\n"), 0644); err != nil {
+		res.Msg = err.Error()
+		checklistJson(w, res)
+		return
+	}
+	res.Ok = true
+	res.Msg = "ok"
+	checklistJson(w, res)
+}
+
+// A numbered list goes on being numbered by whatever org renumbers it to; the
+// new item is given the neighbour's form (1. or 1)) and org or the next
+// reformat fixes the count. A bullet is copied as it is.
+func bulletLike(b string) string {
+	if strings.HasSuffix(b, ".") || strings.HasSuffix(b, ")") {
+		return "1" + b[len(b)-1:]
+	}
+	return b
+}

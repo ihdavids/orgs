@@ -75,6 +75,8 @@ package orgs
   - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
   - *MatchHeadline* - Run an RE against each headline and check for a match
   - *OnDate* - OnDate("2026 30 01") (year, day, month) is true when the heading lands on that day in the agenda: a timestamp, SCHEDULED or DEADLINE on it, a repeat of one, a range spanning it, and on today also an overdue SCHEDULED and a DEADLINE inside its warning period or past it (the rules of GET /agenda)
+  - *DateBefore* - DateBefore("2026 30 10") (year, day, month, as OnDate) is true when the node's SCHEDULED, DEADLINE or an active timestamp of its own falls on a day before that one
+  - *DateAfter* - DateAfter("2026 30 10") is true when one of those dates falls on a day after it; a range counts by its end
   - *Today* - returns true if a node is scheduled for today
   - *Yesterday* - returns true if a node is scheduled for yesterday
   - *ThisWeek* - returns true if a node lands in the agenda on any day of the last seven, today included
@@ -951,6 +953,25 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 
 			return IsOn(p, exp.File, now), nil
 		},
+		// DateBefore("2026 30 10") / DateAfter(...) (year, day, month, as OnDate)
+		// are true when one of the heading's own dates - SCHEDULED, DEADLINE or
+		// an active timestamp, not CLOSED - falls on a day strictly before or
+		// after that one. A range counts by its start for before, its end for
+		// after. The short query's before: and after: are these.
+		"DateBefore": func(args ...interface{}) (interface{}, error) {
+			day, err := queryDayArg("DateBefore", args)
+			if err != nil {
+				return false, err
+			}
+			return headingDateBeside(exp.Sec, day, true), nil
+		},
+		"DateAfter": func(args ...interface{}) (interface{}, error) {
+			day, err := queryDayArg("DateAfter", args)
+			if err != nil {
+				return false, err
+			}
+			return headingDateBeside(exp.Sec, day, false), nil
+		},
 		// The planning lines, as questions rather than as values.
 		//
 		// The query language could ask what a heading *was* - its keyword, its
@@ -1034,8 +1055,13 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 	}
 	guardQueryFunctions(exp, functions)
 	//expString := "strlen('someReallyLongInputString') <= 16"
-	var err error
-	exp.Expression, err = govaluate.NewEvaluableExpressionWithFunctions(expString.Query, functions)
+	// A short query (`todo :work:`) is the full form once translated; a full
+	// one comes back as it was.
+	query, err := shortToFull(expString.Query)
+	if err != nil {
+		return exp, err
+	}
+	exp.Expression, err = govaluate.NewEvaluableExpressionWithFunctions(query, functions)
 	return exp, err
 }
 
@@ -1384,8 +1410,7 @@ func QueryStringNodesOnFile(query string, file *common.OrgFile) ([]*org.Section,
 	var nodes []*org.Section
 
 	// Render {{ FILTER }} in our template
-	ctx := Conf().PlugManager.Tempo.GetAugmentedStandardContextFromStringMap(Conf().Filters, true)
-	query = Conf().PlugManager.Tempo.ExecuteTemplateString(query, ctx)
+	query = expandQueryFilters(query)
 
 	exp, err := ParseString(&common.StringQuery{Query: query})
 	if err != nil {
@@ -2308,6 +2333,62 @@ func datePast(d *org.OrgDate) bool {
 	start := d.Start
 	return time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
 		start.Location()).Before(today)
+}
+
+// queryDayArg reads the day DateBefore/DateAfter are asked about: OnDate's
+// "2006 02 01", or an ISO date, which govaluate hands over already a time.
+func queryDayArg(name string, args []interface{}) (time.Time, error) {
+	if len(args) < 1 {
+		return time.Time{}, fmt.Errorf(`%s needs a day: %s("2026 30 10")`, name, name)
+	}
+	switch v := args[0].(type) {
+	case time.Time:
+		return v, nil
+	case string:
+		for _, layout := range []string{"2006 02 01", "2006-01-02"} {
+			if t, err := time.ParseInLocation(layout, v, time.Local); err == nil {
+				return t, nil
+			}
+		}
+	}
+	return time.Time{}, fmt.Errorf(`%s needs a day written "2026 30 10" (year, day, month)`, name)
+}
+
+// headingDateBeside is true when one of the heading's own dates lands on a day
+// before (or after) day, counted in calendar days as the agenda counts them.
+func headingDateBeside(sec *org.Section, day time.Time, before bool) bool {
+	if sec == nil || sec.Headline == nil {
+		return false
+	}
+	h := sec.Headline
+	var dates []*org.OrgDate
+	for _, sdc := range []*org.SDC{h.Scheduled, h.Deadline} {
+		if sdc != nil && sdc.Date != nil {
+			dates = append(dates, sdc.Date)
+		}
+	}
+	for _, ts := range h.Timestamps {
+		if ts != nil && ts.Time != nil {
+			dates = append(dates, ts.Time)
+		}
+	}
+	target := agendaDayNum(day)
+	for _, d := range dates {
+		if d.Start.IsZero() {
+			continue
+		}
+		if before && agendaDayNum(d.Start) < target {
+			return true
+		}
+		end := d.Start
+		if !d.End.IsZero() && d.End.After(end) {
+			end = d.End
+		}
+		if !before && agendaDayNum(end) > target {
+			return true
+		}
+	}
+	return false
 }
 
 // daysOld is how long ago the most recent of a heading's dates was, in whole
