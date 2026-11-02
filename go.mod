@@ -21,7 +21,7 @@ require (
 	github.com/gorilla/rpc v1.2.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/ides15/todoist v0.0.0-20220427224039-71f7428f4d5a
-	github.com/ihdavids/go-org v1.6.3-0.20261011231845-591d8ab3bc9c
+	github.com/ihdavids/go-org v1.6.3-0.20261102064723-5b400a241eb7
 	github.com/ihdavids/govaluate v0.0.0-20231220060452-759d66a62509
 	github.com/ihdavids/tablewriter v0.0.0-20231130030027-2e70cfc41f0c
 	github.com/junegunn/fzf v0.65.2
@@ -38,6 +38,8 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.6.1
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+require github.com/alecthomas/chroma v0.10.0 // indirect
 
 require (
 	cloud.google.com/go/auth v0.7.2 // indirect
