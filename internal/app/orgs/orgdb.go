@@ -564,6 +564,9 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		// every re-read of a file goes through - a watcher event, a write from
 		// a handler, or a file appearing in a watched directory.
 		PublishReload(filename)
+		// Keywords compared with the last reading: statechange events, for
+		// hooks and the stream (hooks.go). The first reading is the baseline.
+		noteStates(ofile)
 		// A save of a file that asks to be tangled on save (#+auto_tangle: t).
 		// Not the first load: a server starting up is not somebody saving.
 		if have {
@@ -583,6 +586,7 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 // in the file list and its version. Everything keyed per file (FileParts)
 // drops it on its next pass, because it is no longer in GetFiles.
 func (self *OrgDb) UnloadFile(filename string) {
+	forgetStates(filename)
 	self.dblock.Lock()
 	if _, ok := self.ByFile[filename]; !ok {
 		self.dblock.Unlock()

@@ -675,45 +675,73 @@ var refreshableRe = regexp.MustCompile(`(?im)^\s*#\+(BEGIN:|TBLFM:)`)
 
 // exportFile is the file an export should read: its dynamic blocks refreshed
 // and its formulas run, in memory, when there are any and refresh.onExport is
-// on; the database's own reading otherwise.
+// on, and its #+transclude: lines expanded when transclusion is on
+// (transclude.go); the database's own reading otherwise.
 func exportFile(filename string) *common.OrgFile {
 	f, _ := exportFileStamped(filename)
 	return f
 }
 
-// exportFileStamped is exportFile with a stamp of the refreshed text, for a
-// cache keyed on the file's state: a clock table can change while the file
-// does not. The stamp is "" when the file is read as it is.
+// exportFileStamped is exportFile with a stamp of the text exported, for a
+// cache keyed on the file's state: a clock table, or a transcluded heading in
+// another file, can change while the file does not. The stamp is "" when the
+// file is read as it is.
 func exportFileStamped(filename string) (*common.OrgFile, string) {
+	return exportFileWith(filename, Conf().Server.Refresh.ExportRefresh())
+}
+
+// exportFileWith is exportFileStamped, refreshing or not: `orgs export
+// -no-refresh` still wants its transclusions.
+func exportFileWith(filename string, refresh bool) (*common.OrgFile, string) {
 	f := GetDb().FindByFile(filename)
-	if f == nil || f.Doc == nil || !Conf().Server.Refresh.ExportRefresh() {
+	if f == nil || f.Doc == nil {
 		return f, ""
 	}
 	b, err := os.ReadFile(f.Filename)
-	if err != nil || !refreshableRe.Match(b) {
+	if err != nil {
 		return f, ""
 	}
-	r, err := refreshFile(f.Filename, false)
-	if err != nil || r.doc == nil {
+	tx := transclusionOn() && hasTransclude(string(b))
+	var lines []string
+	if refresh && refreshableRe.Match(b) {
+		if r, err := refreshFile(f.Filename, false); err == nil && r.doc != nil && r.changed {
+			lines = r.lines
+		}
+	}
+	if lines == nil && !tx {
 		return f, ""
 	}
-	if !r.changed {
-		// Nothing came out different: the file as the database has it.
-		return f, ""
+	if !tx {
+		// The blocks' new text read as a document, with the tables' new
+		// values already in it.
+		doc, _, _, _ := recalcTableLines(f.Filename, lines)
+		return &common.OrgFile{Filename: f.Filename, Doc: doc}, refreshHash(strings.Join(lines, "\n"))
 	}
-	// The blocks' new text read as a document, with the tables' new values
-	// already in it.
-	doc, _, _, _ := recalcTableLines(f.Filename, r.lines)
-	return &common.OrgFile{Filename: f.Filename, Doc: doc}, refreshHash(strings.Join(r.lines, "\n"))
+	refreshed := lines != nil
+	if !refreshed {
+		lines = strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+	}
+	out, _ := expandTransclusions(f.Filename, lines, true)
+	var doc *org.Document
+	if refreshed {
+		doc, _, _, _ = recalcTableLines(f.Filename, out)
+	} else {
+		doc = GetConfig().Silent().Parse(strings.NewReader(strings.Join(out, "\n")+"\n"), f.Filename)
+	}
+	return &common.OrgFile{Filename: f.Filename, Doc: doc}, refreshHash(strings.Join(out, "\n"))
 }
 
 // exportView is the database with query's file read as exportFile reads it.
 func exportView(base common.ODb, query string) common.ODb {
+	return exportViewWith(base, query, Conf().Server.Refresh.ExportRefresh())
+}
+
+func exportViewWith(base common.ODb, query string, refresh bool) common.ODb {
 	f := GetDb().FindByFile(query)
 	if f == nil {
 		return base
 	}
-	ef := exportFile(query)
+	ef, _ := exportFileWith(query, refresh)
 	if ef == nil || ef == f {
 		return base
 	}

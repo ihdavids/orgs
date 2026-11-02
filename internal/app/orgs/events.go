@@ -49,6 +49,16 @@ type Event struct {
 	// The heading this is about, when it is about one.
 	Hash     string `json:"hash,omitempty"`
 	Headline string `json:"headline,omitempty"`
+	// A `statechange`: the keyword before and after. A `clockout`: the
+	// minutes clocked. A `deadline`: the date that passed. A `capture`: the
+	// template. Line is the heading's, 0 based; Tags its own and inherited.
+	From     string   `json:"from,omitempty"`
+	To       string   `json:"to,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
+	Line     int      `json:"line,omitempty"`
+	Template string   `json:"template,omitempty"`
+	Minutes  float64  `json:"minutes,omitempty"`
+	Date     string   `json:"date,omitempty"`
 	// Free text for a person watching the stream.
 	Msg string `json:"msg,omitempty"`
 	// The database's reload counter as of this event, so a client can tell
@@ -85,6 +95,13 @@ const (
 	// A clock was started or stopped.
 	EventClockIn  = "clockin"
 	EventClockOut = "clockout"
+	// A heading's keyword changed, from anywhere - worg, the command line,
+	// an editor saving the file (see noteStates in hooks.go).
+	EventStateChange = "statechange"
+	// A capture was filed.
+	EventCapture = "capture"
+	// An open heading's DEADLINE went past (deadlineTicker in hooks.go).
+	EventDeadline = "deadline"
 	// The stream opened. Sent once, so a client knows it is connected and what
 	// the reload counter was when it arrived.
 	EventHello = "hello"

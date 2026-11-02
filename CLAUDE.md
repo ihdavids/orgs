@@ -120,6 +120,7 @@ Feature notes sit in `CLAUDE.md` files beside the code and load when you work th
 - `cmd/oc/commands/capture/CLAUDE.md`: `orgs cap`
 - `cmd/oc/commands/habits/CLAUDE.md`: `orgs habits`
 - `cmd/oc/commands/mcp/CLAUDE.md`: `orgs mcp`
+- `cmd/oc/commands/lsp/CLAUDE.md`: `orgs lsp`, the language server (buffer edits through `/lsp/date`, `/lsp/run`)
 - `cmd/oc/commands/orghl/CLAUDE.md`: `orghl`
 - `cmd/oc/commands/pres/CLAUDE.md`: `orgs pres`, the terminal slideshow
 - `cmd/oc/commands/drill/CLAUDE.md`: `orgs drill`, flashcards in the terminal

@@ -1266,17 +1266,33 @@ func hasResultAfter(lines []string, after int) bool {
 
 // Writes a block's result under it in its file.
 func writeBlockResult(block *common.CodeBlock, job babelJob, res *common.CodeResult) error {
-	want := job.results()
-	if hasWord(want, "silent", "none", "discard") || res.Cached {
-		return nil
-	}
 	lines, err := ganttFileLines(block.Filename)
 	if err != nil {
 		return err
 	}
+	after, err := blockResultLines(block, job, res, lines)
+	if err != nil || after == nil {
+		return err
+	}
+	res.Written = false
+	if err := writeLines(block.Filename, after); err != nil {
+		return err
+	}
+	res.Written = true
+	return nil
+}
+
+// blockResultLines is the block's result placed under it in lines: the new
+// lines, or nil when there is nothing to write. Sets res.Written when it
+// changed something, res.Unchanged when the result was there already.
+func blockResultLines(block *common.CodeBlock, job babelJob, res *common.CodeResult, lines []string) ([]string, error) {
+	want := job.results()
+	if hasWord(want, "silent", "none", "discard") || res.Cached {
+		return nil, nil
+	}
 	end := block.EndLine
 	if end < 0 || end >= len(lines) || !regexp.MustCompile(`(?i)^\s*#\+END_SRC`).MatchString(lines[end]) {
-		return fmt.Errorf("the block is not where the database thinks it is - reload and try again")
+		return nil, fmt.Errorf("the block is not where the database thinks it is - reload and try again")
 	}
 	indent := blockIndent(lines[block.Line])
 	body := resultBody(res, want, block.Lang)
@@ -1284,22 +1300,19 @@ func writeBlockResult(block *common.CodeBlock, job babelJob, res *common.CodeRes
 		// Nothing to say and nothing said before: a bare #+RESULTS: under a
 		// block that only defines things is noise, and a notebook imported
 		// without one would change on its first run.
-		return nil
+		return nil, nil
 	}
 	before := strings.Join(lines, "\n")
-	lines = placeResult(lines, end, block.Name, indent, body, want, res.Hash)
+	after := placeResult(append([]string{}, lines...), end, block.Name, indent, body, want, res.Hash)
 	// The same result as last time is left alone: a block re-run on a timer
 	// (refresh.go) would otherwise rewrite its file every few minutes for
 	// nothing, waking every watcher of it.
-	if strings.Join(lines, "\n") == before {
+	if strings.Join(after, "\n") == before {
 		res.Unchanged = true
-		return nil
-	}
-	if err := writeLines(block.Filename, lines); err != nil {
-		return err
+		return nil, nil
 	}
 	res.Written = true
-	return nil
+	return after, nil
 }
 
 // ----------------------------------------------------------------------------
@@ -1515,6 +1528,32 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 	if err != nil {
 		return nil, err
 	}
+	ran, after, err := runItemLines(f, path, lines, it, write)
+	if err != nil || after == nil {
+		return ran, err
+	}
+	if werr := writeLines(path, after); werr != nil {
+		for i := range ran {
+			if ran[i].Written {
+				ran[i].Written, ran[i].Result.Written = false, false
+				ran[i].Result.Ok, ran[i].Result.Msg = false, "ran, but the result could not be written: "+werr.Error()
+			}
+		}
+		// Inline code said so as an error before, and still does.
+		if it.kind == "inline" {
+			return ran, werr
+		}
+	}
+	return ran, nil
+}
+
+// runItemLines is runItem on a file's lines rather than the file: f is those
+// lines parsed, and what the run would write comes back as the new lines (nil
+// when nothing changed) instead of going to disk. `orgs lsp` runs a block this
+// way on the editor's unsaved text (POST /lsp/run), so the result lands in the
+// buffer and nothing is written behind the editor's back. Written on a run
+// means "is in the new lines"; runItem clears it if the write then fails.
+func runItemLines(f *common.OrgFile, path string, lines []string, it babelItem, write bool) ([]common.BabelRan, []string, error) {
 	switch it.kind {
 	case "block":
 		names := namedKinds(f)
@@ -1532,15 +1571,17 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			}
 			// A session's failed run is written too: its traceback is what a
 			// notebook shows in place of the output.
+			var after []string
 			if (res.Ok || res.Kind == "error") && write {
-				if err := writeBlockResult(&block, job, &res); err != nil {
+				var err error
+				if after, err = blockResultLines(&block, job, &res, lines); err != nil {
 					res.Ok, res.Msg = false, "ran, but the result could not be written: "+err.Error()
 				}
 			}
 			ran.Result, ran.Written = res, res.Written
-			return []common.BabelRan{ran}, nil
+			return []common.BabelRan{ran}, after, nil
 		}
-		return nil, fmt.Errorf("the block at line %d is not one the database knows - reload and try again", it.row+1)
+		return nil, nil, fmt.Errorf("the block at line %d is not one the database knows - reload and try again", it.row+1)
 
 	case "call":
 		m := callLineRe.FindStringSubmatch(lines[it.row])
@@ -1555,19 +1596,18 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			res = common.CodeResult{Msg: err.Error()}
 		}
 		want := job.results()
+		var after []string
 		if (res.Ok || res.Kind == "error") && write && !res.Cached && !hasWord(want, "silent", "none", "discard") {
 			before := strings.Join(lines, "\n")
-			lines = placeResult(lines, it.row, blockName(lines, it.row), m[1], resultBody(&res, want, job.Lang), want, res.Hash)
-			if strings.Join(lines, "\n") == before {
+			placed := placeResult(append([]string{}, lines...), it.row, blockName(lines, it.row), m[1], resultBody(&res, want, job.Lang), want, res.Hash)
+			if strings.Join(placed, "\n") == before {
 				res.Unchanged = true
-			} else if err := writeLines(path, lines); err != nil {
-				res.Ok, res.Msg = false, "ran, but the result could not be written: "+err.Error()
 			} else {
-				res.Written = true
+				after, res.Written = placed, true
 			}
 		}
 		ran.Result, ran.Written = res, res.Written
-		return []common.BabelRan{ran}, nil
+		return []common.BabelRan{ran}, after, nil
 
 	case "inline":
 		line := lines[it.row]
@@ -1613,6 +1653,7 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 			ran.Result = res
 			out = append(out, ran)
 		}
+		var after []string
 		if write {
 			changed := false
 			for i := len(codes) - 1; i >= 0; i-- {
@@ -1623,10 +1664,8 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 				changed = true
 			}
 			if changed {
-				lines[it.row] = line
-				if err := writeLines(path, lines); err != nil {
-					return out, err
-				}
+				after = append([]string{}, lines...)
+				after[it.row] = line
 				for i := range out {
 					if replace[i] != "" {
 						out[i].Written, out[i].Result.Written = true, true
@@ -1634,9 +1673,9 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 				}
 			}
 		}
-		return out, nil
+		return out, after, nil
 	}
-	return nil, fmt.Errorf("nothing to run")
+	return nil, nil, fmt.Errorf("nothing to run")
 }
 
 // ExecBabel is the whole of POST /babel/exec.

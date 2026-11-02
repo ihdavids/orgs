@@ -312,6 +312,7 @@ func StartServer(sets *common.ServerSettings) {
 	// Started here rather than in a plugin because it outlives a reload and is
 	// not driven by the org files at all.
 	StartWhisper()
+	startHooks() // hooks.go
 	// LanguageTool for writing mode's checker, when languageTool: asks orgs
 	// to run one (languagetool.go).
 	StartLanguageTool()

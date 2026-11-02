@@ -993,6 +993,75 @@ type ServerSettings struct {
 	EDOC */
 	Babel BabelSettings `yaml:"babel"`
 	/* SDOC: Settings
+	* Transclusion
+		=#+transclude: [[id:...]]= lines drawn as the heading (or file, or lines)
+		they name, in worg, every export and the VS Code preview, with worg's
+		edits written back into the source. Off by default; worg's settings menu
+		and =orgs transclude on|off= turn it on and off without editing this.
+
+		#+BEGIN_SRC yaml
+		transclusion:
+		  enable: true
+		  depth: 3      # transclusions inside transcluded text, how deep (default 3)
+		#+END_SRC
+	EDOC */
+	Transclusion TransclusionSettings `yaml:"transclusion"`
+	/* SDOC: Settings
+	* CalDAV and CardDAV
+		Your dated headings as a calendar and your contacts as an address book,
+		for a phone's own Calendar and Contacts apps, read and write. Off unless
+		enabled, and then reachable only with an app password made for it
+		(=orgs dav password=), never your login password, and only over https
+		(or from this machine) unless =allowHttp= says otherwise.
+
+		#+BEGIN_SRC yaml
+		dav:
+		  enable: true
+		  readOnly: false                # true: the phone can look, not change
+		  calendar: true                 # the calendar (default true)
+		  contacts: true                 # the address book (default true)
+		  calendarQuery: ""              # which headings; default every dated, open, unarchived one
+		  done: false                    # include finished headings' dates
+		  contactQuery: ""               # which headings are contacts; default contact records
+		                                 #   and any heading with an EMAIL or PHONE property
+		  newEvents: inbox.org           # where an event made on the phone is filed
+		  allowHttp: false               # plain http from other machines (behind a VPN, say)
+		#+END_SRC
+
+		Moving an event moves its heading's SCHEDULED, DEADLINE or timestamp
+		(a line edit; the repeater is kept); renaming it renames the heading.
+		Deleting an event takes the date off the heading and leaves the
+		heading. Deleting a contact is refused.
+	EDOC */
+	Dav DavSettings `yaml:"dav"`
+	/* SDOC: Settings
+	* Hooks
+		Run a program, a shell line or a webhook when something happens: a
+		heading changes keyword, a clock stops, a capture lands, a deadline
+		passes - or any other event on the =/events= stream. Off unless enabled.
+		See *Hooks* for the fields each event carries.
+
+		#+BEGIN_SRC yaml
+		hooks:
+		  enable: true
+		  timeout: 30s                     # default for every rule
+		  rules:
+		    - name: done-log
+		      on: [statechange]
+		      match: {to: "DONE|CANCELLED"}  # case-insensitive regexps, whole value
+		      run: ["/usr/local/bin/log-done", "{{headline}}", "{{file}}"]
+		    - name: work-to-slack
+		      on: [statechange, capture]
+		      match: {tags: work}          # any tag
+		      url: https://hooks.slack.com/services/...
+		      secret: env:SLACK_HOOK_SECRET  # signs the body: X-Orgs-Signature
+		    - name: overdue
+		      on: [deadline]
+		      shell: 'say "$ORGS_HEADLINE is overdue"'
+		#+END_SRC
+	EDOC */
+	Hooks HookSettings `yaml:"hooks"`
+	/* SDOC: Settings
 	* Refresh
 		What the server keeps current by itself: source blocks with
 		=:schedule=, dynamic blocks with =:refresh=, files with =#+REFRESH:=
@@ -1256,6 +1325,58 @@ type BabelSettings struct {
 	// How to run a language, replacing what orgs would have used. The code is
 	// handed to the command on standard input.
 	Commands map[string][]string `yaml:"commands"`
+}
+
+// HookSettings is the `hooks:` block (hooks.go).
+type HookSettings struct {
+	Enable  bool       `yaml:"enable"`
+	Timeout string     `yaml:"timeout"`
+	Rules   []HookRule `yaml:"rules"`
+}
+
+// HookRule is one hook: which events, which of them, and what to do.
+type HookRule struct {
+	Name  string            `yaml:"name"`
+	On    []string          `yaml:"on"`
+	Match map[string]string `yaml:"match"`
+	// A program and its arguments; {{field}} is replaced inside each argument.
+	Run []string `yaml:"run"`
+	// A line for sh -c; the event reaches it only as ORGS_* variables.
+	Shell string `yaml:"shell"`
+	Dir   string `yaml:"dir"`
+	// A webhook: the event is POSTed as json.
+	Url     string            `yaml:"url"`
+	Headers map[string]string `yaml:"headers"`
+	// Signs the body (HMAC-SHA256, X-Orgs-Signature). env:NAME and keyring:NAME
+	// read it from there.
+	Secret  string `yaml:"secret"`
+	Timeout string `yaml:"timeout"`
+	// Runs a minute at most; past it the event is skipped and said (default
+	// 30). What stops a hook that edits a file from setting itself off for
+	// ever.
+	Limit int `yaml:"limit"`
+}
+
+// DavSettings is the `dav:` block (dav.go).
+type DavSettings struct {
+	Enable        bool   `yaml:"enable"`
+	ReadOnly      bool   `yaml:"readOnly"`
+	Calendar      *bool  `yaml:"calendar"`
+	Contacts      *bool  `yaml:"contacts"`
+	CalendarQuery string `yaml:"calendarQuery"`
+	Done          bool   `yaml:"done"`
+	ContactQuery  string `yaml:"contactQuery"`
+	NewEvents     string `yaml:"newEvents"`
+	AllowHttp     bool   `yaml:"allowHttp"`
+}
+
+func (d DavSettings) CalendarOn() bool { return d.Enable && (d.Calendar == nil || *d.Calendar) }
+func (d DavSettings) ContactsOn() bool { return d.Enable && (d.Contacts == nil || *d.Contacts) }
+
+// TransclusionSettings is the `transclusion:` block (transclude.go).
+type TransclusionSettings struct {
+	Enable bool `yaml:"enable"`
+	Depth  int  `yaml:"depth"`
 }
 
 // RefreshSettings is the `refresh:` block (refresh.go).

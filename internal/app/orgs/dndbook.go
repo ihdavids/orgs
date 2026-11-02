@@ -256,6 +256,16 @@ func RequestPdfView(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("%s: %v", fname, err), http.StatusNotFound)
 		return
 	}
+	// The file's own state keys the cache; what it is exported as (its
+	// dynamic blocks refreshed, its transclusions drawn) can change without
+	// it, so that joins the key.
+	_, stamp := exportFileStamped(path)
+	if stamp != "" {
+		if len(stamp) > 16 {
+			stamp = stamp[:16]
+		}
+		cache = strings.TrimSuffix(cache, ".pdf") + "-" + stamp + ".pdf"
+	}
 
 	// One at a time per file, and the one that waited looks in the cache again
 	// rather than building it a second time.
@@ -274,7 +284,7 @@ func RequestPdfView(w http.ResponseWriter, r *http.Request) {
 			Filename: cache,
 			Props:    map[string]string{},
 		}
-		res, _ := ExportToFile(db, &opts)
+		res, _ := ExportToFile(exportView(db, path), &opts)
 		if !res.Ok {
 			os.Remove(cache)
 			http.Error(w, res.Msg, http.StatusInternalServerError)

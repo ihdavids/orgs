@@ -28,6 +28,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf16"
+	"unicode/utf8"
 )
 
 // pos is a place in the file: a 0 based line and a 0 based byte column.
@@ -75,6 +76,26 @@ func (p *para) place(off int) pos {
 		lo = len(p.at) - 1
 	}
 	return p.at[lo]
+}
+
+// placeEnd is where a UTF-16 offset that ends a span lands: just past the
+// last character before it, which is on that character's line even when the
+// next one is on another.
+func (p *para) placeEnd(off int) pos {
+	k := -1
+	for i := range p.text {
+		if p.u16[i] < off {
+			k = i
+		} else {
+			break
+		}
+	}
+	if k < 0 {
+		return p.place(off)
+	}
+	at := p.at[k]
+	at.col += utf8.RuneLen(p.text[k])
+	return at
 }
 
 var (

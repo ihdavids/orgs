@@ -48,6 +48,9 @@ require (
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
+	github.com/emersion/go-ical v0.0.0-20240127095438-fc1c9d8fb2b6
+	github.com/emersion/go-vcard v0.0.0-20230815062825-8fda7d206ec9
+	github.com/emersion/go-webdav v0.7.0
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -115,7 +118,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/teambition/rrule-go v1.8.0 // indirect
+	github.com/teambition/rrule-go v1.8.2 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/term v0.34.0

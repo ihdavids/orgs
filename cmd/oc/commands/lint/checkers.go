@@ -19,6 +19,7 @@ import (
 // found is one problem before it has a file to belong to.
 type found struct {
 	at       pos
+	end      pos // just past the problem
 	severity string
 	rule     string
 	msg      string
@@ -107,7 +108,7 @@ func runHarper(core *commands.Core, paras []*para, dialect string, off []string)
 		for i, lints := range res.Lints {
 			p := paras[lo+i]
 			for _, l := range lints {
-				out[lo+i] = append(out[lo+i], found{at: p.place(l.Start), severity: severityOf(l.Kind),
+				out[lo+i] = append(out[lo+i], found{at: p.place(l.Start), end: p.placeEnd(l.End), severity: severityOf(l.Kind),
 					rule: l.Rule, msg: l.Msg, fix: l.Fixes})
 			}
 		}
@@ -161,7 +162,7 @@ func runLanguageTool(core *commands.Core, paras []*para, lang string, off []stri
 				k++
 			}
 			p := paras[lo+k]
-			f := found{at: p.place(m.Offset - starts[k]), severity: severityOf(m.Rule.IssueType),
+			f := found{at: p.place(m.Offset - starts[k]), end: p.placeEnd(m.Offset - starts[k] + m.Length), severity: severityOf(m.Rule.IssueType),
 				rule: m.Rule.Id, msg: m.Message}
 			if m.Rule.IssueType == "misspelling" || m.Rule.IssueType == "grammar" {
 				f.severity = "warning"

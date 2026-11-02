@@ -58,6 +58,12 @@
     "Text": "* Boards: =orgs kanban=\n\n  worg's kanban boards, the same boards, editable from the terminal. =H= and\n  =L= move a card between columns (which changes its keyword), =J= and =K=\n  reorder it, =t= picks a keyword, =c= clocks in.\n\n  [[file:docs/images/cli-kanban.png]]\n"
    }
   ],
+  "lsp": [
+   {
+    "From": "Editing :: Org files in any editor: =orgs lsp=",
+    "Text": "* Org files in any editor: =orgs lsp=\n** What it is\n\n  =orgs lsp= is a language server: any editor that speaks the Language Server\n  Protocol - Neovim, Helix, Zed, Sublime Text, Emacs (eglot), the JetBrains\n  IDEs, VS Code - gets these for org files from it:\n\n  - *Completion*: TODO keywords after the stars (the file's =#+TODO:=, else\n    the server's), tags after a heading's colon (this file's first, then every\n    tag the server knows), link targets after =[[= - headings, =#custom-id=s,\n    =\u003c\u003ctargets\u003e\u003e=, =file:= with every org file, =file:x.org::*= with that\n    file's headings, and =id:= with every heading that has an ID, found by its\n    title - =#+= keywords and blocks, source block languages and property\n    names.\n  - *Go to definition* on a link: =[[*Heading]]=, =[[#id]]=, =[[target]]=,\n    =[[file:x.org::*Heading]]=, =[[file:x.org::42]]= and =[[id:...]]=, which\n    the server finds in whichever file has it.\n  - *Clickable links* for urls, files and the =linkProtocols= in your yaml.\n  - *The outline* (document symbols): headings with their keyword, tags and\n    date, and named blocks and tables under the heading they are in; and every\n    heading of every file as a workspace symbol.\n  - *Folding* of headings, blocks and drawers.\n  - *Diagnostics*: a block with no =#+END_=, a drawer with no =:END:=, a link\n    to a heading, file or id that is not there, and the Harper or LanguageTool\n    lints of =orgs lint=, whose suggestions are quick fixes.\n  - *Code actions*: schedule, deadline, refile (recent targets first), archive,\n    and run the source block, =#+CALL:= or inline code under the cursor - with\n    a =▶ Run= lens over every block the server would run.\n\n  The outline, folding and the links within a file work with no server. The\n  rest is one request each to =orgs serve=, as for every other command.\n\n** Setting an editor up\n\n  The server is =orgs lsp= on standard input and output. Its flags:\n  =-lint auto|harper|languagetool|all|off= (default =auto=, the first checker\n  the server offers), =-lang=, =-dialect=, =-ignore RULES=, =-refile-depth N=\n  and =-path-map SERVER=LOCAL= for a server on another machine. The same can\n  be sent as initialization options: =lint=, =lang=, =dialect=, =ignore=,\n  =refileDepth=, =pathMap= (an object).\n\n*** Neovim\n\n   #+BEGIN_SRC lua\n   vim.lsp.config('orgs', { cmd = { 'orgs', 'lsp' }, filetypes = { 'org' }, root_markers = { '.git' } })\n   vim.lsp.enable('orgs')\n   #+END_SRC\n\n*** Helix (=languages.toml=)\n\n   #+BEGIN_SRC toml\n   [language-server.orgs]\n   command = \"orgs\"\n   args = [\"lsp\"]\n\n   [[language]]\n   name = \"org\"\n   scope = \"source.org\"\n   file-types = [\"org\"]\n   language-servers = [\"orgs\"]\n   #+END_SRC\n\n*** Emacs (eglot)\n\n   #+BEGIN_SRC emacs-lisp\n   (add-to-list 'eglot-server-programs '(org-mode . (\"orgs\" \"lsp\")))\n   #+END_SRC\n\n*** Zed, Sublime Text, JetBrains\n\n   Any \"custom language server\" setting that takes a command: =orgs lsp=, for\n   files ending =.org=.\n\n** How edits are made\n\n  An editor holds text the server has not seen yet. So *schedule*, *deadline*\n  and *run* send the buffer to the server, which makes the edit it would make\n  to the file and sends back the text; the difference arrives as one edit\n  you can undo, and the file on disk is not touched. Nothing needs saving\n  first.\n\n  *Refile* and *archive* change two files, so they work on the files: they\n  refuse while the buffer has unsaved changes (\"save first\"), and afterwards\n  bring the buffer up to what the server wrote if the editor did not reload\n  it by itself.\n\n  The commands behind the actions can be bound to keys with\n  =workspace/executeCommand=, which is also how to schedule for a date the\n  menu does not offer:\n\n  | Command        | Arguments                    | Notes                                                  |\n  |----------------+------------------------------+--------------------------------------------------------|\n  | =orgs.date=    | uri, line, name, value?      | =SCHEDULED=/=DEADLINE=; value as =orgs sched= reads it |\n  | =orgs.run=     | uri, line                    | needs =babel.enable=                                   |\n  | =orgs.refile=  | uri, line, {Filename, Olp}?  | asks where when the target is left out                 |\n  | =orgs.archive= | uri, line                    |                                                        |\n\n  #+BEGIN_SRC lua\n  -- Neovim: schedule the heading under the cursor for Friday\n  vim.lsp.buf.execute_command({ command = 'orgs.date',\n    arguments = { vim.uri_from_bufnr(0), vim.fn.line('.') - 1, 'SCHEDULED', 'fri' } })\n  #+END_SRC\n"
+   }
+  ],
   "plan": [
    {
     "From": "The command line, in pictures",
@@ -274,6 +280,11 @@
    "orgs dash -w       the same, kept current",
    "orgs dash -json    every section as data"
   ],
+  "dav": [
+   "orgs dav                    whether it is on, the addresses, the app passwords",
+   "orgs dav password phone     make an app password for a device (shown once)",
+   "orgs dav revoke 3fa1c2d0    cut one device off (revoke all: every one)"
+  ],
   "deadline": [
    "orgs deadline fri                   DEADLINE"
   ],
@@ -383,6 +394,11 @@
    "orgs help -man search  search's man page (roff); with no command, orgs(1)",
    "orgs help -man-dir ~/.local/share/man/man1   every page, for man to find"
   ],
+  "hooks": [
+   "orgs hooks                          the rules, and the last runs",
+   "orgs hooks runs                     every run kept (the last hundred)",
+   "orgs hooks test done-log to=DONE headline=\"Ship it\"   run one now on a made-up event"
+  ],
   "import": [
    "orgs import analysis.ipynb                     beside the others, in the first org directory",
    "orgs import analysis.ipynb -o science/penguins.org",
@@ -451,6 +467,11 @@
   ],
   "log": [
    "orgs log                   a heading's clock entries"
+  ],
+  "lsp": [
+   "orgs lsp                        speak LSP on stdin and stdout",
+   "orgs lsp -lint off              without the spelling and grammar checkers",
+   "orgs lsp -lint all -lang en-GB  both checkers, British English"
   ],
   "mcp": [
    "orgs mcp                    speak MCP on stdin and stdout",
@@ -686,6 +707,12 @@
    "orgs todo DONE                       a picker, when there is somebody to pick",
    "orgs todo DONE 'IsStatus(\"NEXT\")'    a query, the same language /search takes",
    "orgs todo DONE hOpOB7vIg6oiYz5sMVS=  one heading, by hash"
+  ],
+  "transclude": [
+   "orgs transclude            whether it is on",
+   "orgs transclude on         on, and written into the server's yaml",
+   "orgs transclude off",
+   "orgs transclude ls notes.org   each #+transclude: line and where its text comes from"
   ],
   "triage": [
    "orgs triage              each inbox item in turn: r refile, s schedule, t tag,",

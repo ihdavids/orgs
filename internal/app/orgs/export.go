@@ -247,7 +247,7 @@ func RequestBook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("%s: %v", fname, err), http.StatusNotFound)
 		return
 	}
-	of := GetDb().FindByFile(path)
+	of := exportFile(path)
 	if of == nil || of.Doc == nil {
 		http.Error(w, fmt.Sprintf("%s is not loaded", fname), http.StatusNotFound)
 		return

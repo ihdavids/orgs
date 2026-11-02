@@ -259,6 +259,18 @@ func main() {
 			minted = true
 		}
 	}
+	core.Refresh = func() bool {
+		if localMode {
+			return true
+		}
+		if minted {
+			if tok, _, ok := orgs.LocalToken(); ok {
+				core.Rest.Header.Set("Authorization", "Bearer "+tok)
+				return true
+			}
+		}
+		return refreshToken(core)
+	}
 	core.Start()
 
 	args := flag.Args()

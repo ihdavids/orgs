@@ -157,6 +157,10 @@ type Core struct {
 	ConfigFile     string
 	StartServer    StartServerThunk
 	ServerSettings *common.ServerSettings
+	// Renews the session's token, for a command that runs longer than one
+	// lasts (`orgs lsp` lives as long as the editor). Set in main.go, where
+	// the refresh and the config it writes to live; nil when there is none.
+	Refresh func() bool
 }
 
 func NewCore(rurl string, sets *common.ServerSettings) *Core {

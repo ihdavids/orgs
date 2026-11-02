@@ -94,7 +94,11 @@ func subtreeView(base common.ODb, query, hash string) (common.ODb, error) {
 	for _, n := range sec.Headline.Title {
 		title += n.String()
 	}
-	text := "#+TITLE: " + strings.TrimSpace(title) + "\n" + strings.Join(preamble, "\n") + "\n" + strings.Join(lines[start:end], "\n") + "\n"
+	body := lines[start:end]
+	if transclusionOn() {
+		body, _ = expandTransclusions(f.Filename, body, true)
+	}
+	text := "#+TITLE: " + strings.TrimSpace(title) + "\n" + strings.Join(preamble, "\n") + "\n" + strings.Join(body, "\n") + "\n"
 	doc := org.New().Silent().Parse(strings.NewReader(text), f.Filename)
 	return &subtreeDb{ODb: base, file: &common.OrgFile{Filename: f.Filename, Doc: doc}}, nil
 }

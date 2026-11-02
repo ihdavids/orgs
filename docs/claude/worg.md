@@ -614,3 +614,12 @@ The ring round what is picked (`components/MapRadial.tsx`): a token, a tile or a
 - **The target check writes nothing**: `GetFromTarget` with `allowCreate` off, and only once the file is known to be there, because `file+regexp` dereferences a nil file otherwise. A file outside the org directories is allowed (day pages often are) and only noted.
 - File suggestions are relative to the *first* org directory (`Root` in the check's answer), which is what the server reads a relative capture filename from; a guessed common folder would point captures elsewhere when there are several org directories.
 - A Joy `ToggleButtonGroup` finds its buttons' values on its direct children: a `Tooltip` around each button leaves none selected. Use `title`.
+
+## Transclusion in the Files tab
+
+`worg/src/transclusion.ts` (tested), `components/TransclusionEditor.tsx`, wired in `Files.tsx`'s `onFrameLoad` beside `wireCryptFrame`. Server side in `internal/app/orgs/CLAUDE.md` (Transclusion).
+
+- The rendered page carries empty `span.org-transclusion` marks; when it has any, `/transclusions?file=` is asked and each start mark becomes a bar ("⧉ from src.org:2 — Budget", **Edit source**), each end mark a dashed rule - plain DOM with inline styles, as the crypt placeholders.
+- **Edit source edits the source's rows as written**, not the re-levelled copy on the page, and saves through `/transclusion/save` (refused when the source changed since; reload and edit again). The page is drawn again after.
+- **Live**: the page listens for `reload` events for its transclusions' source files (on the one shared stream, see **Traps: six connections**) and redraws, keeping its scroll; not while the file is being edited here.
+- The settings menu's **Transclusion** switch is the server's setting (`GET/POST /transclusion`, written into the yaml), asked for each time the menu opens - not a browser setting.

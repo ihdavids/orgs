@@ -179,10 +179,23 @@ func tidy(diags []commands.Diagnostic) []commands.Diagnostic {
 }
 
 // checkers asks the server which of the two it offers, and settles which to
-// run. Naming one it does not offer is an error that says why; asking for
-// neither runs Harper when it is there, as worg does, and LanguageTool when
-// only that is.
+// run (see Checkers). Naming one it does not offer is an error that says why.
 func (self *Lint) checkers(core *commands.Core) []string {
+	out, notes, err := Checkers(core, self.With)
+	if err != nil {
+		commands.Fail("%s", err.Error())
+	}
+	for _, n := range notes {
+		fmt.Fprintf(os.Stderr, "%s\n", n)
+	}
+	return out
+}
+
+// Checkers is which checkers to run for -with (harper, languagetool, all, or
+// "" for the first offered). Asking for neither runs Harper when it is there,
+// as worg does, and LanguageTool when only that is. notes are why one of
+// "all" was left out; err is why nothing can run.
+func Checkers(core *commands.Core, with string) (out []string, notes []string, err error) {
 	hs, herr := commands.SendReceiveGetErr[harperStatus](core, "harper/status", nil)
 	ls, lerr := commands.SendReceiveGetErr[ltStatus](core, "languagetool/status", nil)
 	harperOk := herr == nil && hs.Enabled
@@ -198,45 +211,42 @@ func (self *Lint) checkers(core *commands.Core) []string {
 		ltWhy = "LanguageTool is configured but not answering: " + ls.Msg
 	}
 
-	switch strings.ToLower(self.With) {
+	switch strings.ToLower(with) {
 	case "harper":
 		if !harperOk {
-			commands.Fail("%s", harperWhy)
+			return nil, nil, fmt.Errorf("%s", harperWhy)
 		}
-		return []string{"harper"}
+		return []string{"harper"}, nil, nil
 	case "languagetool", "lt":
 		if !ltOk {
-			commands.Fail("%s", ltWhy)
+			return nil, nil, fmt.Errorf("%s", ltWhy)
 		}
-		return []string{"languagetool"}
+		return []string{"languagetool"}, nil, nil
 	case "all", "both":
 		if !harperOk && !ltOk {
-			commands.Fail("neither checker is available.\n  %s\n  %s", harperWhy, ltWhy)
+			return nil, nil, fmt.Errorf("neither checker is available.\n  %s\n  %s", harperWhy, ltWhy)
 		}
-		out := []string{}
 		if harperOk {
 			out = append(out, "harper")
 		} else {
-			fmt.Fprintf(os.Stderr, "%s\n", harperWhy)
+			notes = append(notes, harperWhy)
 		}
 		if ltOk {
 			out = append(out, "languagetool")
 		} else {
-			fmt.Fprintf(os.Stderr, "%s\n", ltWhy)
+			notes = append(notes, ltWhy)
 		}
-		return out
+		return out, notes, nil
 	case "":
 		if harperOk {
-			return []string{"harper"}
+			return []string{"harper"}, nil, nil
 		}
 		if ltOk {
-			return []string{"languagetool"}
+			return []string{"languagetool"}, nil, nil
 		}
-		commands.Fail("no checker to run.\n  %s\n  %s", harperWhy, ltWhy)
-	default:
-		commands.Fail("-with %s: say harper, languagetool or all", self.With)
+		return nil, nil, fmt.Errorf("no checker to run.\n  %s\n  %s", harperWhy, ltWhy)
 	}
-	return nil
+	return nil, nil, fmt.Errorf("-with %s: say harper, languagetool or all", with)
 }
 
 // jobs works out what to read from the words on the line.

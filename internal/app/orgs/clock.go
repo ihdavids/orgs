@@ -37,7 +37,11 @@ func (self *OrgsClock) ClockIn(tgt *common.Target) (common.ResultMsg, error) {
 	self.Time.HaveTime = true
 	self.Target = tgt
 	self.WriteOutClock()
-	Publish(Event{Kind: EventClockIn, Hash: asked, Msg: "Clock is now active"})
+	ev := Event{Kind: EventClockIn, Hash: asked, Msg: "Clock is now active"}
+	if ofile, sec := GetDb().GetFromTarget(tgt, false); sec != nil && ofile != nil {
+		withHeading(&ev, ofile, sec)
+	}
+	Publish(ev)
 	return common.ResultMsg{Ok: true, Msg: "Clock is now active"}, nil
 }
 
@@ -64,7 +68,9 @@ func (self *OrgsClock) ClockOut() (common.ResultMsg, error) {
 func (self *OrgsClock) ClockOutAt(end time.Time) (common.ResultMsg, error) {
 	if self.IsClockActive() {
 		var msg common.ResultMsg
+		ev := Event{Kind: EventClockOut, Msg: "Clocked out okay", Minutes: end.Sub(self.Time.Start).Minutes()}
 		if ofile, sec := GetDb().GetFromTarget(self.Target, false); sec != nil && ofile != nil {
+			withHeading(&ev, ofile, sec)
 			if err := writeClockLine(ofile, sec, self.Time.Start, end); err != nil {
 				msg = common.ResultMsg{Ok: false, Msg: "Clocked out, but the clock line was not written: " + err.Error()}
 			}
@@ -73,7 +79,7 @@ func (self *OrgsClock) ClockOutAt(end time.Time) (common.ResultMsg, error) {
 		self.Time = nil
 		self.Target = nil
 		self.WriteOutClock()
-		Publish(Event{Kind: EventClockOut, Msg: "Clocked out okay"})
+		Publish(ev)
 		if msg.Msg != "" {
 			return msg, nil
 		}

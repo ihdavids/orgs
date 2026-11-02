@@ -93,7 +93,7 @@ func RequestTypstPdf(w http.ResponseWriter, r *http.Request) {
 	// stamp keeps the cache honest when only they changed.
 	of, stamp := exportFileStamped(path)
 	if q.Get("refresh") == "f" {
-		of, stamp = GetDb().FindByFile(path), ""
+		of, stamp = exportFileWith(path, false)
 	}
 	if of == nil || of.Doc == nil {
 		http.Error(w, fmt.Sprintf("%s is not loaded", fname), http.StatusNotFound)

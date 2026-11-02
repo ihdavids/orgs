@@ -807,6 +807,10 @@ func Capture(db common.ODb, args *common.Capture, username string) (common.Resul
 			fmt.Fprintf(os.Stderr, "Capture: invalid capture type [%s]\n", temp.Type)
 			res.Msg = fmt.Sprintf("Capture: invalid capture type  [%s]", temp.Type)
 		}
+		if res.Ok {
+			Publish(Event{Kind: EventCapture, File: file.Doc.Path, Headline: args.NewNode.Headline,
+				Tags: args.NewNode.Tags, Template: temp.Name, Msg: res.Msg})
+		}
 		return res, nil
 	} else {
 		fmt.Fprintf(os.Stderr, "Failed to find capture template [%s]\n", args.Template)

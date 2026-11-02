@@ -46,6 +46,10 @@ func RestApi(router *mux.Router) {
 	// cookie; it takes only a sign in this server started.
 	router.HandleFunc("/dnd/music/spotify/callback", RequestDndSpotifyCallback).Methods("GET")
 
+	// CalDAV and CardDAV (dav.go): their own gate, an app password over
+	// Basic auth, since a phone's calendar cannot carry the token.
+	registerDavRoutes(router)
+
 	// Protected routes - all endpoints below require a valid JWS token
 	api := router.PathPrefix("").Subrouter()
 	if !Conf().Server.NoAuth {
@@ -176,6 +180,17 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/timesheet", RequestTimesheet).Methods("GET") // timesheet.go: clocked time by client, csv/html invoices
 	api.HandleFunc("/execb", PostExecb).Methods("POST")
 	api.HandleFunc("/babel/exec", PostBabelExec).Methods("POST")
+	api.HandleFunc("/lsp/date", PostTextDate).Methods("POST")
+	api.HandleFunc("/lsp/run", PostTextRun).Methods("POST")
+	api.HandleFunc("/lsp/runnable", RequestRunnable).Methods("GET")
+	api.HandleFunc("/transclusion", RequestTransclusion).Methods("GET", "POST") // transclude.go
+	api.HandleFunc("/transclusions", RequestTransclusions).Methods("GET")
+	api.HandleFunc("/transclusion/save", PostTransclusionSave).Methods("POST")
+	api.HandleFunc("/hooks", RequestHooks).Methods("GET") // hooks.go
+	api.HandleFunc("/hooks/test", PostHookTest).Methods("POST")
+	api.HandleFunc("/davconfig", RequestDav).Methods("GET") // dav.go
+	api.HandleFunc("/davconfig/passwords", PostDavPassword).Methods("POST")
+	api.HandleFunc("/davconfig/passwords", DeleteDavPassword).Methods("DELETE")
 	api.HandleFunc("/dblocks", RequestDynBlocks).Methods("GET")
 	api.HandleFunc("/dblocks/update", PostDynBlocksUpdate).Methods("POST")
 	api.HandleFunc("/exectable", PostExect).Methods("POST")
@@ -840,8 +855,8 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	// The page is computed from the file as it would read with its dynamic
 	// blocks refreshed and its formulas run (refresh.go) - in memory, so an
 	// export never rewrites the file. A subtree export reads the file itself.
-	if r.URL.Query().Get("subtree") == "" && r.URL.Query().Get("refresh") != "f" {
-		from = exportView(from, query)
+	if r.URL.Query().Get("subtree") == "" {
+		from = exportViewWith(from, query, r.URL.Query().Get("refresh") != "f" && Conf().Server.Refresh.ExportRefresh())
 	}
 	var res common.ResultMsg
 	if local == "t" {
