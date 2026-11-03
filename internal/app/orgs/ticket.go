@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -123,5 +124,24 @@ func RedeemLoginTicket(w http.ResponseWriter, r *http.Request) {
 	if app := r.URL.Query().Get("app"); ticketAppRe.MatchString(app) {
 		to = "/?app=" + app
 	}
+	// Somewhere in worg itself: `orgs protocol` sends the capture an
+	// org-protocol link asked for this way, so it opens logged in.
+	if next := r.URL.Query().Get("next"); ticketNextOk(next) {
+		to = next
+	}
 	http.Redirect(w, r, to, http.StatusSeeOther)
+}
+
+// A redirect a ticket may follow: worg's own page with parameters, never
+// another site (`//evil.com`, `/\evil.com`) and nothing a header could split on.
+func ticketNextOk(next string) bool {
+	if !strings.HasPrefix(next, "/?") || len(next) > 8192 {
+		return false
+	}
+	for _, c := range next {
+		if c < 0x20 || c == 0x7f || c == '\\' {
+			return false
+		}
+	}
+	return true
 }

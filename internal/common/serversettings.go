@@ -440,6 +440,22 @@ type ServerSettings struct {
 		EDOC */
 	NoUpdateCheck bool `yaml:"noUpdateCheck"`
 	/* SDOC: Settings
+	* Protocol Projects
+		Where an org-protocol =open-source= link finds the file a published
+		page was made from: org's =org-protocol-project-alist=. A page under
+		=baseUrl= is looked for under =workingDirectory=, with =onlineSuffix=
+		swapped for =workingSuffix=; a url ending in a slash is its =index=.
+
+		#+BEGIN_SRC yaml
+	  protocolProjects:
+	    - baseUrl: https://example.com/notes/
+	      workingDirectory: ~/notes
+	      onlineSuffix: .html
+	      workingSuffix: .org
+		#+END_SRC
+		EDOC */
+	ProtocolProjects []ProtocolProject `yaml:"protocolProjects"`
+	/* SDOC: Settings
 	* Dnd Session Path
 		Where play session logs are written. Starting a session from a
 		character sheet creates a dated org file in this folder and every roll

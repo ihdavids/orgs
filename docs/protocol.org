@@ -1,0 +1,121 @@
+#+TITLE: org-protocol: capture from the browser
+#+DOC_SECTION: Setup
+
+* What it is
+
+  Emacs's org-protocol lets a bookmarklet hand the page you are reading to
+  org: capture it (with the text you selected), store a link to it for later,
+  or open the org file a published page was made from. orgs takes the same
+  links, in both spellings org has used:
+
+  #+BEGIN_EXAMPLE
+  org-protocol://capture?template=w&url=URL&title=TITLE&body=SELECTION
+  org-protocol://capture:/w/URL/TITLE/SELECTION
+  org-protocol://store-link?url=URL&title=TITLE
+  org-protocol://open-source?url=URL
+  #+END_EXAMPLE
+
+  A capture always opens worg's capture form, filled in from the page, and
+  nothing is filed until you press Capture: any web page can open one of
+  these links.
+
+* Two ways in
+
+  - *Nothing installed.* Swap =org-protocol://= for your server's address
+    and =/org-protocol/=, e.g.
+    =https://box:8010/org-protocol/capture?template=Web&url=…=. The server
+    reads it and sends the browser to worg. This works on a phone too. A
+    bookmarklet of this kind opens worg in a small window, which closes
+    itself once the capture is filed.
+  - *The org-protocol:// handler.* =orgs protocol install= makes orgs the
+    program your system runs for =org-protocol://= links, so Emacs-style
+    bookmarklets work unchanged. On a click, orgs opens worg already logged
+    in (through a one-use login link), stores the link, or opens the source
+    file in your editor.
+
+  =orgs protocol bookmarklets= prints both kinds for your server, ready to
+  paste as a bookmark's address (=-temp Web= names the template).
+
+* =orgs protocol=
+
+  #+BEGIN_SRC sh
+  orgs protocol install        # handle org-protocol:// links (macOS, Linux, Windows)
+  orgs protocol status         # which program handles them now
+  orgs protocol uninstall
+  orgs protocol bookmarklets -temp Web
+  orgs protocol links          # what store-link has kept, newest first
+  orgs protocol 'org-protocol://capture?url=…'   # what a click runs
+  #+END_SRC
+
+  - *macOS*: a small applet, =~/Applications/Orgs Protocol.app=, made with
+    =osacompile= and registered with Launch Services as the default handler.
+    If Emacs Client handled these links before, it no longer does;
+    =uninstall= gives them back. What a click prints goes to
+    =~/Library/Caches/orgs/protocol.log=.
+  - *Linux*: =~/.local/share/applications/orgs-protocol.desktop=, made the
+    default with =xdg-mime=.
+  - *Windows*: =HKCU\Software\Classes\org-protocol=. orgs is a console
+    program, so a window flashes up on each click.
+
+  The handler runs this binary with this config file, so it talks to the
+  server and uses the login the install was made with. When it runs from a
+  click, a problem shows as a desktop notification.
+
+* Templates and the page
+
+  A link names a template by name (=template=Web=), by name in any case, or
+  by an Emacs one-letter key (=w=), which finds the only template whose name
+  starts with that letter. With no template, or one that is not there, worg
+  asks which.
+
+  A hole in the template named for a part of the page gets it:
+
+  | Hole                           | Gets                      |
+  |--------------------------------+---------------------------|
+  | ={{url}}=, ={{link}}=          | the page's address        |
+  | ={{title}}=, ={{description}}= | the page's title          |
+  | ={{body}}=, ={{initial}}=      | the selected text         |
+  | ={{annotation}}=               | =[[url][title]]=          |
+  | ={{anything}}=                 | =&anything=…= in the link |
+
+  Whatever no hole asked for goes into the body - the link on the first line,
+  then the selection - so a plain headline-and-body template keeps the page
+  too. An entry's headline starts as the page's title.
+
+  #+BEGIN_SRC yaml
+  captureTemplates:
+    - name: Web
+      type: entry
+      target: {type: file+headline, filename: inbox.org, id: Inbox}
+      template: |-
+        :PROPERTIES:
+        :SOURCE: {{url}}
+        :END:
+        {{CONTENT}}
+  #+END_SRC
+
+* store-link
+
+  Keeps =[[url][title]]= on the server (thirty a user, until the server
+  restarts, as org keeps its stored links for a session) and puts it on the
+  clipboard. VS Code's /Insert Link/ offers the kept links first, and
+  =orgs protocol links= lists them.
+
+* open-source
+
+  Maps a published page back to its file with =protocolProjects:=, org's
+  =org-protocol-project-alist=:
+
+  #+BEGIN_SRC yaml
+  server:
+    protocolProjects:
+      - baseUrl: https://example.com/notes/
+        workingDirectory: ~/notes
+        onlineSuffix: .html
+        workingSuffix: .org
+  #+END_SRC
+
+  =https://example.com/notes/a/b.html= opens =~/notes/a/b.org=; a url ending
+  in a slash is its =index=. worg opens it in the Files tab when it is an org
+  file the server holds; =orgs protocol= opens it in your editor when it is
+  on the same machine.

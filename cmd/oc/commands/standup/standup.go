@@ -27,9 +27,7 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -270,27 +268,11 @@ func (o *out) emit(text string) {
 	if !o.Copy {
 		return
 	}
-	cmds := [][]string{}
-	switch runtime.GOOS {
-	case "darwin":
-		cmds = [][]string{{"pbcopy"}}
-	case "windows":
-		cmds = [][]string{{"clip"}}
-	default:
-		cmds = [][]string{{"wl-copy"}, {"xclip", "-selection", "clipboard"}, {"xsel", "--clipboard", "--input"}}
+	if _, err := commands.CopyText(text); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
 	}
-	for _, c := range cmds {
-		if _, err := exec.LookPath(c[0]); err != nil {
-			continue
-		}
-		cmd := exec.Command(c[0], c[1:]...)
-		cmd.Stdin = strings.NewReader(text)
-		if err := cmd.Run(); err == nil {
-			fmt.Fprintf(os.Stderr, "%scopied to the clipboard%s\n", commands.C(commands.AnsiDim), commands.C(commands.AnsiReset))
-			return
-		}
-	}
-	fmt.Fprintln(os.Stderr, "no clipboard program found (pbcopy, wl-copy, xclip, xsel, clip)")
+	fmt.Fprintf(os.Stderr, "%scopied to the clipboard%s\n", commands.C(commands.AnsiDim), commands.C(commands.AnsiReset))
 }
 
 // ---------------------------------------------------------------------------

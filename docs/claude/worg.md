@@ -623,3 +623,10 @@ The ring round what is picked (`components/MapRadial.tsx`): a token, a tile or a
 - **Edit source edits the source's rows as written**, not the re-levelled copy on the page, and saves through `/transclusion/save` (refused when the source changed since; reload and edit again). The page is drawn again after.
 - **Live**: the page listens for `reload` events for its transclusions' source files (on the one shared stream, see **Traps: six connections**) and redraws, keeping its scroll; not while the file is being edited here.
 - The settings menu's **Transclusion** switch is the server's setting (`GET/POST /transclusion`, written into the yaml), asked for each time the menu opens - not a browser setting.
+
+## org-protocol links
+
+`src/orgprotocol.ts` (pinned by `orgprotocol.test.ts`) reads only the flat `/?protocol=capture|store-link|open-source&template&url&title&body&x-<name>` form the server and `orgs protocol` redirect to; org-protocol's own grammar is parsed in Go alone. `App.tsx` reads it at module load (`PROTOCOL`), waits for `isLoggedIn` (worg's login is a state change, not a reload, so the parameters survive it), strips it from the url, then opens the capture with `from`, stores the link (toast, clipboard when the tab has focus) or opens the source in Files. A capture from a bookmarklet's `window.open` closes its window when the dialog closes (`window.opener`).
+
+- **The form is pre-filled, never filed**: any page can open a link. `protocolFill` puts each part into the hole named for it (org's names too: `link`, `description`, `initial`, `annotation`; `x-<name>` fills `{{name}}`), and whatever no hole took goes into the body, so a plain template keeps the page. The dialog says which page asked.
+- **Templates**: `findTemplate` tries the name, then the name in any case, then an Emacs one-letter key as the only template starting with that letter; otherwise the picker, with a note.

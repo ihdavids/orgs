@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -44,8 +45,17 @@ https://dev.to/neelp03/securing-your-go-api-with-jwt-authentication-4amj
 
 func logToFile() *os.File {
 	f, err := os.OpenFile("orgs.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	// Started somewhere it cannot write - the org-protocol handler runs in
+	// `/` on a mac and System32 on Windows - the log goes to the user cache
+	// instead, and failing that nowhere: a log is no reason not to run.
 	if err != nil {
-		log.Fatalf("error opening file: %v", err)
+		if cache, cerr := os.UserCacheDir(); cerr == nil && os.MkdirAll(filepath.Join(cache, "orgs"), 0o755) == nil {
+			f, err = os.OpenFile(filepath.Join(cache, "orgs", "orgs.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		}
+	}
+	if err != nil {
+		log.SetOutput(os.Stderr)
+		return nil
 	}
 	//defer f.Close()
 	// Stderr, not stdout. The log used to go to both stdout and the file,

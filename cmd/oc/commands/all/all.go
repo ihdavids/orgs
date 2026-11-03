@@ -45,6 +45,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/orgtools"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/pres"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/projects"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/protocol"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/rec"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/refile"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/reloadconfig"

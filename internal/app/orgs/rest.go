@@ -67,6 +67,11 @@ func RestApi(router *mux.Router) {
 
 	api.HandleFunc("/refresh", refresh).Methods("POST")
 	api.HandleFunc("/login/ticket", PostLoginTicket).Methods("POST") // a one-use login link for a browser (ticket.go)
+	// org-protocol's store-link and open-source (orgprotocol.go); the links
+	// themselves arrive at /org-protocol/..., answered in front of the router.
+	api.HandleFunc("/protocol/links", PostProtocolLink).Methods("POST")
+	api.HandleFunc("/protocol/links", GetProtocolLinks).Methods("GET")
+	api.HandleFunc("/protocol/source", GetProtocolSource).Methods("GET")
 	api.HandleFunc("/reloadconfig", PostReloadConfig).Methods("POST") // re-read the yaml: capture templates, filters, ... (reload.go)
 	// Adding an account. Only an administrator may, and only when this server
 	// has a keystore file to write - see adduser.go.

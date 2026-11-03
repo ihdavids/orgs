@@ -821,3 +821,11 @@ The tangler is `plugs/tangle` (exporter `tangle`, `GET /tangle`, `orgs tangle`);
 - **Deadlines**: a minute ticker publishes headings whose deadline moment (time, else the end of the day) is in (last check, now]; the last check is in `hooks_data.json` so a restart neither repeats nor drops one (a gap over a week starts fresh rather than flooding).
 - **No injection**: `run` fills `{{field}}` inside each argv element (no shell); `shell` sees the event only in `ORGS_*` variables. Both get the event json on stdin. Webhooks are signed with HMAC-SHA256 when a secret is set.
 - **Per-rule limit** (30 a minute) is the loop guard for hooks that edit org files.
+
+## org-protocol
+
+`orgprotocol.go` (parser `common.ParseOrgProtocol` in `internal/common/orgprotocol.go`, pinned by `orgprotocol_test.go`; user guide `docs/protocol.org`; clients `orgs protocol`, worg's `orgprotocol.ts`).
+
+- **`/org-protocol/...` is answered in front of the router** (`protocolFront`, wrapped round `router` in `StartServer`). An old-style link carries an escaped url as a path segment, and mux cleans the *decoded* path, so `https://` became `https:/` and a 301 lost the link. It is public and only redirects to worg's flat `/?protocol=…` form (`OrgProtocol.WorgPath`, extra keys as `x-<name>`), so worg never reads org-protocol's grammar.
+- **`GET /login/ticket/<t>?next=/?…`** redirects into worg after logging in; `ticketNextOk` takes only `/?` paths, so nothing can bounce to another site.
+- Stored links are memory only, thirty a user, a re-stored url moving to the top. `/protocol/source` maps through `server.protocolProjects` (longest `baseUrl` first, `ProtocolSourceRel` refuses `..`), `Known` = an org file `FindByFile` holds exactly.

@@ -324,9 +324,11 @@ func StartServer(sets *common.ServerSettings) {
 
 	// Everything below serves handler rather than the router, so the
 	// localhost check sits in front of the api, the files and worg alike.
-	var handler http.Handler = router
+	// org-protocol links are answered before the router cleans their path
+	// (orgprotocol.go).
+	var handler http.Handler = protocolFront(router)
 	if sets.LocalhostOnly {
-		handler = localhostOnly(router)
+		handler = localhostOnly(handler)
 		fmt.Fprintf(os.Stderr, "LOCALHOST ONLY: requests from other machines are refused\n")
 	}
 
