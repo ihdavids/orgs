@@ -635,6 +635,7 @@ func buildAgenda(query string, r agendaRules, now time.Time) (common.AgendaResul
 		res.Days = append(res.Days, common.AgendaDay{Date: agendaDayStr(d), Entries: []common.AgendaEntry{}})
 	}
 	keys := &agendaKeys{}
+	sexps := sexpIndex()
 	err := agendaSections(query, func(sec *org.Section, f *common.OrgFile) {
 		if !r.Archived && f != nil && f.Doc != nil && IsArchived(sec, f.Doc) {
 			return
@@ -643,6 +644,7 @@ func buildAgenda(query string, r agendaRules, now time.Time) (common.AgendaResul
 			return
 		}
 		occs := agendaOccurrences(sec.Headline, keys.done(sec, f), r)
+		occs = append(occs, agendaSexpOccurrences(sec, f, sexps, r)...)
 		if len(occs) == 0 {
 			return
 		}
@@ -877,5 +879,5 @@ func agendaLands(p *org.Section, f *common.OrgFile, from, to int) bool {
 	}
 	keys := &agendaKeys{}
 	r := agendaRules{From: from, To: to, Today: agendaDayNum(time.Now()), WarnDays: agendaWarnDays()}
-	return len(agendaOccurrences(p.Headline, keys.done(p, f), r)) > 0
+	return len(agendaOccurrences(p.Headline, keys.done(p, f), r)) > 0 || len(agendaSexpOccurrences(p, f, sexpIndex(), r)) > 0
 }

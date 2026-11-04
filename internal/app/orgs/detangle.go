@@ -356,6 +356,12 @@ func init() {
 	tangle.OnWrite = func(p string, content []byte) { tangles.record(p, content) }
 	// <<name(args)>> in a tangled block is the block's result, as a #+CALL:
 	// would give it: run here, where blocks can run (babel.enable decides).
+	tangle.Defaults = func() (string, map[string]string) {
+		if Conf().Server == nil {
+			return "", nil
+		}
+		return Conf().Server.Babel.DefaultHeaderArgs, Conf().Server.Babel.LanguageHeaderArgs
+	}
 	tangle.Evaluate = func(orgPath, name, args string) (string, error) {
 		f := GetDb().FindByFile(orgPath)
 		if f == nil {

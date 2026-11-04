@@ -92,7 +92,7 @@ func RunInText(req *common.TextRun) common.TextEditResult {
 	}
 	doc := GetConfig().Parse(strings.NewReader(req.Text), req.Filename)
 	f := &common.OrgFile{Filename: req.Filename, Doc: doc}
-	ran, after, err := runItemLines(f, req.Filename, lines, *pick, true)
+	ran, after, err := runItemLines(f, req.Filename, lines, *pick, true, true)
 	res := common.TextEditResult{Ok: true, Ran: ran}
 	if err != nil {
 		res.Ok, res.Msg = false, err.Error()

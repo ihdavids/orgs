@@ -130,6 +130,8 @@ type UserExt struct {
 	// it describes a memory, not a subject.
 	DrillDecks  []DrillDeck `yaml:"drillDecks" json:"drillDecks"`
 	DrillMatrix DrillMatrix `yaml:"drillMatrix,omitempty" json:"drillMatrix,omitempty"`
+	// Custom agenda views (see agendaview.go).
+	AgendaViews []common.AgendaView `yaml:"agendaViews,omitempty" json:"agendaViews,omitempty"`
 	// Saved gantt chart setups (see ganttviews.go).
 	GanttViews []GanttView `yaml:"ganttViews,omitempty" json:"ganttViews,omitempty"`
 	// When the weekly review was last finished, and the step one in progress

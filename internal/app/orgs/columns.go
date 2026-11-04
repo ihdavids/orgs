@@ -153,6 +153,11 @@ func numberKindOf(spec common.ColumnSpec) string {
 	if spec.Summary == "" {
 		return ""
 	}
+	switch summaryOp(spec.Summary) {
+	case "X", "X/", "X%", "est+", "@min", "@max", "@mean":
+		// Checkboxes and ranges are text, read by their own rules.
+		return ""
+	}
 	if strings.HasPrefix(spec.Summary, ":") {
 		return "duration"
 	}
@@ -190,6 +195,8 @@ func summaryOp(s string) string {
 		return "max"
 	case "mean", ":mean":
 		return "mean"
+	case "X", "X/", "X%", "est+", "@min", "@max", "@mean":
+		return op
 	}
 	return ""
 }
@@ -489,6 +496,13 @@ func summarise(n *columnNode, spec []common.ColumnSpec) {
 		if op == "" || len(n.children) == 0 {
 			continue
 		}
+		if v, ok := textSummary(op, n, i, s); ok {
+			if v != "" {
+				n.row.Cells[i].Value = v
+				n.row.Cells[i].Summed = true
+			}
+			continue
+		}
 		var vals []float64
 		// The heading's own value counts too. Of the two readings of a parent
 		// that has an estimate *and* children with estimates, this is the one
@@ -511,6 +525,136 @@ func summarise(n *columnNode, spec []common.ColumnSpec) {
 		n.row.Cells[i].Value = formatSummary(total, s)
 		n.row.Cells[i].Summed = true
 	}
+}
+
+var (
+	checkboxCellRe = regexp.MustCompile(`^\s*\[([ xX-])\]\s*$`)
+	estimateRe     = regexp.MustCompile(`^\s*(-?\d+(?:\.\d+)?)\s*(?:-\s*(-?\d+(?:\.\d+)?))?\s*$`)
+)
+
+// textSummary is the summaries org works out from text rather than numbers;
+// ok is false for the numeric ones.
+//
+//   - X: [X] when every child is ticked, [-] when some are, [ ] when none;
+//     X/ the same as [n/m], X% as [n%] (org-columns--summary-checkbox and
+//     -checkbox-count). Children only, as org counts them.
+//   - est+: low-high estimates (or plain numbers) added as org's
+//     org-columns--summary-estimate does: the means summed, the variances
+//     summed, written as (mean - sd)-(mean + sd), rounded. The heading's own
+//     estimate counts, as for the other sums.
+func textSummary(op string, n *columnNode, i int, s common.ColumnSpec) (string, bool) {
+	switch op {
+	case "X", "X/", "X%":
+		done, total := 0, 0
+		for _, c := range n.children {
+			v := c.row.Cells[i].Value
+			m := checkboxCellRe.FindStringSubmatch(v)
+			if m == nil {
+				// A child's own count ([2/3]) says whether it is complete.
+				if cm := scCookieRe.FindStringSubmatch(v); cm != nil {
+					total++
+					if a, b, ok := strings.Cut(cm[1], "/"); ok && a == b && a != "" {
+						done++
+					} else if cm[1] == "100%" {
+						done++
+					}
+				}
+				continue
+			}
+			total++
+			if strings.EqualFold(m[1], "x") {
+				done++
+			}
+		}
+		if total == 0 {
+			return "", true
+		}
+		switch op {
+		case "X/":
+			return fmt.Sprintf("[%d/%d]", done, total), true
+		case "X%":
+			return fmt.Sprintf("[%d%%]", 100*done/total), true
+		}
+		switch {
+		case done == total:
+			return "[X]", true
+		case done == 0:
+			return "[ ]", true
+		}
+		return "[-]", true
+	case "@min", "@max", "@mean":
+		// org-columns--summary-min-age and kin: how old the children's
+		// timestamps are, the youngest, the oldest or the mean.
+		now := time.Now()
+		ages := []float64{}
+		for _, c := range n.children {
+			if t, ok := propTime(c.row.Cells[i].Value, now); ok {
+				ages = append(ages, now.Sub(t).Seconds())
+			}
+		}
+		if len(ages) == 0 {
+			return "", true
+		}
+		pick := ages[0]
+		switch op {
+		case "@min":
+			for _, a := range ages {
+				pick = math.Min(pick, a)
+			}
+		case "@max":
+			for _, a := range ages {
+				pick = math.Max(pick, a)
+			}
+		default:
+			sum := 0.0
+			for _, a := range ages {
+				sum += a
+			}
+			pick = sum / float64(len(ages))
+		}
+		return formatAge(pick), true
+	case "est+":
+		vals := []string{n.row.Cells[i].Own}
+		for _, c := range n.children {
+			vals = append(vals, c.row.Cells[i].Value)
+		}
+		mean, variance, any := 0.0, 0.0, false
+		for _, v := range vals {
+			m := estimateRe.FindStringSubmatch(v)
+			if m == nil {
+				continue
+			}
+			any = true
+			low, _ := strconv.ParseFloat(m[1], 64)
+			if m[2] == "" {
+				mean += low
+				continue
+			}
+			high, _ := strconv.ParseFloat(m[2], 64)
+			mid := (low + high) / 2
+			mean += mid
+			variance += (low*low+high*high)/2 - mid*mid
+		}
+		if !any {
+			return "", true
+		}
+		sd := math.Sqrt(variance)
+		format := "%.0f"
+		if _, f, ok := strings.Cut(s.Summary, ";"); ok && strings.TrimSpace(f) != "" {
+			format = strings.TrimSpace(f)
+		}
+		return fmt.Sprintf(format, mean-sd) + "-" + fmt.Sprintf(format, mean+sd), true
+	}
+	return "", false
+}
+
+// formatAge is org-columns--format-age: "3d 04h 05m 06s".
+func formatAge(seconds float64) string {
+	s := int(math.Round(seconds))
+	if s < 0 {
+		s = 0
+	}
+	return fmt.Sprintf("%dd %02dh %02dm %02ds", s/86400, s/3600%24, s/60%60, s%60)
 }
 
 func apply(op string, vals []float64) float64 {

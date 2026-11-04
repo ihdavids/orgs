@@ -549,6 +549,28 @@ func (self *TemplateManager) RenderTemplate(name string, context map[string]inte
 	return self.resolveTemplate(name, context)
 }
 
+// RenderTemplateErr is RenderTemplate with a missing or broken template an
+// error, for a caller that writes the answer somewhere it would be mistaken
+// for content (a new org file).
+func (self *TemplateManager) RenderTemplateErr(name string, context map[string]interface{}) (string, error) {
+	name = self.ExpandTemplatePath(name)
+	if st, err := os.Stat(name); err != nil {
+		return "", err
+	} else if st.IsDir() {
+		return "", fmt.Errorf("%s is a folder, not a template", name)
+	}
+	tpl, err := pongo2.FromFile(name)
+	if err != nil {
+		return "", err
+	}
+	ctx := pongo2.Context{}
+	self.standardContext(&ctx)
+	for k, v := range context {
+		ctx[k] = pongo2.AsSafeValue(v)
+	}
+	return tpl.Execute(ctx)
+}
+
 func (self *TemplateManager) RenderTemplateString(template string, context map[string]any) string {
 	return self.resolveTemplateString(template, context)
 }

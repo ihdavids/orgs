@@ -409,6 +409,28 @@ type ServerSettings struct {
 		EDOC */
 	HttpsOnly bool `yaml:"httpsOnly"`
 	DefaultTodoStates string `yaml:"defaultTodoStates"`
+	/* SDOC: Settings
+	* TODO Dependencies
+		Org's =org-enforce-todo-dependencies= and
+		=org-enforce-todo-checkbox-dependencies=. With the first, a heading
+		cannot be marked done while a child heading is still open, or, under a
+		parent with an =ORDERED= property, while a sibling above it is. With the
+		second, not while a checkbox in its own text is unticked. A heading
+		with =:NOBLOCKING: t= is never held back. The refusal names what is in
+		the way; a client can still insist (=Force=, as Emacs's =C-u C-u C-u
+		C-c C-t=). Off by default, as in org.
+		#+BEGIN_SRC yaml
+	  server:
+	    enforceTodoDependencies: true
+	    enforceCheckboxDependencies: true
+		#+END_SRC
+		EDOC */
+	// Properties a query takes from the headings above and the file's
+	// #+PROPERTY: lines (org-use-property-inheritance): names, or "*" for
+	// all. CATEGORY always is.
+	PropertyInheritance []string `yaml:"propertyInheritance"`
+	EnforceTodoDependencies     bool `yaml:"enforceTodoDependencies"`
+	EnforceCheckboxDependencies bool `yaml:"enforceCheckboxDependencies"`
 	DefaultNextStates string `yaml:"defaultNextStates"`
 	TemplatePath      string `yaml:"templatePath"`
 	/* SDOC: Settings
@@ -1008,6 +1030,9 @@ type ServerSettings struct {
 		The code is handed to the command on standard input.
 	EDOC */
 	Babel BabelSettings `yaml:"babel"`
+	// Citations ([cite:@key]): bibliographies for every file, and the
+	// processor when a file has no #+cite_export: (internal/app/orgs/cite.go).
+	Citations CitationSettings `yaml:"citations"`
 	/* SDOC: Settings
 	* Transclusion
 		=#+transclude: [[id:...]]= lines drawn as the heading (or file, or lines)
@@ -1323,6 +1348,13 @@ type AgendaSettings struct {
 	// Days before a deadline it warns on today, when its stamp names no -Nd.
 	// nil is org's default, 14.
 	DeadlineWarningDays *int `yaml:"deadlineWarningDays"`
+	// Custom agenda views every user sees (org-agenda-custom-commands),
+	// beside org's built-in ones and each person's own.
+	Views []AgendaView `yaml:"views"`
+	// The order diary-* sexp dates take their arguments in, as Emacs's
+	// calendar-date-style: american (month day year, the default), european
+	// or iso.
+	DateStyle string `yaml:"dateStyle"`
 }
 
 // What orgs may do about running a source block.
@@ -1341,6 +1373,23 @@ type BabelSettings struct {
 	// How to run a language, replacing what orgs would have used. The code is
 	// handed to the command on standard input.
 	Commands map[string][]string `yaml:"commands"`
+	// Header arguments every block starts from, under the file's and the
+	// headings' (org-babel-default-header-args): ":exports both :results output".
+	DefaultHeaderArgs string `yaml:"defaultHeaderArgs"`
+	// The same for one language, after DefaultHeaderArgs
+	// (org-babel-default-header-args:python): python: ":session main".
+	LanguageHeaderArgs map[string]string `yaml:"languageHeaderArgs"`
+}
+
+// CitationSettings is the `citations:` block: org's
+// org-cite-global-bibliography and org-cite-export-processors.
+type CitationSettings struct {
+	// .bib (BibTeX/BibLaTeX) or .json (CSL-JSON) files every file may cite
+	// from, besides its own #+bibliography: lines.
+	Bibliography []string `yaml:"bibliography"`
+	// What #+cite_export: says when a file says nothing: "basic", "basic
+	// author-year numeric", "biblatex authoryear", "natbib plainnat".
+	Export string `yaml:"export"`
 }
 
 // HookSettings is the `hooks:` block (hooks.go).

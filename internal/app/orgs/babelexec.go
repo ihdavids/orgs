@@ -34,7 +34,44 @@ package orgs
   =:results replace= on a block undoes a file's =header-args :results append=.
 
   A block named with =#+NAME:= writes =#+RESULTS: name=, so another block can
-  take it as a variable. =:eval no= (or =never=) is never run.
+  take it as a variable. =:eval no= (or =never=) is never run. =:eval query=
+  runs only when somebody runs it - that block, at its line, or something
+  they ran that needs it - and never on a schedule, in a run of a whole file
+  or from a tangle, because there is nobody to ask. Exporting never runs a
+  block, so =never-export=, =no-export= and =query-export= run like =yes=.
+
+  ** Where header arguments come from
+
+  As in org, four layers, each merged over the one before, key by key:
+
+  1. =babel: defaultHeaderArgs:= in the server's yaml, for every block
+     (org's =org-babel-default-header-args=);
+  2. =babel: languageHeaderArgs:=, for one language
+     (=org-babel-default-header-args:python=);
+  3. the =header-args= property, then =header-args:<lang>=;
+  4. the block's =#+HEADER:= lines, then its own line.
+
+  #+BEGIN_EXAMPLE
+  babel:
+    enable: true
+    defaultHeaderArgs: ":exports both"
+    languageHeaderArgs:
+      python: ":session main :results output"
+  #+END_EXAMPLE
+
+  A property is set by =#+PROPERTY: header-args ...= lines (a =#+SETUPFILE:='s
+  among them, where it stands) or a heading's =:header-args:= in its property
+  drawer, and **the nearest setting wins outright**: a heading's
+  =:header-args: :results silent= replaces the file's whole value, so a
+  =:session= the file gave is gone under it. Written =header-args+= (on a
+  heading or a =#+PROPERTY:= line) it adds to what is above instead.
+  =header-args= and =header-args:python= are separate properties, each
+  inherited on its own. Tangling reads them the same way.
+
+  Exports read them too: a block whose own lines say nothing about
+  =:exports= is exported as what it inherits (=code=, =results=, =both=,
+  =none=). When nothing says, the code is shown with its results; org's own
+  default is =code=, which =defaultHeaderArgs: ":exports code"= gives.
 
   A block that fails (a non-zero exit) has what it printed and what it wrote to
   standard error written as its result, so the error is in the file where the
@@ -116,6 +153,31 @@ package orgs
   a file and bound as its name, so =plot data using 1:2= works as it does in
   org.
 
+  ** Files
+
+  | Header              | Does                                                    |
+  |---------------------+---------------------------------------------------------|
+  | =:file name.png=    | the result is this file: a picture drawn there, or what the block printed written into it |
+  | =:file-ext png=     | with no =:file=, a block named =plot= writes =plot.png= |
+  | =:output-dir dir=   | where a relative =:file= goes (relative to =:dir=)      |
+  | =:file-desc text=   | the link's description, =[[file:plot.png][text]]=; with no text, the file's name |
+  | =:file-mode (identity #o755)= | the file's mode once it is written (=#o644=, =0600= too) |
+  | =:mkdirp yes=       | make the file's directory when it is missing            |
+
+  ** Compiled and other languages
+
+  | Language          | Runs                    | Notes                                         |
+  |-------------------+-------------------------+-----------------------------------------------|
+  | =C=, =C++=        | =cc=, =c++ -std=c++17=, then the program | =:includes=, =:defines "N 10"=, =:flags=, =:libs "-lm"=, =:main no=; a body without =main()= is put in one; a table is a =const char*= 2D array with =name_rows=, =name_cols= |
+  | =rust=            | =rustc=, then the program | a body without =fn main()= is put in one |
+  | =java=            | =java Main.java= (JDK 11+) | =:classname=, =:imports=; a body without a class is put in =main= |
+  | =julia=, =haskell= (=runghc=), =clojure=, =scheme= (=guile=), =octave= | the interpreter | variables in each one's syntax |
+  | =sql=             | =psql=, =mysql= or =sqlite3= | =:engine postgresql\|mysql\|sqlite=, =:dbhost=, =:dbport=, =:dbuser=, =:dbpassword= (mysql), =:database=; =$name= in the query is a variable; the answer is a table |
+  | =latex=           | =pdflatex=, then =pdftocairo= | =:file eq.png=, =.svg= or =.pdf=; a fragment is set in the standalone class |
+
+  A block that does not compile has the compiler's complaint as its result.
+  =babel.commands= still replaces what runs (=c: ["clang"]=).
+
   ** Pictures
 
   =dot= (graphviz), =plantuml=, =ditaa=, =mermaid= (mmdc) and =gnuplot=
@@ -159,6 +221,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/babelargs"
 	"github.com/ihdavids/orgs/internal/common/noweb"
 )
 
@@ -191,6 +254,12 @@ type babelJob struct {
 	// The hash on the #+RESULTS[...] line already under the block, for
 	// :cache yes; empty when there is none.
 	cachedHash string
+	// The block's #+NAME:, which :file-ext names its file after.
+	Name string
+	// Somebody asked for this run, or for one that needs it: what lets an
+	// :eval query block run. A schedule, a run of a whole file and a tangle
+	// are nobody asking.
+	asked bool
 }
 
 // The last value given for a header argument.
@@ -268,26 +337,38 @@ func hasWord(words []string, w ...string) bool {
 func jobForBlock(b *common.CodeBlock, f *common.OrgFile) babelJob {
 	args := append(inheritedArgs(b.Filename, b.Lang, b.Hash), b.Args...)
 	j := babelJob{Lang: b.Lang, Code: b.Code, Vars: b.Vars, Args: args, File: f, OrgPath: b.Filename,
-		Where: fmt.Sprintf("%s:%d", filepath.Base(b.Filename), b.Line+1)}
+		Where: fmt.Sprintf("%s:%d", filepath.Base(b.Filename), b.Line+1), Name: b.Name}
 	j.Dir = j.runDir()
 	return j
 }
 
-var propertyHeaderRe = regexp.MustCompile(`(?i)^\s*#\+PROPERTY:\s+header-args(:[^\s+]+)?\+?\s+(.*)$`)
-
-// The header arguments a block inherits, as org gives them: the file's
-// #+PROPERTY: header-args lines, then the header-args properties of the
-// headings above it, outermost first - so that, with the block's own after
-// them, the nearest one is the one that counts. Both the plain form and the
-// language's own (header-args:python) apply, the language's after.
+// The header arguments a block inherits, as org gives them
+// (internal/common/babelargs): the yaml's defaults, then that language's,
+// then the header-args property and the header-args:<lang> one, each the
+// nearest setting of it - a heading's replaces the file's, unless it is
+// written header-args+ - with the block's own after them all.
 //
 // This is how a notebook's blocks share a session without each saying so:
 // one line at the top of the file.
 func inheritedArgs(path, lang, hash string) []common.CodeArg {
-	out := []common.CodeArg{}
 	if path == "" {
-		return out
+		return []common.CodeArg{}
 	}
+	chain := []*org.Section{}
+	if hash != "" && GetDb() != nil {
+		for s := GetDb().FindByHash(hash); s != nil; s = s.Parent {
+			chain = append([]*org.Section{s}, chain...)
+		}
+	}
+	data, _ := os.ReadFile(path)
+	return inheritedArgsIn(path, string(data), lang, chain)
+}
+
+// inheritedArgsIn is inheritedArgs over a file's text and the headings above
+// the block (outermost first), for text that is not the file on disk: an
+// export's copy.
+func inheritedArgsIn(path, text, lang string, chain []*org.Section) []common.CodeArg {
+	out := []common.CodeArg{}
 	_, key, _ := runnerFor(lang)
 	if key == "" {
 		key = strings.ToLower(lang)
@@ -300,51 +381,28 @@ func inheritedArgs(path, lang, hash string) []common.CodeArg {
 		_, _, args, _ := splitArgs(splitParametersLike(" " + text))
 		out = append(out, args...)
 	}
-	if data, err := os.ReadFile(path); err == nil {
-		general, specific := []string{}, []string{}
-		for _, l := range strings.Split(string(data), "\n") {
-			m := propertyHeaderRe.FindStringSubmatch(l)
-			if m == nil {
-				continue
-			}
-			if m[1] == "" {
-				general = append(general, m[2])
-			} else if sameLang(m[1][1:]) {
-				specific = append(specific, m[2])
-			}
-		}
-		for _, t := range append(general, specific...) {
+	if Conf().Server != nil {
+		for _, t := range babelargs.Defaults(Conf().Server.Babel.DefaultHeaderArgs, Conf().Server.Babel.LanguageHeaderArgs, sameLang) {
 			add(t)
 		}
 	}
-	if hash == "" || GetDb() == nil {
-		return out
-	}
-	chain := []*org.Section{}
-	for s := GetDb().FindByHash(hash); s != nil; s = s.Parent {
-		chain = append([]*org.Section{s}, chain...)
-	}
+	levels := [][]babelargs.Entry{babelargs.FileEntries(path, text)}
 	for _, s := range chain {
 		if s.Headline == nil || s.Headline.Properties == nil {
 			continue
 		}
+		level := []babelargs.Entry{}
 		for _, kv := range s.Headline.Properties.Properties {
-			if len(kv) < 2 {
-				continue
-			}
-			k := strings.ToLower(strings.TrimSuffix(kv[0], "+"))
-			if k == "header-args" {
-				add(kv[1])
+			if len(kv) >= 2 {
+				level = append(level, babelargs.Entry{Name: kv[0], Value: kv[1]})
 			}
 		}
-		for _, kv := range s.Headline.Properties.Properties {
-			if len(kv) < 2 {
-				continue
-			}
-			k := strings.ToLower(strings.TrimSuffix(kv[0], "+"))
-			if strings.HasPrefix(k, "header-args:") && sameLang(k[len("header-args:"):]) {
-				add(kv[1])
-			}
+		levels = append(levels, level)
+	}
+	general, specific := babelargs.Resolve(levels, sameLang)
+	for _, t := range []string{general, specific} {
+		if t != "" {
+			add(t)
 		}
 	}
 	return out
@@ -368,10 +426,21 @@ func (j *babelJob) runDir() string {
 }
 
 // A path from :file, made absolute against where the program runs.
+//
+// Without :file, a named block with :file-ext writes <name>.<ext>, and
+// :output-dir is the directory a relative file goes in (relative to :dir),
+// as org has them.
 func (j *babelJob) fileArg() (written string, abs string, ok bool) {
 	f, ok := j.arg("file")
 	if !ok || f == "" {
-		return "", "", false
+		ext, eok := j.arg("file-ext")
+		if !eok || ext == "" || j.Name == "" {
+			return "", "", false
+		}
+		f = j.Name + "." + strings.TrimPrefix(ext, ".")
+	}
+	if od, ok := j.arg("output-dir"); ok && od != "" && !filepath.IsAbs(f) {
+		f = filepath.Join(od, f)
 	}
 	if filepath.IsAbs(f) {
 		return f, f, true
@@ -383,6 +452,37 @@ func (j *babelJob) fileArg() (written string, abs string, ok bool) {
 		abs = filepath.Join(j.Dir, f)
 	}
 	return f, abs, true
+}
+
+// fileLink is the result for a file the block made: [[file:x.png]], with
+// :file-desc as its description - the file's own name when it says nothing
+// more, as org has it.
+func (j *babelJob) fileLink(written string) string {
+	desc, ok := j.arg("file-desc")
+	if !ok {
+		return "[[file:" + written + "]]"
+	}
+	if strings.TrimSpace(desc) == "" {
+		desc = written
+	}
+	return "[[file:" + written + "][" + desc + "]]"
+}
+
+// chmodFile gives the file a block made the mode :file-mode asks for
+// ((identity #o755), #o644, 0600).
+func (j *babelJob) chmodFile(abs string) error {
+	m, ok := j.arg("file-mode")
+	if !ok || strings.TrimSpace(m) == "" {
+		return nil
+	}
+	mode, ok := babelargs.ParseMode(m)
+	if !ok {
+		return fmt.Errorf(":file-mode %s is not a mode: write it as (identity #o755), #o644 or 0644", m)
+	}
+	if _, err := os.Stat(abs); err != nil {
+		return nil
+	}
+	return os.Chmod(abs, mode)
 }
 
 const maxBabelDepth = 8
@@ -399,12 +499,27 @@ func runJob(j babelJob) (common.CodeResult, error) {
 	if j.depth > maxBabelDepth {
 		return res, fmt.Errorf("blocks call each other more than %d deep - is one calling itself?", maxBabelDepth)
 	}
-	if ev, ok := j.arg("eval"); ok && (ev == "no" || ev == "never") {
-		return res, fmt.Errorf("this block says :eval %s, so it is not run", ev)
+	if ev, ok := j.arg("eval"); ok {
+		// Exports never run a block here, so never-export, no-export and
+		// query-export are the same as yes. query is asking somebody, and the
+		// only somebody is the person who ran it.
+		switch strings.ToLower(ev) {
+		case "no", "never":
+			return res, fmt.Errorf("this block says :eval %s, so it is not run", ev)
+		case "query":
+			if !j.asked {
+				return res, fmt.Errorf("this block says :eval query, so it runs only when somebody runs it, not on a schedule, in a run of the whole file or from a tangle")
+			}
+		}
 	}
 	r, err := babelAllows(j.Lang)
 	if err != nil {
 		return res, err
+	}
+	if r.prepareRun != nil {
+		if r, err = r.prepareRun(&j, r); err != nil {
+			return res, err
+		}
 	}
 	want := j.results()
 	collect := r.defaultCollect
@@ -563,7 +678,13 @@ func runJob(j babelJob) (common.CodeResult, error) {
 		}
 		return res, err
 	}
-	ran, rerr := runProgram(r, program, j.Dir, timeout, out, stdin, extra...)
+	var ran babelOutcome
+	var rerr error
+	if r.custom != nil {
+		ran, rerr = r.custom(r, program, j.Dir, timeout, out)
+	} else {
+		ran, rerr = runProgram(r, program, j.Dir, timeout, out, stdin, extra...)
+	}
 	res.Seconds = ran.took.Seconds()
 	res.Stderr = strings.TrimRight(ran.stderr, "\n")
 	res.Code = ran.code
@@ -606,11 +727,11 @@ func runJob(j babelJob) (common.CodeResult, error) {
 
 	switch {
 	case r.picture != nil:
-		res.Kind, res.Result = "file", "[["+"file:"+written+"]]"
+		res.Kind, res.Result = "file", j.fileLink(written)
 	case hasFile && hasWord(want, "link", "graphics"):
 		// The code wrote the file itself; the result is the link to it, and
 		// what it printed is not the file (org's :results link/graphics).
-		res.Kind, res.Result = "file", "[["+"file:"+written+"]]"
+		res.Kind, res.Result = "file", j.fileLink(written)
 	case hasFile && !hasWord(want, "silent", "none"):
 		// :file on a block that does not draw: what it printed is the file, as
 		// in org. A block that printed nothing wrote the file itself.
@@ -622,7 +743,7 @@ func runJob(j babelJob) (common.CodeResult, error) {
 				return res, err
 			}
 		}
-		res.Kind, res.Result = "file", "[["+"file:"+written+"]]"
+		res.Kind, res.Result = "file", j.fileLink(written)
 	case key == "sqlite" && !hasWord(want, "raw", "verbatim", "scalar") && sqliteTabular(&j):
 		res.Kind, res.Result = csvTable(text, sqliteHeader(&j))
 	case r.csvOut && !hasWord(want, "raw", "verbatim", "scalar"):
@@ -633,6 +754,11 @@ func runJob(j babelJob) (common.CodeResult, error) {
 	}
 	if j.cacheOn() {
 		res.Hash = babelHash(j.Lang, program, extra, stdin, want, written)
+	}
+	if hasFile {
+		if err := j.chmodFile(out); err != nil {
+			return res, err
+		}
 	}
 	j.finish(&res, shape)
 	// A result that names a file is only half an answer until somebody can see
@@ -714,6 +840,7 @@ func (j *babelJob) runPost(res *common.CodeResult, post string) error {
 		return err
 	}
 	sub.depth = j.depth + 1
+	sub.asked = j.asked
 	this := resultValue("*this*", res.Kind, res.Result)
 	sub.bound = map[string]babelVal{}
 	for _, v := range sub.Vars {
@@ -883,6 +1010,7 @@ func (j *babelJob) nowebResolver() noweb.Resolver {
 				return "", err
 			}
 			sub.depth = j.depth + 1
+			sub.asked = j.asked
 			out, err := runJob(sub)
 			if err != nil {
 				return "", err
@@ -979,6 +1107,7 @@ func (j *babelJob) resolveValue(v common.CodeVar) (babelVal, error) {
 		}
 		sub := jobForBlock(block, bf)
 		sub.depth = j.depth + 1
+		sub.asked = j.asked
 		r, err := runJob(sub)
 		if err != nil {
 			return val, fmt.Errorf("running %s: %v", v.Ref, err)
@@ -1518,7 +1647,8 @@ func babelItems(lines []string) []babelItem {
 }
 
 // Runs one item of a file, writing what it produced unless told not to.
-func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
+// asked is whether somebody ran this item itself (see babelJob.asked).
+func runItem(path string, it babelItem, write, asked bool) ([]common.BabelRan, error) {
 	GetDb().ReloadFile(path)
 	f := GetDb().FindByFile(path)
 	if f == nil || f.Doc == nil {
@@ -1528,7 +1658,7 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 	if err != nil {
 		return nil, err
 	}
-	ran, after, err := runItemLines(f, path, lines, it, write)
+	ran, after, err := runItemLines(f, path, lines, it, write, asked)
 	if err != nil || after == nil {
 		return ran, err
 	}
@@ -1553,7 +1683,7 @@ func runItem(path string, it babelItem, write bool) ([]common.BabelRan, error) {
 // way on the editor's unsaved text (POST /lsp/run), so the result lands in the
 // buffer and nothing is written behind the editor's back. Written on a run
 // means "is in the new lines"; runItem clears it if the write then fails.
-func runItemLines(f *common.OrgFile, path string, lines []string, it babelItem, write bool) ([]common.BabelRan, []string, error) {
+func runItemLines(f *common.OrgFile, path string, lines []string, it babelItem, write, asked bool) ([]common.BabelRan, []string, error) {
 	switch it.kind {
 	case "block":
 		names := namedKinds(f)
@@ -1563,6 +1693,7 @@ func runItemLines(f *common.OrgFile, path string, lines []string, it babelItem, 
 			}
 			block := readBlock(ref, names)
 			job := jobForBlock(&block, f)
+			job.asked = asked
 			job.cachedHash = cachedHashAt(lines, block.EndLine)
 			ran := common.BabelRan{Kind: "block", Name: block.Name, Line: it.row}
 			res, err := runJob(job)
@@ -1589,6 +1720,7 @@ func runItemLines(f *common.OrgFile, path string, lines []string, it babelItem, 
 		job, _, err := callJob(m[2], m[3], m[4], m[5], f, path)
 		var res common.CodeResult
 		if err == nil {
+			job.asked = asked
 			job.cachedHash = cachedHashAt(lines, it.row)
 			res, err = runJob(job)
 		}
@@ -1638,6 +1770,7 @@ func runItemLines(f *common.OrgFile, path string, lines []string, it babelItem, 
 				if !hasWord(job.results(), "output") {
 					job.Args = append(job.Args, common.CodeArg{Key: "results", Value: "value"})
 				}
+				job.asked = asked
 				res, err = runJob(job)
 			}
 			if err != nil {
@@ -1723,7 +1856,7 @@ func ExecBabel(req *common.BabelExec) common.BabelExecResult {
 			}
 			it = now[k]
 		}
-		ran, err := runItem(path, it, !req.NoWrite)
+		ran, err := runItem(path, it, !req.NoWrite, !req.All)
 		for i := range ran {
 			ran[i].Line = original[k]
 		}

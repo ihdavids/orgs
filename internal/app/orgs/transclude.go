@@ -8,7 +8,8 @@ package orgs
 //	#+transclude: [[file:notes.org::#budget]]       by CUSTOM_ID
 //	#+transclude: [[*Budget]]                       a heading in this file
 //	#+transclude: [[file:snippet.org]] :lines 3-10  some lines of a file
-//	#+transclude: [[file:main.go]] :src go          a file as a source block
+//	#+transclude: [[file:main.go::func main]] :end "^}"  from a line to a line
+//	#+transclude: [[file:main.go]] :src go :rest ":exports both"  as a source block
 //	#+transclude: [[id:...]] :level 2 :only-contents
 //
 // Expanded in memory on the way to an exporter (transcludeView, exportFile),
@@ -17,11 +18,28 @@ package orgs
 // Off unless `transclusion: enable: true`; POST /transclusion turns it on
 // and off and writes the setting into the yaml.
 //
-// A transcluded heading takes the level under the heading the line is in,
-// unless :level says otherwise; :only-contents leaves out the heading line,
-// its planning line and its property drawer. Transclusions inside transcluded
-// text are expanded too, transclusion.depth deep, and a cycle is said rather
-// than followed.
+// The properties are org-transclusion's:
+//
+//	:level N / :level auto  the top heading's level; auto (or none) is one
+//	                        under the heading the line is in
+//	:no-first-heading       leave out the first heading line (and its
+//	                        planning line and property drawer), keeping its
+//	                        children: a subtree merged into this heading
+//	:only-contents          leave out every heading line, keeping the text
+//	:exclude-elements "drawer keyword"  leave out these kinds of element
+//	:lines A-B              rows A to B (1 based, either may be left out) of
+//	                        what the link names
+//	:end "text"             end at the first line from the start holding text
+//	:src LANG, :rest "..."  as a source block, with more header arguments
+//	:expand-links           relative file links made absolute, so they still
+//	                        name their file from here
+//	:disable-auto           accepted and ignored: there is no add-all here
+//
+// A link's ::search is a heading (*Title or Title), a #custom-id, a line
+// number, or else the first line holding the text, which is then read to the
+// end of the file unless :lines or :end narrow it. Transclusions inside
+// transcluded text are expanded too, transclusion.depth deep, and a cycle is
+// said rather than followed.
 //
 // Each top-level transclusion is bracketed in the html by two empty spans
 // (class org-transclusion, data-tx = its index in GET /transclusions), which
@@ -87,37 +105,109 @@ type Transclusion struct {
 }
 
 type txOpts struct {
-	level        int
-	onlyContents bool
-	src          string
-	linesFrom    int
-	linesTo      int
+	level          int
+	onlyContents   bool
+	noFirstHeading bool
+	exclude        map[string]bool
+	expandLinks    bool
+	src            string
+	rest           string
+	linesFrom      int
+	linesTo        int
+	end            string
+}
+
+type txWord struct {
+	text   string
+	quoted bool
+}
+
+// txWords splits options at spaces, a "quoted value" being one word with its
+// quotes taken off (\" in it is a quote).
+func txWords(s string) []txWord {
+	words := []txWord{}
+	for i := 0; i < len(s); {
+		if s[i] == ' ' || s[i] == '\t' {
+			i++
+			continue
+		}
+		if s[i] == '"' {
+			var b strings.Builder
+			j := i + 1
+			for ; j < len(s) && s[j] != '"'; j++ {
+				if s[j] == '\\' && j+1 < len(s) && s[j+1] == '"' {
+					j++
+				}
+				b.WriteByte(s[j])
+			}
+			words = append(words, txWord{b.String(), true})
+			i = j + 1
+			continue
+		}
+		j := i
+		for j < len(s) && s[j] != ' ' && s[j] != '\t' {
+			j++
+		}
+		words = append(words, txWord{s[i:j], false})
+		i = j
+	}
+	return words
 }
 
 func parseTxOpts(s string) txOpts {
 	o := txOpts{}
-	words := strings.Fields(s)
+	words := txWords(s)
+	// value is the word after a property, if it is one: quoted, or not the
+	// next property. :level then :only-contents must not lose the second.
+	value := func(i *int) (string, bool) {
+		if *i+1 < len(words) && (words[*i+1].quoted || !strings.HasPrefix(words[*i+1].text, ":")) {
+			*i++
+			return words[*i].text, true
+		}
+		return "", false
+	}
 	for i := 0; i < len(words); i++ {
-		switch strings.ToLower(words[i]) {
+		if words[i].quoted {
+			continue
+		}
+		switch strings.ToLower(words[i].text) {
 		case ":level":
-			if i+1 < len(words) {
-				o.level, _ = strconv.Atoi(words[i+1])
-				i++
+			// A number, auto, or nothing; auto is the default.
+			if i+1 < len(words) && !words[i+1].quoted {
+				if n, err := strconv.Atoi(words[i+1].text); err == nil {
+					o.level = n
+					i++
+				} else if strings.EqualFold(words[i+1].text, "auto") {
+					i++
+				}
 			}
 		case ":only-contents":
 			o.onlyContents = true
-		case ":src":
-			if i+1 < len(words) {
-				o.src = words[i+1]
-				i++
+		case ":no-first-heading":
+			o.noFirstHeading = true
+		case ":expand-links":
+			o.expandLinks = true
+		case ":exclude-elements":
+			if v, ok := value(&i); ok {
+				if o.exclude == nil {
+					o.exclude = map[string]bool{}
+				}
+				for _, e := range strings.Fields(v) {
+					o.exclude[strings.ToLower(e)] = true
+				}
 			}
+		case ":src":
+			o.src, _ = value(&i)
+		case ":rest":
+			o.rest, _ = value(&i)
+		case ":end":
+			o.end, _ = value(&i)
 		case ":lines":
-			if i+1 < len(words) {
-				if m := txLinesRe.FindStringSubmatch(words[i+1]); m != nil {
+			if v, ok := value(&i); ok {
+				if m := txLinesRe.FindStringSubmatch(v); m != nil {
 					o.linesFrom, _ = strconv.Atoi(m[1])
 					o.linesTo, _ = strconv.Atoi(m[2])
 				}
-				i++
 			}
 		}
 	}
@@ -263,11 +353,28 @@ func resolveTransclusion(link, from string) (path string, lines []string, a, b i
 		lines = lines[:len(lines)-1]
 	}
 	if search != "" {
-		row := findHeadingRow(path, lines, search)
-		if row < 0 || row >= len(lines) {
-			return "", nil, 0, 0, fmt.Errorf("%s has no heading %s", filepath.Base(path), search)
+		// ::42 is a line, as org has it.
+		if n, nerr := strconv.Atoi(search); nerr == nil {
+			if n < 1 || n > len(lines) {
+				return "", nil, 0, 0, fmt.Errorf("%s has no line %d", filepath.Base(path), n)
+			}
+			return path, lines, n - 1, len(lines) - 1, nil
 		}
-		return path, lines, row, subtreeRows(lines, row), nil
+		row := findHeadingRow(path, lines, search)
+		if row >= 0 && row < len(lines) {
+			return path, lines, row, subtreeRows(lines, row), nil
+		}
+		// Not a heading: the first line holding the text, to the end of the
+		// file, for :lines and :end to narrow.
+		if !strings.HasPrefix(search, "*") && !strings.HasPrefix(search, "#") {
+			for r, l := range lines {
+				if strings.Contains(l, search) {
+					return path, lines, r, len(lines) - 1, nil
+				}
+			}
+			return "", nil, 0, 0, fmt.Errorf("%s has no heading or line %s", filepath.Base(path), search)
+		}
+		return "", nil, 0, 0, fmt.Errorf("%s has no heading %s", filepath.Base(path), search)
 	}
 	// A whole file, without the #+ settings at its top: they are the file's
 	// own title and options, not text.
@@ -335,18 +442,32 @@ func expandTx(path string, lines []string, depth int, seen map[string]bool, mark
 		tx := Transclusion{Line: i, Link: m[2], Opts: m[3]}
 		o := parseTxOpts(m[3])
 		src, slines, a, b, err := resolveTransclusion(m[2], path)
-		if err == nil && (o.linesFrom > 0 || o.linesTo > 0) {
+		if err == nil && (o.linesFrom > 0 || o.linesTo > 0 || o.end != "") {
 			lo, hi := a, b
 			if o.linesFrom > 0 {
 				lo = a + o.linesFrom - 1
 			}
-			if o.linesTo > 0 {
+			// :end says where it stops, in place of the second number.
+			if o.linesTo > 0 && o.end == "" {
 				hi = a + o.linesTo - 1
 			}
 			if hi > b {
 				hi = b
 			}
-			if lo > hi {
+			if o.end != "" {
+				found := -1
+				for r := lo; r <= b; r++ {
+					if strings.Contains(slines[r], o.end) {
+						found = r
+						break
+					}
+				}
+				if found < 0 {
+					err = fmt.Errorf("%s: :end %q is not found", m[2], o.end)
+				}
+				hi = found
+			}
+			if err == nil && lo > hi {
 				err = fmt.Errorf("%s: :lines %d-%d is past the end", m[2], o.linesFrom, o.linesTo)
 			}
 			a, b = lo, hi
@@ -370,7 +491,7 @@ func expandTx(path string, lines []string, depth int, seen map[string]bool, mark
 		} else {
 			tx.Title = filepath.Base(src)
 		}
-		body := shapeTx(append([]string{}, slines[a:b+1]...), o, level)
+		body := shapeTx(append([]string{}, slines[a:b+1]...), o, level, filepath.Dir(src))
 		if depth > 1 && o.src == "" {
 			inner := map[string]bool{key: true}
 			for k := range seen {
@@ -397,24 +518,28 @@ func txMark(n int, edge string, tx Transclusion) string {
 }
 
 // shapeTx fits the source's lines to where they are going: as a block for
-// :src, without the heading line for :only-contents, at the level asked for.
-func shapeTx(body []string, o txOpts, under int) []string {
+// :src, without heading lines for :no-first-heading and :only-contents,
+// without the elements :exclude-elements names, at the level asked for. dir
+// is the source's directory, which :expand-links makes links relative to.
+func shapeTx(body []string, o txOpts, under int, dir string) []string {
 	if o.src != "" {
-		return append(append([]string{"#+BEGIN_SRC " + o.src}, body...), "#+END_SRC")
+		begin := "#+BEGIN_SRC " + o.src
+		if o.rest != "" {
+			begin += " " + o.rest
+		}
+		return append(append([]string{begin}, body...), "#+END_SRC")
 	}
-	if o.onlyContents && len(body) > 0 && txLevel(body[0]) > 0 {
-		body = body[1:]
-		if len(body) > 0 && txPlanningRe.MatchString(body[0]) {
-			body = body[1:]
-		}
-		if len(body) > 0 && txDrawerRe.MatchString(body[0]) {
-			for len(body) > 0 && !txDrawerEndRe.MatchString(body[0]) {
-				body = body[1:]
-			}
-			if len(body) > 0 {
-				body = body[1:]
-			}
-		}
+	if (o.noFirstHeading || o.onlyContents) && len(body) > 0 && txLevel(body[0]) > 0 {
+		body = body[txHeadingEnd(body, 0):]
+	}
+	if o.onlyContents {
+		body = txDropHeadings(body)
+	}
+	if len(o.exclude) > 0 {
+		body = txExclude(body, o.exclude)
+	}
+	if o.expandLinks {
+		body = txExpandLinks(body, dir)
 	}
 	first := 0
 	for _, l := range body {
@@ -451,6 +576,194 @@ func shapeTx(body []string, o txOpts, under int) []string {
 			}
 			body[i] = strings.Repeat("*", k) + l[n:]
 		}
+	}
+	return body
+}
+
+// txHeadingEnd is the row after the heading on row i, its planning line and
+// its property drawer: what goes when its heading line does, since a
+// planning line or a property drawer under no heading is not one any more.
+func txHeadingEnd(body []string, i int) int {
+	i++
+	if i < len(body) && txPlanningRe.MatchString(body[i]) {
+		i++
+	}
+	if i < len(body) && txDrawerRe.MatchString(body[i]) {
+		j := i + 1
+		for j < len(body) && !txDrawerEndRe.MatchString(body[j]) {
+			j++
+		}
+		if j < len(body) {
+			i = j + 1
+		}
+	}
+	return i
+}
+
+// txDropHeadings is the text without any heading line (:only-contents).
+func txDropHeadings(body []string) []string {
+	out := []string{}
+	inBlock := false
+	for i := 0; i < len(body); {
+		l := body[i]
+		if inBlock {
+			inBlock = !txBlockEndRe.MatchString(l)
+		} else if txBlockBeginRe.MatchString(l) {
+			inBlock = true
+		} else if txLevel(l) > 0 {
+			i = txHeadingEnd(body, i)
+			continue
+		}
+		out = append(out, l)
+		i++
+	}
+	return out
+}
+
+var (
+	txBlockNameRe   = regexp.MustCompile(`(?i)^\s*#\+begin_(\S+)`)
+	txDynBeginRe    = regexp.MustCompile(`(?i)^\s*#\+begin:`)
+	txDynEndRe      = regexp.MustCompile(`(?i)^\s*#\+end:\s*$`)
+	txAnyDrawerRe   = regexp.MustCompile(`^\s*:([\w-]+):\s*$`)
+	txKeywordRe     = regexp.MustCompile(`^\s*#\+([^:\s]+):`)
+	txAffiliatedRe  = regexp.MustCompile(`(?i)^(name|caption|header|plot|results|attr_.*)$`)
+	txCommentRe     = regexp.MustCompile(`^\s*#(\s|$)`)
+	txFixedRe       = regexp.MustCompile(`^\s*:(\s|$)`)
+	txClockRe       = regexp.MustCompile(`^\s*CLOCK:`)
+	txTableRe       = regexp.MustCompile(`^\s*(\||\+-)`)
+	txTblfmRe       = regexp.MustCompile(`(?i)^\s*#\+tblfm:`)
+	txLinkTargetRe  = regexp.MustCompile(`\[\[([^\]]+)\]`)
+	txBlockElements = map[string]string{"src": "src-block", "example": "example-block", "export": "export-block",
+		"quote": "quote-block", "verse": "verse-block", "center": "center-block", "comment": "comment-block"}
+)
+
+// txEndOf is the row that closes what opens on row i (a block or a drawer),
+// or -1 when nothing does, and then it is not one.
+func txEndOf(body []string, i int, closes func(string) bool) int {
+	for j := i + 1; j < len(body); j++ {
+		if closes(body[j]) {
+			return j
+		}
+	}
+	return -1
+}
+
+// txExclude is the text without the elements :exclude-elements names, by
+// org-element's names: keyword, drawer, property-drawer, planning, clock,
+// comment, fixed-width, table, dynamic-block, src-block, example-block,
+// export-block, quote-block, verse-block, center-block, comment-block,
+// special-block. Read off the lines, as org's parser would: a block or
+// drawer with no end is not one. #+NAME:, #+CAPTION: and the other
+// affiliated keywords belong to the element under them, not to keyword.
+func txExclude(body []string, ex map[string]bool) []string {
+	out := []string{}
+	for i := 0; i < len(body); i++ {
+		l := body[i]
+		if m := txBlockNameRe.FindStringSubmatch(l); m != nil {
+			name := strings.ToLower(m[1])
+			endRe := regexp.MustCompile(`(?i)^\s*#\+end_` + regexp.QuoteMeta(name) + `\s*$`)
+			if e := txEndOf(body, i, endRe.MatchString); e >= 0 {
+				kind, ok := txBlockElements[name]
+				if !ok {
+					kind = "special-block"
+				}
+				if !ex[kind] {
+					out = append(out, body[i:e+1]...)
+				}
+				i = e
+				continue
+			}
+		}
+		if txDynBeginRe.MatchString(l) {
+			if e := txEndOf(body, i, txDynEndRe.MatchString); e >= 0 {
+				if !ex["dynamic-block"] {
+					out = append(out, body[i:e+1]...)
+				}
+				i = e
+				continue
+			}
+		}
+		if m := txAnyDrawerRe.FindStringSubmatch(l); m != nil && !strings.EqualFold(m[1], "end") {
+			if e := txEndOf(body, i, txDrawerEndRe.MatchString); e >= 0 {
+				kind := "drawer"
+				if strings.EqualFold(m[1], "properties") {
+					kind = "property-drawer"
+				}
+				if !ex[kind] {
+					out = append(out, body[i:e+1]...)
+				}
+				i = e
+				continue
+			}
+		}
+		if txTableRe.MatchString(l) {
+			e := i
+			for e+1 < len(body) && (txTableRe.MatchString(body[e+1]) || txTblfmRe.MatchString(body[e+1])) {
+				e++
+			}
+			if !ex["table"] {
+				out = append(out, body[i:e+1]...)
+			}
+			i = e
+			continue
+		}
+		drop := false
+		switch {
+		case txLevel(l) > 0:
+		case txPlanningRe.MatchString(l):
+			drop = ex["planning"]
+		case txClockRe.MatchString(l):
+			drop = ex["clock"]
+		case txCommentRe.MatchString(l):
+			drop = ex["comment"]
+		case txFixedRe.MatchString(l):
+			drop = ex["fixed-width"]
+		default:
+			if m := txKeywordRe.FindStringSubmatch(l); m != nil && !txAffiliatedRe.MatchString(m[1]) {
+				drop = ex["keyword"]
+			}
+		}
+		if !drop {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+// txExpandLinks makes relative file links absolute against dir
+// (:expand-links): [[file:x.png]], [[./x.org::*H][d]], [[../y]]. Links in
+// source and example blocks are code, not links, and stay as written.
+func txExpandLinks(body []string, dir string) []string {
+	inBlock := false
+	for i, l := range body {
+		if inBlock {
+			inBlock = !txBlockEndRe.MatchString(l)
+			continue
+		}
+		if m := txBlockNameRe.FindStringSubmatch(l); m != nil {
+			if n := strings.ToLower(m[1]); n == "src" || n == "example" || n == "export" || n == "comment" {
+				inBlock = true
+				continue
+			}
+		}
+		body[i] = txLinkTargetRe.ReplaceAllStringFunc(l, func(s string) string {
+			target := s[2 : len(s)-1]
+			prefix := ""
+			if strings.HasPrefix(strings.ToLower(target), "file:") {
+				prefix, target = target[:5], target[5:]
+			} else if !strings.HasPrefix(target, "./") && !strings.HasPrefix(target, "../") {
+				return s
+			}
+			file, search, has := strings.Cut(target, "::")
+			if file == "" || filepath.IsAbs(file) || strings.HasPrefix(file, "~") {
+				return s
+			}
+			abs := filepath.Join(dir, file)
+			if has {
+				abs += "::" + search
+			}
+			return "[[" + prefix + abs + "]"
+		})
 	}
 	return body
 }

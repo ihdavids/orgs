@@ -55,6 +55,7 @@ type Todo struct {
 	Cycle bool
 	Done  bool
 	Note  string
+	Force bool
 }
 
 func (self *Todo) Unmarshal(u func(interface{}) error) error { return u(self) }
@@ -69,6 +70,8 @@ func (self *Todo) SetupParameters(fset *flag.FlagSet) {
 	// one. The server cannot prompt for it, so this is the only way one reaches
 	// the file from a terminal.
 	fset.StringVar(&self.Note, "note", "", "a note to keep with the state change")
+	fset.BoolVar(&self.Force, "force", false,
+		"mark it done even though an open child or ORDERED sibling is in the way (enforceTodoDependencies)")
 }
 
 func (self *Todo) Exec(core *commands.Core) {
@@ -118,11 +121,14 @@ func (self *Todo) Exec(core *commands.Core) {
 
 		var reply common.Result
 		commands.SendReceivePost(core, "status/change",
-			&common.TodoItemChange{Hash: t.Hash, Value: want, Note: self.Note}, &reply)
+			&common.TodoItemChange{Hash: t.Hash, Value: want, Note: self.Note, Force: self.Force}, &reply)
 		if commands.DryRun {
 			continue
 		}
 		if !reply.Ok {
+			if reply.Msg != "" {
+				commands.Fail("%s (-force to mark it anyway)", reply.Msg)
+			}
 			commands.Fail("could not set %s on %s", want, t.Headline)
 		}
 		shown := want
@@ -982,6 +988,9 @@ type Remove struct {
 	tf commands.TargetFlags
 	// orgs archive -done: every finished heading, in the files named or all.
 	Done bool
+	// orgs archive -sibling: under the heading's Archive sibling instead, in
+	// its own file (org's C-c C-x A).
+	Sibling bool
 	// Which endpoint: "archive" moves the subtree to the archive file, "delete"
 	// does not.
 	How     string
@@ -995,6 +1004,8 @@ func (self *Remove) SetupParameters(fset *flag.FlagSet) {
 	if self.How == "archive" {
 		fset.BoolVar(&self.Done, "done", false,
 			"every heading on a finished keyword (DONE, CANCELLED...), in the files named or in all of them")
+		fset.BoolVar(&self.Sibling, "sibling", false,
+			"file it under its \"Archive\" sibling, tagged ARCHIVE, in its own file (org's C-c C-x A)")
 	}
 	commands.AddTargetFlags(fset, &self.tf)
 }
@@ -1050,8 +1061,11 @@ func (self *Remove) Exec(core *commands.Core) {
 
 	// Several archives are one /move: an edit to a file can change the hash
 	// of every heading after it, so the server resolves them all first.
-	if self.How == "archive" && len(todos) > 1 {
+	if self.How == "archive" && (len(todos) > 1 || self.Sibling) {
 		req := common.MoveRequest{Op: common.MoveArchive}
+		if self.Sibling {
+			req.Op = common.MoveArchiveSibling
+		}
 		for _, t := range todos {
 			req.From = append(req.From, common.Target{Id: t.Hash, Type: "hash"})
 		}

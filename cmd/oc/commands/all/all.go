@@ -79,6 +79,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/dav"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/hookscmd"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/lsp"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/timer"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/transclude"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/palette"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/paste"

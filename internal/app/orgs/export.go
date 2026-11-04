@@ -193,7 +193,14 @@ func RequestPandoc(w http.ResponseWriter, r *http.Request) {
 			conv = p
 		}
 	}
-	b, err := conv.Convert(path, to)
+	// The export copy when it differs from the file (transclusion, citations,
+	// #+OPTIONS:...), so pandoc's docx says what worg's page says.
+	var b []byte
+	if text, ok := exportTextFor(path, Conf().Server.Refresh.ExportRefresh(), "pandoc-"+pandoc.Writer(to)); ok {
+		b, err = conv.ConvertText(text, filepath.Dir(path), to)
+	} else {
+		b, err = conv.Convert(path, to)
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

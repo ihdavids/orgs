@@ -99,6 +99,8 @@ type Config struct {
 
 	// If true tasks are marked done when moved to archive.
 	ArchiveMarkDone bool `yaml:"archiveMarkDone"`
+	// The heading an archive-sibling move files under (org-archive-sibling-heading).
+	ArchiveSiblingHeading string `yaml:"archiveSiblingHeading"`
 	/* SDOC: Settings
 	* Date Tree Formatting
 		These options control the format of your datatree
@@ -139,6 +141,9 @@ type Config struct {
 
 		EDOC */
 	ClockIntoDrawer string `yaml:"clockIntoDrawer"`
+	// Minutes without input, with a clock running, after which a client asks
+	// what to do with them (org-clock-idle-time). 0 is never.
+	ClockIdleMinutes int `yaml:"clockIdleMinutes"`
 	/* SDOC: Settings
 	* Image Path
 		Images and fonts are secondary html requests when loading an html
@@ -294,7 +299,8 @@ func (self *Config) Defaults() {
 	self.Author = ""
 	self.NewFileTemplate = "newfile.tpl"
 	self.ArchiveDefaultTarget = "%s_archive::"
-	self.ArchiveSaveContextInfo = []string{"time", "file", "ltags", "itags", "todo", "category", "olpath"}
+	// org-archive-save-context-info's default.
+	self.ArchiveSaveContextInfo = []string{"time", "file", "olpath", "category", "todo", "itags"}
 	self.ArchiveSkipEmptyProperties = true
 
 	self.DateTreeYearFormat = "2006"

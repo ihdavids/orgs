@@ -256,3 +256,56 @@ SQ=<<square(x=4)>>
 		t.Errorf("calls %v", seen)
 	}
 }
+
+func TestHeadingHeaderArgsReplaceUnlessPlusAndDefaultsSitUnder(t *testing.T) {
+	old := Defaults
+	Defaults = func() (string, map[string]string) {
+		return ":comments link", map[string]string{"bash": ":tangle from-yaml.sh"}
+	}
+	t.Cleanup(func() { Defaults = old })
+	src := func(text string) map[string]string {
+		path := filepath.Join("/notes", "build.org")
+		doc := org.New().Silent().Parse(strings.NewReader(text), path)
+		got := map[string]string{}
+		for _, s := range collectBlocks(doc.Nodes, nil) {
+			a := argsFor(doc, s)
+			got[strings.TrimSpace(org.String(s.block.Children...))] = a[":tangle"] + "|" + a[":mkdirp"] + "|" + a[":comments"]
+		}
+		return got
+	}
+	got := src(`#+PROPERTY: header-args :tangle all.txt :mkdirp yes
+* Replaced
+:PROPERTIES:
+:header-args: :tangle r.txt
+:END:
+#+BEGIN_SRC python
+one
+#+END_SRC
+* Added
+:PROPERTIES:
+:header-args+: :tangle a.txt
+:END:
+#+HEADER: :comments no
+#+BEGIN_SRC python
+two
+#+END_SRC
+* Default
+#+BEGIN_SRC sh :tangle yes
+three
+#+END_SRC
+`)
+	want := map[string]string{
+		"one":   "r.txt||link",    // the heading's whole value replaces the file's
+		"two":   "a.txt|yes|no",   // + adds; #+HEADER over the yaml
+		"three": "yes|yes|link",
+	}
+	for k, w := range want {
+		if got[k] != w {
+			t.Errorf("%s: %q, want %q (all %v)", k, got[k], w, got)
+		}
+	}
+	got = src("#+BEGIN_SRC bash\nfour\n#+END_SRC\n")
+	if got["four"] != "from-yaml.sh||link" {
+		t.Errorf("yaml language default: %v", got)
+	}
+}

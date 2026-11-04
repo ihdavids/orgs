@@ -38,6 +38,7 @@ type TableData struct {
 	ColNames     map[string]int    // Column names declared by a "!" row
 	Params       map[string]string // Parameters declared by a "$" row
 	Indent       string            // Leading whitespace the table is written with
+	Plot         string            // The options of a #+PLOT: line above the table (org-plot), empty when none
 }
 
 // Response for the table list.

@@ -121,6 +121,9 @@ type TodoItemChange struct {
 	// so a client that has one sends it and one that has not gets the plain
 	// timestamp line.
 	Note string `json:",omitempty"`
+	// Mark it done even though enforceTodoDependencies says something is in
+	// the way.
+	Force bool `json:",omitempty"`
 }
 
 type TodoPropertyChange struct {

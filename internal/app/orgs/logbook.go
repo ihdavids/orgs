@@ -912,6 +912,10 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 		res.Logged = entry
 	}
 
+	// 6. The parent's [n/m]: this heading's keyword is one of its counts.
+	done, active := keywordSets(f)
+	lines = refreshCookiesAround(lines, from, done, active)
+
 	if err := writeLines(f.Filename, lines); err != nil {
 		return res, err
 	}

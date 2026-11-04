@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
@@ -133,52 +134,46 @@ func fixupArchiveHeading(ofile *common.OrgFile, sec *org.Section) *org.Section {
 	// For each symbol present in the list, a property will be created in
 	// the archived entry, with a prefix \"ARCHIVE_\", to remember this
 	// information."
-	// TODO add archive properties!
-	if Conf().ArchiveSaveContextInfo != nil && len(Conf().ArchiveSaveContextInfo) > 0 && c.Headline.Properties == nil {
+	//
+	// Written as org writes them (org-archive-subtree): ARCHIVE_ plus the
+	// symbol upcased, tags space separated, the outline path of the headings
+	// *above* it, the time as an active stamp without its brackets. Read off
+	// sec, the original, because the copy has no parents to take a path or
+	// inherited tags from.
+	if len(Conf().ArchiveSaveContextInfo) > 0 && c.Headline.Properties == nil {
 		c.Headline.Properties = &org.PropertyDrawer{}
 	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "time") {
-		timestamp := org.NewOrgDateNow()
-		timestamp.HaveTime = true
-		setProp(c, "ARCHIVE_TIME", timestamp.ToString())
-	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "todo") {
-		setProp(c, "ARCHIVE_TODO", c.Headline.Status)
-	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "file") {
-		setProp(c, "ARCHIVE_FILE", ofile.Filename)
-	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "category") {
-		category := ""
-		if cat := ofile.Doc.Get("CATEGORY"); cat != "" {
-			category = cat
+	for _, what := range Conf().ArchiveSaveContextInfo {
+		switch what {
+		case "time":
+			setProp(c, "ARCHIVE_TIME", archiveTime(time.Now()))
+		case "todo":
+			setProp(c, "ARCHIVE_TODO", c.Headline.Status)
+		case "file":
+			setProp(c, "ARCHIVE_FILE", abbreviateHome(ofile.Filename))
+		case "category":
+			setProp(c, "ARCHIVE_CATEGORY", categoryOf(ofile, sec))
+		case "ltags":
+			setProp(c, "ARCHIVE_LTAGS", strings.Join(c.Headline.Tags, " "))
+		case "itags":
+			local := map[string]bool{}
+			for _, t := range sec.Headline.Tags {
+				local[t] = true
+			}
+			itags := []string{}
+			for _, t := range GetParentTags(sec, ofile.Doc) {
+				if t = strings.TrimSpace(t); t != "" && !local[t] && !slices.Contains(itags, t) {
+					itags = append(itags, t)
+				}
+			}
+			setProp(c, "ARCHIVE_ITAGS", strings.Join(itags, " "))
+		case "olpath":
+			olp := outlineOf(sec)
+			if len(olp) > 0 {
+				olp = olp[:len(olp)-1]
+			}
+			setProp(c, "ARCHIVE_OLPATH", strings.Join(olp, "/"))
 		}
-		if cat, ok := c.Headline.Properties.Get("CATEGORY"); ok {
-			category = cat
-		}
-		setProp(c, "ARCHIVE_CATEGORY", category)
-	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "ltags") {
-		tags := strings.TrimSpace(strings.Join(c.Headline.Tags, ":"))
-		if tags != "" {
-			tags = ":" + tags + ":"
-		}
-		setProp(c, "ARCHIVE_LOCAL_TAGS", tags)
-	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "itags") {
-		tags := GetParentTags(c, ofile.Doc)
-		tagstr := ""
-		if len(tags) > 0 {
-			tagstr = ":" + strings.Join(tags, ":") + ":"
-		}
-		setProp(c, "ARCHIVE_INHERITED_TAGS", tagstr)
-	}
-	if slices.Contains(Conf().ArchiveSaveContextInfo, "olpath") {
-		path := common.BuildOutlinePath(c, "/")
-		setProp(c, "ARCHIVE_OUTLINE_PATH", path)
-	}
-	for _, p := range c.Headline.Properties.Properties {
-		fmt.Fprintf(os.Stderr, "PROP: %v\n", p)
 	}
 
 	if Conf().ArchiveMarkDone {
@@ -204,4 +199,114 @@ func Archive(db common.ODb, tgt *common.Target) (common.ResultMsg, error) {
 	res.Ok = false
 	res.Msg = "failed to find archive target"
 	return res, fmt.Errorf("failed to find archive target")
+}
+
+// archiveTime is org's ARCHIVE_TIME: "2026-11-03 Tue 14:05".
+func archiveTime(t time.Time) string {
+	return t.Format("2006-01-02 Mon 15:04")
+}
+
+// abbreviateHome is a path as Emacs's abbreviate-file-name writes it: ~/ for
+// the home directory.
+func abbreviateHome(p string) string {
+	if home, err := os.UserHomeDir(); err == nil && home != "" && strings.HasPrefix(p, home+string(filepath.Separator)) {
+		return "~" + p[len(home):]
+	}
+	return p
+}
+
+// categoryOf is org-get-category: the nearest CATEGORY property at or above
+// the heading, else the file's #+CATEGORY:, else the file's name without its
+// extension.
+func categoryOf(f *common.OrgFile, sec *org.Section) string {
+	for s := sec; s != nil; s = s.Parent {
+		if s.Headline != nil && s.Headline.Properties != nil {
+			if v, ok := s.Headline.Properties.Get("CATEGORY"); ok && strings.TrimSpace(v) != "" {
+				return strings.TrimSpace(v)
+			}
+		}
+	}
+	if f != nil && f.Doc != nil {
+		if v := strings.TrimSpace(f.Doc.Get("CATEGORY")); v != "" {
+			return v
+		}
+	}
+	if f == nil {
+		return ""
+	}
+	return strings.TrimSuffix(filepath.Base(f.Filename), filepath.Ext(f.Filename))
+}
+
+// ArchiveSibling is org's org-archive-to-archive-sibling: the heading moves to
+// the end of a sibling called Archive (archiveSiblingHeading), tagged
+// ARCHIVE, which is made at the end of its parent's children when there is
+// none. The heading gets ARCHIVE_TIME and nothing else, as in org: it has not
+// left its file or its parent, so there is no context to keep.
+func ArchiveSibling(db common.ODb, tgt *common.Target) (common.ResultMsg, error) {
+	res := common.ResultMsg{}
+	f, sec := db.GetFromTarget(tgt, false)
+	if f == nil || sec == nil || sec.Headline == nil {
+		res.Msg = "could not find that heading"
+		return res, nil
+	}
+	name := strings.TrimSpace(Conf().ArchiveSiblingHeading)
+	if name == "" {
+		name = "Archive"
+	}
+	isSibling := func(s *org.Section) bool {
+		return s != nil && s.Headline != nil && strings.TrimSpace(common.GetSectionTitle(s)) == name && slices.Contains(s.Headline.Tags, "ARCHIVE")
+	}
+	if isSibling(sec) {
+		res.Msg = fmt.Sprintf("%q is the archive sibling itself", name)
+		return res, nil
+	}
+	parent := sec.Parent
+	if isSibling(parent) {
+		res.Msg = fmt.Sprintf("it is already under %q", name)
+		return res, nil
+	}
+	parentOlp := []string{}
+	if parent != nil && parent.Headline != nil {
+		parentOlp = outlineOf(parent)
+	}
+	src := common.Target{Type: "file+olp", Filename: f.Filename, Id: olpString(outlineOf(sec))}
+	found := false
+	if parent != nil {
+		for _, c := range parent.Children {
+			if isSibling(c) {
+				found = true
+			}
+		}
+	}
+	if !found {
+		lines, err := readFileLines(f.Filename)
+		if err != nil {
+			return res, err
+		}
+		if len(lines) > 0 && lines[len(lines)-1] == "" {
+			lines = lines[:len(lines)-1]
+		}
+		at := len(lines)
+		if row := headlineRow(parent); row >= 0 && row < len(lines) {
+			at = subtreeEndRow(lines, row, parent.Headline.Lvl, row) + 1
+			for at > row+1 && strings.TrimSpace(lines[at-1]) == "" {
+				at--
+			}
+		}
+		head := strings.Repeat("*", sec.Headline.Lvl) + " " + name + "  :ARCHIVE:"
+		lines = append(lines[:at], append([]string{head}, lines[at:]...)...)
+		if err := writeLines(f.Filename, lines); err != nil {
+			return res, err
+		}
+	}
+	dest := common.Target{Type: "file+olp", Filename: f.Filename, Id: olpString(append(parentOlp, name))}
+	stamp := func(of *common.OrgFile, s *org.Section) *org.Section {
+		c := CopySection(s)
+		if c.Headline.Properties == nil {
+			c.Headline.Properties = &org.PropertyDrawer{}
+		}
+		c.Headline.Properties.Set("ARCHIVE_TIME", archiveTime(time.Now()))
+		return c
+	}
+	return Refile(db, &common.Refile{FromId: src, ToId: dest}, stamp, false)
 }

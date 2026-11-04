@@ -12,6 +12,7 @@ import (
 
 	"github.com/ihdavids/go-org/org"
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/babelargs"
 	"github.com/ihdavids/orgs/internal/common/noweb"
 )
 
@@ -200,26 +201,6 @@ func markerLink(src tangleSrc, orgPath, target string) string {
 	return link
 }
 
-// parseOctalMode parses a tangle-mode value like "(identity #o755)" or "0644" into an os.FileMode.
-func parseOctalMode(s string) (os.FileMode, bool) {
-	s = strings.TrimSpace(s)
-	// Handle Emacs Lisp style: (identity #o755)
-	re := regexp.MustCompile(`#o(\d+)`)
-	if m := re.FindStringSubmatch(s); m != nil {
-		s = m[1]
-	}
-	// Handle plain octal: 0755 or 755
-	s = strings.TrimPrefix(s, "0")
-	if s == "" {
-		return 0, false
-	}
-	v, err := strconv.ParseUint(s, 8, 32)
-	if err != nil {
-		return 0, false
-	}
-	return os.FileMode(v), true
-}
-
 // parseParams reads the tangle-related header arguments out of a block's
 // arguments, already merged with what it inherits (argsFor).
 func parseParams(merged map[string]string) tangleBlock {
@@ -247,7 +228,7 @@ func parseParams(merged map[string]string) tangleBlock {
 		tb.shebang = v
 	}
 	if v, ok := merged[":tangle-mode"]; ok {
-		if mode, valid := parseOctalMode(v); valid {
+		if mode, valid := babelargs.ParseMode(v); valid {
 			tb.tangleMode = mode
 		}
 	}
@@ -412,71 +393,72 @@ func headerArgs(text string, into map[string]string) {
 	flush()
 }
 
-// The language a #+PROPERTY: or property name is for: "" for plain
-// header-args, "python" for header-args:python; ok is false for any other
-// property. A trailing + (org's "add to") reads the same.
-func headerArgsName(name string) (string, bool) {
-	n := strings.TrimSuffix(strings.ToLower(strings.TrimSpace(name)), "+")
-	if n == "header-args" {
-		return "", true
-	}
-	if strings.HasPrefix(n, "header-args:") {
-		return n[len("header-args:"):], true
-	}
-	return "", false
-}
-
-// argsFor is every header argument a block has, the way org gives them: the
-// file's #+PROPERTY: header-args, then header-args:<lang>, then each heading
-// above it from the outermost in (its header-args, then its
-// header-args:<lang>), then the block's own - so the nearest says last.
+// argsFor is every header argument a block has, the way org gives them
+// (internal/common/babelargs, shared with running a block): the yaml's
+// defaults, then the header-args and header-args:<lang> properties, each the
+// nearest setting of it (a heading's replaces the file's unless written
+// header-args+), then its #+HEADER: lines and its own line.
 //
 // go-org keeps every #+PROPERTY: line under the one key PROPERTY, so
 // doc.Get("header-args") is always empty: read that way, a file's
-// #+PROPERTY: header-args :tangle ... was never seen at all.
+// #+PROPERTY: header-args :tangle ... was never seen at all. A #+SETUPFILE:'s
+// lines are already in it.
 func argsFor(doc *org.Document, src tangleSrc) map[string]string {
 	lang := ""
 	if len(src.block.Parameters) > 0 {
 		lang = src.block.Parameters[0]
 	}
+	same := func(l string) bool { return sameLang(l, lang) }
 	out := map[string]string{}
-	apply := func(pairs [][2]string) {
-		for _, generalFirst := range []bool{true, false} {
-			for _, kv := range pairs {
-				l, ok := headerArgsName(kv[0])
-				if !ok || (l == "") != generalFirst || (l != "" && !sameLang(l, lang)) {
-					continue
-				}
-				headerArgs(kv[1], out)
-			}
+	if Defaults != nil {
+		all, byLang := Defaults()
+		for _, t := range babelargs.Defaults(all, byLang, same) {
+			headerArgs(t, out)
 		}
 	}
+	levels := [][]babelargs.Entry{}
 	if doc != nil {
-		pairs := [][2]string{}
+		level := []babelargs.Entry{}
 		for _, line := range strings.Split(doc.BufferSettings["PROPERTY"], "\n") {
 			if name, rest, ok := strings.Cut(strings.TrimSpace(line), " "); ok {
-				pairs = append(pairs, [2]string{name, rest})
+				level = append(level, babelargs.Entry{Name: name, Value: rest})
 			}
 		}
-		apply(pairs)
+		levels = append(levels, level)
 	}
 	for _, h := range src.chain {
 		if h == nil || h.Properties == nil {
 			continue
 		}
-		pairs := [][2]string{}
+		level := []babelargs.Entry{}
 		for _, kv := range h.Properties.Properties {
 			if len(kv) >= 2 {
-				pairs = append(pairs, [2]string{kv[0], kv[1]})
+				level = append(level, babelargs.Entry{Name: kv[0], Value: kv[1]})
 			}
 		}
-		apply(pairs)
+		levels = append(levels, level)
+	}
+	general, specific := babelargs.Resolve(levels, same)
+	texts := []string{general, specific}
+	// #+HEADER: lines, which go-org hangs on the block.
+	for _, k := range src.block.Keywords {
+		if strings.EqualFold(k.Key, "HEADER") || strings.EqualFold(k.Key, "HEADERS") {
+			texts = append(texts, k.Value)
+		}
+	}
+	for _, t := range texts {
+		headerArgs(t, out)
 	}
 	for k, v := range src.block.ParameterMap() {
 		out[strings.ToLower(k)] = v
 	}
 	return out
 }
+
+// Defaults, when set, is the server's babel.defaultHeaderArgs and
+// babel.languageHeaderArgs (the server imports this package, so it hands
+// them over, as it does Evaluate).
+var Defaults func() (all string, byLang map[string]string)
 
 // The extension org gives a language's file for :tangle yes
 // (org-babel-tangle-lang-exts); a language it does not list is its own name.

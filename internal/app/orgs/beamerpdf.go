@@ -76,7 +76,7 @@ func RequestBeamerPdf(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Read with its dynamic blocks and formulas current (refresh.go).
-	doc := exportFile(path)
+	doc, _ := exportFileFor(path, Conf().Server.Refresh.ExportRefresh(), "beamer")
 	if doc == nil || doc.Doc == nil {
 		http.Error(w, fmt.Sprintf("%s is not loaded", fname), http.StatusNotFound)
 		return

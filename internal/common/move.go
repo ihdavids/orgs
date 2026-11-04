@@ -26,6 +26,9 @@ const (
 	MoveRefile  = "refile"
 	MoveCopy    = "copy"
 	MoveArchive = "archive"
+	// Under the heading's "Archive" sibling, tagged ARCHIVE, in the same file
+	// (org-archive-to-archive-sibling).
+	MoveArchiveSibling = "archive-sibling"
 )
 
 type MoveRequest struct {

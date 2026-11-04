@@ -284,7 +284,7 @@ func RequestPdfView(w http.ResponseWriter, r *http.Request) {
 			Filename: cache,
 			Props:    map[string]string{},
 		}
-		res, _ := ExportToFile(exportView(db, path), &opts)
+		res, _ := ExportToFile(exportViewFor(db, path, Conf().Server.Refresh.ExportRefresh(), "pdf"), &opts)
 		if !res.Ok {
 			os.Remove(cache)
 			http.Error(w, res.Msg, http.StatusInternalServerError)

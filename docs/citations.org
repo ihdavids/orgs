@@ -1,0 +1,73 @@
+#+TITLE: Citations: [cite:@key] and bibliographies
+#+DOC_SECTION: Exporting
+
+* What it is
+
+  org-cite's citations, in every export orgs makes: worg's rendered view,
+  =orgs export=, the pdf, Beamer and Typst exports, books and sites. A file
+  names where its works come from and cites them by key:
+
+  #+BEGIN_EXAMPLE
+  #+bibliography: refs.bib
+  ,* Introduction
+  Typed holes help [cite:@doe2020], as [cite/t:@who2019] found -
+  see [cite:see @doe2020 p. 3; @who2019 ch. 2].
+  ,* References
+  #+print_bibliography:
+  #+END_EXAMPLE
+
+  The file keeps its citations as written; they are worked out on the way to
+  the exporter, as transclusion is.
+
+* Bibliographies
+
+  =.bib= files (BibTeX and BibLaTeX: =@string= macros, =#=, accents and
+  braces are read) and =.json= files (CSL-JSON, as Zotero exports it). A file's
+  =#+bibliography:= lines are relative to it; =citations.bibliography= in the
+  server's yaml is read for every file.
+
+  #+BEGIN_SRC yaml
+  server:
+    citations:
+      bibliography: ["~/papers/library.bib"]
+      export: "basic"
+  #+END_SRC
+
+* Citation styles
+
+  | Written                  | basic writes                     |
+  |--------------------------+----------------------------------|
+  | =[cite:@doe2020]=        | (Doe and Roe, 2020)              |
+  | =[cite/t:@doe2020]=      | Doe and Roe (2020)               |
+  | =[cite/a:@doe2020]=      | Doe and Roe                      |
+  | =[cite/na:@doe2020]=     | (2020)                           |
+  | =[cite//b:@doe2020]=     | Doe and Roe, 2020                |
+  | =[cite/a/f:@gödel]=      | every author: Gödel, van Dalen and Kleene |
+  | =[cite/n:@doe2020]=      | nothing; listed in the bibliography |
+  | =[cite/n:@*]=            | nothing; every entry listed      |
+
+  =c= capitalises (=[cite/a/c:...]=). Text before the first =@key= and after
+  the last is the common prefix and suffix; text beside a key is that work's.
+  A key no bibliography has is written as the key, and the server says so.
+
+* Processors
+
+  =#+cite_export:= (else =citations.export=) picks how they are written:
+
+  - =basic= :: every exporter. =#+print_bibliography:= becomes a list of the
+    cited works, by author, and each citation links to its entry.
+    =#+cite_export: basic numeric numeric= writes [1] and numbers the list in
+    citation order.
+  - =biblatex [style]= :: LaTeX and Beamer: =\autocite=, =\textcite=,
+    =\citeauthor=, =\autocites= for works with their own notes,
+    =\printbibliography=, and the =\usepackage{biblatex}= / =\addbibresource=
+    preamble. Run biber on the result to fill it in.
+  - =natbib [bibstyle]= :: LaTeX and Beamer: =\citep=, =\citet=, =\bibliography=.
+
+  biblatex and natbib are LaTeX's, so the same file exports with =basic=
+  everywhere else (html cannot run biber).
+
+* Completing keys
+
+  =orgs lsp= offers the file's keys after =@= inside =[cite:=, with author,
+  year and title; =GET /cite/keys?file== answers any other client.

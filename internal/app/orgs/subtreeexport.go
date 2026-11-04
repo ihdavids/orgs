@@ -57,6 +57,12 @@ func findSectionByHash(secs []*org.Section, hash string) *org.Section {
 
 // The database, with `query`'s file reading as just the subtree `hash` starts.
 func subtreeView(base common.ODb, query, hash string) (common.ODb, error) {
+	return subtreeViewFor(base, query, hash, "")
+}
+
+// subtreeViewFor is subtreeView for one exporter, which decides how
+// citations are written (cite.go).
+func subtreeViewFor(base common.ODb, query, hash, backend string) (common.ODb, error) {
 	f := GetDb().FindByFile(query)
 	if f == nil || f.Doc == nil {
 		return nil, fmt.Errorf("no org file called %s", query)
@@ -94,11 +100,26 @@ func subtreeView(base common.ODb, query, hash string) (common.ODb, error) {
 	for _, n := range sec.Headline.Title {
 		title += n.String()
 	}
+	// Over the whole file, so the subtree's blocks still inherit from the
+	// headings above it; it adds no lines, so start and end hold.
+	if babelExportsMayInherit(strings.Join(lines, "\n")) {
+		lines, _ = babelExportLines(f.Filename, lines)
+	}
 	body := lines[start:end]
 	if transclusionOn() {
 		body, _ = expandTransclusions(f.Filename, body, true)
 	}
 	text := "#+TITLE: " + strings.TrimSpace(title) + "\n" + strings.Join(preamble, "\n") + "\n" + strings.Join(body, "\n") + "\n"
+	if optionsMayApply(text) {
+		if out, ok := exportOptionLines(f, strings.Split(text, "\n")); ok {
+			text = strings.Join(out, "\n")
+		}
+	}
+	if citeMayApply(text) {
+		if out, ok := citeExportLines(f.Filename, strings.Split(text, "\n"), backend); ok {
+			text = strings.Join(out, "\n")
+		}
+	}
 	doc := org.New().Silent().Parse(strings.NewReader(text), f.Filename)
 	return &subtreeDb{ODb: base, file: &common.OrgFile{Filename: f.Filename, Doc: doc}}, nil
 }

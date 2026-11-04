@@ -180,6 +180,11 @@ func setHeadingParts(hash string, prio *string, tags *[]string) error {
 	if !ok {
 		return fmt.Errorf("could not read %s", f.Doc.Path)
 	}
+	if tags != nil {
+		// One tag of each of the file's { @home @work } sets.
+		kept := exclusiveTags(fileTagDefs(f), sec.Headline.Tags, *tags)
+		tags = &kept
+	}
 	lines[from] = setHeadlineParts(lines[from], sec.Headline.Status, prio, tags)
 	return writeLines(f.Doc.Path, lines)
 }

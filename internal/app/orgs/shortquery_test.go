@@ -279,3 +279,27 @@ SCHEDULED: <%s>
 		}
 	}
 }
+
+func TestOrgMatchStrings(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{`+work-boss+PRIORITY="A"|urgent`, `!IsArchived() && ((HasTags("work") && !HasTags("boss") && PropCompare("PRIORITY", "=", "A")) || (HasTags("urgent")))`},
+		{`work/NEXT|WAITING`, `!IsArchived() && (HasTags("work")) && ((IsStatus("NEXT") || IsStatus("WAITING")))`},
+		{`+project/!`, `!IsArchived() && (HasTags("project")) && (HasAStatus() && !IsDone())`},
+		{`Effort<2:00-@home`, `!IsArchived() && (PropCompare("EFFORT", "<", "2:00") && !HasTags("@home"))`},
+		{`CATEGORY={^cli}&LEVEL>1`, `!IsArchived() && (MatchProperty("CATEGORY", "^cli") && PropCompare("LEVEL", ">", "1"))`},
+		{`{^boss}`, `!IsArchived() && (HasTagMatching("^boss"))`},
+		{`SCHEDULED<="<+1w>"/-DONE`, `!IsArchived() && (PropCompare("SCHEDULED", "<=", "<+1w>")) && (!IsStatus("DONE"))`},
+	}
+	for _, c := range cases {
+		got, err := translateShort(c.in, shortNow)
+		if err != nil || got != c.want {
+			t.Errorf("%s:\n got %s (%v)\nwant %s", c.in, got, err, c.want)
+		}
+	}
+	// Short queries stay short.
+	for _, q := range []string{"due:<3d", "-:home:", "todo :work:", ":work:", "effort:<2h"} {
+		if _, ok := orgMatchToFull(q); ok {
+			t.Errorf("%s was read as an org match", q)
+		}
+	}
+}

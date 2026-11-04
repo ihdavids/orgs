@@ -719,7 +719,7 @@ func runInSession(j babelJob, r runner, name, program, collect string, timeout t
 		res.Msg = err.Error()
 		return res, nil
 	}
-	sessionResult(&res, rep, j.results(), collect, j.OrgPath)
+	sessionResult(&res, rep, j.results(), collect, &j)
 	if err != nil {
 		res.Ok, res.Msg = false, err.Error()
 	}
@@ -733,7 +733,8 @@ var pyReturnRe = regexp.MustCompile(`(?m)^return\b`)
 // value, a table, figures and a traceback, in the shapes runJob gives a
 // program's output - and, when there is more than one of them, all of them in
 // a :results: drawer, the way emacs-jupyter writes a cell's outputs.
-func sessionResult(res *common.CodeResult, rep sessionReply, want []string, collect string, orgPath string) {
+func sessionResult(res *common.CodeResult, rep sessionReply, want []string, collect string, j *babelJob) {
+	orgPath := j.OrgPath
 	text := ""
 	if collect != "value" {
 		text = rep.Out
@@ -758,7 +759,10 @@ func sessionResult(res *common.CodeResult, rep sessionReply, want []string, coll
 	res.Raw = strings.TrimRight(text, "\n")
 	links := []string{}
 	for _, f := range rep.Figures {
-		links = append(links, "[[file:"+relToOrg(f, orgPath)+"]]")
+		links = append(links, j.fileLink(relToOrg(f, orgPath)))
+		if err := j.chmodFile(f); err != nil {
+			res.Msg = err.Error()
+		}
 	}
 	// :results file and graphics say where a figure goes; they are not a
 	// shape for the text.

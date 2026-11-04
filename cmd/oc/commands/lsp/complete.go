@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/biblio"
 )
 
 var (
@@ -52,6 +53,10 @@ func (s *server) complete(p positionParams) CompletionList {
 
 	if m := linkCtxRe.FindStringSubmatch(before); m != nil {
 		list.Items = s.linkItems(d, m[1], line[cur:], replace)
+		return list
+	}
+	if m := citeCtxRe.FindStringSubmatch(before); m != nil {
+		list.Items = s.citeItems(d, m[1], replace)
 		return list
 	}
 	if starsRe.MatchString(line) {
@@ -351,4 +356,29 @@ func (s *server) linesOf(path string) []string {
 		return strings.Split(res.Msg, "\n")
 	}
 	return nil
+}
+
+// Inside [cite:...] after an @: the works the file's bibliographies have.
+var citeCtxRe = regexp.MustCompile(`\[cite(?:/[^:\]\s]*)?:[^\]]*@([^\s;\]@,]*)$`)
+
+func (s *server) citeItems(d *document, typed string, replace func(int, string) *TextEdit) []CompletionItem {
+	type answer struct {
+		Ok   bool
+		Keys []biblio.Key
+	}
+	file := s.remote(d.path)
+	res, err := getCached[answer](s.api, "cite:"+file, "cite/keys", map[string]string{"file": file})
+	if err != nil {
+		return nil
+	}
+	out := []CompletionItem{}
+	for i, k := range res.Keys {
+		if typed != "" && !strings.Contains(strings.ToLower(k.Key+" "+k.Author+" "+k.Title), strings.ToLower(typed)) {
+			continue
+		}
+		out = append(out, CompletionItem{Label: k.Key, Kind: compRefer, SortText: pad(i),
+			Detail:     strings.TrimSpace(k.Author + " " + k.Year + " · " + k.Title),
+			FilterText: k.Key + " " + k.Author + " " + k.Title, TextEdit: replace(len(typed), k.Key)})
+	}
+	return out
 }

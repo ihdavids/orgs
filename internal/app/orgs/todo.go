@@ -58,6 +58,9 @@ package orgs
   - *IsTask* - Syntatical sugar for the following: "!IsArchived() && IsTodo() && !IsProject()"
   - *IsNextTask* - Check if a headline has a NEXT action status. This is GTD support and uses the defaultNextStatus value and #+NEXT comment
   - *IsBlockedProject* - Check if this is a project heading and it DOES NOT have a child marked NEXT.
+  - *PropCompare* - =PropCompare("EFFORT", "<", "2:00")=: a property's value against a value, as org's property match compares: as dates when the value is one (=<2026-11-01>=, =<today>=, =<+1w>=), as numbers when both are numbers, as durations (=2:30=, =2h=), else as text. Operators =<= =<== =>= =>== ===, =!==. The special properties =TODO=, =PRIORITY=, =LEVEL=, =ITEM=, =CATEGORY=, =TAGS=, =SCHEDULED=, =DEADLINE= and =CLOSED= work too. A heading without the property is only =!== anything.
+  - *InheritedProperty* - =InheritedProperty("CLIENT")= or =InheritedProperty("CLIENT", "acme")=: the property set on this heading, one above it, or the file's =#+PROPERTY:= lines. =HasProperty= and =MatchProperty= inherit only the names =propertyInheritance= lists (=["*"]= for all), and =CATEGORY=.
+  - *IsBlocked* - An open task that cannot be marked done yet: a child heading is still open, or, under a parent with an =ORDERED= property, a sibling above it is (org's TODO dependencies; =:NOBLOCKING: t= is never blocked).
   - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
   - *IsPriority* - Check if the priority matches a specific value.
   - *HasProperty* - Returns true if the headline has the specific property
@@ -676,7 +679,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			ok := true
 			for _, tagi := range args {
 				tag := tagi.(string)
-				if ok = ok && HasTag(tag, p, exp.Doc); !ok {
+				if ok = ok && hasTagOrGroup(tag, p, exp.File); !ok {
 					break
 				}
 			}
@@ -741,6 +744,18 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		},
 		// A heading on one of its file's finished keywords (DONE, CANCELLED,
 		// what #+TODO puts after the bar): what an archive sweep looks for.
+		// IsBlocked() - an open task that could not be marked done yet: a
+		// child heading is open, or, under an ORDERED parent, a sibling above.
+		"IsBlocked": func(args ...interface{}) (interface{}, error) {
+			p := exp.Sec
+			if p == nil || p.Headline == nil || p.Headline.Status == "" {
+				return false, nil
+			}
+			if _, active := keywordSets(exp.File); !active[p.Headline.Status] {
+				return false, nil
+			}
+			return todoBlocker(exp.File, p, false) != "", nil
+		},
 		"IsDone": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
 			if p == nil || p.Headline == nil || p.Headline.Status == "" {
@@ -901,12 +916,41 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			return MissedHabit(exp.Sec, time.Now()), nil
 		},
 		"HasProperty": func(args ...interface{}) (interface{}, error) {
-			p := exp.Sec
-			s := args[0].(string)
-			if _, ok := p.Headline.Properties.Get(s); ok {
-				return true, nil
+			s, _ := args[0].(string)
+			_, ok := propValueOf(exp.File, exp.Sec, s, propInherits(s))
+			return ok, nil
+		},
+		// PropCompare("EFFORT", "<", "2:00") - org's property comparison: as
+		// dates when the value is one (<2026-11-01>, <today>, <+1w>), as
+		// numbers, as durations, else as text. Inherits as HasProperty does.
+		"PropCompare": func(args ...interface{}) (interface{}, error) {
+			a, err := stringArgs(args, 3, `PropCompare needs a property, an operator and a value: PropCompare("EFFORT", "<", "2:00")`)
+			if err != nil {
+				return false, err
 			}
-			return false, nil
+			switch a[1] {
+			case "<", "<=", "=<", ">", ">=", "=>", "=", "==", "!=", "<>":
+			default:
+				return false, fmt.Errorf("PropCompare: %q is not an operator: <, <=, >, >=, =, !=", a[1])
+			}
+			val, ok := propValueOf(exp.File, exp.Sec, a[0], propInherits(a[0]))
+			return propCompare(val, ok, a[1], a[2], time.Now()), nil
+		},
+		// InheritedProperty(NAME) or InheritedProperty(NAME, REGEX) - the value
+		// from this heading, the ones above it or the file's #+PROPERTY: lines,
+		// whatever propertyInheritance says.
+		"InheritedProperty": func(args ...interface{}) (interface{}, error) {
+			if len(args) < 1 || len(args) > 2 {
+				return false, fmt.Errorf(`InheritedProperty needs a property name and maybe a pattern: InheritedProperty("CLIENT", "acme")`)
+			}
+			name, _ := args[0].(string)
+			val, ok := propValueOf(exp.File, exp.Sec, name, true)
+			if !ok || len(args) == 1 {
+				return ok, nil
+			}
+			pat, _ := args[1].(string)
+			m, err := regexp.MatchString(pat, val)
+			return err == nil && m, nil
 		},
 		// MatchProperty(NAME, REGEX)
 		// returns true if the property value matches the implied regex
@@ -915,7 +959,7 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			if err != nil {
 				return false, err
 			}
-			if val, ok := exp.Sec.Headline.Properties.Get(a[0]); ok {
+			if val, ok := propValueOf(exp.File, exp.Sec, a[0], propInherits(a[0])); ok {
 				if ok, err := regexp.MatchString(a[1], val); err == nil && ok {
 					return true, nil
 				}
@@ -1720,6 +1764,9 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	if f == nil {
 		return common.Result{Ok: false}, fmt.Errorf("no file for that heading")
 	}
+	if why := statusBlocked(f, sec, query.Value); why != "" && !query.Force {
+		return common.Result{Ok: false, Msg: why}, fmt.Errorf("%s", why)
+	}
 	res, err := applyStatusChange(f, sec, query.Value, query.Note, time.Now())
 	if err != nil {
 		return common.Result{Ok: false}, err
@@ -2011,24 +2058,25 @@ func remove(slice []string, s string) []string {
 	return slice
 }
 
+// ToggleTag adds a tag to a heading or takes it off, as an edit of the
+// headline alone (setHeadingParts). Adding one of a file's mutually exclusive
+// tags ({ @home @work }) takes the others off. It used to rewrite the whole
+// file through WriteOutOrgFile (see Traps: line edits).
 func ToggleTag(query *common.TodoItemChange) (common.Result, error) {
-	fmt.Fprintf(os.Stderr, "TOGGLE TAG CALLED: %s\n", query.Value)
-	didWrite := true
-	if s := GetDb().FindByHash((string)(query.Hash)); s != nil {
-		// Change a tag
-		f := GetDb().FileFromSection(s)
-		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
-			if contains(n.Tags, query.Value) {
-				n.Tags = remove(n.Tags, query.Value)
-			} else {
-				n.Tags = append(n.Tags, query.Value)
-			}
-			return *n
-		}); set {
-			didWrite = WriteOutOrgFile(f)
-		}
+	s := GetDb().FindByHash(query.Hash)
+	if s == nil || s.Headline == nil {
+		return common.Result{Ok: false, Msg: "no heading with that hash"}, nil
 	}
-	return common.Result{Ok: didWrite}, nil
+	tags := append([]string{}, s.Headline.Tags...)
+	if contains(tags, query.Value) {
+		tags = remove(tags, query.Value)
+	} else {
+		tags = append(tags, query.Value)
+	}
+	if err := setHeadingParts(query.Hash, nil, &tags); err != nil {
+		return common.Result{Ok: false, Msg: err.Error()}, nil
+	}
+	return common.Result{Ok: true}, nil
 }
 
 func Reformat(query *common.FileList) (common.Result, error) {

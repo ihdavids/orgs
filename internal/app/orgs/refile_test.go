@@ -25,6 +25,7 @@ func loadOrg(t *testing.T, files map[string]string) map[string]string {
 	paths := map[string]string{}
 	for name, text := range files {
 		p := filepath.Join(dir, name)
+		os.MkdirAll(filepath.Dir(p), 0755)
 		if err := os.WriteFile(p, []byte(text), 0644); err != nil {
 			t.Fatalf("writing %s: %v", name, err)
 		}

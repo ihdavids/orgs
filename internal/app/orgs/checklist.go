@@ -370,6 +370,7 @@ func PostChecklistToggle(w http.ResponseWriter, r *http.Request) {
 		box = "X"
 	}
 	lines[row] = fmt.Sprintf("%s%s [%s] %s", m[1], m[2], box, m[4])
+	lines = refreshCookiesIn(filename, lines, row)
 
 	if err := os.WriteFile(filename, []byte(strings.Join(lines, "\n")+"\n"), 0644); err != nil {
 		res.Msg = err.Error()
@@ -610,6 +611,7 @@ func PostChecklistEdit(w http.ResponseWriter, r *http.Request) {
 		checklistJson(w, res)
 		return
 	}
+	lines = refreshCookiesIn(filename, lines, from)
 
 	if err := os.WriteFile(filename, []byte(strings.Join(lines, "\n")+"\n"), 0644); err != nil {
 		res.Msg = err.Error()

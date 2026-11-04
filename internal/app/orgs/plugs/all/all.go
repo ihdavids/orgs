@@ -23,8 +23,10 @@ import (
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/typst"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/notify"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/revealjs"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/rss"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/tangle"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todoist"
+	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/text"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/todotxt"
 	_ "github.com/ihdavids/orgs/internal/app/orgs/plugs/webslides"
 )

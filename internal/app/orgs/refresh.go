@@ -497,7 +497,7 @@ func runRefreshEntry(en refreshEntry) (bool, string, error) {
 			if it.row != row || it.kind != en.Kind {
 				continue
 			}
-			ran, err := runItem(f.Filename, it, true)
+			ran, err := runItem(f.Filename, it, true, false)
 			if err != nil {
 				return false, "", err
 			}
@@ -693,42 +693,95 @@ func exportFileStamped(filename string) (*common.OrgFile, string) {
 // exportFileWith is exportFileStamped, refreshing or not: `orgs export
 // -no-refresh` still wants its transclusions.
 func exportFileWith(filename string, refresh bool) (*common.OrgFile, string) {
+	return exportFileFor(filename, refresh, "")
+}
+
+// exportFileFor is exportFileWith for one exporter (its name: html, latex,
+// beamer...), which decides how citations are written (cite.go); "" is any.
+func exportFileFor(filename string, refresh bool, backend string) (*common.OrgFile, string) {
+	f := GetDb().FindByFile(filename)
+	out, changed, refreshed := exportLinesFor(filename, refresh, backend)
+	if !changed {
+		return f, ""
+	}
+	var doc *org.Document
+	if refreshed {
+		// The blocks' new text read as a document, with the tables' new
+		// values already in it.
+		doc, _, _, _ = recalcTableLines(f.Filename, out)
+	} else {
+		doc = GetConfig().Silent().Parse(strings.NewReader(strings.Join(out, "\n")+"\n"), f.Filename)
+	}
+	return &common.OrgFile{Filename: f.Filename, Doc: doc}, refreshHash(strings.Join(out, "\n"))
+}
+
+// exportTextFor is the export copy as org text, tables recalculated - for a
+// converter that reads org itself (pandoc). ok is false when the copy is the
+// file as it is.
+func exportTextFor(filename string, refresh bool, backend string) (string, bool) {
+	out, changed, refreshed := exportLinesFor(filename, refresh, backend)
+	if !changed {
+		return "", false
+	}
+	if refreshed {
+		if _, _, recalced, _ := recalcTableLines(filename, out); recalced != nil {
+			out = recalced
+		}
+	}
+	return strings.Join(out, "\n") + "\n", true
+}
+
+// exportLinesFor is the copy's lines: refreshed, transcluded, with inherited
+// :exports, citations and #+OPTIONS: written in. changed is false when it is
+// the file as it stands; refreshed when the refresh pass ran.
+func exportLinesFor(filename string, refresh bool, backend string) (out []string, changed, refreshed bool) {
 	f := GetDb().FindByFile(filename)
 	if f == nil || f.Doc == nil {
-		return f, ""
+		return nil, false, false
 	}
 	b, err := os.ReadFile(f.Filename)
 	if err != nil {
-		return f, ""
+		return nil, false, false
 	}
 	tx := transclusionOn() && hasTransclude(string(b))
+	ex := babelExportsMayInherit(string(b))
+	ct := citeMayApply(string(b))
+	op := optionsMayApply(string(b))
+	pl := strings.Contains(strings.ToLower(string(b)), "#+plot:")
 	var lines []string
 	if refresh && refreshableRe.Match(b) {
 		if r, err := refreshFile(f.Filename, false); err == nil && r.doc != nil && r.changed {
 			lines = r.lines
 		}
 	}
-	if lines == nil && !tx {
-		return f, ""
+	if lines == nil && !tx && !ex && !ct && !op && !pl {
+		return nil, false, false
 	}
-	if !tx {
-		// The blocks' new text read as a document, with the tables' new
-		// values already in it.
-		doc, _, _, _ := recalcTableLines(f.Filename, lines)
-		return &common.OrgFile{Filename: f.Filename, Doc: doc}, refreshHash(strings.Join(lines, "\n"))
-	}
-	refreshed := lines != nil
+	refreshed = lines != nil
 	if !refreshed {
 		lines = strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
 	}
-	out, _ := expandTransclusions(f.Filename, lines, true)
-	var doc *org.Document
-	if refreshed {
-		doc, _, _, _ = recalcTableLines(f.Filename, out)
-	} else {
-		doc = GetConfig().Silent().Parse(strings.NewReader(strings.Join(out, "\n")+"\n"), f.Filename)
+	out = lines
+	if tx {
+		out, _ = expandTransclusions(f.Filename, lines, true)
 	}
-	return &common.OrgFile{Filename: f.Filename, Doc: doc}, refreshHash(strings.Join(out, "\n"))
+	// After transclusion: transcluded blocks are read where they now stand,
+	// as Emacs would export them.
+	exChanged, citeChanged, optChanged := false, false, false
+	if ex {
+		out, exChanged = babelExportLines(f.Filename, out)
+	}
+	if ct {
+		out, citeChanged = citeExportLines(f.Filename, out, backend)
+	}
+	if op {
+		out, optChanged = exportOptionLines(f, out)
+	}
+	plotChanged := false
+	if pl {
+		out, plotChanged = plotExportLines(f.Filename, out)
+	}
+	return out, refreshed || tx || exChanged || citeChanged || optChanged || plotChanged, refreshed
 }
 
 // exportView is the database with query's file read as exportFile reads it.
@@ -737,11 +790,16 @@ func exportView(base common.ODb, query string) common.ODb {
 }
 
 func exportViewWith(base common.ODb, query string, refresh bool) common.ODb {
+	return exportViewFor(base, query, refresh, "")
+}
+
+// exportViewFor is exportViewWith for one exporter (exportFileFor).
+func exportViewFor(base common.ODb, query string, refresh bool, backend string) common.ODb {
 	f := GetDb().FindByFile(query)
 	if f == nil {
 		return base
 	}
-	ef, _ := exportFileWith(query, refresh)
+	ef, _ := exportFileFor(query, refresh, backend)
 	if ef == nil || ef == f {
 		return base
 	}

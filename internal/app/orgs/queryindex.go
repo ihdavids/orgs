@@ -58,6 +58,11 @@ func fileSummaries() []fileSummary {
 				sum.tags[t] = true
 			}
 		}
+		// A group tag of the file's #+TAGS: matches its members (tagdefs.go),
+		// so the file may hold it without any heading carrying the word.
+		for g := range fileTagDefs(f).groups {
+			sum.tags[g] = true
+		}
 		for _, sec := range flattenSections(f) {
 			if sec == nil || sec.Headline == nil {
 				continue

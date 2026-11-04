@@ -43,7 +43,14 @@ package orgs
   | =status:next= =priority:a=    | IsStatus("NEXT") IsPriority("A")            |
   | =client:acme=                 | any other key is a property: MatchProperty("CLIENT", ...) |
   | =client:*=                    | HasProperty("CLIENT")                       |
+  | =effort:<2h= =level:>=2= =scheduled:<<+1w>= | PropCompare("EFFORT", "<", "2h"): =<= =<== =>= =>== ===, =!== |
   | ={{ WorkTasks }}=             | a yaml filter, as in the full form          |
+
+  Org's own match strings work too, as an agenda's tags search writes them:
+  =+work-boss+PRIORITY="A"|urgent=, =work/NEXT|WAITING=, =+project/!=,
+  =Effort<2:00=, =CATEGORY={^cli}=, =SCHEDULED<="<+1w>"/-DONE=. One is told
+  from a short query by having no spaces and starting with =+= or =-= or using
+  one of === =<= =>= =/= ={= =&=.
 
   A query is read as the full form when it calls a function (=IsTodo()=) or
   uses =&&= or =||=, so every query written before keeps its meaning.
@@ -165,6 +172,10 @@ func shortToFull(q string) (string, error) {
 }
 
 func translateShort(q string, now time.Time) (string, error) {
+	// An org match string (orgmatch.go) before a short query.
+	if full, ok := orgMatchToFull(q); ok {
+		return full, nil
+	}
 	toks, err := lexShort(q)
 	if err != nil {
 		return "", err
@@ -620,6 +631,10 @@ func (p *shortParser) keyTerm(k, v string) (string, error) {
 	if v == "" || v == "*" {
 		return qcall("HasProperty", prop), nil
 	}
+	// effort:<2h, scheduled:<today>, level:>=2: a comparison (PropCompare).
+	if m := propOpRe.FindStringSubmatch(v); m != nil {
+		return qcall("PropCompare", prop, m[1], strings.Trim(m[2], `"`)), nil
+	}
 	pat, err := textPattern(v)
 	if err != nil {
 		return "", fmt.Errorf("%s: %v", k, err)
@@ -669,6 +684,8 @@ func compare(f, op, n string) string {
 
 // qcall writes a function call with its arguments as govaluate strings: a
 // backslash escapes anything there, so a regex's own are doubled.
+var propOpRe = regexp.MustCompile(`^(<=|>=|<>|!=|<|>|=)(.+)$`)
+
 func qcall(f string, args ...string) string {
 	q := make([]string, len(args))
 	for i, a := range args {

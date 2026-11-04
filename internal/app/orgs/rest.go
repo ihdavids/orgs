@@ -134,6 +134,9 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/query/explain", RequestQueryExplain).Methods("GET") // shortquery.go
 	api.HandleFunc("/agenda", RequestAgenda).Methods("GET")            // what lands on each day (agenda.go)
 	api.HandleFunc("/agenda/nodes", RequestAgendaNodes).Methods("GET") // a query's headings with their agenda facts
+	api.HandleFunc("/agenda/views", RequestAgendaViews).Methods("GET")      // built-in, yaml and saved agenda views (agendaview.go)
+	api.HandleFunc("/ext/agenda/views", PostAgendaViews).Methods("POST")    // the person's own views, the whole list
+	api.HandleFunc("/agenda/view", RequestAgendaView).Methods("GET")        // one view answered, or exported (format=txt|html|ics)
 	api.HandleFunc("/lookuphash", RequestHash)
 	api.HandleFunc("/todohtml/{hash}", RequestFullTodoHtml)
 	api.HandleFunc("/logbook/{hash}", RequestLogbook)
@@ -170,6 +173,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/refilefiles", RequestRefileTargets)
 	api.HandleFunc("/refile", PostRefile).Methods("POST")
 	api.HandleFunc("/archive", PostArchive).Methods("POST")
+	api.HandleFunc("/cite/keys", RequestCiteKeys).Methods("GET")                   // a file's citable works, for completing [cite:@...]
 	api.HandleFunc("/move", PostMove).Methods("POST")                       // refile, copy or archive, one heading or many
 	api.HandleFunc("/refile/targets", RequestRefileTargets2).Methods("GET") // where a heading can go, with hashes
 	api.HandleFunc("/copy", PostCopy).Methods("POST")                       // a refile that leaves the original
@@ -178,6 +182,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/setexclusivemarker", PostMarker).Methods("POST")
 	api.HandleFunc("/exclusivemarker", RequestMarker)
 	api.HandleFunc("/update", PostUpdate).Methods("POST")
+	registerTimerRoutes(api) // the relative timer, idle time (orgtimer.go)
 	api.HandleFunc("/clockin", PostClockIn).Methods("POST")
 	api.HandleFunc("/clockout", PostClockOut).Methods("POST")
 	api.HandleFunc("/clock", RequestClock)
@@ -849,7 +854,7 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	// subtree=<hash>: export that heading and what is under it, not the file.
 	var from common.ODb = db
 	if sub := r.URL.Query().Get("subtree"); sub != "" {
-		view, err := subtreeView(db, query, sub)
+		view, err := subtreeViewFor(db, query, sub, ptype)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(common.ResultMsg{Ok: false, Msg: err.Error()})
@@ -861,7 +866,7 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	// blocks refreshed and its formulas run (refresh.go) - in memory, so an
 	// export never rewrites the file. A subtree export reads the file itself.
 	if r.URL.Query().Get("subtree") == "" {
-		from = exportViewWith(from, query, r.URL.Query().Get("refresh") != "f" && Conf().Server.Refresh.ExportRefresh())
+		from = exportViewFor(from, query, r.URL.Query().Get("refresh") != "f" && Conf().Server.Refresh.ExportRefresh(), ptype)
 	}
 	var res common.ResultMsg
 	if local == "t" {
@@ -1272,9 +1277,15 @@ func PostChangeStatus(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		var reply common.Result
 		reply, err = ChangeStatus(&args)
-		if err == nil {
+		switch {
+		case err == nil:
 			json.NewEncoder(w).Encode(reply)
-		} else {
+		case reply.Msg != "":
+			// Refused for a reason somebody can act on (enforceTodoDependencies):
+			// a conflict, said, not a server failure.
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(reply)
+		default:
 			answerErr(w, err)
 		}
 	} else {

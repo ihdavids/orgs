@@ -344,3 +344,30 @@ func TestTheEditorsTokenIsSent(t *testing.T) {
 		t.Errorf("after the change %q", got)
 	}
 }
+
+func TestCiteCompletion(t *testing.T) {
+	asked := ""
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/cite/keys" {
+			asked = r.URL.Query().Get("file")
+			json.NewEncoder(w).Encode(map[string]any{"Ok": true, "Keys": []map[string]string{
+				{"Key": "doe2020", "Author": "Doe and Roe", "Year": "2020", "Title": "Typed Holes"},
+				{"Key": "who2019", "Author": "World Health Organization", "Year": "2019", "Title": "Report"}}})
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	cl := start(t, srv.URL, options{PathMap: map[string]string{"/srv/org": "/Users/me/org"}})
+	uri := "file:///Users/me/org/paper.org"
+	cl.open(uri, "As [cite:see @doe2020; @wor\n")
+	var list CompletionList
+	cl.call("textDocument/completion", map[string]interface{}{"textDocument": map[string]string{"uri": uri},
+		"position": Position{Line: 0, Character: 27}}, &list)
+	if len(list.Items) != 1 || list.Items[0].Label != "who2019" || list.Items[0].TextEdit.NewText != "who2019" || list.Items[0].TextEdit.Range.Start.Character != 24 {
+		t.Errorf("items: %+v", list.Items)
+	}
+	if asked != "/srv/org/paper.org" {
+		t.Errorf("asked about %q", asked)
+	}
+}

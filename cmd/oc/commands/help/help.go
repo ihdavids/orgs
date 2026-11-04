@@ -63,7 +63,7 @@ var groups = []struct {
 		"projects", "gantt", "kanban", "cols", "filter", "filters", "tags", "taggroups", "show", "log"}},
 	{"Changing a heading", []string{"todo", "sched", "deadline", "tag", "prop", "rename",
 		"note", "check", "list", "tb", "archive", "rm", "ref", "cap", "listcap", "new", "daypage", "paste"}},
-	{"The clock", []string{"clockin", "clockout", "clocks", "clocktable", "timesheet", "invoice"}},
+	{"The clock", []string{"clockin", "clockout", "clocks", "clocktable", "timesheet", "invoice", "timer"}},
 	{"Reports", []string{"standup", "recap"}},
 	{"Habits", []string{"habits"}},
 	{"Writing", []string{"write", "lint", "ask", "models"}},

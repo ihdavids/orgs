@@ -111,6 +111,9 @@ const (
 // One heading landing on one day.
 type AgendaEntry struct {
 	Node int    // index into AgendaResult.Nodes
+	// The title for this day when it is not the heading's: a diary sexp
+	// anniversary's "%d" filled in ("Arthur is 78"). Empty otherwise.
+	Text string `json:",omitempty"`
 	Kind string // timestamp, scheduled, deadline, closed
 	// When it is on this day: for a timed entry the day's start and end
 	// (a range clipped to the day), else the day itself.

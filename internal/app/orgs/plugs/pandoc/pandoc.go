@@ -103,6 +103,26 @@ func IsBinary(format string) bool { return binary[Writer(format)] }
 
 // Convert runs pandoc over an org file and answers with what it wrote.
 func (self *Exporter) Convert(file, format string) ([]byte, error) {
+	return self.convert(file, filepath.Dir(file), format)
+}
+
+// ConvertText runs pandoc over org text that is not a file on disk - the
+// server's export copy, with transclusions, citations and the rest written
+// in - reading pictures from dir, where the org file is.
+func (self *Exporter) ConvertText(text, dir, format string) ([]byte, error) {
+	tmp, err := os.MkdirTemp("", "orgspandocin")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(tmp)
+	in := filepath.Join(tmp, "in.org")
+	if err := os.WriteFile(in, []byte(text), 0o600); err != nil {
+		return nil, err
+	}
+	return self.convert(in, dir, format)
+}
+
+func (self *Exporter) convert(file, resources, format string) ([]byte, error) {
 	w := Writer(format)
 	if w == "" {
 		w = Writer(self.Format)
@@ -121,7 +141,7 @@ func (self *Exporter) Convert(file, format string) ([]byte, error) {
 	defer os.RemoveAll(dir)
 	out := filepath.Join(dir, "out."+Extension(w))
 
-	args := []string{"-f", "org", "-t", w, "-o", out, "--resource-path", filepath.Dir(file)}
+	args := []string{"-f", "org", "-t", w, "-o", out, "--resource-path", resources}
 	if !IsBinary(w) && w != "plain" {
 		args = append(args, "--standalone")
 	}
@@ -135,7 +155,8 @@ func (self *Exporter) Convert(file, format string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, bin, args...)
-	cmd.Dir = filepath.Dir(file)
+	// Relative links and #+INCLUDE: are read from where the org file is.
+	cmd.Dir = resources
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {

@@ -728,6 +728,13 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 		}
 	}
 
+	// #+LATEX_HEADER: and #+LATEX_HEADER_EXTRA: lines, as org puts them in the
+	// preamble (citations' \usepackage{biblatex} come this way).
+	for _, key := range []string{"LATEX_HEADER", "LATEX_HEADER_EXTRA"} {
+		if h := strings.TrimSpace(d.Get(key)); h != "" {
+			w.WriteString(h + "\n")
+		}
+	}
 	w.WriteString("\n" + `\begin{document}` + "\n")
 	if w.HaveTitle(d) {
 		w.WriteString(`\maketitle` + "\n")

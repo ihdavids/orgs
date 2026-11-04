@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ihdavids/go-org/org"
 
@@ -88,9 +89,11 @@ func TestWhichOperatorsRollUp(t *testing.T) {
 		"max": "max", ":max": "max",
 		"mean": "mean", ":mean": "mean",
 		"+;%.1f": "sum",
+		// Read as text (textSummary).
+		"X": "X", "X/": "X/", "X%": "X%", "est+": "est+",
 		// Not implemented, and a column carrying one must simply not roll up
 		// rather than roll up wrongly.
-		"X": "", "X/": "", "X%": "", "@min": "", "": "",
+		"@min": "@min", "@max": "@max", "@mean": "@mean", "": "",
 	} {
 		if got := summaryOp(op); got != want {
 			t.Errorf("%q: got %q want %q", op, got, want)
@@ -456,5 +459,58 @@ func TestClearingAProperty(t *testing.T) {
 				t.Errorf("the empty drawer was left behind:\n%s", body)
 			}
 		})
+	}
+}
+
+// org's checkbox and estimate summaries (org-columns--summary-checkbox,
+// -checkbox-count, -estimate).
+func TestCheckboxAndEstimateSummaries(t *testing.T) {
+	for _, c := range []struct{ op, want string }{{"X", "[-]"}, {"X/", "[1/3]"}, {"X%", "[33%]"}} {
+		spec := ParseColumnSpec("%ITEM %POINTS{" + c.op + "}")
+		root := leaf("P", "")
+		root.children = []*columnNode{leaf("a", "[X]"), leaf("b", "[ ]"), leaf("c", "[ ]"), leaf("d", "")}
+		fill(root, spec)
+		summarise(root, spec)
+		if got := root.row.Cells[1].Value; got != c.want {
+			t.Errorf("%s: %q want %q", c.op, got, c.want)
+		}
+	}
+	spec := ParseColumnSpec("%ITEM %POINTS{X}")
+	root := leaf("P", "")
+	root.children = []*columnNode{leaf("a", "[X]"), leaf("b", "[x]")}
+	fill(root, spec)
+	summarise(root, spec)
+	if got := root.row.Cells[1].Value; got != "[X]" {
+		t.Errorf("all ticked: %q", got)
+	}
+	// Two 2-4 estimates: means 3+3, variances 1+1, so 6 ± 1.41 = 5-7.
+	spec = ParseColumnSpec("%ITEM %POINTS{est+}")
+	root = leaf("P", "")
+	root.children = []*columnNode{leaf("a", "2-4"), leaf("b", "2-4"), leaf("c", "")}
+	fill(root, spec)
+	summarise(root, spec)
+	if got := root.row.Cells[1].Value; got != "5-7" {
+		t.Errorf("est+: %q", got)
+	}
+	if spec[1].Numbers != "" {
+		t.Errorf("est+ is read as text, got %q", spec[1].Numbers)
+	}
+}
+
+func TestAgeSummaries(t *testing.T) {
+	now := time.Now()
+	stamp := func(d time.Duration) string { return "[" + now.Add(-d).Format("2006-01-02 Mon 15:04") + "]" }
+	for op, want := range map[string]string{"@min": "1d 00h 00m", "@max": "3d 00h 00m", "@mean": "2d 00h 00m"} {
+		spec := ParseColumnSpec("%ITEM %POINTS{" + op + "}")
+		root := leaf("P", "")
+		root.children = []*columnNode{leaf("a", stamp(24*time.Hour)), leaf("b", stamp(72*time.Hour)), leaf("c", "")}
+		fill(root, spec)
+		summarise(root, spec)
+		if got := root.row.Cells[1].Value; !strings.HasPrefix(got, want) {
+			t.Errorf("%s: %q, want %q…", op, got, want)
+		}
+	}
+	if got := formatAge(3*86400 + 4*3600 + 5*60 + 6); got != "3d 04h 05m 06s" {
+		t.Errorf("format: %s", got)
 	}
 }

@@ -336,6 +336,9 @@ var SummaryOperators = []Suggestion{
 	{":", "sum of times (H:MM)"}, {"+", "sum of numbers"}, {"$", "sum, as money"},
 	{"min", "smallest number"}, {"max", "largest number"}, {"mean", "average number"},
 	{":min", "shortest time"}, {":max", "longest time"}, {":mean", "average time"},
+	{"X", "checkbox: [X] all, [-] some, [ ] none"}, {"X/", "checkboxes ticked, [n/m]"}, {"X%", "checkboxes ticked, [n%]"},
+	{"est+", "low-high estimates added"},
+	{"@min", "youngest timestamp's age"}, {"@max", "oldest timestamp's age"}, {"@mean", "mean age of the timestamps"},
 }
 
 var ColumnOptions = []Suggestion{

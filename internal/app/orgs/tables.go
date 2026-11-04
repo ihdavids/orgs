@@ -232,6 +232,7 @@ func tableData(ref *tableRef, lines []string) *common.TableData {
 		ColNames:     ref.Table.ColNames,
 		Params:       ref.Table.Params,
 		Indent:       indent,
+		Plot:         plotLineAbove(lines, ref.Table.Pos.Row),
 	}
 }
 

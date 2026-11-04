@@ -74,6 +74,9 @@ type foundLink struct {
 // Everything the link endpoints serve, built in one pass over the database.
 type linkIndex struct {
 	reload uint64
+	// The database it was built from: a fresh one starts its ReloadIndex
+	// again, so the counter alone would hand back another database's links.
+	db *OrgDb
 	links  []common.OrgLink
 	// Indices into links, so the same link can be looked up from either end.
 	fromFile map[string][]int // links written in this file
@@ -816,10 +819,11 @@ func getLinkIndex() *linkIndex {
 	db := GetDb()
 	linkCacheLock.Lock()
 	defer linkCacheLock.Unlock()
-	if linkCache != nil && linkCache.reload == db.ReloadIndex {
+	if linkCache != nil && linkCache.reload == db.ReloadIndex && linkCache.db == db {
 		return linkCache
 	}
 	linkCache = buildLinkIndex(db)
+	linkCache.db = db
 	return linkCache
 }
 

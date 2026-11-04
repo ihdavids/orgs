@@ -63,6 +63,11 @@ func FillCaptureTemplateAutos(temps []common.CaptureTemplate, username string) [
 		if temps[i].Template == "" {
 			continue
 		}
+		// A template written with org's %-escapes is read into orgs's grammar
+		// first (orgcapture.go), so every client sees one grammar.
+		if common.IsOrgCaptureTemplate(temps[i].Template) {
+			temps[i].Template = common.OrgCaptureToOrgs(temps[i].Template, now)
+		}
 		temps[i].Template = common.CapExpandAutos(temps[i].Template, now, username)
 	}
 	return temps

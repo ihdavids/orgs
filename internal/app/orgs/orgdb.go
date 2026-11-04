@@ -867,7 +867,12 @@ func (self *OrgDb) CreateOrgFileFromTemplate(fname string, title string, templat
 		if len(answers) > 0 {
 			given = answers[0]
 		}
-		data := Conf().PlugManager.Tempo.RenderTemplate(template, newFileContext(fname, title, given, false))
+		data, err := Conf().PlugManager.Tempo.RenderTemplateErr(template, newFileContext(fname, title, given, false))
+		if err != nil {
+			// The complaint used to be written as the file's first line.
+			fmt.Fprintf(os.Stderr, "new file %s: template %q: %v; starting it with a title only\n", fname, template, err)
+			data = "#+TITLE: " + title + "\n"
+		}
 		fmt.Fprintf(os.Stderr, "WRITING ORG FILE %s\n", fname)
 		// A capture filename may name a folder that is not there yet
 		// (tmp/{{shortuid}}.org).

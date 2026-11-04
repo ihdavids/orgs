@@ -114,7 +114,7 @@ const orgDay = "2006-01-02 Mon"
 // below; TestAutoNamesAllAnswer fails on a name here with no case there.
 var AutoNames = []string{
 	"date", "time", "datetime",
-	"today", "now", "tomorrow", "yesterday",
+	"today", "now", "active_now", "inactive_today", "tomorrow", "yesterday",
 	"week", "week_start", "week_end", "month", "year", "day", "weekday", "dayname",
 	"epoch", "iso",
 	"uuid", "shortuid", "hostname",
@@ -162,6 +162,11 @@ func AutoValue(name string, now time.Time) (string, bool) {
 		return "<" + now.Format(orgDay) + ">", true
 	case "now":
 		return "[" + now.Format(orgDay+" 15:04") + "]", true
+	// The other two of org's four (%T and %u in an org capture template).
+	case "active_now":
+		return "<" + now.Format(orgDay+" 15:04") + ">", true
+	case "inactive_today":
+		return "[" + now.Format(orgDay) + "]", true
 	// Active, because a date written on a capture is nearly always something to
 	// be reminded of: {{tomorrow}} is what a SCHEDULED line wants.
 	case "tomorrow":

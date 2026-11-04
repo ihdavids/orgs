@@ -26,6 +26,11 @@ type CommandAgenda struct {
 	// Do not redraw when an org file changes under the screen. On by default:
 	// everything drawn here comes from files the server is already watching.
 	noLive              bool
+	// -view n: print a custom agenda view (built in, yaml or saved) as text,
+	// html or ics instead of opening the screen; -views lists them.
+	view   string
+	views  bool
+	viewAs string
 	Reply               common.Todos
 	TaskReply           common.FullTodo
 	Error               error
@@ -1428,12 +1433,60 @@ func (self *CommandAgenda) Unmarshal(unmarshal func(interface{}) error) error {
 func (self *CommandAgenda) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.noLive, "no-live", false,
 		"do not redraw when an org file changes under it")
+	fset.StringVar(&self.view, "view", "",
+		"print an agenda view by name or key (a week, t open tasks, n both, # stuck, or your own) and exit")
+	fset.BoolVar(&self.views, "views", false, "list the agenda views and exit")
+	fset.StringVar(&self.viewAs, "as", "txt", "with -view: txt, html or ics")
+}
+
+// printView is -view and -views: no screen, the server's answer on stdout.
+func (self *CommandAgenda) printView(core *commands.Core) {
+	if self.views {
+		views, err := commands.SendReceiveGetErr[[]common.AgendaView](core, "agenda/views", nil)
+		if err != nil {
+			commands.Fail("%v", err)
+		}
+		commands.Render(views, func() {
+			for _, v := range views {
+				key := v.Key
+				if key == "" {
+					key = "-"
+				}
+				kinds := []string{}
+				for _, s := range v.Sections {
+					kinds = append(kinds, s.Kind)
+				}
+				fmt.Printf("%-3s %-32s %s\n", key, v.Name, strings.Join(kinds, " + "))
+			}
+		})
+		return
+	}
+	if commands.Machine() && self.viewAs == "txt" {
+		res, err := commands.SendReceiveGetErr[common.AgendaViewResult](core, "agenda/view", map[string]string{"name": self.view})
+		if err != nil {
+			commands.Fail("%v", err)
+		}
+		commands.RenderOne(res, func() {})
+		return
+	}
+	body, _, status, err := core.Rest.GetRaw("agenda/view", map[string]string{"name": self.view, "format": self.viewAs})
+	if err != nil {
+		commands.Fail("%v", err)
+	}
+	if status != 200 {
+		commands.Fail("%s", strings.TrimSpace(string(body)))
+	}
+	fmt.Print(string(body))
 }
 
 func (self *CommandAgenda) StartPlugin(manager *common.PluginManager) {
 }
 
 func (self *CommandAgenda) Exec(core *commands.Core) {
+	if self.view != "" || self.views {
+		self.printView(core)
+		return
+	}
 	self.out = tview.NewTextView()
 	self.weekView = tview.NewTable()
 	self.weekView.SetBorder(true).SetTitle(" Week ")

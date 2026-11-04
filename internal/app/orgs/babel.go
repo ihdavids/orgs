@@ -98,6 +98,18 @@ type runner struct {
 	defaultCmdline string
 	// The program prints csv, which comes back as a table.
 	csvOut bool
+	// A compiled language: build is the command that turns the code's file
+	// (in) into a program (bin); bin is then what runs, with :cmdline.
+	// flags and libs are :flags and :libs, filled in per block (prepareRun).
+	build func(in, bin string, flags, libs []string) []string
+	flags []string
+	libs  []string
+	// Settles what this block needs before it runs: the compiler's flags, the
+	// sql engine's command. Given the job, it returns the runner to use.
+	prepareRun func(j *babelJob, r runner) (runner, error)
+	// A run that is more than one program (latex to a picture): instead of
+	// runProgram.
+	custom func(r runner, program, dir string, timeout time.Duration, out string) (babelOutcome, error)
 }
 
 // How a drawing language is told where to draw.
@@ -615,7 +627,30 @@ func runProgram(r runner, program string, dir string, timeout time.Duration, out
 			return res, err
 		}
 	}
+	name := r.cmd[0]
 	switch {
+	case r.build != nil && in != "":
+		// Compiled: build it, then run what was built.
+		bin := filepath.Join(filepath.Dir(in), "block.bin")
+		bargs := r.build(in, bin, r.flags, r.libs)
+		bc := exec.CommandContext(ctx, bargs[0], bargs[1:]...)
+		bc.Dir = filepath.Dir(in)
+		var be bytes.Buffer
+		bc.Stdout, bc.Stderr = &be, &be
+		start := time.Now()
+		if err := bc.Run(); err != nil {
+			if errors.Is(err, exec.ErrNotFound) {
+				return res, fmt.Errorf("%s is not installed on the server (or not on its PATH)", bargs[0])
+			}
+			res.took = time.Since(start)
+			res.code = 1
+			if ee, ok := err.(*exec.ExitError); ok {
+				res.code = ee.ExitCode()
+			}
+			res.stderr = "it did not compile:\n" + be.String()
+			return res, nil
+		}
+		name, args = bin, nil
 	case r.picture != nil && r.picture.args != nil:
 		args = append(args, r.picture.args(in, out)...)
 	case in != "":
@@ -624,7 +659,7 @@ func runProgram(r runner, program string, dir string, timeout time.Duration, out
 	// :cmdline, after the code's file the way org puts it.
 	args = append(args, extra...)
 
-	cmd := exec.CommandContext(ctx, r.cmd[0], args...)
+	cmd := exec.CommandContext(ctx, name, args...)
 	if dir != "" {
 		cmd.Dir = dir
 	}
@@ -906,6 +941,7 @@ func RunBlock(req *common.CodeRun) (common.CodeResult, error) {
 		return common.CodeResult{}, err
 	}
 	job := jobForBlock(block, f)
+	job.asked = true
 	if lines, err := ganttFileLines(block.Filename); err == nil && !req.SetCode {
 		job.cachedHash = cachedHashAt(lines, block.EndLine)
 	}

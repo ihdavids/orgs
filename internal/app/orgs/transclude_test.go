@@ -1,6 +1,8 @@
 package orgs
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -58,7 +60,7 @@ func TestTransclusionExpandsHeadingsAtTheirNewLevel(t *testing.T) {
 		"main.org": `* Plan
 #+transclude: [[id:budget-1]]
 * By name
-#+transclude: [[file:src.org::*Budget]] :only-contents
+#+transclude: [[file:src.org::*Budget]] :no-first-heading
 * Lines
 #+transclude: [[file:src.org]] :lines 7-8 :src text
 `,
@@ -166,5 +168,139 @@ func TestAnEditGoesBackToTheSourceRows(t *testing.T) {
 	// Nothing outside the org files.
 	if res := SaveTransclusion(&TransclusionSave{File: "/etc/hosts", From: 0, To: 0, Old: "", New: "x"}); res.Ok {
 		t.Errorf("wrote outside the org files")
+	}
+}
+
+func TestTransclusionOptionsAreRead(t *testing.T) {
+	o := parseTxOpts(`:level :only-contents :exclude-elements "drawer keyword" :src go :rest ":exports both" :end "say \"x\"" :expand-links :disable-auto`)
+	if o.level != 0 || !o.onlyContents || !o.exclude["drawer"] || !o.exclude["keyword"] || o.src != "go" ||
+		o.rest != ":exports both" || o.end != `say "x"` || !o.expandLinks {
+		t.Errorf("options: %+v", o)
+	}
+	if o := parseTxOpts(":level auto :no-first-heading :lines 3-"); o.level != 0 || !o.noFirstHeading || o.linesFrom != 3 || o.linesTo != 0 {
+		t.Errorf("options: %+v", o)
+	}
+	if o := parseTxOpts(":level 2 :lines -4"); o.level != 2 || o.linesFrom != 0 || o.linesTo != 4 {
+		t.Errorf("options: %+v", o)
+	}
+}
+
+func TestTransclusionHeadingOptions(t *testing.T) {
+	transclusionOnFor(t)
+	paths := loadOrg(t, map[string]string{
+		"src.org": txSource,
+		"m.org": `* Only
+#+transclude: [[id:budget-1]] :only-contents
+* No first
+#+transclude: [[id:budget-1]] :no-first-heading :level 3
+* Bare level
+#+transclude: [[id:budget-1]] :level :exclude-elements "property-drawer"
+`,
+	})
+	lines, _ := readFileLines(paths["m.org"])
+	out, _ := expandTransclusions(paths["m.org"], lines, false)
+	want := `* Only
+Spend less.
+Too much.
+* No first
+Spend less.
+*** Rent
+Too much.
+* Bare level
+** Budget
+Spend less.
+*** Rent
+Too much.
+`
+	if got := strings.Join(out, "\n"); got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestTransclusionExcludeElements(t *testing.T) {
+	transclusionOnFor(t)
+	paths := loadOrg(t, map[string]string{
+		"src.org": `* Log
+SCHEDULED: <2026-11-03 Tue>
+:LOGBOOK:
+CLOCK: [2026-11-02 Mon 10:00]--[2026-11-02 Mon 11:00] =>  1:00
+:END:
+#+FILETAGS: x
+#+NAME: tbl
+| a | b |
+#+TBLFM: $2=$1
+# a comment
+: fixed
+#+BEGIN_SRC sh
+echo hi
+#+END_SRC
+#+BEGIN_QUOTE
+Said.
+#+END_QUOTE
+Text.
+`,
+		"m.org": `* M
+#+transclude: [[file:src.org::*Log]] :exclude-elements "planning drawer keyword table comment fixed-width src-block"
+`,
+	})
+	lines, _ := readFileLines(paths["m.org"])
+	out, _ := expandTransclusions(paths["m.org"], lines, false)
+	want := `* M
+** Log
+#+NAME: tbl
+#+BEGIN_QUOTE
+Said.
+#+END_QUOTE
+Text.
+`
+	if got := strings.Join(out, "\n"); got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestTransclusionLinesEndAndSearch(t *testing.T) {
+	transclusionOnFor(t)
+	paths := loadOrg(t, map[string]string{
+		"m.org": `* M
+#+transclude: [[file:main.go::func main]] :end "}" :src go :rest ":exports both"
+#+transclude: [[file:main.go::3]] :lines -1
+#+transclude: [[file:main.go]] :lines 5- :end "}"
+#+transclude: [[file:main.go]] :end "nowhere"
+`,
+	})
+	// Not an org file, so it is read for being under the org directories.
+	dir := filepath.Dir(paths["m.org"])
+	os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hi\")\n}\n\nfunc other() {}\n"), 0644)
+	oldDirs := Conf().Server.OrgDirs
+	Conf().Server.OrgDirs = []string{dir}
+	t.Cleanup(func() { Conf().Server.OrgDirs = oldDirs })
+	lines, _ := readFileLines(paths["m.org"])
+	out, txs := expandTransclusions(paths["m.org"], lines, false)
+	got := strings.Join(out, "\n")
+	want := "* M\n#+BEGIN_SRC go :exports both\nfunc main() {\n\tfmt.Println(\"hi\")\n}\n#+END_SRC\n" +
+		"import \"fmt\"\n" +
+		"func main() {\n\tfmt.Println(\"hi\")\n}\n" +
+		": transclusion: [[file:main.go]]: :end \"nowhere\" is not found\n"
+	if got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+	if len(txs) != 4 || txs[0].From != 4 || txs[0].To != 6 {
+		t.Errorf("transclusions: %+v", txs)
+	}
+}
+
+func TestTransclusionExpandLinks(t *testing.T) {
+	transclusionOnFor(t)
+	paths := loadOrg(t, map[string]string{
+		"sub/src.org": "* S\n[[file:pic.png]] [[./other.org::*H][there]] [[https://x.org]] [[file:/abs.png]]\n#+BEGIN_SRC org\n[[file:pic.png]]\n#+END_SRC\n",
+		"m.org":       "* M\n#+transclude: [[file:sub/src.org::*S]] :expand-links :only-contents\n",
+	})
+	lines, _ := readFileLines(paths["m.org"])
+	out, _ := expandTransclusions(paths["m.org"], lines, false)
+	dir := filepath.Dir(paths["sub/src.org"])
+	want := "* M\n[[file:" + filepath.Join(dir, "pic.png") + "]] [[" + filepath.Join(dir, "other.org") + "::*H][there]] [[https://x.org]] [[file:/abs.png]]\n" +
+		"#+BEGIN_SRC org\n[[file:pic.png]]\n#+END_SRC\n"
+	if got := strings.Join(out, "\n"); got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
 	}
 }

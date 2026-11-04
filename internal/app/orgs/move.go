@@ -37,7 +37,7 @@ func Move(db common.ODb, req *common.MoveRequest) (common.MoveResponse, error) {
 
 	op := strings.ToLower(strings.TrimSpace(req.Op))
 	switch op {
-	case common.MoveRefile, common.MoveCopy, common.MoveArchive:
+	case common.MoveRefile, common.MoveCopy, common.MoveArchive, common.MoveArchiveSibling:
 	case "":
 		op = common.MoveRefile
 	default:
@@ -127,6 +127,8 @@ func Move(db common.ODb, req *common.MoveRequest) (common.MoveResponse, error) {
 				touched[at.Filename] = true
 			}
 			one, err = Archive(db, &from)
+		case common.MoveArchiveSibling:
+			one, err = ArchiveSibling(db, &from)
 		case common.MoveCopy:
 			touched[destFile(db, &req.To)] = true
 			one, err = Copy(db, &common.Refile{FromId: from, ToId: req.To}, req.Create)
@@ -192,7 +194,7 @@ func pastTense(op string) string {
 	switch op {
 	case common.MoveCopy:
 		return "copied"
-	case common.MoveArchive:
+	case common.MoveArchive, common.MoveArchiveSibling:
 		return "archived"
 	}
 	return "refiled"
