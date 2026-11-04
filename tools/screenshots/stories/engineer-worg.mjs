@@ -62,14 +62,14 @@ function focusFile() {
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const at = name => ({ selector: `[data-shot="${name}"]` });
+export const at = name => ({ selector: `[data-shot="${name}"]` });
 
 // Marks elements for the notes. A spec finds by selector, or by text (exact,
 // or contains) inside within; then nth, up (parents), upTo (the nearest
 // ancestor that also holds that text), next (its next sibling), closest,
 // thenUp. Only
 // what is on screen counts: worg keeps drawers parked off to the right.
-async function tag(page, specs) {
+export async function tag(page, specs) {
   const missing = await page.evaluate(specs => {
     const shown = e => {
       const r = e.getBoundingClientRect();
@@ -100,7 +100,7 @@ async function tag(page, specs) {
 
 // Clicks the first element on screen that matches (worg draws its header
 // twice, the phone's copy first and hidden).
-async function clickShown(page, selector) {
+export async function clickShown(page, selector) {
   const ok = await page.evaluate(sel => {
     const el = [...document.querySelectorAll(sel)].find(e => {
       const r = e.getBoundingClientRect();
@@ -114,7 +114,7 @@ async function clickShown(page, selector) {
 }
 
 // The rectangle around the tagged elements, padded, kept on the page.
-async function clipAround(page, names, pad = 20) {
+export async function clipAround(page, names, pad = 20) {
   const r = await page.evaluate(names => {
     const rs = names.map(n => document.querySelector(`[data-shot="${n}"]`)?.getBoundingClientRect()).filter(Boolean);
     return { x0: Math.min(...rs.map(r => r.left)), y0: Math.min(...rs.map(r => r.top)),
@@ -127,7 +127,7 @@ async function clipAround(page, names, pad = 20) {
 
 // The main column, without the navigation down the left; from top (a page
 // y) down to bottom, or to the bottom of the page.
-async function mainClip(page, { top, bottom } = {}) {
+export async function mainClip(page, { top, bottom } = {}) {
   const r = await page.evaluate(() => {
     const b = document.querySelector('main').getBoundingClientRect();
     return { x: b.left, y: b.top, w: b.width };
@@ -151,7 +151,7 @@ async function reviewStep(page, ctx, step) {
 }
 
 // clickText scrolls what it clicks into the middle; put the page back.
-async function toTop(page) {
+export async function toTop(page) {
   await page.evaluate(() => { scrollTo(0, 0); document.querySelectorAll('*').forEach(e => { if (e.scrollTop) e.scrollTop = 0; }); });
   await sleep(400);
 }

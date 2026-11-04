@@ -17,7 +17,9 @@
   #+END_EXAMPLE
 
   The file keeps its citations as written; they are worked out on the way to
-  the exporter, as transclusion is.
+  the exporter, as transclusion is. In worg (=basic author-year=):
+
+  [[file:images/worg-citations.png]]
 
 * Bibliographies
 

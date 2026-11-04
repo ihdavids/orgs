@@ -29,6 +29,11 @@
     and run the source block, =#+CALL:= or inline code under the cursor - with
     a =▶ Run= lens over every block the server would run.
 
+  In VS Code (Org Everywhere starts it for you): broken links, an unclosed
+  drawer and an unclosed block in the Problems panel, and a hover on one.
+
+  [[file:images/lsp-vscode.png]]
+
   The outline, folding and the links within a file work with no server. The
   rest is one request each to =orgs serve=, as for every other command.
 

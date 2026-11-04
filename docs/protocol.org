@@ -63,6 +63,13 @@
 
 * Templates and the page
 
+  A capture from a page, with the =Web= template below: the title is the
+  headline, the address goes into =:SOURCE:= and the selected text into the
+  body, and nothing is filed until you press Capture.
+
+  [[file:images/worg-protocol.png]]
+
+
   A link names a template by name (=template=Web=), by name in any case, or
   by an Emacs one-letter key (=w=), which finds the only template whose name
   starts with that letter. With no template, or one that is not there, worg

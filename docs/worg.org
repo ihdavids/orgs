@@ -25,6 +25,15 @@
 
   [[file:images/worg-agenda.png]]
 
+** Agenda views
+
+   Above the calendar, a picker of custom agenda views: org's own (=a= the
+   week, =t= open tasks, =n= both, =#= stuck projects), the server's yaml,
+   and your own. A view shows its sections one after another, and an item
+   opens as the calendar's do. =orgs agenda -view= prints the same views.
+
+   [[file:images/worg-agenda-views.png]]
+
 * Search
 
   The query language in a form: an expression, a regular expression over the
@@ -47,6 +56,26 @@
   shows or hides that one. Click a picture to see it full size.
 
   [[file:images/worg-files.png]]
+
+** Transclusion
+
+   A =#+transclude:= line draws the heading, file or lines it names, as
+   org-transclusion does, in the rendered page and every export; the file
+   keeps the one line. Each transclusion has a bar naming its source, and
+   *Edit source* writes a change back into the file it came from. The page
+   draws again when a source changes. It is off until it is turned on in the
+   settings menu (or with =orgs transclude on=).
+
+   [[file:images/worg-transclusion.png]]
+
+** Citations
+
+   =[cite:@key]= citations are set out, and =#+print_bibliography:= lists the
+   works cited, from the file's =#+bibliography:= or the server's (the
+   Citations guide has the details). Typing =@= inside =[cite:= in the editor
+   offers the keys.
+
+   [[file:images/worg-citations.png]]
 
 * Kanban
 
@@ -116,3 +145,13 @@
   can be run and its results written back under it.
 
   [[file:images/worg-code.png]]
+
+* Focus: the timer
+
+  Under the pomodoros, org's relative timer (=org-timer=): start it at the
+  start of a meeting, or count down, and a note taken in it is written under
+  the heading you are clocked into, stamped with the timer, as
+  =org-timer-item= writes it. The server keeps the timer, so =orgs timer=
+  sees the same one.
+
+  [[file:images/worg-timer.png]]

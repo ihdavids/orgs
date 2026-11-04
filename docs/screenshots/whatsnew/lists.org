@@ -1,0 +1,24 @@
+#+TITLE: Lists
+
+* Checklists
+** Groceries
+   - [X] Oat milk
+   - [X] Eggs
+   - [ ] Sourdough
+   - [ ] Lemons
+   - [ ] Coffee beans
+** Packing for Lisbon                                                  :trip:
+   - [X] Passport
+   - [X] Adapter plug
+   - [ ] Sunglasses
+   - [ ] Walking shoes
+   - [ ] Phrasebook
+** Launch day                                                          :work:
+   - [X] Freeze the content
+   - [X] Warm the CDN cache
+   - [X] Status page note
+   - [X] Rollback plan in the channel
+** Dinner party
+   - [ ] Confirm numbers
+   - [ ] Order the cheese
+   - [ ] Borrow chairs from Lena

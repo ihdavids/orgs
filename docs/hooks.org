@@ -79,5 +79,7 @@
   orgs hooks test done-log kind=statechange headline="Ship it" from=TODO to=DONE
   #+END_SRC
 
+  [[file:images/cli-hooks.png]]
+
   A test runs the rule on the event given, whatever its =on= and =match=
   say; only an administrator may.

@@ -51,7 +51,8 @@ export function expandDates(text) {
   });
 }
 
-// A story (stories/*.mjs) may bring a notebook of its own (src), its own
+// A story (stories/*.mjs) may bring a notebook of its own (src, or a list of
+// folders laid one over another, so a story can add files to the demo), its own
 // saved queries and settings (extensions) and more server settings (server,
 // yaml indented two, spliced under server:), and files written into the run's
 // folder before the server starts ({ 'focus_data.json': '...' }: state the
@@ -66,12 +67,12 @@ function setupDemo({ src = demoSrc, extensions = path.join(demoSrc, '../extensio
       if (f.isDirectory()) {
         fs.mkdirSync(path.join(to, f.name), { recursive: true });
         copy(path.join(from, f.name), path.join(to, f.name));
-      } else if (f.name.endsWith('.org')) {
+      } else if (f.name.endsWith('.org') || f.name.endsWith('.bib')) {
         fs.writeFileSync(path.join(to, f.name), expandDates(fs.readFileSync(path.join(from, f.name), 'utf8')));
       }
     }
   };
-  copy(src, org);
+  for (const from of [].concat(src)) copy(from, org);
   fs.mkdirSync(path.join(org, 'worklog'), { recursive: true });
   // Saved queries, the kanban board and the flashcard deck. The server keeps
   // these beside its config file.
@@ -85,6 +86,8 @@ function setupDemo({ src = demoSrc, extensions = path.join(demoSrc, '../extensio
   allowHttp: true
   allowHttps: false
   noAuth: true
+  # Nothing leaves this machine: no asking github for the latest release.
+  noUpdateCheck: true
   useProjectTag: true
   defaultTodoStates: "TODO NEXT INPROGRESS WAITING BLOCKED | DONE CANCELLED"
   templatePath: "./templates"
@@ -206,7 +209,11 @@ function terminalPage(title, body) {
 async function browser() {
   const puppeteer = (await import('puppeteer-core')).default;
   return puppeteer.launch({ executablePath: CHROME, headless: true,
-    args: ['--hide-scrollbars', '--force-color-profile=srgb'] });
+    // Chrome's own traffic (updates, sync, metrics) off: the shots only ever
+    // talk to the demo server on localhost.
+    args: ['--hide-scrollbars', '--force-color-profile=srgb', '--disable-background-networking',
+      '--disable-component-update', '--disable-sync', '--disable-domain-reliability', '--no-pings',
+      '--disable-default-apps', '--metrics-recording-only', '--no-first-run'] });
 }
 
 async function shootTerminal(b, name, title, html) {

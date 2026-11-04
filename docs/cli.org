@@ -147,6 +147,36 @@
 
   [[file:images/cli-drill.png]]
 
+* Checklists: =orgs list=
+
+  Every heading with =- [ ]= boxes in its own text is a list, wherever it
+  lives, so a list refiled out of the inbox is still found, and so are the
+  boxes under a task. =orgs list= picks one and works on it; =orgs list ls=
+  draws them all, the way taskbook draws its boards.
+
+  #+BEGIN_SRC sh
+  orgs list                          # pick a list, then tick, add, edit, delete
+  orgs list new Packing for Oslo     # a new list, filed under Checklists in the inbox
+  orgs list ls -open                 # only lists with something left to do
+  orgs list check -l groceries 3 4   # tick items 3 and 4
+  #+END_SRC
+
+  [[file:images/cli-list.png]]
+
+* Agenda views: =orgs agenda -view=
+
+  Org's custom agenda commands: a view is sections shown one after another (a
+  day or a week of the agenda, open tasks with some keywords, a match, a
+  search, stuck projects). Org's own =a=, =t=, =n= and =#= are built in; more
+  come from =agenda: views:= in the yaml or from worg, where each person keeps
+  their own. =orgs agenda -views= lists them, and =-as html= or =-as ics=
+  prints one for a page or a calendar.
+
+  [[file:images/cli-agenda-view.png]]
+
+  The hooks (=orgs hooks=), the phone's calendar (=orgs dav=) and the
+  language server (=orgs lsp=) have their pictures in their own guides.
+
 * What is in there: =orgs stats=
 
   [[file:images/cli-stats.png]]
@@ -220,3 +250,7 @@
   story. Each brings its own notebook (=docs/screenshots/<story>/=) and runs on
   a server of its own after the pictures above, so nothing one story sets up
   shows in another. =node capture.mjs -story writer= takes just one story's.
+  The =whatsnew= story is the pictures of the features added in v0.6.0 and
+  v0.7.0 (checklists, agenda views, hooks, CalDAV, transclusion, the timer,
+  org-protocol and citations), on the demo notes with
+  =docs/screenshots/whatsnew= laid over them.

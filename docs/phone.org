@@ -40,6 +40,12 @@
 
 * On the phone
 
+  =orgs dav= says whether it is on, the addresses to give the phone and the
+  app passwords made so far:
+
+  [[file:images/cli-dav.png]]
+
+
   - *iPhone*: Settings → Calendar → Accounts → Add Account → Other → Add
     CalDAV Account. Server: your server's host and https port
     (=box.local:8443=), user: your orgs user, password: the app password. The

@@ -1,0 +1,12 @@
+#+TITLE: Why design systems drift
+#+bibliography: refs.bib
+#+cite_export: basic author-year
+
+* Introduction
+  A component library is a shared vocabulary [cite:@ousterhout2018], and
+  like any vocabulary it drifts unless somebody tends it
+  [cite:@frost2016; @kholmatova2017]. Fowler's account of refactoring
+  [cite:@fowler2018] gives the habits that keep it honest.
+
+* References
+#+print_bibliography:

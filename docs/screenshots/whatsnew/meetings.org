@@ -1,0 +1,15 @@
+#+TITLE: Meetings
+
+* Website relaunch sync                                                 :work:
+  SCHEDULED: <{{D+0}} 10:00>
+  Agreed tokens, pulled in from the design notes so they stay current:
+
+#+transclude: [[file:notes.org::*Colour tokens]] :level 2
+
+  Where the component library stands:
+
+#+transclude: [[file:work.org::*Build the component library]] :level 2 :exclude-elements "drawer keyword"
+
+** Notes
+   - Maya to own the navigation bar
+   - Launch stays on the date we set

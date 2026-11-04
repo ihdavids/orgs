@@ -328,6 +328,36 @@
 
   [[file:docs/images/cli-drill.png]]
 
+** Checklists: =orgs list=
+
+  Every heading with =- [ ]= boxes in its own text is a list, wherever it
+  lives, so a list refiled out of the inbox is still found, and so are the
+  boxes under a task. =orgs list= picks one and works on it; =orgs list ls=
+  draws them all, the way taskbook draws its boards.
+
+  #+BEGIN_SRC sh
+  orgs list                          # pick a list, then tick, add, edit, delete
+  orgs list new Packing for Oslo     # a new list, filed under Checklists in the inbox
+  orgs list ls -open                 # only lists with something left to do
+  orgs list check -l groceries 3 4   # tick items 3 and 4
+  #+END_SRC
+
+  [[file:docs/images/cli-list.png]]
+
+** Agenda views: =orgs agenda -view=
+
+  Org's custom agenda commands: a view is sections shown one after another (a
+  day or a week of the agenda, open tasks with some keywords, a match, a
+  search, stuck projects). Org's own =a=, =t=, =n= and =#= are built in; more
+  come from =agenda: views:= in the yaml or from worg, where each person keeps
+  their own. =orgs agenda -views= lists them, and =-as html= or =-as ics=
+  prints one for a page or a calendar.
+
+  [[file:docs/images/cli-agenda-view.png]]
+
+  The hooks (=orgs hooks=), the phone's calendar (=orgs dav=) and the
+  language server (=orgs lsp=) have their pictures in their own guides.
+
 ** What is in there: =orgs stats=
 
   [[file:docs/images/cli-stats.png]]
@@ -401,6 +431,10 @@
   story. Each brings its own notebook (=docs/screenshots/<story>/=) and runs on
   a server of its own after the pictures above, so nothing one story sets up
   shows in another. =node capture.mjs -story writer= takes just one story's.
+  The =whatsnew= story is the pictures of the features added in v0.6.0 and
+  v0.7.0 (checklists, agenda views, hooks, CalDAV, transclusion, the timer,
+  org-protocol and citations), on the demo notes with
+  =docs/screenshots/whatsnew= laid over them.
 
 * worg, in pictures
 ** What worg is
@@ -426,6 +460,15 @@
 
   [[file:docs/images/worg-agenda.png]]
 
+*** Agenda views
+
+   Above the calendar, a picker of custom agenda views: org's own (=a= the
+   week, =t= open tasks, =n= both, =#= stuck projects), the server's yaml,
+   and your own. A view shows its sections one after another, and an item
+   opens as the calendar's do. =orgs agenda -view= prints the same views.
+
+   [[file:docs/images/worg-agenda-views.png]]
+
 ** Search
 
   The query language in a form: an expression, a regular expression over the
@@ -448,6 +491,26 @@
   shows or hides that one. Click a picture to see it full size.
 
   [[file:docs/images/worg-files.png]]
+
+*** Transclusion
+
+   A =#+transclude:= line draws the heading, file or lines it names, as
+   org-transclusion does, in the rendered page and every export; the file
+   keeps the one line. Each transclusion has a bar naming its source, and
+   *Edit source* writes a change back into the file it came from. The page
+   draws again when a source changes. It is off until it is turned on in the
+   settings menu (or with =orgs transclude on=).
+
+   [[file:docs/images/worg-transclusion.png]]
+
+*** Citations
+
+   =[cite:@key]= citations are set out, and =#+print_bibliography:= lists the
+   works cited, from the file's =#+bibliography:= or the server's (the
+   Citations guide has the details). Typing =@= inside =[cite:= in the editor
+   offers the keys.
+
+   [[file:docs/images/worg-citations.png]]
 
 ** Kanban
 
@@ -517,6 +580,16 @@
   can be run and its results written back under it.
 
   [[file:docs/images/worg-code.png]]
+
+** Focus: the timer
+
+  Under the pomodoros, org's relative timer (=org-timer=): start it at the
+  start of a meeting, or count down, and a note taken in it is written under
+  the heading you are clocked into, stamped with the timer, as
+  =org-timer-item= writes it. The server keeps the timer, so =orgs timer=
+  sees the same one.
+
+  [[file:docs/images/worg-timer.png]]
 
 * Commands
 
@@ -3635,6 +3708,114 @@ In a list of fixes or synonyms: the arrows or =1=-=9=, =Enter= to take one,
 or not. It asks datamuse.com, sending only the word looked up. Spelling uses an
 English (US) dictionary inside the page.
 
+** Org files in any editor: =orgs lsp=
+*** What it is
+
+  =orgs lsp= is a language server: any editor that speaks the Language Server
+  Protocol - Neovim, Helix, Zed, Sublime Text, Emacs (eglot), the JetBrains
+  IDEs, VS Code - gets these for org files from it:
+
+  - *Completion*: TODO keywords after the stars (the file's =#+TODO:=, else
+    the server's), tags after a heading's colon (this file's first, then every
+    tag the server knows), link targets after =[[= - headings, =#custom-id=s,
+    =<<targets>>=, =file:= with every org file, =file:x.org::*= with that
+    file's headings, and =id:= with every heading that has an ID, found by its
+    title - =#+= keywords and blocks, source block languages and property
+    names.
+  - *Go to definition* on a link: =[[*Heading]]=, =[[#id]]=, =[[target]]=,
+    =[[file:x.org::*Heading]]=, =[[file:x.org::42]]= and =[[id:...]]=, which
+    the server finds in whichever file has it.
+  - *Clickable links* for urls, files and the =linkProtocols= in your yaml.
+  - *The outline* (document symbols): headings with their keyword, tags and
+    date, and named blocks and tables under the heading they are in; and every
+    heading of every file as a workspace symbol.
+  - *Folding* of headings, blocks and drawers.
+  - *Diagnostics*: a block with no =#+END_=, a drawer with no =:END:=, a link
+    to a heading, file or id that is not there, and the Harper or LanguageTool
+    lints of =orgs lint=, whose suggestions are quick fixes.
+  - *Code actions*: schedule, deadline, refile (recent targets first), archive,
+    and run the source block, =#+CALL:= or inline code under the cursor - with
+    a =▶ Run= lens over every block the server would run.
+
+  In VS Code (Org Everywhere starts it for you): broken links, an unclosed
+  drawer and an unclosed block in the Problems panel, and a hover on one.
+
+  [[file:docs/images/lsp-vscode.png]]
+
+  The outline, folding and the links within a file work with no server. The
+  rest is one request each to =orgs serve=, as for every other command.
+
+*** Setting an editor up
+
+  The server is =orgs lsp= on standard input and output. Its flags:
+  =-lint auto|harper|languagetool|all|off= (default =auto=, the first checker
+  the server offers), =-lang=, =-dialect=, =-ignore RULES=, =-refile-depth N=
+  and =-path-map SERVER=LOCAL= for a server on another machine. The same can
+  be sent as initialization options: =lint=, =lang=, =dialect=, =ignore=,
+  =refileDepth=, =pathMap= (an object).
+
+**** Neovim
+
+   #+BEGIN_SRC lua
+   vim.lsp.config('orgs', { cmd = { 'orgs', 'lsp' }, filetypes = { 'org' }, root_markers = { '.git' } })
+   vim.lsp.enable('orgs')
+   #+END_SRC
+
+**** Helix (=languages.toml=)
+
+   #+BEGIN_SRC toml
+   [language-server.orgs]
+   command = "orgs"
+   args = ["lsp"]
+
+   [[language]]
+   name = "org"
+   scope = "source.org"
+   file-types = ["org"]
+   language-servers = ["orgs"]
+   #+END_SRC
+
+**** Emacs (eglot)
+
+   #+BEGIN_SRC emacs-lisp
+   (add-to-list 'eglot-server-programs '(org-mode . ("orgs" "lsp")))
+   #+END_SRC
+
+**** Zed, Sublime Text, JetBrains
+
+   Any "custom language server" setting that takes a command: =orgs lsp=, for
+   files ending =.org=.
+
+*** How edits are made
+
+  An editor holds text the server has not seen yet. So *schedule*, *deadline*
+  and *run* send the buffer to the server, which makes the edit it would make
+  to the file and sends back the text; the difference arrives as one edit
+  you can undo, and the file on disk is not touched. Nothing needs saving
+  first.
+
+  *Refile* and *archive* change two files, so they work on the files: they
+  refuse while the buffer has unsaved changes ("save first"), and afterwards
+  bring the buffer up to what the server wrote if the editor did not reload
+  it by itself.
+
+  The commands behind the actions can be bound to keys with
+  =workspace/executeCommand=, which is also how to schedule for a date the
+  menu does not offer:
+
+  | Command        | Arguments                    | Notes                                                  |
+  |----------------+------------------------------+--------------------------------------------------------|
+  | =orgs.date=    | uri, line, name, value?      | =SCHEDULED=/=DEADLINE=; value as =orgs sched= reads it |
+  | =orgs.run=     | uri, line                    | needs =babel.enable=                                   |
+  | =orgs.refile=  | uri, line, {Filename, Olp}?  | asks where when the target is left out                 |
+  | =orgs.archive= | uri, line                    |                                                        |
+
+  #+BEGIN_SRC lua
+  -- Neovim: schedule the heading under the cursor for Friday
+  vim.lsp.buf.execute_command({ command = 'orgs.date',
+    arguments = { vim.uri_from_bufnr(0), vim.fn.line('.') - 1, 'SCHEDULED', 'fri' } })
+  #+END_SRC
+
 ** Babel: Python Sessions
 
   =:session= keeps one python running for a file, so that a block can use
@@ -3715,7 +3896,44 @@ English (US) dictionary inside the page.
   =:results replace= on a block undoes a file's =header-args :results append=.
 
   A block named with =#+NAME:= writes =#+RESULTS: name=, so another block can
-  take it as a variable. =:eval no= (or =never=) is never run.
+  take it as a variable. =:eval no= (or =never=) is never run. =:eval query=
+  runs only when somebody runs it - that block, at its line, or something
+  they ran that needs it - and never on a schedule, in a run of a whole file
+  or from a tangle, because there is nobody to ask. Exporting never runs a
+  block, so =never-export=, =no-export= and =query-export= run like =yes=.
+
+*** Where header arguments come from
+
+  As in org, four layers, each merged over the one before, key by key:
+
+  1. =babel: defaultHeaderArgs:= in the server's yaml, for every block
+     (org's =org-babel-default-header-args=);
+  2. =babel: languageHeaderArgs:=, for one language
+     (=org-babel-default-header-args:python=);
+  3. the =header-args= property, then =header-args:<lang>=;
+  4. the block's =#+HEADER:= lines, then its own line.
+
+  #+BEGIN_EXAMPLE
+  babel:
+    enable: true
+    defaultHeaderArgs: ":exports both"
+    languageHeaderArgs:
+      python: ":session main :results output"
+  #+END_EXAMPLE
+
+  A property is set by =#+PROPERTY: header-args ...= lines (a =#+SETUPFILE:='s
+  among them, where it stands) or a heading's =:header-args:= in its property
+  drawer, and **the nearest setting wins outright**: a heading's
+  =:header-args: :results silent= replaces the file's whole value, so a
+  =:session= the file gave is gone under it. Written =header-args+= (on a
+  heading or a =#+PROPERTY:= line) it adds to what is above instead.
+  =header-args= and =header-args:python= are separate properties, each
+  inherited on its own. Tangling reads them the same way.
+
+  Exports read them too: a block whose own lines say nothing about
+  =:exports= is exported as what it inherits (=code=, =results=, =both=,
+  =none=). When nothing says, the code is shown with its results; org's own
+  default is =code=, which =defaultHeaderArgs: ":exports code"= gives.
 
   A block that fails (a non-zero exit) has what it printed and what it wrote to
   standard error written as its result, so the error is in the file where the
@@ -3796,6 +4014,31 @@ English (US) dictionary inside the page.
   the answer comes back as a table). A table handed to gnuplot is written to
   a file and bound as its name, so =plot data using 1:2= works as it does in
   org.
+
+*** Files
+
+  | Header              | Does                                                    |
+  |---------------------+---------------------------------------------------------|
+  | =:file name.png=    | the result is this file: a picture drawn there, or what the block printed written into it |
+  | =:file-ext png=     | with no =:file=, a block named =plot= writes =plot.png= |
+  | =:output-dir dir=   | where a relative =:file= goes (relative to =:dir=)      |
+  | =:file-desc text=   | the link's description, =[[file:plot.png][text]]=; with no text, the file's name |
+  | =:file-mode (identity #o755)= | the file's mode once it is written (=#o644=, =0600= too) |
+  | =:mkdirp yes=       | make the file's directory when it is missing            |
+
+*** Compiled and other languages
+
+  | Language          | Runs                    | Notes                                         |
+  |-------------------+-------------------------+-----------------------------------------------|
+  | =C=, =C++=        | =cc=, =c++ -std=c++17=, then the program | =:includes=, =:defines "N 10"=, =:flags=, =:libs "-lm"=, =:main no=; a body without =main()= is put in one; a table is a =const char*= 2D array with =name_rows=, =name_cols= |
+  | =rust=            | =rustc=, then the program | a body without =fn main()= is put in one |
+  | =java=            | =java Main.java= (JDK 11+) | =:classname=, =:imports=; a body without a class is put in =main= |
+  | =julia=, =haskell= (=runghc=), =clojure=, =scheme= (=guile=), =octave= | the interpreter | variables in each one's syntax |
+  | =sql=             | =psql=, =mysql= or =sqlite3= | =:engine postgresql\|mysql\|sqlite=, =:dbhost=, =:dbport=, =:dbuser=, =:dbpassword= (mysql), =:database=; =$name= in the query is a variable; the answer is a table |
+  | =latex=           | =pdflatex=, then =pdftocairo= | =:file eq.png=, =.svg= or =.pdf=; a fragment is set in the standalone class |
+
+  A block that does not compile has the compiler's complaint as its result.
+  =babel.commands= still replaces what runs (=c: ["clang"]=).
 
 *** Pictures
 
@@ -5681,6 +5924,26 @@ English (US) dictionary inside the page.
   The file is converted where it is, so pictures linked from it are found.
 
 
+** Plain Text
+  The =txt= exporter (also =ascii=) writes a file as org's ASCII/UTF-8 export
+  does: a centred title, numbered headings underlined with === and ---
+  (deeper ones as list items), paragraphs wrapped at 72 columns, links as
+  =description <url>=, emphasis kept as org writes it, code in =`...'=, and
+  drawers, planning lines, clocks and keywords left out. Tables and source
+  blocks are kept as written. It needs no settings:
+
+	#+BEGIN_SRC sh
+    orgs export -f txt notes.org
+	#+END_SRC
+
+	#+BEGIN_SRC yaml
+    exporters:
+      - name: "txt"
+        width: 72          # the column paragraphs wrap at; 0 leaves them
+        numbered: true     # 1, 1.1 before headings (#+OPTIONS: num:nil turns it off)
+	#+END_SRC
+
+
 ** Reveal JS
 
   [[https://revealjs.com][reveal.js]] is the one with the 3d transitions, the
@@ -6277,6 +6540,81 @@ English (US) dictionary inside the page.
    writing the deck rather than while giving it.
 
 
+* Exporting
+** Citations: [cite:@key] and bibliographies
+*** What it is
+
+  org-cite's citations, in every export orgs makes: worg's rendered view,
+  =orgs export=, the pdf, Beamer and Typst exports, books and sites. A file
+  names where its works come from and cites them by key:
+
+  #+BEGIN_EXAMPLE
+  #+bibliography: refs.bib
+  ,* Introduction
+  Typed holes help [cite:@doe2020], as [cite/t:@who2019] found -
+  see [cite:see @doe2020 p. 3; @who2019 ch. 2].
+  ,* References
+  #+print_bibliography:
+  #+END_EXAMPLE
+
+  The file keeps its citations as written; they are worked out on the way to
+  the exporter, as transclusion is. In worg (=basic author-year=):
+
+  [[file:docs/images/worg-citations.png]]
+
+*** Bibliographies
+
+  =.bib= files (BibTeX and BibLaTeX: =@string= macros, =#=, accents and
+  braces are read) and =.json= files (CSL-JSON, as Zotero exports it). A file's
+  =#+bibliography:= lines are relative to it; =citations.bibliography= in the
+  server's yaml is read for every file.
+
+  #+BEGIN_SRC yaml
+  server:
+    citations:
+      bibliography: ["~/papers/library.bib"]
+      export: "basic"
+  #+END_SRC
+
+*** Citation styles
+
+  | Written                  | basic writes                     |
+  |--------------------------+----------------------------------|
+  | =[cite:@doe2020]=        | (Doe and Roe, 2020)              |
+  | =[cite/t:@doe2020]=      | Doe and Roe (2020)               |
+  | =[cite/a:@doe2020]=      | Doe and Roe                      |
+  | =[cite/na:@doe2020]=     | (2020)                           |
+  | =[cite//b:@doe2020]=     | Doe and Roe, 2020                |
+  | =[cite/a/f:@gödel]=      | every author: Gödel, van Dalen and Kleene |
+  | =[cite/n:@doe2020]=      | nothing; listed in the bibliography |
+  | =[cite/n:@*]=            | nothing; every entry listed      |
+
+  =c= capitalises (=[cite/a/c:...]=). Text before the first =@key= and after
+  the last is the common prefix and suffix; text beside a key is that work's.
+  A key no bibliography has is written as the key, and the server says so.
+
+*** Processors
+
+  =#+cite_export:= (else =citations.export=) picks how they are written:
+
+  - =basic= :: every exporter. =#+print_bibliography:= becomes a list of the
+    cited works, by author, and each citation links to its entry.
+    =#+cite_export: basic numeric numeric= writes [1] and numbers the list in
+    citation order.
+  - =biblatex [style]= :: LaTeX and Beamer: =\autocite=, =\textcite=,
+    =\citeauthor=, =\autocites= for works with their own notes,
+    =\printbibliography=, and the =\usepackage{biblatex}= / =\addbibresource=
+    preamble. Run biber on the result to fill it in.
+  - =natbib [bibstyle]= :: LaTeX and Beamer: =\citep=, =\citet=, =\bibliography=.
+
+  biblatex and natbib are LaTeX's, so the same file exports with =basic=
+  everywhere else (html cannot run biber).
+
+*** Completing keys
+
+  =orgs lsp= offers the file's keys after =@= inside =[cite:=, with author,
+  year and title; =GET /cite/keys?file== answers any other client.
+
 * Links
 ** Backlinks And The Link Graph
 
@@ -6554,6 +6892,31 @@ English (US) dictionary inside the page.
 
 
 
+** RSS and Atom Feeds
+
+	Org's org-feed: new items in a feed become headings in an org file, once
+	each. Each poll fetches the feeds and files what has not been filed before
+	under a heading (made when it is missing), as org-feed's default template
+	does - the title, when it was fetched, the summary as text, a link to the
+	item. An item is remembered by its id (=:RSS_ID:= on the heading, and a
+	list kept in the plugin's folder), so deleting one does not bring it back.
+	RSS 2.0, RSS 1.0 and Atom are read.
+
+	#+BEGIN_SRC yaml
+	server:
+	  plugins:
+	    - name: rss
+	      freq: 3600                 # seconds between polls
+	      feeds:
+	        - url: "https://example.org/feed.xml"
+	          file: "~/org/feeds.org"
+	          heading: "Example blog"  # top level when empty
+	          todo: "TODO"             # the keyword new items get; "" for none
+	          tags: ["feed"]
+	          max: 20                  # at most this many new items a poll
+	#+END_SRC
+
+
 ** Todoist
 
 	TODO More documentation on this module
@@ -6646,6 +7009,9 @@ English (US) dictionary inside the page.
   - *IsTask* - Syntatical sugar for the following: "!IsArchived() && IsTodo() && !IsProject()"
   - *IsNextTask* - Check if a headline has a NEXT action status. This is GTD support and uses the defaultNextStatus value and #+NEXT comment
   - *IsBlockedProject* - Check if this is a project heading and it DOES NOT have a child marked NEXT.
+  - *PropCompare* - =PropCompare("EFFORT", "<", "2:00")=: a property's value against a value, as org's property match compares: as dates when the value is one (=<2026-11-01>=, =<today>=, =<+1w>=), as numbers when both are numbers, as durations (=2:30=, =2h=), else as text. Operators =<= =<== =>= =>== ===, =!==. The special properties =TODO=, =PRIORITY=, =LEVEL=, =ITEM=, =CATEGORY=, =TAGS=, =SCHEDULED=, =DEADLINE= and =CLOSED= work too. A heading without the property is only =!== anything.
+  - *InheritedProperty* - =InheritedProperty("CLIENT")= or =InheritedProperty("CLIENT", "acme")=: the property set on this heading, one above it, or the file's =#+PROPERTY:= lines. =HasProperty= and =MatchProperty= inherit only the names =propertyInheritance= lists (=["*"]= for all), and =CATEGORY=.
+  - *IsBlocked* - An open task that cannot be marked done yet: a child heading is still open, or, under a parent with an =ORDERED= property, a sibling above it is (org's TODO dependencies; =:NOBLOCKING: t= is never blocked).
   - *IsArchived* - Check if a headline is in the archived state or not (in an archived file or has an ARCHIVE tag)
   - *IsPriority* - Check if the priority matches a specific value.
   - *HasProperty* - Returns true if the headline has the specific property
@@ -6663,6 +7029,8 @@ English (US) dictionary inside the page.
   - *MatchProperty* - MatchProperty(NAME, REGEX) returns true if the property value matches the implied regex
   - *MatchHeadline* - Run an RE against each headline and check for a match
   - *OnDate* - OnDate("2026 30 01") (year, day, month) is true when the heading lands on that day in the agenda: a timestamp, SCHEDULED or DEADLINE on it, a repeat of one, a range spanning it, and on today also an overdue SCHEDULED and a DEADLINE inside its warning period or past it (the rules of GET /agenda)
+  - *DateBefore* - DateBefore("2026 30 10") (year, day, month, as OnDate) is true when the node's SCHEDULED, DEADLINE or an active timestamp of its own falls on a day before that one
+  - *DateAfter* - DateAfter("2026 30 10") is true when one of those dates falls on a day after it; a range counts by its end
   - *Today* - returns true if a node is scheduled for today
   - *Yesterday* - returns true if a node is scheduled for yesterday
   - *ThisWeek* - returns true if a node lands in the agenda on any day of the last seven, today included
@@ -6687,6 +7055,62 @@ English (US) dictionary inside the page.
   - *IsHabit* - returns true for a habit (a :STYLE: habit heading)
   - *HabitStreak* - how many times in a row a habit has been kept, as a number to compare: IsHabit() && HabitStreak() > 7; 0 once the run is broken
   - *MissedHabit* - returns true when a habit has gone longer since it was last done than its repeater allows
+
+** Short Queries
+  A second way to write a query, for typing into a search box. It is turned
+  into the full expression on the server, so it can ask everything the full
+  form can ask through the functions above, and the two can be used anywhere
+  a query is taken.
+
+  #+BEGIN_SRC sh
+  orgs search 'NEXT :work:'
+  orgs search 'todo due:<3d -:home:'
+  orgs search 'project stuck | WAITING old:>14'
+  #+END_SRC
+
+  - Words side by side must all match; =|= (or =or=) means either.
+  - =-= (or =not=) in front of a term turns it round; brackets group.
+  - Archived headings are left out unless the query says =archived=.
+  - A plain word, ="quoted phrase"= or =/regex/= searches headlines. Words and
+    phrases match anywhere and ignore case; a regex is used as written.
+
+  | Term                          | Means                                       |
+  |-------------------------------+---------------------------------------------|
+  | =todo= =done= =task= =project= | IsTodo IsDone IsTask IsProject             |
+  | =next= =stuck= =habit= =missed= | IsNextTask IsBlockedProject IsHabit MissedHabit |
+  | =archived= =record= =collection= | IsArchived IsRecord IsCollection         |
+  | =tagged= =untagged=           | has tags / NoTags                           |
+  | =scheduled= =deadline= =dated= | HasScheduled HasDeadline HasAnyDate        |
+  | =clocked= =linked= =broken= =orphan= | HasClock HasLinks HasBrokenLinks, no backlinks |
+  | =checklist= =table= =drawer= =block= | HasChecklist HasTable HasDrawer HasBlock |
+  | =NEXT= (any word in capitals) | IsStatus("NEXT")                            |
+  | =:work:= =:work:urgent:=      | HasTags("work") - every tag named           |
+  | =:/^M[0-9]+$/:=               | HasTagMatching                              |
+  | =#A=                          | IsPriority("A")                             |
+  | =due:past= =due:today= =due:<3d= =due:fri= | DeadlinePast, DeadlineWithin(0/3/days to friday) |
+  | =due:any= =due:none=          | HasDeadline, !HasDeadline                   |
+  | =sched:...=                   | the same for SCHEDULED                      |
+  | =on:today= =on:fri= =on:2026-10-30= | OnDate                                |
+  | =before:today= =after:fri= =before:-2w= | a SCHEDULED, DEADLINE or timestamp of its own before / after that day (DateBefore DateAfter) |
+  | =old:>30= =old:<7=            | OlderThan(30), DaysOld under 7              |
+  | =streak:>7= =backlinks:0= =left:>0= =items:>5= =age:<3= | HabitStreak BacklinkCount ChecklistLeft ChecklistCount DaysOld, compared |
+  | =file:work= =in:contact= =record:contact= | InFile InCollection IsRecord     |
+  | =group:WORK= =text:word= =title:word= =link:word= =tag:work= | InTagGroup MatchContent MatchHeadline LinksTo HasTags |
+  | =status:next= =priority:a=    | IsStatus("NEXT") IsPriority("A")            |
+  | =client:acme=                 | any other key is a property: MatchProperty("CLIENT", ...) |
+  | =client:*=                    | HasProperty("CLIENT")                       |
+  | =effort:<2h= =level:>=2= =scheduled:<<+1w>= | PropCompare("EFFORT", "<", "2h"): =<= =<== =>= =>== ===, =!== |
+  | ={{ WorkTasks }}=             | a yaml filter, as in the full form          |
+
+  Org's own match strings work too, as an agenda's tags search writes them:
+  =+work-boss+PRIORITY="A"|urgent=, =work/NEXT|WAITING=, =+project/!=,
+  =Effort<2:00=, =CATEGORY={^cli}=, =SCHEDULED<="<+1w>"/-DONE=. One is told
+  from a short query by having no spaces and starting with =+= or =-= or using
+  one of === =<= =>= =/= ={= =&=.
+
+  A query is read as the full form when it calls a function (=IsTodo()=) or
+  uses =&&= or =||=, so every query written before keeps its meaning.
+  =orgs search -explain= prints the full form a short query becomes.
 
 * Records
 ** Records — the contact book, and everything else worth a list
@@ -7255,6 +7679,48 @@ English (US) dictionary inside the page.
 
 		=maxMb= is the biggest single upload that will be taken.
 
+** CalDAV and CardDAV
+		Your dated headings as a calendar and your contacts as an address book,
+		for a phone's own Calendar and Contacts apps, read and write. Off unless
+		enabled, and then reachable only with an app password made for it
+		(=orgs dav password=), never your login password, and only over https
+		(or from this machine) unless =allowHttp= says otherwise.
+
+		#+BEGIN_SRC yaml
+		dav:
+		  enable: true
+		  readOnly: false                # true: the phone can look, not change
+		  calendar: true                 # the calendar (default true)
+		  contacts: true                 # the address book (default true)
+		  calendarQuery: ""              # which headings; default every dated, open, unarchived one
+		  done: false                    # include finished headings' dates
+		  contactQuery: ""               # which headings are contacts; default contact records
+		                                 #   and any heading with an EMAIL or PHONE property
+		  newEvents: inbox.org           # where an event made on the phone is filed
+		  allowHttp: false               # plain http from other machines (behind a VPN, say)
+		#+END_SRC
+
+		Moving an event moves its heading's SCHEDULED, DEADLINE or timestamp
+		(a line edit; the repeater is kept); renaming it renames the heading.
+		Deleting an event takes the date off the heading and leaves the
+		heading. Deleting a contact is refused.
+
+** Checklists
+		Where =orgs list new= files a new checklist, and the heading it goes
+		under. Both are optional; these are the defaults.
+
+		#+BEGIN_SRC yaml
+		server:
+		  checklistsFile:    "inbox.org"
+		  checklistsHeading: "Checklists"
+		#+END_SRC
+
+		The file is relative to the first of the orgDirs. It is meant as an
+		inbox: refile a list somewhere better once it has earned a home, and
+		=orgs list= still finds it, since it looks for checkboxes everywhere.
+		It is the built in =Checklist= capture template's target, so a capture
+		template of your own called =Checklist= replaces the whole thing.
+
 ** Clock Into Drawer
 		When using the clocking features org can choose to dump clock data at the top of a heading
 		OR produce the clock data into a drawer of your choosing. This option lets you
@@ -7520,6 +7986,31 @@ English (US) dictionary inside the page.
 		the user cache directory (=orgs/harper-ls-<version>/=). =brew install harper=
 		or =cargo install harper-ls= work as well.
 
+** Hooks
+		Run a program, a shell line or a webhook when something happens: a
+		heading changes keyword, a clock stops, a capture lands, a deadline
+		passes - or any other event on the =/events= stream. Off unless enabled.
+		See *Hooks* for the fields each event carries.
+
+		#+BEGIN_SRC yaml
+		hooks:
+		  enable: true
+		  timeout: 30s                     # default for every rule
+		  rules:
+		    - name: done-log
+		      on: [statechange]
+		      match: {to: "DONE|CANCELLED"}  # case-insensitive regexps, whole value
+		      run: ["/usr/local/bin/log-done", "{{headline}}", "{{file}}"]
+		    - name: work-to-slack
+		      on: [statechange, capture]
+		      match: {tags: work}          # any tag
+		      url: https://hooks.slack.com/services/...
+		      secret: env:SLACK_HOOK_SECRET  # signs the body: X-Orgs-Signature
+		    - name: overdue
+		      on: [deadline]
+		      shell: 'say "$ORGS_HEADLINE is overdue"'
+		#+END_SRC
+
 ** Https Only
 		Serve https and nothing else: the plain http listener on =port= is
 		not started, so nothing - a login, a token, a note - can cross the
@@ -7756,6 +8247,20 @@ English (US) dictionary inside the page.
 		says so loudly on every startup. Add accounts with =orgs user add=; see
 		"Users and the keystore" for the whole of it.
 
+** Protocol Projects
+		Where an org-protocol =open-source= link finds the file a published
+		page was made from: org's =org-protocol-project-alist=. A page under
+		=baseUrl= is looked for under =workingDirectory=, with =onlineSuffix=
+		swapped for =workingSuffix=; a url ending in a slash is its =index=.
+
+		#+BEGIN_SRC yaml
+	  protocolProjects:
+	    - baseUrl: https://example.com/notes/
+	      workingDirectory: ~/notes
+	      onlineSuffix: .html
+	      workingSuffix: .org
+		#+END_SRC
+
 ** Refresh
 		What the server keeps current by itself: source blocks with
 		=:schedule=, dynamic blocks with =:refresh=, files with =#+REFRESH:=
@@ -7908,6 +8413,33 @@ English (US) dictionary inside the page.
 		#+END_SRC
 
 		Every key may be left out.
+
+** TODO Dependencies
+		Org's =org-enforce-todo-dependencies= and
+		=org-enforce-todo-checkbox-dependencies=. With the first, a heading
+		cannot be marked done while a child heading is still open, or, under a
+		parent with an =ORDERED= property, while a sibling above it is. With the
+		second, not while a checkbox in its own text is unticked. A heading
+		with =:NOBLOCKING: t= is never held back. The refusal names what is in
+		the way; a client can still insist (=Force=, as Emacs's =C-u C-u C-u
+		C-c C-t=). Off by default, as in org.
+		#+BEGIN_SRC yaml
+	  server:
+	    enforceTodoDependencies: true
+	    enforceCheckboxDependencies: true
+		#+END_SRC
+
+** Transclusion
+		=#+transclude: [[id:...]]= lines drawn as the heading (or file, or lines)
+		they name, in worg, every export and the VS Code preview, with worg's
+		edits written back into the source. Off by default; worg's settings menu
+		and =orgs transclude on|off= turn it on and off without editing this.
+
+		#+BEGIN_SRC yaml
+		transclusion:
+		  enable: true
+		  depth: 3      # transclusions inside transcluded text, how deep (default 3)
+		#+END_SRC
 
 ** Update Check
 		GET /version tells a client (the vscode plugin, =orgs version=) which
@@ -8136,6 +8668,288 @@ English (US) dictionary inside the page.
 		=security add-generic-password -s orgs -a anthropic -w= on a Mac.
 		=maxContext= caps how much of a file is sent (characters, default
 		400000).
+
+* Setup
+** Hooks: run something when something happens
+*** What a hook is
+
+  A rule in the server's yaml: when this kind of event happens, and it
+  matches, run this program, shell line or webhook. Off until
+  =hooks: enable: true=; rules come only from the yaml.
+
+  #+BEGIN_SRC yaml
+  server:
+    hooks:
+      enable: true
+      timeout: 30s
+      rules:
+        - name: done-log
+          on: [statechange]
+          match: {to: "DONE|CANCELLED"}
+          run: ["/usr/local/bin/log-done", "{{headline}}", "{{file}}"]
+        - name: work-to-chat
+          on: [statechange, capture]
+          match: {tags: work}
+          url: https://example.com/hooks/orgs
+          secret: env:ORGS_HOOK_SECRET
+        - name: overdue
+          on: [deadline]
+          shell: 'say "$ORGS_HEADLINE is overdue"'
+  #+END_SRC
+
+*** The events
+
+  | Event         | When                                                 | Fields besides headline, file, hash, line, tags |
+  |---------------+------------------------------------------------------+-------------------------------------------------|
+  | =statechange= | a heading's keyword changes - from worg, the command |                                                 |
+  |               | line, or an editor saving the file                   | =from=, =to=                                    |
+  | =clockout=    | a clock stops                                        | =minutes=                                       |
+  | =clockin=     | a clock starts                                       |                                                 |
+  | =capture=     | a capture is filed                                   | =template=                                      |
+  | =deadline=    | an open heading's DEADLINE passes (its time, or the  | =date=                                          |
+  |               | end of its day)                                      |                                                 |
+
+  Any other event on the =/events= stream can be named too (=querymatch=,
+  =focusend=, =tangled=, =notify= ...), or ="*"= for all but reloads. Every
+  event has =kind=, =at= and =msg=; =tags= are the heading's own, its
+  parents' and the file's.
+
+*** Matching
+
+  =match= names fields and case-insensitive regular expressions that must
+  match the whole value: =to: DONE= is DONE and not DONEISH, =to: "DONE|CANCELLED"=
+  either. =tags: work= matches when any tag does. All of =match= must hold.
+
+*** What the hook gets
+
+  - =run=: a program and its arguments, no shell. ={{headline}}=, ={{to}}=, ...
+    are filled in /inside each argument/, so a title is always one argument
+    whatever characters it has.
+  - =shell=: a line for =sh -c=. The event is there only as environment
+    variables - =ORGS_KIND=, =ORGS_HEADLINE=, =ORGS_FROM=, =ORGS_TO=,
+    =ORGS_TAGS= (=a:b=), =ORGS_FILE=, =ORGS_LINE=, =ORGS_HASH=, =ORGS_MINUTES=,
+    =ORGS_DATE=, =ORGS_TEMPLATE=, =ORGS_AT= - never pasted into the line, so
+    quote them: ="$ORGS_HEADLINE"=.
+  - Both also get the whole event as json on standard input, and =ORGS_HOOK=,
+    the rule's name. =dir= sets the working directory.
+  - =url=: the event is POSTed as ={"hook": ..., "event": {...}}= with
+    =X-Orgs-Event= and =X-Orgs-Hook= headers, retried twice on a network error
+    or a 5xx. With =secret= (literal, =env:NAME= or =keyring:NAME=) the body is
+    signed: =X-Orgs-Signature: sha256=<hex hmac-sha256 of the body>=.
+    =headers= adds more.
+
+  A rule runs at most =limit= times a minute (30): a hook that edits an org
+  file and so sets itself off again stops there, and says so in its runs.
+
+*** Seeing and trying them
+
+  #+BEGIN_SRC sh
+  orgs hooks                    # the rules and the last runs, with their output
+  orgs hooks runs               # the last hundred
+  orgs hooks test done-log kind=statechange headline="Ship it" from=TODO to=DONE
+  #+END_SRC
+
+  [[file:docs/images/cli-hooks.png]]
+
+  A test runs the rule on the event given, whatever its =on= and =match=
+  say; only an administrator may.
+
+** org-protocol: capture from the browser
+*** What it is
+
+  Emacs's org-protocol lets a bookmarklet hand the page you are reading to
+  org: capture it (with the text you selected), store a link to it for later,
+  or open the org file a published page was made from. orgs takes the same
+  links, in both spellings org has used:
+
+  #+BEGIN_EXAMPLE
+  org-protocol://capture?template=w&url=URL&title=TITLE&body=SELECTION
+  org-protocol://capture:/w/URL/TITLE/SELECTION
+  org-protocol://store-link?url=URL&title=TITLE
+  org-protocol://open-source?url=URL
+  #+END_EXAMPLE
+
+  A capture always opens worg's capture form, filled in from the page, and
+  nothing is filed until you press Capture: any web page can open one of
+  these links.
+
+*** Two ways in
+
+  - *Nothing installed.* Swap =org-protocol://= for your server's address
+    and =/org-protocol/=, e.g.
+    =https://box:8010/org-protocol/capture?template=Web&url=…=. The server
+    reads it and sends the browser to worg. This works on a phone too. A
+    bookmarklet of this kind opens worg in a small window, which closes
+    itself once the capture is filed.
+  - *The org-protocol:// handler.* =orgs protocol install= makes orgs the
+    program your system runs for =org-protocol://= links, so Emacs-style
+    bookmarklets work unchanged. On a click, orgs opens worg already logged
+    in (through a one-use login link), stores the link, or opens the source
+    file in your editor.
+
+  =orgs protocol bookmarklets= prints both kinds for your server, ready to
+  paste as a bookmark's address (=-temp Web= names the template).
+
+*** =orgs protocol=
+
+  #+BEGIN_SRC sh
+  orgs protocol install        # handle org-protocol:// links (macOS, Linux, Windows)
+  orgs protocol status         # which program handles them now
+  orgs protocol uninstall
+  orgs protocol bookmarklets -temp Web
+  orgs protocol links          # what store-link has kept, newest first
+  orgs protocol 'org-protocol://capture?url=…'   # what a click runs
+  #+END_SRC
+
+  - *macOS*: a small applet, =~/Applications/Orgs Protocol.app=, made with
+    =osacompile= and registered with Launch Services as the default handler.
+    If Emacs Client handled these links before, it no longer does;
+    =uninstall= gives them back. What a click prints goes to
+    =~/Library/Caches/orgs/protocol.log=.
+  - *Linux*: =~/.local/share/applications/orgs-protocol.desktop=, made the
+    default with =xdg-mime=.
+  - *Windows*: =HKCU\Software\Classes\org-protocol=. orgs is a console
+    program, so a window flashes up on each click.
+
+  The handler runs this binary with this config file, so it talks to the
+  server and uses the login the install was made with. When it runs from a
+  click, a problem shows as a desktop notification.
+
+*** Templates and the page
+
+  A capture from a page, with the =Web= template below: the title is the
+  headline, the address goes into =:SOURCE:= and the selected text into the
+  body, and nothing is filed until you press Capture.
+
+  [[file:docs/images/worg-protocol.png]]
+
+
+  A link names a template by name (=template=Web=), by name in any case, or
+  by an Emacs one-letter key (=w=), which finds the only template whose name
+  starts with that letter. With no template, or one that is not there, worg
+  asks which.
+
+  A hole in the template named for a part of the page gets it:
+
+  | Hole                           | Gets                      |
+  |--------------------------------+---------------------------|
+  | ={{url}}=, ={{link}}=          | the page's address        |
+  | ={{title}}=, ={{description}}= | the page's title          |
+  | ={{body}}=, ={{initial}}=      | the selected text         |
+  | ={{annotation}}=               | =[[url][title]]=          |
+  | ={{anything}}=                 | =&anything=…= in the link |
+
+  Whatever no hole asked for goes into the body - the link on the first line,
+  then the selection - so a plain headline-and-body template keeps the page
+  too. An entry's headline starts as the page's title.
+
+  #+BEGIN_SRC yaml
+  captureTemplates:
+    - name: Web
+      type: entry
+      target: {type: file+headline, filename: inbox.org, id: Inbox}
+      template: |-
+        :PROPERTIES:
+        :SOURCE: {{url}}
+        :END:
+        {{CONTENT}}
+  #+END_SRC
+
+*** store-link
+
+  Keeps =[[url][title]]= on the server (thirty a user, until the server
+  restarts, as org keeps its stored links for a session) and puts it on the
+  clipboard. VS Code's /Insert Link/ offers the kept links first, and
+  =orgs protocol links= lists them.
+
+*** open-source
+
+  Maps a published page back to its file with =protocolProjects:=, org's
+  =org-protocol-project-alist=:
+
+  #+BEGIN_SRC yaml
+  server:
+    protocolProjects:
+      - baseUrl: https://example.com/notes/
+        workingDirectory: ~/notes
+        onlineSuffix: .html
+        workingSuffix: .org
+  #+END_SRC
+
+  =https://example.com/notes/a/b.html= opens =~/notes/a/b.org=; a url ending
+  in a slash is its =index=. worg opens it in the Files tab when it is an org
+  file the server holds; =orgs protocol= opens it in your editor when it is
+  on the same machine.
+
+** Your agenda and contacts on a phone: CalDAV and CardDAV
+*** What you get
+
+  The phone's own Calendar shows every dated heading - SCHEDULED, DEADLINE
+  (as "Due: ..."), and appointments' own timestamps - and its Contacts app
+  shows your contact records and any heading with an =EMAIL= or =PHONE=
+  property. Both ways: move an event and the heading's date moves; rename it
+  and the heading is renamed; add a phone number and it is in the drawer.
+
+  | On the phone          | In your org files                                          |
+  |-----------------------+------------------------------------------------------------|
+  | move an event         | its SCHEDULED, DEADLINE or timestamp, repeater kept        |
+  | rename an event       | the heading's title                                        |
+  | delete an event       | the date comes off; the heading stays                      |
+  | new event             | a heading in =inbox.org= (=dav.newEvents=)                 |
+  | edit a contact        | its fields, changed by value; other properties untouched   |
+  | new contact           | a contact record (or =contacts.org= when there is no list) |
+  | delete a contact      | refused - remove people in org                             |
+
+*** Turning it on
+
+  In the server's yaml, then restart it:
+
+  #+BEGIN_SRC yaml
+  server:
+    dav:
+      enable: true
+  #+END_SRC
+
+  Then make an app password for the phone. It is shown once; only its hash is
+  kept, and each device gets its own so one can be cut off.
+
+  #+BEGIN_SRC sh
+  orgs dav password "my phone"
+  orgs dav                      # what is on, and every password with when it was last used
+  orgs dav revoke 410704f2
+  #+END_SRC
+
+*** On the phone
+
+  =orgs dav= says whether it is on, the addresses to give the phone and the
+  app passwords made so far:
+
+  [[file:docs/images/cli-dav.png]]
+
+
+  - *iPhone*: Settings → Calendar → Accounts → Add Account → Other → Add
+    CalDAV Account. Server: your server's host and https port
+    (=box.local:8443=), user: your orgs user, password: the app password. The
+    same again under Contacts → Add CardDAV Account.
+  - *Android*: DAVx5, "Login with URL and user name", =https://box.local:8443/=.
+
+  The phone must reach the server over *https*. A plain http address is
+  refused unless the request comes from the server's own machine (a reverse
+  proxy in front of it) or =dav.allowHttp: true= is set for a network you
+  trust, such as a VPN. A server with a self-signed certificate needs that
+  certificate trusted on the phone first.
+
+*** Safe by default
+
+  - Off until =dav.enable=; =dav.readOnly= lets the phone look and not change.
+  - Only app passwords open it - never your login password - compared in
+    constant time; five wrong ones from an address and it waits, doubling up
+    to fifteen minutes.
+  - Each user sees only their own collections.
+  - Every change is checked against the version the phone last saw, so a
+    phone that has not synced cannot overwrite an edit made elsewhere.
+  - Changes are line edits of the lines concerned, as everywhere else in
+    orgs: nothing else in the file moves.
 
 * Stories
 ** A writer's book, start to finish
@@ -10295,6 +11109,26 @@ English (US) dictionary inside the page.
 
 	*Response:* =text/html=, or a 400 with the reason as text.
 
+** GET /agenda/view — One Agenda View, Answered Or Exported
+
+	=?name=Week agenda= or =?name=n= (a view's name or key). Answers
+	={Ok, Name, Parts: [{Title, Kind, Agenda, Nodes, Msg}]}=: an =agenda=
+	section's =Agenda= is =/agenda='s answer for its days, the others' =Nodes=
+	the headings they match. =format=txt= is the view as org-agenda-write
+	writes text, =format=html= that as a page, =format=ics= every dated
+	heading in it as a calendar.
+
+** GET /agenda/views — Every Agenda View
+** POST /ext/agenda/views — Replace The Person's Own
+
+	=GET= lists org's built-in views (=a= week, =t= open tasks, =n= both, =#=
+	stuck projects), the yaml's =agenda: views:= and the person's own; the
+	first two say =ReadOnly=. =POST= takes the person's whole list. A view is
+	={Name, Key, Sections: [{Kind, Title, Query, Days, Start, Keywords}]}=,
+	=Kind= one of =agenda= (=Days=, =Start: monday=), =todo= (=Keywords:
+	"NEXT|WAITING"=), =tags= (=Query= in any form, org match strings
+	included), =search= (words) and =stuck=; =Query= narrows any of them.
+
 ** GET /assistant/status — The Writing Assistant's Backends
 	Which AI backends the server offers worg's writing assistant, whether each
 	has a key, its models, and the default:
@@ -10429,6 +11263,14 @@ English (US) dictionary inside the page.
 
 	*Response:* the file, with =X-Orgs-Words= (the word count) and, for an
 	ebook, an =X-Orgs-Warning= header per picture that could not be put in.
+
+** GET /cite/keys — The Works A File Can Cite
+
+	=?file=paper.org=. Every entry of the file's bibliographies (its
+	=#+bibliography:= lines and =citations.bibliography= in the yaml), by
+	key, for completing =[cite:@...]=.
+
+	*Response:* ={Ok, Msg, Sources: [paths], Keys: [{Key, Author, Year, Title}]}=
 
 ** GET /code — Every Source Block
 
@@ -10603,6 +11445,20 @@ English (US) dictionary inside the page.
 
 	*Response:* =text/csv=, named after the file (or =query.csv=); a problem
 	is a plain-text 400 or 404.
+
+** GET /davconfig — CalDAV and CardDAV: Whether They Are On, And Your App Passwords
+** POST /davconfig/passwords — Make An App Password
+** DELETE /davconfig/passwords — Revoke One
+
+	#+BEGIN_EXAMPLE
+	GET    /davconfig                   {"Ok":true,"Enable":true,"Calendar":"/dav/cal/ian/calendars/org/", ...,"Passwords":[{"Id","Label","Created","LastUsed"}]}
+	POST   /davconfig/passwords {"Label":"phone"}   {"Ok":true,"Id":"3fa1c2d0","Password":"abcde-fghij-klmno-pqrst"}
+	DELETE /davconfig/passwords?id=3fa1c2d0   (id=all revokes every one)
+	#+END_EXAMPLE
+
+	The password is in the answer once and never again: only its hash is kept.
+	A phone logs in with the orgs user name and it. Making one works while the
+	collections are off, so a phone can be set up before they are turned on.
 
 ** GET /dblocks — The Dynamic Blocks In A File
 
@@ -11601,6 +12457,19 @@ English (US) dictionary inside the page.
 	*Response:* =Ok=, =Msg=, =Rev=, =Text=, and =Missing= when the file did
 	not exist at that revision (=Text= is then empty, and =Ok= still true).
 
+** GET /hooks — The Hooks, And What They Did
+** POST /hooks/test — Run One Now
+
+	#+BEGIN_EXAMPLE
+	GET  /hooks            {"Ok":true,"Enable":true,"Rules":[...],"Runs":[{"Hook","Kind","At","Ok","Msg","Output","Millis"}]}
+	POST /hooks/test       {"Hook":"done-log","Event":{"kind":"statechange","headline":"Ship it","from":"TODO","to":"DONE"}}
+	#+END_EXAMPLE
+
+	Runs are the last hundred, oldest first. A test runs the named rule on the
+	event given - whether or not its =on= and =match= would have taken it - and
+	answers how it went; only an administrator may (it runs a program).
+	Rules come only from the yaml: nothing here adds or changes one.
+
 ** GET /insights/deps — Dependency Health
 	What is wrong with the AFTER and ORDERED links between headings, read with
 	the gantt's own rules (an AFTER names a heading by hash, ID or CUSTOM_ID as
@@ -11784,6 +12653,17 @@ English (US) dictionary inside the page.
 	Ollama's: =missing=, =installing=, =stopped=, =starting=, =running=,
 	=adopted=, =failed= or =unreachable=. Asking starts nothing; a runtime is
 	started when a model of it is used, or with =start=.
+
+** GET /lsp/runnable — Which Languages A Block May Run In
+
+	#+BEGIN_EXAMPLE
+	GET /lsp/runnable?lang=python&lang=dot
+	{"python": "", "dot": "orgs does not know how to run \"dot\". ..."}
+	#+END_EXAMPLE
+
+	For each =lang=, empty when a block in it would run here, otherwise why
+	not: babel off, a language it has no runner for, or one left out of
+	=babel.languages=. An editor offers "run" only where a run would happen.
 
 ** GET /mapgen — The Map Generator's Settings
 	The settings of the map generators, for a form: each with its id, its property name in a
@@ -11981,6 +12861,12 @@ English (US) dictionary inside the page.
 	| =KeepDate= | bool   | no       | Keep the date, take off the time.   |
 
 	*Response:* A =PlanWrite=; =Stamp= is what is left, empty when SCHEDULED was removed.
+
+** GET /query/explain?query=Q
+
+  What a query becomes before it runs: =Full= is a short query translated into
+  the full form, =Expanded= that with its {{ filters }} written in. =Ok= is
+  false, with =Msg=, when it would not parse. What =orgs search -explain= shows.
 
 ** GET /recap — What Happened, and What Is in the Way
 	The material of =orgs standup= and =orgs recap=, in one walk over every
@@ -12359,6 +13245,24 @@ English (US) dictionary inside the page.
 	   "Olp": ["Money", "Budget"], "Line": 12, "Rows": 6, "Cols": 3, "Formulas": 2}]}
 	#+END_SRC
 
+** GET /timer, POST /timer — The Relative Timer
+** POST /timer/item — A Note Stamped With It
+** POST /clock/resolve — Idle Time On The Running Clock
+
+	=GET /timer= is ={Ok, Running, Paused, Countdown, Elapsed, Remaining, Display, Started}=.
+	=POST /timer= takes ={"Op": "start"}= (or =pause=, =continue=, =stop=,
+	={"Op": "countdown", "Minutes": 25}= - a notification when it ends -,
+	={"Op": "set", "Offset": "0:10:00"}=) and answers the state.
+
+	=POST /timer/item= ={"Hash": "...", "Text": "they agreed"}= writes =- 0:03:12 :: they agreed=
+	at the end of the heading's own text (the clocked heading when =Hash= is
+	empty), straight after the last such item.
+
+	=POST /clock/resolve= ={"How": "subtract", "Minutes": 20}= takes idle
+	minutes off the running clock; ="stop"= clocks out that long ago; ="keep"=
+	does nothing. =GET /clock/idle= is ={Minutes}=, the yaml's
+	=clockIdleMinutes= (0 is off).
+
 ** GET /timesheet — Clocked Time by Client, as a Timesheet or Invoice
 
 	Every CLOCK line in a range, attributed to a client and priced (see
@@ -12389,6 +13293,28 @@ English (US) dictionary inside the page.
 	| =themes=     | =t= answers the theme names instead                                 |
 
 	*Response:* a =Timesheet= object, =text/csv= or =text/html=.
+
+** GET /transclusion — Whether Transclusion Is On
+** POST /transclusion — Turn It On Or Off
+
+	#+BEGIN_EXAMPLE
+	GET  /transclusion          {"Ok": true, "Enable": false, "Depth": 3}
+	POST /transclusion          {"Enable": true}
+	#+END_EXAMPLE
+
+	The POST takes effect at once and is written into the server's yaml
+	(=transclusion: enable:=), keeping the file as it was in
+	=<file>.before-transclusion=. A server started without a yaml file turns
+	it on for as long as it runs, and says so in =Msg=.
+
+** GET /transclusions — A File's Transclusions
+
+	=?file=notes.org=. Every =#+transclude:= line of the file, in order (the
+	order of the =data-tx= marks in its html), with the file and rows its text
+	comes from and that text, which is what =/transclusion/save= checks an
+	edit against. =Error= says why one names nothing.
+
+	*Response:* ={Ok, Msg, Enable, Transclusions: [{Line, Link, Opts, File, From, To, Text, Title, Error}]}=
 
 ** GET /typst/pdf — A File, Typeset by Typst
 
@@ -12564,6 +13490,27 @@ English (US) dictionary inside the page.
   A ticket is good for one use and for a minute, so the url it is on is worth
   nothing by the time it is in a browser's history. =orgs worg= and
   =Org: Open worg in Browser= are the two ends that use it.
+
+** org-protocol: captures, links and sources from a browser
+  The server's half of Emacs's org-protocol (the parser is
+  =common.ParseOrgProtocol=, shared with =orgs protocol=, the scheme's
+  handler).
+
+  - =GET /org-protocol/<link>= (public) is any org-protocol link with
+    =org-protocol://= swapped for the server's address, in either spelling:
+    =/org-protocol/capture?template=w&url=…= or the old
+    =/org-protocol/capture:/w/URL/TITLE/BODY=. It writes nothing; it
+    redirects to worg's flat form, =/?protocol=capture&template=…=, and worg
+    puts up the capture (or stores the link, or opens the file) once whoever
+    it is has logged in. A bookmarklet for it needs nothing installed.
+  - =POST /protocol/links= ={"Url": "...", "Title": "..."}= stores a link
+    (store-link) for the user, answering ={"Ok": true, "Link": "[[url][title]]"}=;
+    =GET /protocol/links= lists them, newest first. Kept in memory, thirty a
+    user, as org keeps its stored links for the session.
+  - =GET /protocol/source?url=<published url>= is the file the
+    =protocolProjects:= setting says that page was made from:
+    ={"Ok", "Msg", "File", "Known"}=, =Known= when it is an org file this
+    server holds (so worg can open it).
 
 ** POST /assistant/chat — Talk to the Writing Assistant
 	Body ={Backend, Model, Messages: [{Role, Text}], File, Title, Scope,
@@ -14168,6 +15115,35 @@ English (US) dictionary inside the page.
 	=qwen/qwen3-8b=); =cancel= ={Model}= stops a pull, =delete= ={Model}=
 	removes one. *Response:* ={Ok, Msg}=.
 
+** POST /lsp/date — Set A Date In Text The Client Holds
+
+	#+BEGIN_EXAMPLE
+	{ "Filename": "/path/notes.org", "Text": "* TODO Call\n", "Line": 0,
+	  "Name": "SCHEDULED", "Value": "<2026-11-02 Mon>" }
+	#+END_EXAMPLE
+
+	=/date/change= on text instead of a file: the heading holding =Line= (zero
+	based) of =Text= gets the date, and the answer is the whole text after the
+	edit. Nothing is written. =Value= is a stamp or a bare date; empty clears it.
+	For an editor with unsaved changes, which applies the answer to its buffer.
+
+	*Response:* ={Ok, Msg, Changed, Text}=. =Changed= false means the text
+	already said that, and =Text= is then empty.
+
+** POST /lsp/run — Run What Is At A Line Of Text The Client Holds
+
+	#+BEGIN_EXAMPLE
+	{ "Filename": "/path/notes.org", "Text": "...the whole buffer...", "Line": 41 }
+	#+END_EXAMPLE
+
+	=/babel/exec= on text instead of a file: the source block, =#+CALL:= or
+	inline code at =Line= runs with the text's own named tables and blocks, in
+	the directory of =Filename=, and its result is placed in the text as it
+	would be in the file. Nothing is written; the answer is the whole text. Off
+	unless =babel.enable= is set, as for =/code/run=.
+
+	*Response:* ={Ok, Msg, Changed, Text, Ran}=, =Ran= as =/babel/exec= has it.
+
 ** POST /mapgen/render — Draw a Map
 	Draws a map from its params and painted terrain, as a jpeg - what the map editor shows while
 	the settings change. The last dozen maps drawn are kept, so asking again is quick.
@@ -14518,7 +15494,7 @@ English (US) dictionary inside the page.
 ** POST /reloadconfig — Reload The Configuration
 	Reads the server's yaml file again and takes from it everything that can
 	change under a running server: capture templates, filters, tag groups,
-	refile targets, goLinksFile/goLinksHeading, todo states, day page, archive, date tree and clock
+	refile targets, goLinksFile/goLinksHeading, checklistsFile/checklistsHeading, todo states, day page, archive, date tree and clock
 	settings, the template path, babel, columns, log and the dnd paths.
 
 	What a running server is built around is left as it is, and named in
@@ -14669,6 +15645,17 @@ English (US) dictionary inside the page.
 	heading by =Hash=, after line =AfterLine= (zero based), or at the end of
 	the file. =Header= draws a rule under the first row; =Name= writes a
 	=#+NAME:= above it. Only the lines added change.
+
+** POST /transclusion/save — Write An Edit Back To Its Source
+
+	#+BEGIN_EXAMPLE
+	{ "File": "/org/projects.org", "From": 12, "To": 30, "Old": "...", "New": "..." }
+	#+END_EXAMPLE
+
+	Replaces rows =From=..=To= (0 based, as =/transclusions= gave them) of an
+	org file the server has, only if they still read =Old=; otherwise it
+	refuses and nothing is written. Only the rows change. Refused while
+	transclusion is off.
 
 ** POST /users/add — Add A User
 	Adds an account to this server's keystore. The caller must be logged in as
