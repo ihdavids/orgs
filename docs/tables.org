@@ -32,6 +32,10 @@
    [[file:images/worg-tables.png]]
 
    [[file:images/cli-tables.png]]
+
+   In worg a selection, or a table's =#+PLOT:= line, is drawn as a chart.
+
+   [[file:images/worg-chart.png]]
    If a formula fails, nothing is written and the error names the formula.
 
 * Anatomy of a formula

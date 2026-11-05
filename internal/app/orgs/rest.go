@@ -156,6 +156,24 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/body/{hash}", RequestTodoBody).Methods("GET")
 	api.HandleFunc("/checklist", PostChecklistToggle).Methods("POST")
 	api.HandleFunc("/checklist/edit", PostChecklistEdit).Methods("POST")
+	api.HandleFunc("/checklist/reset", PostChecklistReset).Methods("POST") // checklistreset.go
+	api.HandleFunc("/features", RequestFeatures).Methods("GET", "POST") // features.go
+	api.HandleFunc("/edna/explain", PostEdnaExplain).Methods("POST")     // edna.go
+	api.HandleFunc("/edna/check", PostEdnaCheck).Methods("POST")
+	api.HandleFunc("/noter/sessions", RequestNoterSessions).Methods("GET") // noter.go
+	api.HandleFunc("/noter/notes", RequestNoterNotes).Methods("GET")
+	api.HandleFunc("/noter/note", PostNoterNote).Methods("POST")
+	api.HandleFunc("/noter/page", PostNoterPage).Methods("POST")
+	api.HandleFunc("/noter/start", PostNoterStart).Methods("POST")
+	api.HandleFunc("/noter/pdf", RequestNoterPdf).Methods("GET")
+	api.HandleFunc("/remark/sources", RequestRemarkSources).Methods("GET") // remark.go
+	api.HandleFunc("/remark", RequestRemark).Methods("GET")
+	api.HandleFunc("/remark/highlight", PostRemarkHighlight).Methods("POST")
+	api.HandleFunc("/remark/note", PostRemarkNote).Methods("POST")
+	api.HandleFunc("/remark/delete", PostRemarkDelete).Methods("POST")
+	api.HandleFunc("/expiry/due", RequestExpiryDue).Methods("GET") // expiry.go
+	api.HandleFunc("/expiry/run", PostExpiryRun).Methods("POST")
+	api.HandleFunc("/expiry/set", PostExpirySet).Methods("POST")
 	api.HandleFunc("/addresses", RequestServerAddresses).Methods("GET")
 	api.HandleFunc("/events", RequestEvents).Methods("GET")
 	api.HandleFunc("/status", RequestDefaultStatus).Methods("GET")

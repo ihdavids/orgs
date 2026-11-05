@@ -1048,6 +1048,58 @@ type ServerSettings struct {
 	EDOC */
 	Transclusion TransclusionSettings `yaml:"transclusion"`
 	/* SDOC: Settings
+	* Optional Features
+		Org packages orgs does the work of, each off until turned on: worg's
+		settings menu, =orgs features NAME on|off= and VS Code's
+		=Org: Turn orgs Features On or Off= write this block for you.
+
+		#+BEGIN_SRC yaml
+		features:
+		  checklistReset: true  # org-checklist: :RESET_CHECK_BOXES: t on a repeating heading
+		  edna: true            # org-edna: TRIGGER and BLOCKER properties
+		  noter: true           # org-noter: notes on a PDF, page by page
+		  remark: true          # org-remark: highlights and margin notes
+		  expiry: true          # org-expiry: :EXPIRY: dates
+		  autoArchive: true     # archive headings done longer ago than autoArchive.after
+		#+END_SRC
+	EDOC */
+	Features FeatureSettings `yaml:"features"`
+	/* SDOC: Settings
+	* Expiry and Auto Archive
+		What happens to a heading whose =:EXPIRY:= has passed (=features:
+		expiry:=), and to one finished longer ago than =after= (=features:
+		autoArchive:=). Both are looked at every =every= (default 1h) and on
+		=orgs expire=.
+
+		#+BEGIN_SRC yaml
+		expiry:
+		  handler: archive   # archive (default), sibling, tag (adds :ARCHIVE:) or keyword
+		  keyword: EXPIRED   # the keyword the keyword handler writes
+		  wait: ""           # an EXPIRY for headings with CREATED and none of their own, e.g. +30d
+		  every: 1h
+		autoArchive:
+		  after: 30d         # since CLOSED (or the last state change into a done keyword)
+		  mode: archive      # archive (default), sibling or tag
+		  query: ""          # only headings this query also finds
+		#+END_SRC
+
+		A heading (or a file, through =#+PROPERTY:=) can say otherwise:
+		=:AUTO_ARCHIVE: nil= keeps it, =:AUTO_ARCHIVE: 7d= archives it sooner.
+	EDOC */
+	Expiry      ExpirySettings      `yaml:"expiry"`
+	AutoArchive AutoArchiveSettings `yaml:"autoArchive"`
+	/* SDOC: Settings
+	* Remark
+		Where =features: remark:= keeps its highlights: org-remark's
+		marginalia file, relative to the first org directory unless absolute.
+
+		#+BEGIN_SRC yaml
+		remark:
+		  notesFile: marginalia.org
+		#+END_SRC
+	EDOC */
+	Remark RemarkSettings `yaml:"remark"`
+	/* SDOC: Settings
 	* CalDAV and CardDAV
 		Your dated headings as a calendar and your contacts as an address book,
 		for a phone's own Calendar and Contacts apps, read and write. Off unless
@@ -1442,6 +1494,37 @@ func (d DavSettings) ContactsOn() bool { return d.Enable && (d.Contacts == nil |
 type TransclusionSettings struct {
 	Enable bool `yaml:"enable"`
 	Depth  int  `yaml:"depth"`
+}
+
+// FeatureSettings is the `features:` block (features.go): optional org
+// packages, every one off unless turned on.
+type FeatureSettings struct {
+	ChecklistReset bool `yaml:"checklistReset"`
+	Edna           bool `yaml:"edna"`
+	Noter          bool `yaml:"noter"`
+	Remark         bool `yaml:"remark"`
+	Expiry         bool `yaml:"expiry"`
+	AutoArchive    bool `yaml:"autoArchive"`
+}
+
+// ExpirySettings is the `expiry:` block (expiry.go).
+type ExpirySettings struct {
+	Handler string `yaml:"handler"`
+	Keyword string `yaml:"keyword"`
+	Wait    string `yaml:"wait"`
+	Every   string `yaml:"every"`
+}
+
+// AutoArchiveSettings is the `autoArchive:` block (expiry.go).
+type AutoArchiveSettings struct {
+	After string `yaml:"after"`
+	Mode  string `yaml:"mode"`
+	Query string `yaml:"query"`
+}
+
+// RemarkSettings is the `remark:` block (remark.go).
+type RemarkSettings struct {
+	NotesFile string `yaml:"notesFile"`
 }
 
 // RefreshSettings is the `refresh:` block (refresh.go).

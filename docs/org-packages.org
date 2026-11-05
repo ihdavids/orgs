@@ -1,0 +1,190 @@
+#+TITLE: Optional org packages: checklists, edna, noter, remark, expiry
+#+DOC_SECTION: Editing
+
+* Turning them on
+
+  Six Emacs packages orgs does the work of. Each is off until you turn it
+  on, and does nothing at all while off: a TRIGGER or EXPIRY property in
+  your files is left alone, and the commands and panels for it say it is
+  off.
+
+  #+BEGIN_SRC sh
+  orgs features                 # which are on
+  orgs features edna on         # turn one on; written into the server's yaml
+  #+END_SRC
+
+  worg's settings menu has an *Org packages…* entry, and VS Code has *Org: Turn
+  orgs Features On or Off*. All three write the same =features:= block:
+
+  #+BEGIN_SRC yaml
+  server:
+    features:
+      checklistReset: true
+      edna: true
+      noter: true
+      remark: true
+      expiry: true
+      autoArchive: true
+  #+END_SRC
+
+  Only an administrator can turn one on or off, unless the server runs
+  with =noAuth=.
+
+* Checklists that start again (org-checklist)
+
+  A repeating heading with =:RESET_CHECK_BOXES: t= has every checkbox in it,
+  and in the headings under it, unticked when it is marked done and comes
+  round again. Its =[n/m]= cookies follow.
+
+  #+BEGIN_SRC org
+  ,* TODO Weekly review [3/3]
+  SCHEDULED: <2026-11-09 Mon +1w>
+  :PROPERTIES:
+  :RESET_CHECK_BOXES: t
+  :END:
+  - [X] empty the inbox
+  - [X] read the calendar
+  - [X] look over the projects
+  #+END_SRC
+
+  =#+PROPERTY: RESET_CHECK_BOXES t= does it for every heading in a file.
+  =orgs check -reset= (worg: *Reset checkboxes* on a kanban card; VS Code:
+  *Org: Reset Checkboxes*) unticks a heading's boxes by hand, whether or not
+  the feature is on.
+
+* Triggers and blockers (org-edna)
+
+  Two properties, in org-edna's language. A =BLOCKER= stops a heading being
+  marked done; a =TRIGGER= acts on other headings once it is.
+
+  #+BEGIN_SRC org
+  ,** TODO Write the draft
+  :PROPERTIES:
+  :BLOCKER: previous-sibling
+  :TRIGGER: next-sibling todo!(NEXT) scheduled!("++1d")
+  :END:
+  #+END_SRC
+
+  Finders gather headings, and the action or condition after them works on
+  what they gathered:
+
+  | Finders     | =self= =parent= =children= =first-child= =last-child= =descendants= =ancestors= =siblings= =siblings-wrap= =rest-of-siblings= =next-sibling= =next-sibling-wrap= =previous-sibling= =ids(a b)= =match("+work")= =olp("file.org" "A/B")= |
+  | Options     | =children(todo-only)=, =todo-and-done-only=, =no-comment=, =no-archive= |
+  | Actions     | =todo!(NEXT)= =scheduled!("+1d")= =deadline!("fri")= =tag!("a:b")= =set-property!("P" "v")= =delete-property!("P")= =set-priority!("A")= =set-effort!("1:00")= =archive!= =chain!("P")= |
+  | Conditions  | =done?= =todo-state?(WAITING)= =headings?= =has-property?("P" "v")= =has-tags?("a")= =matches?("+x")= =re-search?("regexp")=, each negated with =!= |
+  | Other       | =consider(any)= / =all= / a count / a fraction, and =if ... then ... else ... endif= in a TRIGGER |
+
+  A BLOCKER with finders and no condition waits for them all to be done
+  (edna's =!done?=). Dates in =scheduled!= and =deadline!=: =+2d= from the
+  date the target has (or today), =++2d= from now, =-1w=, =cp= (copy this
+  heading's), =rm=, or anything =orgs sched= takes (=mon=, =tomorrow 10:00=).
+  A =todo!= that finishes a heading runs that heading's own TRIGGER too, five
+  deep at most and never the same heading twice.
+
+  The blocker is checked wherever a heading is marked done (the CLI, worg,
+  VS Code, MCP), and =IsBlocked()= in a query counts it. =-force= goes past
+  it.
+
+  #+BEGIN_SRC sh
+  orgs edna                      # a heading's TRIGGER and BLOCKER, and what done would do
+  orgs edna -check 'ids(a1) !done?' -blocker
+  orgs edna -names               # every finder, action and condition
+  #+END_SRC
+
+  =orgs lsp= marks a TRIGGER or BLOCKER it cannot read, and completes the
+  names as you type.
+
+* Notes on a PDF (org-noter)
+
+  A heading with =:NOTER_DOCUMENT:= is a session, and the headings under it
+  with =:NOTER_PAGE:= are its notes, in page order - org-noter's own shape,
+  so a session started in Emacs opens in worg and the other way round.
+
+  #+BEGIN_SRC org
+  ,* Attention is all you need
+  :PROPERTIES:
+  :NOTER_DOCUMENT: papers/attention.pdf
+  :NOTER_PAGE: 4
+  :END:
+  ,** Scaled dot product
+  :PROPERTIES:
+  :NOTER_PAGE: (4 . 0.31)
+  :END:
+  ,#+begin_quote
+  We suspect that for large values of d the dot products grow large
+  ,#+end_quote
+  Hence the √d.
+  #+END_SRC
+
+  worg's *Noter* panel shows the document beside its notes: select a
+  passage to note it, click a note to go to its page. VS Code's *Org: Open
+  PDF Notes* opens the same panel.
+
+  #+BEGIN_SRC sh
+  orgs noter                                   # every session
+  orgs noter notes                             # a session's notes, page by page
+  orgs noter add -page 4 -y 0.3 -quote '...' 'the note'
+  orgs noter start reading.org papers/x.pdf
+  #+END_SRC
+
+* Highlights and margin notes (org-remark)
+
+  Highlight a passage of any file and keep a note on it without touching
+  the file: the highlights live in a marginalia file, org-remark's, so
+  Emacs reads them too.
+
+  #+BEGIN_SRC yaml
+  remark:
+    notesFile: marginalia.org   # relative to the first org directory
+  #+END_SRC
+
+  In VS Code, *Org: Highlight Selection* works in any editor and the
+  highlights are drawn there; worg highlights in a file's Org view. When the
+  file changes, a highlight is found again by its words.
+
+  #+BEGIN_SRC sh
+  orgs remark                                  # every file with highlights
+  orgs remark show notes.txt                   # file:line:col, for a quickfix list
+  orgs remark add notes.txt 'the words' -line 7 -note 'why'
+  orgs remark note ID 'a better note'
+  orgs remark rm ID
+  #+END_SRC
+
+* Headings that expire, and old done work (org-expiry, auto archive)
+
+  With =expiry= on, a heading whose =:EXPIRY:= has passed is filed away.
+  The value is a date, or a span after its =:CREATED:=:
+
+  #+BEGIN_SRC org
+  ,* An article to read
+  :PROPERTIES:
+  :CREATED: [2026-11-04 Wed 10:00]
+  :EXPIRY: +2w
+  :END:
+  #+END_SRC
+
+  With =autoArchive= on, a heading in a done keyword that was closed longer
+  ago than =after= is archived. =:AUTO_ARCHIVE: nil= on a heading (or a
+  heading above it, or the file's =#+PROPERTY:=) keeps it; =:AUTO_ARCHIVE:
+  7d= archives it sooner.
+
+  #+BEGIN_SRC yaml
+  expiry:
+    handler: archive   # archive, sibling, tag (adds :ARCHIVE:) or keyword
+    keyword: EXPIRED
+    every: 1h
+  autoArchive:
+    after: 30d
+    mode: archive      # archive, sibling or tag
+  #+END_SRC
+
+  The server looks every =every=. To see and do it yourself:
+
+  #+BEGIN_SRC sh
+  orgs expire               # what is due, and why
+  orgs expire -run          # file it away
+  orgs expire -set +2w      # give a heading an EXPIRY (a span or a date)
+  #+END_SRC
+
+  worg's *Expiry & Archive* panel lists what is due with a button to file it away, and a search row's menu has *Expires…*; VS Code has *Org:
+  File Away Expired and Old Done Items* and *Org: Set Expiry*.

@@ -43,6 +43,20 @@
 
   [[file:images/worg-search.png]]
 
+* The command palette
+
+  ⌘K (ctrl-K) anywhere: every tab, capture template, file, saved search and
+  setting, and any heading in your notes, found by typing a few letters.
+
+  [[file:images/worg-palette.png]]
+
+* Clock Report
+
+  Org's clock table as a page: what you are clocked into, then the time
+  clocked over a range, heading by heading.
+
+  [[file:images/worg-clock-report.png]]
+
 * Files
 
   Every org file, read rendered or as org, and edited in place. Drawers fold,
@@ -56,6 +70,30 @@
   shows or hides that one. Click a picture to see it full size.
 
   [[file:images/worg-files.png]]
+
+  [[file:images/worg-inline-images.png]]
+
+** Editing
+
+   *Edit* turns the Org view into an editor with vim or Emacs keys and org's
+   own commands: folding, moving subtrees, cycling keywords and priorities,
+   scheduling. See [[*Editing org files in worg][Editing org files in worg]] for every key.
+
+   [[file:images/worg-editor.png]]
+
+** Links and backlinks
+
+   The links panel beside the page shows what links to the heading being read,
+   what it links to, and where its title is written but not yet linked.
+
+   [[file:images/worg-links-panel.png]]
+
+** Refiling and archiving
+
+   *Move headings* ticks headings in the file and refiles, copies or archives
+   them, as =C-c C-w= and =C-c C-x C-a= do.
+
+   [[file:images/worg-refile.png]]
 
 ** Transclusion
 
@@ -108,12 +146,24 @@
 
   [[file:images/worg-tables.png]]
 
+  A table with a =#+PLOT:= line opens on its chart (ctrl-G), as org-plot
+  would draw it.
+
+  [[file:images/worg-chart.png]]
+
 * Mind Map
 
   A saved query drawn as a map, coloured by branch, keyword or tag, and
   exported as an image.
 
   [[file:images/worg-mindmap.png]]
+
+* Starmap
+
+  Every heading as a star and every link as a thread between them, with a
+  timeline to watch the notes grow.
+
+  [[file:images/worg-starmap.png]]
 
 * Contacts
 
@@ -122,6 +172,12 @@
   list. See [[*Records — the contact book, and everything else worth a list][Records]].
 
   [[file:images/worg-contacts.png]]
+
+* Collections
+
+  The same view over any other kind of record: books, wine, recipes.
+
+  [[file:images/worg-collections.png]]
 
 * Flashcards
 
@@ -146,6 +202,8 @@
 
   [[file:images/worg-code.png]]
 
+  [[file:images/worg-code-run.png]]
+
 * Focus: the timer
 
   Under the pomodoros, org's relative timer (=org-timer=): start it at the
@@ -155,3 +213,14 @@
   sees the same one.
 
   [[file:images/worg-timer.png]]
+
+* Tabletop games
+
+  The dice button on the rail opens the tabletop tools: a random generator
+  (encounters, treasure, NPCs, traps...), a dungeon generator you can draw on,
+  and a map generator for regions, worlds and towns. A saved dungeon or map
+  opens in the Files tab as a DM screen, with fog of war, tokens, an
+  initiative tracker and a players' screen for a second display; a character
+  file opens as its character sheet. The D&D guide has the whole tour.
+
+  [[file:images/dnd-dm-screen.png]]

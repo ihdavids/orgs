@@ -113,6 +113,8 @@ Each of these comes up in several features below. They are stated once here, and
   - a writing snapshot's heading path and word count: `headingsOf`/`headingTitle` in `worg/src/writing.ts` and `take` in `WritingParts.tsx` ↔ `cmd/oc/commands/writing/outline.go`
   - a local model name each runtime takes: `llamaRefRe`/`hfRepoRe`/`lmsKeyRe` (`locallamacpp.go`, `localhf.go`, `locallmstudio.go`) ↔ `validName` in `worg/src/localllm.ts` (the server checks again, so drift only shows as a refusal with a different wording)
   - an org link written from a url and title: `common.OrgLinkText` ↔ `orgLink` in `worg/src/orgprotocol.ts` (same cases in `TestOrgLinkText` and `orgprotocol.test.ts`)
+  - org-edna's words and what each means: `EdnaFinders`/`EdnaActions`/`EdnaConditions` in `internal/common/edna.go` ↔ `vscode-org-everywhere/src/edna-model.ts` (its hover)
+  - org-remark positions (code points from 1, end exclusive; Line/Col in code points): `internal/app/orgs/remark.go` ↔ `worg/src/remark.ts` ↔ `vscode-org-everywhere/src/remark-model.ts`
   - kinds of light and their reach: `randgen.LightKinds` (`lights.go`) ↔ `LIGHT_KINDS` in `worg/src/dungeon.ts`; a map's scale for measuring (125 miles across a region, `shores.go`'s scale bar) ↔ `unitOf` in `worg/src/measure.ts`
 
 ### Where the rest of the notes live

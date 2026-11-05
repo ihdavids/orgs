@@ -358,6 +358,27 @@
   The hooks (=orgs hooks=), the phone's calendar (=orgs dav=) and the
   language server (=orgs lsp=) have their pictures in their own guides.
 
+** Where the time went: =orgs clocktable=
+
+  Org's clock table: the =CLOCK:= lines in every =:LOGBOOK:= over a range,
+  added up by file and by heading. =orgs clockin= and =orgs clockout= write
+  them; =orgs clocks= says what is running.
+
+  [[file:docs/images/cli-clocktable.png]]
+
+** Source blocks: =orgs code=
+
+  Every =#+BEGIN_SRC= block in your notes, found by name, language or file,
+  and run the way =C-c C-c= runs it, =:var= arguments and all.
+
+  #+BEGIN_SRC sh
+  orgs code ls -lang python    # the python blocks
+  orgs code run busiest        # run the block named busiest
+  orgs code run -w busiest     # and write #+RESULTS: under it
+  #+END_SRC
+
+  [[file:docs/images/cli-code-run.png]]
+
 ** What is in there: =orgs stats=
 
   [[file:docs/images/cli-stats.png]]
@@ -434,7 +455,9 @@
   The =whatsnew= story is the pictures of the features added in v0.6.0 and
   v0.7.0 (checklists, agenda views, hooks, CalDAV, transclusion, the timer,
   org-protocol and citations), on the demo notes with
-  =docs/screenshots/whatsnew= laid over them.
+  =docs/screenshots/whatsnew= laid over them. The =features= story pictures
+  org's own features (clocking, source blocks, the editor, links, refiling,
+  plots, collections) over =docs/screenshots/features=.
 
 * worg, in pictures
 ** What worg is
@@ -478,6 +501,20 @@
 
   [[file:docs/images/worg-search.png]]
 
+** The command palette
+
+  ⌘K (ctrl-K) anywhere: every tab, capture template, file, saved search and
+  setting, and any heading in your notes, found by typing a few letters.
+
+  [[file:docs/images/worg-palette.png]]
+
+** Clock Report
+
+  Org's clock table as a page: what you are clocked into, then the time
+  clocked over a range, heading by heading.
+
+  [[file:docs/images/worg-clock-report.png]]
+
 ** Files
 
   Every org file, read rendered or as org, and edited in place. Drawers fold,
@@ -491,6 +528,30 @@
   shows or hides that one. Click a picture to see it full size.
 
   [[file:docs/images/worg-files.png]]
+
+  [[file:docs/images/worg-inline-images.png]]
+
+*** Editing
+
+   *Edit* turns the Org view into an editor with vim or Emacs keys and org's
+   own commands: folding, moving subtrees, cycling keywords and priorities,
+   scheduling. See [[*Editing org files in worg][Editing org files in worg]] for every key.
+
+   [[file:docs/images/worg-editor.png]]
+
+*** Links and backlinks
+
+   The links panel beside the page shows what links to the heading being read,
+   what it links to, and where its title is written but not yet linked.
+
+   [[file:docs/images/worg-links-panel.png]]
+
+*** Refiling and archiving
+
+   *Move headings* ticks headings in the file and refiles, copies or archives
+   them, as =C-c C-w= and =C-c C-x C-a= do.
+
+   [[file:docs/images/worg-refile.png]]
 
 *** Transclusion
 
@@ -543,12 +604,24 @@
 
   [[file:docs/images/worg-tables.png]]
 
+  A table with a =#+PLOT:= line opens on its chart (ctrl-G), as org-plot
+  would draw it.
+
+  [[file:docs/images/worg-chart.png]]
+
 ** Mind Map
 
   A saved query drawn as a map, coloured by branch, keyword or tag, and
   exported as an image.
 
   [[file:docs/images/worg-mindmap.png]]
+
+** Starmap
+
+  Every heading as a star and every link as a thread between them, with a
+  timeline to watch the notes grow.
+
+  [[file:docs/images/worg-starmap.png]]
 
 ** Contacts
 
@@ -557,6 +630,12 @@
   list. See [[*Records — the contact book, and everything else worth a list][Records]].
 
   [[file:docs/images/worg-contacts.png]]
+
+** Collections
+
+  The same view over any other kind of record: books, wine, recipes.
+
+  [[file:docs/images/worg-collections.png]]
 
 ** Flashcards
 
@@ -581,6 +660,8 @@
 
   [[file:docs/images/worg-code.png]]
 
+  [[file:docs/images/worg-code-run.png]]
+
 ** Focus: the timer
 
   Under the pomodoros, org's relative timer (=org-timer=): start it at the
@@ -590,6 +671,17 @@
   sees the same one.
 
   [[file:docs/images/worg-timer.png]]
+
+** Tabletop games
+
+  The dice button on the rail opens the tabletop tools: a random generator
+  (encounters, treasure, NPCs, traps...), a dungeon generator you can draw on,
+  and a map generator for regions, worlds and towns. A saved dungeon or map
+  opens in the Files tab as a DM screen, with fog of war, tokens, an
+  initiative tracker and a players' screen for a second display; a character
+  file opens as its character sheet. The D&D guide has the whole tour.
+
+  [[file:docs/images/dnd-dm-screen.png]]
 
 * Commands
 
@@ -1274,6 +1366,12 @@
   The bundled rules are the SRD 5.1, published by Wizards of the Coast under
   the Creative Commons Attribution 4.0 licence.
 
+  [[file:docs/images/dnd-sheet.png]]
+
+  Beyond the sheet, worg has the tools to run a game from your notes: random
+  generators, a dungeon and map generator, and a DM screen with fog of war, an
+  initiative tracker and a players' screen for the table (see *At the table*).
+
 *** Setup
 
   Enable the exporters you want in your =orgs.yaml=, and point the module at
@@ -1495,6 +1593,8 @@
   orgs dnd sheet -file lyra.org -format pdf  -out l.pdf
   #+END_SRC
 
+  [[file:docs/images/cli-dnd-show.png]]
+
   A backdrop can also be given to the export itself, which paints that one
   sheet and writes nothing into the character's org file. =-backdrop= takes a
   file, a folder or a url and may be given more than once:
@@ -1705,6 +1805,8 @@
     rolls 2d10 from 5th, 3d10 from 11th,
   - and a spell the target saves against says so in words ready to read out:
     "Dexterity saving throw against DC 15, half as much damage on a success".
+
+  [[file:docs/images/dnd-sheet-cast.png]]
 
   A spell that rolls nothing at all - mage armor, say - still lands in the
   history saying what it costs and how long it lasts, so the tray is a record
@@ -2005,6 +2107,74 @@
   #+END_SRC
 
   Do not hand edit those files, put your changes in a module instead.
+
+*** At the table
+
+  Worg's dice button, on the rail down the left, opens the tabletop tools.
+  Each opens over the page, so the campaign notes stay on screen under it.
+
+**** The random generator
+
+  Encounters balanced against the party's experience budget, treasure, magic
+  items, gems, NPCs, names, taverns, traps, adventure hooks, trinkets, wild
+  magic surges and carousing. Every result is org text: tick the ones worth
+  keeping (they survive a re-roll) and Save files them under any heading.
+
+  [[file:docs/images/dnd-randgen.png]]
+
+**** The dungeon generator
+
+  Rolls a dungeon, a dwelling or a cave for a party, stocked with monsters,
+  traps and treasure, with a backstory and a line for every room - then lets
+  you draw on it: rooms in any shape, corridors, doors, water, stairs,
+  furniture and labels. It can also start from a picture (a Dungeon Alchemist
+  export, or any image) and have you mark out its rooms. The same seed and
+  settings give the same dungeon.
+
+  [[file:docs/images/dnd-dungeon.png]]
+
+  Save writes an org file - the story, a heading per room, the wandering
+  monsters - with the GM's map, the players' map and a one-page sheet beside
+  it in a =maps= folder.
+
+**** The map generator
+
+  A region, a world on hexes, an inked region, a town or a village. Towns and
+  roads are placed where people would live; a place you found on the map
+  becomes a heading of its own.
+
+  [[file:docs/images/dnd-mapgen.png]]
+
+**** The DM screen
+
+  A saved dungeon or map opened in the Files tab is a screen to run the game
+  from. Clicking a room shows its key, with a button to reveal it to the
+  players or move the party there. The toolbar holds fog of war for either
+  map, the party's track, measuring, pins, the journal (see *The DM's journal
+  on a map*), lights, tokens, tiles, music and sounds. Everything - the fog,
+  the tokens, the fight - is kept in the map's org file.
+
+  [[file:docs/images/dnd-dm-screen.png]]
+
+  The initiative tracker brings in the party (from their character sheets)
+  and monsters by name, from a room's card or the wandering table, rolls
+  initiative and keeps the round. Each fighter gets a numbered token on the
+  map.
+
+  [[file:docs/images/dnd-initiative.png]]
+
+  The session drawer throws dice across the map and, once a session is
+  started, keeps every roll, note and fight of the evening.
+
+  [[file:docs/images/dnd-session.png]]
+
+**** The players' screen
+
+  Opened in a tab of its own for a TV or projector, it shows only the
+  players' map under the fog, the party's marker and whose turn it is. It
+  follows the DM's screen as it changes.
+
+  [[file:docs/images/dnd-players.png]]
 
 *** The DM's journal on a map
 
@@ -7387,6 +7557,8 @@ English (US) dictionary inside the page.
    The same view over any other collection, with a strip to pick between them
    and a button to start a new one.
 
+   [[file:docs/images/worg-collections.png]]
+
 **** The Search tab
 
    Records are **left out of search results by default**, with a *Records*
@@ -9870,6 +10042,10 @@ English (US) dictionary inside the page.
    [[file:docs/images/worg-tables.png]]
 
    [[file:docs/images/cli-tables.png]]
+
+   In worg a selection, or a table's =#+PLOT:= line, is drawn as a chart.
+
+   [[file:docs/images/worg-chart.png]]
    If a formula fails, nothing is written and the error names the formula.
 
 **** Anatomy of a formula

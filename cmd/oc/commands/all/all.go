@@ -42,6 +42,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/new"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/notifications"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/notifycmd"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/orgpkgs"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/orgtools"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/pres"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/projects"

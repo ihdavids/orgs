@@ -754,7 +754,10 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 			if _, active := keywordSets(exp.File); !active[p.Headline.Status] {
 				return false, nil
 			}
-			return todoBlocker(exp.File, p, false) != "", nil
+			if todoBlocker(exp.File, p, false) != "" {
+				return true, nil
+			}
+			return featureOn("edna") && ednaBlocker(exp.File, p) != "", nil
 		},
 		"IsDone": func(args ...interface{}) (interface{}, error) {
 			p := exp.Sec
@@ -1767,11 +1770,39 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	if why := statusBlocked(f, sec, query.Value); why != "" && !query.Force {
 		return common.Result{Ok: false, Msg: why}, fmt.Errorf("%s", why)
 	}
+	if why := ednaStatusBlocked(f, sec, query.Value); why != "" && !query.Force {
+		return common.Result{Ok: false, Msg: why}, fmt.Errorf("%s", why)
+	}
+	// Where the heading is, as somewhere to find it again: the write below
+	// changes the hashes, and a TRIGGER runs from the heading afterwards.
+	ref := refOf(f, sec)
+	done, _ := keywordSets(f)
+	wasDone := done[sec.Headline.Status]
 	res, err := applyStatusChange(f, sec, query.Value, query.Note, time.Now())
 	if err != nil {
 		return common.Result{Ok: false}, err
 	}
-	return common.Result{Ok: true, Msg: statusChangeMessage(res, query.Value)}, nil
+	msg := statusChangeMessage(res, query.Value)
+	if featureOn("edna") && done[query.Value] && !wasDone {
+		msg = joinMsg(msg, ednaStepsMessage(runEdnaTrigger(ref, false)))
+	}
+	return common.Result{Ok: true, Msg: msg}, nil
+}
+
+// What a TRIGGER did, said in one line.
+func ednaStepsMessage(steps []EdnaStep) string {
+	if len(steps) == 0 {
+		return ""
+	}
+	parts := []string{}
+	for _, s := range steps {
+		p := fmt.Sprintf("%s on %q", s.Action, s.Headline)
+		if !s.Ok {
+			p += " failed: " + s.Msg
+		}
+		parts = append(parts, p)
+	}
+	return "TRIGGER: " + strings.Join(parts, ", ")
 }
 
 // What to tell a client that asked for DONE and got TODO back.
@@ -1780,10 +1811,25 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 // into Done that reappears in Next looks like the write failed. It did not - the
 // heading repeats, which is what its own date says it should do.
 func statusChangeMessage(res StatusChangeResult, asked string) string {
+	msg := ""
 	if res.Repeated && res.Status != asked {
-		return fmt.Sprintf("%s repeats: moved on and set back to %s", asked, res.Status)
+		msg = fmt.Sprintf("%s repeats: moved on and set back to %s", asked, res.Status)
 	}
-	return ""
+	if res.ResetBoxes > 0 {
+		msg = joinMsg(msg, fmt.Sprintf("%d checkbox%s unticked for the next round", res.ResetBoxes, map[bool]string{true: "", false: "es"}[res.ResetBoxes == 1]))
+	}
+	return msg
+}
+
+// joinMsg puts two things to say into one Msg.
+func joinMsg(a, b string) string {
+	switch {
+	case a == "":
+		return b
+	case b == "":
+		return a
+	}
+	return a + "; " + b
 }
 
 // RenameHeadline changes a heading's title as an edit of its headline line

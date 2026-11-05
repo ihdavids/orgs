@@ -795,6 +795,9 @@ type StatusChangeResult struct {
 	// Whether a CLOSED stamp was written or taken off.
 	Closed   bool
 	Unclosed bool
+	// How many checkboxes a repeat unticked (org-checklist's
+	// RESET_CHECK_BOXES, when features.checklistReset is on).
+	ResetBoxes int
 }
 
 // Apply org's own meaning of a state change to one heading, as a line edit.
@@ -869,6 +872,12 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 		res.Repeated = advancePlanning(lines, from, end, now)
 	}
 
+	// 2b. org-checklist: a repeating checklist starts again unticked. No line
+	//     count changes, so the extent still holds.
+	if res.Repeated && wantsCheckboxReset(f, propsFromLines(lines, from, end)) {
+		res.ResetBoxes = resetCheckboxes(lines, from, end)
+	}
+
 	// 3. The CLOSED stamp. A repeat is explicitly not a closure, so any stamp
 	//    left from a previous pass comes off - otherwise a habit would carry the
 	//    date it was last completed as though it were finished for good.
@@ -912,8 +921,18 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 		res.Logged = entry
 	}
 
-	// 6. The parent's [n/m]: this heading's keyword is one of its counts.
+	// 6. The parent's [n/m]: this heading's keyword is one of its counts. A
+	//    reset changes the counts of every heading in the subtree that had a
+	//    box ticked, so those are refreshed as well (no line count changes).
 	done, active := keywordSets(f)
+	if res.ResetBoxes > 0 {
+		lines, from, end = reread(lines, from, lvl) // the log entry added lines
+		for i := end; i > from; i-- {
+			if i < len(lines) && isHeadingLine(lines[i]) {
+				lines = refreshCookiesAround(lines, i, done, active)
+			}
+		}
+	}
 	lines = refreshCookiesAround(lines, from, done, active)
 
 	if err := writeLines(f.Filename, lines); err != nil {

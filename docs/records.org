@@ -275,6 +275,8 @@
    The same view over any other collection, with a strip to pick between them
    and a button to start a new one.
 
+   [[file:images/worg-collections.png]]
+
 ** The Search tab
 
    Records are **left out of search results by default**, with a *Records*

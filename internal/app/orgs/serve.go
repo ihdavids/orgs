@@ -313,6 +313,7 @@ func StartServer(sets *common.ServerSettings) {
 	// not driven by the org files at all.
 	StartWhisper()
 	startHooks() // hooks.go
+	startExpiry() // expiry.go: features.expiry and features.autoArchive
 	// LanguageTool for writing mode's checker, when languageTool: asks orgs
 	// to run one (languagetool.go).
 	StartLanguageTool()

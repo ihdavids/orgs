@@ -371,3 +371,39 @@ func TestCiteCompletion(t *testing.T) {
 		t.Errorf("asked about %q", asked)
 	}
 }
+
+// A misspelt edna property is pointed at, only when the server has edna on.
+func TestEdnaDiagnostics(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/features":
+			w.Write([]byte(`{"Ok": true, "Features": [{"Name": "edna", "Enable": true}]}`))
+		case "/status":
+			json.NewEncoder(w).Encode(common.TodoStatesResult{Active: []string{"TODO"}, Done: []string{"DONE"}})
+		default:
+			w.Write([]byte(`[]`))
+		}
+	}))
+	defer srv.Close()
+	cl := start(t, srv.URL, options{})
+	uri := "file:///tmp/orgs-lsp-test/edna.org"
+	cl.open(uri, "* TODO A\n:PROPERTIES:\n:TRIGGER: next-sibing todo!(NEXT)\n:BLOCKER: previous-sibling\n:END:\n")
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		for _, m := range cl.seen {
+			if m.Method != "textDocument/publishDiagnostics" {
+				continue
+			}
+			var p struct{ Diagnostics []Diagnostic }
+			json.Unmarshal(m.Params, &p)
+			if len(p.Diagnostics) != 1 || p.Diagnostics[0].Code != "edna" || p.Diagnostics[0].Range.Start.Line != 2 ||
+				p.Diagnostics[0].Range.Start.Character != 10 || !strings.Contains(p.Diagnostics[0].Message, "next-sibling") {
+				t.Fatalf("diagnostics: %+v", p.Diagnostics)
+			}
+			return
+		}
+		cl.call("textDocument/foldingRange", map[string]interface{}{"textDocument": map[string]string{"uri": uri}}, nil)
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatal("no diagnostics were published")
+}

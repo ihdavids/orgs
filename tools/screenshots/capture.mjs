@@ -69,6 +69,9 @@ function setupDemo({ src = demoSrc, extensions = path.join(demoSrc, '../extensio
         copy(path.join(from, f.name), path.join(to, f.name));
       } else if (f.name.endsWith('.org') || f.name.endsWith('.bib')) {
         fs.writeFileSync(path.join(to, f.name), expandDates(fs.readFileSync(path.join(from, f.name), 'utf8')));
+      } else if (f.name.endsWith('.json') || f.name.endsWith('.svg')) {
+        // A saved dungeon's data and pictures, which sit beside its org file.
+        fs.copyFileSync(path.join(from, f.name), path.join(to, f.name));
       }
     }
   };

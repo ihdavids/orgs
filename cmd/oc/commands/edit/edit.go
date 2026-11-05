@@ -822,6 +822,7 @@ type Check struct {
 	On    bool
 	Off   bool
 	Every bool
+	Reset bool
 }
 
 func (self *Check) Unmarshal(u func(interface{}) error) error { return u(self) }
@@ -832,6 +833,7 @@ func (self *Check) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.On, "on", false, "tick it, whatever it was")
 	fset.BoolVar(&self.Off, "off", false, "clear it, whatever it was")
 	fset.BoolVar(&self.Every, "every", false, "every box on the heading")
+	fset.BoolVar(&self.Reset, "reset", false, "clear every box on the heading and the headings under it (org-reset-checkbox-state-subtree)")
 }
 
 // The same shape the server matches, said again here because the client numbers
@@ -862,8 +864,27 @@ func (self *Check) Exec(core *commands.Core) {
 	todos := commands.Resolve(core, &self.tf, rest, commands.TargetOpts{
 		Prompt: "Check on> ",
 		Query:  "HasChecklist()",
-		Multi:  self.Every || which >= 0,
+		Multi:  self.Every || self.Reset || which >= 0,
 	})
+
+	if self.Reset {
+		// One write per heading, subtree and cookies included, done by the
+		// server - not a box at a time, which would renumber under itself.
+		lines := []string{}
+		for _, t := range todos {
+			var reply common.Result
+			commands.SendReceivePost(core, "checklist/reset", &struct{ Hash string }{t.Hash}, &reply)
+			if commands.DryRun {
+				continue
+			}
+			if !reply.Ok {
+				commands.Fail("%s: %s", t.Headline, reply.Msg)
+			}
+			lines = append(lines, fmt.Sprintf("%s %s%s%s", commands.Describe(t), commands.C(commands.AnsiDim), reply.Msg, commands.C(commands.AnsiReset)))
+		}
+		commands.Ok(len(lines), "reset", lines)
+		return
+	}
 
 	lines := []string{}
 	for _, t := range todos {

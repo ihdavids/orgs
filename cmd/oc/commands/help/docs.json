@@ -10,6 +10,18 @@
     "Text": "* Agenda views: =orgs agenda -view=\n\n  Org's custom agenda commands: a view is sections shown one after another (a\n  day or a week of the agenda, open tasks with some keywords, a match, a\n  search, stuck projects). Org's own =a=, =t=, =n= and =#= are built in; more\n  come from =agenda: views:= in the yaml or from worg, where each person keeps\n  their own. =orgs agenda -views= lists them, and =-as html= or =-as ics=\n  prints one for a page or a calendar.\n\n  [[file:docs/images/cli-agenda-view.png]]\n\n  The hooks (=orgs hooks=), the phone's calendar (=orgs dav=) and the\n  language server (=orgs lsp=) have their pictures in their own guides.\n"
    }
   ],
+  "clocktable": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Where the time went: =orgs clocktable=\n\n  Org's clock table: the =CLOCK:= lines in every =:LOGBOOK:= over a range,\n  added up by file and by heading. =orgs clockin= and =orgs clockout= write\n  them; =orgs clocks= says what is running.\n\n  [[file:docs/images/cli-clocktable.png]]\n"
+   }
+  ],
+  "code": [
+   {
+    "From": "The command line, in pictures",
+    "Text": "* Source blocks: =orgs code=\n\n  Every =#+BEGIN_SRC= block in your notes, found by name, language or file,\n  and run the way =C-c C-c= runs it, =:var= arguments and all.\n\n  #+BEGIN_SRC sh\n  orgs code ls -lang python    # the python blocks\n  orgs code run busiest        # run the block named busiest\n  orgs code run -w busiest     # and write #+RESULTS: under it\n  #+END_SRC\n\n  [[file:docs/images/cli-code-run.png]]\n"
+   }
+  ],
   "cols": [
    {
     "From": "The command line, in pictures",
@@ -334,11 +346,21 @@
    "orgs drill ls                 the decks, and what each has due",
    "orgs drill cards Spanish      every card: status, next review, ease"
   ],
+  "edna": [
+   "orgs edna                           a heading's TRIGGER and BLOCKER, and what done would do",
+   "orgs edna -check 'ids(x) !done?' -blocker   read one without a server",
+   "orgs edna -names                    every finder, action and condition"
+  ],
   "estimates": [
    "orgs estimates                      every finished task, grouped by tag",
    "orgs estimates -by project -from -90d",
    "orgs estimates -by person -block lastmonth -day 8",
    "orgs estimates 'HasTags(\"work\")'    only what a query finds"
+  ],
+  "expire": [
+   "orgs expire                         what expiry and auto archive would take now",
+   "orgs expire -run                    take it",
+   "orgs expire -set +2w                give a heading an EXPIRY (+span from CREATED, or a date)"
   ],
   "export": [
    "orgs export -f html notes.org -out notes.html",
@@ -350,6 +372,10 @@
    "orgs export -list-themes             what the html exporter can wear",
    "orgs export -f manuscript story.org  a docx in manuscript format (-style novel)",
    "orgs export -f epub novel.org        an ebook (-theme literary)"
+  ],
+  "features": [
+   "orgs features                       which are on",
+   "orgs features edna on               turn one on (written into the server's yaml)"
   ],
   "find": [
    "orgs find 'migration'",
@@ -521,6 +547,12 @@
   "note": [
    "orgs note 'rang back, no answer'    a line onto the body"
   ],
+  "noter": [
+   "orgs noter                          every document with notes",
+   "orgs noter notes                    a session's notes, page by page",
+   "orgs noter add -page 4 'why √d'     a note at a page (-y 0.3 how far down, -quote)",
+   "orgs noter start reading.org papers/x.pdf   start notes on a document"
+  ],
   "notifications": [
    "orgs notifications              the list, newest first, unread marked",
    "orgs notifications -unread      only those not yet read",
@@ -631,6 +663,12 @@
    "orgs refresh run all            everything",
    "orgs refresh dash.org           that file's dynamic blocks and table formulas, now",
    "orgs refresh dash.org -blocks   and its :schedule source blocks"
+  ],
+  "remark": [
+   "orgs remark                         every file with highlights",
+   "orgs remark show notes.txt          a file's highlights, as file:line:col",
+   "orgs remark add notes.txt -line 7 'the words' -note 'why'",
+   "orgs remark note ID 'new note'      orgs remark rm ID"
   ],
   "rename": [
    "orgs rename 'a better title'        the headline text"

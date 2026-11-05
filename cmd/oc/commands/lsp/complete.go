@@ -11,6 +11,7 @@ package lsp
 //	#+|                     keywords and blocks
 //	#+begin_src |           languages
 //	  :|  in a drawer       property names
+//	:TRIGGER: next-s|       org-edna's finders, actions and conditions (edna on)
 
 import (
 	"os"
@@ -30,6 +31,7 @@ var (
 	hashPlusRe    = regexp.MustCompile(`^(\s*)#\+(\w*)$`)
 	srcLangCtxRe  = regexp.MustCompile(`(?i)^\s*#\+begin_src\s+(\S*)$`)
 	propNameCtxRe = regexp.MustCompile(`^(\s*):([\w-]*)$`)
+	ednaCtxRe     = regexp.MustCompile(`(?i)^\s*:(?:TRIGGER|BLOCKER):[ \t]+(?:.*[ \t])?!?([\w-]*[!?]?)$`)
 )
 
 func (s *server) complete(p positionParams) CompletionList {
@@ -79,6 +81,17 @@ func (s *server) complete(p positionParams) CompletionList {
 	}
 	if m := hashPlusRe.FindStringSubmatch(before); m != nil {
 		list.Items = s.keywordItems(m[2], m[1], replace)
+		return list
+	}
+	if m := ednaCtxRe.FindStringSubmatch(before); m != nil && s.featureOn("edna") {
+		for _, k := range []map[string]string{common.EdnaFinders, common.EdnaActions, common.EdnaConditions} {
+			for name, about := range k {
+				if strings.HasPrefix(name, strings.ToLower(m[1])) {
+					list.Items = append(list.Items, CompletionItem{Label: name, Kind: compKeyword, Detail: about,
+						TextEdit: replace(len(m[1]), name)})
+				}
+			}
+		}
 		return list
 	}
 	if m := propNameCtxRe.FindStringSubmatch(before); m != nil {

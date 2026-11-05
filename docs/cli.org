@@ -177,6 +177,27 @@
   The hooks (=orgs hooks=), the phone's calendar (=orgs dav=) and the
   language server (=orgs lsp=) have their pictures in their own guides.
 
+* Where the time went: =orgs clocktable=
+
+  Org's clock table: the =CLOCK:= lines in every =:LOGBOOK:= over a range,
+  added up by file and by heading. =orgs clockin= and =orgs clockout= write
+  them; =orgs clocks= says what is running.
+
+  [[file:images/cli-clocktable.png]]
+
+* Source blocks: =orgs code=
+
+  Every =#+BEGIN_SRC= block in your notes, found by name, language or file,
+  and run the way =C-c C-c= runs it, =:var= arguments and all.
+
+  #+BEGIN_SRC sh
+  orgs code ls -lang python    # the python blocks
+  orgs code run busiest        # run the block named busiest
+  orgs code run -w busiest     # and write #+RESULTS: under it
+  #+END_SRC
+
+  [[file:images/cli-code-run.png]]
+
 * What is in there: =orgs stats=
 
   [[file:images/cli-stats.png]]
@@ -253,4 +274,6 @@
   The =whatsnew= story is the pictures of the features added in v0.6.0 and
   v0.7.0 (checklists, agenda views, hooks, CalDAV, transclusion, the timer,
   org-protocol and citations), on the demo notes with
-  =docs/screenshots/whatsnew= laid over them.
+  =docs/screenshots/whatsnew= laid over them. The =features= story pictures
+  org's own features (clocking, source blocks, the editor, links, refiling,
+  plots, collections) over =docs/screenshots/features=.

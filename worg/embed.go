@@ -13,6 +13,8 @@ import "embed"
 // dicefx.js is the character sheet's casting effects for the map screens
 // (tools/dicefx/extract.py), loaded on the first effect. dict/ is the
 // English dictionary the editor's writing mode spells with (en.aff, en.dic).
+// pdfjs/ is pdf.js's worker for the Noter tab (worg's `npm run pdfjs`): pdf.js
+// loads it by url, so it is a file here rather than part of the bundle.
 //
-//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict harper
+//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict harper pdfjs
 var Content embed.FS

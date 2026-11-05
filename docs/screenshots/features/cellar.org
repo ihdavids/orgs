@@ -1,0 +1,57 @@
+#+TITLE: Cellar
+
+* Wine
+  :PROPERTIES:
+  :COLLECTION: wine
+  :ICON:       🍷
+  :FIELDS:     WINERY, REGION, VINTAGE, RATING, PRICE, URL
+  :END:
+
+** Quinta do Crasto Douro
+   :PROPERTIES:
+   :RECORD:   wine
+   :ADDED:    [{{D-40}} 19:20]
+   :WINERY:   Quinta do Crasto
+   :REGION:   Douro, Portugal
+   :VINTAGE:  2021
+   :RATING:   4
+   :PRICE:    18.50
+   :URL:      https://example.com/crasto-douro
+   :END:
+   Bought two in Lisbon. Dark fruit, soft; good with the lamb.
+
+** Domaine de la Janasse Côtes du Rhône
+   :PROPERTIES:
+   :RECORD:   wine
+   :ADDED:    [{{D-25}} 18:05]
+   :WINERY:   Domaine de la Janasse
+   :REGION:   Rhône, France
+   :VINTAGE:  2022
+   :RATING:   5
+   :PRICE:    16.00
+   :END:
+   The everyday red. Order a case before the holidays.
+
+** Cloudy Bay Sauvignon Blanc
+   :PROPERTIES:
+   :RECORD:   wine
+   :ADDED:    [{{D-12}} 20:40]
+   :WINERY:   Cloudy Bay
+   :REGION:   Marlborough, New Zealand
+   :VINTAGE:  2024
+   :RATING:   3
+   :PRICE:    27.00
+   :END:
+   Brighter than remembered. Fine for a summer evening, not the price.
+
+** Tenuta delle Terre Nere Etna Rosso
+   :PROPERTIES:
+   :RECORD:   wine
+   :ADDED:    [{{D-3}} 19:55]
+   :WINERY:   Tenuta delle Terre Nere
+   :REGION:   Sicily, Italy
+   :VINTAGE:  2022
+   :RATING:   5
+   :PRICE:    24.00
+   :END:
+   Light, smoky, a little like pinot. Maya's recommendation.

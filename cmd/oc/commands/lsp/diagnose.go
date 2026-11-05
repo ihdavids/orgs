@@ -18,10 +18,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands/lint"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 type diagItem struct {
@@ -109,6 +111,26 @@ func (s *server) structural(d *document) []diagItem {
 				fmt.Sprintf(":%s: drawer with no :END:", dr.name))
 		}
 	}
+	// org-edna's TRIGGER and BLOCKER, read as the server will run them -
+	// only when the server has edna on, since otherwise they mean nothing.
+	if s.featureOn("edna") {
+		for row := range d.lines {
+			l := d.line(row)
+			m := ednaPropRe.FindStringSubmatchIndex(l)
+			if m == nil {
+				continue
+			}
+			prop, val := strings.ToUpper(l[m[2]:m[3]]), l[m[4]:m[5]]
+			if err := common.ValidateEdna(prop, val); err != nil {
+				from, to := m[4], m[5]
+				if e, ok := err.(*common.EdnaError); ok {
+					from, to = m[4]+e.Start, m[4]+max(e.End, e.Start+1)
+					to = min(to, len(l))
+				}
+				add(row, from, to, sevError, "edna", prop+": "+err.Error())
+			}
+		}
+	}
 	var known map[string]bool
 	for _, l := range linksIn(d.lines, bs) {
 		proto, rest := splitLink(l.target)
@@ -165,6 +187,28 @@ func (s *server) structural(d *document) []diagItem {
 		}
 	}
 	return out
+}
+
+var ednaPropRe = regexp.MustCompile(`(?i)^\s*:(TRIGGER|BLOCKER):[ \t]+(.*?)\s*$`)
+
+// featureOn is whether the server has an optional feature on; false with
+// no server to ask.
+func (s *server) featureOn(name string) bool {
+	res, err := getCached[struct {
+		Features []struct {
+			Name   string
+			Enable bool
+		}
+	}](s.api, "features", "features", nil)
+	if err != nil {
+		return false
+	}
+	for _, f := range res.Features {
+		if f.Name == name {
+			return f.Enable
+		}
+	}
+	return false
 }
 
 // diagnosticsAt are the published diagnostics touching row, as of the

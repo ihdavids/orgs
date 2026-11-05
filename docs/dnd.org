@@ -21,6 +21,12 @@
   The bundled rules are the SRD 5.1, published by Wizards of the Coast under
   the Creative Commons Attribution 4.0 licence.
 
+  [[file:images/dnd-sheet.png]]
+
+  Beyond the sheet, worg has the tools to run a game from your notes: random
+  generators, a dungeon and map generator, and a DM screen with fog of war, an
+  initiative tracker and a players' screen for the table (see *At the table*).
+
 * Setup
 
   Enable the exporters you want in your =orgs.yaml=, and point the module at
@@ -242,6 +248,8 @@
   orgs dnd sheet -file lyra.org -format pdf  -out l.pdf
   #+END_SRC
 
+  [[file:images/cli-dnd-show.png]]
+
   A backdrop can also be given to the export itself, which paints that one
   sheet and writes nothing into the character's org file. =-backdrop= takes a
   file, a folder or a url and may be given more than once:
@@ -452,6 +460,8 @@
     rolls 2d10 from 5th, 3d10 from 11th,
   - and a spell the target saves against says so in words ready to read out:
     "Dexterity saving throw against DC 15, half as much damage on a success".
+
+  [[file:images/dnd-sheet-cast.png]]
 
   A spell that rolls nothing at all - mage armor, say - still lands in the
   history saying what it costs and how long it lasts, so the tray is a record
@@ -752,6 +762,74 @@
   #+END_SRC
 
   Do not hand edit those files, put your changes in a module instead.
+
+* At the table
+
+  Worg's dice button, on the rail down the left, opens the tabletop tools.
+  Each opens over the page, so the campaign notes stay on screen under it.
+
+** The random generator
+
+  Encounters balanced against the party's experience budget, treasure, magic
+  items, gems, NPCs, names, taverns, traps, adventure hooks, trinkets, wild
+  magic surges and carousing. Every result is org text: tick the ones worth
+  keeping (they survive a re-roll) and Save files them under any heading.
+
+  [[file:images/dnd-randgen.png]]
+
+** The dungeon generator
+
+  Rolls a dungeon, a dwelling or a cave for a party, stocked with monsters,
+  traps and treasure, with a backstory and a line for every room - then lets
+  you draw on it: rooms in any shape, corridors, doors, water, stairs,
+  furniture and labels. It can also start from a picture (a Dungeon Alchemist
+  export, or any image) and have you mark out its rooms. The same seed and
+  settings give the same dungeon.
+
+  [[file:images/dnd-dungeon.png]]
+
+  Save writes an org file - the story, a heading per room, the wandering
+  monsters - with the GM's map, the players' map and a one-page sheet beside
+  it in a =maps= folder.
+
+** The map generator
+
+  A region, a world on hexes, an inked region, a town or a village. Towns and
+  roads are placed where people would live; a place you found on the map
+  becomes a heading of its own.
+
+  [[file:images/dnd-mapgen.png]]
+
+** The DM screen
+
+  A saved dungeon or map opened in the Files tab is a screen to run the game
+  from. Clicking a room shows its key, with a button to reveal it to the
+  players or move the party there. The toolbar holds fog of war for either
+  map, the party's track, measuring, pins, the journal (see *The DM's journal
+  on a map*), lights, tokens, tiles, music and sounds. Everything - the fog,
+  the tokens, the fight - is kept in the map's org file.
+
+  [[file:images/dnd-dm-screen.png]]
+
+  The initiative tracker brings in the party (from their character sheets)
+  and monsters by name, from a room's card or the wandering table, rolls
+  initiative and keeps the round. Each fighter gets a numbered token on the
+  map.
+
+  [[file:images/dnd-initiative.png]]
+
+  The session drawer throws dice across the map and, once a session is
+  started, keeps every roll, note and fight of the evening.
+
+  [[file:images/dnd-session.png]]
+
+** The players' screen
+
+  Opened in a tab of its own for a TV or projector, it shows only the
+  players' map under the fog, the party's marker and whose turn it is. It
+  follows the DM's screen as it changes.
+
+  [[file:images/dnd-players.png]]
 
 * The DM's journal on a map
 
