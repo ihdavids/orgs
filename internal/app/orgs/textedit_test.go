@@ -3,6 +3,7 @@ package orgs
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ihdavids/orgs/internal/common"
@@ -57,5 +58,73 @@ func TestABlockRunsInTextAndTheFileIsLeftAlone(t *testing.T) {
 	}
 	if res := RunInText(&common.TextRun{Filename: path, Text: text, Line: 0}); res.Ok {
 		t.Errorf("a heading line ran: %+v", res)
+	}
+}
+
+// A clock table refreshed in a buffer reads the buffer's clocks, not the
+// file's: the file on disk has none.
+func TestADynamicBlockIsRefreshedInText(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "d.org")
+	if err := os.WriteFile(path, []byte("* Work\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	text := "#+BEGIN: clocktable :scope file :block untilnow\n#+END:\n* Work\n  :LOGBOOK:\n  CLOCK: [2026-10-01 Thu 09:00]--[2026-10-01 Thu 10:30] =>  1:30\n  :END:\n" +
+		"#+BEGIN: insertdatetime\nold\n#+END:\n"
+	res := DblockInText(&common.TextRun{Filename: path, Text: text, Line: 0})
+	if !res.Ok || !res.Changed || len(res.Blocks) != 1 {
+		t.Fatalf("not refreshed: %+v", res)
+	}
+	if !strings.Contains(res.Text, "Work") || !strings.Contains(res.Text, "1:30") || !strings.Contains(res.Text, "\nold\n") {
+		t.Errorf("only the clock table should have changed, got\n%s", res.Text)
+	}
+	all := DblockInText(&common.TextRun{Filename: path, Text: text, Line: -1})
+	if !all.Ok || len(all.Blocks) != 2 || strings.Contains(all.Text, "\nold\n") {
+		t.Errorf("Line -1 should refresh both: %+v", all)
+	}
+	if again := DblockInText(&common.TextRun{Filename: path, Text: res.Text, Line: 0}); !again.Ok || again.Changed {
+		t.Errorf("a fresh table changed again: %+v", again)
+	}
+	if bad := DblockInText(&common.TextRun{Filename: path, Text: text, Line: 2}); bad.Ok {
+		t.Errorf("a heading line is not a block: %+v", bad)
+	}
+	if b, _ := os.ReadFile(path); string(b) != "* Work\n" {
+		t.Errorf("the file was written: %q", b)
+	}
+}
+
+func TestDiagnosticsOfText(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "x.org")
+	text := strings.Join([]string{
+		"* Heading",                              // 0
+		"🙂 see [[*Nowhere]] and [[*Heading]]",    // 1
+		"[[file:missing.org]] [[id:no-such-id]]", // 2
+		":LOGBOOK:",                              // 3
+		"* Other",                                // 4
+		"#+BEGIN_SRC sh",                         // 5
+		"echo",                                   // 6
+	}, "\n") + "\n"
+	got := DiagnoseText(&common.TextDiagnose{Filename: path, Text: text})
+	byCode := map[string][]common.TextDiagnostic{}
+	for _, d := range got {
+		byCode[d.Code] = append(byCode[d.Code], d)
+	}
+	if b := byCode["unclosed-block"]; len(b) != 1 || b[0].Line != 5 || b[0].Severity != "error" || b[0].To != 14 {
+		t.Errorf("unclosed block: %+v", b)
+	}
+	if d := byCode["unclosed-drawer"]; len(d) != 1 || d[0].Line != 3 {
+		t.Errorf("unclosed drawer: %+v", d)
+	}
+	links := byCode["broken-link"]
+	if len(links) != 3 {
+		t.Fatalf("want 3 broken links, got %+v", links)
+	}
+	// The emoji is 4 bytes and 2 UTF-16 units: the link starts at unit 7.
+	if l := links[0]; l.Line != 1 || l.From != 7 || l.To != 7+len("[[*Nowhere]]") {
+		t.Errorf("columns are not UTF-16: %+v", l)
+	}
+	if links[1].Line != 2 || !strings.Contains(links[1].Message, "no file") || !strings.Contains(links[2].Message, "no-such-id") {
+		t.Errorf("file and id links: %+v", links[1:])
 	}
 }

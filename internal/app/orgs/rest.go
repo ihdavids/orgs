@@ -191,6 +191,7 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/refilefiles", RequestRefileTargets)
 	api.HandleFunc("/refile", PostRefile).Methods("POST")
 	api.HandleFunc("/archive", PostArchive).Methods("POST")
+	api.HandleFunc("/archive/where", RequestArchivePlace).Methods("GET") // archiveplace.go: where a file or heading archives to
 	api.HandleFunc("/cite/keys", RequestCiteKeys).Methods("GET")                   // a file's citable works, for completing [cite:@...]
 	api.HandleFunc("/move", PostMove).Methods("POST")                       // refile, copy or archive, one heading or many
 	api.HandleFunc("/refile/targets", RequestRefileTargets2).Methods("GET") // where a heading can go, with hashes
@@ -210,6 +211,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/babel/exec", PostBabelExec).Methods("POST")
 	api.HandleFunc("/lsp/date", PostTextDate).Methods("POST")
 	api.HandleFunc("/lsp/run", PostTextRun).Methods("POST")
+	api.HandleFunc("/lsp/dblock", PostTextDblock).Methods("POST")
+	api.HandleFunc("/lsp/diagnose", PostTextDiagnose).Methods("POST")
 	api.HandleFunc("/lsp/runnable", RequestRunnable).Methods("GET")
 	api.HandleFunc("/transclusion", RequestTransclusion).Methods("GET", "POST") // transclude.go
 	api.HandleFunc("/transclusions", RequestTransclusions).Methods("GET")
@@ -2289,7 +2292,8 @@ func PostCopy(w http.ResponseWriter, r *http.Request) {
 	It **falls back to every file** when the =refileTargets= setting is unset -
 	which is the default, and which made the flat one answer with nothing at
 	all, so a refile dialog had no targets to offer on a fresh server. And a
-	target carries its **hash, outline path, keyword and tags**, where the flat
+	target carries its **hash, outline path, keyword, tags and ID** (=Id=, when
+	the heading has an =ID= property, for an =id:= link to it), where the flat
 	form is ="file|H1|H2"= - which cannot say which of two headings with the
 	same name is meant, and has nowhere to put what tells them apart.
 

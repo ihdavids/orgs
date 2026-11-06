@@ -61,8 +61,28 @@ back out, =<c= included.
 | =M-Enter=             | =SPC n=         | the next thing: a new list item after this one (keeping its bullet, its checkbox and its numbering), or a new heading at this level after the subtree |
 | =M-S-Enter=           | =SPC N=         | the same as a =TODO= heading, or a checkbox item                     |
 | =C-Enter=             | =SPC h=         | a new heading after the subtree, even inside a list                  |
-| =TAB= on a heading    | =TAB=, =za=     | fold / unfold it (=zc= =zo= =zM= =zR= in vim)                        |
-| =TAB= on an empty item |                | indent it                                                            |
+| =TAB= on a heading    | =TAB=           | cycle it: folded, its children, the whole subtree (as org-cycle)     |
+| =S-TAB=               | =S-TAB=         | cycle the file: OVERVIEW, CONTENTS, SHOW ALL (as org-global-cycle)   |
+| =TAB= on a drawer or block line | =TAB=, =za= | fold / unfold it (=zc= =zo= =zM= =zR= in vim)                  |
+| =TAB= on an empty item | =S-TAB= outdents | indent it                                                          |
+| =C-x n s=             | =SPC w=, =:narrow= | narrow to the subtree: the rest of the file is hidden behind a bar (=SPC w= again widens) |
+| =C-x n b= / =C-x n n= |                 | narrow to the block around the cursor / to the selected lines        |
+| =C-x n w=             | =SPC w=, =:widen= | show the whole file again                                          |
+| =C-c ^=               | =SPC ^=         | sort the list, the headings under this one, or the table's rows: pick a key, upper case for reverse |
+| =C-c C-w=             | =SPC R=, =:refile= | refile the heading: saved first, then a target picked; the file is read back |
+| =C-c C-x C-a=, =C-c $= | =SPC A=, =:archive= | archive the heading where the file's =#+ARCHIVE:= says              |
+
+The file opens folded the way its =#+STARTUP:= says (=overview=, =content=,
+=showall=, =show2levels= ...) and a heading's =:VISIBILITY:= property says
+(=folded=, =children=, =content=, =all=), as org opens it.
+
+Sort keys: =a= alphabetical, =n= numeric, =t= first timestamp, =s= scheduled,
+=d= deadline, =p= priority, =o= todo keyword order, =r= a property (asked
+for), =x= checkbox (lists). A table sorts the rows between rules by the
+cursor's column: =a=, =n=, =t=.
+
+Refile and archive are done by the server on the file, so a changed buffer is
+saved first and the editor reads the file back after.
 
 A heading moves with everything under it and never out from under its parent.
 A list item moves with the lines indented under it. A numbered list is
@@ -81,6 +101,14 @@ renumbered when an item is added.
 
 The keywords cycled are the file's own first =#+TODO:= line, or the server's
 defaults when the file has none.
+
+A keyword change is written the way the server writes one: going to a done
+keyword stamps =CLOSED:= and logs the change in the =LOGBOOK= drawer (as the
+file's =#+STARTUP:= logging words, a heading's =:LOGGING:= and the =#+TODO:=
+cookies say), and leaving it takes =CLOSED:= off again. A heading whose
+=SCHEDULED:= or =DEADLINE:= repeats (=+1w=, =++1d=, =.+2d=) is not left done:
+its dates move on, its keyword goes back (to =REPEAT_TO_STATE= or the first
+keyword) and =:LAST_REPEAT:= is set, as org-todo does.
 
 Ticking a box keeps its parents and their counts right, as org does: a parent
 item with a box is =[X]= when all its children are, =[-]= when some are, and
@@ -108,9 +136,115 @@ recomputed, and a time range keeps its length. Scheduling a heading with a
 deadline puts both on one planning line. A planning line or drawer that goes in
 takes the indentation the heading's body already has.
 
+* Lists, emphasis and footnotes
+| Keys                      | vim normal         | What it does                                                                 |
+|---------------------------+--------------------+------------------------------------------------------------------------------|
+| =Enter= on an item        |                    | the text after the cursor into a new item (same bullet, next number, =[ ]= if it has a box); on an empty item, end the list: out a level, or the bullet taken off |
+| =S-Left= / =S-Right= on an item | =SPC -=      | the list's bullet: =-= =+= =1.= =1)= =*= (=*= only indented)                 |
+|                           | =SPC #=            | renumber the list; off a list, renumber the footnotes                        |
+| =⌘B= =⌘I= =⌘U=            | =SPC *= =SPC /= =SPC _= | *bold*, /italic/, _underline_ the selection or word; again to take it off |
+| =⌘E= =⌘⇧E= =⌘⇧X=          | =SPC ~= ~SPC =~ =SPC += | ~code~, =verbatim=, +strike-through+                                    |
+| =C-c C-x C-f= then a marker |                  | the same, in emacs (and on Linux, where =C-b= =C-i= =C-u= keep their meanings) |
+| a marker typed over a selection |              | wraps it: =*= over =word= gives =*word*=                                     |
+| =C-c C-x f=               | =SPC f=            | a new footnote =[fn:N]= with its definition under =* Footnotes=; on a footnote, jump to its definition and back |
+|                           | =SPC F=            | an inline footnote =[fn::]=                                                  |
+| =C-c C-c= on a footnote   | =SPC x=            | jump between the reference and its definition                                |
+| =C-c C-x F=               |                    | renumber the footnotes in the order they are referred to                     |
+
+Hovering over a footnote reference shows its definition.
+
+* Tables
+| Keys                        | vim normal also          | What it does                                                         |
+|-----------------------------+--------------------------+----------------------------------------------------------------------|
+| =TAB= / =S-TAB=             | =TAB= / =S-TAB=          | align the table and go to the next / previous cell; off the last cell adds a row; on =\vert{}-= draws the rule; on =\vert{}a\vert{}b= makes a table |
+| =Enter=                     |                          | the next row, same column (a row added at the end or above a rule)  |
+| =M-Up= / =M-Down=           | =M-k= / =M-j=            | move the row                                                         |
+| =M-Left= / =M-Right=        | =M-h= / =M-l=            | move the column                                                      |
+| =M-S-Up= / =M-S-Down=       | =M-K= / =M-J=            | kill the row / open a row above                                      |
+| =M-S-Left= / =M-S-Right=    | =M-H= / =M-L=            | delete the column / insert one                                       |
+| =C-c -= / =C-c Enter=       | =SPC -= / =SPC _=        | a rule below the row / the rule and on to the row below it          |
+| =C-c C-c=, =C-c *=          | =SPC x=                  | work out the =#+TBLFM:= formulas (on the server); align if there are none |
+|                             | =SPC o= =SPC O= =SPC k=  | a row below / above, kill the row                                    |
+|                             | =SPC c= =SPC C= ~SPC =~ | insert / delete a column, align                              |
+
+Typing ~=expr~ or ~:=expr~ in a cell and pressing =TAB= makes it a column or
+field formula and works it out. The status line shows the cell (=@3$2=) and
+the formula that fills it, and the cells that formula reads are marked.
+
+* Completion
+Completions open as you type; =Enter= takes one. =TAB= takes one once you
+have typed for it, otherwise it moves to the next field as usual. =ESC= closes
+the list, =C-SPC= opens it.
+
+| Where                          | What it offers                                                                  |
+|--------------------------------+---------------------------------------------------------------------------------|
+| after =[[=                     | this file's headings (=*Title=), =#custom-ids=, =<<targets>>= and =#+NAME:=s; other files' headings (=id:= when they have an ID, else =file:…::*Title=) and files |
+| after a heading's =:=          | tags: this file's, =#+TAGS:= / =#+FILETAGS:=, the server's                      |
+| after a heading's stars        | TODO keywords                                                                   |
+| between a heading's =\vert{}=s | org-recur rules                                                                 |
+| =:= at the start of a drawer line | property names; choosing one moves on to its values                          |
+| after =:NAME:=                 | =NAME_ALL= values, else org's (EFFORT, ORDERED t/nil, a new ID, VISIBILITY...) and this file's |
+| =#+= at the start of a line    | keywords; a =#+begin_…= brings its =#+end_…=                                     |
+| after =#+begin_src=            | languages; after =:= on the line, header arguments and their values              |
+| after =[fn:=                   | footnote labels, a new number first                                             |
+| =C-c C-x p= / =SPC p= / =<p=   | the property's name, then its value, offered as you go                          |
+
+* Links and tags
+| Keys            | vim normal                    | What it does                                                           |
+|-----------------+-------------------------------+------------------------------------------------------------------------|
+| =C-c C-l=       | =SPC l=                       | insert a link: the stored link, headings, files, or a url typed; then a description. On a link, edit it |
+| =C-c C-o=       | =SPC o=, =Enter=, =gx=        | follow the link: in this file the cursor goes there; another file opens; a web page opens in a tab |
+| ⌘-click (ctrl-click) |                          | follow the link clicked                                                |
+| =C-c l=         | =SPC L=                       | store a link to this heading (by its ID, CUSTOM_ID or title), also copied |
+| =C-c C-q=       | =SPC q=                       | set the heading's tags: =TAB= ticks one, =Enter= takes them            |
+| =C-c C-x C-t=   | =SPC Q=                       | align every heading's tags                                             |
+
+* Clocking
+| Keys                 | vim normal | What it does                                                    |
+|----------------------+------------+-----------------------------------------------------------------|
+| =C-c C-x C-i=        | =SPC i=    | clock in to this heading (a =CLOCK:= line in its =LOGBOOK=), clocking out of any other |
+| =C-c C-x C-o=        | =SPC I=    | clock out: =CLOCK: [..]--[..] =>  1:05=                          |
+| =C-c C-x C-q=        | =SPC K=    | cancel the running clock (its line taken out)                   |
+| =C-c C-x C-j=        | =SPC j=    | go to the heading with the running clock                        |
+| =C-c C-c= on a =CLOCK:= line | =SPC x= | work its duration out again                                  |
+
+The running clock shows at the end of its heading and in the status line.
+This clock is the file's, as Emacs keeps one; the server's own clock (the
+Focus timer, =orgs clock=) is separate and knows nothing of it until the file
+is saved, when its time counts toward clock budgets and the recap.
+
+* Running code and problems
+| Keys            | vim normal       | What it does                                                               |
+|-----------------+------------------+----------------------------------------------------------------------------|
+| =C-c C-c=       | =SPC x=, =SPC e= | run the source block, =#+CALL:= or inline code at the cursor; update the dynamic block (clocktable, columnview) it is in |
+| =C-c C-v b=     | =SPC E=          | run every block in the file                                                 |
+| =C-c C-x C-u=   | =SPC u=          | update every dynamic block                                                  |
+| =M-g n= / =M-g p= | =]d= / =[d=    | the next / previous problem                                                 |
+|                 | =SPC D=          | the list of problems                                                        |
+
+=▶ Run= above a block (where the server would run it) and =↻ Update= above
+a dynamic block do the same with a click. Blocks run on the server with the
+text in the editor, saved or not, and only with =babel.enable= on. The
+problems are what =orgs lsp= reports: a block or drawer that is never closed,
+a link to nothing, a bad org-edna rule, an unknown callout type.
+
+* Several cursors
+| Keys                    | vim normal | What it does                                                    |
+|-------------------------+------------+-----------------------------------------------------------------|
+| =⌘D= (=C-d= off a mac)  | =gb=       | add the next match of the word or selection                     |
+| =C->=                   |            | the same, in emacs                                              |
+| =⌘⌥Up= / =⌘⌥Down=       |            | add a cursor on the line above / below                          |
+| =⌥=-drag                |            | a rectangle of cursors                                          |
+| =ESC=, =C-c C-<=        | =ESC=      | back to one cursor                                              |
+
+Typing, deleting and pasting happen at every cursor; in vim, normal mode
+commands run at each cursor too (=V-BLOCK= then =I= or =A= also makes them).
+The org commands (M-arrows, =C-c C-c= and the rest) act at the main cursor.
+
 * Vim
 =SPC= in normal mode is the leader: the status line shows =SPC-= and the next
-key runs one of the org commands above (=SPC ?= opens this page).
+key runs one of the org commands above (=SPC ?= opens this page). In a table
+=SPC - _ ^ o O k c C = x= are the table's.
 
 | Keys         | What it does                                                      |
 |--------------+-------------------------------------------------------------------|
@@ -120,6 +254,8 @@ key runs one of the org commands above (=SPC ?= opens this page).
 | =:q=         | close (asks if there are unsaved changes)                         |
 | =:q!=        | close, throwing the changes away                                  |
 | =:help=      | this page                                                         |
+| =:narrow=, =:widen= | narrow to the subtree, show the whole file                 |
+| =:refile=, =:archive= | refile or archive the heading                            |
 
 The rest is vim: motions, operators, text objects, registers, visual modes,
 =/= search, =:s= substitution, macros. The mode is shown under the editor:

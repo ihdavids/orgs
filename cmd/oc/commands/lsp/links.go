@@ -11,16 +11,16 @@ package lsp
 import (
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/orgcheck"
 )
 
 func (s *server) linkAt(d *document, p Position) *link {
 	cur := s.enc.byteAt(d.line(p.Line), p.Character)
 	for _, l := range linksIn(d.lines, blocks(d.lines)) {
-		if l.line == p.Line && cur >= l.start && cur <= l.end {
+		if l.Line == p.Line && cur >= l.Start && cur <= l.End {
 			lk := l
 			return &lk
 		}
@@ -38,7 +38,7 @@ func (s *server) definition(p positionParams) []Location {
 	if l == nil {
 		return out
 	}
-	if loc, ok := s.follow(d, l.target); ok {
+	if loc, ok := s.follow(d, l.Target); ok {
 		out = append(out, loc)
 	}
 	return out
@@ -96,59 +96,10 @@ func (s *server) followId(id string) (Location, bool) {
 var lineSearchRe = regexp.MustCompile(`^\d+$`)
 
 // search finds what a link's search part names in d: the row and the byte
-// column to put the cursor at.
+// column to put the cursor at (orgcheck.Search, which the server's
+// diagnostics use too).
 func (s *server) search(d *document, q string) (int, int, bool) {
-	q = strings.TrimSpace(q)
-	if q == "" {
-		return 0, 0, false
-	}
-	if lineSearchRe.MatchString(q) {
-		n, _ := strconv.Atoi(q)
-		if n < 1 {
-			n = 1
-		}
-		if n > len(d.lines) {
-			n = len(d.lines)
-		}
-		return n - 1, 0, true
-	}
-	hs := s.headings(d)
-	if strings.HasPrefix(q, "*") {
-		t := strings.TrimSpace(q[1:])
-		for _, h := range hs {
-			if sameTitle(h.title, t) {
-				return h.line, h.titleCol, true
-			}
-		}
-		return 0, 0, false
-	}
-	if strings.HasPrefix(q, "#") {
-		for _, h := range hs {
-			if h.customId == q[1:] {
-				return h.line, h.titleCol, true
-			}
-		}
-		return 0, 0, false
-	}
-	// A dedicated target, then a name, then a heading: org's order.
-	for i := range d.lines {
-		for _, m := range targetDefRe.FindAllStringSubmatchIndex(d.line(i), -1) {
-			if strings.EqualFold(d.line(i)[m[2]:m[3]], q) {
-				return i, m[0], true
-			}
-		}
-	}
-	for i := range d.lines {
-		if m := nameRe.FindStringSubmatch(d.line(i)); m != nil && strings.EqualFold(m[1], q) {
-			return i, 0, true
-		}
-	}
-	for _, h := range hs {
-		if sameTitle(h.title, q) {
-			return h.line, h.titleCol, true
-		}
-	}
-	return 0, 0, false
+	return orgcheck.Search(d.lines, checkHeadings(s.headings(d)), q)
 }
 
 // commandsPathEscape is a path segment: an id is a uuid in practice, but a
@@ -168,11 +119,11 @@ func (s *server) documentLinks(uri string) []DocumentLink {
 		return out
 	}
 	for _, l := range linksIn(d.lines, blocks(d.lines)) {
-		r := Range{Start: s.enc.pos(d.lines, l.line, l.start), End: s.enc.pos(d.lines, l.line, l.end)}
-		proto, rest := splitLink(l.target)
+		r := Range{Start: s.enc.pos(d.lines, l.Line, l.Start), End: s.enc.pos(d.lines, l.Line, l.End)}
+		proto, rest := splitLink(l.Target)
 		switch proto {
 		case "http", "https", "ftp", "mailto":
-			out = append(out, DocumentLink{Range: r, Target: l.target})
+			out = append(out, DocumentLink{Range: r, Target: l.Target})
 		case "file":
 			file, search, _ := strings.Cut(rest, "::")
 			path := s.resolveFile(d, file)
@@ -185,7 +136,7 @@ func (s *server) documentLinks(uri string) []DocumentLink {
 			// Definition goes there; a document link would be a second way
 			// to the same place that editors draw as an underline.
 		default:
-			out = append(out, DocumentLink{Range: r, Data: l.target})
+			out = append(out, DocumentLink{Range: r, Data: l.Target})
 		}
 	}
 	return out

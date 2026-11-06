@@ -15,15 +15,13 @@ package lsp
 // none for a moment.
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands/lint"
-	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/orgcheck"
 )
 
 type diagItem struct {
@@ -88,123 +86,67 @@ func (s *server) diagnose(uri string) {
 	s.c.notify("textDocument/publishDiagnostics", map[string]interface{}{"uri": uri, "version": d.version, "diagnostics": out})
 }
 
-// structural is what is wrong with the file as org, with no checker.
+// structural is what is wrong with the file as org, with no checker: the
+// rules are orgcheck's (the server's /lsp/diagnose runs the same ones), the
+// questions the text cannot answer are put to lspEnv.
 func (s *server) structural(d *document) []diagItem {
 	out := []diagItem{}
-	add := func(row, from, to, sev int, code, msg string) {
+	sevs := map[string]int{"error": sevError, "warning": sevWarning, "info": sevInfo}
+	for _, p := range orgcheck.Structural(d.path, d.lines, checkHeadings(s.headings(d)), &lspEnv{s: s}) {
 		out = append(out, diagItem{Diagnostic: Diagnostic{
-			Range:    Range{Start: s.enc.pos(d.lines, row, from), End: s.enc.pos(d.lines, row, to)},
-			Severity: sev, Code: code, Source: "orgs", Message: msg}})
-	}
-	bs := blocks(d.lines)
-	for _, b := range bs {
-		if b.end < 0 {
-			l := d.line(b.begin)
-			add(b.begin, len(l)-len(strings.TrimLeft(l, " \t")), len(l), sevError, "unclosed-block",
-				fmt.Sprintf("#+BEGIN_%s with no #+END_%s", strings.ToUpper(b.kind), strings.ToUpper(b.kind)))
-		}
-	}
-	for _, dr := range drawers(d.lines, bs) {
-		if dr.end < 0 {
-			l := d.line(dr.begin)
-			add(dr.begin, len(l)-len(strings.TrimLeft(l, " \t")), len(l), sevWarning, "unclosed-drawer",
-				fmt.Sprintf(":%s: drawer with no :END:", dr.name))
-		}
-	}
-	// org-edna's TRIGGER and BLOCKER, read as the server will run them -
-	// only when the server has edna on, since otherwise they mean nothing.
-	if s.featureOn("edna") {
-		for row := range d.lines {
-			l := d.line(row)
-			m := ednaPropRe.FindStringSubmatchIndex(l)
-			if m == nil {
-				continue
-			}
-			prop, val := strings.ToUpper(l[m[2]:m[3]]), l[m[4]:m[5]]
-			if err := common.ValidateEdna(prop, val); err != nil {
-				from, to := m[4], m[5]
-				if e, ok := err.(*common.EdnaError); ok {
-					from, to = m[4]+e.Start, m[4]+max(e.End, e.Start+1)
-					to = min(to, len(l))
-				}
-				add(row, from, to, sevError, "edna", prop+": "+err.Error())
-			}
-		}
-	}
-	// Callouts of a type no row names (drawn as a note) - only with the
-	// server's callouts on.
-	if s.featureOn("callouts") {
-		lines := make([]string, len(d.lines))
-		for i := range d.lines {
-			lines[i] = d.line(i)
-		}
-		for _, c := range common.CalloutsInLines(lines) {
-			if c.Unknown != "" {
-				l := lines[c.Line-1]
-				add(c.Line-1, len(l)-len(strings.TrimLeft(l, " \t")), len(l), sevWarning, "callout-type",
-					fmt.Sprintf("no callout type %q: drawn as a note (orgs callouts types lists them)", c.Unknown))
-			}
-		}
-	}
-	var known map[string]bool
-	for _, l := range linksIn(d.lines, bs) {
-		proto, rest := splitLink(l.target)
-		switch proto {
-		case "":
-			if _, _, ok := s.search(d, rest); !ok {
-				what := "no heading, target or #+NAME: called %q in this file"
-				name := rest
-				if strings.HasPrefix(rest, "*") {
-					what, name = "no heading called %q in this file", strings.TrimSpace(rest[1:])
-				} else if strings.HasPrefix(rest, "#") {
-					what, name = "no heading with CUSTOM_ID %q in this file", rest[1:]
-				}
-				add(l.line, l.start, l.end, sevWarning, "broken-link", fmt.Sprintf(what, name))
-			}
-		case "file":
-			file, search, _ := strings.Cut(rest, "::")
-			path := s.resolveFile(d, file)
-			if _, err := os.Stat(path); err != nil {
-				// Only said when the folder is here: otherwise this is not the
-				// machine the file is on, and its absence means nothing.
-				if _, derr := os.Stat(filepath.Dir(path)); derr == nil && s.docByPath(path) == nil {
-					add(l.line, l.start, l.end, sevWarning, "broken-link", "no file "+file)
-				}
-				continue
-			}
-			if search != "" && strings.EqualFold(filepath.Ext(path), ".org") {
-				if lines := s.linesOf(path); lines != nil {
-					other := newDocument(pathToURI(path), 0, strings.Join(lines, "\n"))
-					if _, _, ok := s.search(other, search); !ok {
-						add(l.line, l.start, l.end, sevWarning, "broken-link", fmt.Sprintf("%s has nothing called %q", filepath.Base(path), search))
-					}
-				}
-			}
-		case "id":
-			if known == nil {
-				known = map[string]bool{}
-				ids := s.ids()
-				if ids == nil {
-					// No server to ask: say nothing rather than call every
-					// id broken.
-					known["\x00offline"] = true
-				}
-				for _, h := range ids {
-					known[h.Id] = true
-				}
-			}
-			if known["\x00offline"] || known[rest] {
-				continue
-			}
-			if _, ok := s.followId(rest); !ok {
-				add(l.line, l.start, l.end, sevWarning, "broken-link", "no heading has the id "+rest)
-			}
-		}
+			Range:    Range{Start: s.enc.pos(d.lines, p.Line, p.From), End: s.enc.pos(d.lines, p.Line, p.To)},
+			Severity: sevs[p.Severity], Code: p.Code, Source: "orgs", Message: p.Message}})
 	}
 	return out
 }
 
-var ednaPropRe = regexp.MustCompile(`(?i)^\s*:(TRIGGER|BLOCKER):[ \t]+(.*?)\s*$`)
+// lspEnv answers orgcheck from here: the disk and open buffers for files,
+// the server for ids and features.
+type lspEnv struct {
+	s     *server
+	known map[string]bool
+}
+
+func (e *lspEnv) FeatureOn(name string) bool { return e.s.featureOn(name) }
+
+func (e *lspEnv) File(path string) (bool, bool) {
+	if _, err := os.Stat(path); err == nil {
+		return true, false
+	}
+	// Only said when the folder is here: otherwise this is not the machine
+	// the file is on, and its absence means nothing.
+	_, derr := os.Stat(filepath.Dir(path))
+	return false, derr == nil && e.s.docByPath(path) == nil
+}
+
+func (e *lspEnv) LinesOf(path string) []string { return e.s.linesOf(path) }
+
+func (e *lspEnv) Headings(path string, lines []string) []orgcheck.Heading {
+	return checkHeadings(e.s.headings(newDocument(pathToURI(path), 0, strings.Join(lines, "\n"))))
+}
+
+func (e *lspEnv) Id(id string) (bool, bool) {
+	if e.known == nil {
+		e.known = map[string]bool{}
+		ids := e.s.ids()
+		if ids == nil {
+			// No server to ask: say nothing rather than call every id
+			// broken.
+			e.known["\x00offline"] = true
+		}
+		for _, h := range ids {
+			e.known[h.Id] = true
+		}
+	}
+	if e.known["\x00offline"] {
+		return false, false
+	}
+	if e.known[id] {
+		return true, true
+	}
+	_, ok := e.s.followId(id)
+	return ok, true
+}
 
 // featureOn is whether the server has an optional feature on; false with
 // no server to ask.

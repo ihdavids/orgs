@@ -433,10 +433,20 @@ func dynBlockLines(filename string, pick func(b dynBlock) bool) (common.DynBlock
 	if err != nil {
 		return res, path, nil, false, err
 	}
+	var changed bool
+	res.Blocks, lines, changed = dynBlockSplice(f, lines, pick, time.Now())
+	return res, path, lines, changed, nil
+}
+
+// dynBlockSplice writes the picked blocks of lines afresh, f being those
+// lines parsed (for the heading a block is under and the clocks of its
+// scope). It touches no file and no database, so the same edit serves a file
+// (dynBlockLines) and a buffer an editor holds (POST /lsp/dblock).
+func dynBlockSplice(f *common.OrgFile, lines []string, pick func(b dynBlock) bool, now time.Time) ([]common.DynBlock, []string, bool) {
+	var infos []common.DynBlock
 	blocks := findDynBlocks(lines)
 	bodies := make([][]string, len(blocks))
 	picked := make([]bool, len(blocks))
-	now := time.Now()
 	for i, b := range blocks {
 		if !pick(b) {
 			continue
@@ -451,10 +461,10 @@ func dynBlockLines(filename string, pick func(b dynBlock) bool) (common.DynBlock
 			out.Ok = true
 			bodies[i] = body
 		}
-		res.Blocks = append(res.Blocks, out)
+		infos = append(infos, out)
 	}
-	if len(res.Blocks) == 0 {
-		return res, path, lines, false, nil
+	if len(infos) == 0 {
+		return nil, lines, false
 	}
 
 	changed := false
@@ -480,7 +490,7 @@ func dynBlockLines(filename string, pick func(b dynBlock) bool) (common.DynBlock
 		lines = out
 		changed = true
 	}
-	return res, path, lines, changed, nil
+	return infos, lines, changed
 }
 
 func blockInfo(b dynBlock, owner *org.Section) common.DynBlock {

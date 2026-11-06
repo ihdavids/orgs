@@ -19,81 +19,92 @@ var headlineRegexp = regexp.MustCompile(`^([*]+)\s+(.*)`)
 func FindArchiveTarget(db common.ODb, tgt *common.Target) *common.Target {
 	fromFile, fromSecs := db.GetFromTarget(tgt, false)
 	if fromFile != nil && fromSecs != nil {
-		// Default global setting
-		archiveTarget := Conf().ArchiveDefaultTarget
-		// File level properties
-		if at := fromFile.Doc.Get("ARCHIVE"); at != "" {
-			archiveTarget = at
-		}
-		// Node level properties
-		if at, ok := fromSecs.Headline.Properties.Get("ARCHIVE"); ok {
-			archiveTarget = at
-		}
+		rule, _ := archiveRule(fromFile, fromSecs)
+		return archiveTargetOf(fromFile, rule)
+	}
+	return nil
+}
 
-		// Now find the filename
-		vals := strings.Split(archiveTarget, "::")
-		if len(vals) != 2 {
-			return nil
+// archiveRule is the `file::heading` a heading archives to, and where that was
+// said: the heading's own ARCHIVE property, the file's #+ARCHIVE line, or the
+// server's default. sec may be nil, for the file as a whole.
+func archiveRule(f *common.OrgFile, sec *org.Section) (string, string) {
+	rule, from := Conf().ArchiveDefaultTarget, "default"
+	if at := f.Doc.Get("ARCHIVE"); at != "" {
+		rule, from = at, "file"
+	}
+	if sec != nil && sec.Headline != nil {
+		if at, ok := sec.Headline.Properties.Get("ARCHIVE"); ok {
+			rule, from = at, "heading"
 		}
-		fname_temp := strings.TrimSpace(vals[0])
-		heading := strings.TrimSpace(vals[1])
+	}
+	return rule, from
+}
 
-		fname := ""
-		isSameFile := false
-		if fname_temp != "" {
-			// As org reads it: %s is the file's name without its directory, and
-			// a relative result is beside the file. Filling in the whole path
-			// put a file loaded as notes/a.org into notes/notes/a.org_archive.
-			src := fromFile.Filename
-			if abs, err := filepath.Abs(src); err == nil {
-				src = abs
-			}
-			if strings.Contains(fname_temp, "%s") {
-				fname = fmt.Sprintf(fname_temp, filepath.Base(src))
-			} else {
-				fname = fname_temp
-			}
-			if strings.HasPrefix(fname, "~/") {
-				if home, err := os.UserHomeDir(); err == nil {
-					fname = filepath.Join(home, fname[2:])
-				}
-			}
-			if !filepath.IsAbs(fname) {
-				fname = filepath.Join(filepath.Dir(src), fname)
-			}
-			if fname == src {
-				isSameFile = true
-			}
+// archiveTargetOf reads an archive rule for a heading in f: a file, or a
+// file+headline target, or nil when the rule is malformed or would archive a
+// heading into its own file with no heading to put it under.
+func archiveTargetOf(f *common.OrgFile, archiveTarget string) *common.Target {
+	vals := strings.Split(archiveTarget, "::")
+	if len(vals) != 2 {
+		return nil
+	}
+	fname_temp := strings.TrimSpace(vals[0])
+	heading := strings.TrimSpace(vals[1])
+
+	fname := ""
+	isSameFile := false
+	if fname_temp != "" {
+		// As org reads it: %s is the file's name without its directory, and
+		// a relative result is beside the file. Filling in the whole path
+		// put a file loaded as notes/a.org into notes/notes/a.org_archive.
+		src := f.Filename
+		if abs, err := filepath.Abs(src); err == nil {
+			src = abs
+		}
+		if strings.Contains(fname_temp, "%s") {
+			fname = fmt.Sprintf(fname_temp, filepath.Base(src))
 		} else {
-			fname = fromFile.Filename
+			fname = fname_temp
+		}
+		if strings.HasPrefix(fname, "~/") {
+			if home, err := os.UserHomeDir(); err == nil {
+				fname = filepath.Join(home, fname[2:])
+			}
+		}
+		if !filepath.IsAbs(fname) {
+			fname = filepath.Join(filepath.Dir(src), fname)
+		}
+		if fname == src {
 			isSameFile = true
 		}
-		if heading == "" {
-			// This is not allowed! We HAVE to have a new heading
-			// So just abort
-			if isSameFile {
-				return nil
-			}
-			// Trim off stars to determine level
-			res := common.Target{Filename: fname, Type: "file"}
-			return &res
-		} else {
-			// We do not handle datetree yet
-			if m := headlineRegexp.FindStringSubmatch(heading); m != nil {
-				// "file+headline", not "file+heading". The singular spelling
-				// appeared nowhere else in the codebase and `GetFromTarget`
-				// does not answer to it, so it fell through to the default and
-				// returned nothing - which meant archiving to a heading, the
-				// form every `#+ARCHIVE:` line in the wild uses, had never
-				// worked at all. It failed as "could not find destination
-				// target", which reads like the heading is missing.
-				res := common.Target{Filename: fname, Type: "file+headline", Id: m[2], Lvl: len(m[1])}
-				return &res
-			}
-		}
-		// TODO: Need datetree capabilities
+	} else {
+		fname = f.Filename
+		isSameFile = true
 	}
-
+	if heading == "" {
+		// This is not allowed! We HAVE to have a new heading
+		// So just abort
+		if isSameFile {
+			return nil
+		}
+		// Trim off stars to determine level
+		res := common.Target{Filename: fname, Type: "file"}
+		return &res
+	}
+	// We do not handle datetree yet
+	if m := headlineRegexp.FindStringSubmatch(heading); m != nil {
+		// "file+headline", not "file+heading". The singular spelling
+		// appeared nowhere else in the codebase and `GetFromTarget`
+		// does not answer to it, so it fell through to the default and
+		// returned nothing - which meant archiving to a heading, the
+		// form every `#+ARCHIVE:` line in the wild uses, had never
+		// worked at all. It failed as "could not find destination
+		// target", which reads like the heading is missing.
+		res := common.Target{Filename: fname, Type: "file+headline", Id: m[2], Lvl: len(m[1])}
+		return &res
+	}
+	// TODO: Need datetree capabilities
 	return nil
 }
 

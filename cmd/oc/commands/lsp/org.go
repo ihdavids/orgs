@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/common/orgcheck"
 )
 
 type heading struct {
@@ -32,107 +32,31 @@ type heading struct {
 	deadline string
 }
 
-var (
-	starsRe    = regexp.MustCompile(`^(\*+)\s`)
-	tagsTailRe = regexp.MustCompile(`\s+(:[\p{L}\p{N}_@#%:]+:)\s*$`)
-	priorityRe = regexp.MustCompile(`^\[#[A-Za-z0-9]\]\s*`)
-	cookieRe   = regexp.MustCompile(`\s*\[\d*(?:/\d*|%)\]`)
-)
+var starsRe = orgcheck.StarsRe
 
-// headings of a document, in file order.
+// headings of a document, in file order (orgcheck.Headings, which the
+// server's /lsp/diagnose reads too, in this package's own names).
 func (s *server) headings(d *document) []heading {
-	doc := d.parsed(s.orgConfig)
-	todo, done := doc.TodoKeywords()
-	isDone := map[string]bool{}
-	for _, k := range done {
-		isDone[k] = true
-	}
-	_ = todo
-	out := []heading{}
-	var walk func(secs []*org.Section)
-	walk = func(secs []*org.Section) {
-		for _, sec := range secs {
-			if h := sec.Headline; h != nil && h.Pos.Row >= 0 && h.Pos.Row < len(d.lines) {
-				hd := heading{line: h.Pos.Row, level: h.Lvl, keyword: h.Status, done: isDone[h.Status],
-					priority: h.Priority, comment: h.IsComment, tags: h.Tags}
-				if h.Properties != nil {
-					hd.id, _ = h.Properties.Get("ID")
-					hd.customId, _ = h.Properties.Get("CUSTOM_ID")
-				}
-				if h.Scheduled != nil && h.Scheduled.Date != nil {
-					hd.sched = h.Scheduled.Date.ToString()
-				}
-				if h.Deadline != nil && h.Deadline.Date != nil {
-					hd.deadline = h.Deadline.Date.ToString()
-				}
-				hd.title, hd.titleCol = rawTitle(d.line(h.Pos.Row), h.Status, h.IsComment)
-				out = append(out, hd)
-			}
-			walk(sec.Children)
-		}
-	}
-	if doc.Outline.Section != nil {
-		walk(doc.Outline.Children)
-	}
-	sort.SliceStable(out, func(a, b int) bool { return out[a].line < out[b].line })
-	for i := range out {
-		out[i].end = len(d.lines) - 1
-		for j := i + 1; j < len(out); j++ {
-			if out[j].level <= out[i].level {
-				out[i].end = out[j].line - 1
-				break
-			}
-		}
-	}
-	// A trailing empty line after the final newline belongs to nothing.
-	for i := range out {
-		for out[i].end > out[i].line && strings.TrimSpace(d.line(out[i].end)) == "" && out[i].end == len(d.lines)-1 {
-			out[i].end--
-		}
+	hs := orgcheck.Headings(d.parsed(s.orgConfig), d.lines)
+	out := make([]heading, len(hs))
+	for i, h := range hs {
+		out[i] = heading{line: h.Line, level: h.Level, end: h.End, keyword: h.Keyword, done: h.Done,
+			priority: h.Priority, comment: h.Comment, title: h.Title, titleCol: h.TitleCol, tags: h.Tags,
+			id: h.Id, customId: h.CustomId, sched: h.Sched, deadline: h.Deadline}
 	}
 	return out
 }
 
-// rawTitle is a heading line's title and the byte column it starts at.
-func rawTitle(line, keyword string, comment bool) (string, int) {
-	m := starsRe.FindStringIndex(line)
-	if m == nil {
-		return "", 0
+// checkHeadings is the other way round, for orgcheck.Search.
+func checkHeadings(hs []heading) []orgcheck.Heading {
+	out := make([]orgcheck.Heading, len(hs))
+	for i, h := range hs {
+		out[i] = orgcheck.Heading{Line: h.line, Level: h.level, End: h.end, Title: h.title, TitleCol: h.titleCol, CustomId: h.customId}
 	}
-	col := m[1]
-	for col < len(line) && (line[col] == ' ' || line[col] == '\t') {
-		col++
-	}
-	rest := line[col:]
-	if keyword != "" && strings.HasPrefix(rest, keyword) {
-		n := len(keyword)
-		rest = rest[n:]
-		col += n
-		trim := len(rest) - len(strings.TrimLeft(rest, " \t"))
-		rest, col = rest[trim:], col+trim
-	}
-	if p := priorityRe.FindString(rest); p != "" {
-		rest, col = rest[len(p):], col+len(p)
-	}
-	if comment && strings.HasPrefix(rest, "COMMENT") {
-		rest = strings.TrimLeft(rest[len("COMMENT"):], " \t")
-		col = len(line) - len(rest)
-	}
-	if t := tagsTailRe.FindStringIndex(rest); t != nil {
-		rest = rest[:t[0]]
-	}
-	return strings.TrimRight(rest, " \t"), col
+	return out
 }
 
-// sameTitle is whether a link's *Title names a heading: org compares the
-// title without its statistics cookie, and so does this, ignoring case and
-// runs of space as org's search does.
-func sameTitle(a, b string) bool {
-	norm := func(s string) string {
-		return strings.ToLower(strings.Join(strings.Fields(cookieRe.ReplaceAllString(s, "")), " "))
-	}
-	return norm(a) == norm(b)
-}
+var sameTitle = orgcheck.SameTitle
 
 // headingAt is the heading whose own lines (not a child's) hold row, or -1.
 func headingAt(hs []heading, row int) int {
@@ -152,169 +76,26 @@ func headingAt(hs []heading, row int) int {
 // Blocks and drawers
 // ---------------------------------------------------------------------------
 
-type block struct {
-	kind     string // src, example, quote ... lower case
-	lang     string // for src
-	name     string // #+NAME: above it
-	begin    int
-	end      int // -1 when it has no #+END_
-	nameLine int // -1 when unnamed
-}
-
-var (
-	beginRe    = regexp.MustCompile(`(?i)^\s*#\+begin_(\S+)(?:\s+(\S+))?`)
-	nameRe     = regexp.MustCompile(`(?i)^\s*#\+name:\s*(\S.*?)\s*$`)
-	callRe     = regexp.MustCompile(`(?i)^\s*#\+call:`)
-	drawerRe   = regexp.MustCompile(`^\s*:([\w-]+):\s*$`)
-	drawerEndR = regexp.MustCompile(`(?i)^\s*:end:\s*$`)
-	tableRowRe = regexp.MustCompile(`^\s*\|`)
-	inlineRe   = regexp.MustCompile(`\b(?:src_[\w-]+(?:\[[^\]]*\])?\{|call_[\w-]+(?:\[[^\]]*\])?\()`)
+// Blocks, drawers and links are orgcheck's, shared with the server.
+type (
+	block  = orgcheck.Block
+	drawer = orgcheck.Drawer
+	link   = orgcheck.Link
 )
 
-func blocks(lines []string) []block {
-	out := []block{}
-	for i := 0; i < len(lines); i++ {
-		l := strings.TrimSuffix(lines[i], "\r")
-		m := beginRe.FindStringSubmatch(l)
-		if m == nil {
-			continue
-		}
-		b := block{kind: strings.ToLower(m[1]), begin: i, end: -1, nameLine: -1}
-		if b.kind == "src" {
-			b.lang = m[2]
-		}
-		for k := i - 1; k >= 0; k-- {
-			pl := strings.TrimSuffix(lines[k], "\r")
-			if nm := nameRe.FindStringSubmatch(pl); nm != nil {
-				b.name, b.nameLine = nm[1], k
-				break
-			}
-			if !strings.HasPrefix(strings.TrimSpace(pl), "#+") {
-				break
-			}
-		}
-		endRe := regexp.MustCompile(`(?i)^\s*#\+end_` + regexp.QuoteMeta(m[1]) + `\s*$`)
-		for j := i + 1; j < len(lines); j++ {
-			if endRe.MatchString(strings.TrimSuffix(lines[j], "\r")) {
-				b.end = j
-				break
-			}
-			if starsRe.MatchString(lines[j]) && b.kind != "src" && b.kind != "example" {
-				break
-			}
-		}
-		out = append(out, b)
-		if b.end > 0 {
-			i = b.end
-		}
-	}
-	return out
-}
-
-// inBlock is the block holding row, or nil.
-func inBlock(bs []block, row int) *block {
-	for i := range bs {
-		if bs[i].begin <= row && (row <= bs[i].end || (bs[i].end < 0 && row == bs[i].begin)) {
-			return &bs[i]
-		}
-	}
-	return nil
-}
-
-type drawer struct {
-	name       string
-	begin, end int // end -1 when it is never closed
-}
-
-func drawers(lines []string, bs []block) []drawer {
-	out := []drawer{}
-	for i := 0; i < len(lines); i++ {
-		if inBlock(bs, i) != nil {
-			continue
-		}
-		l := strings.TrimSuffix(lines[i], "\r")
-		m := drawerRe.FindStringSubmatch(l)
-		if m == nil || strings.EqualFold(m[1], "end") {
-			continue
-		}
-		d := drawer{name: m[1], begin: i, end: -1}
-		for j := i + 1; j < len(lines); j++ {
-			lj := strings.TrimSuffix(lines[j], "\r")
-			if drawerEndR.MatchString(lj) {
-				d.end = j
-				break
-			}
-			if starsRe.MatchString(lj) {
-				break
-			}
-		}
-		out = append(out, d)
-		if d.end > 0 {
-			i = d.end
-		}
-	}
-	return out
-}
-
-// ---------------------------------------------------------------------------
-// Links
-// ---------------------------------------------------------------------------
-
-type link struct {
-	line       int
-	start, end int // bytes in the line, the whole of [[...]]
-	target     string
-	desc       string
-}
-
 var (
-	bracketLinkRe = regexp.MustCompile(`\[\[((?:[^\]\\]|\\.)+)\](?:\[((?:[^\]]|\][^\]])*)\])?\]`)
-	plainLinkRe   = regexp.MustCompile(`\b(?:https?|ftp|mailto|file):[^\s\]\[<>"]+`)
-	targetDefRe   = regexp.MustCompile(`<<([^<>\s][^<>]*?)>>`)
+	nameRe      = orgcheck.NameRe
+	targetDefRe = orgcheck.TargetDefRe
+	callRe      = regexp.MustCompile(`(?i)^\s*#\+call:`)
+	tableRowRe  = regexp.MustCompile(`^\s*\|`)
+	inlineRe    = regexp.MustCompile(`\b(?:src_[\w-]+(?:\[[^\]]*\])?\{|call_[\w-]+(?:\[[^\]]*\])?\()`)
+
+	blocks    = orgcheck.Blocks
+	inBlock   = orgcheck.InBlock
+	drawers   = orgcheck.Drawers
+	linksIn   = orgcheck.Links
+	splitLink = orgcheck.SplitLink
 )
-
-func linksIn(lines []string, bs []block) []link {
-	out := []link{}
-	for i, raw := range lines {
-		if b := inBlock(bs, i); b != nil && b.kind != "quote" && b.kind != "verse" && b.kind != "center" {
-			continue
-		}
-		l := strings.TrimSuffix(raw, "\r")
-		taken := [][]int{}
-		for _, m := range bracketLinkRe.FindAllStringSubmatchIndex(l, -1) {
-			lk := link{line: i, start: m[0], end: m[1], target: strings.ReplaceAll(l[m[2]:m[3]], `\]`, "]")}
-			if m[4] >= 0 {
-				lk.desc = l[m[4]:m[5]]
-			}
-			out = append(out, lk)
-			taken = append(taken, m[:2])
-		}
-		for _, m := range plainLinkRe.FindAllStringIndex(l, -1) {
-			inside := false
-			for _, t := range taken {
-				if m[0] >= t[0] && m[0] < t[1] {
-					inside = true
-				}
-			}
-			if !inside {
-				out = append(out, link{line: i, start: m[0], end: m[1], target: strings.TrimRight(l[m[0]:m[1]], ".,;:!?)")})
-			}
-		}
-	}
-	return out
-}
-
-// splitLink is a link target's protocol and the rest: "id", "X" for id:X,
-// "" for *Heading or #custom or a bare name.
-func splitLink(t string) (string, string) {
-	if strings.HasPrefix(t, "./") || strings.HasPrefix(t, "../") || strings.HasPrefix(t, "/") || strings.HasPrefix(t, "~/") {
-		return "file", t
-	}
-	if i := strings.Index(t, ":"); i > 0 && !strings.ContainsAny(t[:i], " \t*#") {
-		return strings.ToLower(t[:i]), t[i+1:]
-	}
-	return "", t
-}
 
 // ---------------------------------------------------------------------------
 // Outline and folding
@@ -372,22 +153,22 @@ func (s *server) symbols(d *document) []DocumentSymbol {
 		sym  DocumentSymbol
 	}{}
 	for _, b := range bs {
-		if b.name == "" {
+		if b.Name == "" {
 			continue
 		}
-		kind, detail := symVariable, b.kind
-		if b.kind == "src" {
-			kind, detail = symFunction, "src "+b.lang
+		kind, detail := symVariable, b.Kind
+		if b.Kind == "src" {
+			kind, detail = symFunction, "src "+b.Lang
 		}
-		end := b.end
+		end := b.End
 		if end < 0 {
-			end = b.begin
+			end = b.Begin
 		}
 		named = append(named, struct {
 			line int
 			sym  DocumentSymbol
-		}{b.nameLine, DocumentSymbol{Name: b.name, Detail: detail, Kind: kind, Range: rng(b.nameLine, end),
-			SelectionRange: rng(b.nameLine, b.nameLine)}})
+		}{b.NameLine, DocumentSymbol{Name: b.Name, Detail: detail, Kind: kind, Range: rng(b.NameLine, end),
+			SelectionRange: rng(b.NameLine, b.NameLine)}})
 	}
 	for i := 0; i < len(d.lines); i++ {
 		m := nameRe.FindStringSubmatch(d.line(i))
@@ -451,13 +232,13 @@ func (s *server) folding(d *document) []FoldingRange {
 	}
 	bs := blocks(d.lines)
 	for _, b := range bs {
-		if b.end > b.begin {
-			out = append(out, FoldingRange{StartLine: b.begin, EndLine: b.end})
+		if b.End > b.Begin {
+			out = append(out, FoldingRange{StartLine: b.Begin, EndLine: b.End})
 		}
 	}
 	for _, dr := range drawers(d.lines, bs) {
-		if dr.end > dr.begin {
-			out = append(out, FoldingRange{StartLine: dr.begin, EndLine: dr.end})
+		if dr.End > dr.Begin {
+			out = append(out, FoldingRange{StartLine: dr.Begin, EndLine: dr.End})
 		}
 	}
 	return out

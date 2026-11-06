@@ -34,4 +34,24 @@ type TextEditResult struct {
 	Text    string
 	// What ran, for a TextRun.
 	Ran []BabelRan `json:",omitempty"`
+	// The dynamic blocks refreshed, for /lsp/dblock, each with its own Ok.
+	Blocks []DynBlock `json:",omitempty"`
+}
+
+// TextDiagnose asks what is wrong with Text, the file Filename as the editor
+// has it.
+type TextDiagnose struct {
+	Filename string
+	Text     string
+}
+
+// TextDiagnostic is one problem on one line (zero based). From and To are
+// columns in UTF-16 code units, which is what a JavaScript string counts.
+type TextDiagnostic struct {
+	Line     int
+	From     int
+	To       int
+	Severity string // error, warning or info
+	Code     string
+	Message  string
 }

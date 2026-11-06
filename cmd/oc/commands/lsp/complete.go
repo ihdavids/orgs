@@ -22,6 +22,7 @@ import (
 
 	"github.com/ihdavids/orgs/internal/common"
 	"github.com/ihdavids/orgs/internal/common/biblio"
+	"github.com/ihdavids/orgs/internal/common/orgcheck"
 )
 
 var (
@@ -49,7 +50,7 @@ func (s *server) complete(p positionParams) CompletionList {
 		return &TextEdit{Range: Range{Start: s.enc.pos(d.lines, row, cur-n), End: p.Position}, NewText: text}
 	}
 	bs := blocks(d.lines)
-	if b := inBlock(bs, row); b != nil && row != b.begin {
+	if b := inBlock(bs, row); b != nil && row != b.Begin {
 		return list
 	}
 
@@ -96,7 +97,7 @@ func (s *server) complete(p positionParams) CompletionList {
 	}
 	if m := propNameCtxRe.FindStringSubmatch(before); m != nil {
 		for _, dr := range drawers(d.lines, bs) {
-			if dr.begin < row && (dr.end < 0 || row < dr.end) && strings.EqualFold(dr.name, "properties") {
+			if dr.Begin < row && (dr.End < 0 || row < dr.End) && strings.EqualFold(dr.Name, "properties") {
 				list.Items = s.propertyItems(m[2], replace)
 				return list
 			}
@@ -202,8 +203,8 @@ func (s *server) keywordItems(typed, indent string, replace func(int, string) *T
 func (s *server) langItems(d *document, typed string, replace func(int, string) *TextEdit) []CompletionItem {
 	used := map[string]int{}
 	for _, b := range blocks(d.lines) {
-		if b.lang != "" {
-			used[b.lang]++
+		if b.Lang != "" {
+			used[b.Lang]++
 		}
 	}
 	for _, l := range []string{"sh", "bash", "python", "js", "go", "emacs-lisp", "sql", "sqlite", "ruby",
@@ -362,15 +363,7 @@ func (s *server) linkItems(d *document, typed, after string, replace func(int, s
 
 // resolveFile is a file: link's path, as a path here.
 func (s *server) resolveFile(d *document, p string) string {
-	if strings.HasPrefix(p, "~/") {
-		if home, err := os.UserHomeDir(); err == nil {
-			p = filepath.Join(home, p[2:])
-		}
-	}
-	if !filepath.IsAbs(p) {
-		p = filepath.Join(filepath.Dir(d.path), p)
-	}
-	return filepath.Clean(p)
+	return orgcheck.ResolveFile(d.path, p)
 }
 
 // linesOf is a file's lines: the editor's copy when it is open, the disk's

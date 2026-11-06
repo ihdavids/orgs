@@ -18,3 +18,4 @@ Files: `rpc.go` transport, `protocol.go` types, `text.go` documents/positions/di
 - **Lint** is `lint.Checkers`/`lint.Check` (exported for this; the command's flag handling stays in `lint.go`). `found.end` / `para.placeEnd` give a lint its extent.
 
 Tested by `lsp_test.go` through pipes and an `httptest` server; by hand with a Python driver against `orgs -orgdir DIR lsp`.
+- **Structural diagnostics, blocks, drawers, links, headings and the in-file search are `internal/common/orgcheck`**, shared with the server's `POST /lsp/diagnose` (worg's editor). Change the rules there; `lspEnv` here and `serverCheckEnv` in the server only answer files, ids and features.

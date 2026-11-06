@@ -140,14 +140,14 @@ func (s *server) codeActions(p codeActionParams) []CodeAction {
 func runnableAt(d *document, row int) (string, string) {
 	bs := blocks(d.lines)
 	if b := inBlock(bs, row); b != nil {
-		if b.kind != "src" || b.end < 0 {
+		if b.Kind != "src" || b.End < 0 {
 			return "", ""
 		}
-		what := "the " + b.lang + " block"
-		if b.name != "" {
-			what += " " + b.name
+		what := "the " + b.Lang + " block"
+		if b.Name != "" {
+			what += " " + b.Name
 		}
-		return what, b.lang
+		return what, b.Lang
 	}
 	l := d.line(row)
 	if callRe.MatchString(l) {
@@ -181,11 +181,11 @@ func (s *server) codeLenses(uri string) []CodeLens {
 		return out
 	}
 	for _, b := range blocks(d.lines) {
-		if b.kind != "src" || b.end < 0 || b.lang == "" || s.whyNot(b.lang) != "" {
+		if b.Kind != "src" || b.End < 0 || b.Lang == "" || s.whyNot(b.Lang) != "" {
 			continue
 		}
-		r := Range{Start: Position{Line: b.begin}, End: Position{Line: b.begin}}
-		out = append(out, CodeLens{Range: r, Command: &Command{Title: "▶ Run", Command: "orgs.run", Arguments: []interface{}{uri, b.begin}}})
+		r := Range{Start: Position{Line: b.Begin}, End: Position{Line: b.Begin}}
+		out = append(out, CodeLens{Range: r, Command: &Command{Title: "▶ Run", Command: "orgs.run", Arguments: []interface{}{uri, b.Begin}}})
 	}
 	return out
 }

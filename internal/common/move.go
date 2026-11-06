@@ -98,6 +98,10 @@ type RefileTarget struct {
 	// answered by what is on it rather than by its name.
 	Todo string
 	Tags []string
+	// The heading's ID property, when it has one: what a link to it should
+	// name (the editor's [[ completion writes id: links), since an id
+	// survives the heading being renamed or moved and a title path does not.
+	Id string `json:",omitempty"`
 }
 
 type RefileTargetList struct {

@@ -196,3 +196,11 @@ Translator `internal/common/orgql.go` (pure, `orgql_test.go`): `OrgQlToQuery(q, 
 
 Not done: org-ql's `org-ql-search`/views (worg has its own search), `:ts-format` per column, `(clocked)` over a span, ancestors/parent/children predicates (need new query functions), `rifle`'s any-order word matching (each word is its own MatchContent, which is the same thing for AND).
 
+
+### Buffer endpoints for worg's editor (`textedit.go`)
+
+`/lsp/dblock` runs `dynBlockSplice` (split out of `dynBlockLines`) on the posted text, parsed under `Filename`; a clocktable with `:scope file` reads the buffer's clocks. `/lsp/diagnose` is `internal/common/orgcheck.Structural` with `serverCheckEnv` answering files, ids and features from the database; columns are UTF-16 code units, and a `file:x.org::search` target is only read when it is inside the org directories.
+
+### Where things archive to: `archiveplace.go`
+
+`GET /archive/where` (file, file + line, or hash, as `/links/heading`) answers the archive file and heading for the links panel's archive button. It uses the same `archiveRule` (heading `:ARCHIVE:`, then `#+ARCHIVE:`, then `archiveDefaultTarget`) and `archiveTargetOf` that `FindArchiveTarget` does, so the button and an actual archive cannot disagree. Only the heading's own `:ARCHIVE:` is read, not an ancestor's (org inherits it; Archive here never has). `Loaded` is false for an `.org_archive` (`IsOrgFile` is `.org` only), and worg opens those in the source view, since the rendered view needs the file in the database. `Line` is found by matching the rule's heading text and level in the file, tags ignored. Tested in `TestArchivePlace`.

@@ -332,6 +332,7 @@ func collectTargets(ofile *common.OrgFile, sec *org.Section, olp []string, depth
 
 	title := common.GetSectionTitle(sec)
 	path := append(append([]string{}, olp...), title)
+	id, _ := sec.Headline.Properties.Get("ID")
 
 	out.Targets = append(out.Targets, common.RefileTarget{
 		Hash:     sec.Hash,
@@ -340,6 +341,7 @@ func collectTargets(ofile *common.OrgFile, sec *org.Section, olp []string, depth
 		Level:    sec.Headline.Lvl,
 		Todo:     sec.Headline.Status,
 		Tags:     sec.Headline.Tags,
+		Id:       id,
 	})
 	if len(out.Targets) >= maxRefileTargets {
 		return true

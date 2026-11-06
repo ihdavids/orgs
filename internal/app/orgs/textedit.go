@@ -11,10 +11,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/ihdavids/orgs/internal/common"
+	"github.com/ihdavids/orgs/internal/common/orgcheck"
 )
 
 var textHeadRe = regexp.MustCompile(`^(\*+)\s`)
@@ -184,4 +188,174 @@ func RequestRunnable(w http.ResponseWriter, r *http.Request) {
 		out[lang] = why
 	}
 	dynJson(w, out)
+}
+
+// DblockInText is POST /dblocks/update on a buffer: the dynamic block whose
+// #+BEGIN:..#+END: holds req.Line is written afresh, or every block when Line
+// is negative. The text is parsed under Filename, so a block's own heading
+// and a :scope file clock table read the buffer; a scope naming other files
+// reads them as the server has them.
+func DblockInText(req *common.TextRun) common.TextEditResult {
+	if req.Filename == "" {
+		return common.TextEditResult{Msg: "which file is this? A block's scope is read relative to its file"}
+	}
+	lines, nl := textLines(req.Text)
+	pick := func(b dynBlock) bool { return req.Line < 0 || (req.Line >= b.Begin && req.Line <= b.End) }
+	doc := GetConfig().Silent().Parse(strings.NewReader(req.Text), req.Filename)
+	f := &common.OrgFile{Filename: req.Filename, Doc: doc}
+	infos, out, changed := dynBlockSplice(f, lines, pick, time.Now())
+	if len(infos) == 0 {
+		if req.Line < 0 {
+			return common.TextEditResult{Ok: true, Msg: "no dynamic blocks in this text"}
+		}
+		return common.TextEditResult{Msg: fmt.Sprintf("line %d is not in a dynamic block", req.Line+1)}
+	}
+	res := common.TextEditResult{Ok: true, Blocks: infos}
+	for _, b := range infos {
+		if !b.Ok && res.Ok {
+			res.Ok, res.Msg = false, fmt.Sprintf("line %d: %s", b.Line+1, b.Msg)
+		}
+	}
+	if res.Ok {
+		res.Msg = fmt.Sprintf("%d block(s) refreshed", len(infos))
+	}
+	if changed {
+		res.Changed, res.Text = true, joinTextLines(out, nl)
+	}
+	return res
+}
+
+// DiagnoseText is what `orgs lsp` publishes as its structural diagnostics,
+// for a client with no language server: the rules are orgcheck's, the files
+// and ids those of this server's database. Columns go out as UTF-16 code
+// units, which is what a JavaScript client indexes a line by.
+func DiagnoseText(req *common.TextDiagnose) []common.TextDiagnostic {
+	lines, _ := textLines(req.Text)
+	doc := GetConfig().Silent().Parse(strings.NewReader(req.Text), req.Filename)
+	path := req.Filename
+	if f := GetDb().FindByFile(req.Filename); f != nil && f.Doc != nil {
+		path = f.Doc.Path
+	}
+	probs := orgcheck.Structural(path, lines, orgcheck.Headings(doc, lines), serverCheckEnv{})
+	out := make([]common.TextDiagnostic, 0, len(probs))
+	for _, p := range probs {
+		l := strings.TrimSuffix(lines[p.Line], "\r")
+		out = append(out, common.TextDiagnostic{Line: p.Line, From: utf16Col(l, p.From), To: utf16Col(l, p.To),
+			Severity: p.Severity, Code: p.Code, Message: p.Message})
+	}
+	return out
+}
+
+// utf16Col is a byte column of line in UTF-16 code units.
+func utf16Col(line string, col int) int {
+	if col > len(line) {
+		col = len(line)
+	}
+	n := 0
+	for _, r := range line[:col] {
+		if r >= 0x10000 {
+			n += 2
+		} else {
+			n++
+		}
+	}
+	return n
+}
+
+// serverCheckEnv answers orgcheck from the server's own disk and database.
+// Only files inside the org directories are read for a ::search, so a link
+// cannot be used to look into the rest of the machine.
+type serverCheckEnv struct{}
+
+func (serverCheckEnv) FeatureOn(name string) bool { return featureOn(name) }
+
+func (serverCheckEnv) File(path string) (bool, bool) {
+	if GetDb().FindByFile(path) != nil {
+		return true, false
+	}
+	if _, err := os.Stat(path); err == nil {
+		return true, false
+	}
+	// As in orgs lsp: a folder that is not here is probably on another
+	// machine, so its file's absence means nothing.
+	_, derr := os.Stat(filepath.Dir(path))
+	return false, derr == nil
+}
+
+func (serverCheckEnv) LinesOf(path string) []string {
+	if !insideOrgDirsOk(path) {
+		return nil
+	}
+	lines, err := ganttFileLines(path)
+	if err != nil {
+		return nil
+	}
+	return lines
+}
+
+func (serverCheckEnv) Headings(path string, lines []string) []orgcheck.Heading {
+	doc := GetConfig().Silent().Parse(strings.NewReader(strings.Join(lines, "\n")), path)
+	return orgcheck.Headings(doc, lines)
+}
+
+func (serverCheckEnv) Id(id string) (bool, bool) {
+	return GetDb().FindByAnyId(id) != nil, true
+}
+
+/* SDOC: API
+* POST /lsp/dblock — Refresh Dynamic Blocks In Text The Client Holds
+
+	#+BEGIN_EXAMPLE
+	{ "Filename": "/path/notes.org", "Text": "...the whole buffer...", "Line": 12 }
+	#+END_EXAMPLE
+
+	=/dblocks/update= on text instead of a file: the dynamic block
+	(=#+BEGIN: clocktable …= to =#+END:=) holding =Line= (zero based) is
+	written afresh, or every block in the text when =Line= is negative.
+	Nothing is written; the answer is the whole text. The text is read as the
+	file =Filename=, so a block's heading and a =:scope file= table are the
+	buffer's; a scope naming other files reads them from disk.
+
+	*Response:* ={Ok, Msg, Changed, Text, Blocks}=, =Blocks= as =/dblocks=
+	lists them, each with its own =Ok= and =Msg=.
+EDOC */
+func PostTextDblock(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	var req common.TextRun
+	if err := json.Unmarshal(body, &req); err != nil {
+		dynJson(w, common.TextEditResult{Msg: err.Error()})
+		return
+	}
+	dynJson(w, DblockInText(&req))
+}
+
+/* SDOC: API
+* POST /lsp/diagnose — What Is Wrong With Text The Client Holds
+
+	#+BEGIN_EXAMPLE
+	{ "Filename": "/path/notes.org", "Text": "...the whole buffer..." }
+	[ { "Line": 4, "From": 0, "To": 14, "Severity": "error",
+	    "Code": "unclosed-block", "Message": "#+BEGIN_SRC with no #+END_SRC" } ]
+	#+END_EXAMPLE
+
+	The structural checks =orgs lsp= publishes, for an editor with no language
+	server: a block with no =#+END_= (an error), a drawer with no =:END:=, a
+	link to nothing (no heading, =CUSTOM_ID=, target or =#+NAME:= in the text,
+	no such file, nothing of that name in the file, no heading with that id),
+	and with those features on, org-edna properties that will not run and
+	callouts of no known type. =Line= is zero based; =From= and =To= are
+	columns in UTF-16 code units, which is what a JavaScript string counts, not
+	bytes. =Severity= is =error=, =warning= or =info=; =Code= names the check
+	(=unclosed-block=, =unclosed-drawer=, =broken-link=, =edna=,
+	=callout-type=). Nothing is written.
+EDOC */
+func PostTextDiagnose(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	var req common.TextDiagnose
+	if err := json.Unmarshal(body, &req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		dynJson(w, []common.TextDiagnostic{})
+		return
+	}
+	dynJson(w, DiagnoseText(&req))
 }
