@@ -47,7 +47,8 @@
     - plugins that sync periodically with 3rd party services: google
       calendar, ics calendars, jira, todoist, trello, github and gitlab
     - =orgs import= for Jupyter notebooks, markdown and vaults of markdown notes,
-      todo.txt and .ics files
+      Notion exports (zipped or not; databases become records), todo.txt
+      and .ics files
   - Background plugins: git sync of your notes, notifications of what is
     coming up, and automatic clock out.
   - Generators

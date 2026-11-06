@@ -1406,6 +1406,10 @@ EDOC */
 
 		Unset is org's own 14. =0= shows a deadline only on its day (and as
 		overdue after it).
+
+		=agenda.groups= sorts every agenda into titled groups, as
+		org-super-agenda does, while =features.superAgenda= is on (see
+		/Grouped agendas/ in the optional org packages).
 	EDOC */
 	Agenda AgendaSettings `yaml:"agenda"`
 	/* SDOC: Settings
@@ -1629,6 +1633,10 @@ type AgendaSettings struct {
 	// calendar-date-style: american (month day year, the default), european
 	// or iso.
 	DateStyle string `yaml:"dateStyle"`
+	// org-super-agenda-groups: what every agenda is grouped by while
+	// features.superAgenda is on, unless a view section or request names
+	// its own (superagenda.go).
+	Groups []AgendaGroup `yaml:"groups"`
 }
 
 // What orgs may do about running a source block.
@@ -1747,6 +1755,9 @@ type FeatureSettings struct {
 	AutoLinkTitle  bool `yaml:"autoLinkTitle"`
 	LatexSuite     bool `yaml:"latexSuite"`
 	LocalImages    bool `yaml:"localImages"`
+	SuperAgenda    bool `yaml:"superAgenda"`
+	OrgQl          bool `yaml:"orgQl"`
+	StickyHeader   bool `yaml:"stickyHeader"`
 }
 
 // LinkTitleSettings is the `autoLinkTitle:` block (linktitle.go).

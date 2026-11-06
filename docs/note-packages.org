@@ -1,4 +1,4 @@
-#+TITLE: More optional packages: canvases, trackers, related notes, drawings, media notes, callouts, backlink counts, maps, timelines, a library, hover previews, link titles, maths typing, local pictures
+#+TITLE: More optional packages: canvases, trackers, related notes, drawings, media notes, callouts, backlink counts, maps, timelines, a library, hover previews, link titles, maths typing, local pictures, sticky headings
 #+DOC_SECTION: Editing
 
 * Turning them on
@@ -34,6 +34,7 @@
       autoLinkTitle: true
       latexSuite: true
       localImages: true
+      stickyHeader: true
   #+END_SRC
 
 * Canvases (JSON Canvas)
@@ -1954,3 +1955,35 @@ Features On or Off*).
    back after). Above each picture still on the web is a /Download here/
    lens, and hovering one shows the picture with the same action. Download
    on save is the server's =auto=.
+
+* Sticky headings (org-sticky-header)
+
+  With =features: stickyHeader:= on, a file open in worg has a bar pinned
+  over it that names the headings the top of the view is under, the way
+  org-sticky-header's =full= mode does in Emacs' header line:
+
+  #+BEGIN_EXAMPLE
+  Projects › Garden › NEXT [#A] Raised beds
+  #+END_EXAMPLE
+
+  #+BEGIN_SRC sh
+  orgs features stickyHeader on
+  #+END_SRC
+
+  It follows the scroll in all three ways of reading a file: the rendered
+  page, the Org view and the editor. In the editor it follows the text you
+  have, saved or not. Each heading in the bar is a button that scrolls back
+  to it (in the editor it also puts the cursor there). Folding counts: a
+  folded subtree's lines are not on screen, so the bar names what is. Above
+  the first heading it says /Top of the file/.
+
+  The small button at the bar's right end sets what it shows, kept per
+  browser: every heading above (the default) or only the nearest one, and
+  whether a heading's TODO keyword and priority are shown. A rendered page
+  shows a keyword only if its html theme writes one. On a phone the bar
+  keeps the outermost heading and the one you are in, and folds the rest
+  into a =…= that lists them.
+
+  Nothing is written to your files and nothing is asked of the server: the
+  bar reads the page it is drawn over. It is worg's alone: Emacs has
+  org-sticky-header itself.

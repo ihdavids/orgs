@@ -245,3 +245,8 @@ func Convert(v Vault) Converted {
 func ConvertText(name, text string) string {
 	return Convert(Vault{Notes: []Note{{Path: name, Text: text}}}).Files[OrgPath(name)]
 }
+
+// RelLink is the path from one vault file to another as an org link writes
+// it (./b.org beside it, ../x/b.org elsewhere), for a converter that builds
+// links of its own beside the ones Convert writes (notionorg's properties).
+func RelLink(from, to string) string { return relLink(from, to) }

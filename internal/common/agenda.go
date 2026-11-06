@@ -137,6 +137,9 @@ type AgendaEntry struct {
 type AgendaDay struct {
 	Date    string // YYYY-MM-DD
 	Entries []AgendaEntry
+	// With features.superAgenda and groups to sort by: the day's entries in
+	// their groups, in the order to show them (superagenda.go).
+	Groups []AgendaGroupItems `json:",omitempty"`
 }
 
 // GET /agenda?from=YYYY-MM-DD&to=YYYY-MM-DD[&query=...][&today=YYYY-MM-DD]
@@ -161,4 +164,6 @@ type AgendaNodes struct {
 	Ok    bool
 	Msg   string
 	Nodes []AgendaNode
+	// The nodes in org-super-agenda's groups, when there are groups.
+	Groups []AgendaGroupItems `json:",omitempty"`
 }

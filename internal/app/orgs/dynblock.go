@@ -88,6 +88,13 @@ package orgs
   =[[#anchor][Title]]= links instead of =[[*Title][Title]]=. The heading the
   block is under, =:noexport:= and =COMMENT= headings are left out.
 
+  ** org-ql
+
+  org-ql's own block, =#+BEGIN: org-ql :query "todo:NEXT tags:work" :columns
+  (todo heading deadline) :sort (deadline) :take 10=, refreshed as Emacs
+  refreshes it (needs =orgs features orgQl on=; see /Query blocks/ in the
+  optional org packages).
+
   Any other name is looked up among the dynamic blocks plugins register.
 EDOC */
 

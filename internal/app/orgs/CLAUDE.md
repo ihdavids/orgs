@@ -166,3 +166,33 @@ Twin (for the root list):
 - **what a url's path says it is** (picture / no extension / other): `localImagesUrlKind` in `internal/app/orgs/localimages.go` ↔ `urlKind` in `worg/src/localimages.ts` ↔ `urlKind` in `vscode-org-everywhere/src/local-images-model.ts` (same eight cases in `TestLocalImagesUrlKind`, `localimages.test.ts`, `test/local-images-model.test.ts`). The vscode `webPictures` is a simplified copy of the scan's skip rules (lens placement only; the server decides what is fetched).
 
 Not done: the description of a link being itself an image url (`[[page][https://…/thumb.png]]`, a thumbnail) is not localized; `data:` urls; per-heading folders (org-download's `org-download-heading-lvl`); `ignore` is not editable from the settings endpoint (a yaml block list can't be safely line-edited with `setYamlPath`); no proxy support (Proxy is nil by design).
+
+## Third set: grouped agendas (org-super-agenda), org-ql blocks, sticky headings
+
+Three more `features:` switches (`superAgenda`, `orgQl`, `stickyHeader`), guide sections "Grouped agendas" and "Query blocks" in `docs/org-packages.org`. `stickyHeader` is worg only (see `docs/claude/worg.md`).
+
+### Grouped agendas: `superagenda.go` (features.superAgenda)
+
+Wire types `common.AgendaGroup` (the selectors, yaml + json) and `AgendaGroupItems` (`internal/common/superagenda.go`); `Groups` fields on `AgendaDay`, `AgendaNodes`, `AgendaViewPart`; `Groups`/`NoGroups` on `AgendaViewSection`; `agenda.groups` in `AgendaSettings`. Tests `superagenda_test.go` (pure: nodes built by hand, `superAgendaCtx` answers category and queries).
+
+- **Grouping happens after the agenda engine and its cache** (`withAgendaGroups` copies `Days` first: the cached answer must stay ungrouped, or a request with other groups would see the first one's). The items are never reordered or removed; `Groups` are indexes into a day's `Entries` or the `Nodes`, so an ungrouped client still works and a discarded item is simply in no group.
+- **Rules are org-super-agenda's**: first group that takes an item wins; selectors in one group are OR'd; `and:`/`not:` are themselves selectors (lists of selector groups, all / none matching); `auto:` makes one group per value sorted case-insensitively, items without a value fall through; `order` sorts groups (stable), Other items is 99; empty groups are not answered; a group with only a name takes nothing.
+- Priority comparisons count no cookie as B (`agendaPriority`), as the agenda sorts; `priority: A,B` exact matches need a cookie. Effort through `common.ParseDuration` (note: its `w` is 7200 minutes, 5 days, not 7 - pre-existing, untouched). `query:` runs once per grouping per query (`agendaSections`, cached in the ctx).
+- A bad regexp or unknown `auto` goes to the answer's `Msg` (and the view part's), the rest still grouped.
+- Request: `groups=` (json list) replaces the yaml's, `grouped=f` turns off. Feature off = no `Groups` at all (`agendaGroupsFor`).
+- Text export (`agendaViewText`): a group's name one space in, items under it as before (`agendaTextOrder`); html marks it `.group`. worg: `Grouped` in `AgendaViews.tsx` only draws. **No twin**: clients never work out a group.
+
+Not done: the worg calendar (week/month grid, fed by `/search`) is not grouped - groups are drawn in the agenda views list; org-super-agenda's `:transformer`, `:face`, `:auto-ts`, `:auto-map`, `:log`, `:effort` on clocked time; the old tview `orgs agenda` screen (it reads `/search`, not `/agenda`).
+
+### org-ql blocks: `orgql.go` (features.orgQl)
+
+Translator `internal/common/orgql.go` (pure, `orgql_test.go`): `OrgQlToQuery(q, now)` reads org-ql's sexp *and* non-sexp syntax into one sexp (`qlNode`), then into the full-form query; `OrgQlColumns`, `OrgQlWords` read `:columns`/`:sort`. Block `dynOrgQl` registered in `init()` into `dynGenerators` (dynblock.go only gained an SDOC paragraph). Test `orgql_test.go` drives `refreshDynBlocks` on a real file (off leaves the file byte-identical and says how to turn it on).
+
+- **Dates go through `PropCompare("DEADLINE", "<=", "<today>")`** (`<-7d>`, `<+7d>`, `<2026-11-05>`), which the query engine already reads; `(closed)` alone is `PropCompare("CLOSED", ">", "<1900-01-01>")` (no CLOSED compares false). `(ts …)` is `HasAnyDate() && !DateBefore(d) && !DateAfter(d)` with OnDate's `"YYYY DD MM"` - only close to org-ql's: it counts planning dates, and a heading with one of its dates outside the span is left out even when another is inside.
+- `(priority >= "B")` flips the operator (A is highest, compares lowest).
+- Plain syntax: only names in `qlPredNames` are predicates, so `https://x` or `todo` alone are text (MatchContent, `(?i)` unless the word has a capital - org's case-fold). `property:NAME=v` is name and value; `from=/to=/on=/inherit=` are keyword args.
+- Unknown predicates (`ancestors`, `parent`, `children`, `outline-path`, `src`, `(clocked :from …)`) are **refused by name** - the block keeps its old rows and the refresh's `Msg` says why.
+- Rows: the block's own heading is never one; title cell is `[[id:…]]` when the heading has an ID else `headingLink`; dates via `strftime`, time added when the stamp has one and the format is the default.
+
+Not done: org-ql's `org-ql-search`/views (worg has its own search), `:ts-format` per column, `(clocked)` over a span, ancestors/parent/children predicates (need new query functions), `rifle`'s any-order word matching (each word is its own MatchContent, which is the same thing for AND).
+

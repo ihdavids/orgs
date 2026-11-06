@@ -7,6 +7,8 @@ package importcmd
 //	orgs import analysis.ipynb -overwrite -run     import again, then run every block
 //	orgs import analysis.ipynb -print              the org text, and nothing written
 //	orgs import ~/Notes/Vault -o vault             a whole vault, folders kept
+//	orgs import Export.zip -o notion               a Notion export (Markdown & CSV), zipped or not
+//	orgs import ~/Downloads/NotionExport/ -print   the same from its folder, nothing written
 //	orgs import note.md                            one markdown file
 //	orgs import todo.txt -o inbox.org -append      todo.txt tasks onto a file
 //	orgs import work.ics -o calendar.org -append -since -30d
@@ -64,6 +66,9 @@ type Importer struct {
 	// It reads a folder (a vault) as well as a file; Import is then handed
 	// the folder's path and no data.
 	Dirs bool
+	// For a folder: whether it is this kind's. A folder goes to the first
+	// importer whose Detect says yes, else to one with no Detect (a vault).
+	Detect func(dir string) bool
 	// Import the file's bytes; name is the file's name as given.
 	Import func(core *commands.Core, name string, data []byte, o *Options)
 }
@@ -88,7 +93,12 @@ func importerFor(name, as string) (*Importer, bool) {
 		}
 		if st, err := os.Stat(name); err == nil && st.IsDir() {
 			for i := range importers {
-				if importers[i].Dirs {
+				if importers[i].Dirs && importers[i].Detect != nil && importers[i].Detect(name) {
+					return &importers[i], true
+				}
+			}
+			for i := range importers {
+				if importers[i].Dirs && importers[i].Detect == nil {
 					return &importers[i], true
 				}
 			}
@@ -125,7 +135,7 @@ func (self *ImportCmd) HelpGroup() string                                 { retu
 
 func (self *ImportCmd) SetupParameters(fset *flag.FlagSet) {
 	self.fset = fset
-	fset.StringVar(&self.opts.Out, "o", "", "the org file to write (a folder for a vault): relative to the first org directory, or absolute inside one (default: the file's own name)")
+	fset.StringVar(&self.opts.Out, "o", "", "the org file to write (a folder for a vault or a Notion export): relative to the first org directory, or absolute inside one (default: the file's own name)")
 	fset.BoolVar(&self.opts.Overwrite, "overwrite", false, "replace a file (and its pictures) that is already there")
 	fset.BoolVar(&self.opts.Append, "append", false, "add to the end of an org file that is already there (a calendar skips events it already has)")
 	fset.StringVar(&self.opts.Since, "since", "", "calendars: leave out events that ended before this (2026-01-01, -30d, ...)")
@@ -134,13 +144,13 @@ func (self *ImportCmd) SetupParameters(fset *flag.FlagSet) {
 	fset.BoolVar(&self.opts.Print, "print", false, "print the org text and write nothing")
 	fset.BoolVar(&self.opts.Run, "run", false, "run every source block once it is imported (babel has to be on)")
 	fset.BoolVar(&self.opts.Open, "open", false, "open the new file in your editor")
-	fset.StringVar(&self.As, "as", "", "what the file is, when its name does not say (ipynb, md, todotxt, ics); needed for -")
+	fset.StringVar(&self.As, "as", "", "what the file is, when its name does not say (ipynb, md, todotxt, ics, notion); needed for -")
 }
 
 func (self *ImportCmd) Exec(core *commands.Core) {
 	words := commands.FreeArgs(self.fset)
 	if len(words) != 1 {
-		commands.Fail("orgs import <file|vault folder> [-o target.org] [-overwrite|-append] [-print]\nKnows: %s", kinds())
+		commands.Fail("orgs import <file|vault or Notion folder> [-o target.org] [-overwrite|-append] [-print]\nKnows: %s", kinds())
 	}
 	name := words[0]
 	imp, ok := importerFor(name, self.As)
@@ -151,7 +161,7 @@ func (self *ImportCmd) Exec(core *commands.Core) {
 	var err error
 	if st, serr := os.Stat(name); serr == nil && st.IsDir() {
 		if !imp.Dirs {
-			commands.Fail("%s is a folder; orgs import reads a folder only as a markdown vault", name)
+			commands.Fail("%s is a folder; orgs import reads a folder only as a markdown vault or a Notion export", name)
 		}
 		imp.Import(core, name, nil, &self.opts)
 		return
@@ -169,11 +179,14 @@ func (self *ImportCmd) Exec(core *commands.Core) {
 }
 
 func init() {
-	commands.AddCmd("import", "turn other files into org: Jupyter notebooks, markdown files and vaults, todo.txt, calendars (.ics)", func() commands.Cmd {
+	commands.AddCmd("import", "turn other files into org: Jupyter notebooks, markdown files and vaults, Notion exports, todo.txt, calendars (.ics)", func() commands.Cmd {
 		return &ImportCmd{}
 	})
 	Register(Importer{Kind: "Jupyter notebook", Exts: []string{".ipynb"}, Import: importNotebook})
 	Register(Importer{Kind: "markdown or a vault of markdown notes (a folder)", Exts: []string{".md", ".markdown", ".mdown"}, Dirs: true, Import: importMarkdown})
+	// Its Detect claims a folder of Notion's id-named pages, which would
+	// otherwise be read as a vault.
+	Register(Importer{Kind: "Notion export (its .zip or folder)", Exts: []string{".zip", ".notion"}, Dirs: true, Detect: isNotionDir, Import: importNotion})
 	Register(Importer{Kind: "todo.txt", Names: []string{"todo.txt", "done.txt"}, Exts: []string{".todotxt"}, Import: importTodoTxt})
 	Register(Importer{Kind: "iCalendar", Exts: []string{".ics", ".ical", ".icalendar"}, Import: importCalendar})
 }

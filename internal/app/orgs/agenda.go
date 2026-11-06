@@ -752,10 +752,12 @@ func agendaAnswer(w http.ResponseWriter, v interface{}) {
 	| =query=   | string | no       | Narrows the headings, as =/search=. Empty is all.      |
 	| =closed=  | bool   | no       | =t= adds CLOSED dates (the logbook view).              |
 	| =archived= | bool  | no       | =t= keeps headings in archived trees.                  |
+	| =groups=  | json   | no       | org-super-agenda groups, in place of =agenda.groups=.   |
+	| =grouped= | bool   | no       | =f= leaves the days ungrouped.                         |
 
 	*Response:* An =AgendaResult=: ={"Ok": true, "From", "To", "Today",
 	"Nodes": [...], "Days": [{"Date", "Entries": [{"Node", "Kind", "Start",
-	"End", "HasTime", "Repeat", "Late", "DueIn", "Done"}]}]}=. =Node= is an
+	"End", "HasTime", "Repeat", "Late", "DueIn", "Done"}], "Groups"}]}=. =Node= is an
 	index into =Nodes=, so a heading on five days is sent once. Every day of
 	the range is listed, empty or not. A bad date or query answers =Ok: false=
 	with the reason in =Msg=.
@@ -773,8 +775,10 @@ func agendaAnswer(w http.ResponseWriter, v interface{}) {
 	| Parameter | Type   | Required | Description                               |
 	|-----------+--------+----------+-------------------------------------------|
 	| =query=   | string | no       | The query expression, as for =/search=.   |
+	| =groups=  | json   | no       | org-super-agenda groups (see /Grouped agendas/). |
+	| =grouped= | bool   | no       | =f= leaves the list ungrouped.            |
 
-	*Response:* ={"Ok": true, "Nodes": [...]}=, or =Ok: false= and =Msg=.
+	*Response:* ={"Ok": true, "Nodes": [...], "Groups": [...]}=, or =Ok: false= and =Msg=.
 	EDOC */
 
 func RequestAgenda(w http.ResponseWriter, r *http.Request) {
@@ -813,6 +817,11 @@ func RequestAgenda(w http.ResponseWriter, r *http.Request) {
 	case "t", "true", "1", "yes":
 		rules.Archived = true
 	}
+	own, off, gerr := agendaGroupsParam(q.Get("groups"), q.Get("grouped"))
+	if gerr != nil {
+		fail("agenda: " + gerr.Error())
+		return
+	}
 	query := expandQueryFilters(q.Get("query"))
 	key := fmt.Sprintf("a\x00%s\x00%d\x00%d\x00%d\x00%v\x00%v\x00%d\x00%s", query, rules.From, rules.To, rules.Today, rules.Closed, rules.Archived, rules.WarnDays, now.Format("200601021504"))
 	v, err := agendaCache.get(key, func() (interface{}, error) {
@@ -822,11 +831,30 @@ func RequestAgenda(w http.ResponseWriter, r *http.Request) {
 		fail("agenda: " + err.Error())
 		return
 	}
+	if groups := agendaGroupsFor(own, off); len(groups) > 0 {
+		res := withAgendaGroups(v.(common.AgendaResult), groups)
+		v = res
+	}
 	agendaAnswer(w, v)
+}
+
+// withAgendaGroups is a cached answer with its days grouped: the days are
+// copied, since the cache's own must stay as built.
+func withAgendaGroups(a common.AgendaResult, groups []common.AgendaGroup) common.AgendaResult {
+	a.Days = append([]common.AgendaDay(nil), a.Days...)
+	if msg := groupAgendaDays(&a, groups); msg != "" {
+		a.Msg = msg
+	}
+	return a
 }
 
 func RequestAgendaNodes(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
+	own, off, gerr := agendaGroupsParam(r.URL.Query().Get("groups"), r.URL.Query().Get("grouped"))
+	if gerr != nil {
+		agendaAnswer(w, common.AgendaNodes{Ok: false, Msg: "agenda: " + gerr.Error(), Nodes: []common.AgendaNode{}})
+		return
+	}
 	query := expandQueryFilters(r.URL.Query().Get("query"))
 	key := fmt.Sprintf("n\x00%s\x00%s", query, now.Format("200601021504"))
 	v, err := agendaCache.get(key, func() (interface{}, error) {
@@ -835,6 +863,11 @@ func RequestAgendaNodes(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		agendaAnswer(w, common.AgendaNodes{Ok: false, Msg: "agenda: " + err.Error(), Nodes: []common.AgendaNode{}})
 		return
+	}
+	if groups := agendaGroupsFor(own, off); len(groups) > 0 {
+		res := v.(common.AgendaNodes)
+		res.Groups, res.Msg = groupAgendaNodes(res.Nodes, groups, agendaDayStr(agendaDayNum(now)))
+		v = res
 	}
 	agendaAnswer(w, v)
 }

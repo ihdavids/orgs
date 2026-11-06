@@ -164,6 +164,9 @@ func runAgendaView(v common.AgendaView, now time.Time) common.AgendaViewResult {
 			if err != nil {
 				part.Msg = err.Error()
 			} else {
+				if groups := agendaGroupsFor(s.Groups, s.NoGroups); len(groups) > 0 {
+					part.Msg = groupAgendaDays(&a, groups)
+				}
 				part.Agenda = &a
 			}
 			res.Parts = append(res.Parts, part)
@@ -182,6 +185,9 @@ func runAgendaView(v common.AgendaView, now time.Time) common.AgendaViewResult {
 		part.Nodes = nodes.Nodes
 		if part.Nodes == nil {
 			part.Nodes = []common.AgendaNode{}
+		}
+		if groups := agendaGroupsFor(s.Groups, s.NoGroups); len(groups) > 0 && err == nil {
+			part.Groups, part.Msg = groupAgendaNodes(part.Nodes, groups, agendaDayStr(agendaDayNum(now)))
 		}
 		res.Parts = append(res.Parts, part)
 	}
@@ -236,7 +242,12 @@ func agendaViewText(r common.AgendaViewResult) string {
 			for _, d := range p.Agenda.Days {
 				day, _ := time.Parse("2006-01-02", d.Date)
 				b.WriteString(day.Format("Monday") + strings.Repeat(" ", max(1, 10-len(day.Format("Monday")))) + day.Format("2 January 2006") + "\n")
-				for _, e := range d.Entries {
+				for _, at := range agendaTextOrder(len(d.Entries), d.Groups) {
+					if at.group != "" {
+						b.WriteString(agendaGroupLine(at.group))
+						continue
+					}
+					e := d.Entries[at.i]
 					if e.Node < 0 || e.Node >= len(p.Agenda.Nodes) {
 						continue
 					}
@@ -268,18 +279,56 @@ func agendaViewText(r common.AgendaViewResult) string {
 			}
 			continue
 		}
-		for _, n := range p.Nodes {
-			b.WriteString(agendaLine(n, "") + "\n")
+		for _, at := range agendaTextOrder(len(p.Nodes), p.Groups) {
+			if at.group != "" {
+				b.WriteString(agendaGroupLine(at.group))
+				continue
+			}
+			b.WriteString(agendaLine(p.Nodes[at.i], "") + "\n")
 		}
 	}
 	return b.String()
+}
+
+// One line of agendaViewText's: an item (i) or a group's heading.
+type agendaTextAt struct {
+	i     int
+	group string
+}
+
+// agendaTextOrder is the items in the order they are written: as they are,
+// or group by group under each group's name. A discarded item is not in any
+// group and so is not written.
+func agendaTextOrder(n int, groups []common.AgendaGroupItems) []agendaTextAt {
+	out := []agendaTextAt{}
+	if len(groups) == 0 {
+		for i := 0; i < n; i++ {
+			out = append(out, agendaTextAt{i: i})
+		}
+		return out
+	}
+	for _, g := range groups {
+		out = append(out, agendaTextAt{group: g.Name})
+		for _, i := range g.Items {
+			if i >= 0 && i < n {
+				out = append(out, agendaTextAt{i: i})
+			}
+		}
+	}
+	return out
+}
+
+// agendaGroupLine is a group's heading the way org-super-agenda writes one:
+// the name, a space in, between the items.
+func agendaGroupLine(name string) string {
+	return " " + name + "\n"
 }
 
 // agendaViewHTML is the text as a page, each item linked to worg.
 func agendaViewHTML(r common.AgendaViewResult) string {
 	var b strings.Builder
 	b.WriteString("<!doctype html><meta charset=\"utf-8\"><title>" + html.EscapeString(r.Name) + "</title>\n")
-	b.WriteString(`<style>body{font:14px/1.5 ui-monospace,Menlo,monospace;max-width:60rem;margin:2rem auto;padding:0 1rem}h2{font:600 1rem system-ui;margin:1.5rem 0 .25rem;border-bottom:1px solid #ccc}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}.day{font-weight:600;margin-top:.5rem}pre{margin:0}</style>` + "\n")
+	b.WriteString(`<style>body{font:14px/1.5 ui-monospace,Menlo,monospace;max-width:60rem;margin:2rem auto;padding:0 1rem}h2{font:600 1rem system-ui;margin:1.5rem 0 .25rem;border-bottom:1px solid #ccc}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}.day{font-weight:600;margin-top:.5rem}.group{font:600 .9rem system-ui;margin:.4rem 0 0 .5rem;opacity:.8}pre{margin:0}</style>` + "\n")
 	b.WriteString("<h1 style=\"font:600 1.3rem system-ui\">" + html.EscapeString(r.Name) + "</h1>\n")
 	for _, line := range strings.Split(strings.TrimRight(agendaViewText(r), "\n"), "\n") {
 		switch {
@@ -288,6 +337,8 @@ func agendaViewHTML(r common.AgendaViewResult) string {
 			b.WriteString("<div class=\"day\">" + html.EscapeString(line) + "</div>\n")
 		case !strings.HasPrefix(line, " "):
 			b.WriteString("<h2>" + html.EscapeString(line) + "</h2>\n")
+		case !strings.HasPrefix(line, "  "): // a group's name (agendaGroupLine)
+			b.WriteString("<div class=\"group\">" + html.EscapeString(strings.TrimSpace(line)) + "</div>\n")
 		default:
 			b.WriteString("<pre>" + html.EscapeString(line) + "</pre>\n")
 		}

@@ -117,6 +117,15 @@ var featureDefs = []featureDef{
 	{"localImages", "Keep web pictures here", "org-download",
 		"Pictures linked from the web are downloaded beside your notes and the links pointed at the copies.",
 		func(f *common.FeatureSettings) *bool { return &f.LocalImages }},
+	{"superAgenda", "Grouped agenda", "org-super-agenda",
+		"The agenda's items sorted into titled groups - by tag, priority, keyword, property, deadline, file or a query - from :groups in the yaml or the request.",
+		func(f *common.FeatureSettings) *bool { return &f.SuperAgenda }},
+	{"orgQl", "Query blocks", "org-ql",
+		"#+BEGIN: org-ql blocks, and queries written the org-ql way (todo:NEXT tags:work, or (and (todo) (deadline :to today))), as live tables in a note.",
+		func(f *common.FeatureSettings) *bool { return &f.OrgQl }},
+	{"stickyHeader", "Sticky headings", "org-sticky-header",
+		"While scrolling a file in worg, the path of headings you are under stays pinned at the top of the view.",
+		func(f *common.FeatureSettings) *bool { return &f.StickyHeader }},
 }
 
 func featureDefOf(name string) *featureDef {

@@ -6,6 +6,18 @@ Add the next version's section here before bumping `VERSION` in that script.
 
 ## Unreleased
 
+- Optional org-super-agenda (`orgs features superAgenda on`): `agenda.groups`
+  in the yaml (or per agenda view section) sorts every agenda into titled
+  groups - by time of day, deadline, priority, keyword, tag, effort, property,
+  a query, or one group per category/tag/file/... - in `orgs agenda -view`,
+  its txt/html export and worg's agenda views.
+- Optional org-ql blocks (`orgs features orgQl on`): `#+BEGIN: org-ql :query
+  … :columns … :sort … :take N` refreshed as Emacs refreshes it, in both of
+  org-ql's query spellings.
+- Optional sticky headings in worg's file view (`orgs features stickyHeader on`),
+  as org-sticky-header.
+- `orgs import` reads Notion's Markdown & CSV export (a zip or a folder):
+  pages become org files, databases records collections.
 - Babel, closer to org:
   - `:var` indexing (`data[2,1]`, `data[,0]`, `data[1:3]`, `data[-1]`), lists
     and example blocks by name, and `other.org:name` across files.

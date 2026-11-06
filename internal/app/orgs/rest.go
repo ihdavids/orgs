@@ -3035,6 +3035,12 @@ func insideOrgDirs(p string) (string, bool) {
 	if !filepath.IsAbs(p) {
 		p = filepath.Join(dirs[0], p)
 	}
+	// Absolute, as the roots below are: with a relative org dir (orgs
+	// -orgdir ./notes) filepath.Rel of a relative path against an absolute
+	// root fails, and every import refused its files as "outside".
+	if abs, err := filepath.Abs(p); err == nil {
+		p = abs
+	}
 	p = filepath.Clean(p)
 	for _, d := range dirs {
 		root, err := filepath.Abs(d)

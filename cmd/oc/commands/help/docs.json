@@ -503,6 +503,8 @@
    "orgs import analysis.ipynb -overwrite -run     import again, then run every block",
    "orgs import analysis.ipynb -print              the org text, and nothing written",
    "orgs import ~/Notes/Vault -o vault             a whole vault, folders kept",
+   "orgs import Export.zip -o notion               a Notion export (Markdown \u0026 CSV), zipped or not",
+   "orgs import ~/Downloads/NotionExport/ -print   the same from its folder, nothing written",
    "orgs import note.md                            one markdown file",
    "orgs import todo.txt -o inbox.org -append      todo.txt tasks onto a file",
    "orgs import work.ics -o calendar.org -append -since -30d"

@@ -31,6 +31,8 @@
       review: true
       chef: true
       ledger: true
+      superAgenda: true
+      orgQl: true
   #+END_SRC
 
   Only an administrator can turn one on or off, unless the server runs
@@ -775,3 +777,142 @@
    blocks as you type, shows an account's balance when you hover on it, and
    has *Org: Ledger Balance* and *Org: Ledger Register*, which print the
    report in the *Org Ledger* output.
+
+* Grouped agendas (org-super-agenda)
+
+  With =superAgenda= on, the agenda's items are sorted into titled groups the
+  way org-super-agenda sorts them: each item goes to the first group that
+  takes it, and what no group takes is listed last under /Other items/. A
+  day of the agenda is grouped within the day; a list (open tasks, a tags
+  match, stuck projects) as a whole.
+
+  The groups every agenda uses go in the yaml, as =org-super-agenda-groups=
+  does in Emacs. A section of an agenda view (=agenda.views=) may name its
+  own =groups:=, or say =noGroups: true= to stay as it was.
+
+  #+BEGIN_SRC yaml
+  server:
+    agenda:
+      groups:
+        - name: Today
+          timeGrid: true
+        - name: Overdue
+          deadline: past
+          scheduled: past
+        - name: Important
+          priority: A
+        - name: Quick
+          effortMax: "0:15"
+        - name: Waiting
+          todo: [WAITING]
+          order: 9
+        - discard: true
+          tag: [someday]
+        - auto: category
+  #+END_SRC
+
+  Several selectors in one group are alternatives: an item matching any of
+  them is taken. =and:= is a list of selectors that must all match, =not:= a
+  list none of which may. A group with only a name takes nothing.
+
+  | Selector    | Takes                                                         |
+  |-------------+---------------------------------------------------------------|
+  | =anything=  | every item left                                               |
+  | =timeGrid=  | an entry at a time of day                                     |
+  | =tag=       | any of these tags, inherited ones included                    |
+  | =todo=      | any of these keywords; =[t]= any not-done one                 |
+  | =priority=  | =A=, =A,B=, =>B= (higher than B), =<B=; no cookie counts as B |
+  | =deadline=  | =past=, =today=, =future=, =any=, =none=, or a day =2026-11-05= |
+  | =scheduled= | the same, for SCHEDULED                                       |
+  | =date=      | the same, for a plain active timestamp                        |
+  | =habit=     | habits                                                        |
+  | =category=  | any of these categories                                       |
+  | =file=      | a regexp over the file's path                                 |
+  | =property=  | =NAME= (has it) or =NAME=value=                               |
+  | =heading=   | a regexp over the title                                       |
+  | =regexp=    | a regexp over the title and the property values               |
+  | =children=  | =any= (has children), =todo= (has open ones), =none=          |
+  | =effortMin= | an EFFORT of at least this (=1:00=)                           |
+  | =effortMax= | an EFFORT under this                                          |
+  | =query=     | what an orgs query finds (=IsProject()=, a ={{ filter }}=)    |
+
+  =auto:= makes one group per value instead, named by it and in its order:
+  =category=, =tags= (all of an item's tags), =todo=, =priority=, =file=,
+  =dir=, =parent=, =outline= (the headings above), =planning= or
+  =property:NAME=. An item with no value goes on to the next group.
+
+  =name:= titles a group, =order:= moves it (lower first; /Other items/ is
+  99), =discard: true= drops what it takes. A bad regexp or an unknown =auto=
+  is reported in the answer's message; the rest of the grouping still
+  happens.
+
+  #+BEGIN_SRC sh
+  orgs features superAgenda on
+  orgs agenda -view n          # printed in its groups, as org-agenda-write would
+  orgs agenda -view a -as html
+  #+END_SRC
+
+  worg's agenda views (the picker above the calendar) draw each group's name
+  with its items under it. =GET /agenda=, =/agenda/nodes= and =/agenda/view=
+  answer =Groups= beside the items, as indexes into them, so every client
+  shows the same groups; a request may send its own with =groups== (the list
+  as json) or turn them off with =grouped=f=.
+
+* Query blocks (org-ql)
+
+  With =orgQl= on, org-ql's dynamic block is refreshed by orgs as Emacs
+  refreshes it: the headings an org-ql query finds, as a table. A file with
+  these blocks reads the same in both.
+
+  #+BEGIN_EXAMPLE
+  #+BEGIN: org-ql :query "todo:NEXT tags:work" :columns (todo (priority "P") heading deadline) :sort (deadline priority) :take 10
+  #+END:
+  #+END_EXAMPLE
+
+  Refresh it like any dynamic block: =orgs dblock notes.org=, worg's
+  refresh, or on a schedule with =orgs refresh=.
+
+  =:query= takes either of org-ql's spellings:
+
+  - =(and (todo "NEXT") (tags "work") (not (done)) (deadline :to today))=
+  - =todo:NEXT tags:work !done: deadline:to=today= - terms side by side must
+    all match, =!= turns one round, =pred:a,b= gives several arguments,
+    =pred:key=value= a keyword one, and a plain word or ="phrase"= is looked
+    for in the heading and its text.
+
+  | Predicate                                     | Means                                                    |
+  |-----------------------------------------------+----------------------------------------------------------|
+  | =(todo)= =(todo "A" "B")=                      | any open keyword, or one of these                        |
+  | =(done)=                                      | a finished keyword                                       |
+  | =(tags "a" "b")= =(tags-all "a" "b")=          | any of these tags (inherited too), or all of them        |
+  | =(priority "A")= =(priority >= "B")=           | a priority, or a comparison (A is the highest)           |
+  | =(heading "words")= =(regexp "re")=            | in the title; in the title or the text                   |
+  | =(property "NAME")= =(property "NAME" "v")=    | has it; has that value (=:inherit t= looks above too)    |
+  | =(level 2)= =(level < 3)= =(level 2 4)=        | outline level                                            |
+  | =(scheduled …)= =(deadline …)= =(closed …)=    | =:on=, =:from=, =:to=: =today=, days (=-7=, =30=) or =2026-11-05= |
+  | =(deadline auto)=                             | past or inside its warning period                        |
+  | =(ts :from -7 :to today)=                     | a date of the heading's own in the span                  |
+  | =(planning)= =(habit)= =(blocked)= =(clocked)= | has a planning date, is a habit, is blocked, was clocked |
+  | =(category "c")= =(path "work")=               | category; part of the file's path                        |
+  | =(link)= =(link "x")= =(effort "1:00")=        | has links, links to x; EFFORT at most                    |
+  | =(and …)= =(or …)= =(not …)=                   | as written                                               |
+
+  =(ts …)= is close to org-ql's, not the same: it counts SCHEDULED and DEADLINE
+  as dates of the heading's own, and a heading with any of its dates outside
+  the span is left out. Predicates orgs cannot
+  answer yet (=ancestors=, =parent=, =children=, =outline-path=, =src=,
+  =(clocked)= over a span) are refused by name rather than read as something
+  else; the block is left as it was and the refresh says why.
+
+  | Parameter    | Meaning                                                                         |
+  |--------------+---------------------------------------------------------------------------------|
+  | =:columns=   | =heading=, =todo=, =priority=, =deadline=, =scheduled=, =closed=, =tags=, =file= |
+  |              | or a property's name; =(name "Title")= retitles one. Default =(heading todo)=    |
+  | =:sort=      | =date= (deadline, else scheduled), =deadline=, =scheduled=, =closed=,           |
+  |              | =priority=, =todo= (the file's keyword order), =heading=, =random=, =reverse=   |
+  | =:take=      | the first N rows; a negative N, the last N                                      |
+  | =:ts-format= | how dates are written, as strftime; default =%Y-%m-%d= (and the time if it has one) |
+  | =:scope=     | =file= keeps to this file; otherwise every file the server watches              |
+
+  A title links to its heading by its =ID= when it has one, else by its
+  title. The heading the block is written under is never one of its rows.

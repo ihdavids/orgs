@@ -28,6 +28,10 @@ type AgendaViewSection struct {
 	Start string `yaml:"start,omitempty" json:"Start,omitempty"`
 	// todo: only these keywords, "NEXT|WAITING" (org's t with a keyword).
 	Keywords string `yaml:"keywords,omitempty" json:"Keywords,omitempty"`
+	// org-super-agenda's groups for this section, in place of agenda.groups
+	// (needs features.superAgenda); noGroups shows it ungrouped.
+	Groups   []AgendaGroup `yaml:"groups,omitempty" json:"Groups,omitempty"`
+	NoGroups bool          `yaml:"noGroups,omitempty" json:"NoGroups,omitempty"`
 }
 
 // AgendaViewPart is one section's answer: days for an agenda section, nodes
@@ -37,7 +41,10 @@ type AgendaViewPart struct {
 	Kind   string
 	Agenda *AgendaResult `json:",omitempty"`
 	Nodes  []AgendaNode  `json:",omitempty"`
-	Msg    string        `json:",omitempty"`
+	// A list section's Nodes in their groups (an agenda section's are on
+	// its days).
+	Groups []AgendaGroupItems `json:",omitempty"`
+	Msg    string             `json:",omitempty"`
 }
 
 type AgendaViewResult struct {
