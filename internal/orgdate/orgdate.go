@@ -32,6 +32,7 @@ type OrgDate struct {
 	End      time.Time // the far end of a time range; zero when there is none
 	HasEnd   bool
 	Repeater string // "+1w", ".+2d", "++1m" - written as typed
+	Warning  string // "-3d", "--1w": how early a deadline starts to show
 	Inactive bool
 	// A timestamp that arrived already written, to be passed through as it
 	// stands. Somebody pasting one from a file means it, and re-deriving it
@@ -57,6 +58,9 @@ func (d OrgDate) String() string {
 	}
 	if d.Repeater != "" {
 		s += " " + d.Repeater
+	}
+	if d.Warning != "" {
+		s += " " + d.Warning
 	}
 	return lo + s + hi
 }
@@ -102,7 +106,8 @@ func ParseDate(s string, now time.Time) (OrgDate, bool, error) {
 	// round: `+2w` is both an offset and a repeater in org's spelling, and the
 	// only thing that tells them apart is that a repeater needs a day to
 	// repeat from. So the first word that reads as a day *is* the day, and a
-	// `+2w` after one is the repeater.
+	// `+2w` after one is the repeater - as a `-3d` after one is the warning
+	// period, which is the same argument the other way round.
 	day := d.Day
 	haveDay := false
 	for _, w := range rest {
@@ -114,6 +119,10 @@ func ParseDate(s string, now time.Time) (OrgDate, bool, error) {
 		}
 		if isRepeater(w) {
 			d.Repeater = w
+			continue
+		}
+		if haveDay && isWarning(w) {
+			d.Warning = w
 			continue
 		}
 		// Not a day and not a repeater: say what is wrong with it as a day,
@@ -290,6 +299,19 @@ func isRepeater(w string) bool {
 		return last == 'd' || last == 'w' || last == 'm' || last == 'y' || last == 'h'
 	}
 	return false
+}
+
+// A warning period: -3d shows a deadline three days early, --3d only the
+// first time a repeating one comes round.
+func isWarning(w string) bool {
+	body := strings.TrimPrefix(strings.TrimPrefix(w, "-"), "-")
+	if body == w || len(body) < 2 {
+		return false
+	}
+	if _, err := strconv.Atoi(body[:len(body)-1]); err != nil {
+		return false
+	}
+	return strings.ContainsRune("hdwmy", rune(body[len(body)-1]))
 }
 
 func looksLikeTime(w string) bool {

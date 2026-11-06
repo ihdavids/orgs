@@ -40,6 +40,10 @@ func TestParseDate(t *testing.T) {
 		{"mon +1w", "<2026-09-28 Mon +1w>"},
 		{"tomorrow .+2d", "<2026-09-28 Mon .+2d>"},
 		{"fri 14:00 ++1m", "<2026-10-02 Fri 14:00 ++1m>"},
+		// And a `-3d` after one is the warning period, not an offset.
+		{"fri -3d", "<2026-10-02 Fri -3d>"},
+		{"eom +1m --2d", "<2026-09-30 Wed +1m --2d>"},
+		{"-3d", "<2026-09-24 Thu>"},
 		// A day and month with no year is the coming one.
 		{"12-25", "<2026-12-25 Fri>"},
 		{"01-05", "<2027-01-05 Tue>"},
