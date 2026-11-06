@@ -49,7 +49,8 @@
     - plugins that sync periodically with 3rd party services: google
       calendar, ics calendars, jira, todoist, trello, github and gitlab
     - =orgs import= for Jupyter notebooks, markdown and vaults of markdown notes,
-      todo.txt and .ics files
+      Notion exports (zipped or not; databases become records), todo.txt
+      and .ics files
   - Background plugins: git sync of your notes, notifications of what is
     coming up, and automatic clock out.
   - Generators
@@ -3214,8 +3215,28 @@ back out, =<c= included.
 | =M-Enter=             | =SPC n=         | the next thing: a new list item after this one (keeping its bullet, its checkbox and its numbering), or a new heading at this level after the subtree |
 | =M-S-Enter=           | =SPC N=         | the same as a =TODO= heading, or a checkbox item                     |
 | =C-Enter=             | =SPC h=         | a new heading after the subtree, even inside a list                  |
-| =TAB= on a heading    | =TAB=, =za=     | fold / unfold it (=zc= =zo= =zM= =zR= in vim)                        |
-| =TAB= on an empty item |                | indent it                                                            |
+| =TAB= on a heading    | =TAB=           | cycle it: folded, its children, the whole subtree (as org-cycle)     |
+| =S-TAB=               | =S-TAB=         | cycle the file: OVERVIEW, CONTENTS, SHOW ALL (as org-global-cycle)   |
+| =TAB= on a drawer or block line | =TAB=, =za= | fold / unfold it (=zc= =zo= =zM= =zR= in vim)                  |
+| =TAB= on an empty item | =S-TAB= outdents | indent it                                                          |
+| =C-x n s=             | =SPC w=, =:narrow= | narrow to the subtree: the rest of the file is hidden behind a bar (=SPC w= again widens) |
+| =C-x n b= / =C-x n n= |                 | narrow to the block around the cursor / to the selected lines        |
+| =C-x n w=             | =SPC w=, =:widen= | show the whole file again                                          |
+| =C-c ^=               | =SPC ^=         | sort the list, the headings under this one, or the table's rows: pick a key, upper case for reverse |
+| =C-c C-w=             | =SPC R=, =:refile= | refile the heading: saved first, then a target picked; the file is read back |
+| =C-c C-x C-a=, =C-c $= | =SPC A=, =:archive= | archive the heading where the file's =#+ARCHIVE:= says              |
+
+The file opens folded the way its =#+STARTUP:= says (=overview=, =content=,
+=showall=, =show2levels= ...) and a heading's =:VISIBILITY:= property says
+(=folded=, =children=, =content=, =all=), as org opens it.
+
+Sort keys: =a= alphabetical, =n= numeric, =t= first timestamp, =s= scheduled,
+=d= deadline, =p= priority, =o= todo keyword order, =r= a property (asked
+for), =x= checkbox (lists). A table sorts the rows between rules by the
+cursor's column: =a=, =n=, =t=.
+
+Refile and archive are done by the server on the file, so a changed buffer is
+saved first and the editor reads the file back after.
 
 A heading moves with everything under it and never out from under its parent.
 A list item moves with the lines indented under it. A numbered list is
@@ -3234,6 +3255,14 @@ renumbered when an item is added.
 
 The keywords cycled are the file's own first =#+TODO:= line, or the server's
 defaults when the file has none.
+
+A keyword change is written the way the server writes one: going to a done
+keyword stamps =CLOSED:= and logs the change in the =LOGBOOK= drawer (as the
+file's =#+STARTUP:= logging words, a heading's =:LOGGING:= and the =#+TODO:=
+cookies say), and leaving it takes =CLOSED:= off again. A heading whose
+=SCHEDULED:= or =DEADLINE:= repeats (=+1w=, =++1d=, =.+2d=) is not left done:
+its dates move on, its keyword goes back (to =REPEAT_TO_STATE= or the first
+keyword) and =:LAST_REPEAT:= is set, as org-todo does.
 
 Ticking a box keeps its parents and their counts right, as org does: a parent
 item with a box is =[X]= when all its children are, =[-]= when some are, and
@@ -3261,9 +3290,115 @@ recomputed, and a time range keeps its length. Scheduling a heading with a
 deadline puts both on one planning line. A planning line or drawer that goes in
 takes the indentation the heading's body already has.
 
+*** Lists, emphasis and footnotes
+| Keys                      | vim normal         | What it does                                                                 |
+|---------------------------+--------------------+------------------------------------------------------------------------------|
+| =Enter= on an item        |                    | the text after the cursor into a new item (same bullet, next number, =[ ]= if it has a box); on an empty item, end the list: out a level, or the bullet taken off |
+| =S-Left= / =S-Right= on an item | =SPC -=      | the list's bullet: =-= =+= =1.= =1)= =*= (=*= only indented)                 |
+|                           | =SPC #=            | renumber the list; off a list, renumber the footnotes                        |
+| =⌘B= =⌘I= =⌘U=            | =SPC *= =SPC /= =SPC _= | *bold*, /italic/, _underline_ the selection or word; again to take it off |
+| =⌘E= =⌘⇧E= =⌘⇧X=          | =SPC ~= ~SPC =~ =SPC += | ~code~, =verbatim=, +strike-through+                                    |
+| =C-c C-x C-f= then a marker |                  | the same, in emacs (and on Linux, where =C-b= =C-i= =C-u= keep their meanings) |
+| a marker typed over a selection |              | wraps it: =*= over =word= gives =*word*=                                     |
+| =C-c C-x f=               | =SPC f=            | a new footnote =[fn:N]= with its definition under =* Footnotes=; on a footnote, jump to its definition and back |
+|                           | =SPC F=            | an inline footnote =[fn::]=                                                  |
+| =C-c C-c= on a footnote   | =SPC x=            | jump between the reference and its definition                                |
+| =C-c C-x F=               |                    | renumber the footnotes in the order they are referred to                     |
+
+Hovering over a footnote reference shows its definition.
+
+*** Tables
+| Keys                        | vim normal also          | What it does                                                         |
+|-----------------------------+--------------------------+----------------------------------------------------------------------|
+| =TAB= / =S-TAB=             | =TAB= / =S-TAB=          | align the table and go to the next / previous cell; off the last cell adds a row; on =\vert{}-= draws the rule; on =\vert{}a\vert{}b= makes a table |
+| =Enter=                     |                          | the next row, same column (a row added at the end or above a rule)  |
+| =M-Up= / =M-Down=           | =M-k= / =M-j=            | move the row                                                         |
+| =M-Left= / =M-Right=        | =M-h= / =M-l=            | move the column                                                      |
+| =M-S-Up= / =M-S-Down=       | =M-K= / =M-J=            | kill the row / open a row above                                      |
+| =M-S-Left= / =M-S-Right=    | =M-H= / =M-L=            | delete the column / insert one                                       |
+| =C-c -= / =C-c Enter=       | =SPC -= / =SPC _=        | a rule below the row / the rule and on to the row below it          |
+| =C-c C-c=, =C-c *=          | =SPC x=                  | work out the =#+TBLFM:= formulas (on the server); align if there are none |
+|                             | =SPC o= =SPC O= =SPC k=  | a row below / above, kill the row                                    |
+|                             | =SPC c= =SPC C= ~SPC =~ | insert / delete a column, align                              |
+
+Typing ~=expr~ or ~:=expr~ in a cell and pressing =TAB= makes it a column or
+field formula and works it out. The status line shows the cell (=@3$2=) and
+the formula that fills it, and the cells that formula reads are marked.
+
+*** Completion
+Completions open as you type; =Enter= takes one. =TAB= takes one once you
+have typed for it, otherwise it moves to the next field as usual. =ESC= closes
+the list, =C-SPC= opens it.
+
+| Where                          | What it offers                                                                  |
+|--------------------------------+---------------------------------------------------------------------------------|
+| after =[[=                     | this file's headings (=*Title=), =#custom-ids=, =<<targets>>= and =#+NAME:=s; other files' headings (=id:= when they have an ID, else =file:…::*Title=) and files |
+| after a heading's =:=          | tags: this file's, =#+TAGS:= / =#+FILETAGS:=, the server's                      |
+| after a heading's stars        | TODO keywords                                                                   |
+| between a heading's =\vert{}=s | org-recur rules                                                                 |
+| =:= at the start of a drawer line | property names; choosing one moves on to its values                          |
+| after =:NAME:=                 | =NAME_ALL= values, else org's (EFFORT, ORDERED t/nil, a new ID, VISIBILITY...) and this file's |
+| =#+= at the start of a line    | keywords; a =#+begin_…= brings its =#+end_…=                                     |
+| after =#+begin_src=            | languages; after =:= on the line, header arguments and their values              |
+| after =[fn:=                   | footnote labels, a new number first                                             |
+| =C-c C-x p= / =SPC p= / =<p=   | the property's name, then its value, offered as you go                          |
+
+*** Links and tags
+| Keys            | vim normal                    | What it does                                                           |
+|-----------------+-------------------------------+------------------------------------------------------------------------|
+| =C-c C-l=       | =SPC l=                       | insert a link: the stored link, headings, files, or a url typed; then a description. On a link, edit it |
+| =C-c C-o=       | =SPC o=, =Enter=, =gx=        | follow the link: in this file the cursor goes there; another file opens; a web page opens in a tab |
+| ⌘-click (ctrl-click) |                          | follow the link clicked                                                |
+| =C-c l=         | =SPC L=                       | store a link to this heading (by its ID, CUSTOM_ID or title), also copied |
+| =C-c C-q=       | =SPC q=                       | set the heading's tags: =TAB= ticks one, =Enter= takes them            |
+| =C-c C-x C-t=   | =SPC Q=                       | align every heading's tags                                             |
+
+*** Clocking
+| Keys                 | vim normal | What it does                                                    |
+|----------------------+------------+-----------------------------------------------------------------|
+| =C-c C-x C-i=        | =SPC i=    | clock in to this heading (a =CLOCK:= line in its =LOGBOOK=), clocking out of any other |
+| =C-c C-x C-o=        | =SPC I=    | clock out: =CLOCK: [..]--[..] =>  1:05=                          |
+| =C-c C-x C-q=        | =SPC K=    | cancel the running clock (its line taken out)                   |
+| =C-c C-x C-j=        | =SPC j=    | go to the heading with the running clock                        |
+| =C-c C-c= on a =CLOCK:= line | =SPC x= | work its duration out again                                  |
+
+The running clock shows at the end of its heading and in the status line.
+This clock is the file's, as Emacs keeps one; the server's own clock (the
+Focus timer, =orgs clock=) is separate and knows nothing of it until the file
+is saved, when its time counts toward clock budgets and the recap.
+
+*** Running code and problems
+| Keys            | vim normal       | What it does                                                               |
+|-----------------+------------------+----------------------------------------------------------------------------|
+| =C-c C-c=       | =SPC x=, =SPC e= | run the source block, =#+CALL:= or inline code at the cursor; update the dynamic block (clocktable, columnview) it is in |
+| =C-c C-v b=     | =SPC E=          | run every block in the file                                                 |
+| =C-c C-x C-u=   | =SPC u=          | update every dynamic block                                                  |
+| =M-g n= / =M-g p= | =]d= / =[d=    | the next / previous problem                                                 |
+|                 | =SPC D=          | the list of problems                                                        |
+
+=▶ Run= above a block (where the server would run it) and =↻ Update= above
+a dynamic block do the same with a click. Blocks run on the server with the
+text in the editor, saved or not, and only with =babel.enable= on. The
+problems are what =orgs lsp= reports: a block or drawer that is never closed,
+a link to nothing, a bad org-edna rule, an unknown callout type.
+
+*** Several cursors
+| Keys                    | vim normal | What it does                                                    |
+|-------------------------+------------+-----------------------------------------------------------------|
+| =⌘D= (=C-d= off a mac)  | =gb=       | add the next match of the word or selection                     |
+| =C->=                   |            | the same, in emacs                                              |
+| =⌘⌥Up= / =⌘⌥Down=       |            | add a cursor on the line above / below                          |
+| =⌥=-drag                |            | a rectangle of cursors                                          |
+| =ESC=, =C-c C-<=        | =ESC=      | back to one cursor                                              |
+
+Typing, deleting and pasting happen at every cursor; in vim, normal mode
+commands run at each cursor too (=V-BLOCK= then =I= or =A= also makes them).
+The org commands (M-arrows, =C-c C-c= and the rest) act at the main cursor.
+
 *** Vim
 =SPC= in normal mode is the leader: the status line shows =SPC-= and the next
-key runs one of the org commands above (=SPC ?= opens this page).
+key runs one of the org commands above (=SPC ?= opens this page). In a table
+=SPC - _ ^ o O k c C = x= are the table's.
 
 | Keys         | What it does                                                      |
 |--------------+-------------------------------------------------------------------|
@@ -3273,6 +3408,8 @@ key runs one of the org commands above (=SPC ?= opens this page).
 | =:q=         | close (asks if there are unsaved changes)                         |
 | =:q!=        | close, throwing the changes away                                  |
 | =:help=      | this page                                                         |
+| =:narrow=, =:widen= | narrow to the subtree, show the whole file                 |
+| =:refile=, =:archive= | refile or archive the heading                            |
 
 The rest is vim: motions, operators, text objects, registers, visual modes,
 =/= search, =:s= substitution, macros. The mode is shown under the editor:
@@ -3878,7 +4015,7 @@ In a list of fixes or synonyms: the arrows or =1=-=9=, =Enter= to take one,
 or not. It asks datamuse.com, sending only the word looked up. Spelling uses an
 English (US) dictionary inside the page.
 
-** More optional packages: canvases, trackers, related notes, drawings, media notes, callouts, backlink counts, maps, timelines, a library, hover previews, link titles, maths typing, local pictures
+** More optional packages: canvases, trackers, related notes, drawings, media notes, callouts, backlink counts, maps, timelines, a library, hover previews, link titles, maths typing, local pictures, sticky headings
 *** Turning them on
 
   These do in orgs what well-loved note-taking plugins do elsewhere, kept in
@@ -3912,6 +4049,7 @@ English (US) dictionary inside the page.
       autoLinkTitle: true
       latexSuite: true
       localImages: true
+      stickyHeader: true
   #+END_SRC
 
 *** Canvases (JSON Canvas)
@@ -5833,6 +5971,38 @@ Features On or Off*).
    lens, and hovering one shows the picture with the same action. Download
    on save is the server's =auto=.
 
+*** Sticky headings (org-sticky-header)
+
+  With =features: stickyHeader:= on, a file open in worg has a bar pinned
+  over it that names the headings the top of the view is under, the way
+  org-sticky-header's =full= mode does in Emacs' header line:
+
+  #+BEGIN_EXAMPLE
+  Projects › Garden › NEXT [#A] Raised beds
+  #+END_EXAMPLE
+
+  #+BEGIN_SRC sh
+  orgs features stickyHeader on
+  #+END_SRC
+
+  It follows the scroll in all three ways of reading a file: the rendered
+  page, the Org view and the editor. In the editor it follows the text you
+  have, saved or not. Each heading in the bar is a button that scrolls back
+  to it (in the editor it also puts the cursor there). Folding counts: a
+  folded subtree's lines are not on screen, so the bar names what is. Above
+  the first heading it says /Top of the file/.
+
+  The small button at the bar's right end sets what it shows, kept per
+  browser: every heading above (the default) or only the nearest one, and
+  whether a heading's TODO keyword and priority are shown. A rendered page
+  shows a keyword only if its html theme writes one. On a phone the bar
+  keeps the outermost heading and the one you are in, and folds the rest
+  into a =…= that lists them.
+
+  Nothing is written to your files and nothing is asked of the server: the
+  bar reads the page it is drawn over. It is worg's alone: Emacs has
+  org-sticky-header itself.
+
 ** Optional org packages: checklists, edna, noter, remark, expiry, recur, budgets, contents, review, recipes, ledgers
 *** Turning them on
 
@@ -5864,6 +6034,8 @@ Features On or Off*).
       review: true
       chef: true
       ledger: true
+      superAgenda: true
+      orgQl: true
   #+END_SRC
 
   Only an administrator can turn one on or off, unless the server runs
@@ -6608,6 +6780,145 @@ Features On or Off*).
    blocks as you type, shows an account's balance when you hover on it, and
    has *Org: Ledger Balance* and *Org: Ledger Register*, which print the
    report in the *Org Ledger* output.
+
+*** Grouped agendas (org-super-agenda)
+
+  With =superAgenda= on, the agenda's items are sorted into titled groups the
+  way org-super-agenda sorts them: each item goes to the first group that
+  takes it, and what no group takes is listed last under /Other items/. A
+  day of the agenda is grouped within the day; a list (open tasks, a tags
+  match, stuck projects) as a whole.
+
+  The groups every agenda uses go in the yaml, as =org-super-agenda-groups=
+  does in Emacs. A section of an agenda view (=agenda.views=) may name its
+  own =groups:=, or say =noGroups: true= to stay as it was.
+
+  #+BEGIN_SRC yaml
+  server:
+    agenda:
+      groups:
+        - name: Today
+          timeGrid: true
+        - name: Overdue
+          deadline: past
+          scheduled: past
+        - name: Important
+          priority: A
+        - name: Quick
+          effortMax: "0:15"
+        - name: Waiting
+          todo: [WAITING]
+          order: 9
+        - discard: true
+          tag: [someday]
+        - auto: category
+  #+END_SRC
+
+  Several selectors in one group are alternatives: an item matching any of
+  them is taken. =and:= is a list of selectors that must all match, =not:= a
+  list none of which may. A group with only a name takes nothing.
+
+  | Selector    | Takes                                                         |
+  |-------------+---------------------------------------------------------------|
+  | =anything=  | every item left                                               |
+  | =timeGrid=  | an entry at a time of day                                     |
+  | =tag=       | any of these tags, inherited ones included                    |
+  | =todo=      | any of these keywords; =[t]= any not-done one                 |
+  | =priority=  | =A=, =A,B=, =>B= (higher than B), =<B=; no cookie counts as B |
+  | =deadline=  | =past=, =today=, =future=, =any=, =none=, or a day =2026-11-05= |
+  | =scheduled= | the same, for SCHEDULED                                       |
+  | =date=      | the same, for a plain active timestamp                        |
+  | =habit=     | habits                                                        |
+  | =category=  | any of these categories                                       |
+  | =file=      | a regexp over the file's path                                 |
+  | =property=  | =NAME= (has it) or =NAME=value=                               |
+  | =heading=   | a regexp over the title                                       |
+  | =regexp=    | a regexp over the title and the property values               |
+  | =children=  | =any= (has children), =todo= (has open ones), =none=          |
+  | =effortMin= | an EFFORT of at least this (=1:00=)                           |
+  | =effortMax= | an EFFORT under this                                          |
+  | =query=     | what an orgs query finds (=IsProject()=, a ={{ filter }}=)    |
+
+  =auto:= makes one group per value instead, named by it and in its order:
+  =category=, =tags= (all of an item's tags), =todo=, =priority=, =file=,
+  =dir=, =parent=, =outline= (the headings above), =planning= or
+  =property:NAME=. An item with no value goes on to the next group.
+
+  =name:= titles a group, =order:= moves it (lower first; /Other items/ is
+  99), =discard: true= drops what it takes. A bad regexp or an unknown =auto=
+  is reported in the answer's message; the rest of the grouping still
+  happens.
+
+  #+BEGIN_SRC sh
+  orgs features superAgenda on
+  orgs agenda -view n          # printed in its groups, as org-agenda-write would
+  orgs agenda -view a -as html
+  #+END_SRC
+
+  worg's agenda views (the picker above the calendar) draw each group's name
+  with its items under it. =GET /agenda=, =/agenda/nodes= and =/agenda/view=
+  answer =Groups= beside the items, as indexes into them, so every client
+  shows the same groups; a request may send its own with =groups== (the list
+  as json) or turn them off with =grouped=f=.
+
+*** Query blocks (org-ql)
+
+  With =orgQl= on, org-ql's dynamic block is refreshed by orgs as Emacs
+  refreshes it: the headings an org-ql query finds, as a table. A file with
+  these blocks reads the same in both.
+
+  #+BEGIN_EXAMPLE
+  #+BEGIN: org-ql :query "todo:NEXT tags:work" :columns (todo (priority "P") heading deadline) :sort (deadline priority) :take 10
+  #+END:
+  #+END_EXAMPLE
+
+  Refresh it like any dynamic block: =orgs dblock notes.org=, worg's
+  refresh, or on a schedule with =orgs refresh=.
+
+  =:query= takes either of org-ql's spellings:
+
+  - =(and (todo "NEXT") (tags "work") (not (done)) (deadline :to today))=
+  - =todo:NEXT tags:work !done: deadline:to=today= - terms side by side must
+    all match, =!= turns one round, =pred:a,b= gives several arguments,
+    =pred:key=value= a keyword one, and a plain word or ="phrase"= is looked
+    for in the heading and its text.
+
+  | Predicate                                     | Means                                                    |
+  |-----------------------------------------------+----------------------------------------------------------|
+  | =(todo)= =(todo "A" "B")=                      | any open keyword, or one of these                        |
+  | =(done)=                                      | a finished keyword                                       |
+  | =(tags "a" "b")= =(tags-all "a" "b")=          | any of these tags (inherited too), or all of them        |
+  | =(priority "A")= =(priority >= "B")=           | a priority, or a comparison (A is the highest)           |
+  | =(heading "words")= =(regexp "re")=            | in the title; in the title or the text                   |
+  | =(property "NAME")= =(property "NAME" "v")=    | has it; has that value (=:inherit t= looks above too)    |
+  | =(level 2)= =(level < 3)= =(level 2 4)=        | outline level                                            |
+  | =(scheduled …)= =(deadline …)= =(closed …)=    | =:on=, =:from=, =:to=: =today=, days (=-7=, =30=) or =2026-11-05= |
+  | =(deadline auto)=                             | past or inside its warning period                        |
+  | =(ts :from -7 :to today)=                     | a date of the heading's own in the span                  |
+  | =(planning)= =(habit)= =(blocked)= =(clocked)= | has a planning date, is a habit, is blocked, was clocked |
+  | =(category "c")= =(path "work")=               | category; part of the file's path                        |
+  | =(link)= =(link "x")= =(effort "1:00")=        | has links, links to x; EFFORT at most                    |
+  | =(and …)= =(or …)= =(not …)=                   | as written                                               |
+
+  =(ts …)= is close to org-ql's, not the same: it counts SCHEDULED and DEADLINE
+  as dates of the heading's own, and a heading with any of its dates outside
+  the span is left out. Predicates orgs cannot
+  answer yet (=ancestors=, =parent=, =children=, =outline-path=, =src=,
+  =(clocked)= over a span) are refused by name rather than read as something
+  else; the block is left as it was and the refresh says why.
+
+  | Parameter    | Meaning                                                                         |
+  |--------------+---------------------------------------------------------------------------------|
+  | =:columns=   | =heading=, =todo=, =priority=, =deadline=, =scheduled=, =closed=, =tags=, =file= |
+  |              | or a property's name; =(name "Title")= retitles one. Default =(heading todo)=    |
+  | =:sort=      | =date= (deadline, else scheduled), =deadline=, =scheduled=, =closed=,           |
+  |              | =priority=, =todo= (the file's keyword order), =heading=, =random=, =reverse=   |
+  | =:take=      | the first N rows; a negative N, the last N                                      |
+  | =:ts-format= | how dates are written, as strftime; default =%Y-%m-%d= (and the time if it has one) |
+  | =:scope=     | =file= keeps to this file; otherwise every file the server watches              |
+
+  A title links to its heading by its =ID= when it has one, else by its
+  title. The heading the block is written under is never one of its rows.
 
 ** Org files in any editor: =orgs lsp=
 *** What it is
@@ -7408,6 +7719,13 @@ Features On or Off*).
   =siblings= of the heading the block is under, =:links gh= writes
   =[[#anchor][Title]]= links instead of =[[*Title][Title]]=. The heading the
   block is under, =:noexport:= and =COMMENT= headings are left out.
+
+*** org-ql
+
+  org-ql's own block, =#+BEGIN: org-ql :query "todo:NEXT tags:work" :columns
+  (todo heading deadline) :sort (deadline) :take 10=, refreshed as Emacs
+  refreshes it (needs =orgs features orgQl on=; see /Query blocks/ in the
+  optional org packages).
 
   Any other name is looked up among the dynamic blocks plugins register.
 
@@ -11558,6 +11876,10 @@ Features On or Off*).
 		Unset is org's own 14. =0= shows a deadline only on its day (and as
 		overdue after it).
 
+		=agenda.groups= sorts every agenda into titled groups, as
+		org-super-agenda does, while =features.superAgenda= is on (see
+		/Grouped agendas/ in the optional org packages).
+
 ** Timesheets and Invoices
 
 		Who =orgs invoice= and =orgs timesheet= bill, and how. Time belongs to
@@ -14233,10 +14555,12 @@ Features On or Off*).
 	| =query=   | string | no       | Narrows the headings, as =/search=. Empty is all.      |
 	| =closed=  | bool   | no       | =t= adds CLOSED dates (the logbook view).              |
 	| =archived= | bool  | no       | =t= keeps headings in archived trees.                  |
+	| =groups=  | json   | no       | org-super-agenda groups, in place of =agenda.groups=.   |
+	| =grouped= | bool   | no       | =f= leaves the days ungrouped.                         |
 
 	*Response:* An =AgendaResult=: ={"Ok": true, "From", "To", "Today",
 	"Nodes": [...], "Days": [{"Date", "Entries": [{"Node", "Kind", "Start",
-	"End", "HasTime", "Repeat", "Late", "DueIn", "Done"}]}]}=. =Node= is an
+	"End", "HasTime", "Repeat", "Late", "DueIn", "Done"}], "Groups"}]}=. =Node= is an
 	index into =Nodes=, so a heading on five days is sent once. Every day of
 	the range is listed, empty or not. A bad date or query answers =Ok: false=
 	with the reason in =Msg=.
@@ -14254,8 +14578,10 @@ Features On or Off*).
 	| Parameter | Type   | Required | Description                               |
 	|-----------+--------+----------+-------------------------------------------|
 	| =query=   | string | no       | The query expression, as for =/search=.   |
+	| =groups=  | json   | no       | org-super-agenda groups (see /Grouped agendas/). |
+	| =grouped= | bool   | no       | =f= leaves the list ungrouped.            |
 
-	*Response:* ={"Ok": true, "Nodes": [...]}=, or =Ok: false= and =Msg=.
+	*Response:* ={"Ok": true, "Nodes": [...], "Groups": [...]}=, or =Ok: false= and =Msg=.
 
 ** GET /agenda/print — The Agenda as a Printable Planner
 
@@ -14316,6 +14642,28 @@ Features On or Off*).
 	=Kind= one of =agenda= (=Days=, =Start: monday=), =todo= (=Keywords:
 	"NEXT|WAITING"=), =tags= (=Query= in any form, org match strings
 	included), =search= (words) and =stuck=; =Query= narrows any of them.
+
+** GET /archive/where — Where A File Or Heading Archives To
+
+	The archive file (and heading in it) that archiving would send a heading
+	to, worked out by the same rules as =/archive=: the heading's =ARCHIVE=
+	property, then the file's =#+ARCHIVE:= line, then =archiveDefaultTarget=.
+	Asked about a file, the heading part is left out. Nothing is written; the
+	links panel uses it to open the archive.
+
+	*Method:* =GET=
+
+	*Query Parameters:*
+	| Parameter  | Type   | Required | Description                                                  |
+	|------------+--------+----------+--------------------------------------------------------------|
+	| =hash=     | string | one of   | The heading, by hash (query-escaped, not base64 again).      |
+	| =filename= | string | one of   | A file. With nothing else, the file is the target.           |
+	| =line=     | int    | no       | With =filename=: the heading this zero based line is under.  |
+	| =heading=  | string | no       | With =filename=: a heading by its text.                      |
+
+	*Response:* An =ArchivePlace= object: =Filename=, =Heading= and its zero
+	based =Line= there (0 when it is not there yet), =Rule= and =From=
+	(=heading=, =file= or =default=), =Exists=, =Loaded= and =SameFile=.
 
 ** GET /assistant/status — The Writing Assistant's Backends
 	Which AI backends the server offers worg's writing assistant, whether each
@@ -19441,6 +19789,41 @@ Features On or Off*).
 
 	*Response:* ={Ok, Msg, Changed, Text}=. =Changed= false means the text
 	already said that, and =Text= is then empty.
+
+** POST /lsp/dblock — Refresh Dynamic Blocks In Text The Client Holds
+
+	#+BEGIN_EXAMPLE
+	{ "Filename": "/path/notes.org", "Text": "...the whole buffer...", "Line": 12 }
+	#+END_EXAMPLE
+
+	=/dblocks/update= on text instead of a file: the dynamic block
+	(=#+BEGIN: clocktable …= to =#+END:=) holding =Line= (zero based) is
+	written afresh, or every block in the text when =Line= is negative.
+	Nothing is written; the answer is the whole text. The text is read as the
+	file =Filename=, so a block's heading and a =:scope file= table are the
+	buffer's; a scope naming other files reads them from disk.
+
+	*Response:* ={Ok, Msg, Changed, Text, Blocks}=, =Blocks= as =/dblocks=
+	lists them, each with its own =Ok= and =Msg=.
+
+** POST /lsp/diagnose — What Is Wrong With Text The Client Holds
+
+	#+BEGIN_EXAMPLE
+	{ "Filename": "/path/notes.org", "Text": "...the whole buffer..." }
+	[ { "Line": 4, "From": 0, "To": 14, "Severity": "error",
+	    "Code": "unclosed-block", "Message": "#+BEGIN_SRC with no #+END_SRC" } ]
+	#+END_EXAMPLE
+
+	The structural checks =orgs lsp= publishes, for an editor with no language
+	server: a block with no =#+END_= (an error), a drawer with no =:END:=, a
+	link to nothing (no heading, =CUSTOM_ID=, target or =#+NAME:= in the text,
+	no such file, nothing of that name in the file, no heading with that id),
+	and with those features on, org-edna properties that will not run and
+	callouts of no known type. =Line= is zero based; =From= and =To= are
+	columns in UTF-16 code units, which is what a JavaScript string counts, not
+	bytes. =Severity= is =error=, =warning= or =info=; =Code= names the check
+	(=unclosed-block=, =unclosed-drawer=, =broken-link=, =edna=,
+	=callout-type=). Nothing is written.
 
 ** POST /lsp/run — Run What Is At A Line Of Text The Client Holds
 
