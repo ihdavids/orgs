@@ -748,13 +748,18 @@ func exportLinesFor(filename string, refresh bool, backend string) (out []string
 	ct := citeMayApply(string(b))
 	op := optionsMayApply(string(b))
 	pl := strings.Contains(strings.ToLower(string(b)), "#+plot:")
+	tk := trackerMayApply(string(b)) // tracker.go: #+TRACKER: lines drawn
+	tl := timelineMayApply(string(b)) // timeline.go: #+TIMELINE: lines drawn
+	bl := backlinkExportMayApply(backend)
+	xd := excalidrawMayApply(string(b)) // excalidraw.go: drawings as their pictures
+	mv := mapMayApply(string(b))       // mapstatic.go: #+MAP: lines as maps
 	var lines []string
 	if refresh && refreshableRe.Match(b) {
 		if r, err := refreshFile(f.Filename, false); err == nil && r.doc != nil && r.changed {
 			lines = r.lines
 		}
 	}
-	if lines == nil && !tx && !ex && !ct && !op && !pl {
+	if lines == nil && !tx && !ex && !ct && !op && !pl && !bl && !tk && !tl && !xd && !mv {
 		return nil, false, false
 	}
 	refreshed = lines != nil
@@ -781,7 +786,27 @@ func exportLinesFor(filename string, refresh bool, backend string) (out []string
 	if pl {
 		out, plotChanged = plotExportLines(f.Filename, out)
 	}
-	return out, refreshed || tx || exChanged || citeChanged || optChanged || plotChanged, refreshed
+	blChanged := false
+	if bl {
+		out, blChanged = backlinkExportLines(f.Filename, out)
+	}
+	trackChanged := false
+	if tk {
+		out, trackChanged = trackerExportLines(f.Filename, out, backend)
+	}
+	tlChanged := false
+	if tl {
+		out, tlChanged = timelineExportLines(f.Filename, out, backend)
+	}
+	drawChanged := false
+	if xd {
+		out, drawChanged = excalidrawExportLines(f.Filename, out, backend)
+	}
+	mapChanged := false
+	if mv {
+		out, mapChanged = mapExportLines(f.Filename, out, backend)
+	}
+	return out, refreshed || tx || exChanged || citeChanged || optChanged || plotChanged || blChanged || trackChanged || tlChanged || drawChanged || mapChanged, refreshed
 }
 
 // exportView is the database with query's file read as exportFile reads it.

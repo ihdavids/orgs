@@ -73,7 +73,7 @@ func TestVault(t *testing.T) {
 		"[fn:1] The footnote text.",
 		"#+attr_html: :width 300px\n[[file:./attachments/photo.png]]",
 		`#+INCLUDE: "./Recipes.org"`,
-		"#+begin_warning\n*Careful*\nHot *pan*.\n#+end_warning",
+		"#+begin_warning Careful\nHot *pan*.\n#+end_warning",
 		"#+begin_quote\nJust a quote\n- with a list\n#+end_quote",
 		"| Name | Qty |\n|---+---|\n| Eggs \\vert{} large | 2 |",
 		"- [ ] Water plants due <2026-10-20 Tue>\n- [X] Buy seeds done [2026-10-02 Fri]\n  - nested item",

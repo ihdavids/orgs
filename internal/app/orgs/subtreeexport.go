@@ -120,6 +120,11 @@ func subtreeViewFor(base common.ODb, query, hash, backend string) (common.ODb, e
 			text = strings.Join(out, "\n")
 		}
 	}
+	if excalidrawMayApply(text) {
+		if out, ok := excalidrawExportLines(f.Filename, strings.Split(text, "\n"), backend); ok {
+			text = strings.Join(out, "\n")
+		}
+	}
 	doc := org.New().Silent().Parse(strings.NewReader(text), f.Filename)
 	return &subtreeDb{ODb: base, file: &common.OrgFile{Filename: f.Filename, Doc: doc}}, nil
 }

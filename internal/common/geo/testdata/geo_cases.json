@@ -1,0 +1,58 @@
+{
+  "parse": [
+    {"in": "49.2827, -123.1207", "lat": 49.2827, "lon": -123.1207},
+    {"in": "49.2827 -123.1207", "lat": 49.2827, "lon": -123.1207},
+    {"in": "(49.2827,-123.1207)", "lat": 49.2827, "lon": -123.1207},
+    {"in": "geo:49.2827,-123.1207", "lat": 49.2827, "lon": -123.1207},
+    {"in": "geo:49.2827,-123.1207,70;u=35", "lat": 49.2827, "lon": -123.1207},
+    {"in": "49°17'N 123°7'W", "lat": 49.283333, "lon": -123.116667},
+    {"in": "49°16'57.7\"N 123°07'14.5\"W", "lat": 49.282694, "lon": -123.120694},
+    {"in": "48.8584 N, 2.2945 E", "lat": 48.8584, "lon": 2.2945},
+    {"in": "33.86S 151.21E", "lat": -33.86, "lon": 151.21},
+    {"in": "https://www.google.com/maps/@49.2827,-123.1207,15z", "lat": 49.2827, "lon": -123.1207},
+    {"in": "https://www.google.com/maps/place/Stanley+Park/@49.30,-123.14,14z/data=!3m1!4b1!4m6!3m5!1s0x0:0x0!8m2!3d49.3017!4d-123.1417", "lat": 49.3017, "lon": -123.1417},
+    {"in": "https://maps.google.com/?q=49.2827,-123.1207", "lat": 49.2827, "lon": -123.1207},
+    {"in": "https://www.google.com/maps/search/?api=1&query=48.8584%2C2.2945", "lat": 48.8584, "lon": 2.2945},
+    {"in": "https://www.openstreetmap.org/?mlat=51.5007&mlon=-0.1246#map=17/51.5007/-0.1246", "lat": 51.5007, "lon": -0.1246},
+    {"in": "https://www.openstreetmap.org/#map=12/51.5007/-0.1246", "lat": 51.5007, "lon": -0.1246},
+    {"in": "https://maps.apple.com/?ll=37.3349,-122.0090&q=Apple%20Park", "lat": 37.3349, "lon": -122.009},
+    {"in": "https://www.bing.com/maps?cp=47.6062~-122.3321&lvl=11", "lat": 47.6062, "lon": -122.3321},
+    {"in": "[[https://www.openstreetmap.org/?mlat=51.5007&mlon=-0.1246][Big Ben]]", "lat": 51.5007, "lon": -0.1246},
+    {"in": "1600 Amphitheatre Pkwy, Mountain View, CA", "none": true},
+    {"in": "Flat 4N, 12 Main St", "none": true},
+    {"in": "Vancouver", "none": true},
+    {"in": "91, 10", "none": true},
+    {"in": "0, 0", "none": true},
+    {"in": "https://example.com/somewhere", "none": true},
+    {"in": "", "none": true}
+  ],
+  "format": [
+    {"lat": 49.2827, "lon": -123.1207, "out": "49.2827,-123.1207"},
+    {"lat": 49.28270049, "lon": -123.12, "out": "49.2827,-123.12"},
+    {"lat": -33.8, "lon": 151, "out": "-33.8,151"},
+    {"lat": 0.0000001, "lon": 10, "out": "0,10"}
+  ],
+  "colour": [
+    {"by": "keyword", "keyword": "", "done": false, "tags": [], "out": "#2a78d6"},
+    {"by": "keyword", "keyword": "TODO", "done": false, "tags": ["cafe"], "out": "#e8743b"},
+    {"by": "keyword", "keyword": "DONE", "done": true, "tags": [], "out": "#7d8b96"},
+    {"by": "tag", "keyword": "TODO", "done": false, "tags": [], "out": "#2a78d6"},
+    {"by": "tag", "keyword": "", "done": false, "tags": ["cafe"], "out": "PALETTE"},
+    {"by": "tag", "keyword": "", "done": false, "tags": ["Travel", "x"], "out": "PALETTE"},
+    {"by": "tag", "keyword": "", "done": false, "tags": ["café"], "out": "PALETTE"}
+  ],
+  "hash": [
+    {"in": "cafe", "n": 8, "out": 5},
+    {"in": "travel", "n": 8, "out": 6},
+    {"in": "café", "n": 8, "out": 1},
+    {"in": "a much longer tag name that wraps", "n": 8, "out": 4},
+    {"in": "😀", "n": 8, "out": 3}
+  ],
+  "fit": [
+    {"pts": [], "w": 720, "h": 400, "lat": 20, "lon": 0, "zoom": 1},
+    {"pts": [[49.2827, -123.1207]], "w": 720, "h": 400, "lat": 49.2827, "lon": -123.1207, "zoom": 15},
+    {"pts": [[49.2827, -123.1207], [49.3017, -123.1417]], "w": 720, "h": 400, "lat": 49.292204, "lon": -123.1312, "zoom": 13},
+    {"pts": [[51.5007, -0.1246], [48.8584, 2.2945]], "w": 720, "h": 400, "lat": 50.197826, "lon": 1.08495, "zoom": 6},
+    {"pts": [[49.2827, -123.1207], [-33.86, 151.21]], "w": 720, "h": 400, "lat": 10.33232, "lon": 14.04465, "zoom": 1}
+  ]
+}

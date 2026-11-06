@@ -1,0 +1,220 @@
+#+TITLE: Latex snippets
+#+STARTUP: showall
+
+The built-in maths snippets of orgs (=features: latexSuite:=), after
+Emacs's cdlatex. Copy any row into your own
+=latex-snippets.org= (=orgs latex init= writes one) to change it: a row of
+yours with the same trigger and modes replaces the built-in one, and a row
+with an empty replacement turns it off.
+
+- Options :: =t= text, =m= any maths, =n= inline maths only, =M= display maths
+  only (none of these: anywhere); =A= expands as you type (otherwise on TAB);
+  =r= the trigger is a regular expression (matched against what comes just
+  before the cursor; =[[0]]= is its first group); =w= not straight after a letter; =v= wraps the selection (=${VISUAL}=).
+- Replacement :: =$1=, =$2=... are the places TAB visits in turn, =${1:x}= one
+  with =x= written in it, =$0= where the cursor ends (the end, if there is
+  none). The same number twice is typed in both places at once.
+  In a cell =\vert= is a =|= and =\n= (not before a letter) a new line.
+- Nothing expands while you type a command's name: =\sqrt= typed out stays
+  =\sqrt=, though =sq= is a snippet.
+- A trigger starting with =@= also expands after cdlatex's backquote: =`a= is
+  =\alpha= as =@a= is.
+
+* Into and out of maths
+| Trigger | Replacement          | Options | Description                  |
+|---------+----------------------+---------+------------------------------|
+| mk      | \( $0 \)             | twA     | inline maths                 |
+| dm      | \[\n$0\n\]           | twA     | display maths                |
+| beq     | \begin{equation}\n$0\n\end{equation} | twA | a numbered equation |
+| bal     | \begin{align}\n$0\n\end{align} | twA | aligned equations         |
+| beg     | \begin{$1}\n$0\n\end{$1} | mA  | an environment               |
+| te      | \text{$1}$0          | wmA     | words in maths               |
+
+* Greek (cdlatex's backquote works too: `a)
+| Trigger | Replacement | Options | Description |
+|---------+-------------+---------+-------------|
+| @a      | \alpha      | mA      | α           |
+| @b      | \beta       | mA      | β           |
+| @g      | \gamma      | mA      | γ           |
+| @G      | \Gamma      | mA      | Γ           |
+| @d      | \delta      | mA      | δ           |
+| @D      | \Delta      | mA      | Δ           |
+| @e      | \epsilon    | mA      | ϵ           |
+| :e      | \varepsilon | mA      | ε           |
+| @z      | \zeta       | mA      | ζ           |
+| @h      | \eta        | mA      | η           |
+| @t      | \theta      | mA      | θ           |
+| @T      | \Theta      | mA      | Θ           |
+| :t      | \vartheta   | mA      | ϑ           |
+| @i      | \iota       | mA      | ι           |
+| @k      | \kappa      | mA      | κ           |
+| @l      | \lambda     | mA      | λ           |
+| @L      | \Lambda     | mA      | Λ           |
+| @m      | \mu         | mA      | μ           |
+| @n      | \nu         | mA      | ν           |
+| @x      | \xi         | mA      | ξ           |
+| @X      | \Xi         | mA      | Ξ           |
+| @p      | \pi         | mA      | π           |
+| @P      | \Pi         | mA      | Π           |
+| @r      | \rho        | mA      | ρ           |
+| @s      | \sigma      | mA      | σ           |
+| @S      | \Sigma      | mA      | Σ           |
+| @u      | \upsilon    | mA      | υ           |
+| @f      | \phi        | mA      | ϕ           |
+| :f      | \varphi     | mA      | φ           |
+| @F      | \Phi        | mA      | Φ           |
+| @c      | \chi        | mA      | χ           |
+| @y      | \psi        | mA      | ψ           |
+| @Y      | \Psi        | mA      | Ψ           |
+| @o      | \omega      | mA      | ω           |
+| @O      | \Omega      | mA      | Ω           |
+
+* Powers, roots and fractions
+| Trigger | Replacement                 | Options | Description                     |
+|---------+-----------------------------+---------+---------------------------------|
+| //      | \frac{$1}{$2}$0             | mA      | a fraction                      |
+| sr      | ^{2}                        | mA      | squared                         |
+| cb      | ^{3}                        | mA      | cubed                           |
+| rd      | ^{$1}$0                     | mA      | to a power                      |
+| invs    | ^{-1}                       | mA      | inverse                         |
+| _       | _{$1}$0                     | mA      | a subscript                     |
+| sq      | \sqrt{$1}$0                 | mA      | square root                     |
+| (\d)rt  | \sqrt[[[0]]]{$1}$0          | rmA     | nth root: 3rt                   |
+| ee      | e^{$1}$0                    | wmA     | e to a power                    |
+| ([A-Za-z])(\d) | [[0]]_[[1]]          | rmA     | x1 is x_1                       |
+| ([A-Za-z])_(\d)(\d) | [[0]]_{[[1]][[2]]} | rmA  | x_12 is x_{12}                  |
+
+* Accents
+| Trigger          | Replacement       | Options | Description |
+|------------------+-------------------+---------+-------------|
+| ([A-Za-z])hat    | \hat{[[0]]}       | rmA     | xhat        |
+| ([A-Za-z])bar    | \bar{[[0]]}       | rmA     | xbar        |
+| ([A-Za-z])vec    | \vec{[[0]]}       | rmA     | xvec        |
+| ([A-Za-z])tilde  | \tilde{[[0]]}     | rmA     | xtilde      |
+| ([A-Za-z])ddot   | \ddot{[[0]]}      | rmA     | xddot       |
+| ([A-Za-z])dot    | \dot{[[0]]}       | rmA     | xdot        |
+| ([A-Za-z])und    | \underline{[[0]]} | rmA     | xund        |
+| hat              | \hat{$1}$0        | wmA     | hat         |
+| bar              | \bar{$1}$0        | wmA     | bar         |
+| vec              | \vec{$1}$0        | wmA     | vector      |
+| bf               | \mathbf{$1}$0     | mA      | bold        |
+| rm               | \mathrm{$1}$0     | mA      | upright     |
+| mcal             | \mathcal{$1}$0    | mA      | calligraphic |
+
+* Operators and relations
+| Trigger | Replacement        | Options | Description |
+|---------+--------------------+---------+-------------|
+| ooo     | \infty             | mA      | ∞           |
+| +-      | \pm                | mA      | ±           |
+| -+      | \mp                | mA      | ∓           |
+| ...     | \dots              | mA      | …           |
+| xx      | \times             | mA      | ×           |
+| **      | \cdot              | mA      | ·           |
+| ===     | \equiv             | mA      | ≡           |
+| !=      | \neq               | mA      | ≠           |
+| >=      | \geq               | mA      | ≥           |
+| <=      | \leq               | mA      | ≤           |
+| >>      | \gg                | mA      | ≫           |
+| <<      | \ll                | mA      | ≪           |
+| ~~      | \approx            | mA      | ≈           |
+| simm    | \sim               | mA      | ∼           |
+| prop    | \propto            | mA      | ∝           |
+| <->     | \leftrightarrow    | mA      | ↔           |
+| ->      | \to                | mA      | →           |
+| !>      | \mapsto            | mA      | ↦           |
+| =>      | \implies           | mA      | ⟹           |
+| =<      | \impliedby         | mA      | ⟸           |
+| iff     | \iff               | wmA     | ⟺           |
+| nabl    | \nabla             | mA      | ∇           |
+| para    | \parallel          | mA      | ∥           |
+| sin     | \sin               | wmA     | \sin |
+| cos     | \cos               | wmA     | \cos |
+| tan     | \tan               | wmA     | \tan |
+| cot     | \cot               | wmA     | \cot |
+| sec     | \sec               | wmA     | \sec |
+| csc     | \csc               | wmA     | \csc |
+| arcsin  | \arcsin            | wmA     | \arcsin |
+| arccos  | \arccos            | wmA     | \arccos |
+| arctan  | \arctan            | wmA     | \arctan |
+| log     | \log               | wmA     | \log |
+| ln      | \ln                | wmA     | \ln |
+| exp     | \exp               | wmA     | \exp |
+| det     | \det               | wmA     | \det |
+| min     | \min               | wmA     | \min |
+| max     | \max               | wmA     | \max |
+| gcd     | \gcd               | wmA     | \gcd |
+
+* Sums, limits, integrals and derivatives
+| Trigger | Replacement                                | Options | Description       |
+|---------+--------------------------------------------+---------+-------------------|
+| sum     | \sum_{${1:i}=${2:1}}^{${3:n}} $0           | wmA     | ∑ with limits     |
+| prod    | \prod_{${1:i}=${2:1}}^{${3:n}} $0          | wmA     | ∏ with limits     |
+| lim     | \lim_{${1:n} \to ${2:\infty}} $0           | wmA     | a limit           |
+| dint    | \int_{${1:0}}^{${2:1}} $3 \, d${4:x} $0    | mA      | a definite integral |
+| int     | \int $1 \, d${2:x} $0                      | wm      | an integral (TAB) |
+| oinf    | \int_{0}^{\infty} $1 \, d${2:x} $0         | mA      | ∫ from 0 to ∞     |
+| infi    | \int_{-\infty}^{\infty} $1 \, d${2:x} $0   | mA      | ∫ over everything |
+| par     | \frac{\partial ${1:y}}{\partial ${2:x}} $0 | wm      | ∂y/∂x (TAB)       |
+| ddt     | \frac{d}{dt}                               | mA      | d/dt              |
+| ddx     | \frac{d${1:y}}{d${2:x}} $0                 | mA      | dy/dx             |
+
+* Sets and logic
+| Trigger | Replacement      | Options | Description  |
+|---------+------------------+---------+--------------|
+| RR      | \mathbb{R}       | mA      | ℝ            |
+| NN      | \mathbb{N}       | mA      | ℕ            |
+| ZZ      | \mathbb{Z}       | mA      | ℤ            |
+| QQ      | \mathbb{Q}       | mA      | ℚ            |
+| CC      | \mathbb{C}       | mA      | ℂ            |
+| inn     | \in              | mA      | ∈            |
+| notin   | \notin           | mA      | ∉            |
+| sub=    | \subseteq        | mA      | ⊆            |
+| sup=    | \supseteq        | mA      | ⊇            |
+| orr     | \cup             | mA      | ∪            |
+| and     | \cap             | wmA     | ∩            |
+| eset    | \emptyset        | mA      | ∅            |
+| set     | \{ $1 \}$0       | wmA     | a set        |
+| EE      | \exists          | mA      | ∃            |
+| AA      | \forall          | mA      | ∀            |
+| neg     | \neg             | wmA     | ¬            |
+
+* Brackets
+| Trigger | Replacement                 | Options | Description    |
+|---------+-----------------------------+---------+----------------|
+| lr(     | \left( $1 \right)$0         | mA      | sized ( )      |
+| lr[     | \left[ $1 \right]$0         | mA      | sized [ ]      |
+| lr{     | \left\{ $1 \right\}$0       | mA      | sized { }      |
+| lr\vert | \left\vert $1 \right\vert$0 | mA      | sized \vert \vert      |
+| lra     | \left\langle $1 \right\rangle$0 | mA  | sized ⟨ ⟩      |
+| avg     | \langle $1 \rangle$0        | mA      | ⟨ ⟩            |
+| norm    | \lVert $1 \rVert$0          | mA      | ‖ ‖            |
+| abs     | \lvert $1 \rvert$0          | wmA     | \vert \vert            |
+| ceil    | \lceil $1 \rceil$0          | mA      | ⌈ ⌉            |
+| floor   | \lfloor $1 \rfloor$0        | mA      | ⌊ ⌋            |
+
+* Matrices and cases
+| Trigger | Replacement                             | Options | Description       |
+|---------+-----------------------------------------+---------+-------------------|
+| pmat    | \begin{pmatrix}\n$0\n\end{pmatrix}      | MA      | ( matrix )        |
+| bmat    | \begin{bmatrix}\n$0\n\end{bmatrix}      | MA      | [ matrix ]        |
+| vmat    | \begin{vmatrix}\n$0\n\end{vmatrix}      | MA      | determinant       |
+| cases   | \begin{cases}\n$0\n\end{cases}          | MA      | cases             |
+| ali     | \begin{aligned}\n$0\n\end{aligned}      | MA      | aligned lines     |
+| pmat    | \begin{pmatrix} $0 \end{pmatrix}        | nA      | ( matrix ) inline |
+| bmat    | \begin{bmatrix} $0 \end{bmatrix}        | nA      | [ matrix ] inline |
+| cases   | \begin{cases} $0 \end{cases}            | nA      | cases inline      |
+| mtwo    | \begin{pmatrix} ${1:a} & ${2:b} \\ ${3:c} & ${4:d} \end{pmatrix}$0 | mA | a 2×2 matrix |
+
+* Wrapping a selection
+Select some maths and type the key.
+| Trigger | Replacement                  | Options | Description   |
+|---------+------------------------------+---------+---------------|
+| U       | \underbrace{${VISUAL}}_{$1}$0 | mv     | underbrace    |
+| O       | \overbrace{${VISUAL}}^{$1}$0 | mv      | overbrace     |
+| C       | \cancel{${VISUAL}}           | mv      | crossed out   |
+| K       | \cancelto{$1}{${VISUAL}}$0   | mv      | cancel to     |
+| S       | \sqrt{${VISUAL}}             | mv      | root of it    |
+| B       | \boxed{${VISUAL}}            | mv      | boxed         |
+| (       | \left( ${VISUAL} \right)     | mv      | in ( )        |
+| [       | \left[ ${VISUAL} \right]     | mv      | in [ ]        |
+| $       | \( ${VISUAL} \)              | tv      | make it maths |

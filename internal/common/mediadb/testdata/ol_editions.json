@@ -1,0 +1,278 @@
+{
+    "links": {
+        "self": "/works/OL893414W/editions.json?limit=5",
+        "work": "/works/OL893414W",
+        "next": "/works/OL893414W/editions.json?limit=5&offset=5"
+    },
+    "size": 155,
+    "entries": [
+        {
+            "works": [
+                {
+                    "key": "/works/OL893414W"
+                }
+            ],
+            "title": "Dune",
+            "publishers": [
+                "Nemira Publishing House"
+            ],
+            "publish_date": "2021",
+            "key": "/books/OL62445412M",
+            "type": {
+                "key": "/type/edition"
+            },
+            "covers": [
+                15246488
+            ],
+            "publish_places": [
+                "Bucharest, Romania"
+            ],
+            "copyright_date": "2021",
+            "edition_name": "Edi\u021bia a VII-a",
+            "contributors": [
+                {
+                    "role": "Translator",
+                    "name": "Ion Doru Brana"
+                }
+            ],
+            "languages": [
+                {
+                    "key": "/languages/rum"
+                }
+            ],
+            "translation_of": "Dune",
+            "translated_from": [
+                {
+                    "key": "/languages/eng"
+                }
+            ],
+            "description": "\u00centr-un viitor \u00eendep\u0103rtat, \u00eentr-un imperiu interplanetar, condus dup\u0103 reguli feudale, casele nobiliare se lupt\u0103 pentru suprema\u021bie. Casa Atreides prime\u0219te controlul asupra planetei Arakis, singura surs\u0103 de mirodenie \u2013 cea mai valoroas\u0103 \u0219i important\u0103 substan\u021b\u0103 din univers. Asta ad\u00e2nce\u0219te vechea rivalitate dintre Casele Atreides \u0219i Harkonnen.\r\n\r\nLeto Atreides \u0219i familia lui se vor confrunta nu doar cu o planet\u0103 de\u0219ertic\u0103, neprietenoas\u0103 \u0219i necunoscut\u0103, ci \u0219i cu comploturi politice periculoase.\r\n\r\nO poveste clasic\u0103, bogat\u0103 \u00een sensuri religioase, economice, tehnologice \u0219i sociale, o complexitate care o pune definitiv pe lista c\u0103r\u021bilor de citit \u00eentr-o via\u021b\u0103.",
+            "physical_format": "Paperback",
+            "number_of_pages": 734,
+            "pagination": "734p",
+            "isbn_13": [
+                "9786064312617"
+            ],
+            "latest_revision": 4,
+            "revision": 4,
+            "created": {
+                "type": "/type/datetime",
+                "value": "2026-08-17T16:01:01.199831"
+            },
+            "last_modified": {
+                "type": "/type/datetime",
+                "value": "2026-08-17T16:38:45.327563"
+            }
+        },
+        {
+            "type": {
+                "key": "/type/edition"
+            },
+            "publish_date": "1989",
+            "publish_country": "is",
+            "languages": [
+                {
+                    "key": "/languages/heb"
+                }
+            ],
+            "work_titles": [
+                "Dune"
+            ],
+            "title": "\u1e24olit",
+            "by_statement": "Fran\u1e33 Herber\u1e6d ; tirgem me-Anglit \u02bbImanu\u02beel Lo\u1e6dem",
+            "authors": [
+                {
+                    "key": "/authors/OL79034A"
+                },
+                {
+                    "key": "/authors/OL14733713A"
+                }
+            ],
+            "notes": "Translation of: Dune.",
+            "publishers": [
+                "\u02bbAm-\u02bboved"
+            ],
+            "publish_places": [
+                "Tel-Aviv"
+            ],
+            "source_records": [
+                "marc:harvard_bibliographic_metadata/ab.bib.01.20150123.full.mrc:805739465:513"
+            ],
+            "works": [
+                {
+                    "key": "/works/OL893414W"
+                }
+            ],
+            "key": "/books/OL58201616M",
+            "identifiers": {},
+            "oclc_numbers": [
+                "22406474"
+            ],
+            "contributors": [
+                {
+                    "role": "Translator",
+                    "name": "\u02bbImanu\u02beel Lo\u1e6dem"
+                }
+            ],
+            "translation_of": "Dune",
+            "translated_from": [
+                {
+                    "key": "/languages/eng"
+                }
+            ],
+            "latest_revision": 4,
+            "revision": 4,
+            "created": {
+                "type": "/type/datetime",
+                "value": "2025-03-19T02:17:14.017113"
+            },
+            "last_modified": {
+                "type": "/type/datetime",
+                "value": "2026-07-25T20:13:05.172840"
+            }
+        },
+        {
+            "type": {
+                "key": "/type/edition"
+            },
+            "authors": [
+                {
+                    "key": "/authors/OL79034A"
+                }
+            ],
+            "isbn_13": [
+                "9780575122796"
+            ],
+            "languages": [
+                {
+                    "key": "/languages/eng"
+                }
+            ],
+            "publish_date": "2012",
+            "publishers": [
+                "Orion Publishing Group, Limited"
+            ],
+            "source_records": [
+                "bwb:9780575122796"
+            ],
+            "subjects": [
+                "Dune (imaginary place), fiction",
+                "Fiction, science fiction, general"
+            ],
+            "title": "Dune Ebook Collection",
+            "works": [
+                {
+                    "key": "/works/OL893414W"
+                }
+            ],
+            "key": "/books/OL48154015M",
+            "latest_revision": 3,
+            "revision": 3,
+            "created": {
+                "type": "/type/datetime",
+                "value": "2023-06-17T05:06:36.944142"
+            },
+            "last_modified": {
+                "type": "/type/datetime",
+                "value": "2026-07-25T20:13:05.172840"
+            }
+        },
+        {
+            "type": {
+                "key": "/type/edition"
+            },
+            "title": "Dune",
+            "authors": [
+                {
+                    "key": "/authors/OL79034A"
+                }
+            ],
+            "publish_date": "1965",
+            "languages": [
+                {
+                    "key": "/languages/eng"
+                }
+            ],
+            "number_of_pages": 550,
+            "publishers": [
+                "Chilton Book Company"
+            ],
+            "source_records": [
+                "ia:dune0000fran"
+            ],
+            "full_title": "Dune ",
+            "works": [
+                {
+                    "key": "/works/OL893414W"
+                }
+            ],
+            "key": "/books/OL58816437M",
+            "identifiers": {},
+            "ocaid": "dune0000fran",
+            "latest_revision": 4,
+            "revision": 4,
+            "created": {
+                "type": "/type/datetime",
+                "value": "2025-04-30T23:21:13.295297"
+            },
+            "last_modified": {
+                "type": "/type/datetime",
+                "value": "2026-07-25T20:13:05.172840"
+            }
+        },
+        {
+            "type": {
+                "key": "/type/edition"
+            },
+            "authors": [
+                {
+                    "key": "/authors/OL79034A"
+                }
+            ],
+            "identifiers": {
+                "amazon": [
+                    "B003GRIVR8"
+                ]
+            },
+            "local_id": [
+                "urn:bwbsku:P7-CCC-894"
+            ],
+            "publish_date": "1965-01-01",
+            "publishers": [
+                "Chilton Book Company"
+            ],
+            "source_records": [
+                "promise:bwb_daily_pallets_2021-08-13"
+            ],
+            "title": "Dune",
+            "works": [
+                {
+                    "key": "/works/OL893414W"
+                }
+            ],
+            "key": "/books/OL43283259M",
+            "covers": [
+                15244952
+            ],
+            "publish_places": [
+                "New York, N.Y"
+            ],
+            "copyright_date": "1965",
+            "edition_name": "Book Club Edition",
+            "series": [
+                "The Dune Chronicles, Book 1;"
+            ],
+            "physical_format": "Hardcover",
+            "latest_revision": 5,
+            "revision": 5,
+            "created": {
+                "type": "/type/datetime",
+                "value": "2022-12-08T03:20:02.990742"
+            },
+            "last_modified": {
+                "type": "/type/datetime",
+                "value": "2026-08-10T12:23:44.087923"
+            }
+        }
+    ]
+}

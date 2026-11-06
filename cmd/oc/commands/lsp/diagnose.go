@@ -131,6 +131,21 @@ func (s *server) structural(d *document) []diagItem {
 			}
 		}
 	}
+	// Callouts of a type no row names (drawn as a note) - only with the
+	// server's callouts on.
+	if s.featureOn("callouts") {
+		lines := make([]string, len(d.lines))
+		for i := range d.lines {
+			lines[i] = d.line(i)
+		}
+		for _, c := range common.CalloutsInLines(lines) {
+			if c.Unknown != "" {
+				l := lines[c.Line-1]
+				add(c.Line-1, len(l)-len(strings.TrimLeft(l, " \t")), len(l), sevWarning, "callout-type",
+					fmt.Sprintf("no callout type %q: drawn as a note (orgs callouts types lists them)", c.Unknown))
+			}
+		}
+	}
 	var known map[string]bool
 	for _, l := range linksIn(d.lines, bs) {
 		proto, rest := splitLink(l.target)

@@ -711,6 +711,9 @@ func RequestReviewWeekly(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	res.Stale = staleItems(cache, skip, now)
+	if featureOn("review") {
+		res.Reviews = orgReviewItems(now, 0, false).Items
+	}
 	res.Ok = true
 	reviewJson(w, res)
 }
@@ -994,6 +997,12 @@ func reviewAction(req *common.ReviewAct, sec *org.Section, f *common.OrgFile, no
 			lines = splice(lines, end+1, []string{head})
 			return fmt.Sprintf("added %s %q under %q", kw, text, title), writeLines(f.Filename, lines)
 		}, nil
+	case "reviewed", "review-snooze", "review-every":
+		// org-review (orgreview.go), here so the walk can undo it.
+		if !featureOn("review") {
+			return nil, nil, fmt.Errorf("review (org-review) is turned off on this server")
+		}
+		return touch, func() (string, error) { return orgReviewAct(req, f, sec, now) }, nil
 	case "chase":
 		note := "Chased"
 		if t := strings.TrimSpace(req.Text); t != "" {

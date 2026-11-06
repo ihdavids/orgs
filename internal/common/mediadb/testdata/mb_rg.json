@@ -1,0 +1,1267 @@
+{
+    "secondary-type-ids": [],
+    "id": "b1392450-e666-3926-a536-22c65f834433",
+    "first-release-date": "1997-05-21",
+    "disambiguation": "",
+    "genres": [
+        {
+            "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+            "name": "alternative rock",
+            "count": 27,
+            "disambiguation": ""
+        },
+        {
+            "disambiguation": "",
+            "count": 15,
+            "name": "art rock",
+            "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b"
+        },
+        {
+            "count": 1,
+            "disambiguation": "",
+            "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+            "name": "britpop"
+        },
+        {
+            "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+            "name": "electronic",
+            "count": 2,
+            "disambiguation": ""
+        },
+        {
+            "count": 3,
+            "disambiguation": "",
+            "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+            "name": "experimental"
+        },
+        {
+            "count": 2,
+            "disambiguation": "",
+            "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+            "name": "experimental rock"
+        },
+        {
+            "name": "indie rock",
+            "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7",
+            "disambiguation": "",
+            "count": 2
+        },
+        {
+            "disambiguation": "",
+            "count": 2,
+            "name": "leftfield",
+            "id": "32bea60c-e201-4241-8ed4-228636d34a97"
+        },
+        {
+            "id": "cd99451c-f6d5-47c7-8d49-6c08b51e61aa",
+            "name": "neo-psychedelia",
+            "count": 1,
+            "disambiguation": ""
+        },
+        {
+            "disambiguation": "",
+            "count": 2,
+            "name": "pop rock",
+            "id": "797e2e85-5ffd-495c-a757-8b4079052f0e"
+        },
+        {
+            "name": "post-britpop",
+            "id": "a493b79c-4072-4371-a14c-446b1027982a",
+            "disambiguation": "",
+            "count": 4
+        },
+        {
+            "disambiguation": "",
+            "count": 1,
+            "name": "progressive",
+            "id": "8d275a8d-154a-4bcb-8b5a-f56306ad4bcb"
+        },
+        {
+            "name": "rock",
+            "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+            "disambiguation": "",
+            "count": 13
+        },
+        {
+            "disambiguation": "",
+            "count": 3,
+            "name": "space rock revival",
+            "id": "11c85378-c3d2-4f21-a189-56fac6e3de24"
+        }
+    ],
+    "primary-type": "Album",
+    "artist-credit": [
+        {
+            "joinphrase": "",
+            "artist": {
+                "genres": [
+                    {
+                        "name": "alternative rock",
+                        "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+                        "disambiguation": "",
+                        "count": 43
+                    },
+                    {
+                        "disambiguation": "",
+                        "count": 1,
+                        "name": "ambient pop",
+                        "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b"
+                    },
+                    {
+                        "count": 3,
+                        "disambiguation": "",
+                        "id": "930ef127-3653-4677-9b95-ecc90c7c1a14",
+                        "name": "art pop"
+                    },
+                    {
+                        "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b",
+                        "name": "art rock",
+                        "count": 30,
+                        "disambiguation": ""
+                    },
+                    {
+                        "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+                        "name": "britpop",
+                        "count": 2,
+                        "disambiguation": ""
+                    },
+                    {
+                        "count": 1,
+                        "disambiguation": "",
+                        "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9",
+                        "name": "chamber pop"
+                    },
+                    {
+                        "name": "crossover prog",
+                        "id": "eee90717-3eee-41bd-b463-003c180544bd",
+                        "disambiguation": "",
+                        "count": 1
+                    },
+                    {
+                        "count": 14,
+                        "disambiguation": "",
+                        "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                        "name": "electronic"
+                    },
+                    {
+                        "disambiguation": "",
+                        "count": 1,
+                        "name": "electronic rock",
+                        "id": "c4a69842-f891-4569-9506-1882aa5db433"
+                    },
+                    {
+                        "count": 2,
+                        "disambiguation": "",
+                        "id": "53a3cea3-17af-4421-a07a-5824b540aeb5",
+                        "name": "electronica"
+                    },
+                    {
+                        "disambiguation": "",
+                        "count": 3,
+                        "name": "experimental",
+                        "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99"
+                    },
+                    {
+                        "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+                        "name": "experimental rock",
+                        "count": 14,
+                        "disambiguation": ""
+                    },
+                    {
+                        "count": 1,
+                        "disambiguation": "",
+                        "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9",
+                        "name": "idm"
+                    },
+                    {
+                        "disambiguation": "",
+                        "count": 5,
+                        "name": "indie rock",
+                        "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7"
+                    },
+                    {
+                        "name": "indietronica",
+                        "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d",
+                        "disambiguation": "",
+                        "count": 1
+                    },
+                    {
+                        "disambiguation": "",
+                        "count": 2,
+                        "name": "post-britpop",
+                        "id": "a493b79c-4072-4371-a14c-446b1027982a"
+                    },
+                    {
+                        "count": 1,
+                        "disambiguation": "",
+                        "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2",
+                        "name": "post-grunge"
+                    },
+                    {
+                        "disambiguation": "",
+                        "count": 19,
+                        "name": "rock",
+                        "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798"
+                    }
+                ],
+                "sort-name": "Radiohead",
+                "type": "Group",
+                "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                "country": "GB",
+                "disambiguation": "",
+                "name": "Radiohead",
+                "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711"
+            },
+            "name": "Radiohead"
+        }
+    ],
+    "title": "OK Computer",
+    "secondary-types": [],
+    "releases": [
+        {
+            "date": "1997-05-21",
+            "disambiguation": "",
+            "artist-credit": [
+                {
+                    "joinphrase": "",
+                    "artist": {
+                        "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+                        "name": "Radiohead",
+                        "disambiguation": "",
+                        "type": "Group",
+                        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                        "country": "GB",
+                        "sort-name": "Radiohead",
+                        "genres": [
+                            {
+                                "count": 43,
+                                "disambiguation": "",
+                                "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+                                "name": "alternative rock"
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b",
+                                "name": "ambient pop"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 3,
+                                "name": "art pop",
+                                "id": "930ef127-3653-4677-9b95-ecc90c7c1a14"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 30,
+                                "name": "art rock",
+                                "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 2,
+                                "name": "britpop",
+                                "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "chamber pop",
+                                "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9"
+                            },
+                            {
+                                "id": "eee90717-3eee-41bd-b463-003c180544bd",
+                                "name": "crossover prog",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "name": "electronic",
+                                "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                                "disambiguation": "",
+                                "count": 14
+                            },
+                            {
+                                "name": "electronic rock",
+                                "id": "c4a69842-f891-4569-9506-1882aa5db433",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "name": "electronica",
+                                "id": "53a3cea3-17af-4421-a07a-5824b540aeb5",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "count": 3,
+                                "disambiguation": "",
+                                "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+                                "name": "experimental"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 14,
+                                "name": "experimental rock",
+                                "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7"
+                            },
+                            {
+                                "name": "idm",
+                                "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7",
+                                "name": "indie rock",
+                                "count": 5,
+                                "disambiguation": ""
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "indietronica",
+                                "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 2,
+                                "name": "post-britpop",
+                                "id": "a493b79c-4072-4371-a14c-446b1027982a"
+                            },
+                            {
+                                "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2",
+                                "name": "post-grunge",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "count": 19,
+                                "disambiguation": "",
+                                "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                                "name": "rock"
+                            }
+                        ]
+                    },
+                    "name": "Radiohead"
+                }
+            ],
+            "status": "Official",
+            "genres": [
+                {
+                    "disambiguation": "",
+                    "count": 1,
+                    "name": "rock",
+                    "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798"
+                }
+            ],
+            "barcode": "4988006729254",
+            "text-representation": {
+                "script": "Latn",
+                "language": "eng"
+            },
+            "quality": "normal",
+            "id": "1834eae1-741b-3c03-9ca5-0df3decb43ea",
+            "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+            "release-events": [
+                {
+                    "area": {
+                        "name": "Japan",
+                        "iso-3166-1-codes": [
+                            "JP"
+                        ],
+                        "id": "2db42837-c832-3c27-b4a3-08198f75693c",
+                        "disambiguation": "",
+                        "sort-name": "Japan",
+                        "type-id": null,
+                        "type": null
+                    },
+                    "date": "1997-05-21"
+                }
+            ],
+            "country": "JP",
+            "packaging-id": null,
+            "title": "OK Computer",
+            "packaging": null
+        },
+        {
+            "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+            "id": "425d8db9-88a3-31e2-bd23-b1a967626dd5",
+            "text-representation": {
+                "language": "eng",
+                "script": "Latn"
+            },
+            "quality": "normal",
+            "genres": [
+                {
+                    "count": 4,
+                    "disambiguation": "",
+                    "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+                    "name": "alternative rock"
+                },
+                {
+                    "disambiguation": "",
+                    "count": 1,
+                    "name": "art rock",
+                    "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b"
+                }
+            ],
+            "barcode": "724385522925",
+            "status": "Official",
+            "artist-credit": [
+                {
+                    "artist": {
+                        "disambiguation": "",
+                        "sort-name": "Radiohead",
+                        "genres": [
+                            {
+                                "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+                                "name": "alternative rock",
+                                "count": 43,
+                                "disambiguation": ""
+                            },
+                            {
+                                "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b",
+                                "name": "ambient pop",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 3,
+                                "name": "art pop",
+                                "id": "930ef127-3653-4677-9b95-ecc90c7c1a14"
+                            },
+                            {
+                                "count": 30,
+                                "disambiguation": "",
+                                "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b",
+                                "name": "art rock"
+                            },
+                            {
+                                "name": "britpop",
+                                "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "chamber pop",
+                                "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9"
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "eee90717-3eee-41bd-b463-003c180544bd",
+                                "name": "crossover prog"
+                            },
+                            {
+                                "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                                "name": "electronic",
+                                "count": 14,
+                                "disambiguation": ""
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "c4a69842-f891-4569-9506-1882aa5db433",
+                                "name": "electronic rock"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 2,
+                                "name": "electronica",
+                                "id": "53a3cea3-17af-4421-a07a-5824b540aeb5"
+                            },
+                            {
+                                "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+                                "name": "experimental",
+                                "count": 3,
+                                "disambiguation": ""
+                            },
+                            {
+                                "count": 14,
+                                "disambiguation": "",
+                                "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+                                "name": "experimental rock"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "idm",
+                                "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9"
+                            },
+                            {
+                                "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7",
+                                "name": "indie rock",
+                                "count": 5,
+                                "disambiguation": ""
+                            },
+                            {
+                                "name": "indietronica",
+                                "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "name": "post-britpop",
+                                "id": "a493b79c-4072-4371-a14c-446b1027982a",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2",
+                                "name": "post-grunge"
+                            },
+                            {
+                                "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                                "name": "rock",
+                                "count": 19,
+                                "disambiguation": ""
+                            }
+                        ],
+                        "country": "GB",
+                        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                        "type": "Group",
+                        "name": "Radiohead",
+                        "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711"
+                    },
+                    "name": "Radiohead",
+                    "joinphrase": ""
+                }
+            ],
+            "disambiguation": "UDEN",
+            "date": "1997-06-16",
+            "packaging": "Jewel Case",
+            "title": "OK Computer",
+            "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+            "country": "XE",
+            "release-events": [
+                {
+                    "area": {
+                        "id": "89a675c2-3e37-3518-b83c-418bad59a85a",
+                        "name": "Europe",
+                        "iso-3166-1-codes": [
+                            "XE"
+                        ],
+                        "disambiguation": "",
+                        "type": null,
+                        "type-id": null,
+                        "sort-name": "Europe"
+                    },
+                    "date": "1997-06-16"
+                },
+                {
+                    "area": {
+                        "disambiguation": "",
+                        "type": null,
+                        "type-id": null,
+                        "sort-name": "France",
+                        "id": "08310658-51eb-3801-80de-5a0739207115",
+                        "iso-3166-1-codes": [
+                            "FR"
+                        ],
+                        "name": "France"
+                    },
+                    "date": "1997-06-16"
+                },
+                {
+                    "date": "1997-06-16",
+                    "area": {
+                        "iso-3166-1-codes": [
+                            "DE"
+                        ],
+                        "name": "Germany",
+                        "id": "85752fda-13c4-31a3-bee5-0e5cb1f51dad",
+                        "disambiguation": "",
+                        "sort-name": "Germany",
+                        "type-id": null,
+                        "type": null
+                    }
+                },
+                {
+                    "area": {
+                        "disambiguation": "",
+                        "sort-name": "Italy",
+                        "type": null,
+                        "type-id": null,
+                        "iso-3166-1-codes": [
+                            "IT"
+                        ],
+                        "name": "Italy",
+                        "id": "c6500277-9a3d-349b-bf30-41afdbf42add"
+                    },
+                    "date": "1997-06-16"
+                },
+                {
+                    "area": {
+                        "id": "8a754a16-0027-3a29-b6d7-2b40ea0481ed",
+                        "name": "United Kingdom",
+                        "iso-3166-1-codes": [
+                            "GB"
+                        ],
+                        "disambiguation": "",
+                        "type": null,
+                        "type-id": null,
+                        "sort-name": "United Kingdom"
+                    },
+                    "date": "1997-06-16"
+                }
+            ]
+        },
+        {
+            "country": "XE",
+            "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+            "release-events": [
+                {
+                    "area": {
+                        "disambiguation": "",
+                        "sort-name": "Europe",
+                        "type": null,
+                        "type-id": null,
+                        "name": "Europe",
+                        "iso-3166-1-codes": [
+                            "XE"
+                        ],
+                        "id": "89a675c2-3e37-3518-b83c-418bad59a85a"
+                    },
+                    "date": "1997-06-16"
+                }
+            ],
+            "title": "OK Computer",
+            "packaging": "Jewel Case",
+            "artist-credit": [
+                {
+                    "artist": {
+                        "disambiguation": "",
+                        "genres": [
+                            {
+                                "name": "alternative rock",
+                                "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+                                "disambiguation": "",
+                                "count": 43
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b",
+                                "name": "ambient pop"
+                            },
+                            {
+                                "count": 3,
+                                "disambiguation": "",
+                                "id": "930ef127-3653-4677-9b95-ecc90c7c1a14",
+                                "name": "art pop"
+                            },
+                            {
+                                "count": 30,
+                                "disambiguation": "",
+                                "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b",
+                                "name": "art rock"
+                            },
+                            {
+                                "name": "britpop",
+                                "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9",
+                                "name": "chamber pop",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "crossover prog",
+                                "id": "eee90717-3eee-41bd-b463-003c180544bd"
+                            },
+                            {
+                                "name": "electronic",
+                                "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                                "disambiguation": "",
+                                "count": 14
+                            },
+                            {
+                                "name": "electronic rock",
+                                "id": "c4a69842-f891-4569-9506-1882aa5db433",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "count": 2,
+                                "disambiguation": "",
+                                "id": "53a3cea3-17af-4421-a07a-5824b540aeb5",
+                                "name": "electronica"
+                            },
+                            {
+                                "count": 3,
+                                "disambiguation": "",
+                                "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+                                "name": "experimental"
+                            },
+                            {
+                                "count": 14,
+                                "disambiguation": "",
+                                "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+                                "name": "experimental rock"
+                            },
+                            {
+                                "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9",
+                                "name": "idm",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 5,
+                                "name": "indie rock",
+                                "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7"
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d",
+                                "name": "indietronica"
+                            },
+                            {
+                                "count": 2,
+                                "disambiguation": "",
+                                "id": "a493b79c-4072-4371-a14c-446b1027982a",
+                                "name": "post-britpop"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "post-grunge",
+                                "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2"
+                            },
+                            {
+                                "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                                "name": "rock",
+                                "count": 19,
+                                "disambiguation": ""
+                            }
+                        ],
+                        "sort-name": "Radiohead",
+                        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                        "country": "GB",
+                        "type": "Group",
+                        "name": "Radiohead",
+                        "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711"
+                    },
+                    "name": "Radiohead",
+                    "joinphrase": ""
+                }
+            ],
+            "status": "Official",
+            "barcode": "724385522925",
+            "genres": [],
+            "date": "1997-06-16",
+            "disambiguation": "EMI UDEN, made in Italy, printed in Italy",
+            "id": "52709206-8816-3c12-9ff6-f957f2f1eecf",
+            "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+            "text-representation": {
+                "language": "eng",
+                "script": "Latn"
+            },
+            "quality": "normal"
+        },
+        {
+            "title": "OK Computer",
+            "packaging": "Jewel Case",
+            "release-events": [
+                {
+                    "area": {
+                        "disambiguation": "",
+                        "sort-name": "Europe",
+                        "type": null,
+                        "type-id": null,
+                        "iso-3166-1-codes": [
+                            "XE"
+                        ],
+                        "name": "Europe",
+                        "id": "89a675c2-3e37-3518-b83c-418bad59a85a"
+                    },
+                    "date": "1997-06-16"
+                },
+                {
+                    "date": "1997-06-16",
+                    "area": {
+                        "sort-name": "United Kingdom",
+                        "type": null,
+                        "type-id": null,
+                        "disambiguation": "",
+                        "name": "United Kingdom",
+                        "iso-3166-1-codes": [
+                            "GB"
+                        ],
+                        "id": "8a754a16-0027-3a29-b6d7-2b40ea0481ed"
+                    }
+                }
+            ],
+            "country": "XE",
+            "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+            "text-representation": {
+                "language": "eng",
+                "script": "Latn"
+            },
+            "quality": "normal",
+            "id": "c7569949-0f67-4682-a0d8-75c4290c52dc",
+            "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+            "date": "1997-06-16",
+            "disambiguation": "EMI SWINDON",
+            "artist-credit": [
+                {
+                    "artist": {
+                        "name": "Radiohead",
+                        "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+                        "sort-name": "Radiohead",
+                        "genres": [
+                            {
+                                "name": "alternative rock",
+                                "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18",
+                                "disambiguation": "",
+                                "count": 43
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b",
+                                "name": "ambient pop"
+                            },
+                            {
+                                "name": "art pop",
+                                "id": "930ef127-3653-4677-9b95-ecc90c7c1a14",
+                                "disambiguation": "",
+                                "count": 3
+                            },
+                            {
+                                "name": "art rock",
+                                "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b",
+                                "disambiguation": "",
+                                "count": 30
+                            },
+                            {
+                                "name": "britpop",
+                                "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9",
+                                "name": "chamber pop"
+                            },
+                            {
+                                "id": "eee90717-3eee-41bd-b463-003c180544bd",
+                                "name": "crossover prog",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                                "name": "electronic",
+                                "count": 14,
+                                "disambiguation": ""
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "c4a69842-f891-4569-9506-1882aa5db433",
+                                "name": "electronic rock"
+                            },
+                            {
+                                "name": "electronica",
+                                "id": "53a3cea3-17af-4421-a07a-5824b540aeb5",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "name": "experimental",
+                                "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+                                "disambiguation": "",
+                                "count": 3
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 14,
+                                "name": "experimental rock",
+                                "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "idm",
+                                "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9"
+                            },
+                            {
+                                "count": 5,
+                                "disambiguation": "",
+                                "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7",
+                                "name": "indie rock"
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d",
+                                "name": "indietronica"
+                            },
+                            {
+                                "name": "post-britpop",
+                                "id": "a493b79c-4072-4371-a14c-446b1027982a",
+                                "disambiguation": "",
+                                "count": 2
+                            },
+                            {
+                                "name": "post-grunge",
+                                "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "count": 19,
+                                "disambiguation": "",
+                                "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                                "name": "rock"
+                            }
+                        ],
+                        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                        "country": "GB",
+                        "type": "Group",
+                        "disambiguation": ""
+                    },
+                    "name": "Radiohead",
+                    "joinphrase": ""
+                }
+            ],
+            "status": "Official",
+            "barcode": "724385522925",
+            "genres": []
+        },
+        {
+            "packaging": "Jewel Case",
+            "title": "OK Computer",
+            "packaging-id": "ec27701a-4a22-37f4-bfac-6616e0f9750a",
+            "country": "XE",
+            "release-events": [
+                {
+                    "date": "1997-06-16",
+                    "area": {
+                        "id": "89a675c2-3e37-3518-b83c-418bad59a85a",
+                        "iso-3166-1-codes": [
+                            "XE"
+                        ],
+                        "name": "Europe",
+                        "type-id": null,
+                        "type": null,
+                        "sort-name": "Europe",
+                        "disambiguation": ""
+                    }
+                }
+            ],
+            "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+            "id": "ad0e6676-3e55-4bd6-a9ed-7f6424fd46f6",
+            "quality": "normal",
+            "text-representation": {
+                "language": "eng",
+                "script": "Latn"
+            },
+            "status": "Official",
+            "barcode": "724385522925",
+            "genres": [],
+            "artist-credit": [
+                {
+                    "joinphrase": "",
+                    "artist": {
+                        "genres": [
+                            {
+                                "disambiguation": "",
+                                "count": 43,
+                                "name": "alternative rock",
+                                "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18"
+                            },
+                            {
+                                "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b",
+                                "name": "ambient pop",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "name": "art pop",
+                                "id": "930ef127-3653-4677-9b95-ecc90c7c1a14",
+                                "disambiguation": "",
+                                "count": 3
+                            },
+                            {
+                                "name": "art rock",
+                                "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b",
+                                "disambiguation": "",
+                                "count": 30
+                            },
+                            {
+                                "count": 2,
+                                "disambiguation": "",
+                                "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+                                "name": "britpop"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "chamber pop",
+                                "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9"
+                            },
+                            {
+                                "name": "crossover prog",
+                                "id": "eee90717-3eee-41bd-b463-003c180544bd",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "count": 14,
+                                "disambiguation": "",
+                                "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                                "name": "electronic"
+                            },
+                            {
+                                "id": "c4a69842-f891-4569-9506-1882aa5db433",
+                                "name": "electronic rock",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "id": "53a3cea3-17af-4421-a07a-5824b540aeb5",
+                                "name": "electronica",
+                                "count": 2,
+                                "disambiguation": ""
+                            },
+                            {
+                                "count": 3,
+                                "disambiguation": "",
+                                "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+                                "name": "experimental"
+                            },
+                            {
+                                "count": 14,
+                                "disambiguation": "",
+                                "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+                                "name": "experimental rock"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 1,
+                                "name": "idm",
+                                "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9"
+                            },
+                            {
+                                "name": "indie rock",
+                                "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7",
+                                "disambiguation": "",
+                                "count": 5
+                            },
+                            {
+                                "name": "indietronica",
+                                "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 2,
+                                "name": "post-britpop",
+                                "id": "a493b79c-4072-4371-a14c-446b1027982a"
+                            },
+                            {
+                                "name": "post-grunge",
+                                "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "count": 19,
+                                "disambiguation": "",
+                                "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                                "name": "rock"
+                            }
+                        ],
+                        "sort-name": "Radiohead",
+                        "country": "GB",
+                        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                        "type": "Group",
+                        "disambiguation": "",
+                        "name": "Radiohead",
+                        "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711"
+                    },
+                    "name": "Radiohead"
+                }
+            ],
+            "disambiguation": "made in Italy; printed in Holland",
+            "date": "1997-06-16"
+        },
+        {
+            "release-events": [
+                {
+                    "date": "1997-06-16",
+                    "area": {
+                        "disambiguation": "",
+                        "sort-name": "United Kingdom",
+                        "type": null,
+                        "type-id": null,
+                        "iso-3166-1-codes": [
+                            "GB"
+                        ],
+                        "name": "United Kingdom",
+                        "id": "8a754a16-0027-3a29-b6d7-2b40ea0481ed"
+                    }
+                }
+            ],
+            "packaging-id": "f7101ce3-0384-39ce-9fde-fbbd0044d35f",
+            "country": "GB",
+            "packaging": "Cardboard/Paper Sleeve",
+            "title": "OK Computer",
+            "disambiguation": "",
+            "date": "1997-06-16",
+            "status": "Official",
+            "barcode": "724385522918",
+            "genres": [],
+            "artist-credit": [
+                {
+                    "joinphrase": "",
+                    "artist": {
+                        "id": "a74b1b7f-71a5-4011-9441-d0b5e4122711",
+                        "name": "Radiohead",
+                        "disambiguation": "",
+                        "type": "Group",
+                        "type-id": "e431f5f6-b5d2-343d-8b36-72607fffb74b",
+                        "country": "GB",
+                        "genres": [
+                            {
+                                "disambiguation": "",
+                                "count": 43,
+                                "name": "alternative rock",
+                                "id": "ceeaa283-5d7b-4202-8d1d-e25d116b2a18"
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "2cdcecfe-3e7c-4055-ab34-78eceabe4d9b",
+                                "name": "ambient pop"
+                            },
+                            {
+                                "count": 3,
+                                "disambiguation": "",
+                                "id": "930ef127-3653-4677-9b95-ecc90c7c1a14",
+                                "name": "art pop"
+                            },
+                            {
+                                "name": "art rock",
+                                "id": "b7ef058e-6d83-4ca4-8123-9724bff4648b",
+                                "disambiguation": "",
+                                "count": 30
+                            },
+                            {
+                                "count": 2,
+                                "disambiguation": "",
+                                "id": "f1c9b874-7ef2-4e79-9419-c0bcb5f33a30",
+                                "name": "britpop"
+                            },
+                            {
+                                "id": "f0843e91-c025-4dd7-8aef-6fe3d35470d9",
+                                "name": "chamber pop",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "eee90717-3eee-41bd-b463-003c180544bd",
+                                "name": "crossover prog"
+                            },
+                            {
+                                "count": 14,
+                                "disambiguation": "",
+                                "id": "89255676-1f14-4dd8-bbad-fca839d6aff4",
+                                "name": "electronic"
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "c4a69842-f891-4569-9506-1882aa5db433",
+                                "name": "electronic rock"
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 2,
+                                "name": "electronica",
+                                "id": "53a3cea3-17af-4421-a07a-5824b540aeb5"
+                            },
+                            {
+                                "count": 3,
+                                "disambiguation": "",
+                                "id": "68c81274-5770-4e7b-a4bf-ab0d7d425d99",
+                                "name": "experimental"
+                            },
+                            {
+                                "name": "experimental rock",
+                                "id": "65c97e89-b42b-45c2-a70e-0eca1b8f0ff7",
+                                "disambiguation": "",
+                                "count": 14
+                            },
+                            {
+                                "count": 1,
+                                "disambiguation": "",
+                                "id": "8eb583f1-4fd7-460c-8246-dcdccc0e3ef9",
+                                "name": "idm"
+                            },
+                            {
+                                "count": 5,
+                                "disambiguation": "",
+                                "id": "ccd19ebf-052c-4afe-8ad9-fbb0a73f94a7",
+                                "name": "indie rock"
+                            },
+                            {
+                                "id": "9e7ae1de-d5f2-46a5-b105-11c7367dc70d",
+                                "name": "indietronica",
+                                "count": 1,
+                                "disambiguation": ""
+                            },
+                            {
+                                "disambiguation": "",
+                                "count": 2,
+                                "name": "post-britpop",
+                                "id": "a493b79c-4072-4371-a14c-446b1027982a"
+                            },
+                            {
+                                "name": "post-grunge",
+                                "id": "bbb1310c-24cb-4fc9-97c4-f93e4549f1e2",
+                                "disambiguation": "",
+                                "count": 1
+                            },
+                            {
+                                "count": 19,
+                                "disambiguation": "",
+                                "id": "0e3fc579-2d24-4f20-9dae-736e1ec78798",
+                                "name": "rock"
+                            }
+                        ],
+                        "sort-name": "Radiohead"
+                    },
+                    "name": "Radiohead"
+                }
+            ],
+            "text-representation": {
+                "script": "Latn",
+                "language": "eng"
+            },
+            "quality": "normal",
+            "status-id": "4e304316-386d-3409-af2e-78857eec5cfe",
+            "id": "541a0976-ca45-3c0f-89e5-26bc376f58d1"
+        }
+    ],
+    "primary-type-id": "f529b476-6e62-324f-b0aa-1f3e33d313fc"
+}

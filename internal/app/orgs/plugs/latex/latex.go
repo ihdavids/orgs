@@ -735,6 +735,9 @@ func (w *OrgLatexWriter) Before(d *org.Document) {
 			w.WriteString(h + "\n")
 		}
 	}
+	if common.CalloutsActive() && common.HasCallouts(d.Nodes) {
+		w.WriteString(common.CalloutLatexHeader())
+	}
 	w.WriteString("\n" + `\begin{document}` + "\n")
 	if w.HaveTitle(d) {
 		w.WriteString(`\maketitle` + "\n")
@@ -861,6 +864,24 @@ func (e *EnvironmentStack) endEnvAsString(name string) string {
 EDOC
 */
 func (w *OrgLatexWriter) WriteBlock(b org.Block) {
+	// features.callouts: a callout is an orgcallout tcolorbox, defined in
+	// the preamble (Before) when the document has one.
+	if common.CalloutsActive() {
+		if c, ok := common.CalloutOfBlock(b); ok {
+			col, def := c.LatexColorOf()
+			if def != "" {
+				w.WriteString("\n" + def)
+			}
+			title := EscapeString(c.ShownTitle())
+			if nodes := common.CalloutTitleNodes(c.Title); nodes != nil {
+				title = w.WriteNodesAsString(nodes...)
+			}
+			w.WriteString("\n\\begin{orgcallout}{" + col + "}{" + title + "}\n")
+			w.WriteString(w.WriteNodesAsString(b.Children...))
+			w.WriteString("\\end{orgcallout}\n")
+			return
+		}
+	}
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
 	props := w.TemplateProps()
 	// Copy over local properties for this block so they can be

@@ -242,7 +242,7 @@ func orgImportSummary(r *common.OrgImported) string {
 	  "KeyProp": "ID", "DryRun": false }
 	#+END_EXAMPLE
 
-	What =orgs import= sends for markdown and Obsidian vaults, todo.txt and
+	What =orgs import= sends for markdown files and vaults, todo.txt and
 	iCalendar files: those are converted on the client, where the file is,
 	and written here. Each =Filename= is relative to the first org directory
 	or absolute inside one.

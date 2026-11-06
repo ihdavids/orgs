@@ -453,8 +453,8 @@ func TestUnknownIdIsNotInvented(t *testing.T) {
 	has(t, out, "[x](#missing)")
 }
 
-func TestObsidianWikiLinks(t *testing.T) {
-	e := withFlavor(flavorObsidian)
+func TestWikiLinks(t *testing.T) {
+	e := withFlavor(flavorWikilinks)
 	has(t, md(t, "[[file:other.org][other]]\n", e), "[[other|other]]")
 	has(t, md(t, "[[file:shed.png]]\n", e), "![[shed.png]]")
 	// A url is a url in every dialect.

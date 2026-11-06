@@ -281,6 +281,30 @@ func (w *Writer) WriteDrawer(d org.Drawer) {
 }
 
 func (w *Writer) WriteBlock(b org.Block) {
+	// features.callouts: a callout is its paragraph(s) behind a bar, under
+	// a line saying what kind it is and its title.
+	if common.CalloutsActive() {
+		if c, ok := common.CalloutOfBlock(b); ok {
+			head := strings.ToUpper(c.TypeInfo().Title)
+			if c.Title != "" && !strings.EqualFold(c.Title, head) {
+				head += ": " + c.Title
+			}
+			if c.Fold == "closed" {
+				head += " (folded)"
+			}
+			w.WriteString("| " + head + "\n|\n")
+			body := strings.TrimRight(w.WriteNodesAsString(b.Children...), "\n")
+			for _, l := range strings.Split(body, "\n") {
+				if strings.TrimSpace(l) == "" {
+					w.WriteString("|\n")
+				} else {
+					w.WriteString("| " + l + "\n")
+				}
+			}
+			w.WriteString("\n")
+			return
+		}
+	}
 	switch strings.ToUpper(b.Name) {
 	case "SRC", "EXAMPLE":
 		body := strings.TrimRight(w.WriteNodesAsString(b.Children...), "\n")

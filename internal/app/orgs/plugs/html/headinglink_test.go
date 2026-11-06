@@ -41,3 +41,35 @@ func TestHeadingLinksGoToTheHeading(t *testing.T) {
 		t.Errorf("a link to no heading was resolved")
 	}
 }
+
+// The links a table of contents writes (toc-org, org-make-toc): github-style
+// `[[#anchor]]` (a CUSTOM_ID first, twins numbered), and `[[*Title]]` with a
+// link in the title shown as its description and the cookie gone.
+func TestTocLinksGoToTheHeading(t *testing.T) {
+	src := "* Contents :TOC:\n- [[#about-this][About this]]\n- [[#about-this-1][About this]]\n" +
+		"- [[#the-keys][Keys]]\n- [[*Three link here][Three link here]]\n- [[#nowhere][Nowhere]]\n" +
+		"* About this [1/2]\n* About this\n* Keys\n:PROPERTIES:\n:CUSTOM_ID: the-keys\n:END:\n" +
+		"* Three [[https://x.org][link]] here\n"
+	doc := org.New().Parse(strings.NewReader(src), "test.org")
+	w := NewOrgHtmlWriter(&OrgHtmlExporter{Props: map[string]interface{}{}, pm: &common.PluginManager{}})
+	w.SrcDoc = doc
+	org.WriteNodes(w, doc.Nodes...)
+	out := w.String()
+	ids := regexp.MustCompile(`<div id="([^"]+)" class="heading-wrapper">`).FindAllStringSubmatch(out, -1)
+	if len(ids) != 5 {
+		t.Fatalf("want 5 headings, got %d in:\n%s", len(ids), out)
+	}
+	for _, want := range []string{
+		`<a href="#` + ids[1][1] + `" class="heading-link">About this</a>`,
+		`<a href="#` + ids[2][1] + `" class="heading-link">About this</a>`,
+		`<a href="#` + ids[3][1] + `" class="heading-link">Keys</a>`,
+		`<a href="#` + ids[4][1] + `" class="heading-link">Three link here</a>`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %s in:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, `class="heading-link">Nowhere`) {
+		t.Errorf("a link to no heading was resolved")
+	}
+}

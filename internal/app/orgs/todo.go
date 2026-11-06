@@ -97,6 +97,9 @@ package orgs
   - *HasClock* - returns true if time has ever been clocked against the node
   - *DaysOld* - how many days ago the node's newest date (SCHEDULED, DEADLINE, CLOSED or timestamp) was, as a number to compare; -1 with no date
   - *OlderThan* - OlderThan(N) is true when the node's newest date is at least N days ago; never true for a node with no date
+  - *ReviewDue* - returns true when the heading is due for review (org-review: its NEXT_REVIEW, or LAST_REVIEW plus its REVIEW_DELAY, is today or past); false while features.review is off
+  - *HasReview* - returns true when the heading takes part in review: a LAST_REVIEW, NEXT_REVIEW or REVIEW_DELAY of its own (features.review)
+  - *IsRecurring* - returns true when the heading's title carries an org-recur rule between bars that reads, e.g. =|+2|= or =|Mon,Thu|= (features.recur; false while it is off)
   - *HasChecklist* - returns true if the node's own text has checkboxes
   - *ChecklistDone* - returns true if the node has checkboxes and every one is ticked
   - *ChecklistCount* - how many checkboxes the node's own text has, as a number to compare
@@ -104,6 +107,8 @@ package orgs
   - *IsHabit* - returns true for a habit (a :STYLE: habit heading)
   - *HabitStreak* - how many times in a row a habit has been kept, as a number to compare: IsHabit() && HabitStreak() > 7; 0 once the run is broken
   - *MissedHabit* - returns true when a habit has gone longer since it was last done than its repeater allows
+  - *HasBudget* - returns true if the node has a time budget (=:BUDGET_WEEK:= and kin, needs =features: clockBudget:=); HasBudget("week") asks about one period
+  - *OverBudget* - returns true if the node's subtree has clocked more than its budget this period; OverBudget("month") asks about one period
 EDOC */
 
 import (
@@ -658,8 +663,27 @@ func ParseString(expString *common.StringQuery) (*Expr, error) {
 		// `ChecklistDone()` is "every box ticked", which is not the same
 		// question as IsStatus("DONE") and is the one a review wants -
 		// a heading whose list is finished and whose keyword nobody moved.
+		// org-review (orgreview.go); both false while the feature is off.
+		"ReviewDue": func(args ...interface{}) (interface{}, error) {
+			return reviewDue(exp.File, exp.Sec), nil
+		},
+		"HasReview": func(args ...interface{}) (interface{}, error) {
+			return hasReview(exp.File, exp.Sec), nil
+		},
+		// org-recur: a |rule| in the title (recur.go).
+		"IsRecurring": func(args ...interface{}) (interface{}, error) {
+			return isRecurring(exp.Sec), nil
+		},
 		"HasChecklist": func(args ...interface{}) (interface{}, error) {
 			return HasChecklist(exp.Sec, exp.File), nil
+		},
+		// Time budgets (clockbudget.go): HasBudget(), HasBudget("week"),
+		// OverBudget(), OverBudget("month"). False while clockBudget is off.
+		"HasBudget": func(args ...interface{}) (interface{}, error) {
+			return queryHasBudget(exp.Sec, args)
+		},
+		"OverBudget": func(args ...interface{}) (interface{}, error) {
+			return queryOverBudget(exp.File, exp.Sec, args)
 		},
 		"ChecklistDone": func(args ...interface{}) (interface{}, error) {
 			done, total := ChecklistCounts(exp.Sec, exp.File)
@@ -1812,7 +1836,9 @@ func ednaStepsMessage(steps []EdnaStep) string {
 // heading repeats, which is what its own date says it should do.
 func statusChangeMessage(res StatusChangeResult, asked string) string {
 	msg := ""
-	if res.Repeated && res.Status != asked {
+	if res.Recur != "" {
+		msg = fmt.Sprintf("%s recurs %s, set back to %s", asked, res.Recur, res.Status)
+	} else if res.Repeated && res.Status != asked {
 		msg = fmt.Sprintf("%s repeats: moved on and set back to %s", asked, res.Status)
 	}
 	if res.ResetBoxes > 0 {

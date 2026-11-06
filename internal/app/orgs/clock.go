@@ -38,11 +38,16 @@ func (self *OrgsClock) ClockIn(tgt *common.Target) (common.ResultMsg, error) {
 	self.Target = tgt
 	self.WriteOutClock()
 	ev := Event{Kind: EventClockIn, Hash: asked, Msg: "Clock is now active"}
+	msg := "Clock is now active"
 	if ofile, sec := GetDb().GetFromTarget(tgt, false); sec != nil && ofile != nil {
 		withHeading(&ev, ofile, sec)
+		// Time budgets (clockbudget.go): say so when this is already over.
+		if w := clockBudgetWarning(ofile, sec); w != "" {
+			msg += ". " + w
+		}
 	}
 	Publish(ev)
-	return common.ResultMsg{Ok: true, Msg: "Clock is now active"}, nil
+	return common.ResultMsg{Ok: true, Msg: msg}, nil
 }
 
 func (self *OrgsClock) IsClockActive() bool {

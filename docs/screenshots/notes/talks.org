@@ -1,0 +1,24 @@
+#+TITLE: Talks and podcasts
+#+FILETAGS: :listening:
+
+* The soil food web, at the allotment society
+  :PROPERTIES:
+  :MEDIA:    talks/soil-food-web.mp4
+  :END:
+  The autumn talk at the allotment society: fungi, bacteria and the worms,
+  and why leaf litter and a covered soil matter more than any fertiliser.
+
+  - [[video:talks/soil-food-web.mp4#0:01:40][0:01:40]] why a teaspoon of soil holds more microbes than there are people
+  - [[video:talks/soil-food-web.mp4#0:06:15][0:06:15]] fungal threads carry water and phosphorus to the roots
+  - [[video:talks/soil-food-web.mp4#0:11:30-0:13:05][0:11:30-0:13:05]] the slide comparing dug and undug soil - worth seeing twice
+  - [[video:talks/soil-food-web.mp4#0:18:50][0:18:50]] leaf mould is fungal, compost is mostly bacterial: use both
+  - [[video:talks/soil-food-web.mp4#0:24:10][0:24:10]] questions: does mulch attract slugs? Only right against the stems
+  - [[video:talks/soil-food-web.mp4#0:31:45][0:31:45]] the reading list at the end
+
+* Growing in a dry summer, episode 42
+  :PROPERTIES:
+  :MEDIA:    talks/dry-summer-ep42.m4a
+  :END:
+  - [[audio:talks/dry-summer-ep42.m4a#0:03:20][0:03:20]] water less often but deeper
+  - [[audio:talks/dry-summer-ep42.m4a#0:09:05][0:09:05]] olla pots buried between the tomatoes
+  - [[audio:talks/dry-summer-ep42.m4a#0:15:40][0:15:40]] shade cloth over the salad beds in August

@@ -1,0 +1,54 @@
+#+TITLE: Areas of my life
+#+PROPERTY: REVIEW_DELAY +2w
+
+Read again every so often, not done: a look at each to see that nothing has
+drifted. orgs brings them back when they are due.
+
+#+BEGIN: toc :depth 2
+#+END:
+
+* Areas
+** Health
+   :PROPERTIES:
+   :LAST_REVIEW: [{{D-20}}]
+   :END:
+   - Running three times a week; knee is fine since the new shoes.
+   - Dentist booked for the spring. Eye test overdue.
+   - Sleep: aim for lights out by 11.
+** Money
+   :PROPERTIES:
+   :REVIEW_DELAY: +1m
+   :LAST_REVIEW: [{{D-35}}]
+   :NEXT_REVIEW: [{{D-4}}]
+   :END:
+   Check the journal against the bank statement, look at the month's
+   groceries and dining, and move what is left over into savings.
+   - Emergency fund: three months of rent and bills.
+   - Car insurance renews in March: get two quotes first.
+** Home and garden
+   :PROPERTIES:
+   :LAST_REVIEW: [{{D-9}}]
+   :END:
+   Gutters before the rain, bulbs in by the end of the month.
+** Friends and family
+   :PROPERTIES:
+   :LAST_REVIEW: [{{D-30}}]
+   :END:
+   Who have I not seen in a while? Who is owed a call?
+   - Ring Grandad on Sunday; he has worked out the video calls now.
+   - Priya's birthday on the 19th: book the Thai place on Market Street.
+   - Plan the December visit to Tomás and Inês in Lisbon.
+
+* Projects
+** Garden planner app
+   :PROPERTIES:
+   :REVIEW_DELAY: +1w
+   :LAST_REVIEW: [{{D-11}}]
+   :END:
+   Is it still the right next thing? Read the open tasks in [[file:time.org][time.org]]
+   and pick one for the weekend.
+** The book
+   :PROPERTIES:
+   :REVIEW_DELAY: +1m
+   :LAST_REVIEW: [{{D-12}}]
+   :END:

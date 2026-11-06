@@ -67,7 +67,7 @@ Add the next version's section here before bumping `VERSION` in that script.
   `GET /refresh`, `POST /refresh/run`; a `refreshed` event says when one
   changed its file or failed.
 
-- `orgs import` reads markdown and whole Obsidian vaults (`orgs import
+- `orgs import` reads markdown and whole vaults of notes (`orgs import
   ~/Vault -o vault`): folders kept, front matter into the file's head
   (title, tags, aliases as `ROAM_ALIASES`, date, the rest as properties),
   `[[wikilinks]]` (by note name anywhere in the vault, `#heading`, `^block`,

@@ -1,0 +1,49 @@
+#+TITLE: Where the time goes
+
+Weekly allowances for the things that would otherwise eat every evening.
+
+* Writing the book
+  :PROPERTIES:
+  :BUDGET_WEEK: 5:00
+  :BUDGET_MONTH: 20:00
+  :END:
+** TODO Chapter four: the move north
+   :LOGBOOK:
+   CLOCK: [{{D+0}} 07:10]--[{{D+0}} 08:05] =>  0:55
+   CLOCK: [{{D-1}} 06:50]--[{{D-1}} 07:55] =>  1:05
+   :END:
+** TODO Rework the opening of chapter two
+   :LOGBOOK:
+   CLOCK: [{{D-2}} 20:15]--[{{D-2}} 21:10] =>  0:55
+   :END:
+
+* Spanish practice
+  :PROPERTIES:
+  :BUDGET_WEEK: 2:00
+  :END:
+  :LOGBOOK:
+  CLOCK: [{{D+0}} 07:30]--[{{D+0}} 07:55] =>  0:25
+  CLOCK: [{{D-1}} 19:00]--[{{D-1}} 20:10] =>  1:10
+  CLOCK: [{{D-2}} 19:05]--[{{D-2}} 19:55] =>  0:50
+  :END:
+
+* Garden planner app
+  :PROPERTIES:
+  :BUDGET_WEEK: 4:00
+  :BUDGET_MONTH: 12:00
+  :END:
+** TODO Sowing calendar view
+   :LOGBOOK:
+   CLOCK: [{{D-1}} 21:00]--[{{D-1}} 22:15] =>  1:15
+   :END:
+** TODO Import last year's planting notes
+
+* Email and admin
+  :PROPERTIES:
+  :BUDGET_DAY: 0:45
+  :BUDGET_WEEK: 3:00
+  :END:
+  :LOGBOOK:
+  CLOCK: [{{D+0}} 08:10]--[{{D+0}} 08:40] =>  0:30
+  CLOCK: [{{D-1}} 12:30]--[{{D-1}} 13:05] =>  0:35
+  :END:

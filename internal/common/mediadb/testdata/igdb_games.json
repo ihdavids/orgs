@@ -1,0 +1,4 @@
+[{"id":1942,"name":"The Witcher 3: Wild Hunt","first_release_date":1431993600,"cover":{"id":89386,"image_id":"coaarl"},
+ "genres":[{"id":12,"name":"Role-playing (RPG)"},{"id":31,"name":"Adventure"}],"platforms":[{"id":6,"name":"PC (Microsoft Windows)"},{"id":48,"name":"PlayStation 4"}],
+ "involved_companies":[{"id":1,"company":{"id":908,"name":"CD Projekt RED"},"developer":true,"publisher":false},{"id":2,"company":{"id":1,"name":"Bandai Namco Entertainment"},"developer":false,"publisher":true}],
+ "summary":"RPG and sequel to The Witcher 2.","url":"https://www.igdb.com/games/the-witcher-3-wild-hunt"}]

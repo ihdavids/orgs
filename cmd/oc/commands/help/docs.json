@@ -170,12 +170,14 @@
   "HasBacklinks": "returns true when something else links at this heading; HasBacklinks(2) asks for at least two",
   "HasBlock": "Checks if the node contains a block object.",
   "HasBrokenLinks": "returns true when a link under this heading resolves to nothing",
+  "HasBudget": "returns true if the node has a time budget (=:BUDGET_WEEK:= and kin, needs =features: clockBudget:=); HasBudget(\"week\") asks about one period",
   "HasChecklist": "returns true if the node's own text has checkboxes",
   "HasClock": "returns true if time has ever been clocked against the node",
   "HasDeadline": "returns true if the node has a DEADLINE",
   "HasDrawer": "Checks if the node contains a drawer.",
   "HasLinks": "returns true when this heading links out at all",
   "HasProperty": "Returns true if the headline has the specific property",
+  "HasReview": "returns true when the heading takes part in review: a LAST_REVIEW, NEXT_REVIEW or REVIEW_DELAY of its own (features.review)",
   "HasScheduled": "returns true if the node has a SCHEDULED date",
   "HasTable": "Checks if the node contains a table.",
   "HasTagMatching": "returns true if any tag on the node, its parents or the file matches a regular expression: HasTagMatching(\"^M[0-9]+$\")",
@@ -197,6 +199,7 @@
   "IsPriority": "Check if the priority matches a specific value.",
   "IsProject": "returns true for nodes that are defined as a project (see project definition)",
   "IsRecord": "returns true for a record heading (anything with a RECORD property); IsRecord(\"contact\") asks about one collection",
+  "IsRecurring": "returns true when the heading's title carries an org-recur rule between bars that reads, e.g. =|+2|= or =|Mon,Thu|= (features.recur; false while it is off)",
   "IsStatus": "returns true if a node has a given status",
   "IsTask": "Syntatical sugar for the following: \"!IsArchived() \u0026\u0026 IsTodo() \u0026\u0026 !IsProject()\"",
   "IsTodo": "returns true if a node has an active status (the same as IsActive currently)",
@@ -208,7 +211,9 @@
   "NoTags": "returns true if a node does not have any tags on it",
   "OlderThan": "OlderThan(N) is true when the node's newest date is at least N days ago; never true for a node with no date",
   "OnDate": "OnDate(\"2026 30 01\") (year, day, month) is true when the heading lands on that day in the agenda: a timestamp, SCHEDULED or DEADLINE on it, a repeat of one, a range spanning it, and on today also an overdue SCHEDULED and a DEADLINE inside its warning period or past it (the rules of GET /agenda)",
+  "OverBudget": "returns true if the node's subtree has clocked more than its budget this period; OverBudget(\"month\") asks about one period",
   "PropCompare": "=PropCompare(\"EFFORT\", \"\u003c\", \"2:00\")=: a property's value against a value, as org's property match compares: as dates when the value is one (=\u003c2026-11-01\u003e=, =\u003ctoday\u003e=, =\u003c+1w\u003e=), as numbers when both are numbers, as durations (=2:30=, =2h=), else as text. Operators =\u003c= =\u003c== =\u003e= =\u003e== ===, =!==. The special properties =TODO=, =PRIORITY=, =LEVEL=, =ITEM=, =CATEGORY=, =TAGS=, =SCHEDULED=, =DEADLINE= and =CLOSED= work too. A heading without the property is only =!== anything.",
+  "ReviewDue": "returns true when the heading is due for review (org-review: its NEXT_REVIEW, or LAST_REVIEW plus its REVIEW_DELAY, is today or past); false while features.review is off",
   "ScheduledPast": "returns true if the SCHEDULED date is before today (today itself is not past)",
   "ScheduledWithin": "ScheduledWithin(N) is true when the SCHEDULED date falls between today and N days ahead, in calendar days",
   "ThisWeek": "returns true if a node lands in the agenda on any day of the last seven, today included",
@@ -236,8 +241,41 @@
   "blame": [
    "orgs blame 'the migration'   when that heading became what it is"
   ],
+  "budget": [
+   "orgs budget                          every budget, this day/week/month/quarter/year",
+   "orgs budget -period week             one period (-date 2026-10-15 for another week)",
+   "orgs budget clocked                  what the running clock is spending",
+   "orgs budget set 'Writing' week 5:00  give a heading a budget (off takes it away)"
+  ],
+  "callouts": [
+   "orgs callouts                       every callout in every file",
+   "orgs callouts ls notes.org          one file's, by line and heading",
+   "orgs callouts types                 the types, their aliases and colours",
+   "orgs callouts check notes.org       warn about callouts of a type no row names (-check: exit 1)",
+   "orgs callouts ls notes.org -format quickfix   file:line: lines for an editor"
+  ],
+  "canvas": [
+   "orgs canvas                          every .canvas under the org directories",
+   "orgs canvas show plan.canvas         groups, cards and edges as an outline",
+   "orgs canvas add plan TODO report     put a heading on it (a title, query or -hash)",
+   "orgs canvas add plan pics/map.png    a file (a picture, a pdf, an org file)",
+   "orgs canvas add plan https://x.org   a link",
+   "orgs canvas add plan -text 'An idea' a text card (- reads stdin)",
+   "orgs canvas add plan -group Later    a group   (-in GROUP -color green -x 0 -y 0 for any of them)",
+   "orgs canvas link plan Plans 'Book flights' -label then [-color 2] [-both|-none]",
+   "orgs canvas svg plan -out plan.svg   the board drawn as a picture",
+   "orgs canvas new boards/plan          an empty one"
+  ],
   "check": [
    "orgs check 2                        a checkbox"
+  ],
+  "chef": [
+   "orgs chef add URL [-file recipes.org] [-under Mains]   fetch a recipe into a heading",
+   "orgs chef add URL -dry-run          show the heading it would write",
+   "orgs chef ls [words]                every recipe (words search names, ingredients, tags)",
+   "orgs chef show NAME [-servings 6]   one recipe, scaled (-factor 2 for one without servings)",
+   "orgs chef show NAME -cook           one step at a time, enter for the next",
+   "orgs chef shop NAME... [-servings 4] [-file F -under H] [-preview]"
   ],
   "clocks": [
    "orgs clocks              the running clock, or that there is none",
@@ -336,6 +374,14 @@
   "doctor": [
    "orgs doctor          check everything and say what is wrong",
    "orgs doctor -json    for a script"
+  ],
+  "draw": [
+   "orgs draw ls                                 every drawing, newest first, and what links to it",
+   "orgs draw new flow                           an empty drawings/…/flow.excalidraw (from the first org dir)",
+   "orgs draw new flow -link-from 'Design'       and [[file:flow.excalidraw]] under that heading (picker without words)",
+   "orgs draw new flow -caption 'The flow' -link-from 'Design'",
+   "orgs draw svg flow.excalidraw -out flow.svg  the server's own drawing of it (no Excalidraw needed)",
+   "orgs draw open flow.excalidraw               worg's editor in the browser"
   ],
   "drill": [
    "orgs drill                    pick a deck and drill it",
@@ -444,12 +490,19 @@
    "orgs hooks runs                     every run kept (the last hundred)",
    "orgs hooks test done-log to=DONE headline=\"Ship it\"   run one now on a made-up event"
   ],
+  "images": [
+   "orgs images scan [files]            the web pictures each file links (every file when none named)",
+   "orgs images localize [files]        download them beside the notes and point the links at the copies",
+   "orgs images localize trip.org -dry-run   what would be downloaded, and where",
+   "orgs images orphans                 pictures in the pictures folders nothing links any more",
+   "orgs images orphans -delete         ...and delete them (asks; -yes to not)"
+  ],
   "import": [
    "orgs import analysis.ipynb                     beside the others, in the first org directory",
    "orgs import analysis.ipynb -o science/penguins.org",
    "orgs import analysis.ipynb -overwrite -run     import again, then run every block",
    "orgs import analysis.ipynb -print              the org text, and nothing written",
-   "orgs import ~/Obsidian/Vault -o vault          a whole vault, folders kept",
+   "orgs import ~/Notes/Vault -o vault             a whole vault, folders kept",
    "orgs import note.md                            one markdown file",
    "orgs import todo.txt -o inbox.org -append      todo.txt tasks onto a file",
    "orgs import work.ics -o calendar.org -append -since -30d"
@@ -476,6 +529,49 @@
    "orgs kanban new sprint -saved mine",
    "orgs kanban rm sprint"
   ],
+  "latex": [
+   "orgs latex snippets                 every snippet, by group (words filter: orgs latex snippets greek)",
+   "orgs latex snippets -builtin        the built-in set alone",
+   "orgs latex expand 'x + @a'          what typing that becomes ($1… tab stops; -plain without them)",
+   "orgs latex expand -mode text 'see mk'   the mode is read from the text's delimiters unless named",
+   "orgs latex expand -tab 'x int'      a TAB snippet as well as the as-you-type ones",
+   "orgs latex check notes.org          unbalanced braces, \\left without \\right, unclosed maths",
+   "orgs latex check notes.org -format quickfix   file:line:col: lines for an editor (-check: exit 1)",
+   "orgs latex init                     write latex-snippets.org to make your own"
+  ],
+  "ledger": [
+   "orgs ledger                                  balance of every source, as ledger bal prints it",
+   "orgs ledger bal -source money.org -depth 2   one source, two levels deep",
+   "orgs ledger reg ^Assets:Bank -period 'last month'",
+   "orgs ledger monthly Expenses -depth 2 -period 'this year'",
+   "orgs ledger check                            problems, file:line; exits 1 on an error",
+   "orgs ledger sources                          the journals there are",
+   "orgs ledger -f money.ledger bal              read a file here, no server needed"
+  ],
+  "library": [
+   "orgs library search KIND WORDS...      look up in the catalogues (book, film, show, game, album, other)",
+   "orgs library add KIND WORDS...|ISBN    look up, choose, and file a heading (-file F -under H)",
+   "orgs library add KIND -id ID [-source S]   file one by its catalogue id",
+   "orgs library ls [KIND] [-shelf doing]  what you have (-json for everything)",
+   "orgs library show NAME                 one in full",
+   "orgs library set NAME -status read -rating 4   move it to a shelf, give it stars",
+   "orgs library refresh NAME [-overwrite] fill in what the heading is missing",
+   "orgs library sources                   which catalogues can be asked, and the keys they want"
+  ],
+  "link-title": [
+   "orgs link-title https://youtu.be/x        [[https://youtu.be/x][Never Gonna Give You Up]]",
+   "orgs link-title -title URL                 the title alone",
+   "orgs link-title -filter \u003c notes.org        the text back with its bare urls titled (an editor filter)",
+   "orgs link-title -retitle notes.org         the bare urls of a file given titles: the diff, then ask",
+   "orgs link-title -retitle notes.org -dry-run   the diff only"
+  ],
+  "linkcounts": [
+   "orgs linkcounts notes.org             the file's outline, ↩ 3 beside each linked-to heading",
+   "orgs linkcounts notes.org -mentions   ≈ 2 for unlinked mentions too",
+   "orgs linkcounts notes.org -links      every link in the file and how many others go where it goes",
+   "orgs linkcounts -top                  the most linked headings in the database (-limit 20)",
+   "orgs linkcounts notes.org -json"
+  ],
   "links": [
    "orgs links                       every link, grouped by service",
    "orgs links jira                  the ones matching the pattern",
@@ -484,7 +580,9 @@
    "orgs links -in notes.org         what points at that file",
    "orgs links -out notes.org        what that file points at",
    "orgs links -stats                per file counts",
-   "orgs links -json | jq '.[].Raw'"
+   "orgs links counts notes.org      how many places link to each heading (orgs linkcounts)",
+   "orgs links -json | jq '.[].Raw'",
+   "orgs links counts notes.org           the same, as a verb of orgs links"
   ],
   "lint": [
    "orgs lint chapter1.org              a file",
@@ -518,10 +616,29 @@
    "orgs lsp -lint off              without the spelling and grammar checkers",
    "orgs lsp -lint all -lang en-GB  both checkers, British English"
   ],
+  "map": [
+   "orgs map [query]                         headings with a place, with coordinates",
+   "orgs map -format geojson \u003e places.json   a GeoJSON FeatureCollection",
+   "orgs map geocode 'Granville Island'      look an address up (best five)",
+   "orgs map geocode \u003cheading\u003e [-write]      look a heading's address up (-write: as :GEO:)",
+   "orgs map geocode -all                    look up every address not looked up yet",
+   "orgs map set \u003cheading\u003e '49.28,-123.12'   write :LOCATION: (an address too; -geo writes :GEO:)",
+   "orgs map set \u003cheading\u003e ''                take it off",
+   "orgs map open \u003cheading\u003e                  show it in the OS's map (or -in osm|google|apple)",
+   "orgs map status                          tiles, the geocoder and its cache"
+  ],
   "mcp": [
    "orgs mcp                    speak MCP on stdin and stdout",
    "orgs mcp -read-only         offer only the tools that read",
    "orgs mcp -list              what it would offer, and exit"
+  ],
+  "media": [
+   "orgs media                           every heading with a recording",
+   "orgs media notes [heading]           its notes, by time",
+   "orgs media add [heading] 12:30 'text'   a note at a moment (12:30-12:45 is an A-B loop)",
+   "orgs media play [heading] [12:30]    open it in mpv (else vlc, else the OS player) there",
+   "orgs media start lecture.mp4 -file notes.org [-title T] [-under heading]",
+   "orgs media transcribe [heading] [-write]   whisper's words as linked notes"
   ],
   "mentions": [
    "orgs mentions Apollo                  where \"Apollo\" is written but not linked",
@@ -584,6 +701,13 @@
    "orgs paste                                 keep it, print [[file:…]] to stdout",
    "orgs paste -template todo                  …relative to where that capture goes",
    "orgs paste -in chart.png 'IsProject()'     a file instead of the clipboard"
+  ],
+  "peek": [
+   "orgs peek 'id:6a1e…'                    the heading with that id",
+   "orgs peek '[[*Budget]]' -from plan.org  a heading of plan.org",
+   "orgs peek file:notes.org::#setup        by CUSTOM_ID; ::*Title, ::42 and a whole file work too",
+   "orgs peek https://example.com           a web page's title and description",
+   "orgs peek id:6a1e… -edit                open it in $EDITOR at its line"
   ],
   "plan": [
    "orgs plan                          today: the hours as a timeline, then what is left to place",
@@ -656,6 +780,13 @@
    "orgs recap -last -week        last week, Monday to Sunday",
    "orgs recap -from 2026-10-01 -to 2026-10-15"
   ],
+  "recur": [
+   "orgs recur                          every heading with a |rule|, its rule in words and next date",
+   "orgs recur -done                    done ones too",
+   "orgs recur set 'Water' '|Mon,Fri|'  give a heading a rule (a query or hash, then the rule)",
+   "orgs recur clear 'Water'            take it off",
+   "orgs recur explain '|1,15|' -n 6    what a rule means and its next dates (no server needed)"
+  ],
   "refresh": [
    "orgs refresh                    everything on a timer: what, how often, last run, next, how it went",
    "orgs refresh run 2              run the second of those now (or its key)",
@@ -663,6 +794,17 @@
    "orgs refresh run all            everything",
    "orgs refresh dash.org           that file's dynamic blocks and table formulas, now",
    "orgs refresh dash.org -blocks   and its :schedule source blocks"
+  ],
+  "related": [
+   "orgs related 'Upgrading the cluster'   the notes most like a heading (a query or a hash)",
+   "orgs related ops.org                    like a whole file (-line 12: the heading on line 12)",
+   "orgs related ops.org -link 2            link the second one from it ([[id:…]] in a Related: list)",
+   "orgs related -engine embeddings ...     words or embeddings (default: the server's)",
+   "orgs related -linked ...                keep results already linked, marked",
+   "orgs related text 'some words'          like some text (or text on stdin)",
+   "orgs related pairs                      alike, and not linked, across everything",
+   "orgs related status                     words indexed, embeddings progress",
+   "orgs related reindex [-embeddings]      read everything again (-embeddings: ask for every vector again)"
   ],
   "remark": [
    "orgs remark                         every file with highlights",
@@ -688,6 +830,16 @@
    "orgs review week -restart   from the top, whatever step was left",
    "orgs review week -days 14   waiting items older than a fortnight",
    "orgs review week -json      what each step would ask about, as json"
+  ],
+  "reviews": [
+   "orgs reviews                        what is due for review, most overdue first",
+   "orgs reviews -within 7              and what falls due in the next week",
+   "orgs reviews -all                   every heading in review",
+   "orgs reviews walk                   one at a time: r reviewed, s snooze, c cadence, n next, u undo, o open",
+   "orgs reviews done 2                 mark the second one reviewed (-note 'why', -date yesterday)",
+   "orgs reviews done 'Project X'       by its title, a query or a hash",
+   "orgs reviews set 'Project X' +2w    its cadence (REVIEW_DELAY); -next fri, -clear takes it out",
+   "orgs reviews snooze 'Project X' +1w put it off (NEXT_REVIEW only)"
   ],
   "rm": [
    "orgs rm                             gone"
@@ -763,6 +915,15 @@
   "tangle": [
    "orgs tangle notes.org      write the source blocks out as files"
   ],
+  "timeline": [
+   "orgs timeline                         every dated heading, by year and month",
+   "orgs timeline 'HasTags(\"history\")'       a query's",
+   "orgs timeline group:tag from:-500     a #+TIMELINE: line's words",
+   "orgs timeline -group file -from -1y -to today",
+   "orgs timeline ls                      the #+TIMELINE: lines",
+   "orgs timeline svg -out t.svg          the picture the html exporter draws",
+   "orgs timeline date 'c. 1200'          how a :DATE: value reads"
+  ],
   "timer": [
    "orgs timer                   where it is",
    "orgs timer start             from zero",
@@ -776,11 +937,28 @@
    "orgs timesheet -block thisweek -f pdf       this week's sittings, signed off",
    "orgs timesheet -block 2026-10 -f csv        a row a sitting, for a spreadsheet"
   ],
+  "toc": [
+   "orgs toc                         bring every file's tables of contents up to date",
+   "orgs toc notes.org other.org     just these",
+   "orgs toc -check                  exit 1 if any is stale (a git hook, CI; works with -local)",
+   "orgs toc -print notes.org        what the file's tables should say",
+   "orgs toc -insert notes.org       add a `* Table of Contents :TOC:` heading",
+   "orgs toc -insert notes.org -make-toc -line 12   org-make-toc's drawer at the heading on line 12"
+  ],
   "todo": [
    "orgs todo DONE 'IsStatus(\"NEXT\")'   the keyword",
    "orgs todo DONE                       a picker, when there is somebody to pick",
    "orgs todo DONE 'IsStatus(\"NEXT\")'    a query, the same language /search takes",
    "orgs todo DONE hOpOB7vIg6oiYz5sMVS=  one heading, by hash"
+  ],
+  "track": [
+   "orgs track source:property:MOOD          a year as a heatmap (the #+TRACKER: words)",
+   "orgs track MOOD                          the same: a bare word is a property",
+   "orgs track habit:Run -type sparkline     the last weeks in one line",
+   "orgs track clock:Writing -type bar -from -30d",
+   "orgs track all                           every #+TRACKER: line, drawn",
+   "orgs track ls                            the #+TRACKER: lines",
+   "orgs track log MOOD 4 [-date yesterday]  write :MOOD: 4 on the day page"
   ],
   "transclude": [
    "orgs transclude            whether it is on",

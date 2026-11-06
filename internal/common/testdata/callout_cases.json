@@ -1,0 +1,42 @@
+{
+  "about": "Callout begin lines and what they mean. Read by internal/common/callout_test.go (TestCalloutCases), worg src/callouts.test.ts and vscode-org-everywhere test/callouts-model.test.ts (copies: keep them the same). want null = not a callout.",
+  "lines": [
+    {"line": "#+begin_note", "want": {"Type": "note", "Name": "note", "Title": "", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+BEGIN_WARNING Mind the gap", "want": {"Type": "warning", "Name": "warning", "Title": "Mind the gap", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "  #+begin_tip   Two   spaces  ", "want": {"Type": "tip", "Name": "tip", "Title": "Two spaces", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_tldr In short :fold closed", "want": {"Type": "abstract", "Name": "tldr", "Title": "In short", "Fold": "closed", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_faq :title \"Why: because\" :fold open", "want": {"Type": "question", "Name": "faq", "Title": "Why: because", "Fold": "open", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_danger :fold", "want": {"Type": "danger", "Name": "danger", "Title": "", "Fold": "closed", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_error :fold -", "want": {"Type": "danger", "Name": "error", "Title": "", "Fold": "closed", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_info :fold +", "want": {"Type": "info", "Name": "info", "Title": "", "Fold": "open", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_bug Crash :icon 🐞 :color #aa0000", "want": {"Type": "bug", "Name": "bug", "Title": "Crash", "Fold": "", "Icon": "🐞", "Color": "#aa0000", "Unknown": ""}},
+    {"line": "#+begin_note :color red;}x", "want": {"Type": "note", "Name": "note", "Title": "", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_callout Results :type example", "want": {"Type": "example", "Name": "callout", "Title": "Results", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_callout", "want": {"Type": "note", "Name": "callout", "Title": "", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_callout Mine :type recipe", "want": {"Type": "note", "Name": "callout", "Title": "Mine", "Fold": "", "Icon": "", "Color": "", "Unknown": "recipe"}},
+    {"line": "#+begin_recipe Soup :fold open", "want": {"Type": "note", "Name": "recipe", "Title": "Soup", "Fold": "open", "Icon": "", "Color": "", "Unknown": "recipe"}},
+    {"line": "#+begin_details Some title", "want": null},
+    {"line": "#+begin_quote", "want": null},
+    {"line": "#+begin_quote Wilde", "want": {"Type": "quote", "Name": "quote", "Title": "Wilde", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_cite", "want": {"Type": "quote", "Name": "cite", "Title": "", "Fold": "", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_abstract", "want": null},
+    {"line": "#+begin_abstract :fold open", "want": {"Type": "abstract", "Name": "abstract", "Title": "", "Fold": "open", "Icon": "", "Color": "", "Unknown": ""}},
+    {"line": "#+begin_example", "want": null},
+    {"line": "#+begin_example Title :fold open", "want": null},
+    {"line": "#+begin_src python :fold open", "want": null},
+    {"line": "#+begin_export html", "want": null},
+    {"line": "#+begin_center", "want": null},
+    {"line": "#+begin: clocktable :fold open", "want": null},
+    {"line": "#+end_note", "want": null},
+    {"line": "Some #+begin_note in text", "want": null}
+  ],
+  "files": [
+    {
+      "text": "* A\n#+begin_warning Hot\nText\n#+begin_tip Inside :fold closed\nmore\n#+end_tip\n#+end_warning\n#+begin_src org\n#+begin_note not a callout\n#+end_note\n#+end_src\n#+begin_note never closed\n",
+      "want": [
+        {"Type": "warning", "Line": 2, "EndLine": 7, "Depth": 0},
+        {"Type": "tip", "Line": 4, "EndLine": 6, "Depth": 1}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+    "entities": {
+        "Q548823": {
+            "type": "item",
+            "id": "Q548823",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Denis Villeneuve"
+                }
+            }
+        },
+        "Q481832": {
+            "type": "item",
+            "id": "Q481832",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Amy Adams"
+                }
+            }
+        },
+        "Q23365": {
+            "type": "item",
+            "id": "Q23365",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Jeremy Renner"
+                }
+            }
+        },
+        "Q182763": {
+            "type": "item",
+            "id": "Q182763",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Forest Whitaker"
+                }
+            }
+        },
+        "Q438445": {
+            "type": "item",
+            "id": "Q438445",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Michael Stuhlbarg"
+                }
+            }
+        },
+        "Q598178": {
+            "type": "item",
+            "id": "Q598178",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Tzi Ma"
+                }
+            }
+        },
+        "Q21063644": {
+            "type": "item",
+            "id": "Q21063644",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Sangita Patel"
+                }
+            }
+        },
+        "Q130232": {
+            "type": "item",
+            "id": "Q130232",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "drama film"
+                }
+            }
+        },
+        "Q471839": {
+            "type": "item",
+            "id": "Q471839",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "science fiction film"
+                }
+            }
+        },
+        "Q2484376": {
+            "type": "item",
+            "id": "Q2484376",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "thriller film"
+                }
+            }
+        },
+        "Q1200678": {
+            "type": "item",
+            "id": "Q1200678",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "mystery film"
+                }
+            }
+        },
+        "Q30": {
+            "type": "item",
+            "id": "Q30",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "United States"
+                }
+            }
+        }
+    },
+    "success": 1
+}

@@ -1,9 +1,9 @@
-#+TITLE: Optional org packages: checklists, edna, noter, remark, expiry
+#+TITLE: Optional org packages: checklists, edna, noter, remark, expiry, recur, budgets, contents, review, recipes, ledgers
 #+DOC_SECTION: Editing
 
 * Turning them on
 
-  Six Emacs packages orgs does the work of. Each is off until you turn it
+  The Emacs packages below are ones orgs does the work of. Each is off until you turn it
   on, and does nothing at all while off: a TRIGGER or EXPIRY property in
   your files is left alone, and the commands and panels for it say it is
   off.
@@ -25,6 +25,12 @@
       remark: true
       expiry: true
       autoArchive: true
+      recur: true
+      clockBudget: true
+      toc: true
+      review: true
+      chef: true
+      ledger: true
   #+END_SRC
 
   Only an administrator can turn one on or off, unless the server runs
@@ -188,3 +194,584 @@
 
   worg's *Expiry & Archive* panel lists what is due with a button to file it away, and a search row's menu has *Expires…*; VS Code has *Org:
   File Away Expired and Old Done Items* and *Org: Set Expiry*.
+
+* Repeats in plain words (org-recur)
+
+  A recurrence written in the heading's title, between bars. When the
+  heading is marked done it is not closed: its =SCHEDULED= moves to the
+  rule's next date after today and its keyword goes back to the first open
+  one, as a repeat does - a =State= line in the logbook, =:LAST_REPEAT:=, no
+  =CLOSED=.
+
+  #+BEGIN_SRC org
+  ,* TODO Water plants |+2|
+  SCHEDULED: <2026-11-04 Wed>
+  ,* TODO Pay rent |1,15|
+  ,* TODO Standup |wkdy 09:30|
+  ,* TODO Gym |Mon,Thu|
+  #+END_SRC
+
+  Between the bars is a comma separated list; the rule's next date is the
+  earliest of them. These are org-recur's spellings (org-read-date's):
+
+  | =+2= =+2d= =+w= =+2w= =+1m= =+1y=     | that long from today (=+w= is a week)                          |
+  | =+0= =.=                              | today                                                          |
+  | =Mon= =thursday= =Sun,Sat=            | the next such weekday                                          |
+  | =1= =15= =1,15=                       | the next such day of a month (=31= skips the short months)     |
+  | =wkdy=                                | the next weekday, Monday to Friday unless =recur.weekdays= says |
+  | =+tue= =+2tue= =-fri=                 | the next (second) Tuesday after today; the Friday before        |
+  | =12-25= =dec 25= =25 Dec= =12/25=     | the next such day of the year                                  |
+  | =2027-01-01=                          | that date                                                      |
+  | =10:00= =3pm= =Mon 09:00= =Thu 10:00-11:00= | a time, alone (today if still to come, else tomorrow) or with any of the above |
+
+  A weekday, day of the month or day of the year that is today counts as
+  the next one, not today: =|Thu|= finished on a Thursday goes to next
+  Thursday. (org-read-date would say today.) A rule with no time of day
+  keeps the time the stamp had.
+
+  Which date moves: =SCHEDULED=; else =DEADLINE= when that is the only date
+  the heading has; else a =SCHEDULED= is added. A stamp that also carries an
+  org repeater (=SCHEDULED: <2026-11-02 Mon +1w>=) moves by the rule, once -
+  the cookie is kept as written but not stepped as well. Any other
+  repeating date on the heading moves on by org's own rule.
+
+  Bars that are not a rule (=* a | b | c=) are left alone: the heading is
+  simply done. =IsRecurring()= finds the headings that have one.
+
+  #+BEGIN_SRC sh
+  orgs recur                          # every heading with a rule: in words, and its next dates
+  orgs recur set 'Water' '|Mon,Fri|'  # give a heading a rule (a query or hash, then the rule)
+  orgs recur clear 'Water'            # take it off
+  orgs recur explain '|1,15|' -n 6    # what a rule means, and its next dates
+  orgs search 'IsRecurring()'
+  #+END_SRC
+
+  [[file:images/cli-recur.png]]
+
+  worg draws the rule as a chip after the title - =↻ every 2 days · Fri 6
+  Nov= - in the search rows and the agenda, and a search row's menu has
+  *Repeats…*, which shows the next dates as you type.
+
+  [[file:images/worg-recur.png]]
+
+  [[file:images/worg-recur-dialog.png]]
+
+  In VS Code the rule
+  gets the same note after it and a hover with its next dates, a =|= in a
+  heading offers common rules, and *Org: Set Recurrence* sets or clears the
+  rule of the heading at the cursor.
+
+  #+BEGIN_SRC yaml
+  server:
+    features:
+      recur: true
+    recur:
+      weekdays: "mon,tue,wed,thu,fri"   # what |wkdy| stands for
+  #+END_SRC
+
+  Not done: org-recur's =org-recur-finish-done= and =-archive= (they are
+  about finishing a heading /without/ a rule, which here is just marking it
+  done), its own =org-recur-schedule-today= (=orgs sched today= does that),
+  and the rest of org-read-date's spellings (ISO weeks such as =2026-W45=,
+  words such as =tomorrow=).
+
+* Time budgets (org-clock-budget)
+
+  With =clockBudget= on, a heading can be given a time allowance for a
+  period, and the time clocked under it in that period - the heading's own
+  clocks and every heading below it - is set against the allowance. The
+  property names the period:
+
+  #+BEGIN_SRC org
+  ,* Writing the book
+  :PROPERTIES:
+  :BUDGET_WEEK: 5:00
+  :BUDGET_MONTH: 20:00
+  :END:
+  ,** TODO Chapter one
+  #+END_SRC
+
+  =BUDGET_DAY=, =BUDGET_WEEK= (Monday to Sunday), =BUDGET_MONTH=,
+  =BUDGET_QUARTER= (from January) and =BUDGET_YEAR=. A value is =H:MM= or
+  a plain number of minutes (org-clock-budget's two spellings), or =5h=,
+  =90m=, =1h30m=. A budget is the heading's own, not inherited, and comes
+  round again each period: nothing carries over. A clock that is running
+  counts up to now, whether Emacs is running it (an open =CLOCK:= line) or
+  orgs is.
+
+  Each budget also has a /pace/: how far through the period it is now. On a
+  Wednesday at noon a week is 36% through, so 1:48 of a 5:00 budget is on
+  track and 4:00 is spending ahead of the week.
+
+  Clocking in under a heading that is already over budget says so in the
+  answer ("Writing the book is over its budget: 5:30 of 5:00 this week"), and
+  a clock that runs past a budget raises a notification once. Settings:
+
+  #+BEGIN_SRC yaml
+  clockBudget:
+    dailyHours: 12   # hours a day that can be budgeted (org-clock-budget's default)
+    notify: true     # false: no notification when a running clock goes over
+  #+END_SRC
+
+  =dailyHours= makes the /budgetable/ time of a period (12 hours × 7 days is
+  84 hours a week), which the report compares the budgets given out against.
+
+  From the command line:
+
+  #+BEGIN_SRC sh
+  orgs budget                          # every budget, with bars against the pace
+  orgs budget -period week -over       # this week's, only those over
+  orgs budget -date 2026-10-15         # the periods around another day
+  orgs budget clocked                  # what the running clock is spending
+  orgs budget set 'Writing' week 5:00  # give one (off takes it away)
+  #+END_SRC
+
+  [[file:images/cli-budget.png]]
+
+  In a file, org-clock-budget's report as a table, refreshed like any
+  dynamic block:
+
+  #+BEGIN_SRC org
+  ,#+BEGIN: clockbudget :period week,month :scope agenda
+  ,#+END:
+  #+END_SRC
+
+  =:period= is one or more periods (default: every one somebody has a
+  budget for), =:scope= =agenda= (every file, the default) or =file=,
+  =:date= another day. The last two rows are org-clock-budget's sums:
+  budgeted against clocked, and budgetable hours against what is given out.
+
+  Queries: =HasBudget()= / =HasBudget("week")= and =OverBudget()= /
+  =OverBudget("month")=.
+
+  worg's *Time Budgets* tab shows each period's budgets as bars with a mark
+  for the pace, steps back and forward a period at a time, opens a heading
+  on a click, and sets, changes or takes off a budget (*Add a budget* finds a
+  heading by its title). While the clock runs under a budgeted heading, the
+  header shows a chip beside the focus timer: used against budget, red once
+  over. VS Code shows the same in the status bar, and has *Org: Show Clock
+  Budgets* and *Org: Set Clock Budget* (for the heading at the cursor).
+
+  [[file:images/worg-budget.png]]
+
+* Tables of contents (toc-org, org-make-toc)
+
+  A list of links to a file's headings that keeps itself current: every time
+  the file is saved - from Emacs, worg, VS Code or anything else - orgs
+  brings it up to date. Turn it on with =orgs features toc on=. Three ways to
+  ask for one, and a file may have all three.
+
+  *toc-org's way: a heading tagged =:TOC:=.* Its whole body is the list; any
+  text you write there is replaced (planning lines and drawers directly under
+  the headline stay). Only the first =:TOC:= heading in a file is written.
+
+  #+BEGIN_SRC org
+  ,* Table of Contents :TOC:
+  - [[#about][About]]
+    - [[#installation][Installation]]
+  - [[#use][Use]]
+
+  ,* About
+  ,** Installation
+  ,* Use
+  #+END_SRC
+
+  | Tag                | Means                                                               |
+  |--------------------+---------------------------------------------------------------------|
+  | =:TOC:=            | two levels deep, github-style links (=[[#about][About]]=)           |
+  | =:TOC_3:=          | three levels deep                                                   |
+  | =:TOC_2_gh:=       | github-style links, said outright                                   |
+  | =:TOC_2_org:=      | org links (=[[*About][About]]=), which Emacs follows with no help   |
+  | =:QUOTE:= beside it | the list inside a =#+BEGIN_QUOTE= block                            |
+
+  =@= may stand for =_= (=:TOC@2@org:=), as in toc-org. Levels are counted
+  from the top of the file. Left out: the =:TOC:= heading itself, headings
+  tagged =:noexport:= or marked =COMMENT= (with everything under them), and
+  under a =:noexport_1:= heading its children (=:noexport_2:= keeps one level
+  of them, and so on). A heading with a =CUSTOM_ID= is linked by it. Keyword,
+  priority, tags and =[1/3]= cookies are not part of an entry (a cookie would
+  change the list every time a box is ticked), and a link in a title shows as
+  its description. Two headings with one title are =#notes= and =#notes-1=.
+
+  *org-make-toc's way: a =:TOC:= property and a =:CONTENTS:= drawer.* The list
+  goes in the drawer and the text around it stays. A =:TOC:= property with no
+  drawer under it is a setting for the tables above it, not a table.
+
+  #+BEGIN_SRC org
+  ,* Contents
+  :PROPERTIES:
+  :TOC: :include all :ignore this
+  :END:
+  Some words before the list.
+  :CONTENTS:
+  - [[#about][About]]
+  :END:
+  #+END_SRC
+
+  | Setting                       | Means                                                                    |
+  |-------------------------------+--------------------------------------------------------------------------|
+  | =:include all=                | the whole file (the default)                                             |
+  | =:include descendants=        | the headings under this one                                              |
+  | =:include siblings=           | this heading's siblings and what is under them                           |
+  | =:depth N=                    | on the table's heading: N levels from where it starts. On any other      |
+  |                               | heading: N levels of what is under it, in every table that lists it      |
+  | =:ignore this=                | leave this heading out (what is under it is still listed)                |
+  | =:ignore descendants=         | leave out what is under it                                               |
+  | =:ignore siblings=            | leave out its siblings                                                   |
+  | =:local depth=                | this heading's =:depth= is only for its own table, not tables above it   |
+  | =:force depth= / =:force ignore= | this table ignores the =:depth= / =:ignore= of the headings it lists  |
+  | =:links org=                  | org links instead of github ones (ours; org-make-toc chooses in elisp)   |
+
+  A list goes in parentheses: =:ignore (this descendants)=. The old values
+  =all=, =children=, =siblings= on their own still read.
+
+  *A dynamic block.* Anywhere, refreshed on save like the others and by
+  =orgs dblock=:
+
+  #+BEGIN_SRC org
+  ,#+BEGIN: toc :depth 2
+  - [[*About][About]]
+    - [[*Installation][Installation]]
+  ,#+END:
+  #+END_SRC
+
+  =:depth=, =:include= as above (of the heading the block is under), and
+  =:links gh=. Org links are the default here. The heading the block is under
+  is not listed.
+
+  The links work everywhere orgs shows a file: the exported page and worg's
+  rendered view go to the heading, whichever kind the table uses.
+
+  #+BEGIN_SRC sh
+  orgs toc                          # bring every file's tables up to date
+  orgs toc notes.org                # one file
+  orgs toc -check                   # write nothing; exit 1 if any table is stale
+  orgs -local toc -check            # the same with no server (a git hook, CI)
+  orgs toc -print notes.org         # what the tables should say
+  orgs toc -insert notes.org        # add a * Table of Contents :TOC: heading
+  orgs toc -insert notes.org -make-toc -line 12   # org-make-toc's drawer at line 12's heading
+  #+END_SRC
+
+  [[file:images/cli-toc.png]]
+
+  worg: the table of contents button in the Files tab's bar (Update, Insert a
+  =:TOC:= heading, Insert a Contents heading), and the same button in the org
+  editor, which works on the text being edited; saving from the editor
+  brings the tables up to date first.
+
+  [[file:images/worg-toc.png]]
+
+  VS Code: *Org: Update Table of
+  Contents*, *Org: Insert Table of Contents* (a =:TOC:= heading, a
+  =:CONTENTS:= drawer at the heading at the cursor, or a =#+BEGIN: toc= block),
+  and the tables are brought up to date on save (=org.toc.updateOnSave=, on by
+  default). Both work on unsaved text.
+
+* Headings that come back to be read (org-review)
+
+  With =review= on, a heading can be given a cadence: it comes back to be
+  read again every so often. This is for areas, projects and notes you want
+  to look at regularly (a monthly look at your finances, a quarterly look at
+  each project), not for tasks with a date. orgs reads and writes
+  org-review's own properties, so the same files work in Emacs:
+
+  #+BEGIN_SRC org
+  ,* Areas
+  :PROPERTIES:
+  :REVIEW_DELAY: +2w
+  :END:
+  ,** Health
+  :PROPERTIES:
+  :LAST_REVIEW: [2026-10-01 Thu]
+  :END:
+  ,** Money
+  :PROPERTIES:
+  :REVIEW_DELAY: +1m
+  :LAST_REVIEW: [2026-10-20 Tue]
+  :NEXT_REVIEW: [2026-11-20 Fri]
+  :END:
+  #+END_SRC
+
+  - =:NEXT_REVIEW:= is when it is next due. When it is set, it wins.
+  - Otherwise the heading is due on its =:LAST_REVIEW:= plus its delay.
+  - =:REVIEW_DELAY:= is the delay (=+3d=, =+2w=, =+1m=, =+1y=). It is
+    inherited from the headings above and from the file's =#+PROPERTY:
+    REVIEW_DELAY=. With none of those, =orgReview.delay= is used (=+1m=).
+    Above, Health is due two weeks after 1 October.
+  - A heading with a =REVIEW_DELAY= of its own and no dates has never been
+    reviewed, so it is due now. In the example that is /Areas/.
+  - A heading takes part only when it has one of the three properties
+    itself. With =orgReview.unreviewed: true=, a heading that only
+    inherits a delay is due too. This is org-review's
+    =org-review-unreviewed=, and it flags every heading under that delay.
+  - Archived, commented and finished headings are never due.
+
+  Marking a heading reviewed writes =LAST_REVIEW= as today, and
+  =NEXT_REVIEW= as today plus the delay. Changing the cadence moves
+  =NEXT_REVIEW= to the last review (or today) plus the new delay. Snoozing
+  moves only =NEXT_REVIEW=.
+
+  #+BEGIN_SRC yaml
+  orgReview:
+    delay: +1m          # the cadence of a heading with no REVIEW_DELAY
+    setsNext: always    # always, only-future or never (org-review-sets-next-date)
+    stamp: inactive     # [2026-11-04 Wed]; active writes <2026-11-04 Wed>
+    unreviewed: false
+  #+END_SRC
+
+  (=review:= is a different block. It configures the weekly review wizard,
+  which is not this.)
+
+  #+BEGIN_SRC sh
+  orgs reviews                         # what is due, most overdue first
+  orgs reviews -within 7               # and what falls due this week
+  orgs reviews walk                    # one at a time: r reviewed, s snooze, c cadence, u undo, o open
+  orgs reviews done 2 -note 'on track' # the second one; a note goes into its log drawer
+  orgs reviews done 'Money'            # by title, a query or a hash
+  orgs reviews set Money +1w           # its cadence; -next fri, or -clear to stop reviewing it
+  orgs reviews snooze Money +3d
+  orgs search 'ReviewDue()'            # the query functions ReviewDue() and HasReview()
+  orgs agenda -view R                  # today's agenda, then what is due for review
+  #+END_SRC
+
+  [[file:images/cli-reviews.png]]
+
+  worg has a *Due for Review* panel. It shows the due headings one at a
+  time, with their text rendered, and takes one key per decision:
+  =r= reviewed, =R= reviewed with a note, =s= snooze, =c= change the
+  cadence, =o= open, =→= next, =u= undo. A search row's menu has *Review
+  every…*. In the weekly review, the stale items step also lists what is
+  due for review.
+
+  [[file:images/worg-reviews.png]]
+
+  VS Code has these commands:
+  - *Org: Mark Heading Reviewed*
+  - *Org: Set Review Cadence*
+  - *Org: Headings Due for Review*: a list that opens the heading, with
+    buttons that mark it reviewed or snooze it.
+
+  VS Code also puts a line over each heading in review (for example "20
+  days late · every 2 weeks"). Click it to mark the heading reviewed.
+
+* Recipes from web pages (org-chef)
+
+  Give orgs the address of a recipe page and it writes the recipe as a
+  heading, the way org-chef does in Emacs, so one cookbook file serves both:
+
+  #+BEGIN_SRC org
+  ,* Weeknight Chicken Curry
+  :PROPERTIES:
+  :source-url: https://spiceandsimmer.example/chicken-curry/
+  :servings:   4
+  :prep-time:  15 min
+  :cook-time:  25 min
+  :ready-in:   40 min
+  :IMAGE:      [[file:images/recipes/weeknight-chicken-curry.jpg]]
+  :RECORD:     recipe
+  :END:
+  A creamy, mild curry that's on the table in 40 minutes.
+
+  ,** Ingredients
+  - 2 tablespoons vegetable oil
+  - 1 large onion, finely chopped
+  - 1 1/2 pounds boneless chicken thighs
+
+  ,** Directions
+  1. Heat the oil in a large pan over medium heat.
+  2. Add the onion and cook until soft, about 8 minutes.
+  #+END_SRC
+
+  The page is read for its schema.org recipe data, which nearly every
+  recipe site carries (WordPress recipe plugins, the big recipe sites, the
+  newspapers). A page with steps in sections ("For the sauce") gets a
+  heading per section under Directions. orgs adds two properties org-chef
+  does not write and does not mind: =:IMAGE:=, the picture, saved beside
+  the org file in =images/recipes/=, and =:RECORD: recipe=, which lists the
+  recipes in the records browser too.
+
+  A heading is a recipe when it has =:source-url:= (org-chef's, written by
+  either), =:RECORD: recipe=, or both an Ingredients and a Directions child -
+  so a recipe typed by hand from org-chef's manual capture template counts.
+  Times may be written as org-chef writes them (=15  m=) or as orgs does.
+
+  #+BEGIN_SRC sh
+  orgs chef add https://www.example.com/recipes/curry          # into recipes.org
+  orgs chef add https://… -file cook.org -under Mains           # under a heading
+  orgs chef add https://… -dry-run                              # show the heading, write nothing
+  orgs chef ls chicken                                          # recipes with chicken in them
+  orgs chef show curry -servings 6                              # scaled for six
+  orgs chef cook curry                                          # one step at a time
+  orgs chef shop curry burgers -servings 4                      # a shopping list
+  #+END_SRC
+
+  [[file:images/cli-chef.png]]
+
+  - *Scaling* multiplies each ingredient's leading amount and keeps its
+    spelling and units: =1/2 cup= doubles to =1 cup=, =½ cup= to =1 cup=,
+    =1 1/2 pounds= halves to =3/4 pound=, =2-3 teaspoons= doubles to =4-6=,
+    =400g= to =800g=. Only the leading amount changes, so =1 (16 ounce)
+    can= doubles to =2 (16 ounce) cans=. Large amounts are rounded as a
+    cook would (=150 g=, not =150 1/3 g=). A recipe that does not say what
+    it serves scales by a factor instead (=-factor 2=). Nothing is written:
+    the file keeps the recipe as it was.
+  - *A shopping list* adds the same thing in the same unit up across
+    recipes (=2 cups rice= and =1 cup rice= are =3 cups rice=) and is
+    written as a heading of checkboxes with a =[0/n]= cookie: under a
+    =Shopping= heading in the recipes file when there is one, else at the
+    end of the first recipe's file, or where =-file= and =-under= say.
+  - A page already in a file (the same =:source-url:=) is not added again
+    unless asked (=-force=, or *Add anyway*).
+  - Some sites turn servers away; worg and the api take the page's html
+    pasted in (=Html= on =/chef/fetch= and =/chef/add=).
+
+  worg's *Recipes* tab takes a pasted address, shows what was read before
+  anything is written and lets you pick the file and heading; it lists the
+  recipes with their pictures and searches them by name and ingredient. A
+  recipe opens with a servings stepper, ingredients to tick off (kept in the
+  browser, not the file), *Cook* - large type, one step at a time, the
+  arrow keys to move, and the screen kept awake where the browser can - and
+  *Add to list* for the shopping list.
+
+  [[file:images/worg-chef.png]]
+
+  VS Code has *Org: Import Recipe from
+  URL* (put in the open file at the cursor, as an edit you can undo, or
+  written by the server with its picture), *Org: Scale Recipe* (the recipe at
+  the cursor, scaled, to copy or insert) and *Org: Make a Shopping List from
+  Recipes*.
+
+  #+BEGIN_SRC yaml
+  server:
+    features:
+      chef: true
+    chef:
+      file: recipes.org      # where a recipe goes when no file is named (made if missing)
+      checkboxes: false      # ingredients as - [ ] items (org-chef writes plain - items)
+      noRecord: false        # leave out :RECORD: recipe
+      noPictures: false      # keep the picture's url instead of saving it
+  #+END_SRC
+
+* Ledger journals (ledger-mode, ob-ledger)
+
+  Money kept the way ledger and hledger keep it - plain-text transactions -
+  in source blocks of an org file, or in =.ledger=, =.journal=, =.hledger= and
+  =.dat= files under the org directories. With =features: ledger:= on, orgs
+  reads them itself: balances, registers, monthly totals and checks work
+  without ledger or hledger installed.
+
+  #+BEGIN_SRC org
+  ,* Accounts
+  ,#+NAME: opening
+  ,#+BEGIN_SRC ledger
+  commodity $
+    format $1,000.00
+
+  2026/01/01 * Opening
+      Assets:Bank:Checking     $3,000.00
+      Equity:Opening
+  ,#+END_SRC
+
+  ,* This year
+  ,#+BEGIN_SRC ledger :cmdline reg Expenses
+  2026/02/07 ! (1042) Grocer  ; :food:
+      Expenses:Food:Groceries    $98.10
+      Expenses:Food:Snacks       $12.00
+      Assets:Bank:Checking     = $2,889.90
+  ,#+END_SRC
+  #+END_SRC
+
+** One journal or one block
+
+   All the =ledger= and =hledger= blocks of a file are read *in order as one
+   journal*: the second block's assertions are checked against the first
+   block's balances, and its accounts and commodities are the first's. This
+   is what every report, the dynamic block and the checks read.
+
+   ob-ledger runs each block *alone*, and so does running a block (C-c C-c,
+   =orgs code at=, worg's Run). Any report can be asked for one block alone
+   too: =-block 1= (its place, from 0), =-block opening= (its =#+NAME:=) or
+   =block=line:12=.
+
+** What is read
+
+   | Dates          | =2026/11/04=, =2026-11-04=, =2026.11.04=, =11/04= with =Y 2026= (or =year=); =2026/11/04=2026/11/05= for the auxiliary date |
+   | The first line | status =*= or =!=, a code =(1042)=, the payee, =; a note= (hledger's =payee \vert note= too) |
+   | Postings       | an account, then two spaces (or a tab) and the amount; =(Budget:Rent)= virtual and unbalanced, =[Savings]= virtual and balanced; one posting may leave its amount out |
+   | Amounts        | =$1,000.50=, =-$5=, =$-5=, =10 AAPL=, =1.000,00 EUR=, ="M&M" 3=; =decimal-mark ,= for commas |
+   | Costs          | =10 AAPL @ $150=, =@@ $1500=, ={$150}= lot prices; two commodities and no cost read as an exchange |
+   | Assertions     | =Assets:Bank  $-50 = $950= checked; =Assets:Bank  = $950= with no amount is an assignment; ===, =*= as hledger has them |
+   | Metadata       | =; :tag1:tag2:= and =; Key: value= on a transaction or a posting |
+   | Directives     | =account=, =commodity= (and its =format=), =include= (only inside the org directories), =alias a=b= and =alias /re/=b=, =apply account=, =D=, =P= prices, =Y=/=year=, =comment= ... =end comment= |
+   | Skipped, with a warning | periodic =~= and automated === transactions, value expressions, directives it does not know |
+
+   An unbalanced transaction, a failed assertion, a date that is not a day
+   and an amount that does not read are errors, each at the line it is on -
+   the org file's own line for a block.
+
+** Reports
+
+   #+BEGIN_SRC sh
+   orgs ledger                                  # balance of every journal, as ledger bal prints it
+   orgs ledger bal -source money.org -depth 2
+   orgs ledger bal Expenses not Rent -period 'this year'
+   orgs ledger reg ^Assets:Bank -period 'last month'
+   orgs ledger monthly Expenses -depth 2        # a month a line, an account a column
+   orgs ledger check                            # file:line problems; exits 1 on an error
+   orgs ledger check -format quickfix
+   orgs ledger sources
+   orgs ledger -f money.ledger bal              # a file here, no server at all
+   #+END_SRC
+
+   [[file:images/cli-ledger.png]]
+
+   Words after the report are account regular expressions, any of which may
+   match, as ledger's are; =not= leaves the next ones out. Periods are said in
+   words: =this month=, =last year=, =2026=, =2026-11=, =nov=, =q3=, =from
+   2026-01-01 to 2026-04-01=, =jan..mar=, =since last month= - the end is not
+   included. =-json= gives the rows.
+
+   A dynamic block writes a report into the file as an org table, refreshed
+   with =orgs dblock= (or =C-c C-c= in Emacs with orgs' blocks):
+
+   #+BEGIN_SRC org
+   ,#+BEGIN: ledger :report balance :account Expenses :period "this year" :depth 2
+   | Account  | Balance   |
+   |----------+-----------|
+   | Expenses | $2,755.50 |
+   | \_  Food | $355.50   |
+   | \_  Rent | $2,400.00 |
+   |----------+-----------|
+   | *Total*  | $2,755.50 |
+   ,#+END:
+   #+END_SRC
+
+   =:report= is =balance=, =register=, =monthly= or =check=; =:source= is
+   another journal (the file the block is in when it has ledger blocks,
+   every journal otherwise); =:block=, =:account=, =:period=, =:begin=,
+   =:end=, =:depth= and =:real= as above.
+
+** Running a block
+
+   Running a =ledger= block runs =ledger -f= as before, and an =hledger=
+   block now runs =hledger -f= (it used to run ledger). When the program is
+   not installed and the feature is on, orgs answers the block itself for a
+   =:cmdline= of =bal=, =reg= or =accounts= with =-p=, =-b=, =-e=,
+   =--depth=, =--real=, =--flat= and account patterns; anything else says to
+   install ledger. A journal with an error answers with the error, as
+   ledger does.
+
+** In worg and VS Code
+
+   worg's *Ledger* tab: a journal (or one block of it) and a period at the
+   top; the account tree with balances, opened and folded by its arrows;
+   pick an account to see its month-by-month totals as bars (a table one
+   click away) and its register with a running total, each row opening its
+   line. The journal's problems are listed above, each a link to its line.
+
+   [[file:images/worg-ledger.png]]
+
+   VS Code marks unbalanced transactions and failed assertions in ledger
+   blocks as you type, shows an account's balance when you hover on it, and
+   has *Org: Ledger Balance* and *Org: Ledger Register*, which print the
+   report in the *Org Ledger* output.

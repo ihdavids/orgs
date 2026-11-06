@@ -1,0 +1,9 @@
+#+TITLE: How the year went
+
+* Every day
+  A line on each day page - =orgs track log MOOD 4= from the phone - and the
+  charts draw themselves.
+
+  #+TRACKER: source:property:MOOD title:"Mood" color:green
+  #+TRACKER: source:property:SLEEP type:line from:-90d goal:7:00 title:"Sleep" unit:h
+  #+TRACKER: source:property:WALK title:"Walking" color:orange unit:min goal:30

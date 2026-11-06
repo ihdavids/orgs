@@ -189,7 +189,11 @@ package orgs
   A =beancount= block is a journal, asked a question by =bean-query=: the
   question is =:cmdline= (=BALANCES= when it says none), and the answer comes
   back as an org table. A =ledger= block runs =ledger -f= over itself with
-  =:cmdline= as the report (=bal= by default).
+  =:cmdline= as the report (=bal= by default), and an =hledger= block
+  =hledger -f=. With =features: ledger:= on and the program not installed,
+  orgs answers a =bal=, =reg= or =accounts= =:cmdline= itself (with =-p=,
+  =-b=, =-e=, =--depth=, =--real=, =--flat= and account patterns), the block
+  read alone as ob-ledger reads it.
 
   #+BEGIN_EXAMPLE
   #+BEGIN_SRC beancount :cmdline "SELECT account, sum(position) GROUP BY account"
@@ -682,6 +686,8 @@ func runJob(j babelJob) (common.CodeResult, error) {
 	var rerr error
 	if r.custom != nil {
 		ran, rerr = r.custom(r, program, j.Dir, timeout, out)
+	} else if nat, ok := nativeLedgerRun(key, r, program, &j, extra); ok {
+		ran = nat // ledger.go: ledger/hledger not installed, read by orgs
 	} else {
 		ran, rerr = runProgram(r, program, j.Dir, timeout, out, stdin, extra...)
 	}

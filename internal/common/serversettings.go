@@ -1100,6 +1100,228 @@ type ServerSettings struct {
 	EDOC */
 	Remark RemarkSettings `yaml:"remark"`
 	/* SDOC: Settings
+* Latex Suite
+		Where =features: latexSuite:= reads your own maths snippets, and what an
+		html export draws maths with. Every key is optional.
+
+		#+BEGIN_SRC yaml
+		latexSuite:
+		  snippets: latex-snippets.org   # relative to the first org directory (orgs latex init writes it)
+		  noBuiltin: false               # true: only your own snippets
+		  katex: https://cdn.jsdelivr.net/npm/katex@0.16.11/dist   # where an html export loads KaTeX from; "off" for none
+		#+END_SRC
+	EDOC */
+	LatexSuite LatexSuiteSettings `yaml:"latexSuite"`
+	/* SDOC: Settings
+	* Chef
+		How =features: chef:= writes a recipe it fetches. Every key is
+		optional.
+
+		#+BEGIN_SRC yaml
+		chef:
+		  file: recipes.org      # where a recipe goes when no file is named (made if missing)
+		  checkboxes: false      # ingredients as - [ ] (org-chef writes plain - items)
+		  noRecord: false        # leave out :RECORD: recipe (the records browser then skips them)
+		  noPictures: false      # keep the picture's url instead of saving it in images/recipes/
+		#+END_SRC
+	EDOC */
+	Chef ChefSettings `yaml:"chef"`
+	/* SDOC: Settings
+* Media DB
+	For =features: mediaDb:= (books, films, shows, games and albums looked
+	up and filed as headings). Every key is optional: books (Open Library),
+	albums (MusicBrainz) and the Wikidata / Wikipedia fallback need no key.
+	A key is written as it is, as =env:NAME= or as =keyring:NAME=.
+
+	#+BEGIN_SRC yaml
+	mediaDb:
+	  contact: you@example.com   # put in the User-Agent, as MusicBrainz and Wikipedia ask
+	  language: en               # Wikipedia, Wikidata and TMDB answer in this language
+	  noCovers: false            # link the cover's url instead of saving it in images/<kind>/
+	  maxTags: 5                 # genres written as tags (0: the default 5; noTags: true for none)
+	  keys:
+	    tmdb: env:TMDB_KEY       # films and TV shows (a v3 key or a v4 read token)
+	    googlebooks: env:GOOGLE_BOOKS_KEY
+	    rawg: keyring:rawg
+	    igdbClientId: ...        # IGDB is a Twitch application's id and secret
+	    igdbClientSecret: keyring:igdb
+	  urls:                      # point a service elsewhere (a mirror, a proxy)
+	    openlibrary: https://openlibrary.org
+	  kinds:
+	    book:
+	      file: books.org        # where new books go (default: the book collection, else media.org)
+	      under: Reading list    # a heading in that file (title, a::b path)
+	      capture: Book          # or: a capture template's target
+	      sources: [openlibrary, googlebooks]
+	      fields: [AUTHOR, PUBLISHED_DATE, ISBN, PAGES]   # only these (MEDIA_ID and STATUS always)
+	      status: to read        # what a new one starts as
+	    film: {file: films.org}
+	#+END_SRC
+EDOC */
+	MediaDb MediaDbSettings `yaml:"mediaDb"`
+	/* SDOC: Settings
+* Hover previews
+		For =features: hoverEditor:= (hover previews). Every key is optional.
+		A web link's preview is its page's title, description and picture,
+		read from the page's =<head>= by the server; =noWeb= stops that.
+
+		#+BEGIN_SRC yaml
+		hoverEditor:
+		  noWeb: false          # web links show only their address; nothing is fetched
+		  privateHosts: false   # let a preview fetch addresses on this machine or its network
+		  timeout: 8s           # how long a page has to answer
+		  userAgent: ""         # what the fetch says it is (default: orgs/<version> (link preview))
+		#+END_SRC
+	EDOC */
+	HoverEditor HoverEditorSettings `yaml:"hoverEditor"`
+	/* SDOC: Settings
+	* Recur
+		For =features: recur:= (org-recur): the days =|wkdy|= stands for,
+		org-recur's =org-recur-weekday-recurrence=.
+
+		#+BEGIN_SRC yaml
+		recur:
+		  weekdays: "mon,tue,wed,thu,fri"   # the default; "sun,mon,tue,wed,thu" for a Sunday-Thursday week
+		#+END_SRC
+	EDOC */
+	Recur RecurSettings `yaml:"recur"`
+	/* SDOC: Settings
+	* Auto Link Title
+		For =features: autoLinkTitle:= (org-cliplink): how a pasted web address is given its page's title.
+		Every key is optional.
+
+		#+BEGIN_SRC yaml
+		autoLinkTitle:
+		  rules:                    # cleanups per site, tried before the built-in ones
+		    - host: example.com     # also www.example.com, docs.example.com
+		      strip: [" \\| Example Docs$", "^Example: "]   # regular expressions, removed
+		  ignore: [docs.google.com] # never fetched: a paste stays a plain url
+		  allowPrivate: false       # true: fetch 127.0.0.1, 10/8, 192.168/16, localhost too
+		  keepSiteName: false       # true: keep " - Site" when it is the page's own site name
+		  noDefaultRules: false     # true: only your rules (no " - YouTube", "· GitHub")
+		  noOembed: false           # true: never ask YouTube, Vimeo... for a video's title
+		  oembed:                   # more oEmbed endpoints (the url is appended, escaped)
+		    - host: example.tv
+		      url: "https://example.tv/oembed?format=json&url="
+		  cacheFor: 30d             # how long a title is kept (memory and the user cache dir)
+		  timeout: 8s
+		  userAgent: ""             # default: orgs/<version> (+https://github.com/ihdavids/orgs)
+		#+END_SRC
+	EDOC */
+	AutoLinkTitle LinkTitleSettings `yaml:"autoLinkTitle"`
+	/* SDOC: Settings
+	* Clock Budget
+		For =features: clockBudget:= (org-clock-budget): how many hours a day
+		can be budgeted (org-clock-budget-daily-budgetable-hours, 12), which
+		makes a week's budgetable hours 84; and whether a clock running past a
+		heading's budget raises a notification (on unless =notify: false=; the
+		clock-in answer still says so).
+
+		#+BEGIN_SRC yaml
+		clockBudget:
+		  dailyHours: 12
+		  notify: true
+		#+END_SRC
+	EDOC */
+	ClockBudget ClockBudgetSettings `yaml:"clockBudget"`
+	/* SDOC: Settings
+	* Backlink Counts
+		For =features: backlinkCounts:=: the
+		count of links to each heading, shown beside it. =export: true= also
+		writes the count after each linked-to heading in html exports (off by
+		default, even with the feature on: a published page is read by people
+		who cannot follow the links). =mentions: true= counts unlinked
+		mentions in exports too.
+
+		#+BEGIN_SRC yaml
+		backlinkCounts:
+		  export: false
+		  mentions: false
+		#+END_SRC
+	EDOC */
+	BacklinkCounts BacklinkCountsSettings `yaml:"backlinkCounts"`
+	/* SDOC: Settings
+	* Review (org-review)
+		How =features: review:= reads and writes a heading's review dates.
+		(=review:= is the weekly review wizard's block; this one is
+		=orgReview:=.)
+
+		#+BEGIN_SRC yaml
+		orgReview:
+		  delay: +1m          # the cadence of a heading with no REVIEW_DELAY (org-review-delay)
+		  setsNext: always    # always, only-future or never (org-review-sets-next-date)
+		  stamp: inactive     # inactive [2026-11-04 Wed] or active <2026-11-04 Wed>
+		  unreviewed: false   # a heading that only inherits a REVIEW_DELAY is due too
+		#+END_SRC
+	EDOC */
+	OrgReview OrgReviewSettings `yaml:"orgReview"`
+	/* SDOC: Settings
+	* Related notes
+		For =features: related:=: headings
+		like the one you are reading. The words engine needs nothing set.
+		=embeddings:= adds an engine that asks a model what each heading
+		means; it is off until it names a backend. Keys are the assistant's
+		(=assistant.chatgpt=, =assistant.gemini=) unless given here.
+
+		#+BEGIN_SRC yaml
+		related:
+		  engine: auto            # auto (embeddings when ready, else words), words or embeddings
+		  embeddings:
+		    backend: ollama       # ollama, local, openai or gemini
+		    model: nomic-embed-text   # local: runtime:name or server:name (llamacpp:nomic-embed-text-v1.5)
+		    url: ""               # another endpoint (ollama's, or an OpenAI-compatible /v1)
+		    apiKey: ""            # as the assistant's: the key, env:NAME or keyring:NAME
+		    perMinute: 60         # requests a minute at most (a request is a batch)
+		    batch: 16             # headings per request
+		    blend: 0.25           # how much of the words score is mixed into the embeddings one (0-1)
+		#+END_SRC
+
+		Vectors are kept in =<config>_related_vectors.gob= beside the
+		server's yaml, by a hash of each heading's text, so only what changed
+		is asked for again.
+	EDOC */
+	Related RelatedSettings `yaml:"related"`
+	/* SDOC: Settings
+	* Map View
+		For =features: mapView:=: where addresses are looked up and where the
+		map's pictures come from. Every key is optional. Coordinates found for
+		an address are kept in =<config>_geocode.json= beside the yaml, so each
+		address is asked for once; the lookups go one a second, as
+		Nominatim's usage policy asks.
+
+		#+BEGIN_SRC yaml
+		mapView:
+		  geocodeUrl: https://nominatim.openstreetmap.org/search   # any Nominatim-compatible search
+		  email: ""            # sent with each lookup, as Nominatim asks of heavy users
+		  autoGeocode: false   # true: look up new addresses as the map asks for them
+		  geoProperty: GEO     # where "write the coordinates back" puts them
+		  tileUrl: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+		  tileDarkUrl: ""      # tiles for dark pages; empty: the light tiles, darkened
+		  attribution: "© OpenStreetMap contributors"
+		  staticTiles: true    # false: exported maps are drawn without tiles (pins on a grid)
+		#+END_SRC
+	EDOC */
+	MapView MapViewSettings `yaml:"mapView"`
+	/* SDOC: Settings
+	* Local images
+		For =features: localImages:= (org-download): pictures linked from the web are downloaded beside the
+		notes and the links pointed at the copies, with org-download's
+		=#+DOWNLOADED: url @ time= line above each.
+
+		#+BEGIN_SRC yaml
+		localImages:
+		  dir: images             # beside the org file; {file} for a folder per file (images/{file})
+		  auto: false             # download on save
+		  ignore: [example.com]   # hosts (and their subdomains) left alone
+		  maxImageMB: 20          # a bigger picture is skipped
+		  maxRunMB: 200           # one run stops downloading after this much
+		  allowPrivate: false     # true: fetch from localhost and private addresses too
+		  svg: false              # true: keep svg pictures as well (they can carry scripts)
+		  annotate: true          # false: no #+DOWNLOADED: line
+		#+END_SRC
+	EDOC */
+	LocalImages LocalImagesSettings `yaml:"localImages"`
+	/* SDOC: Settings
 	* CalDAV and CardDAV
 		Your dated headings as a calendar and your contacts as an address book,
 		for a phone's own Calendar and Contacts apps, read and write. Off unless
@@ -1505,6 +1727,61 @@ type FeatureSettings struct {
 	Remark         bool `yaml:"remark"`
 	Expiry         bool `yaml:"expiry"`
 	AutoArchive    bool `yaml:"autoArchive"`
+	Recur          bool `yaml:"recur"`
+	ClockBudget    bool `yaml:"clockBudget"`
+	Toc            bool `yaml:"toc"`
+	Review         bool `yaml:"review"`
+	Chef           bool `yaml:"chef"`
+	Ledger         bool `yaml:"ledger"`
+	Canvas         bool `yaml:"canvas"`
+	Tracker        bool `yaml:"tracker"`
+	Related        bool `yaml:"related"`
+	Excalidraw     bool `yaml:"excalidraw"`
+	MediaNotes     bool `yaml:"mediaNotes"`
+	Callouts       bool `yaml:"callouts"`
+	BacklinkCounts bool `yaml:"backlinkCounts"`
+	MapView        bool `yaml:"mapView"`
+	Timeline       bool `yaml:"timeline"`
+	MediaDb        bool `yaml:"mediaDb"`
+	HoverEditor    bool `yaml:"hoverEditor"`
+	AutoLinkTitle  bool `yaml:"autoLinkTitle"`
+	LatexSuite     bool `yaml:"latexSuite"`
+	LocalImages    bool `yaml:"localImages"`
+}
+
+// LinkTitleSettings is the `autoLinkTitle:` block (linktitle.go).
+type LinkTitleSettings struct {
+	Rules          []LinkTitleRule   `yaml:"rules"`
+	Ignore         []string          `yaml:"ignore"`
+	AllowPrivate   bool              `yaml:"allowPrivate"`
+	KeepSiteName   bool              `yaml:"keepSiteName"`
+	NoDefaultRules bool              `yaml:"noDefaultRules"`
+	NoOembed       bool              `yaml:"noOembed"`
+	Oembed         []LinkTitleOembed `yaml:"oembed"`
+	CacheFor       string            `yaml:"cacheFor"`
+	Timeout        string            `yaml:"timeout"`
+	UserAgent      string            `yaml:"userAgent"`
+}
+
+// LinkTitleRule cleans the titles of one site: each Strip is a regular
+// expression removed from the title.
+type LinkTitleRule struct {
+	Host  string   `yaml:"host" json:"Host"`
+	Strip []string `yaml:"strip" json:"Strip"`
+}
+
+// LinkTitleOembed is an oEmbed endpoint for a host: the page's url is
+// appended to Url, query-escaped.
+type LinkTitleOembed struct {
+	Host string `yaml:"host" json:"Host"`
+	Url  string `yaml:"url" json:"Url"`
+}
+
+// LatexSuiteSettings is the `latexSuite:` block (internal/app/orgs/latexsuite.go).
+type LatexSuiteSettings struct {
+	Snippets  string `yaml:"snippets"`
+	NoBuiltin bool   `yaml:"noBuiltin"`
+	Katex     string `yaml:"katex"`
 }
 
 // ExpirySettings is the `expiry:` block (expiry.go).
@@ -1522,9 +1799,106 @@ type AutoArchiveSettings struct {
 	Query string `yaml:"query"`
 }
 
+// BacklinkCountsSettings is the `backlinkCounts:` block (backlinkcounts.go).
+type BacklinkCountsSettings struct {
+	Export   bool `yaml:"export"`
+	Mentions bool `yaml:"mentions"`
+}
+
+// ClockBudgetSettings is the `clockBudget:` block (clockbudget.go).
+type ClockBudgetSettings struct {
+	DailyHours float64 `yaml:"dailyHours"`
+	Notify     *bool   `yaml:"notify"`
+}
+
+// RelatedSettings is the `related:` block (internal/app/orgs/related.go).
+// MapViewSettings is the `mapView:` block (mapview.go).
+type MapViewSettings struct {
+	GeocodeUrl  string `yaml:"geocodeUrl"`
+	Email       string `yaml:"email"`
+	AutoGeocode bool   `yaml:"autoGeocode"`
+	GeoProperty string `yaml:"geoProperty"`
+	TileUrl     string `yaml:"tileUrl"`
+	TileDarkUrl string `yaml:"tileDarkUrl"`
+	Attribution string `yaml:"attribution"`
+	StaticTiles *bool  `yaml:"staticTiles"`
+}
+
+type RelatedSettings struct {
+	Engine     string                    `yaml:"engine"`
+	Embeddings RelatedEmbeddingsSettings `yaml:"embeddings"`
+}
+
+// RelatedEmbeddingsSettings is `related.embeddings:`: the model that turns a
+// heading's text into a vector.
+type RelatedEmbeddingsSettings struct {
+	Backend   string  `yaml:"backend"`
+	Model     string  `yaml:"model"`
+	Url       string  `yaml:"url"`
+	ApiKey    string  `yaml:"apiKey"`
+	PerMinute int     `yaml:"perMinute"`
+	Batch     int     `yaml:"batch"`
+	Blend     *float64 `yaml:"blend"`
+}
+
+// LocalImagesSettings is the `localImages:` block (localimages.go).
+type LocalImagesSettings struct {
+	Dir          string   `yaml:"dir"`
+	Auto         bool     `yaml:"auto"`
+	Ignore       []string `yaml:"ignore"`
+	MaxImageMB   int      `yaml:"maxImageMB"`
+	MaxRunMB     int      `yaml:"maxRunMB"`
+	AllowPrivate bool     `yaml:"allowPrivate"`
+	Svg          bool     `yaml:"svg"`
+	Annotate     *bool    `yaml:"annotate"`
+}
+
+// RecurSettings is the `recur:` block (recur.go).
+type RecurSettings struct {
+	Weekdays string `yaml:"weekdays"`
+}
+
 // RemarkSettings is the `remark:` block (remark.go).
 type RemarkSettings struct {
 	NotesFile string `yaml:"notesFile"`
+}
+
+// HoverEditorSettings is the `hoverEditor:` block (preview.go).
+type HoverEditorSettings struct {
+	NoWeb        bool   `yaml:"noWeb"`
+	PrivateHosts bool   `yaml:"privateHosts"`
+	Timeout      string `yaml:"timeout"`
+	UserAgent    string `yaml:"userAgent"`
+}
+
+// MediaDbSettings is the `mediaDb:` block (mediadb.go).
+type MediaDbSettings struct {
+	Contact  string                  `yaml:"contact"`
+	Language string                  `yaml:"language"`
+	NoCovers bool                    `yaml:"noCovers"`
+	NoTags   bool                    `yaml:"noTags"`
+	MaxTags  int                     `yaml:"maxTags"`
+	Keys     map[string]string       `yaml:"keys"`
+	Urls     map[string]string       `yaml:"urls"`
+	Kinds    map[string]MediaDbKind  `yaml:"kinds"`
+}
+
+// MediaDbKind is where one kind of thing goes and what it writes.
+type MediaDbKind struct {
+	File    string   `yaml:"file"`
+	Under   string   `yaml:"under"`
+	Capture string   `yaml:"capture"`
+	Sources []string `yaml:"sources"`
+	Fields  []string `yaml:"fields"`
+	Status  string   `yaml:"status"`
+}
+
+// ChefSettings is the `chef:` block (chef.go).
+type ChefSettings struct {
+	File       string `yaml:"file"`
+	Checkboxes bool   `yaml:"checkboxes"`
+	NoRecord   bool   `yaml:"noRecord"`
+	NoPictures bool   `yaml:"noPictures"`
 }
 
 // RefreshSettings is the `refresh:` block (refresh.go).

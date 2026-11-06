@@ -117,6 +117,14 @@ type OrgHtmlWriter struct {
 	// written or a link to it.
 	headingIDs     map[int]string
 	headingByTitle map[string]int
+	// The heading a `[[#anchor]]` link names: its CUSTOM_ID, else the
+	// github-style anchor toc-org and org-make-toc write (common.TocAnchors).
+	headingByAnchor map[string]int
+	// The recordings a player has been written for (medianote.go).
+	mediaPlayers map[string]bool
+	// Write canvas links as links, not pictures: a canvas card's own body
+	// must not draw the board it sits on (canvas.go).
+	noCanvasEmbed bool
 }
 
 var docStart = `
@@ -136,7 +144,7 @@ var docEnd = `
 `
 
 func MakeWriter() OrgHtmlWriter {
-	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}, nil, nil, nil, nil}
+	return OrgHtmlWriter{org.NewHTMLWriter(), nil, "", "", []OrgHeadingNode{}, map[string]bool{}, nil, nil, nil, nil, nil, nil, false}
 }
 
 func NewOrgHtmlWriter(exp *OrgHtmlExporter) *OrgHtmlWriter {
@@ -428,7 +436,9 @@ func (w *OrgHtmlWriter) findHeading(title string) (int, bool) {
 			}
 			if h := sec.Headline; h != nil {
 				t := org.String(h.Title...)
-				for _, k := range []string{"=" + t, "~" + loose(t)} {
+				// "^": the title as a table of contents writes it - a link
+				// as its description, no statistics cookie.
+				for _, k := range []string{"=" + t, "~" + loose(t), "^" + loose(common.TocVisibleTitle(t))} {
 					if _, ok := w.headingByTitle[k]; !ok {
 						w.headingByTitle[k] = h.Index
 					}
@@ -445,13 +455,90 @@ func (w *OrgHtmlWriter) findHeading(title string) (int, bool) {
 	if i, ok := w.headingByTitle["="+title]; ok {
 		return i, true
 	}
-	i, ok := w.headingByTitle["~"+loose(title)]
+	if i, ok := w.headingByTitle["~"+loose(title)]; ok {
+		return i, true
+	}
+	i, ok := w.headingByTitle["^"+loose(common.TocVisibleTitle(title))]
+	return i, ok
+}
+
+// The heading a `[[#anchor]]` link names: a CUSTOM_ID first (org's meaning),
+// then the github-style anchor of its title, numbered as toc-org numbers
+// twins (`notes`, `notes-1`), so a TOC written by toc-org or org-make-toc
+// links to its headings on the page.
+func (w *OrgHtmlWriter) findAnchor(anchor string) (int, bool) {
+	if w.headingByAnchor == nil {
+		w.headingByAnchor = map[string]int{}
+		heads := []*org.Headline{}
+		var walk func(*org.Section)
+		walk = func(sec *org.Section) {
+			if sec == nil {
+				return
+			}
+			if sec.Headline != nil {
+				heads = append(heads, sec.Headline)
+			}
+			for _, c := range sec.Children {
+				walk(c)
+			}
+		}
+		if w.SrcDoc != nil {
+			walk(w.SrcDoc.Outline.Section)
+		}
+		visibles := make([]string, len(heads))
+		for i, h := range heads {
+			visibles[i] = common.TocVisibleTitle(org.String(h.Title...))
+		}
+		gh := common.TocAnchors(visibles)
+		for i, h := range heads {
+			if _, ok := w.headingByAnchor[gh[i]]; !ok {
+				w.headingByAnchor[gh[i]] = h.Index
+			}
+		}
+		for _, h := range heads {
+			if h.Properties != nil {
+				if id, ok := h.Properties.Get("CUSTOM_ID"); ok && id != "" {
+					w.headingByAnchor[id] = h.Index
+				}
+			}
+		}
+	}
+	i, ok := w.headingByAnchor[anchor]
 	return i, ok
 }
 
 func (w *OrgHtmlWriter) WriteRegularLink(l org.RegularLink) {
+	if w.writeMediaNoteLink(l) { // medianote.go: org-media-note links as a player (features.mediaNotes)
+		return
+	}
+	if w.writeCanvasLink(l) { // canvas.go: [[file:x.canvas]] drawn as the canvas (features.canvas)
+		return
+	}
+	if open := w.hoverLinkOpen(l); open != "" { // hoverlink.go: the link's text for worg's hover previews (features.hoverEditor)
+		w.WriteString(open)
+		w.writeLinkItself(l)
+		w.WriteString("</span>")
+		return
+	}
+	w.writeLinkItself(l)
+}
+
+func (w *OrgHtmlWriter) writeLinkItself(l org.RegularLink) {
 	// `[[*Title]]` - a heading of this document. Left to go-org it is written
 	// as a relative url, `*Title`, that goes nowhere.
+	// `[[#anchor]]` - a heading by CUSTOM_ID, or by the anchor a table of
+	// contents (toc-org's github links) names it by. The page's ids are not
+	// either, so left alone it would go nowhere.
+	if l.Protocol == "" && strings.HasPrefix(l.URL, "#") && len(l.URL) > 1 {
+		if index, ok := w.findAnchor(l.URL[1:]); ok {
+			description := html.EscapeString(l.URL[1:])
+			if l.Description != nil {
+				description = w.WriteNodesAsString(l.Description...)
+			}
+			w.WriteString(fmt.Sprintf(`<a href="#%s" class="heading-link">%s</a>`, w.headingID(index), description))
+			return
+		}
+	}
 	if l.Protocol == "" && strings.HasPrefix(l.URL, "*") {
 		if index, ok := w.findHeading(strings.TrimSpace(l.URL[1:])); ok {
 			description := html.EscapeString(strings.TrimSpace(l.URL[1:]))
@@ -823,6 +910,9 @@ func (self *OrgHtmlExporter) ExportToString(db common.ODb, query string, opts st
 		org.WriteNodes(w, f.Nodes...)
 		fmt.Fprintf(os.Stderr, "Done writing nodes...\n")
 		res := w.String()
+		if common.LatexSuiteActive() && strings.Contains(res, `class="org-math `) {
+			res += LatexMathLoader() // latexmath.go
+		}
 		self.Props["html_data"] = res
 		self.Props["post_scripts"] = w.PostWriteScripts
 		nodestr, _ := json.Marshal(w.Nodes)
@@ -890,7 +980,11 @@ func GetStylesheet(name string, fontfamily string) string {
 		re := regexp.MustCompile(`url\(([^)]+)\)`)
 		ff := regexp.MustCompile(`[{][{]fontfamily[}][}]`)
 
-		return ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily) + audioStyles
+		css := ff.ReplaceAllString(re.ReplaceAllString(string(data), "url(http://localhost:8010/${1})"), fontfamily) + audioStyles
+		if common.CalloutsActive() {
+			css += common.CalloutCSS(strings.Contains(name, "dark"), strings.Contains(css, "prefers-color-scheme"))
+		}
+		return css
 	}
 	// An unknown theme name still has to produce a styled page.
 	if name != "default" {
@@ -992,6 +1086,20 @@ func (self *OrgHtmlExporter) RenderFragmentIn(doc *org.Document, nodes ...org.No
 	if doc != nil {
 		w.Document = doc
 	}
+	org.WriteNodes(w, nodes...)
+	return w.String()
+}
+
+// RenderCardFragmentIn is RenderFragmentIn for a canvas card: canvas links
+// stay links, so a heading that links its own board does not draw it inside
+// itself.
+func (self *OrgHtmlExporter) RenderCardFragmentIn(doc *org.Document, nodes ...org.Node) string {
+	self.Props = ValidateMap(self.Props)
+	w := NewOrgHtmlWriter(self)
+	if doc != nil {
+		w.Document = doc
+	}
+	w.noCanvasEmbed = true
 	org.WriteNodes(w, nodes...)
 	return w.String()
 }

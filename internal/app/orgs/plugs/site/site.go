@@ -343,7 +343,7 @@ func (b *builder) addPage(s Source) {
 		return
 	}
 	rel = filepath.ToSlash(rel)
-	// A hidden folder (.git, .obsidian) or an archive file is not content.
+	// A hidden folder (.git, .trash) or an archive file is not content.
 	for _, part := range strings.Split(rel, "/") {
 		if strings.HasPrefix(part, ".") || strings.HasPrefix(part, "_") {
 			return

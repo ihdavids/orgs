@@ -306,6 +306,7 @@ type RevealExporter struct {
 
 type RevealWriter struct {
 	*org.HTMLWriter
+	calloutStyled    bool // features.callouts: the callout stylesheet is written
 	exp              *RevealExporter
 	PostWriteScripts string
 	Opts             string
@@ -804,4 +805,14 @@ func init() {
 	common.AddExporter("revealjs", func() common.Exporter {
 		return &RevealExporter{Props: ValidateMap(map[string]interface{}{}), TemplatePath: "reveal_default.tpl"}
 	})
+}
+
+// WriteBlock draws a callout (features.callouts); every other block is
+// go-org's.
+func (w *RevealWriter) WriteBlock(b org.Block) {
+	if out, ok := slides.Callout(w.HTMLWriter, b, &w.calloutStyled); ok {
+		w.WriteString(out)
+		return
+	}
+	w.HTMLWriter.WriteBlock(b)
 }

@@ -4,7 +4,7 @@
 
 * Markdown
   The markdown exporter hands an org file to everybody who does not use org:
-  GitHub, Obsidian, and every static site generator there is.
+  GitHub, note apps, and every static site generator there is.
 
   To enable it, add it to the =exporters= list in your orgs.yaml:
 
@@ -34,8 +34,8 @@
      =~~strikethrough~~= and =[^1]= footnotes. This is what GitHub, GitLab and
      most static site generators read.
    - =obsidian= - GFM, plus =[[wikilinks]]= for links that point at another org
-     file and =![[embeds]]= for local images, which is how Obsidian addresses
-     things inside a vault.
+     file and =![[embeds]]= for local images, which is how wiki-style note apps
+     address things inside a vault.
    - =commonmark= - The lowest common denominator. No tables, no strikethrough
      and no footnote syntax, so those fall back to inline html - which
      CommonMark passes through untouched.
@@ -61,7 +61,7 @@
 ** Front matter
    By default the document's =#+TITLE:=, =#+AUTHOR:=, =#+DATE:= and
    =#+FILETAGS:= are written as a yaml front matter block, which is what
-   Obsidian, Hugo, Jekyll and Zola all read. Any =#+MD_<name>:= keyword is
+   Hugo, Jekyll, Zola and most note apps read. Any =#+MD_<name>:= keyword is
    written into it too, under =<name>= lowercased, so a file can carry whatever
    its destination wants:
 
@@ -123,7 +123,7 @@ type settings struct {
 
 const (
 	flavorGFM        = "gfm"
-	flavorObsidian   = "obsidian"
+	flavorWikilinks  = "obsidian"
 	flavorCommonMark = "commonmark"
 )
 
@@ -134,7 +134,7 @@ func (self *settings) extended() bool {
 }
 
 func (self *settings) wikiLinks() bool {
-	return self.flavor == flavorObsidian
+	return self.flavor == flavorWikilinks
 }
 
 // ---------------------------------------------------------------------------
@@ -182,13 +182,13 @@ func (self *OrgMdExporter) settingsFor(d *org.Document, props map[string]string)
 	}
 	// A caller can ask for a flavor of its own, which wins over what the file
 	// says - the same rule the html exporter follows for a theme, and what lets
-	// a client offer "give me this file as Obsidian markdown" without editing it.
+	// a client offer "give me this file as wikilink markdown" without editing it.
 	flavor := props["flavor"]
 	if flavor == "" {
 		flavor = get("MD_FLAVOR")
 	}
 	s := settings{
-		flavor:       pick(flavor, self.Flavor, flavorGFM, flavorGFM, flavorObsidian, flavorCommonMark),
+		flavor:       pick(flavor, self.Flavor, flavorGFM, flavorGFM, flavorWikilinks, flavorCommonMark),
 		frontMatter:  pick(get("MD_FRONTMATTER"), self.FrontMatter, "yaml", "yaml", "toml", "none"),
 		keyword:      pick(get("MD_KEYWORD"), self.Keyword, "bold", "bold", "text", "tag", "strip"),
 		tags:         pick(get("MD_TAGS"), self.Tags, "hash", "hash", "code", "strip"),
@@ -580,7 +580,7 @@ func (w *OrgMdWriter) WriteHeadline(h org.Headline) {
 		for _, t := range h.Tags {
 			switch w.Set.tags {
 			case "hash":
-				// Obsidian reads these as tags and everything else draws them
+				// Note apps read these as tags and everything else draws them
 				// as plain words, which is the right failure.
 				ts = append(ts, "#"+t)
 			case "code":
@@ -735,6 +735,14 @@ func fenceFor(content string) string {
 }
 
 func (w *OrgMdWriter) WriteBlock(b org.Block) {
+	// features.callouts: back to markdown's `> [!type]+ Title`, the shape
+	// `orgs import` reads them from.
+	if common.CalloutsActive() {
+		if c, ok := common.CalloutOfBlock(b); ok {
+			w.WriteString(calloutMarkdown(c, w.calloutTitle(c), w.blockContent(b.Name, b.Children)))
+			return
+		}
+	}
 	content, params := w.blockContent(b.Name, b.Children), b.ParameterMap()
 
 	switch strings.ToUpper(b.Name) {
@@ -895,7 +903,7 @@ func (w *OrgMdWriter) WriteExplicitLineBreak(l org.ExplicitLineBreak) {
 
 func (w *OrgMdWriter) WriteLatexFragment(l org.LatexFragment) {
 	// Passed through as written. Every place that renders maths in markdown -
-	// GitHub, Obsidian, Hugo with KaTeX - reads the delimiters org already uses.
+	// GitHub, note apps, Hugo with KaTeX - reads the delimiters org already uses.
 	was := w.raw
 	w.raw = true
 	w.WriteString(l.OpeningPair)
@@ -962,8 +970,8 @@ func (w *OrgMdWriter) linkTarget(l org.RegularLink) string {
 		return url
 	}
 
-	// A `::` search inside a file becomes an anchor, which is how both GitHub
-	// and Obsidian address a heading in another document.
+	// A `::` search inside a file becomes an anchor, which is how GitHub and
+	// wiki-style note apps address a heading in another document.
 	anchor := ""
 	if i := strings.Index(url, "::"); i >= 0 {
 		anchor = strings.TrimPrefix(strings.TrimPrefix(url[i+2:], "*"), "#")
@@ -1074,8 +1082,8 @@ func (w *OrgMdWriter) WriteRegularLink(l org.RegularLink) {
 	isImage := l.Kind() == "image" || isImageTarget(target)
 	local := l.Protocol == "file" || l.Protocol == ""
 
-	// Obsidian addresses things in the vault by name rather than by path, and
-	// an embed is how it shows a picture. Only for local targets: a url is a url
+	// The wikilink flavor addresses things in the vault by name rather than by
+	// path, and an embed is how it shows a picture. Only for local targets: a url is a url
 	// in every dialect.
 	if w.Set.wikiLinks() && local && !strings.HasPrefix(target, "#") {
 		name := strings.TrimSuffix(target, path.Ext(target))
@@ -1560,4 +1568,39 @@ func tidy(s string) string {
 	s = manyBlankLines.ReplaceAllString(s, "\n\n")
 	s = strings.TrimLeft(s, "\n")
 	return strings.TrimRight(s, "\n") + "\n"
+}
+
+func (w *OrgMdWriter) calloutTitle(c common.Callout) string {
+	if nodes := common.CalloutTitleNodes(c.Title); nodes != nil {
+		return strings.TrimSpace(w.WriteNodesAsString(nodes...))
+	}
+	return c.Title
+}
+
+// calloutMarkdown is a callout as markdown writes one: the type as the block
+// named it (an alias stays an alias), + or - for a fold, the title, then the
+// body quoted.
+func calloutMarkdown(c common.Callout, title, body string) string {
+	kind := c.Name
+	if kind == "callout" || c.Unknown != "" {
+		kind = c.Type
+		if c.Unknown != "" {
+			kind = c.Unknown
+		}
+	}
+	head := "> [!" + kind + "]"
+	switch c.Fold {
+	case "open":
+		head += "+"
+	case "closed":
+		head += "-"
+	}
+	if title != "" {
+		head += " " + title
+	}
+	out := head + "\n"
+	if strings.TrimSpace(body) != "" {
+		out += blockQuote(body)
+	}
+	return out + "\n"
 }

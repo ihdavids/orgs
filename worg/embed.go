@@ -15,6 +15,8 @@ import "embed"
 // English dictionary the editor's writing mode spells with (en.aff, en.dic).
 // pdfjs/ is pdf.js's worker for the Noter tab (worg's `npm run pdfjs`): pdf.js
 // loads it by url, so it is a file here rather than part of the bundle.
+// excalidraw-assets/ is the drawing editor's fonts and chunks (worg's `npm
+// run excalidraw`), fetched by url from the page's own folder.
 //
-//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict harper pdfjs
+//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict harper pdfjs excalidraw-assets
 var Content embed.FS

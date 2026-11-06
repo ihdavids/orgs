@@ -1,0 +1,26 @@
+#+TITLE: Routines
+
+Things that come round again. The rule between the bars says when: marking
+one done moves it to its next date instead of closing it.
+
+* Home
+** TODO Water the balcony herbs |+2|
+   SCHEDULED: <{{D+0}}>
+   Basil every other day; the rosemary can wait for the weekend.
+** TODO Take the recycling out |Tue|
+   SCHEDULED: <{{D+2}}>
+** TODO Change the furnace filter |+3m|
+   SCHEDULED: <{{D+12}}>
+   Size 16x25x1. Spare filters are on the shelf above the dryer.
+** TODO Pay the credit card |1,15|
+   SCHEDULED: <{{D+3}}>
+
+* Me
+** TODO Gym |Mon,Thu|
+   SCHEDULED: <{{D+0}}>
+** TODO Call Mum |Sun 18:00|
+   SCHEDULED: <{{D+1}} 18:00>
+** TODO Back up the photo library |wkdy|
+   SCHEDULED: <{{D+0}}>
+** TODO Renew the parking permit |dec 1|
+   SCHEDULED: <{{D+26}}>

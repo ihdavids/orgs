@@ -1,0 +1,323 @@
+[
+  {
+    "name": "toc-org: depth 2, github links, keyword priority tags and cookies off, the TOC heading and noexport left out",
+    "in": [
+      "#+TITLE: Notes",
+      "* Contents :TOC:",
+      "old text that goes",
+      "* TODO [#A] About this [1/2] :work:",
+      "** Installation",
+      "*** Too deep",
+      "* Private :noexport:",
+      "** Under private",
+      "* About this",
+      "* Via package.el"
+    ],
+    "out": [
+      "#+TITLE: Notes",
+      "* Contents :TOC:",
+      "- [[#about-this][About this]]",
+      "  - [[#installation][Installation]]",
+      "- [[#about-this-1][About this]]",
+      "- [[#via-packageel][Via package.el]]",
+      "",
+      "* TODO [#A] About this [1/2] :work:",
+      "** Installation",
+      "*** Too deep",
+      "* Private :noexport:",
+      "** Under private",
+      "* About this",
+      "* Via package.el"
+    ]
+  },
+  {
+    "name": "toc-org: TOC_3_org in a quote, drawers under the headline kept, blank lines before the next heading kept",
+    "in": [
+      "* Table of Contents :TOC_3_org:QUOTE:",
+      ":PROPERTIES:",
+      ":ID: x1",
+      ":END:",
+      "- [[#stale][Stale]]",
+      "",
+      "",
+      "* One",
+      "** Two",
+      "*** Three [[https://x.org][link]] here",
+      "**** Four"
+    ],
+    "out": [
+      "* Table of Contents :TOC_3_org:QUOTE:",
+      ":PROPERTIES:",
+      ":ID: x1",
+      ":END:",
+      "#+BEGIN_QUOTE",
+      "- [[*One][One]]",
+      "  - [[*Two][Two]]",
+      "    - [[*Three link here][Three link here]]",
+      "#+END_QUOTE",
+      "",
+      "",
+      "* One",
+      "** Two",
+      "*** Three [[https://x.org][link]] here",
+      "**** Four"
+    ]
+  },
+  {
+    "name": "toc-org: noexport_1 keeps the heading but not its children, COMMENT goes with its subtree, #+TODO keywords, CUSTOM_ID wins",
+    "in": [
+      "#+TODO: NEXT WAIT | DONE",
+      "* NEXT Plan :noexport_1:",
+      "** Hidden child",
+      "* COMMENT Drafts",
+      "** Draft one",
+      "* WAIT Keys",
+      ":PROPERTIES:",
+      ":CUSTOM_ID: the-keys",
+      ":END:",
+      "* Index :TOC_2_gh:"
+    ],
+    "out": [
+      "#+TODO: NEXT WAIT | DONE",
+      "* NEXT Plan :noexport_1:",
+      "** Hidden child",
+      "* COMMENT Drafts",
+      "** Draft one",
+      "* WAIT Keys",
+      ":PROPERTIES:",
+      ":CUSTOM_ID: the-keys",
+      ":END:",
+      "* Index :TOC_2_gh:",
+      "- [[#plan][Plan]]",
+      "- [[#the-keys][Keys]]"
+    ]
+  },
+  {
+    "name": "org-make-toc: include all, ignore this, the drawer filled and the text around it kept",
+    "in": [
+      "* Contents",
+      ":PROPERTIES:",
+      ":TOC: :include all :ignore this",
+      ":END:",
+      "Before the list.",
+      ":CONTENTS:",
+      "- old",
+      ":END:",
+      "After the list.",
+      "* Alpha",
+      "** Alpha one",
+      "* Beta"
+    ],
+    "out": [
+      "* Contents",
+      ":PROPERTIES:",
+      ":TOC: :include all :ignore this",
+      ":END:",
+      "Before the list.",
+      ":CONTENTS:",
+      "- [[#alpha][Alpha]]",
+      "  - [[#alpha-one][Alpha one]]",
+      "- [[#beta][Beta]]",
+      ":END:",
+      "After the list.",
+      "* Alpha",
+      "** Alpha one",
+      "* Beta"
+    ]
+  },
+  {
+    "name": "org-make-toc: descendants to depth 1, an empty drawer filled, org links",
+    "in": [
+      "* Guide",
+      ":PROPERTIES:",
+      ":TOC: :include descendants :depth 1 :links org",
+      ":END:",
+      ":CONTENTS:",
+      ":END:",
+      "Intro text.",
+      "** Start",
+      "*** Deeper",
+      "** Finish",
+      "* Elsewhere"
+    ],
+    "out": [
+      "* Guide",
+      ":PROPERTIES:",
+      ":TOC: :include descendants :depth 1 :links org",
+      ":END:",
+      ":CONTENTS:",
+      "- [[*Start][Start]]",
+      "- [[*Finish][Finish]]",
+      ":END:",
+      "Intro text.",
+      "** Start",
+      "*** Deeper",
+      "** Finish",
+      "* Elsewhere"
+    ]
+  },
+  {
+    "name": "org-make-toc: siblings, ignore descendants and a heading's own depth",
+    "in": [
+      "* Top",
+      "** Map",
+      "   :PROPERTIES:",
+      "   :TOC: :include siblings :ignore this",
+      "   :END:",
+      "   :CONTENTS:",
+      "   :END:",
+      "** First",
+      "   :PROPERTIES:",
+      "   :TOC: :ignore descendants",
+      "   :END:",
+      "*** Not listed",
+      "** Second",
+      "   :PROPERTIES:",
+      "   :TOC: :depth 1",
+      "   :END:",
+      "*** Listed",
+      "**** Too deep for Second",
+      "* Other top"
+    ],
+    "out": [
+      "* Top",
+      "** Map",
+      "   :PROPERTIES:",
+      "   :TOC: :include siblings :ignore this",
+      "   :END:",
+      "   :CONTENTS:",
+      "   - [[#first][First]]",
+      "   - [[#second][Second]]",
+      "     - [[#listed][Listed]]",
+      "   :END:",
+      "** First",
+      "   :PROPERTIES:",
+      "   :TOC: :ignore descendants",
+      "   :END:",
+      "*** Not listed",
+      "** Second",
+      "   :PROPERTIES:",
+      "   :TOC: :depth 1",
+      "   :END:",
+      "*** Listed",
+      "**** Too deep for Second",
+      "* Other top"
+    ]
+  },
+  {
+    "name": "org-make-toc: a local depth is ignored by a TOC higher up, force depth overrides the headings' own",
+    "in": [
+      "* All",
+      ":PROPERTIES:",
+      ":TOC: :include all :ignore this :force depth",
+      ":END:",
+      ":CONTENTS:",
+      ":END:",
+      "* Part",
+      ":PROPERTIES:",
+      ":TOC: :include descendants :depth 1 :local depth",
+      ":END:",
+      ":CONTENTS:",
+      ":END:",
+      "** Chapter",
+      "*** Section",
+      "* Short",
+      ":PROPERTIES:",
+      ":TOC: :depth 0",
+      ":END:",
+      "** Still listed (forced)"
+    ],
+    "out": [
+      "* All",
+      ":PROPERTIES:",
+      ":TOC: :include all :ignore this :force depth",
+      ":END:",
+      ":CONTENTS:",
+      "- [[#part][Part]]",
+      "  - [[#chapter][Chapter]]",
+      "    - [[#section][Section]]",
+      "- [[#short][Short]]",
+      "  - [[#still-listed-forced][Still listed (forced)]]",
+      ":END:",
+      "* Part",
+      ":PROPERTIES:",
+      ":TOC: :include descendants :depth 1 :local depth",
+      ":END:",
+      ":CONTENTS:",
+      "- [[#chapter][Chapter]]",
+      ":END:",
+      "** Chapter",
+      "*** Section",
+      "* Short",
+      ":PROPERTIES:",
+      ":TOC: :depth 0",
+      ":END:",
+      "** Still listed (forced)"
+    ]
+  },
+  {
+    "name": "dynamic block: depth 2, org links, not the heading it is under, indented like its BEGIN line",
+    "in": [
+      "* Overview",
+      "  #+BEGIN: toc :depth 2",
+      "  - stale",
+      "  #+END:",
+      "* One",
+      "** One a",
+      "*** One a i",
+      "* Two :noexport:",
+      "#+BEGIN_SRC org",
+      "#+BEGIN: toc",
+      "#+END:",
+      "#+END_SRC"
+    ],
+    "out": [
+      "* Overview",
+      "  #+BEGIN: toc :depth 2",
+      "  - [[*One][One]]",
+      "    - [[*One a][One a]]",
+      "  #+END:",
+      "* One",
+      "** One a",
+      "*** One a i",
+      "* Two :noexport:",
+      "#+BEGIN_SRC org",
+      "#+BEGIN: toc",
+      "#+END:",
+      "#+END_SRC"
+    ]
+  },
+  {
+    "name": "dynamic block above the first heading lists everything; gh links on request",
+    "in": [
+      "#+BEGIN: toc :links gh",
+      "#+END:",
+      "* Ünïcode Title!",
+      "* Second"
+    ],
+    "out": [
+      "#+BEGIN: toc :links gh",
+      "- [[#ünïcode-title][Ünïcode Title!]]",
+      "- [[#second][Second]]",
+      "#+END:",
+      "* Ünïcode Title!",
+      "* Second"
+    ]
+  },
+  {
+    "name": "toc-org: only the first :TOC: heading is written, both are left out; an empty TOC at the end of the file",
+    "in": [
+      "* A :TOC:",
+      "* B :noexport:",
+      "* C :TOC_1:",
+      "text stays"
+    ],
+    "out": [
+      "* A :TOC:",
+      "",
+      "* B :noexport:",
+      "* C :TOC_1:",
+      "text stays"
+    ]
+  }
+]

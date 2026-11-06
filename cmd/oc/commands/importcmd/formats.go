@@ -155,7 +155,7 @@ func commonDir2(paths []string) string {
 }
 
 // ----------------------------------------------------------------------------
-// Markdown and Obsidian vaults
+// Markdown files and vaults
 // ----------------------------------------------------------------------------
 
 // Folders a vault keeps that are not notes.

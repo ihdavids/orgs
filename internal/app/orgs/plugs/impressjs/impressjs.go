@@ -269,6 +269,7 @@ type ImpressExporter struct {
 
 type ImpressWriter struct {
 	*org.HTMLWriter
+	calloutStyled    bool // features.callouts: the callout stylesheet is written
 	exp   *ImpressExporter
 	Opts  string
 	conf  slides.Conf
@@ -799,4 +800,14 @@ func init() {
 	common.AddExporter("impressjs", func() common.Exporter {
 		return &ImpressExporter{Props: ValidateMap(map[string]interface{}{}), ThemePath: "./templates", TemplatePath: "impress_default.tpl"}
 	})
+}
+
+// WriteBlock draws a callout (features.callouts); every other block is
+// go-org's.
+func (w *ImpressWriter) WriteBlock(b org.Block) {
+	if out, ok := slides.Callout(w.HTMLWriter, b, &w.calloutStyled); ok {
+		w.WriteString(out)
+		return
+	}
+	w.HTMLWriter.WriteBlock(b)
 }

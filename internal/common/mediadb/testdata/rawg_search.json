@@ -1,0 +1,4 @@
+{"count":2,"results":[
+ {"id":3328,"slug":"the-witcher-3-wild-hunt","name":"The Witcher 3: Wild Hunt","released":"2015-05-18","background_image":"https://media.rawg.io/media/games/618/618c2031a07bbff6b4f611f10b6bcdbc.jpg","platforms":[{"platform":{"name":"PC"}},{"platform":{"name":"PlayStation 4"}}],"genres":[{"name":"Action"},{"name":"RPG"}]},
+ {"id":10,"slug":"the-witcher","name":"The Witcher","released":"2007-10-24","background_image":null,"platforms":[{"platform":{"name":"PC"}}]}
+]}

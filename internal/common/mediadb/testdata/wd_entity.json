@@ -1,0 +1,431 @@
+{
+    "entities": {
+        "Q20382729": {
+            "type": "item",
+            "id": "Q20382729",
+            "labels": {
+                "en": {
+                    "language": "en",
+                    "value": "Arrival"
+                }
+            },
+            "descriptions": {
+                "en": {
+                    "language": "en",
+                    "value": "2016 science fiction film by Denis Villeneuve"
+                }
+            },
+            "claims": {
+                "P31": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P31",
+                            "hash": "fa41184cb03f49f0edfbf2fc4f9d33e35afecaea",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 11424,
+                                    "id": "Q11424"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$C3A3146D-C498-4783-AF91-D3B4A33C4215",
+                        "rank": "normal"
+                    }
+                ],
+                "P577": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P577",
+                            "hash": "bd68103c5c0e7e256cf5ee0be6bbb5e77eb0972b",
+                            "datavalue": {
+                                "value": {
+                                    "time": "+2016-11-11T00:00:00Z",
+                                    "timezone": 0,
+                                    "before": 0,
+                                    "after": 0,
+                                    "precision": 11,
+                                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+                                },
+                                "type": "time"
+                            },
+                            "datatype": "time"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$88951eaa-4c5a-2a5d-7bdf-f94a93d9e03b",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P577",
+                            "hash": "72145611cddf1243927790f760fe6d40134c90ce",
+                            "datavalue": {
+                                "value": {
+                                    "time": "+2016-11-10T00:00:00Z",
+                                    "timezone": 0,
+                                    "before": 0,
+                                    "after": 0,
+                                    "precision": 11,
+                                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+                                },
+                                "type": "time"
+                            },
+                            "datatype": "time"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$d0ff13ef-4a80-0bc0-f9c0-6c85e2daf854",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P577",
+                            "hash": "80863ad2232b9141ed5026a8e1927961d0c0d702",
+                            "datavalue": {
+                                "value": {
+                                    "time": "+2016-11-24T00:00:00Z",
+                                    "timezone": 0,
+                                    "before": 0,
+                                    "after": 0,
+                                    "precision": 11,
+                                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727"
+                                },
+                                "type": "time"
+                            },
+                            "datatype": "time"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$7090e277-4a55-7eb6-3ee7-4293fcfe0f49",
+                        "rank": "normal"
+                    }
+                ],
+                "P57": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P57",
+                            "hash": "27861525dea0695b7f632577bc6e1c4624a67974",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 548823,
+                                    "id": "Q548823"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$93FD369A-82DC-4CCF-8DBC-63BF52640C59",
+                        "rank": "normal"
+                    }
+                ],
+                "P161": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P161",
+                            "hash": "409c03cdc22ed7ad8ccca802039040c7f6df53b7",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 481832,
+                                    "id": "Q481832"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$E60AE03F-263A-48A9-9209-D760E6EFC86D",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P161",
+                            "hash": "708889f008acb695bf661926cdadb8de1d811328",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 23365,
+                                    "id": "Q23365"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$0a0095fe-4ba8-c4a2-afb3-0c794e8608bf",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P161",
+                            "hash": "4e52147a17b93faf2bad6e3b1bc762100fe23c62",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 182763,
+                                    "id": "Q182763"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$796c9587-4a71-b3d1-0da0-a18b3c7eca14",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P161",
+                            "hash": "82c7c6e642bd6d5dbb9542dbf009dcb4d74742c9",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 438445,
+                                    "id": "Q438445"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$24817687-48f2-4421-2234-f6db44d7af89",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P161",
+                            "hash": "0132039d26eded7e8750b819c7c4ab0857687acb",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 598178,
+                                    "id": "Q598178"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$c8069be0-4a2f-c3d5-1f59-74478c3b7706",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P161",
+                            "hash": "22a519bb478a7841692bd8f30f2246451518a19d",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 21063644,
+                                    "id": "Q21063644"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$fc64b767-48bc-6447-f3c3-a75bb7831e9a",
+                        "rank": "normal"
+                    }
+                ],
+                "P136": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P136",
+                            "hash": "cc5871474d42b97301fbb224fe70dbd9efb377ef",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 130232,
+                                    "id": "Q130232"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$DD4FE61F-B4CC-47F9-BBCA-3AA98ACAEE9A",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P136",
+                            "hash": "b4bcdad0d6a7c47e3be229c4e0dd51cf143af691",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 471839,
+                                    "id": "Q471839"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$809FCEC9-ECE7-4852-B507-DDD19CA3E4E7",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P136",
+                            "hash": "893e9a0e060b6343532cde22ebbb744dc3f7c195",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 2484376,
+                                    "id": "Q2484376"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$8DAC54A5-6A3B-4E24-B235-D761B5295CDE",
+                        "rank": "normal"
+                    },
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P136",
+                            "hash": "d1448f98456e86721fbc4ac56e40598cb438a7ce",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 1200678,
+                                    "id": "Q1200678"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$4D6AF9A0-B346-4801-ADCE-36A7A89CB49A",
+                        "rank": "normal"
+                    }
+                ],
+                "P2047": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P2047",
+                            "hash": "dbb7cf54e8f638ad8ae87607b626ea73c91d7b3a",
+                            "datavalue": {
+                                "value": {
+                                    "amount": "+116",
+                                    "unit": "http://www.wikidata.org/entity/Q7727"
+                                },
+                                "type": "quantity"
+                            },
+                            "datatype": "quantity"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$A024C25D-6800-4B0A-8F54-247DB255AEFE",
+                        "rank": "normal"
+                    }
+                ],
+                "P18": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P18",
+                            "hash": "9696a539c194f22f9bf8d0f1fabd19b8212ad51d",
+                            "datavalue": {
+                                "value": "Arrival 2016 Film.png",
+                                "type": "string"
+                            },
+                            "datatype": "commonsMedia"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$e5903156-426d-c586-a625-4960b8d193c0",
+                        "rank": "normal"
+                    }
+                ],
+                "P495": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P495",
+                            "hash": "7f985e15819b74ed189d022e004890e66d2ae42e",
+                            "datavalue": {
+                                "value": {
+                                    "entity-type": "item",
+                                    "numeric-id": 30,
+                                    "id": "Q30"
+                                },
+                                "type": "wikibase-entityid"
+                            },
+                            "datatype": "wikibase-item"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$170D6F6D-E39D-40AA-8AA9-96F2092CBF5A",
+                        "rank": "normal"
+                    }
+                ],
+                "P1476": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P1476",
+                            "hash": "b2d156ce866dbc58fbf3199de9dc1794cb0d98c6",
+                            "datavalue": {
+                                "value": {
+                                    "text": "Arrival",
+                                    "language": "en"
+                                },
+                                "type": "monolingualtext"
+                            },
+                            "datatype": "monolingualtext"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$F231BF86-D2B4-4C0A-A784-881B3C72985A",
+                        "rank": "normal"
+                    }
+                ],
+                "P345": [
+                    {
+                        "mainsnak": {
+                            "snaktype": "value",
+                            "property": "P345",
+                            "hash": "cf48ac63151da9df39b714a36154aa94133186a1",
+                            "datavalue": {
+                                "value": "tt2543164",
+                                "type": "string"
+                            },
+                            "datatype": "external-id"
+                        },
+                        "type": "statement",
+                        "id": "Q20382729$6631D183-62EA-4F7C-8BFC-7169F775907D",
+                        "rank": "normal"
+                    }
+                ]
+            },
+            "sitelinks": {
+                "enwiki": {
+                    "site": "enwiki",
+                    "title": "Arrival (film)",
+                    "badges": [
+                        "Q17437798"
+                    ]
+                }
+            }
+        }
+    },
+    "success": 1
+}

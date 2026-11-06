@@ -1,0 +1,49 @@
+#+TITLE: Allotment handbook
+
+Everything about plot 14 at the Elm Road allotments: what grows where, when
+to sow, and who to ask.
+
+* Contents                                                              :TOC:
+- [[#the-plot][The plot]]
+  - [[#beds-and-rotation][Beds and rotation]]
+  - [[#water-and-the-shed][Water and the shed]]
+- [[#sowing-calendar][Sowing calendar]]
+  - [[#spring][Spring]]
+  - [[#summer][Summer]]
+  - [[#autumn-and-winter][Autumn and winter]]
+- [[#pests-and-problems][Pests and problems]]
+- [[#people][People]]
+
+* The plot
+  Ten metres by five, facing south, with the compost bins at the north end.
+** Beds and rotation
+   Four beds, moved round one place each year so nothing grows in the same
+   soil two years running.
+
+   | Bed | This year       | Next year       |
+   |-----+-----------------+-----------------|
+   |   1 | Potatoes        | Beans and peas  |
+   |   2 | Beans and peas  | Brassicas       |
+   |   3 | Brassicas       | Roots and onions |
+   |   4 | Roots and onions | Potatoes        |
+** Water and the shed
+   The trough by the gate is shared; fill the cans before 9 on hot days.
+   The shed key is on the hook behind the door, code 4-1-7.
+
+* Sowing calendar
+** Spring
+   Broad beans and peas under fleece in March; first earlies in at Easter.
+** Summer
+   Successional lettuce every three weeks; French beans until July.
+** Autumn and winter
+   Garlic and overwintering onions in October, then mulch the empty beds.
+
+* Pests and problems
+  Slugs: beer traps and a torch walk after rain. Pigeons: net the brassicas.
+
+* People
+  Maureen on plot 12 knows everything about leeks. The committee meets on
+  the first Saturday of the month.
+
+* Old notes                                                        :noexport:
+  The previous holder's seed list, kept for reference.

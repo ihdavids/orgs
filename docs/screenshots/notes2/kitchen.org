@@ -1,0 +1,36 @@
+#+TITLE: Kitchen renovation
+#+TIMELINE: group:parent title:"Kitchen renovation" from:-3w to:+6w
+
+* Planning
+** DONE Measure up and draw the plan
+   CLOSED: [{{D-18}} 17:30]
+   SCHEDULED: <{{D-21}}> DEADLINE: <{{D-18}}>
+** DONE Three quotes from fitters
+   CLOSED: [{{D-9}} 12:10]
+   SCHEDULED: <{{D-17}}> DEADLINE: <{{D-9}}>
+** DONE Choose the worktop
+   CLOSED: [{{D-6}} 15:00]
+* Building work
+** DONE Strip out the old units
+   CLOSED: [{{D-2}} 18:00]
+   SCHEDULED: <{{D-4}}> DEADLINE: <{{D-2}}>
+** INPROGRESS Electrics and plumbing first fix
+   SCHEDULED: <{{D-1}}> DEADLINE: <{{D+4}}>
+** TODO Plaster and paint
+   SCHEDULED: <{{D+5}}> DEADLINE: <{{D+10}}>
+** TODO Fit units and worktop
+   SCHEDULED: <{{D+11}}> DEADLINE: <{{D+18}}>
+** TODO Tiling the splashback
+   SCHEDULED: <{{D+19}}> DEADLINE: <{{D+22}}>
+* Deliveries
+** TODO Units arrive
+   <{{D+9}} 08:00>
+** TODO Worktop templating visit
+   <{{D+12}} 10:00>
+** TODO Oven and hob delivered
+   <{{D+17}}>
+* Finishing
+** TODO Building control sign-off
+   DEADLINE: <{{D+25}}>
+** TODO First dinner in the new kitchen
+   <{{D+28}} 19:30>

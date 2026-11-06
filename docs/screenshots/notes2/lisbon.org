@@ -1,0 +1,79 @@
+#+TITLE: Lisbon, in May
+#+FILETAGS: :travel:
+
+Five days with Sam. Flights booked, the flat is in Alfama.
+
+#+MAP: title:"Lisbon" height:380 colour:tag
+
+* The flat in Alfama                                                  :stay:
+  :PROPERTIES:
+  :LOCATION: 38.7114, -9.1296
+  :END:
+  Keys from the café downstairs after 15:00. Third floor, no lift.
+
+* DONE Castelo de São Jorge                                          :sight:
+  CLOSED: [{{D-6}} 11:40]
+  :PROPERTIES:
+  :LOCATION: 38.7139, -9.1335
+  :END:
+  Go at opening, before the tour buses. The peacocks are real.
+
+* TODO Miradouro da Senhora do Monte                                 :sight:
+  :PROPERTIES:
+  :LOCATION: 38.7193, -9.1325
+  :END:
+  The best view in the city at sunset. Take a bottle of vinho verde.
+
+* TODO Tram 28 from Martim Moniz                                     :sight:
+  :PROPERTIES:
+  :LOCATION: 38.7163, -9.1356
+  :END:
+  Board at the first stop to get a seat; it fills up by Graça.
+
+* DONE Time Out Market                                                :food:
+  CLOSED: [{{D-5}} 20:15]
+  :PROPERTIES:
+  :LOCATION: 38.7069, -9.1459
+  :END:
+  Too busy at eight. The croquetes at Croqueteria were worth the queue.
+
+* TODO Livraria Bertrand                                             :shop:
+  :PROPERTIES:
+  :LOCATION: 38.7108, -9.1424
+  :END:
+  The oldest bookshop still open. Look for a Pessoa in translation.
+
+* TODO A Cevicheria                                                   :food:
+  :PROPERTIES:
+  :LOCATION: 38.7166, -9.1489
+  :END:
+  No bookings; put a name down and walk round Príncipe Real.
+
+* TODO LX Factory on Sunday                                          :shop:
+  :PROPERTIES:
+  :LOCATION: 38.7034, -9.1784
+  :END:
+  Market in the morning, then lunch at the old printing works.
+
+* TODO Pastéis de Belém                                               :food:
+  :PROPERTIES:
+  :LOCATION: 38.6975, -9.2032
+  :END:
+  Eat them warm, with cinnamon. The queue for take-away moves fast.
+
+* TODO Mosteiro dos Jerónimos                                        :sight:
+  :PROPERTIES:
+  :LOCATION: 38.6979, -9.2068
+  :END:
+  Book online; the cloister is the part to see.
+
+* TODO Torre de Belém                                                :sight:
+  :PROPERTIES:
+  :LOCATION: 38.6916, -9.2160
+  :END:
+
+* TODO Gulbenkian museum and garden                                  :sight:
+  :PROPERTIES:
+  :LOCATION: 38.7372, -9.1546
+  :END:
+  Free on Sunday afternoons. The garden alone is worth an hour.

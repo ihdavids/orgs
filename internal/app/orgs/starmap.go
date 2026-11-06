@@ -14,8 +14,8 @@ package orgs
 //  2. A star's weight and its birthday come off the disk. Size, modification
 //     time, a date in the file's name, a CREATED property - none of it is on the
 //     wire anywhere else.
-//  3. The outline is the relationship org is made of. Obsidian has folders and
-//     links and nothing else; org has a tree, and a starmap that ignored it
+//  3. The outline is the relationship org is made of. Many note apps have
+//     folders and links and nothing else; org has a tree, and a starmap that ignored it
 //     would draw nine tenths of a database as unconnected dust. The structural
 //     edges are handed over *named* as outline edges rather than mixed in with
 //     the links, so a client can draw them differently and count them

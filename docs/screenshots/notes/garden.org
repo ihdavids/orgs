@@ -1,0 +1,139 @@
+#+TITLE: Kitchen garden
+#+FILETAGS: :garden:
+
+* The plan
+  Four beds behind the shed, the water butt by the back door and the compost
+  bays along the fence. The board keeps the order of things; the drawing is
+  how the rain gets from the roof to the beds. Where each crop goes is in
+  [[file:drawings/bed-layout.excalidraw][the bed layout]], and the order they move round in [[file:drawings/crop-rotation.excalidraw][the rotation]].
+
+  [[file:boards/garden-plan.canvas][The garden plan, autumn to spring]]
+
+  #+CAPTION: Rain from the shed roof to the beds
+  #+ATTR_HTML: :width 640
+  [[file:drawings/rainwater.excalidraw]]
+
+* Soil
+** No-dig beds
+   :PROPERTIES:
+   :ID:       3b1f6f0e-5c1a-4b0e-9a63-1d2f7c9e8a01
+   :END:
+   The beds are never dug. Each autumn a few centimetres of [[id:8d4c2a71-0e9b-4f3a-b6d5-2a7e9c1f4b02][compost]] go on
+   top and the worms pull it down over the winter. Digging breaks up the
+   fungal threads and brings weed seeds to the light, so the less the soil
+   is turned the better it holds its structure and its water.
+
+   A new bed starts on grass: wet cardboard first, then fifteen centimetres
+   of compost straight on top. Plant into it the same day.
+
+** Compost
+   :PROPERTIES:
+   :ID:       8d4c2a71-0e9b-4f3a-b6d5-2a7e9c1f4b02
+   :END:
+   Three bays: one filling, one heating, one ready. Greens are grass
+   clippings, kitchen peelings and comfrey; browns are cardboard, straw and
+   the autumn leaves. Roughly equal volumes of each, kept as damp as a wrung
+   sponge. Turning the heap once a month speeds it up but it rots down
+   either way, just slower.
+
+   A heap that smells sour has too many greens: add browns and turn it. A
+   heap that does nothing is too dry or too brown.
+
+** Leaf mould
+   Autumn leaves stacked on their own in a wire cage, wetted and left for two
+   years. Fungi rather than bacteria break the leaves down, slowly and cold,
+   into a dark crumbly mulch that holds water and smells of the woods. Oak
+   and beech are best; plane leaves take longer to rot. Bagged leaves with a
+   few holes in the bin bags work too.
+
+   Leaf mould and compost do different jobs: compost feeds the soil, leaf
+   mould conditions it. Use young leaf mould as a mulch on the beds and the
+   older, finer stuff in seed compost.
+
+** Mulching
+   Bare soil loses water and grows weeds. A mulch of compost, leaf mould or
+   straw keeps the ground covered, feeds the worms and the fungi underneath,
+   and stops the rain from capping the surface. Mulch after rain, never on
+   dry soil, and keep it off the stems of young plants.
+
+** Green manure
+   Field beans and crimson clover sown in September on the bed that comes
+   free, cut down in April and left on the surface as a mulch. The roots hold
+   the soil together over winter and the clover fixes nitrogen for the next
+   crop.
+
+* Water
+** Rainwater butts
+   :PROPERTIES:
+   :ID:       c27e5b39-61f0-4d8a-9e4b-7f3a0d2c6e03
+   :END:
+   Two linked butts on the shed downpipe, 400 litres between them, with an
+   overflow to the little pond. They fill in one good storm. A lid keeps the
+   mosquitoes and the leaves out. See the [[file:drawings/rainwater.excalidraw][rainwater drawing]] for the
+   pipework.
+
+** Drip line
+   A gravity drip line from the [[id:c27e5b39-61f0-4d8a-9e4b-7f3a0d2c6e03][water butts]] along the two tomato beds. It
+   needs the butts raised on blocks to get enough head, about fifty
+   centimetres, and a filter before the first dripper.
+
+** Watering in a heatwave
+   Water in the evening, deeply and less often, at the roots and not on the
+   leaves. A mulched [[id:3b1f6f0e-5c1a-4b0e-9a63-1d2f7c9e8a01][no-dig bed]] needs about half the water a bare one does.
+   Pots and seedlings first; established beans and squash can wait a day.
+
+* Crops
+** Tomatoes
+   :PROPERTIES:
+   :ID:       e5a9d1c4-2f7b-4e63-8a0d-9c4b1e7f2a04
+   :END:
+   Sungold, Gardener's Delight and San Marzano this year, grown as cordons up
+   strings in the two sunny beds, fed from the [[id:8d4c2a71-0e9b-4f3a-b6d5-2a7e9c1f4b02][compost]] bays and watered
+   from the [[id:c27e5b39-61f0-4d8a-9e4b-7f3a0d2c6e03][butts]].
+
+   #+begin_tip Pinch out the side shoots
+   Every week from June: the shoot in the angle between a side branch and
+   the stem. Keep the flower trusses. A cordon wants one stem and nothing else.
+   #+end_tip
+
+   #+begin_warning Frost
+   Not out before the middle of May. A single night at two degrees sets them
+   back by a month; keep fleece by the door.
+   #+end_warning
+
+   #+begin_info Feeding
+   Comfrey tea once a week from the first truss, a litre per plant, diluted
+   one to ten.
+   #+end_info
+
+   #+begin_faq Why is the fruit splitting? :fold closed
+   Uneven watering: a dry spell, then a downpour. Water deeply in the evening
+   and mulch so the ground stays evenly moist.
+   #+end_faq
+
+   #+begin_danger Blight
+   Brown patches after a warm wet week: cut away every affected stem at once
+   and burn it, never on the compost heap.
+   #+end_danger
+
+** Garlic
+   Planted on the shortest day, harvested on the longest. Into a [[id:3b1f6f0e-5c1a-4b0e-9a63-1d2f7c9e8a01][no-dig bed]]
+   with a little [[id:8d4c2a71-0e9b-4f3a-b6d5-2a7e9c1f4b02][compost]], a hand's width apart, pointy end up.
+
+** Squash
+   Three plants of Crown Prince on the edge of the [[id:8d4c2a71-0e9b-4f3a-b6d5-2a7e9c1f4b02][compost]] bays, where
+   they can spread over the fence. Cure the fruit in the sun for two weeks
+   before storing them.
+
+** Runner beans
+   A double row of canes on the north side of the [[id:3b1f6f0e-5c1a-4b0e-9a63-1d2f7c9e8a01][no-dig beds]] so they shade
+   nothing. Pick every other day or they stop flowering.
+
+* Pests
+** Slugs
+   Night patrols with a torch in May, a beer trap by the lettuces, and no
+   mulch right up against the seedlings. The frogs from the pond do the rest.
+
+** Aphids
+   Left alone for a week, the ladybirds and blue tits find them. A jet of
+   water knocks them off the broad bean tips if they don't.

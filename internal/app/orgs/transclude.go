@@ -885,28 +885,11 @@ func SaveTransclusion(req *TransclusionSave) common.ResultMsg {
 	if !transclusionOn() {
 		return common.ResultMsg{Msg: "transclusion is off"}
 	}
-	f := GetDb().FindByFile(req.File)
-	if f == nil || f.Filename != filepath.Clean(req.File) {
-		return common.ResultMsg{Msg: "that is not an org file this server has"}
-	}
-	lines, err := readFileLines(f.Filename)
-	if err != nil {
-		return common.ResultMsg{Msg: err.Error()}
-	}
-	nl := len(lines) > 0 && lines[len(lines)-1] == ""
-	if nl {
-		lines = lines[:len(lines)-1]
-	}
-	if req.From < 0 || req.To < req.From || req.To >= len(lines) ||
-		strings.Join(lines[req.From:req.To+1], "\n") != req.Old {
-		return common.ResultMsg{Msg: filepath.Base(f.Filename) + " has changed since this was read: reload and edit again"}
-	}
-	repl := strings.Split(strings.TrimRight(req.New, "\n"), "\n")
-	out := append(append(append([]string{}, lines[:req.From]...), repl...), lines[req.To+1:]...)
-	if err := writeLines(f.Filename, out); err != nil {
-		return common.ResultMsg{Msg: err.Error()}
-	}
-	return common.ResultMsg{Ok: true, Msg: fmt.Sprintf("%s: %d lines", filepath.Base(f.Filename), len(repl))}
+	// The row-checked splice is shared with /preview/save (preview.go).
+	res, _, _ := previewSpliceRows(req.File, req.From, req.To, func(lines []string) bool {
+		return strings.Join(lines[req.From:req.To+1], "\n") == req.Old
+	}, req.New)
+	return res
 }
 
 /* SDOC: API

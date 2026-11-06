@@ -81,6 +81,10 @@ type linkIndex struct {
 	// Indices into links, so the same link can be looked up from either end.
 	fromFile map[string][]int // links written in this file
 	toFile   map[string][]int // links pointing at this file or a heading in it
+	// What the links were resolved with, kept so a link in an unsaved buffer
+	// (backlinkcounts.go) resolves the same way.
+	ids    *idIndex
+	lookup *fileLookup
 }
 
 var (
@@ -758,6 +762,16 @@ type linkPart struct {
 
 var linkParts = NewFileParts[linkPart]()
 
+// One file's links, before resolution. A named function because the link
+// counts (backlinkcounts.go) read the same parts.
+func buildLinkPart(f *common.OrgFile) linkPart {
+	secs := flattenSections(f)
+	for _, sec := range secs {
+		GetDb().RegisterSection(sec.Hash, sec, f)
+	}
+	return linkPart{links: collectFileLinks(f), file: f, secs: secs}
+}
+
 func buildLinkIndex(db *OrgDb) *linkIndex {
 	idx := &linkIndex{
 		reload:   db.ReloadIndex,
@@ -768,13 +782,7 @@ func buildLinkIndex(db *OrgDb) *linkIndex {
 
 	// The walk, cached per file: a saved file costs one file's links rather
 	// than the database's.
-	parts := linkParts.All(func(f *common.OrgFile) linkPart {
-		secs := flattenSections(f)
-		for _, sec := range secs {
-			GetDb().RegisterSection(sec.Hash, sec, f)
-		}
-		return linkPart{links: collectFileLinks(f), file: f, secs: secs}
-	})
+	parts := linkParts.All(buildLinkPart)
 
 	// Sections are registered lazily as queries touch them, so an "id:" link
 	// written in the first file could not find a heading in the last one. Every
@@ -786,6 +794,7 @@ func buildLinkIndex(db *OrgDb) *linkIndex {
 		}
 		ids.addFile(parts[i].file, parts[i].secs)
 	}
+	idx.ids, idx.lookup = ids, lookup
 
 	for i := range parts {
 		p := &parts[i]
@@ -810,6 +819,15 @@ func buildLinkIndex(db *OrgDb) *linkIndex {
 			if link.To.Filename != "" {
 				idx.toFile[link.To.Filename] = append(idx.toFile[link.To.Filename], i)
 			}
+		}
+	}
+	// Boards naming headings (canvas.go, features.canvas).
+	for _, link := range canvasLinks(db) {
+		i := len(idx.links)
+		idx.links = append(idx.links, link)
+		idx.fromFile[link.From.Filename] = append(idx.fromFile[link.From.Filename], i)
+		if link.To.Filename != "" {
+			idx.toFile[link.To.Filename] = append(idx.toFile[link.To.Filename], i)
 		}
 	}
 	return idx

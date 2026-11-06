@@ -1,0 +1,120 @@
+#+TITLE: Recipes
+
+* Weeknight Chicken Curry
+  :PROPERTIES:
+  :source-url: https://spiceandsimmer.example/chicken-curry/
+  :servings:   4
+  :prep-time:  15 min
+  :cook-time:  25 min
+  :ready-in:   40 min
+  :IMAGE:      [[file:images/recipes/chicken-curry.svg]]
+  :RECORD:     recipe
+  :END:
+  A creamy, mild curry that's on the table in 40 minutes. Good with rice or warm naan.
+
+** Ingredients
+   - 2 tablespoons vegetable oil
+   - 2 medium onions, finely chopped
+   - 4 cloves garlic, grated
+   - 1 tablespoon grated ginger
+   - 2 tablespoons curry paste
+   - 2 pounds boneless chicken thighs, cut into bite-size pieces
+   - 1 (14 ounce) can coconut milk
+   - 1 cup crushed tomatoes
+   - 1/2 teaspoon salt
+   - 2 handfuls baby spinach
+   - a small bunch of coriander, to serve
+
+** Directions
+   1. Heat the oil in a large pan over medium heat. Add the onions and cook until soft and golden, about 8 minutes.
+   2. Stir in the garlic, ginger and curry paste and cook for a minute, until fragrant.
+   3. Add the chicken and stir until coated and no longer pink on the outside.
+   4. Pour in the coconut milk and tomatoes, add the salt and simmer for 15 minutes, until the chicken is cooked through.
+   5. Stir in the spinach until it wilts. Scatter with coriander and serve.
+
+* Lemon Ricotta Pancakes
+  :PROPERTIES:
+  :servings:   2
+  :prep-time:  10 min
+  :cook-time:  15 min
+  :ready-in:   25 min
+  :IMAGE:      [[file:images/recipes/pancakes.svg]]
+  :RECORD:     recipe
+  :END:
+  Saturday breakfast. Light and a little tangy; blueberries on top.
+
+** Ingredients
+   - 3/4 cup flour
+   - 1 tablespoon sugar
+   - 1 teaspoon baking powder
+   - a pinch of salt
+   - 1/2 cup ricotta
+   - 1/2 cup milk
+   - 1 egg, separated
+   - zest of 1 lemon
+   - butter, for the pan
+   - 1 cup blueberries
+
+** Directions
+   1. Whisk the flour, sugar, baking powder and salt in a bowl.
+   2. In another bowl, mix the ricotta, milk, egg yolk and lemon zest, then fold into the flour.
+   3. Beat the egg white to soft peaks and fold it in gently.
+   4. Fry spoonfuls in a buttered pan over medium heat, 2 minutes a side. Serve with the blueberries.
+
+* Shakshuka
+  :PROPERTIES:
+  :source-url: https://thegreenpan.example/shakshuka
+  :servings:   3
+  :prep-time:  10 min
+  :cook-time:  25 min
+  :ready-in:   35 min
+  :IMAGE:      [[file:images/recipes/shakshuka.svg]]
+  :RECORD:     recipe
+  :END:
+  Eggs poached in a spiced tomato and pepper sauce. One pan, lots of bread.
+
+** Ingredients
+   - 2 tablespoons olive oil
+   - 1 onion, sliced
+   - 2 red peppers, sliced
+   - 2 cloves garlic, sliced
+   - 1 teaspoon ground cumin
+   - 1 teaspoon smoked paprika
+   - 1 (28 ounce) can whole tomatoes
+   - 6 eggs
+   - 100 g feta
+   - parsley and crusty bread, to serve
+
+** Directions
+   1. Soften the onion and peppers in the oil over medium heat, about 10 minutes.
+   2. Add the garlic and spices and cook for a minute.
+   3. Tip in the tomatoes, crush them with a spoon and simmer until thick, about 10 minutes.
+   4. Make six hollows, crack an egg into each, cover and cook until the whites are set.
+   5. Crumble over the feta and parsley and bring the pan to the table.
+
+* Roast Squash and Lentil Salad
+  :PROPERTIES:
+  :servings:   4
+  :prep-time:  15 min
+  :cook-time:  35 min
+  :ready-in:   50 min
+  :IMAGE:      [[file:images/recipes/squash-salad.svg]]
+  :RECORD:     recipe
+  :END:
+  Warm or cold, and better the next day in a lunchbox.
+
+** Ingredients
+   - 1 butternut squash, peeled and cut into chunks
+   - 3 tablespoons olive oil
+   - 1 cup green lentils
+   - 2 handfuls rocket
+   - 1/2 red onion, thinly sliced
+   - 50 g toasted pumpkin seeds
+   - 1 tablespoon maple syrup
+   - 2 tablespoons cider vinegar
+
+** Directions
+   1. Roast the squash with 1 tablespoon of the oil at 200°C for 35 minutes, turning once.
+   2. Meanwhile simmer the lentils in plenty of water until just tender, about 20 minutes. Drain.
+   3. Whisk the rest of the oil with the maple syrup and vinegar.
+   4. Toss everything together while the squash is still warm.

@@ -399,9 +399,37 @@ func PostDndDungeonStock(w http.ResponseWriter, r *http.Request) {
 // read as xml and judged by its elements and attributes, not by its text, so a
 // room labelled "onerror=" is still a picture.
 func safeSvg(s string) error {
+	return checkSvg(s, svgRules{noun: "a map"})
+}
+
+// svgRules is what checkSvg lets through beyond a plain drawing. A dungeon
+// map gets nothing more; an Excalidraw drawing (excalidraw.go) may carry the
+// pictures pasted into it as data urls and links on its shapes.
+type svgRules struct {
+	noun string
+	// <image> whose href is a data:image/ url (or a #fragment).
+	dataImages bool
+	// <a> whose href is http(s), mailto or a #fragment.
+	links bool
+}
+
+func svgHrefAllowed(el, val string, r svgRules) bool {
+	if strings.HasPrefix(val, "#") {
+		return true
+	}
+	switch el {
+	case "image":
+		return r.dataImages && strings.HasPrefix(val, "data:image/")
+	case "a":
+		return r.links && (strings.HasPrefix(val, "http://") || strings.HasPrefix(val, "https://") || strings.HasPrefix(val, "mailto:"))
+	}
+	return false
+}
+
+func checkSvg(s string, r svgRules) error {
 	t := strings.TrimSpace(s)
 	if !strings.HasPrefix(t, "<svg") || !strings.HasSuffix(t, "</svg>") {
-		return fmt.Errorf("a map has to be an svg picture")
+		return fmt.Errorf("%s has to be an svg picture", r.noun)
 	}
 	dec := xml.NewDecoder(strings.NewReader(t))
 	for {
@@ -410,29 +438,34 @@ func safeSvg(s string) error {
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("a map has to be well formed svg: %s", err)
+			return fmt.Errorf("%s has to be well formed svg: %s", r.noun, err)
 		}
 		switch x := tok.(type) {
 		case xml.StartElement:
-			switch strings.ToLower(x.Name.Local) {
+			el := strings.ToLower(x.Name.Local)
+			switch el {
 			// <use> is allowed: its href must point inside the picture
 			// (checked with the other attributes below), and the hatching
 			// draws thousands of strokes as uses of a few symbols.
-			case "script", "foreignobject", "iframe", "object", "embed", "image", "a":
-				return fmt.Errorf("a map may not contain <%s>", x.Name.Local)
+			case "script", "foreignobject", "iframe", "object", "embed":
+				return fmt.Errorf("%s may not contain <%s>", r.noun, x.Name.Local)
+			case "image", "a":
+				if (el == "image" && !r.dataImages) || (el == "a" && !r.links) {
+					return fmt.Errorf("%s may not contain <%s>", r.noun, x.Name.Local)
+				}
 			}
 			for _, at := range x.Attr {
 				name := strings.ToLower(at.Name.Local)
 				val := strings.ToLower(strings.TrimSpace(at.Value))
 				if strings.HasPrefix(name, "on") {
-					return fmt.Errorf("a map may not contain event handlers")
+					return fmt.Errorf("%s may not contain event handlers", r.noun)
 				}
-				if strings.Contains(val, "javascript:") || (name == "href" && !strings.HasPrefix(val, "#")) {
-					return fmt.Errorf("a map may not link anywhere")
+				if strings.Contains(val, "javascript:") || (name == "href" && !svgHrefAllowed(el, val, r)) {
+					return fmt.Errorf("%s may not link anywhere", r.noun)
 				}
 			}
 		case xml.ProcInst, xml.Directive:
-			return fmt.Errorf("a map may not contain processing instructions or doctypes")
+			return fmt.Errorf("%s may not contain processing instructions or doctypes", r.noun)
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 // writer turns an org document into the body of a beamer presentation.
@@ -699,6 +700,19 @@ func verbatim(src string) string {
 func (w *writer) WriteBlock(b org.Block) {
 	params := b.ParameterMap()
 	name := strings.ToUpper(b.Name)
+	// features.callouts: block, alertblock or exampleblock by type. NOTE
+	// and NOTES stay speaker notes - that is what they are in a deck.
+	if name != "NOTE" && name != "NOTES" && common.CalloutsActive() {
+		if c, ok := common.CalloutOfBlock(b); ok {
+			title := escape(c.ShownTitle())
+			if nodes := common.CalloutTitleNodes(c.Title); nodes != nil {
+				title = w.WriteNodesAsString(nodes...)
+			}
+			env := c.TypeInfo().Beamer
+			w.WriteString("\\begin{" + env + "}{" + title + "}\n" + w.WriteNodesAsString(b.Children...) + "\\end{" + env + "}\n")
+			return
+		}
+	}
 	switch name {
 	case "SRC":
 		exports := params[":exports"]

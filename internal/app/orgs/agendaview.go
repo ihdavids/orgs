@@ -31,12 +31,18 @@ import (
 
 // builtinAgendaViews are org's dispatcher letters.
 func builtinAgendaViews() []common.AgendaView {
-	return []common.AgendaView{
+	views := []common.AgendaView{
 		{Name: "Week agenda", Key: "a", ReadOnly: true, Sections: []common.AgendaViewSection{{Kind: "agenda", Days: 7}}},
 		{Name: "All open tasks", Key: "t", ReadOnly: true, Sections: []common.AgendaViewSection{{Kind: "todo"}}},
 		{Name: "Agenda and all open tasks", Key: "n", ReadOnly: true, Sections: []common.AgendaViewSection{{Kind: "agenda", Days: 7}, {Kind: "todo"}}},
 		{Name: "Stuck projects", Key: "#", ReadOnly: true, Sections: []common.AgendaViewSection{{Kind: "stuck"}}},
 	}
+	// org-review's agenda: today, then what is due for review (orgreview.go).
+	if featureOn("review") {
+		views = append(views, common.AgendaView{Name: "Today and due for review", Key: "R", ReadOnly: true,
+			Sections: []common.AgendaViewSection{{Kind: "agenda", Days: 1}, {Kind: "tags", Title: "Due for review", Query: "ReviewDue()"}}})
+	}
+	return views
 }
 
 // agendaViewsFor is every view a person can open.

@@ -79,6 +79,15 @@ package orgs
   The moment the block was refreshed, as an inactive timestamp. =:active t=
   writes an active one, =:format "%Y-%m-%d %H:%M"= writes it your way.
 
+  ** toc
+
+  A table of contents of the file, as a list of links (needs
+  =orgs features toc on=, which also refreshes it whenever the file is saved).
+  =:depth N= stops N levels down, =:include all= (default), =descendants= or
+  =siblings= of the heading the block is under, =:links gh= writes
+  =[[#anchor][Title]]= links instead of =[[*Title][Title]]=. The heading the
+  block is under, =:noexport:= and =COMMENT= headings are left out.
+
   Any other name is looked up among the dynamic blocks plugins register.
 EDOC */
 
@@ -285,6 +294,7 @@ var dynGenerators = map[string]dynGenerator{
 	"columnview":     dynColumnview,
 	"query":          dynQuery,
 	"insertdatetime": dynInsertDateTime,
+	"toc":            dynToc, // tocserve.go
 }
 
 // The heading a row belongs to: the last one starting at or above it. Found by

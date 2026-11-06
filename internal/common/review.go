@@ -158,6 +158,8 @@ type WeeklyReview struct {
 	WaitingDays int
 	Time        ReviewTime
 	Stale       []ReviewItem
+	// Headings due for review (org-review), only while features.review is on.
+	Reviews []OrgReviewItem `json:",omitempty"`
 }
 
 // ReviewState is what is kept per user: when the last review was finished,

@@ -798,6 +798,9 @@ type StatusChangeResult struct {
 	// How many checkboxes a repeat unticked (org-checklist's
 	// RESET_CHECK_BOXES, when features.checklistReset is on).
 	ResetBoxes int
+	// What an org-recur |rule| in the title did (features.recur, recur.go):
+	// "|+2| (every 2 days): SCHEDULED moved to <...>". Empty otherwise.
+	Recur string
 }
 
 // Apply org's own meaning of a state change to one heading, as a line edit.
@@ -837,6 +840,12 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 	// A heading with a repeater that reaches a done state does not become done -
 	// it comes round again. Org's rule, and the one that makes a habit a habit.
 	repeating := toIsDone && planningHasRepeater(lines, from, end)
+	// org-recur: a |rule| in the title repeats it too, by the rule (recur.go).
+	recurRule, recurring := common.RecurRule{}, false
+	if toIsDone {
+		recurRule, recurring = recurRuleFor(lines[from])
+		repeating = repeating || recurring
+	}
 
 	// What gets written down. The per-keyword cookies are part of this and are
 	// not overridden by the global switches: `NEXT(n!)` is somebody saying "log
@@ -868,7 +877,17 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 	res.Status = written
 
 	// 2. The dates. No line count changes here, so no re-measuring yet.
-	if repeating {
+	switch {
+	case recurring:
+		// The one date edit that may add a line (a SCHEDULED for a heading
+		// with none), so it is measured again straight after.
+		var added bool
+		lines, res.Recur, added = recurPlanning(lines, from, end, ind, recurRule, now)
+		res.Repeated = true
+		if added {
+			lines, from, end = reread(lines, from, lvl)
+		}
+	case repeating:
 		res.Repeated = advancePlanning(lines, from, end, now)
 	}
 

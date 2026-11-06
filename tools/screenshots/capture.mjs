@@ -105,7 +105,11 @@ function setupDemo({ src = demoSrc, extensions = path.join(demoSrc, '../extensio
     - name: "html"
 ${server}url: "${BASE}"
 `);
-  for (const [rel, content] of Object.entries(files)) fs.writeFileSync(path.join(work, rel), content);
+  // A file may name a folder the notebook does not have (org/boards/x.canvas).
+  for (const [rel, content] of Object.entries(files)) {
+    fs.mkdirSync(path.dirname(path.join(work, rel)), { recursive: true });
+    fs.writeFileSync(path.join(work, rel), content);
+  }
   return { work, org, config };
 }
 
@@ -172,7 +176,9 @@ async function terminal(bin, config, args, { cols = 100, rows = 30, keys = [], s
   await new Promise(r => term.write('', r));
   const html = ser.serializeAsHTML({ onlySelection: false, includeGlobalBackground: true });
   if (!done) p.kill();
-  return html;
+  // A command that prints where a heading is says the run's temp folder;
+  // the pictures say ~/notes, as worg's do.
+  return html.split(path.join(path.dirname(config), 'org')).join('~/notes');
 }
 
 // One Dark, more or less. Black is the window itself: tview paints "black"
@@ -601,7 +607,8 @@ export { CLI, ANNOTATED, WORG, setupDemo, BASE, PORT, terminal, shootTerminal, w
 //   last: true                   the last match rather than the first
 //   up: n / closest: 'css'       then an ancestor of it, for the whole panel
 // badge: tr (default), tl, bl, br, l, r - where on the element's box the
-// badge sits; ring: false leaves the box unoutlined. A note without at is
+// badge sits (dx/dy move it off that point, in page pixels, for a box too
+// small to wear one); ring: false leaves the box unoutlined. A note without at is
 // legend only, as in terminal shots. clip (from the shot's go) crops to part
 // of the page; every position is worked out against it.
 function findRects(notes) {
@@ -635,7 +642,7 @@ function annotatedImagePage(png, width, height, notes, rects, { side = false, ti
       l: [r.x, r.y + r.h / 2], r: [r.x + r.w, r.y + r.h / 2] }[n.badge || 'tr'];
     const ring = n.ring === false ? '' :
       `<div class="ring" style="left:${r.x - 3}px;top:${r.y - 3}px;width:${r.w + 6}px;height:${r.h + 6}px"></div>`;
-    const bx = Math.min(Math.max(pos[0], 12), width - 12), by = Math.min(Math.max(pos[1], 12), height - 12);
+    const bx = Math.min(Math.max(pos[0] + (n.dx || 0), 12), width - 12), by = Math.min(Math.max(pos[1] + (n.dy || 0), 12), height - 12);
     return ring + `<div class="badge" style="left:${bx}px;top:${by}px">${i + 1}</div>`;
   }).join('');
   return `<!doctype html><html><head><meta charset="utf-8"><style>

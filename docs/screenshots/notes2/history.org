@@ -1,0 +1,114 @@
+#+TITLE: A short history of England
+#+TIMELINE: group:tag title:"England, 55 BC to 1603" from:"80 BC" to:1700
+
+Reading notes for the medieval history course. One heading per event, each
+with a =:DATE:= as the books give it.
+
+* Roman Britain                                                        :era:
+  :PROPERTIES:
+  :DATE:     43 -- 410
+  :END:
+* Anglo-Saxon England                                                  :era:
+  :PROPERTIES:
+  :DATE:     410 -- 1066
+  :END:
+* Norman and Plantagenet England                                       :era:
+  :PROPERTIES:
+  :DATE:     1066 -- 1485
+  :END:
+* Tudor England                                                        :era:
+  :PROPERTIES:
+  :DATE:     1485 -- 1603
+  :END:
+* Caesar crosses the Channel                                          :rome:
+  :PROPERTIES:
+  :DATE:     55 BC
+  :END:
+* Claudius invades                                                    :rome:
+  :PROPERTIES:
+  :DATE:     43
+  :END:
+* Boudica's revolt                                                    :rome:
+  :PROPERTIES:
+  :DATE:     60 -- 61
+  :END:
+* Hadrian's Wall built                                                :rome:
+  :PROPERTIES:
+  :DATE:     122 -- 128
+  :END:
+* Augustine reaches Kent                                            :church:
+  :PROPERTIES:
+  :DATE:     597
+  :END:
+* Sutton Hoo ship burial                                             :saxon:
+  :PROPERTIES:
+  :DATE:     c. 625
+  :END:
+* Bede finishes the Ecclesiastical History                          :church:
+  :PROPERTIES:
+  :DATE:     731
+  :END:
+* Viking raid on Lindisfarne                                           :war:
+  :PROPERTIES:
+  :DATE:     793
+  :END:
+* Alfred the Great                                                   :crown:
+  :PROPERTIES:
+  :DATE:     871 -- 899
+  :END:
+* Battle of Hastings                                                   :war:
+  :PROPERTIES:
+  :DATE:     1066-10-14
+  :END:
+* Domesday Book                                                      :crown:
+  :PROPERTIES:
+  :DATE:     1086
+  :END:
+* Becket murdered in Canterbury                                     :church:
+  :PROPERTIES:
+  :DATE:     1170-12-29
+  :END:
+* Magna Carta sealed                                                 :crown:
+  :PROPERTIES:
+  :DATE:     1215-06-15
+  :END:
+* Hundred Years' War                                                   :war:
+  :PROPERTIES:
+  :DATE:     1337 -- 1453
+  :END:
+* Black Death                                                       :plague:
+  :PROPERTIES:
+  :DATE:     1348 -- 1350
+  :END:
+* Peasants' Revolt                                                     :war:
+  :PROPERTIES:
+  :DATE:     1381
+  :END:
+* Chaucer's Canterbury Tales                                         :books:
+  :PROPERTIES:
+  :DATE:     c. 1390
+  :END:
+* Wars of the Roses                                                    :war:
+  :PROPERTIES:
+  :DATE:     1455 -- 1487
+  :END:
+* Caxton's press at Westminster                                      :books:
+  :PROPERTIES:
+  :DATE:     1476
+  :END:
+* Break with Rome                                                   :church:
+  :PROPERTIES:
+  :DATE:     1534
+  :END:
+* Elizabeth I                                                        :crown:
+  :PROPERTIES:
+  :DATE:     1558 -- 1603
+  :END:
+* The Armada                                                           :war:
+  :PROPERTIES:
+  :DATE:     1588
+  :END:
+* Shakespeare's Hamlet                                               :books:
+  :PROPERTIES:
+  :DATE:     c. 1600
+  :END:

@@ -1,0 +1,49 @@
+{
+    "type": "standard",
+    "title": "Arrival (film)",
+    "displaytitle": "<i>Arrival</i> (film)",
+    "namespace": {
+        "id": 0,
+        "text": ""
+    },
+    "wikibase_item": "Q20382729",
+    "titles": {
+        "canonical": "Arrival_(film)",
+        "normalized": "Arrival (film)",
+        "display": "<i>Arrival</i> (film)"
+    },
+    "pageid": 43991244,
+    "thumbnail": {
+        "source": "https://upload.wikimedia.org/wikipedia/en/d/df/Arrival%2C_Movie_Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+        "width": 220,
+        "height": 343
+    },
+    "originalimage": {
+        "source": "https://upload.wikimedia.org/wikipedia/en/d/df/Arrival%2C_Movie_Poster.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+        "width": 220,
+        "height": 343
+    },
+    "lang": "en",
+    "dir": "ltr",
+    "revision": "1383143339",
+    "tid": "c10f56ec-d5b5-11f1-9903-4691e4c776ab",
+    "timestamp": "2026-11-01T05:33:23Z",
+    "description": "2016 American science fiction drama film",
+    "description_source": "local",
+    "content_urls": {
+        "desktop": {
+            "page": "https://en.wikipedia.org/wiki/Arrival_(film)",
+            "revisions": "https://en.wikipedia.org/wiki/Arrival_(film)?action=history",
+            "edit": "https://en.wikipedia.org/wiki/Arrival_(film)?action=edit",
+            "talk": "https://en.wikipedia.org/wiki/Talk:Arrival_(film)"
+        },
+        "mobile": {
+            "page": "https://en.wikipedia.org/wiki/Arrival_(film)",
+            "revisions": "https://en.wikipedia.org/wiki/Special:History/Arrival_(film)",
+            "edit": "https://en.wikipedia.org/wiki/Arrival_(film)?action=edit",
+            "talk": "https://en.wikipedia.org/wiki/Talk:Arrival_(film)"
+        }
+    },
+    "extract": "Arrival is a 2016 American science fiction drama film directed by Denis Villeneuve and written by Eric Heisserer, based on the 1998 novella \"Story of Your Life\" by Ted Chiang. The film stars Amy Adams as Louise Banks, a linguist engaged by the United States Army to discover how to communicate with extraterrestrials who have arrived on Earth, before tensions lead to war. Jeremy Renner, Forest Whitaker, and Michael Stuhlbarg appear in supporting roles.",
+    "extract_html": "<p><i><b>Arrival</b></i> is a 2016 American science fiction drama film directed by Denis Villeneuve and written by Eric Heisserer, based on the 1998 novella \"Story of Your Life\" by Ted Chiang. The film stars Amy Adams as Louise Banks, a linguist engaged by the United States Army to discover how to communicate with extraterrestrials who have arrived on Earth, before tensions lead to war. Jeremy Renner, Forest Whitaker, and Michael Stuhlbarg appear in supporting roles.</p>"
+}

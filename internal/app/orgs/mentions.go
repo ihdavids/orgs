@@ -751,6 +751,15 @@ func QueryLinksAround(f *common.OrgFile, sec *org.Section) common.LinksAround {
 			lines, _ = readOrgLines(l.From.Filename)
 			files[l.From.Filename] = lines
 		}
+		if l.Kind == "canvas" {
+			// A board's line is json (`{` where the card starts): say what
+			// it is instead.
+			card := l.To.Headline
+			if card == "" {
+				card = filepath.Base(strings.TrimPrefix(l.Raw, "file:"))
+			}
+			return common.LinkInContext{OrgLink: l, Context: "A card on the board: " + card, Before: "A card on the board: ", Shown: card}
+		}
 		c := common.LinkInContext{OrgLink: l, Context: contextLine(lines, l.From.Line)}
 		c.Before, c.Shown, c.After = contextParts(lines, l.From.Line, l.Raw)
 		return c

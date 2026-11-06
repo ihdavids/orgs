@@ -6,7 +6,7 @@ package importcmd
 //	orgs import analysis.ipynb -o science/penguins.org
 //	orgs import analysis.ipynb -overwrite -run     import again, then run every block
 //	orgs import analysis.ipynb -print              the org text, and nothing written
-//	orgs import ~/Obsidian/Vault -o vault          a whole vault, folders kept
+//	orgs import ~/Notes/Vault -o vault             a whole vault, folders kept
 //	orgs import note.md                            one markdown file
 //	orgs import todo.txt -o inbox.org -append      todo.txt tasks onto a file
 //	orgs import work.ics -o calendar.org -append -since -30d
@@ -169,11 +169,11 @@ func (self *ImportCmd) Exec(core *commands.Core) {
 }
 
 func init() {
-	commands.AddCmd("import", "turn other files into org: Jupyter notebooks, markdown and Obsidian vaults, todo.txt, calendars (.ics)", func() commands.Cmd {
+	commands.AddCmd("import", "turn other files into org: Jupyter notebooks, markdown files and vaults, todo.txt, calendars (.ics)", func() commands.Cmd {
 		return &ImportCmd{}
 	})
 	Register(Importer{Kind: "Jupyter notebook", Exts: []string{".ipynb"}, Import: importNotebook})
-	Register(Importer{Kind: "markdown or an Obsidian vault (a folder)", Exts: []string{".md", ".markdown", ".mdown"}, Dirs: true, Import: importMarkdown})
+	Register(Importer{Kind: "markdown or a vault of markdown notes (a folder)", Exts: []string{".md", ".markdown", ".mdown"}, Dirs: true, Import: importMarkdown})
 	Register(Importer{Kind: "todo.txt", Names: []string{"todo.txt", "done.txt"}, Exts: []string{".todotxt"}, Import: importTodoTxt})
 	Register(Importer{Kind: "iCalendar", Exts: []string{".ics", ".ical", ".icalendar"}, Import: importCalendar})
 }

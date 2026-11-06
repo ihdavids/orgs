@@ -1,0 +1,302 @@
+#+TITLE: Household money
+
+* About
+  Our joint accounts, kept as a ledger journal. Receipts go in on Sunday
+  evenings; the bank statement is checked against it at the start of each month.
+
+* Journal
+#+NAME: household
+#+BEGIN_SRC ledger
+commodity $
+  format $1,000.00
+
+account Assets:Bank:Checking
+account Assets:Bank:Savings
+account Liabilities:Visa
+
+{{ISO-130}} * Opening balances
+    Assets:Bank:Checking                       $3,200.00
+    Assets:Bank:Savings                        $8,500.00
+    Equity:Opening
+
+{{ISO-128}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-127}} * Harbour Property Mgmt  ; rent
+    Expenses:Home:Rent                         $1,850.00
+    Assets:Bank:Checking
+
+{{ISO-126}} * Green Valley Market
+    Expenses:Food:Groceries                       $96.40
+    Liabilities:Visa
+
+{{ISO-125}} * Transfer to savings
+    Assets:Bank:Savings                          $400.00
+    Assets:Bank:Checking
+
+{{ISO-123}} * City Hydro
+    Expenses:Home:Utilities:Electricity           $78.40
+    Assets:Bank:Checking
+
+{{ISO-121}} * Fibrelink  ; internet
+    Expenses:Home:Utilities:Internet              $60.00
+    Assets:Bank:Checking
+
+{{ISO-120}} * Transit pass
+    Expenses:Transport:Transit                   $112.00
+    Liabilities:Visa
+
+{{ISO-119}} * Fresh Street Grocer
+    Expenses:Food:Groceries                      $118.25
+    Liabilities:Visa
+
+{{ISO-118}} * Little Fig Bistro
+    Expenses:Food:Dining                          $64.50
+    Liabilities:Visa
+
+{{ISO-116}} * Visa payment
+    Liabilities:Visa                             $640.00
+    Assets:Bank:Checking
+
+{{ISO-113}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-112}} * Green Valley Market
+    Expenses:Food:Groceries                       $87.90
+    Liabilities:Visa
+
+{{ISO-109}} * Corner Cafe
+    Expenses:Food:Dining                          $18.40
+    Liabilities:Visa
+
+{{ISO-105}} * Farmers market
+    Expenses:Food:Groceries                      $134.60
+    Liabilities:Visa
+
+{{ISO-104}} * Streamly
+    Expenses:Subscriptions                        $15.99
+    Liabilities:Visa
+
+{{ISO-98}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-97}} * Harbour Property Mgmt  ; rent
+    Expenses:Home:Rent                         $1,850.00
+    Assets:Bank:Checking
+
+{{ISO-96}} * Green Valley Market
+    Expenses:Food:Groceries                      $102.30
+    Liabilities:Visa
+
+{{ISO-95}} * Transfer to savings
+    Assets:Bank:Savings                          $400.00
+    Assets:Bank:Checking
+
+{{ISO-93}} * City Hydro
+    Expenses:Home:Utilities:Electricity           $84.15
+    Assets:Bank:Checking
+
+{{ISO-91}} * Fibrelink  ; internet
+    Expenses:Home:Utilities:Internet              $60.00
+    Assets:Bank:Checking
+
+{{ISO-90}} * Transit pass
+    Expenses:Transport:Transit                   $112.00
+    Liabilities:Visa
+
+{{ISO-89}} * Fresh Street Grocer
+    Expenses:Food:Groceries                       $91.75
+    Liabilities:Visa
+
+{{ISO-88}} * Little Fig Bistro
+    Expenses:Food:Dining                          $48.20
+    Liabilities:Visa
+
+{{ISO-86}} * Visa payment
+    Liabilities:Visa                             $640.00
+    Assets:Bank:Checking
+
+{{ISO-85}} * Ridgeline Outfitters  ; hiking boots
+    Expenses:Clothing                            $189.99
+    Liabilities:Visa
+
+{{ISO-83}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-82}} * Green Valley Market
+    Expenses:Food:Groceries                      $127.40
+    Liabilities:Visa
+
+{{ISO-79}} * Corner Cafe
+    Expenses:Food:Dining                          $22.10
+    Liabilities:Visa
+
+{{ISO-75}} * Farmers market
+    Expenses:Food:Groceries                      $109.80
+    Liabilities:Visa
+
+{{ISO-74}} * Streamly
+    Expenses:Subscriptions                        $15.99
+    Liabilities:Visa
+
+{{ISO-68}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-67}} * Harbour Property Mgmt  ; rent
+    Expenses:Home:Rent                         $1,850.00
+    Assets:Bank:Checking
+
+{{ISO-66}} * Green Valley Market
+    Expenses:Food:Groceries                       $96.40
+    Liabilities:Visa
+
+{{ISO-65}} * Transfer to savings
+    Assets:Bank:Savings                          $400.00
+    Assets:Bank:Checking
+
+{{ISO-63}} * City Hydro
+    Expenses:Home:Utilities:Electricity           $96.30
+    Assets:Bank:Checking
+
+{{ISO-61}} * Fibrelink  ; internet
+    Expenses:Home:Utilities:Internet              $60.00
+    Assets:Bank:Checking
+
+{{ISO-60}} * Transit pass
+    Expenses:Transport:Transit                   $112.00
+    Liabilities:Visa
+
+{{ISO-59}} * Fresh Street Grocer
+    Expenses:Food:Groceries                      $118.25
+    Liabilities:Visa
+
+{{ISO-58}} * Little Fig Bistro
+    Expenses:Food:Dining                          $92.00
+    Liabilities:Visa
+
+{{ISO-56}} * Visa payment
+    Liabilities:Visa                             $640.00
+    Assets:Bank:Checking
+
+{{ISO-53}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-52}} * Green Valley Market
+    Expenses:Food:Groceries                       $87.90
+    Liabilities:Visa
+
+{{ISO-49}} * Corner Cafe
+    Expenses:Food:Dining                          $16.75
+    Liabilities:Visa
+
+{{ISO-47}} * Dr. Osei  ; dentist
+    Expenses:Health                              $145.00
+    Assets:Bank:Checking
+
+{{ISO-45}} * Farmers market
+    Expenses:Food:Groceries                      $134.60
+    Liabilities:Visa
+
+{{ISO-44}} * Streamly
+    Expenses:Subscriptions                        $15.99
+    Liabilities:Visa
+
+{{ISO-38}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-37}} * Harbour Property Mgmt  ; rent
+    Expenses:Home:Rent                         $1,850.00
+    Assets:Bank:Checking
+
+{{ISO-36}} * Green Valley Market
+    Expenses:Food:Groceries                      $102.30
+    Liabilities:Visa
+
+{{ISO-35}} * Transfer to savings
+    Assets:Bank:Savings                          $400.00
+    Assets:Bank:Checking
+
+{{ISO-33}} * City Hydro
+    Expenses:Home:Utilities:Electricity          $112.60
+    Assets:Bank:Checking
+
+{{ISO-31}} * Fibrelink  ; internet
+    Expenses:Home:Utilities:Internet              $60.00
+    Assets:Bank:Checking
+
+{{ISO-30}} * Transit pass
+    Expenses:Transport:Transit                   $112.00
+    Liabilities:Visa
+
+{{ISO-29}} * Fresh Street Grocer
+    Expenses:Food:Groceries                       $91.75
+    Liabilities:Visa
+
+{{ISO-28}} * Little Fig Bistro
+    Expenses:Food:Dining                          $55.75
+    Liabilities:Visa
+
+{{ISO-26}} * Visa payment
+    Liabilities:Visa                             $640.00
+    Assets:Bank:Checking
+
+{{ISO-23}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-22}} * Green Valley Market
+    Expenses:Food:Groceries                      $127.40
+    Liabilities:Visa
+
+{{ISO-22}} ! Gas Bar
+    Expenses:Transport:Car                        $58.30
+    Liabilities:Visa
+
+{{ISO-19}} * Corner Cafe
+    Expenses:Food:Dining                          $24.60
+    Liabilities:Visa
+
+{{ISO-15}} * Farmers market
+    Expenses:Food:Groceries                      $109.80
+    Liabilities:Visa
+
+{{ISO-14}} * Streamly
+    Expenses:Subscriptions                        $15.99
+    Liabilities:Visa
+
+{{ISO-8}} * Northwind Design  ; salary
+    Assets:Bank:Checking                       $2,350.00
+    Income:Salary
+
+{{ISO-7}} * Harbour Property Mgmt  ; rent
+    Expenses:Home:Rent                         $1,850.00
+    Assets:Bank:Checking
+
+{{ISO-6}} * Green Valley Market
+    Expenses:Food:Groceries                       $96.40
+    Liabilities:Visa
+
+{{ISO-5}} * Transfer to savings
+    Assets:Bank:Savings                          $400.00
+    Assets:Bank:Checking
+
+{{ISO-3}} * City Hydro
+    Expenses:Home:Utilities:Electricity          $121.90
+    Assets:Bank:Checking
+
+{{ISO-1}} * Fibrelink  ; internet
+    Expenses:Home:Utilities:Internet              $60.00
+    Assets:Bank:Checking
+
+{{ISO-0}} * Transit pass
+    Expenses:Transport:Transit                   $112.00
+    Liabilities:Visa
+
+#+END_SRC

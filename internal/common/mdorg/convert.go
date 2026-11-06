@@ -164,7 +164,7 @@ func orgDate(s string) string {
 	return s
 }
 
-// OrgTag makes an Obsidian tag (nested/tag, kebab-case) an org tag.
+// OrgTag makes a markdown #tag (nested/tag, kebab-case) an org tag.
 func OrgTag(s string) string {
 	s = strings.TrimPrefix(strings.TrimSpace(s), "#")
 	return strings.Trim(badTag.ReplaceAllString(s, "_"), "_")
@@ -461,7 +461,7 @@ func (c *conv) block(lines []string, indent string) string {
 			w("\\[" + strings.TrimSpace(t[2:len(t)-2]) + "\\]")
 			continue
 		}
-		// %% Obsidian comments %% and <!-- html comments -->
+		// %% comments %% and <!-- html comments -->
 		if commentRe.MatchString(l) || (strings.HasPrefix(t, "%%") && !strings.HasSuffix(t[2:], "%%")) {
 			body := []string{}
 			first := strings.TrimSpace(strings.TrimPrefix(t, "%%"))
@@ -566,13 +566,10 @@ func (c *conv) block(lines []string, indent string) string {
 			if len(inner) > 0 {
 				if cm := calloutRe.FindStringSubmatch(strings.TrimSpace(inner[0])); cm != nil {
 					c.stats.Callouts++
-					kind := strings.ToLower(cm[1])
-					w("#+begin_" + kind)
-					if cm[3] != "" {
-						w("*" + c.inline(cm[3]) + "*")
-					}
+					begin, end := calloutBegin(strings.ToLower(cm[1]), cm[2], c.inline(strings.TrimSpace(cm[3])))
+					w(begin)
 					b.WriteString(c.block(inner[1:], indent))
-					w("#+end_" + kind)
+					w(end)
 					continue
 				}
 			}
@@ -637,7 +634,7 @@ func isStructural(l string) bool {
 
 var blockIDRe = regexp.MustCompile(`[ \t]+\^([A-Za-z0-9-]+)[ \t]*$`)
 
-// blockID takes Obsidian's ^block-id off the end of a line; it becomes an
+// blockID takes a ^block-id off the end of a line; it becomes an
 // org target, which [[file:x.org::block-id]] finds.
 func blockID(l string) (string, string) {
 	if m := blockIDRe.FindStringSubmatchIndex(l); m != nil {
@@ -656,7 +653,7 @@ func fnName(s string) string {
 	}, s)
 }
 
-// item converts a list item's text: its checkbox, and Obsidian Tasks dates.
+// item converts a list item's text: its checkbox, and task emoji dates.
 func (c *conv) item(s string) string {
 	box := ""
 	if m := taskRe.FindStringSubmatch(s); m != nil {
@@ -676,7 +673,7 @@ func (c *conv) item(s string) string {
 
 var taskDateRe = regexp.MustCompile(`(📅|⏳|🛫|✅|➕|❌)️?[ \t]*(\d{4}-\d{2}-\d{2})`)
 
-// taskDates writes the Obsidian Tasks plugin's dates as org stamps: due,
+// taskDates writes task emoji dates (📅 due and friends) as org stamps: due,
 // scheduled and start as active ones (so the agenda sees them), done and
 // created as inactive.
 func taskDates(s string) string {
@@ -773,4 +770,59 @@ func (c *conv) row(l string) string {
 		cells = append(cells, v)
 	}
 	return "| " + strings.Join(cells, " | ") + " |"
+}
+
+// calloutBegin is the org special block a `> [!kind]± Title` callout becomes,
+// in the syntax orgs' callouts feature reads (internal/common/callout.go):
+// `#+begin_warning Title :fold closed`. A kind org already uses for
+// something else (example is verbatim; quote and abstract without a title
+// are org's own blocks) or one no callout type names is written as
+// `#+begin_callout Title :type kind`, so it is still a callout and comes
+// back out as the same kind.
+func calloutBegin(kind, fold, title string) (string, string) {
+	name, args := kind, ""
+	general := false
+	switch kind {
+	case "example":
+		general = true
+	case "quote", "abstract":
+		general = title == ""
+	default:
+		if !CalloutKinds[kind] {
+			general = true
+		}
+	}
+	if general {
+		name = "callout"
+	}
+	if title != "" {
+		// " :" starts a header argument wherever it stands (go-org splits on
+		// it, quotes or not): a no-break space keeps the title one.
+		title = strings.ReplaceAll(title, " :", "\u00a0:")
+		if strings.HasPrefix(title, ":") {
+			args += " :title \"" + strings.ReplaceAll(title, "\"", "'") + "\""
+		} else {
+			args = " " + title
+		}
+	}
+	if general {
+		args += " :type " + kind
+	}
+	switch fold {
+	case "+":
+		args += " :fold open"
+	case "-":
+		args += " :fold closed"
+	}
+	return "#+begin_" + name + args, "#+end_" + name
+}
+
+// The callout types and aliases (the table is
+// internal/common/callout.go's; this package stays free of go-org).
+var CalloutKinds = map[string]bool{
+	"note": true, "abstract": true, "summary": true, "tldr": true, "info": true, "todo": true,
+	"tip": true, "hint": true, "important": true, "success": true, "check": true, "done": true,
+	"question": true, "help": true, "faq": true, "warning": true, "caution": true, "attention": true,
+	"failure": true, "fail": true, "missing": true, "danger": true, "error": true, "bug": true,
+	"example": true, "quote": true, "cite": true,
 }

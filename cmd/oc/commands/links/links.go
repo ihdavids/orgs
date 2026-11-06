@@ -9,6 +9,7 @@ package links
 //	orgs links -in notes.org         what points at that file
 //	orgs links -out notes.org        what that file points at
 //	orgs links -stats                per file counts
+//	orgs links counts notes.org      how many places link to each heading (orgs linkcounts)
 //	orgs links -json | jq '.[].Raw'
 //
 // The links worth going back and finding are usually the external ones: a
@@ -73,6 +74,17 @@ func (self *Links) SetupParameters(fset *flag.FlagSet) {
 }
 
 func (self *Links) Exec(core *commands.Core) {
+	// `orgs links counts …` is `orgs linkcounts …` (orgpkgs/linkcounts.go),
+	// read before FreeArgs: its flags are not this command's.
+	if a := self.fset.Args(); len(a) > 0 && strings.EqualFold(a[0], "counts") {
+		if c := commands.Find("linkcounts"); c != nil && c.Flags != nil {
+			if err := c.Flags.Parse(a[1:]); err != nil {
+				commands.Fail("orgs links counts: %v", err)
+			}
+			c.Cmd.Exec(core)
+			return
+		}
+	}
 	// The words, taken once. `FreeArgs` parses flags wherever they were written
 	// and *consumes* them as it goes, so asking the flag set for its arguments
 	// afterwards gets nothing - which is what silently turned `orgs links

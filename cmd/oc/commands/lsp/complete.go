@@ -178,6 +178,24 @@ func (s *server) keywordItems(typed, indent string, replace func(int, string) *T
 		}
 		out = append(out, it)
 	}
+	// Callout types, while the server draws them.
+	if s.featureOn("callouts") {
+		for i, t := range common.CalloutTypes {
+			if t.Name == "example" || t.Name == "quote" {
+				continue // org's own blocks; #+begin_callout :type example
+			}
+			b := strings.ToUpper(t.Name)
+			it := CompletionItem{Label: "#+BEGIN_" + b, Kind: compSnippet, FilterText: "BEGIN_" + b, SortText: "2" + pad(i),
+				Detail: t.Glyph + " callout"}
+			if s.caps.snippets {
+				it.InsertTextFormat = 2
+				it.TextEdit = replace(len(typed), "BEGIN_"+b+" ${1:"+t.Title+"}\n"+indent+"$0\n"+indent+"#+END_"+b)
+			} else {
+				it.TextEdit = replace(len(typed), "BEGIN_"+b)
+			}
+			out = append(out, it)
+		}
+	}
 	return out
 }
 

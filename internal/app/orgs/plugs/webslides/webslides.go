@@ -267,6 +267,7 @@ type WebSlidesExporter struct {
 
 type WebSlidesWriter struct {
 	*org.HTMLWriter
+	calloutStyled    bool // features.callouts: the callout stylesheet is written
 	exp   *WebSlidesExporter
 	Opts  string
 	conf  slides.Conf
@@ -701,4 +702,14 @@ func init() {
 			TemplatePath: "webslides_default.tpl",
 		}
 	})
+}
+
+// WriteBlock draws a callout (features.callouts); every other block is
+// go-org's.
+func (w *WebSlidesWriter) WriteBlock(b org.Block) {
+	if out, ok := slides.Callout(w.HTMLWriter, b, &w.calloutStyled); ok {
+		w.WriteString(out)
+		return
+	}
+	w.HTMLWriter.WriteBlock(b)
 }

@@ -1,0 +1,50 @@
+#+TITLE: The allotment
+
+* Plan for spring
+  Beds one and two get [[id:4f7c2a90-compost-heap][the compost from last autumn]]
+  before anything goes in. The brassicas move to bed three this year, as
+  [[*Crop rotation][the rotation]] says, and the beans go where the potatoes
+  were. Order seed potatoes by the end of January (see [[*Seed order]]).
+
+  Water in the mornings; the notes on [[*Watering]] say why.
+
+* Crop rotation
+  Four beds, moving one along each year, so nothing grows where its own
+  family grew the year before.
+
+  - Bed 1: potatoes, then legumes
+  - Bed 2: legumes, then brassicas
+  - Bed 3: brassicas, then roots
+  - Bed 4: roots, then potatoes
+
+* Compost heap
+  :PROPERTIES:
+  :ID:       4f7c2a90-compost-heap
+  :END:
+  Two bays, turned every three weeks. Greens and browns roughly half and
+  half by volume: grass and peelings, then cardboard and leaves.
+
+  The left bay was started in September and should be ready by March. It
+  smelled sour in October - too wet; more cardboard fixed it. A pH of
+  6.8 from [[*Soil test, March][the March soil test]] means no lime is needed.
+
+* Soil test, March
+  Bought a kit from the garden centre; four samples, one per bed.
+
+  | Bed |  pH | N      | P      | K      |
+  |-----+-----+--------+--------+--------|
+  |   1 | 6.8 | low    | medium | high   |
+  |   2 | 6.5 | medium | medium | medium |
+  |   3 | 7.0 | low    | high   | medium |
+  |   4 | 6.6 | medium | low    | medium |
+
+  Bed one needs nitrogen: green manure over winter, then compost.
+
+* Watering
+  Mornings, at the roots, not on the leaves: wet leaves overnight bring
+  blight. A good soak twice a week beats a sprinkle every day.
+
+* Seed order
+** TODO Seed potatoes: Charlotte and Pink Fir Apple
+** TODO Runner beans, Scarlet Emperor
+** TODO Kale, Cavolo Nero

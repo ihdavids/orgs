@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/go-org/org"
+	"github.com/ihdavids/orgs/internal/common"
 )
 
 // Writer writes an org document as the body of a typst document.
@@ -1047,6 +1048,12 @@ func (w *Writer) writeResult(b org.Block) {
 func (w *Writer) WriteResult(r org.Result) { org.WriteNodes(w, r.Node) }
 
 func (w *Writer) WriteBlock(b org.Block) {
+	if common.CalloutsActive() {
+		if c, ok := common.CalloutOfBlock(b); ok {
+			w.callout(c, b)
+			return
+		}
+	}
 	name := strings.ToUpper(b.Name)
 	switch name {
 	case "SRC":
@@ -1385,4 +1392,25 @@ func (w *Writer) WriteTableEl(t org.TableEl) {
 		}
 		return out
 	}()})
+}
+
+// callout (features.callouts) is a callout block as a block with a tinted
+// fill and a coloured rule down its left: the title bold above the body.
+// No icon: typst's fonts lack most of the glyphs.
+func (w *Writer) callout(c common.Callout, b org.Block) {
+	col := c.TypeInfo().Color
+	if strings.HasPrefix(c.Color, "#") {
+		col = c.Color
+	}
+	title := ""
+	if nodes := common.CalloutTitleNodes(c.Title); nodes != nil {
+		title = w.inner(nodes...)
+	} else {
+		title = escapeMarkup(c.ShownTitle(), false)
+	}
+	body := w.inner(b.Children...)
+	w.blankLine()
+	w.expr(fmt.Sprintf("#block(width: 100%%, inset: (x: 10pt, y: 8pt), radius: 3pt, fill: rgb(%s).lighten(90%%), stroke: (left: 3pt + rgb(%s), rest: 0.5pt + rgb(%s).lighten(60%%)))[#text(fill: rgb(%s).darken(25%%), weight: \"bold\")[%s]\n\n%s]",
+		str(col), str(col), str(col), str(col), title, body))
+	w.raw("\n\n")
 }

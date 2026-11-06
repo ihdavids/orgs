@@ -1,9 +1,10 @@
-// Package mdorg turns markdown into org: a single file, or an Obsidian vault
-// with its [[wikilinks]], embeds, callouts, front matter and #tags.
+// Package mdorg turns markdown into org: a single file, or a vault of
+// markdown notes with its [[wikilinks]], embeds, callouts, front matter and
+// #tags.
 //
 // It runs on the client (`orgs import`), where the vault is, and needs
 // nothing but the files' text: the vault is converted as a whole so a link is
-// resolved the way Obsidian resolves it (by note name, anywhere in the vault)
+// resolved by note name (anywhere in the vault)
 // and comes out as a relative file: link between the org files, which keep
 // the vault's folders. The attachments the notes use are named in the answer
 // so the client sends only those.
@@ -27,7 +28,7 @@ type Note struct {
 type Vault struct {
 	Notes []Note
 	// Every other file in the vault, relative to it, so ![[pic.png]] can be
-	// found wherever Obsidian put it.
+	// found wherever it was put.
 	Files []string
 }
 
@@ -62,7 +63,7 @@ func isNote(p string) bool {
 	return false
 }
 
-// index is how links are resolved: by name the way Obsidian does, and by
+// index is how links are resolved: by note name, and by
 // path for markdown links.
 type index struct {
 	byName   map[string][]string // lower-case name without extension → note paths
@@ -102,8 +103,8 @@ func newIndex(v Vault) *index {
 }
 
 // closest picks, of several notes or files with one name, the one in the
-// linking note's own folder, else the shallowest - which is Obsidian's
-// "shortest path when possible".
+// linking note's own folder, else the shallowest - "shortest path when
+// possible".
 func closest(cands []string, from string) string {
 	dir := path.Dir(from)
 	for _, c := range cands {

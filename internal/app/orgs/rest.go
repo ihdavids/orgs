@@ -283,6 +283,26 @@ func RestApi(router *mux.Router) {
 	registerReviewRoutes(api)  // review_wizard.go: weekly review, inbox triage, someday sweep
 	registerMentionRoutes(api) // mentions.go: heading backlinks, unlinked mentions
 	registerFocusRoutes(api)   // focus.go: focus / pomodoro sessions
+	registerMediadbRoutes(api) // mediadb.go: books, films, games, albums (features.mediaDb)
+	registerTimelineRoutes(api) // timeline.go: dated headings on a timeline (features.timeline)
+	registerMapRoutes(api)     // mapview.go: places on a map (features.mapView)
+	registerLatexSuiteRoutes(api) // latexsuite.go: maths snippets, preview checks (features.latexSuite)
+	registerLinkTitleRoutes(api) // linktitle.go: page titles for pasted urls (features.autoLinkTitle)
+	registerLocalImagesRoutes(api) // localimages.go: web pictures kept here (features.localImages)
+	registerPreviewRoutes(api) // preview.go: hover previews and their edits (features.hoverEditor)
+	registerExcalidrawRoutes(api) // excalidraw.go: drawings (features.excalidraw)
+	registerTrackerRoutes(api) // tracker.go: #+TRACKER: heatmaps and lines (features.tracker)
+	registerMediaNoteRoutes(api) // medianote.go: org-media-note, notes at moments of a recording (features.mediaNotes)
+	registerRelatedRoutes(api) // related.go: related notes, words and embeddings (features.related)
+	registerCalloutRoutes(api) // callouts.go: callouts as special blocks (features.callouts)
+	registerBacklinkCountRoutes(api) // backlinkcounts.go: features.backlinkCounts
+	registerLedgerRoutes(api)  // ledger.go: ledger/hledger journals (features.ledger)
+	registerTocRoutes(api)     // tocserve.go: toc-org / org-make-toc tables of contents
+	registerCanvasRoutes(api)  // canvas.go: JSON Canvas boards, .canvas files (features.canvas)
+	registerChefRoutes(api)    // chef.go: org-chef recipes (features.chef)
+	registerRecurRoutes(api)   // recur.go: org-recur |rules| in titles
+	registerOrgReviewRoutes(api) // orgreview.go: org-review, headings due to be read again (features.review)
+	registerClockBudgetRoutes(api) // clockbudget.go: time budgets (features.clockBudget)
 	registerPlannerRoutes(api)    // planner.go: time-blocking, the day planner
 	registerInsightRoutes(api)    // insights.go: effort vs actual, dependency health
 	registerQueryWatchRoutes(api) // querywatch.go: saved-query notifications

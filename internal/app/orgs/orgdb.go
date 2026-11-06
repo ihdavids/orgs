@@ -571,6 +571,8 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		// Not the first load: a server starting up is not somebody saving.
 		if have {
 			autoTangleAfterLoad(ofile)
+			autoTocAfterLoad(ofile) // tocserve.go: tables of contents (features.toc)
+			autoLocalImagesAfterLoad(ofile) // localimages.go: web pictures on save (features.localImages)
 		}
 	} else if os.IsNotExist(err) {
 		// Deleted, or the old name of a rename: the watcher reports both by
@@ -630,6 +632,10 @@ func (self *OrgDb) Watch() {
 					return
 				}
 				//log.Printf("EVENT %s %s\n", event.Name, event.Op)
+				if isCanvasFile(event.Name) {
+					canvasChanged(event.Name) // canvas.go: a board changed (features.canvas)
+					continue
+				}
 				// A folder that has gone may be reported only by its own
 				// name: forget every file that was under it.
 				if _, err := os.Stat(event.Name); os.IsNotExist(err) && !IsOrgFile(event.Name) {

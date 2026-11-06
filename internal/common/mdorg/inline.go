@@ -323,7 +323,7 @@ func (c *conv) mdLink(image bool, text, u string) string {
 		}
 		return "[[" + u + "][" + linkText(text) + "]]"
 	}
-	// Obsidian's own links between notes.
+	// App links between notes.
 	if strings.HasPrefix(u, "obsidian://") {
 		return "[[" + u + "][" + linkText(text) + "]]"
 	}
