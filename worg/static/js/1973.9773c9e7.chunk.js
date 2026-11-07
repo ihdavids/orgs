@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkworg=self.webpackChunkworg||[]).push([[1973],{71973:function(e,u,s){s.r(u),u.default={}}}]);

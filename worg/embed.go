@@ -18,5 +18,9 @@ import "embed"
 // excalidraw-assets/ is the drawing editor's fonts and chunks (worg's `npm
 // run excalidraw`), fetched by url from the page's own folder.
 //
-//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json *.png gantt-viewer.js dicefx.js dict harper pdfjs excalidraw-assets
+// tools/buildworg.sh stores the compressible files gzipped, as name.gz with no
+// plain copy, which is why the scripts are matched with a trailing `*`; the
+// server unzips them for a client that does not take gzip (worgserve.go).
+//
+//go:embed all:static index.html favicon.ico manifest.json asset-manifest.json* *.png gantt-viewer.js* dicefx.js* dict harper pdfjs excalidraw-assets
 var Content embed.FS

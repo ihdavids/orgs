@@ -2,7 +2,6 @@ package orgs
 
 import (
 	"fmt"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -300,9 +299,8 @@ func StartServer(sets *common.ServerSettings) {
 	// from ../webfonts. A ./web or ./webfonts in the working directory wins.
 	router.PathPrefix("/web/").Handler(http.StripPrefix("/web", http.FileServer(assets.Overlay("./web", assets.Dir("web")))))
 	router.PathPrefix("/webfonts/").Handler(http.StripPrefix("/webfonts", http.FileServer(assets.Overlay("./webfonts", assets.Dir("webfonts")))))
-	// Serve the embedded worg frontend
-	webFS, _ := fs.Sub(worg.Content, ".")
-	router.PathPrefix("/").Handler(http.FileServer(http.FS(webFS)))
+	// Serve the embedded worg frontend, gzipped and cached (worgserve.go).
+	router.PathPrefix("/").Handler(newWorgHandler(worg.Content))
 
 	// http.Handle(Conf().WebServePath, http.StripPrefix(Conf().WebServePath, fileServer))
 	// This is annoying, I can't seem to handle binding to anything other than /

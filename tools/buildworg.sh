@@ -42,4 +42,23 @@ if [ ! -f "$HERE/worg/index.html" ] || [ ! -d "$HERE/worg/static" ]; then
     exit 1
 fi
 
+# Stored gzipped: the server hands a .gz to any browser that takes gzip as it
+# is and unzips it for one that does not (internal/app/orgs/worgserve.go), so
+# only the compressed copy goes into the binary - about a third of the size.
+# index.html and manifest.json stay as they are: embed.go names them, and they
+# are tiny. A file gzip saves less than a tenth of (fonts, pictures) is left.
+echo "compressing"
+find "$HERE/worg" -type f -size +1k \( -name '*.js' -o -name '*.css' -o -name '*.json' \
+    -o -name '*.wasm' -o -name '*.svg' -o -name '*.txt' -o -name '*.aff' -o -name '*.dic' \
+    -o -name '*.ttf' -o -name '*.otf' -o -name '*.html' -o -name '*.map' \) \
+    ! -path "$HERE/worg/index.html" ! -path "$HERE/worg/manifest.json" |
+while read -r f; do
+    gzip -9 -n -c "$f" > "$f.gz"
+    if [ "$(wc -c < "$f.gz")" -lt "$(( $(wc -c < "$f") * 9 / 10 ))" ]; then
+        rm "$f"
+    else
+        rm "$f.gz"
+    fi
+done
+
 echo "done - rebuild orgs to pick it up:  go build -o orgs ./cmd/orgs"
