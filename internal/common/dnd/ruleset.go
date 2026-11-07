@@ -155,9 +155,11 @@ EDOC */
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
@@ -781,17 +783,71 @@ func mergeProficiencySets(dst, src ProficiencySet) ProficiencySet {
 	return dst
 }
 
+// cloneRuleset deep-copies a ruleset through json. It used to go through
+// yaml, which for the SRD allocated ~160 MB a copy (json: ~15 MB, 4x faster)
+// and set the server's peak heap at startup. The yaml copy also turned every
+// nil slice and map into an empty one, so the sheet and worg are served
+// `[]` rather than `null` for a list a module never wrote; fillEmpty keeps
+// that.
 func cloneRuleset(src *Ruleset) *Ruleset {
-	data, err := yaml.Marshal(src)
+	data, err := json.Marshal(src)
 	if err != nil {
 		return src
 	}
 	var out Ruleset
-	if err := yaml.Unmarshal(data, &out); err != nil {
+	if err := json.Unmarshal(data, &out); err != nil {
 		return src
 	}
+	fillEmpty(reflect.ValueOf(&out).Elem())
 	out.Modules = append([]string{}, src.Modules...)
 	return &out
+}
+
+// fillEmpty replaces every nil slice and map reachable from v through
+// exported fields with an empty one, as a yaml round trip does.
+func fillEmpty(v reflect.Value) {
+	switch v.Kind() {
+	case reflect.Pointer, reflect.Interface:
+		if !v.IsNil() {
+			fillEmpty(v.Elem())
+		}
+	case reflect.Struct:
+		t := v.Type()
+		for i := 0; i < v.NumField(); i++ {
+			f := t.Field(i)
+			// yaml left out a field tagged "-" or omitempty, so it stayed nil.
+			tag := f.Tag.Get("yaml")
+			if !f.IsExported() || tag == "-" || strings.Contains(tag, ",omitempty") {
+				continue
+			}
+			fillEmpty(v.Field(i))
+		}
+	case reflect.Slice:
+		if v.IsNil() {
+			if v.CanSet() {
+				v.Set(reflect.MakeSlice(v.Type(), 0, 0))
+			}
+			return
+		}
+		for i := 0; i < v.Len(); i++ {
+			fillEmpty(v.Index(i))
+		}
+	case reflect.Map:
+		if v.IsNil() {
+			if v.CanSet() {
+				v.Set(reflect.MakeMap(v.Type()))
+			}
+			return
+		}
+		// Map values are not addressable: copy, fill, put back.
+		it := v.MapRange()
+		for it.Next() {
+			e := reflect.New(it.Value().Type()).Elem()
+			e.Set(it.Value())
+			fillEmpty(e)
+			v.SetMapIndex(it.Key(), e)
+		}
+	}
 }
 
 func indexOfSkill(l []Skill, id string) int {

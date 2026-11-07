@@ -245,6 +245,7 @@ func StartServer(sets *common.ServerSettings) {
 	// Force config parsing right up front
 	DefaultKeystore()
 	Conf()
+	startPprof()
 	// The ports actually served. The plugin manager copied them when the yaml
 	// was read, before `-port` had its say, and a notification's link to worg
 	// then pointed at a port nothing was listening on.

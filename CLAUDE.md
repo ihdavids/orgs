@@ -22,6 +22,7 @@ The worg frontend is embedded from `worg/` (`worg/embed.go`) and served by `Star
 Version: `common.Version`/`Commit`/`BuildDate` (`internal/common/version.go`) are set with `-ldflags -X`; a plain `go build` says `dev` plus the vcs commit. `orgs version` (works with no config) prints it and the server's; `GET /version` (`internal/app/orgs/version.go`) adds the latest github release and `updateAvailable`, cached 6h, off with `server.noUpdateCheck`. Releases: push a `v*` tag; `.github/workflows/release.yml` runs `.goreleaser.yaml` (linux/darwin/windows × amd64/arm64, `CGO_ENABLED=0`, `-s -w`).
 
 - Subcommand flags go *after* the subcommand (`./orgs serve -port 8010`); a flag before it is consumed by the global parse and the command list is printed instead.
+- `ORGS_PPROF=localhost:6060 ./orgs serve` serves Go's profiler on its own listener (`internal/app/orgs/pprof.go`): `go tool pprof -sample_index=alloc_space http://localhost:6060/debug/pprof/heap`. On macOS judge memory by `vmmap --summary <pid>`'s "Physical footprint", not RSS, which counts the mapped binary.
 - The HTTP listener runs in a goroutine while HTTPS blocks: with `allowHttps: false` the process falls through both and exits, so a throwaway server on another port still needs `allowHttps: true` and a cert to stay up.
 
 ```sh
