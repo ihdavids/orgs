@@ -1,0 +1,445 @@
+/* skin: Tinker's Workshop
+   about: An artificer's bench: tan parchment, riveted copper pipes, hanging signboards, gears and blueprint doodles.
+   swatch: #dcc79c #7e2c2e #4d3f44 #a8761e #f4ead2
+   fonts: Rye | Kalam:wght@400;700 | Zilla Slab:ital,wght@0,400;0,600;0,700;1,400
+*/
+
+/* ================= tokens ================= */
+html[data-skin="tinkers-workshop"] {
+  --font-head: Kalam, "Comic Neue", "Trebuchet MS", sans-serif;
+  --font-body: "Zilla Slab", Rockwell, Georgia, serif;
+  --font-show: Rye, "Zilla Slab", Georgia, serif;
+  --ink: #2b1d18;
+  --paper: #f8f0dc;
+  --paper-2: #f1e5c9;
+  --line: #bfa47c;
+  --edge: #7a5a3a;
+  --accent: #7a2629;
+  --accent-2: #9a6a14;
+  --muted: #6b5643;
+  --shadow: 0 2px 0 rgba(43,29,24,.25);
+  --stat-radius: 8px;
+  --mood-rgb: 176, 120, 50;
+  --tw-pipe-h: linear-gradient(180deg, #2c0e10 0, #6e2427 14%, #a9484a 34%, #d48a7e 46%, #9a4442 58%, #6a2326 82%, #2c0e10 100%);
+  --tw-pipe-v: linear-gradient(90deg, #2c0e10 0, #6e2427 14%, #a9484a 34%, #d48a7e 46%, #9a4442 58%, #6a2326 82%, #2c0e10 100%);
+  --tw-brass: linear-gradient(180deg, #f3dc9c, #d6ab55 45%, #b5852e 55%, #e6c47a);
+  --tw-wood: linear-gradient(180deg, #c3ada2, #a48d82 55%, #927a70);
+  --tw-i-doodles: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360' opacity='.11'%3E%3Cg stroke='%234a2c14' fill='none' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M96.8 66.5 L103.8 66.8 L103.8 73.2 L96.8 73.5 L94.9 80.3 L100.9 84.2 L97.7 89.7 L91.4 86.4 L86.4 91.4 L89.7 97.7 L84.2 100.9 L80.3 94.9 L73.5 96.8 L73.2 103.8 L66.8 103.8 L66.5 96.8 L59.7 94.9 L55.8 100.9 L50.3 97.7 L53.6 91.4 L48.6 86.4 L42.3 89.7 L39.1 84.2 L45.1 80.3 L43.2 73.5 L36.2 73.2 L36.2 66.8 L43.2 66.5 L45.1 59.7 L39.1 55.8 L42.3 50.3 L48.6 53.6 L53.6 48.6 L50.3 42.3 L55.8 39.1 L59.7 45.1 L66.5 43.2 L66.8 36.2 L73.2 36.2 L73.5 43.2 L80.3 45.1 L84.2 39.1 L89.7 42.3 L86.4 48.6 L91.4 53.6 L97.7 50.3 L100.9 55.8 L94.9 59.7ZM59 70a11 11 0 1 0 22 0a11 11 0 1 0 -22 0Z'/%3E%3Cpath d='M317.7 246.9 L323.8 247 L323.8 253 L317.7 253.1 L315.6 259 L320.2 263 L316.3 267.6 L311.6 263.8 L306.2 266.9 L307.1 272.9 L301.2 274 L300 268 L293.8 266.9 L290.7 272.1 L285.5 269.1 L288.4 263.8 L284.4 259 L278.7 261 L276.6 255.3 L282.3 253.1 L282.3 246.9 L276.6 244.7 L278.7 239 L284.4 241 L288.4 236.2 L285.5 230.9 L290.7 227.9 L293.8 233.1 L300 232 L301.2 226 L307.1 227.1 L306.2 233.1 L311.6 236.2 L316.3 232.4 L320.2 237 L315.6 241ZM293 250a7 7 0 1 0 14 0a7 7 0 1 0 -14 0Z'/%3E%3Cpath transform='translate(250 80) rotate(40)' d='M-4.5 -22 L-4.5 26 Q-4.5 31 0 31 Q4.5 31 4.5 26 L4.5 -22 A12 12 0 1 0 -4.5 -22Z M-4 -40 L-4 -30 L4 -30 L4 -40'/%3E%3Cpath transform='translate(90 270) rotate(-14)' d='M-6 -30 L-6 -10 L-20 14 Q-23 22 -14 22 L14 22 Q23 22 20 14 L6 -10 L6 -30 Z M-9 -30 L9 -30 M-15 8 Q-6 4 0 8 T15 8'/%3E%3Cpath transform='translate(190 170) rotate(28)' d='M-8 -14 L8 -14 L8 -6 L-8 -6Z M-5 -6 L-5 22 L5 22 L5 -6 M-5 0 L5 3 M-5 6 L5 9 M-5 12 L5 15 M-5 18 L5 21'/%3E%3Cpath d='M150 330 h40 M170 310 v40' stroke-dasharray='3 4'/%3E%3Cpath d='M20 180 l26 0 l0 -26' stroke-dasharray='2 4'/%3E%3C/g%3E%3C/svg%3E");
+  --tw-i-signgrain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='48' viewBox='0 0 200 48' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%2321140f' stroke-opacity='.28' stroke-width='1.1'%3E%3Cpath d='M0 7 C30 4 60 10 90 7 S150 4 200 8'/%3E%3Cpath d='M0 15 C30 12 60 18 90 15 S150 12 200 16'/%3E%3Cpath d='M0 24 C30 21 60 27 90 24 S150 21 200 25'/%3E%3Cpath d='M0 33 C30 30 60 36 90 33 S150 30 200 34'/%3E%3Cpath d='M0 41 C30 38 60 44 90 41 S150 38 200 42'/%3E%3Cellipse cx='140' cy='24' rx='9' ry='3.5'/%3E%3Cellipse cx='140' cy='24' rx='4' ry='1.4'/%3E%3C/g%3E%3C/svg%3E");
+  --tw-i-chain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='14' viewBox='0 0 8 14'%3E%3Crect x='1.2' y='.8' width='5.6' height='8' rx='2.8' fill='none' stroke='%232b1d18' stroke-width='1.3'/%3E%3Crect x='3.1' y='7.4' width='1.8' height='6.4' rx='.9' fill='%236d6466' stroke='%232b1d18' stroke-width='.8'/%3E%3C/svg%3E");
+  --tw-i-nut: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpolygon points='26.5,14 20.2,24.8 7.8,24.8 1.5,14 7.7,3.2 20.2,3.2' fill='%234d3f44' stroke='%2321151a' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpolygon points='22,18.6 14,23.2 6,18.6 6,9.4 14,4.8 22,9.4' fill='%235f5055' stroke='%2321151a' stroke-width='1'/%3E%3Ccircle cx='14' cy='14' r='3.8' fill='%232e2328' /%3E%3Cpath d='M6.2 10.2 a8.8 8.8 0 0 1 8.8 -3.1' fill='none' stroke='%238c7c80' stroke-width='1.3' stroke-linecap='round'/%3E%3Ccircle cx='12.8' cy='12.5' r='1.2' fill='%23b8a9ad'/%3E%3C/svg%3E");
+}
+
+/* ================= the bench ================= */
+html[data-skin="tinkers-workshop"] body {
+  background-color: #3a2618;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, transparent 2px 118px),
+    linear-gradient(90deg, #3a2618, #4a3220 50%, #3a2618);
+}
+html[data-skin="tinkers-workshop"] .page {
+  padding: 26px 30px 24px;
+  background-color: #e0caa0;
+  background-image:
+    radial-gradient(ellipse 620px 420px at 0% 0%, rgba(214,150,60,.45), transparent 70%),
+    radial-gradient(ellipse 520px 520px at 100% 100%, rgba(150,90,40,.25), transparent 70%),
+    radial-gradient(ellipse 140% 110% at 50% 45%, transparent 55%, rgba(120,70,30,.28)),
+    var(--tw-i-doodles),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='4' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .36 0 0 0 0 .14 0 0 0 -1.4 .75'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23m)'/%3E%3C/svg%3E");
+  background-size: auto, auto, auto, 360px 360px, 300px 300px;
+  box-shadow: 0 0 0 2px #2b1d18, 0 0 50px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+/* gears turning slowly behind the work */
+html[data-skin="tinkers-workshop"] .page::before,
+html[data-skin="tinkers-workshop"] .page::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  background: no-repeat center / contain;
+}
+html[data-skin="tinkers-workshop"] .page::before {
+  width: 300px; height: 300px; top: -120px; right: -110px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cpath d='M181.6 92.1 L195.8 93.4 L195.8 106.6 L181.6 107.9 L179.4 120.5 L192.3 126.5 L187.7 139 L174 135.3 L167.6 146.4 L177.6 156.5 L169.1 166.6 L157.5 158.5 L147.6 166.8 L153.6 179.6 L142.1 186.3 L134 174.6 L121.9 179 L123.2 193.2 L110.1 195.5 L106.4 181.7 L93.6 181.7 L89.9 195.5 L76.8 193.2 L78.1 179 L66 174.6 L57.9 186.3 L46.4 179.6 L52.4 166.8 L42.5 158.5 L30.9 166.6 L22.4 156.5 L32.4 146.4 L26 135.3 L12.3 139 L7.7 126.5 L20.6 120.5 L18.4 107.9 L4.2 106.6 L4.2 93.4 L18.4 92.1 L20.6 79.5 L7.7 73.5 L12.3 61 L26 64.7 L32.4 53.6 L22.4 43.5 L30.9 33.4 L42.5 41.5 L52.4 33.2 L46.4 20.4 L57.9 13.7 L66 25.4 L78.1 21 L76.8 6.8 L89.9 4.5 L93.6 18.3 L106.4 18.3 L110.1 4.5 L123.2 6.8 L121.9 21 L134 25.4 L142.1 13.7 L153.6 20.4 L147.6 33.2 L157.5 41.5 L169.1 33.4 L177.6 43.5 L167.6 53.6 L174 64.7 L187.7 61 L192.3 73.5 L179.4 79.5ZM36 100a64 64 0 1 0 128 0a64 64 0 1 0 -128 0ZM78 100a22 22 0 1 0 44 0a22 22 0 1 0 -44 0Z' fill='%23b07a2c' fill-opacity='.22' fill-rule='evenodd' stroke='%235a3a1c' stroke-opacity='.55' stroke-width='2.5'/%3E%3Cpath d='M122 100 L164 100M111 119.1 L132 155.4M89 119.1 L68 155.4M78 100 L36 100M89 80.9 L68 44.6M111 80.9 L132 44.6' stroke='%235a3a1c' stroke-opacity='.55' stroke-width='9' stroke-linecap='round'/%3E%3Ccircle cx='100' cy='100' r='9' fill='%235a3a1c' fill-opacity='.5'/%3E%3C/svg%3E");
+  animation: tinkers-workshop-turn 90s linear infinite;
+}
+html[data-skin="tinkers-workshop"] .page::after {
+  width: 150px; height: 150px; top: 112px; right: 152px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M87.5 44.1 L96.7 44.7 L96.7 55.3 L87.5 55.9 L84.8 65.3 L92.2 70.8 L86.4 79.7 L78.4 75.3 L71 81.7 L74.2 90.3 L64.6 94.7 L60.2 86.6 L50.5 88 L48.6 97 L38.1 95.5 L38.8 86.3 L29.9 82.3 L23.4 88.8 L15.4 81.8 L20.9 74.5 L15.7 66.3 L6.7 68.2 L3.7 58.1 L12.3 54.9 L12.3 45.1 L3.7 41.9 L6.7 31.8 L15.7 33.7 L20.9 25.5 L15.4 18.2 L23.4 11.2 L29.9 17.7 L38.8 13.7 L38.1 4.5 L48.6 3 L50.5 12 L60.2 13.4 L64.6 5.3 L74.2 9.7 L71 18.3 L78.4 24.7 L86.4 20.3 L92.2 29.2 L84.8 34.7ZM36 50a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z' fill='%238a3a33' fill-opacity='.2' fill-rule='evenodd' stroke='%235a2a24' stroke-opacity='.55' stroke-width='2.2'/%3E%3C/svg%3E");
+  animation: tinkers-workshop-turn 54s linear infinite reverse;
+}
+@keyframes tinkers-workshop-turn { to { transform: rotate(360deg); } }
+
+/* ================= header ================= */
+html[data-skin="tinkers-workshop"] header.sheet-head {
+  position: relative;
+  border-bottom: 0;
+  padding: 4px 6px 26px;
+  margin-bottom: 22px;
+  background: var(--tw-pipe-h) no-repeat left bottom / 100% 11px;
+}
+html[data-skin="tinkers-workshop"] header.sheet-head::after {
+  content: ""; position: absolute; left: -12px; right: -12px; bottom: -9px; height: 30px; pointer-events: none;
+  background:
+    var(--tw-i-nut) no-repeat left center / 30px,
+    var(--tw-i-nut) no-repeat right center / 30px,
+    var(--tw-i-nut) no-repeat center center / 26px;
+}
+html[data-skin="tinkers-workshop"] .char-name {
+  font-family: var(--font-show); font-weight: 400;
+  font-size: 2.7rem; color: var(--accent);
+  text-shadow: 2px 2px 0 rgba(43,29,24,.18);
+}
+html[data-skin="tinkers-workshop"] .char-title {
+  font-family: var(--font-head); font-weight: 700; color: #5a3e2c; font-size: 1.15rem;
+}
+html[data-skin="tinkers-workshop"] .has-portrait .char-title {
+  font-family: var(--font-show); font-weight: 400;
+  font-size: 1.75rem; line-height: 1.15; color: var(--accent);
+  text-shadow: 2px 2px 0 rgba(43,29,24,.16);
+}
+html[data-skin="tinkers-workshop"] .char-sub { font-family: var(--font-head); color: #5a4433; font-size: 1.05rem; }
+
+/* facts: brass-screwed tags */
+html[data-skin="tinkers-workshop"] .fact {
+  background:
+    radial-gradient(circle at 6px 6px, #8a7468 0 1.4px, #2b1d18 2.2px, transparent 2.8px),
+    radial-gradient(circle at calc(100% - 6px) 6px, #8a7468 0 1.4px, #2b1d18 2.2px, transparent 2.8px),
+    var(--paper);
+  border: 2px solid var(--ink); border-radius: 7px;
+  box-shadow: 0 3px 0 rgba(43,29,24,.85);
+  padding: 5px 14px 4px;
+}
+html[data-skin="tinkers-workshop"] .fact .label { font-family: var(--font-head); font-weight: 700; font-size: .72rem; letter-spacing: .08em; color: var(--muted); }
+html[data-skin="tinkers-workshop"] .fact .value { font-family: var(--font-body); font-weight: 700; font-size: 1.1rem; }
+html[data-skin="tinkers-workshop"] .fact.insp,
+html[data-skin="tinkers-workshop"] .fact.xp-fact { padding: 0; }
+html[data-skin="tinkers-workshop"] .insp-btn { padding: 5px 14px 4px; border-radius: 5px; }
+html[data-skin="tinkers-workshop"] .insp-btn:hover { background: rgba(214,171,85,.22); }
+html[data-skin="tinkers-workshop"] .fact.insp.on {
+  background: var(--tw-brass); border-color: var(--ink);
+  box-shadow: 0 3px 0 rgba(43,29,24,.85), 0 0 14px rgba(240,190,80,.8);
+}
+html[data-skin="tinkers-workshop"] .fact.insp.on .insp-btn .word { color: #5a2a06; }
+html[data-skin="tinkers-workshop"] .insp-btn .word { font-family: var(--font-head); font-weight: 700; }
+
+/* portrait: a copper band inside a turning cog */
+html[data-skin="tinkers-workshop"] .portrait { filter: drop-shadow(0 3px 0 rgba(43,29,24,.5)); }
+html[data-skin="tinkers-workshop"] .portrait::before {
+  content: ""; position: absolute; inset: -3%; z-index: -1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='210' viewBox='0 0 210 210'%3E%3Cpath d='M196.9 99.8 L208.9 100.8 L208.9 109.2 L196.9 110.2 L195.7 120.4 L207.2 124 L205.4 132.2 L193.4 130.5 L190 140.2 L200.4 146.3 L196.8 153.9 L185.5 149.5 L180 158.2 L188.9 166.5 L183.6 173.1 L173.6 166.3 L166.3 173.6 L173.1 183.6 L166.5 188.9 L158.2 180 L149.5 185.5 L153.9 196.8 L146.3 200.4 L140.2 190 L130.5 193.4 L132.2 205.4 L124 207.2 L120.4 195.7 L110.2 196.9 L109.2 208.9 L100.8 208.9 L99.8 196.9 L89.6 195.7 L86 207.2 L77.8 205.4 L79.5 193.4 L69.8 190 L63.7 200.4 L56.1 196.8 L60.5 185.5 L51.8 180 L43.5 188.9 L36.9 183.6 L43.7 173.6 L36.4 166.3 L26.4 173.1 L21.1 166.5 L30 158.2 L24.5 149.5 L13.2 153.9 L9.6 146.3 L20 140.2 L16.6 130.5 L4.6 132.2 L2.8 124 L14.3 120.4 L13.1 110.2 L1.1 109.2 L1.1 100.8 L13.1 99.8 L14.3 89.6 L2.8 86 L4.6 77.8 L16.6 79.5 L20 69.8 L9.6 63.7 L13.2 56.1 L24.5 60.5 L30 51.8 L21.1 43.5 L26.4 36.9 L36.4 43.7 L43.7 36.4 L36.9 26.4 L43.5 21.1 L51.8 30 L60.5 24.5 L56.1 13.2 L63.7 9.6 L69.8 20 L79.5 16.6 L77.8 4.6 L86 2.8 L89.6 14.3 L99.8 13.1 L100.8 1.1 L109.2 1.1 L110.2 13.1 L120.4 14.3 L124 2.8 L132.2 4.6 L130.5 16.6 L140.2 20 L146.3 9.6 L153.9 13.2 L149.5 24.5 L158.2 30 L166.5 21.1 L173.1 26.4 L166.3 36.4 L173.6 43.7 L183.6 36.9 L188.9 43.5 L180 51.8 L185.5 60.5 L196.8 56.1 L200.4 63.7 L190 69.8 L193.4 79.5 L205.4 77.8 L207.2 86 L195.7 89.6Z' fill='%239a6a2a' stroke='%232b1d18' stroke-width='2'/%3E%3Ccircle cx='105' cy='105' r='92' fill='none' stroke='%23e2b866' stroke-opacity='.5' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat center / contain;
+  animation: tinkers-workshop-turn 120s linear infinite;
+}
+html[data-skin="tinkers-workshop"] .ring-band { stroke: url(#tinkers-workshop-ring); }
+html[data-skin="tinkers-workshop"] .ring-edge { stroke: #2b1d18; stroke-width: 1.8; opacity: 1; }
+html[data-skin="tinkers-workshop"] .ring-hair { stroke: #f2c79a; opacity: .5; }
+html[data-skin="tinkers-workshop"] .ring-name { fill: #fff3dc; font-family: var(--font-head); font-weight: 700; letter-spacing: .12em; }
+html[data-skin="tinkers-workshop"] .ring-xp { fill: #fbe6c2; font-family: var(--font-head); font-weight: 700; }
+html[data-skin="tinkers-workshop"] .xp-track { stroke: rgba(43,29,24,.4); }
+html[data-skin="tinkers-workshop"] .xp-fill { stroke: #f3d27a; }
+html[data-skin="tinkers-workshop"] .ring-gem { fill: #4d3f44; stroke: #21151a; stroke-width: 1; }
+html[data-skin="tinkers-workshop"] .ring-gem-core { fill: #c9b8bc; }
+html[data-skin="tinkers-workshop"] .portrait:has(.ring-xp-btn:hover) .ring-xp { fill: #ffe08a; }
+
+/* ================= boxes: framed in copper pipe ================= */
+html[data-skin="tinkers-workshop"] .columns { gap: 26px; }
+html[data-skin="tinkers-workshop"] .col { gap: 24px; }
+html[data-skin="tinkers-workshop"] .box,
+html[data-skin="tinkers-workshop"] .has-backdrop .box,
+html[data-skin="tinkers-workshop"].has-backdrop .box {
+  position: relative;
+  border: 10px solid transparent; border-radius: 0;
+  padding: 10px 11px 14px;
+  background:
+    radial-gradient(ellipse 90% 60% at 20% 0%, rgba(255,250,236,.75), transparent 70%),
+    var(--tw-i-doodles),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .3 0 0 0 0 .2 0 0 0 -.9 .5'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23p)'/%3E%3C/svg%3E"),
+    var(--paper-2);
+  background-clip: padding-box;
+  background-attachment: scroll;
+  box-shadow: 0 6px 10px -2px rgba(70,40,15,.35);
+}
+html[data-skin="tinkers-workshop"] .box::before {
+  content: ""; position: absolute; inset: -10px; pointer-events: none; z-index: 1;
+  background:
+    var(--tw-pipe-h) no-repeat left top / 100% 10px,
+    var(--tw-pipe-h) no-repeat left bottom / 100% 10px,
+    var(--tw-pipe-v) no-repeat left top / 10px 100%,
+    var(--tw-pipe-v) no-repeat right top / 10px 100%;
+}
+html[data-skin="tinkers-workshop"] .box::after {
+  content: ""; position: absolute; inset: -19px; pointer-events: none; z-index: 2;
+  background:
+    var(--tw-i-nut) no-repeat left top / 28px,
+    var(--tw-i-nut) no-repeat right top / 28px,
+    var(--tw-i-nut) no-repeat left bottom / 28px,
+    var(--tw-i-nut) no-repeat right bottom / 28px;
+}
+
+/* box titles: wooden signboards hung on little chains from the pipe */
+html[data-skin="tinkers-workshop"] .box > h2,
+html[data-skin="tinkers-workshop"] .box.tabbed > .tabpane > h2 {
+  position: relative;
+  width: fit-content; max-width: 100%;
+  margin: 18px 0 12px 4px;
+  padding: 5px 16px 3px;
+  font-family: var(--font-show); font-weight: 400;
+  font-size: .98rem; line-height: 1.2; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--ink);
+  background: var(--tw-i-signgrain) no-repeat center / 100% 100%, var(--tw-wood);
+  border: 2px solid var(--ink); border-radius: 5px 7px 4px 6px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.28), inset 0 -3px 0 rgba(0,0,0,.14), 0 3px 0 rgba(43,29,24,.4);
+  transform: rotate(-.8deg);
+}
+html[data-skin="tinkers-workshop"] .box > h2::before,
+html[data-skin="tinkers-workshop"] .box.tabbed > .tabpane:first-child > h2::before,
+html[data-skin="tinkers-workshop"] .tabbtn.on::before {
+  content: ""; position: absolute; bottom: calc(100% + 1px); left: 12px; right: 12px; height: 34px;
+  pointer-events: none;
+  background:
+    var(--tw-i-chain) repeat-y left bottom / 8px 14px,
+    var(--tw-i-chain) repeat-y right bottom / 8px 14px;
+}
+html[data-skin="tinkers-workshop"] h3.subhead,
+html[data-skin="tinkers-workshop"] .spell-level h3 {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1.02rem; text-transform: none; letter-spacing: .02em;
+  color: var(--accent);
+  border-bottom: 2px dashed rgba(122,38,41,.45);
+}
+
+/* tabs: plain chalked labels, the open one is a hanging sign */
+html[data-skin="tinkers-workshop"] .tabbar {
+  border-bottom: 2px dashed rgba(122,38,41,.4);
+  margin: 16px 0 12px; gap: 6px; padding-bottom: 6px; align-items: flex-end;
+}
+html[data-skin="tinkers-workshop"] .tabbtn {
+  position: relative;
+  font-family: var(--font-head); font-weight: 700; font-size: .86rem; letter-spacing: .02em;
+  text-transform: none;
+  color: var(--muted); border: 2px solid transparent; border-radius: 5px; margin: 0;
+  padding: 3px 7px 1px;
+}
+html[data-skin="tinkers-workshop"] .tabbtn:hover { color: var(--accent); background: rgba(214,171,85,.25); }
+html[data-skin="tinkers-workshop"] .tabbtn.on {
+  font-family: var(--font-show); font-weight: 400; font-size: .76rem; text-transform: uppercase;
+  color: var(--ink);
+  background: var(--tw-i-signgrain) no-repeat center / 100% 100%, var(--tw-wood);
+  border-color: var(--ink);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.28), 0 3px 0 rgba(43,29,24,.4);
+  padding: 4px 10px 2px;
+}
+html[data-skin="tinkers-workshop"] .tabbtn.on::before { height: 40px; left: 8px; right: 8px; }
+
+/* ================= ability scores: copper hex cells ================= */
+html[data-skin="tinkers-workshop"] .abilities { gap: 6px 6px; }
+html[data-skin="tinkers-workshop"] .ability,
+html[data-skin="tinkers-workshop"] .ability.rollable {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  aspect-ratio: 82 / 100; min-height: 0;
+  padding: 9px 2px 8px; gap: 1px;
+  border: 0; border-radius: 0; box-shadow: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='c' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23e3a094'/%3E%3Cstop offset='.5' stop-color='%23a9484a'/%3E%3Cstop offset='1' stop-color='%235a1c1e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='26,1.5 74,1.5 98.5,50 74,98.5 26,98.5 1.5,50' fill='url(%23c)' stroke='%232b1d18' stroke-width='2.2' vector-effect='non-scaling-stroke' stroke-linejoin='round'/%3E%3Cpolygon points='29.5,8 70.5,8 91,50 70.5,92 29.5,92 9,50' fill='%23f8f0dc' stroke='%232b1d18' stroke-width='1.6' vector-effect='non-scaling-stroke' stroke-linejoin='round'/%3E%3Cpolygon points='31,11 69,11 73,19 27,19' fill='%23fff' fill-opacity='.35'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+  filter: drop-shadow(0 3px 0 rgba(43,29,24,.35));
+  transition: filter .15s ease, transform .15s ease;
+}
+html[data-skin="tinkers-workshop"] .ability.rollable:hover,
+html[data-skin="tinkers-workshop"] .ability.rollable:focus-visible {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='c' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6dc9a'/%3E%3Cstop offset='.5' stop-color='%23c9963a'/%3E%3Cstop offset='1' stop-color='%235a1c1e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='26,1.5 74,1.5 98.5,50 74,98.5 26,98.5 1.5,50' fill='url(%23c)' stroke='%232b1d18' stroke-width='2.2' vector-effect='non-scaling-stroke' stroke-linejoin='round'/%3E%3Cpolygon points='29.5,8 70.5,8 91,50 70.5,92 29.5,92 9,50' fill='%23fff8e6' stroke='%232b1d18' stroke-width='1.6' vector-effect='non-scaling-stroke' stroke-linejoin='round'/%3E%3Cpolygon points='31,11 69,11 73,19 27,19' fill='%23fff' fill-opacity='.35'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+  box-shadow: none;
+  filter: drop-shadow(0 0 6px rgba(230,170,70,.9)) drop-shadow(0 3px 0 rgba(43,29,24,.35));
+  transform: translateY(-2px);
+}
+html[data-skin="tinkers-workshop"] .ability .tile-label { font-family: var(--font-head); font-weight: 700; font-size: .7rem; letter-spacing: .1em; color: #5a3e2c; line-height: 1; }
+html[data-skin="tinkers-workshop"] .ability .mod { font-family: var(--font-body); font-weight: 700; font-size: 1.5rem; line-height: 1; color: var(--ink); }
+html[data-skin="tinkers-workshop"] .ability .score {
+  font-family: var(--font-body); font-weight: 700; font-size: .82rem;
+  background: var(--tw-brass); border: 1.5px solid var(--ink); border-radius: 10px; color: var(--ink);
+  min-width: 30px; padding: 0 5px;
+}
+
+/* ================= lists ================= */
+html[data-skin="tinkers-workshop"] .row { border-bottom: 1px dashed rgba(122,90,58,.45); font-size: .95rem; }
+html[data-skin="tinkers-workshop"] .row .val { font-weight: 700; }
+html[data-skin="tinkers-workshop"] .row .abbr { font-family: var(--font-head); font-weight: 700; font-size: .74rem; }
+/* proficiency: bolt heads; expertise: a brass one with a ring */
+html[data-skin="tinkers-workshop"] .pip {
+  width: 13px; height: 13px; border: 0; border-radius: 0; padding: 2px; box-shadow: none;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: linear-gradient(#fbf5e6, #fbf5e6) content-box, var(--ink);
+}
+html[data-skin="tinkers-workshop"] .pip.on {
+  background: radial-gradient(circle at 40% 35%, #d98a7f, #8a3034 60%, #4a1416) content-box, var(--ink);
+}
+html[data-skin="tinkers-workshop"] .pip.exp {
+  background: radial-gradient(circle at 40% 35%, #fff0b8, #d6ab55 55%, #8a5a14) content-box, var(--ink);
+  box-shadow: none;
+}
+html[data-skin="tinkers-workshop"] .rollable:hover,
+html[data-skin="tinkers-workshop"] .rollable:focus-visible {
+  background-color: rgba(214,171,85,.28);
+  box-shadow: 0 0 0 2px rgba(154,106,20,.5);
+}
+html[data-skin="tinkers-workshop"] .row.rollable,
+html[data-skin="tinkers-workshop"] td.rollable,
+html[data-skin="tinkers-workshop"] .inline-roll { text-decoration-color: rgba(122,38,41,.6); }
+html[data-skin="tinkers-workshop"] th { font-family: var(--font-head); font-weight: 700; font-size: .74rem; letter-spacing: .05em; color: var(--muted); border-bottom: 2px solid var(--ink); }
+html[data-skin="tinkers-workshop"] td { border-bottom-color: rgba(122,90,58,.4); }
+
+/* ================= combat: brass-framed plates ================= */
+html[data-skin="tinkers-workshop"] .tile,
+html[data-skin="tinkers-workshop"] .tile.rollable {
+  background:
+    radial-gradient(circle at 7px 7px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at 7px calc(100% - 7px), #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    var(--paper);
+  border: 3px solid #b5852e;
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px var(--ink), 0 4px 0 1px rgba(43,29,24,.5);
+}
+html[data-skin="tinkers-workshop"] .tile.shield,
+html[data-skin="tinkers-workshop"] .tile.shield.rollable {
+  border-color: #9a3d3b;
+  border-radius: 8px 8px 30px 30px / 8px 8px 38px 38px;
+  background:
+    radial-gradient(circle at 8px 8px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) 8px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    var(--paper);
+}
+html[data-skin="tinkers-workshop"] .tile.rollable:hover,
+html[data-skin="tinkers-workshop"] .tile.rollable:focus-visible {
+  box-shadow: 0 0 0 2px var(--ink), 0 4px 0 1px rgba(43,29,24,.5), 0 0 14px 3px rgba(230,170,70,.75);
+}
+html[data-skin="tinkers-workshop"] .tile .tile-label { font-family: var(--font-head); font-weight: 700; font-size: .74rem; letter-spacing: .06em; color: var(--muted); }
+html[data-skin="tinkers-workshop"] .tile .big { font-family: var(--font-body); font-weight: 700; font-size: 1.75rem; line-height: 1.1; }
+html[data-skin="tinkers-workshop"] .tile .sub { font-size: .76rem; }
+html[data-skin="tinkers-workshop"] .spell-head .tile { min-width: 66px; padding: 6px 9px; }
+html[data-skin="tinkers-workshop"] .combat { gap: 14px; }
+
+/* hit points: a glass gauge tube in copper fittings */
+html[data-skin="tinkers-workshop"] .hp-bar {
+  height: 14px; border-radius: 8px;
+  background: linear-gradient(180deg, #fffaf0, #e2d4ba);
+  border: 2px solid var(--ink);
+  box-shadow: 0 0 0 2px #b0544f, inset 0 2px 3px rgba(43,29,24,.35);
+}
+html[data-skin="tinkers-workshop"] .hp-fill { box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.18); }
+html[data-skin="tinkers-workshop"] .hp-gauge { gap: 12px; }
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-now,
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-max { font-family: var(--font-body); }
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-now { font-size: 1.55rem; }
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-max { font-size: 1.1rem; }
+
+/* buttons: chunky cartoon pushbuttons */
+html[data-skin="tinkers-workshop"] .hpb,
+html[data-skin="tinkers-workshop"] .cast-btn,
+html[data-skin="tinkers-workshop"] .hitdie {
+  font-family: var(--font-head); font-weight: 700; letter-spacing: .04em;
+  background: linear-gradient(180deg, #fffaf0, #eedcb4);
+  border: 1.5px solid var(--ink); border-radius: 6px;
+  box-shadow: 0 2px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+html[data-skin="tinkers-workshop"] .hpb { font-size: .84rem; padding: 3px 11px 1px; }
+html[data-skin="tinkers-workshop"] .cast-btn { font-size: .74rem; padding: 0 7px; line-height: 1.45; margin-bottom: 2px; }
+html[data-skin="tinkers-workshop"] .cast-at { font-family: var(--font-head); font-weight: 700; font-size: .72rem; border: 1.5px solid var(--ink); border-radius: 6px; }
+html[data-skin="tinkers-workshop"] .hpb:hover,
+html[data-skin="tinkers-workshop"] .cast-btn:hover,
+html[data-skin="tinkers-workshop"] .hitdie:hover {
+  background: var(--tw-brass); border-color: var(--ink);
+  transform: translateY(1px); box-shadow: 0 1px 0 var(--ink);
+}
+html[data-skin="tinkers-workshop"] .hitdie .hd-label { font-size: .74rem; }
+html[data-skin="tinkers-workshop"] .hitdie .hd-val { font-family: var(--font-body); font-size: 1.05rem; }
+html[data-skin="tinkers-workshop"] .hp-ctl .hp-amt { font-family: var(--font-body); font-size: 1rem; border: 1.5px solid var(--ink); border-radius: 6px; }
+html[data-skin="tinkers-workshop"] details.spell summary { font-size: .93rem; border-bottom-color: rgba(122,90,58,.4); }
+html[data-skin="tinkers-workshop"] details.spell summary::marker { color: var(--accent); }
+html[data-skin="tinkers-workshop"] .feature h3 { font-family: var(--font-head); font-weight: 700; color: var(--accent); font-size: 1.02rem; }
+
+/* the spell buttons float beside each line: kept no taller than the line so
+   the floats of one spell never push into the next */
+html[data-skin="tinkers-workshop"] .cast-btn,
+html[data-skin="tinkers-workshop"] .cast-at { height: 18px; line-height: 14px; padding-top: 0; padding-bottom: 0; margin-top: 1px; margin-bottom: 1px; }
+html[data-skin="tinkers-workshop"] .cast-at { height: 18px; }
+html[data-skin="tinkers-workshop"] details.spell summary { line-height: 21px; }
+html[data-skin="tinkers-workshop"] details.spell summary::after { content: ""; display: block; clear: both; }
+
+/* the inventory's row of buttons, a little tighter than the classic
+   sheet's so the whole row fits inside the frame */
+html[data-skin="tinkers-workshop"] .ib { padding: 0 4px; margin-left: 2px; }
+html[data-skin="tinkers-workshop"] .inv-table td, html[data-skin="tinkers-workshop"] .inv-table th { padding-left: 3px; padding-right: 3px; }
+
+/* ================= footer ================= */
+html[data-skin="tinkers-workshop"] footer.sheet-foot {
+  font-family: var(--font-head); font-size: .82rem; color: #5a4433;
+  border-top: 2px dashed rgba(122,38,41,.45);
+}
+
+html[data-skin="tinkers-workshop"] .xp-pop {
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 8px;
+  box-shadow: 0 0 0 4px #b0544f, 0 0 0 6px var(--ink), 0 12px 26px rgba(43,29,24,.45);
+}
+html[data-skin="tinkers-workshop"] .xp-pop-head { font-family: var(--font-head); font-weight: 700; font-size: .86rem; }
+
+/* ================= the phone ================= */
+html[data-skin="tinkers-workshop"].m .page { padding: 8px 14px 92px; }
+html[data-skin="tinkers-workshop"].m .page::before { width: 200px; height: 200px; top: -90px; right: -80px; }
+html[data-skin="tinkers-workshop"].m .page::after { display: none; }
+html[data-skin="tinkers-workshop"].m header.sheet-head { padding: 6px 2px 20px; margin-bottom: 12px; }
+html[data-skin="tinkers-workshop"].m header.sheet-head::after { left: -6px; right: -6px; bottom: -8px; }
+html[data-skin="tinkers-workshop"].m .char-name { font-size: 1.7rem; }
+html[data-skin="tinkers-workshop"].m .has-portrait .char-title { font-size: 1.15rem; }
+html[data-skin="tinkers-workshop"].m .char-title { font-size: 1rem; }
+html[data-skin="tinkers-workshop"].m .head-facts { padding: 4px 14px 8px; margin: 0 -14px; }
+html[data-skin="tinkers-workshop"].m .fact { padding: 4px 11px 3px; }
+html[data-skin="tinkers-workshop"].m .fact.insp,
+html[data-skin="tinkers-workshop"].m .fact.xp-fact { padding: 0; }
+html[data-skin="tinkers-workshop"].m .insp-btn { padding: 4px 11px 3px; }
+html[data-skin="tinkers-workshop"].m .m-bar {
+  margin: 0 -14px 18px; padding: 8px 14px 0;
+  background:
+    var(--tw-pipe-h) no-repeat left bottom / 100% 8px,
+    linear-gradient(180deg, #ead8b2, #dcc595);
+  border-bottom: 0;
+  box-shadow: 0 6px 10px -4px rgba(43,29,24,.5);
+  padding-bottom: 8px;
+}
+html[data-skin="tinkers-workshop"].m .m-stat {
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 7px;
+  box-shadow: 0 2px 0 var(--ink);
+}
+html[data-skin="tinkers-workshop"].m .m-stat .m-lbl { font-family: var(--font-head); font-size: .66rem; letter-spacing: .06em; }
+html[data-skin="tinkers-workshop"].m .m-stat b { font-family: var(--font-body); font-size: 1.22rem; }
+html[data-skin="tinkers-workshop"].m .m-tool {
+  background: linear-gradient(180deg, #c76a5f, #8a3034 55%, #5a1c1e);
+  color: #ffe6c8; border: 2px solid var(--ink); border-radius: 7px;
+  box-shadow: 0 2px 0 var(--ink), inset 0 2px 0 rgba(255,255,255,.25);
+}
+html[data-skin="tinkers-workshop"].m .m-tab {
+  font-family: var(--font-head); font-weight: 700; font-size: .92rem; letter-spacing: .02em; text-transform: none;
+  color: var(--muted); padding: 8px 9px 6px;
+}
+html[data-skin="tinkers-workshop"].m .m-tab.on { color: var(--accent); border-bottom-color: #9a3d3b; }
+html[data-skin="tinkers-workshop"].m .columns { gap: 26px; }
+html[data-skin="tinkers-workshop"].m .ability { aspect-ratio: 100 / 88; gap: 2px; }
+html[data-skin="tinkers-workshop"].m .ability .mod { font-size: 1.9rem; }
+html[data-skin="tinkers-workshop"].m .ability .tile-label { font-size: .8rem; }
+html[data-skin="tinkers-workshop"].m .box { padding: 8px 12px 12px; }
+html[data-skin="tinkers-workshop"].m .box.has-tabs > .tabpane.m-on ~ .tabpane.m-on > h2 { margin-top: 22px; }
+html[data-skin="tinkers-workshop"].m .box.has-tabs > .tabpane.m-on > h2::before {
+  content: ""; position: absolute; bottom: calc(100% + 1px); left: 12px; right: 12px; height: 34px; pointer-events: none;
+  background: var(--tw-i-chain) repeat-y left bottom / 8px 14px, var(--tw-i-chain) repeat-y right bottom / 8px 14px;
+}
+html[data-skin="tinkers-workshop"].m .box.has-tabs > .tabpane.m-on ~ .tabpane.m-on > h2::before { content: none; }
+html[data-skin="tinkers-workshop"].m .m-spf button { font-family: var(--font-head); font-weight: 700; font-size: .86rem; border: 1.5px solid var(--ink); }
+html[data-skin="tinkers-workshop"].m .m-spf button.on { background: var(--accent); color: #fff3e0; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="tinkers-workshop"] .page::before,
+  html[data-skin="tinkers-workshop"] .page::after,
+  html[data-skin="tinkers-workshop"] .portrait::before { animation: none; }
+  html[data-skin="tinkers-workshop"] .ability,
+  html[data-skin="tinkers-workshop"] .hpb,
+  html[data-skin="tinkers-workshop"] .cast-btn,
+  html[data-skin="tinkers-workshop"] .hitdie { transition: none; }
+}

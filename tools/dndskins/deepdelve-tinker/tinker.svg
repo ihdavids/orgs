@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- the portrait's band: polished copper, lit from above -->
+    <linearGradient id="tinkers-workshop-ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e3a76d"/>
+      <stop offset=".3" stop-color="#b56a3a"/>
+      <stop offset=".62" stop-color="#7e3a24"/>
+      <stop offset="1" stop-color="#c47c4a"/>
+    </linearGradient>
+  </defs>
+</svg>

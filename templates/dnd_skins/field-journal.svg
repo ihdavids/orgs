@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- a pencil line: shaken a little off true, and broken up by the tooth
+         of the paper so it is never one flat colour -->
+    <filter id="field-journal-pencil" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="3.2" xChannelSelector="R" yChannelSelector="G" result="shaken"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="2" result="tooth"/>
+      <feColorMatrix in="tooth" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 2.05" result="toothA"/>
+      <feComposite in="shaken" in2="toothA" operator="in"/>
+    </filter>
+    <!-- charcoal lettering: a gentler shake, and grain -->
+    <filter id="field-journal-charcoal" x="-3%" y="-10%" width="106%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="shaken"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="9" result="tooth"/>
+      <feColorMatrix in="tooth" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.75" result="toothA"/>
+      <feComposite in="shaken" in2="toothA" operator="in"/>
+    </filter>
+  </defs>
+</svg>

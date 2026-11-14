@@ -1,0 +1,345 @@
+/* skin: Strawberry Meadow
+   about: Cottagecore: cream panels in twining vines, strawberries, blossoms and falling petals.
+   swatch: #f1c4c4 #fff8ee #e04a5c #9db88a #6b4a35
+   fonts: Fredoka:wght@400;500;600;700 | Nunito:ital,wght@0,400;0,700;1,400
+*/
+
+/* ================= palette and faces ================= */
+$P {
+  --font-head: Fredoka, "Varela Round", "Trebuchet MS", sans-serif;
+  --font-body: Nunito, "Segoe UI", "Helvetica Neue", sans-serif;
+  --ink: #4a3226;
+  --paper: #f8dcd8;
+  --paper-2: #fff8ee;
+  --line: #efc6c6;
+  --edge: #c98a8a;
+  --accent: #c23446;
+  --accent-2: #c98a1e;
+  --muted: #8a6656;
+  --sm-sage: #6f8f5c;
+  --sm-pink: #f6d0d4;
+  --sm-hover: #fde9ea;
+  --shadow: 0 2px 6px rgba(150,80,80,.16);
+  --stat-radius: 22px;
+  --mood-rgb: 214, 140, 150;
+  --sm-frame: @@FRAME@@;
+  --sm-vine: @@VINE@@;
+  --sm-petals: @@PETALS@@;
+  --sm-blossom: @@BLOSSOM@@;
+  --sm-icon: @@ICON@@;
+}
+
+$P body {
+  background-color: #d79c9f;
+  background-image: var(--sm-petals);
+  background-size: 300px 300px;
+}
+
+/* ================= the page: blush, with petals drifting down ================= */
+$P .page {
+  background-color: #f8e0dc;
+  background-image:
+    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255,246,240,.75), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 50% 100%, rgba(240,180,186,.4), transparent 70%),
+    var(--sm-petals);
+  background-size: auto, auto, 300px 300px;
+  box-shadow: 0 0 0 10px #f1c4c4, 0 0 40px rgba(110,40,50,.45);
+  padding: 28px 24px 24px;
+  color: var(--ink);
+}
+$P .page::after {
+  content: ""; position: absolute; inset: 8px; pointer-events: none; z-index: -1;
+  border: 2px dashed rgba(196,110,122,.35); border-radius: 18px;
+}
+
+/* ================= header ================= */
+$P header.sheet-head {
+  position: relative;
+  border: 13px solid transparent;
+  border-image: var(--sm-frame) 40 / 26px / 13px round;
+  background: var(--paper-2);
+  box-shadow: 0 4px 14px rgba(160,80,90,.18);
+  padding: 6px 14px;
+  margin: 8px 0 28px;
+  gap: 14px;
+}
+$P .char-name {
+  font-family: var(--font-head); font-weight: 600;
+  color: var(--accent); font-size: 2.6rem;
+  text-shadow: 0 2px 0 #fbe0e3;
+}
+$P .char-title, $P .has-portrait .char-title {
+  font-family: var(--font-head); font-weight: 600;
+  color: #9a2c3b; font-size: 1.15rem;
+  text-shadow: none;
+}
+$P .has-portrait .char-title { font-size: 1.5rem; line-height: 1.15; }
+$P .char-sub { color: var(--muted); font-style: italic; }
+$P .portrait { margin: 14px 10px 14px 12px; filter: drop-shadow(0 3px 6px rgba(150,70,80,.3)); }
+$P .portrait::before {
+  content: ""; position: absolute; inset: -11.5%; pointer-events: none;
+  background: @@WREATH@@ center / 100% 100% no-repeat;
+}
+$P .portrait-well { background: #f3d6d6; }
+$P .ring-band { stroke: #f7d3d8; }
+$P .ring-edge { stroke: #c96a78; stroke-width: 1.4; }
+$P .ring-hair { stroke: #9db88a; opacity: .9; stroke-dasharray: 2 3; stroke-width: 1.2; }
+$P .ring-name { fill: #a72d3e; font-family: var(--font-head); font-weight: 600; letter-spacing: .05em; }
+$P .ring-xp { fill: #6b4a35; font-family: var(--font-head); font-weight: 500; }
+$P .xp-track { stroke: rgba(196,110,122,.25); }
+$P .xp-fill { stroke: #e04a5c; }
+$P .ring-gem { fill: #9db88a; }
+$P .ring-gem-core { fill: #e04a5c; }
+
+$P .fact {
+  background: #fffaf3;
+  border: 2px solid #f0b9c0;
+  border-radius: 16px;
+  box-shadow: 0 2px 0 #f6d6d9;
+  min-width: 78px; padding: 4px 12px;
+}
+$P .fact .label {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .64rem; letter-spacing: .08em; color: var(--sm-sage);
+}
+$P .fact .value { font-family: var(--font-head); font-weight: 500; font-size: 1.08rem; color: var(--ink); }
+$P .insp-btn { border-radius: 14px; }
+$P .insp-btn:hover { background: var(--sm-hover); }
+$P .fact.insp.on { background: #fff1d6; border-color: #e3b04a; }
+
+/* ================= panels in a vine frame ================= */
+$P .columns { gap: 30px; }
+$P .col { gap: 28px; }
+$P .box {
+  position: relative;
+  border: 13px solid transparent;
+  border-image: var(--sm-frame) 40 / 26px / 13px round;
+  border-radius: 0;
+  background: var(--paper-2);
+  box-shadow: 0 5px 16px rgba(170,90,100,.18);
+  padding: 4px 8px 8px;
+}
+$P .has-backdrop .box {
+  background-color: transparent;
+  background-image:
+    linear-gradient(rgba(255,248,238,var(--glass-a,.94)), rgba(255,248,238,var(--glass-a,.94))),
+    var(--backdrop-img, none);
+  background-attachment: scroll, fixed;
+}
+/* a blossom pinned at the middle of every panel's top */
+$P .box::before {
+  content: ""; position: absolute; z-index: 2; pointer-events: none;
+  width: 22px; height: 22px; left: 50%; top: -24px; margin-left: -11px;
+  background: var(--sm-blossom) center / contain no-repeat;
+}
+
+$P .box > h2, $P .box.tabbed > .tabpane > h2, $P h3.subhead {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: 1.05rem; text-transform: none; letter-spacing: .01em;
+  color: var(--accent);
+  border-bottom: 0;
+  padding: 1px 0 10px 22px;
+  margin-bottom: 8px;
+  background:
+    var(--sm-icon) left 0 top 0 / 18px 20px no-repeat,
+    var(--sm-vine) left bottom / 64px 14px repeat-x;
+}
+$P h3.subhead { font-size: .95rem; margin-top: 14px; }
+
+$P .tabbar {
+  border-bottom: 0; padding-bottom: 8px; margin: -2px 0 10px; gap: 5px;
+  background: var(--sm-vine) left bottom / 64px 14px repeat-x;
+}
+$P .tabbtn {
+  font-family: var(--font-head); font-weight: 500;
+  font-size: .9rem; text-transform: none; letter-spacing: .01em;
+  color: var(--muted);
+  border: 2px solid transparent; border-radius: 999px;
+  padding: 2px 12px 3px; margin-bottom: 3px;
+}
+$P .tabbtn:hover { color: var(--accent); background: var(--sm-hover); }
+$P .tabbtn.on {
+  background: #fde3e6; border-color: #eda3ad; color: #a72d3e; font-weight: 600;
+}
+
+/* ================= ability scores in strawberries ================= */
+$P .abilities { gap: 8px 6px; }
+$P .ability {
+  background: @@BERRY@@ center / contain no-repeat;
+  border: 0; border-radius: 0;
+  padding: 25px 2px 14px;
+  min-height: 96px;
+}
+/* on the wide sheet the column is narrow, so the berries go two abreast and
+   grow big enough to read */
+@media (min-width: 1001px) {
+  $P .abilities { grid-template-columns: repeat(2, 1fr); gap: 6px 10px; padding: 0 6px; }
+  $P .ability { min-height: 114px; padding-top: 24px; }
+  $P .ability .tile-label { margin-bottom: 11px; font-size: .74rem; }
+  $P .ability .mod { font-size: 1.8rem; }
+}
+$P .ability.rollable { box-shadow: none; border-radius: 0; transition: filter .15s ease, transform .15s ease; }
+$P .ability.rollable:hover, $P .ability.rollable:focus-visible {
+  background-color: transparent; box-shadow: none;
+  filter: drop-shadow(0 0 6px rgba(240,120,140,.8));
+}
+$P .ability .tile-label {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .68rem; letter-spacing: .08em;
+  color: #fff; text-shadow: 0 1px 1px rgba(120,20,30,.6);
+  display: block; margin-bottom: 3px; line-height: 1.2;
+}
+$P .ability .mod {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: 1.6rem; line-height: 1; color: #6e2230;
+}
+$P .ability .score {
+  background: #fde3e6; border: 1.5px solid #e69aa6; border-radius: 999px;
+  font-family: var(--font-head); font-weight: 500; font-size: .76rem; color: #7a3440;
+  margin-top: 3px;
+}
+$P .ability .check-note { color: #a8721a; }
+
+/* ================= lists ================= */
+$P .row { border-bottom: 1.5px dotted rgba(214,140,150,.55); }
+$P .row .abbr { font-family: var(--font-head); font-weight: 500; color: var(--sm-sage); }
+$P .row .val { font-family: var(--font-head); font-weight: 600; color: #6e2230; }
+$P .pip { width: 12px; height: 12px; border: 1.5px solid #d58b97; background: #fffaf3; }
+$P .pip.on {
+  background: radial-gradient(circle at 35% 35%, #f6808e, #d23a4e 70%);
+  border-color: #9c2f3c;
+  box-shadow: inset 0 2px 0 -1px #7fa06a;
+}
+$P .pip.exp { background: #f0b93e; border-color: #a8721a; box-shadow: inset 0 0 0 2px #fffaf3; }
+$P .row.rollable, $P td.rollable, $P .inline-roll { text-decoration-color: rgba(214,110,125,.8); }
+$P .rollable:hover, $P .rollable:focus-visible {
+  background: rgba(246,180,190,.28);
+  box-shadow: 0 0 0 2px rgba(224,110,128,.45);
+}
+
+/* ================= combat ================= */
+$P .combat { gap: 10px; }
+$P .tile {
+  position: relative;
+  background: #fffaf3;
+  border: 2px solid #eda3ad;
+  border-radius: 26px;
+  box-shadow: inset 0 0 0 3px #fffaf3, inset 0 0 0 4.5px #cfe0c2;
+  padding: 8px 6px 9px;
+}
+$P .tile .tile-label {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .62rem; letter-spacing: .07em; color: var(--sm-sage);
+}
+$P .tile .big { font-family: var(--font-head); font-weight: 600; font-size: 1.55rem; color: #6e2230; }
+$P .tile .sub { color: var(--muted); }
+$P .tile.shield, $P .tile.shield.rollable {
+  background: @@SHIELD@@ center / 100% 100% no-repeat;
+  border: 0; border-radius: 0; box-shadow: none;
+  padding: 9px 10px 16px;
+}
+$P .tile.rollable { box-shadow: inset 0 0 0 3px #fffaf3, inset 0 0 0 4.5px #cfe0c2; border-radius: 26px; }
+$P .tile.rollable:hover, $P .tile.rollable:focus-visible {
+  background-color: #fff0f2;
+  box-shadow: inset 0 0 0 3px #fff0f2, inset 0 0 0 4.5px #cfe0c2, 0 0 0 3px rgba(240,140,155,.45);
+}
+$P .spell-head .tile { min-width: 66px; }
+
+$P .hp-gauge .hp-now, $P .hp-gauge .hp-max { font-family: var(--font-head); font-weight: 600; }
+$P .hp-gauge .hp-now { font-size: 1.3rem; }
+$P .hp-bar {
+  height: 12px; border-radius: 999px; background: #fbe4e4;
+  border: 1.5px solid #e2a0a8;
+  box-shadow: inset 0 1px 2px rgba(150,70,80,.2);
+}
+$P #hp-line strong { font-family: var(--font-head); font-weight: 600; color: var(--accent); font-size: 1.02rem; }
+
+$P .hpb, $P .hitdie, $P .death .death-do, $P .spell-manage, $P .inv-add {
+  font-family: var(--font-head); font-weight: 600; text-transform: none; letter-spacing: .02em;
+  background: #fffaf3; border: 1.5px solid #eda3ad; border-radius: 999px;
+  box-shadow: 0 2px 0 #f6d0d4;
+}
+$P .hpb { font-size: .8rem; padding: 3px 13px; }
+$P .hpb:hover, $P .hitdie:hover, $P .death .death-do:hover, $P .spell-manage:hover, $P .inv-add:hover {
+  background: var(--sm-hover); border-color: currentColor;
+}
+$P .hpb.heal { color: #4f7a3a; }
+$P .hpb.temp { color: #a8721a; }
+$P .hitdie .hd-label { font-family: var(--font-head); font-weight: 600; text-transform: none; color: var(--sm-sage); font-size: .7rem; }
+$P .hitdie .hd-val { font-family: var(--font-head); font-weight: 600; color: #6e2230; }
+$P .death-roll, $P .death-word { font-family: var(--font-head); font-weight: 600; }
+$P .dp { border: 1.5px solid #e2a0a8; }
+
+/* ================= spells and the rest ================= */
+$P .spell-level h3 {
+  font-family: var(--font-head); font-weight: 600; text-transform: none;
+  font-size: .95rem; color: #a72d3e;
+  border-bottom: 1.5px dotted rgba(214,140,150,.7);
+}
+$P details.spell summary { font-size: .84rem; border-bottom: 1.5px dotted rgba(214,140,150,.45); }
+$P details.spell summary::marker { color: #e07a8a; }
+$P .prep { color: #b07818; }
+$P .slot { width: 13px; height: 13px; border: 1.5px solid #d58b97; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; background: #fffaf3; }
+$P .slot.used { background: #e04a5c; border-color: #9c2f3c; }
+$P .slot-row .lvl { font-family: var(--font-head); font-weight: 600; color: var(--sm-sage); }
+$P .cast-btn, $P .cast-at {
+  font-family: var(--font-head); font-weight: 600;
+  font-size: .66rem; letter-spacing: .04em;
+  background: #fffaf3; border: 1.5px solid #eda3ad; border-radius: 999px;
+  line-height: 1.45; padding: 0 6px;
+}
+$P .tagline { font-size: .66rem; }
+$P .cast-btn:hover, $P .cast2-btn:hover, $P .wearbtn:hover, $P .ib:hover,
+$P .attunebtn:hover, $P .hp-temp .val:hover, $P .cond-pick:hover, $P .sb-b:hover {
+  background: var(--sm-hover);
+}
+$P .ib { border-radius: 999px; }
+$P .feature h3 { font-family: var(--font-head); font-weight: 600; color: #a72d3e; font-size: .92rem; }
+$P .feature .src, $P .quote .label { font-family: var(--font-head); font-weight: 600; color: var(--sm-sage); }
+$P .use-pip { border: 1.5px solid #d58b97; background: #fffaf3; }
+$P th { font-family: var(--font-head); font-weight: 600; color: var(--sm-sage); }
+$P td { border-bottom: 1.5px dotted rgba(214,140,150,.4); }
+$P .inv-tab { font-family: var(--font-head); font-weight: 500; text-transform: none; border-radius: 999px; font-size: .82rem; }
+$P .inv-tab.on { background: #fde3e6; color: #a72d3e; border-color: #eda3ad; }
+$P .enc-badge { font-family: var(--font-head); border-radius: 999px; }
+$P .xp-pop { background: #fff8ee; border: 2px solid #eda3ad; border-radius: 18px; }
+
+$P footer.sheet-foot {
+  border-top: 0; padding-top: 14px; color: #6b4a35; font-size: .74rem;
+  background: var(--sm-vine) left top / 64px 14px repeat-x;
+}
+
+/* ================= phone ================= */
+$P.m .page { padding: 10px 12px 92px; box-shadow: none; }
+$P.m .page::after { inset: 4px; border-radius: 12px; }
+$P.m header.sheet-head { padding: 4px 6px; margin: 6px 0 10px; gap: 6px 14px; }
+$P.m .portrait { margin: 6px; }
+$P.m .char-name { font-size: 1.6rem; }
+$P.m .has-portrait .char-title, $P.m .char-title { font-size: 1.05rem; }
+$P.m .head-facts { margin: 0 -6px; padding: 2px 6px 4px; }
+$P.m .m-bar {
+  margin: 0 -12px 22px; padding: 6px 12px 0;
+  background: #fff8ee;
+  border-bottom: 2px solid #eda3ad;
+  box-shadow: 0 6px 12px -6px rgba(150,70,80,.35);
+}
+$P.m .m-bar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -9px; height: 8px; pointer-events: none;
+  background: radial-gradient(circle at 8px 0, #eda3ad 0 5px, transparent 5.5px) left top / 16px 8px repeat-x;
+}
+$P .m-stat { background: #fffaf3; border: 1.5px solid #eda3ad; border-radius: 14px; }
+$P .m-stat .m-lbl { font-family: var(--font-head); font-weight: 600; color: var(--sm-sage); font-size: .58rem; }
+$P .m-stat b { font-family: var(--font-head); font-weight: 600; color: #6e2230; }
+$P .m-tool {
+  background: radial-gradient(circle at 35% 30%, #f07383, #c93448 75%);
+  color: #fff6ea; border: 1.5px solid #9c2f3c; border-radius: 14px;
+}
+$P .m-tab {
+  font-family: var(--font-head); font-weight: 500; text-transform: none;
+  font-size: .9rem; letter-spacing: 0; color: var(--muted);
+}
+$P .m-tab.on { color: #a72d3e; border-bottom-color: #e04a5c; font-weight: 600; }
+$P .m-spf button { font-family: var(--font-head); }
+$P .m-spf button.on { background: #e04a5c; border-color: #9c2f3c; }
+$P.m .columns { gap: 32px; }
+$P.m .hpb { padding: 3px 10px; }

@@ -1,0 +1,781 @@
+/* skin: Field Journal
+   about: A ranger's sketchbook: grey-green paper, forest-green pencil, kites, flasks and hexes drawn by hand.
+   swatch: #d9d7c3 #23412c #3a3b33 #8a6a2a #eceadb
+   fonts: Amatic SC:wght@400;700 | Caveat:wght@500;700 | Kalam:wght@300;400;700
+*/
+
+/* ================================================================
+   tokens
+   ================================================================ */
+html[data-skin="field-journal"] {
+  --font-head: "Kalam", "Comic Neue", cursive;
+  --font-body: "Kalam", "Comic Neue", cursive;
+  --fj-hand: "Caveat", "Kalam", cursive;
+  --fj-letter: "Amatic SC", "Caveat", cursive;
+  --ink: #2a3229;
+  --paper: #dcdac6;
+  --paper-2: #e3e1cf;
+  --line: #a9a990;
+  --edge: #4d5b48;
+  --accent: #21452d;
+  --accent-2: #7d5d1e;
+  --muted: #565e51;
+  --shadow: none;
+  --stat-radius: 0;
+  --mood-rgb: 96, 104, 78;
+  --fj-pencil: rgba(38, 52, 40, .86);
+  --fj-faint: rgba(38, 52, 40, .28);
+  --fj-wash: rgba(250, 249, 236, .38);
+  --fj-hover: rgba(33, 69, 45, .1);
+  /* one loose sketch radius: no corner is the same as another */
+  --fj-wobble: 255px 14px 225px 12px / 12px 225px 14px 255px;
+
+  /* ---- the hand-drawn shapes, as masks (black = ink) ---- */
+  --fj-kite-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='1.9' d='M50 3 L96 37 L51 97 L4 38 Z'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='.9' opacity='.6' d='M46 5 L98 39 M97 34 L49 99 M53 96 L2 36 M3 40 L54 1'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-kite-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M50 3 L96 37 L51 97 L4 38 Z'/%3E%3C/svg%3E");
+  --fj-ring-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round'%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='1.9' d='M57 4 C84 5 97 26 96 51 C95 78 75 96 49 96 C22 96 4 76 4 50 C4 23 24 4 51 4 C60 4 67 6 73 10'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='.8' opacity='.55' d='M20 14 C34 3 62 1 80 12 C96 24 99 52 92 70'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-ring-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cellipse cx='50' cy='50' rx='46' ry='46'/%3E%3C/svg%3E");
+  --fj-hex-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='1.9' d='M24 4 L76 3 L97 50 L75 96 L25 97 L3 50 Z'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='.8' opacity='.55' d='M20 6 L79 5 M99 52 L77 94 M21 95 L1 48'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-hex-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M24 4 L76 3 L97 50 L75 96 L25 97 L3 50 Z'/%3E%3C/svg%3E");
+  --fj-shield-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='2.2' d='M6 5 C30 9 70 9 94 4 L94 45 C94 72 73 88 50 97 C27 88 6 72 6 45 Z'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='.9' opacity='.6' d='M2 7 C30 11 70 11 98 6 M12 13 L12 45 C12 68 30 82 50 90 C70 82 88 68 88 45 L88 13'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-shield-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M6 5 C30 9 70 9 94 4 L94 45 C94 72 73 88 50 97 C27 88 6 72 6 45 Z'/%3E%3C/svg%3E");
+  --fj-banner-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 50' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='1.7' d='M3 5 C60 8 140 2 197 6 L187 25 L197 45 C140 41 60 47 3 44 L13 25 Z'/%3E%3Cpath vector-effect='non-scaling-stroke' stroke-width='.8' opacity='.55' d='M14 9 C70 11 130 6 186 9 M14 40 C70 38 130 43 186 40'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-banner-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 50' preserveAspectRatio='none'%3E%3Cpath d='M3 5 C60 8 140 2 197 6 L187 25 L197 45 C140 41 60 47 3 44 L13 25 Z'/%3E%3C/svg%3E");
+  --fj-flask-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-width='3.2' d='M38 17 L38 37 C18 43 8 58 9 77 C10 99 28 116 50 116 C72 116 90 99 91 77 C92 58 82 43 62 37 L62 17'/%3E%3Cpath stroke-width='3' d='M33 5 C44 3 56 3 67 5 L66 17 C55 19 45 19 34 17 Z'/%3E%3Cpath stroke-width='1.6' opacity='.6' d='M41 8 L40 16 M50 7 L50 17 M59 8 L60 16'/%3E%3Cpath stroke-width='1.6' opacity='.55' d='M20 62 C24 52 30 47 38 44 M36 36 L36 20 M93 72 C93 90 80 108 60 114'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-flask-fill: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120' preserveAspectRatio='none'%3E%3Cpath d='M41 39 C22 45 13 59 14 77 C15 96 31 111 50 111 C69 111 85 96 86 77 C87 59 78 45 59 39 L59 20 L41 20 Z'/%3E%3C/svg%3E");
+  --fj-squiggle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5 C40 2 80 7 130 4 S220 2 299 5' fill='none' stroke='%2321452d' stroke-width='1.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M12 6.5 C70 5 150 7.5 260 5.5' fill='none' stroke='%2321452d' stroke-width='.8' opacity='.5' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --fj-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .2  0 0 0 0 .24  0 0 0 0 .18  0 0 0 .55 -.12'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23g)'/%3E%3C/svg%3E");
+  --fj-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .05' numOctaves='3' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .34  0 0 0 0 .26  0 0 0 .5 -.18'/%3E%3C/filter%3E%3Crect width='600' height='600' filter='url(%23f)'/%3E%3C/svg%3E");
+  /* margin sketches */
+  --fj-compass: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%2321452d' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='100' cy='100' r='70' stroke-width='1.2'/%3E%3Ccircle cx='100' cy='100' r='64' stroke-width='.6' stroke-dasharray='2 5'/%3E%3Cpath stroke-width='1.3' d='M100 14 L112 88 L186 100 L112 112 L100 186 L88 112 L14 100 L88 88 Z'/%3E%3Cpath stroke-width='.8' d='M100 14 L100 186 M14 100 L186 100 M100 100 L112 88 M100 100 L88 112'/%3E%3Cpath stroke-width='.9' d='M100 52 L106 94 L148 100 L106 106 L100 148 L94 106 L52 100 L94 94 Z' transform='rotate(45 100 100)'/%3E%3Cpath stroke-width='1.4' d='M95 2 L95 -8 L105 2 L105 -8' transform='translate(0 3)'/%3E%3C/g%3E%3Cg fill='%2321452d' opacity='.5'%3E%3Cpath d='M100 14 L112 88 L100 100 Z M186 100 L112 112 L100 100 Z M100 186 L88 112 L100 100 Z M14 100 L88 88 L100 100 Z'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-fern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 260'%3E%3Cg fill='none' stroke='%2321452d' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.1'%3E%3Cpath d='M62 255 C58 200 54 140 60 80 C64 50 70 25 78 6' stroke-width='1.5'/%3E%3Cpath d='M60 225 C40 222 22 214 8 200 M60 225 C78 220 96 210 110 196 M59 195 C42 190 26 180 14 166 M59 195 C76 190 94 178 106 164 M58 165 C44 160 30 150 20 136 M58 165 C74 158 90 146 100 132 M59 135 C47 130 36 120 28 108 M59 135 C72 128 84 116 92 104 M61 105 C51 100 43 92 37 82 M61 105 C72 98 80 88 86 78 M64 78 C57 73 51 66 48 58 M64 78 C72 72 78 64 81 56 M68 54 C63 49 60 43 59 37 M68 54 C74 48 78 42 80 36 M72 32 C69 28 68 24 68 20 M72 32 C76 28 79 24 80 19'/%3E%3C/g%3E%3C/svg%3E");
+  --fj-leaf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40'%3E%3Cg fill='none' stroke='%2321452d' stroke-linecap='round' stroke-width='1.2'%3E%3Cpath d='M4 30 C14 8 40 2 56 10 C46 30 22 38 4 30 Z'/%3E%3Cpath d='M4 30 C20 22 36 16 52 11 M18 25 L20 16 M28 21 L32 11 M38 17 L42 9 M24 23 L30 30 M34 19 L42 25'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* ================================================================
+   the page: a journal page on a worn leather cover
+   ================================================================ */
+html[data-skin="field-journal"] body {
+  background-color: #2c3127;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(120, 130, 96, .22), transparent 60%),
+    var(--fj-fibres);
+}
+html[data-skin="field-journal"] .page {
+  background-color: var(--paper);
+  background-image:
+    var(--fj-grain),
+    radial-gradient(ellipse 120% 90% at 50% 45%, rgba(246, 245, 228, .45) 0%, transparent 55%, rgba(92, 96, 70, .2) 100%),
+    var(--fj-fibres);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 0 50px rgba(0,0,0,.6), inset 0 0 70px rgba(80, 82, 58, .22);
+  color: var(--ink);
+}
+/* a compass rose pencilled in the top corner, a fern down the far edge */
+html[data-skin="field-journal"] .page::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: 8px; right: 14px; width: 170px; height: 170px;
+  background: var(--fj-compass) center / contain no-repeat;
+  opacity: .14;
+  transform: rotate(-11deg);
+}
+html[data-skin="field-journal"] .page::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  left: -6px; bottom: 30px; width: 74px; height: 170px;
+  background: var(--fj-fern) center / contain no-repeat;
+  opacity: .2;
+  transform: rotate(8deg);
+}
+
+/* ================================================================
+   header: the name in big charcoal capitals
+   ================================================================ */
+html[data-skin="field-journal"] header.sheet-head {
+  border-bottom: 0;
+  padding-bottom: 18px;
+  margin-bottom: 14px;
+  position: relative;
+  align-items: center;
+}
+html[data-skin="field-journal"] header.sheet-head::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 4px; height: 9px;
+  background: var(--fj-squiggle) center / 100% 100% no-repeat;
+  opacity: .85;
+}
+/* the name is shown even when the portrait ring carries it too: this is a
+   journal, and its owner wrote their name across the top */
+html[data-skin="field-journal"] .char-name,
+html[data-skin="field-journal"] .char-name.sr-only {
+  position: static; width: auto; height: auto; margin: 0;
+  overflow: visible; clip: auto; clip-path: none; white-space: normal;
+  font-family: var(--fj-letter);
+  font-weight: 700;
+  font-size: 5rem;
+  line-height: .9;
+  letter-spacing: .01em;
+  color: var(--accent);
+  text-shadow: none;
+  filter: url(#field-journal-charcoal);
+}
+html[data-skin="field-journal"] .char-title,
+html[data-skin="field-journal"] .has-portrait .char-title {
+  font-family: var(--fj-hand);
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  color: var(--ink);
+  text-shadow: none;
+  margin-top: 4px;
+}
+html[data-skin="field-journal"] .char-sub {
+  font-family: var(--fj-letter);
+  font-weight: 700;
+  font-size: 1.45rem;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin-top: 0;
+}
+html[data-skin="field-journal"] .char-sub::before,
+html[data-skin="field-journal"] .char-sub::after {
+  content: " · · · ";
+  color: var(--edge); letter-spacing: .1em;
+}
+
+/* the facts are pencilled ribbons */
+html[data-skin="field-journal"] .head-facts { gap: 6px 4px; align-items: center; }
+html[data-skin="field-journal"] .fact {
+  position: relative; isolation: isolate;
+  background: none; border: 0; border-radius: 0; box-shadow: none;
+  padding: 7px 26px 8px;
+  min-width: 96px;
+  text-align: center;
+}
+html[data-skin="field-journal"] .fact::before,
+html[data-skin="field-journal"] .fact::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  -webkit-mask: var(--fj-banner-fill) center / 100% 100% no-repeat;
+          mask: var(--fj-banner-fill) center / 100% 100% no-repeat;
+  background: var(--fj-wash);
+}
+html[data-skin="field-journal"] .fact::after {
+  -webkit-mask-image: var(--fj-banner-ink);
+          mask-image: var(--fj-banner-ink);
+  background: var(--fj-pencil);
+}
+html[data-skin="field-journal"] .fact:nth-child(even)::after { transform: scaleX(-1); }
+html[data-skin="field-journal"] .fact:nth-child(even)::before { transform: scaleX(-1); }
+html[data-skin="field-journal"] .fact .label {
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: .95rem; letter-spacing: .08em; line-height: 1;
+  color: var(--muted);
+}
+html[data-skin="field-journal"] .fact .value {
+  font-family: var(--fj-hand); font-weight: 700;
+  font-size: 1.35rem; line-height: 1.05; color: var(--ink);
+}
+html[data-skin="field-journal"] .fact.insp,
+html[data-skin="field-journal"] .fact.xp-fact { padding: 0; }
+html[data-skin="field-journal"] .insp-btn {
+  padding: 7px 26px 8px; border-radius: 0; text-align: center;
+}
+html[data-skin="field-journal"] .insp-btn .value { justify-content: center; }
+html[data-skin="field-journal"] .insp-btn:hover { background: none; }
+html[data-skin="field-journal"] .fact.insp:hover::before { background: rgba(33, 69, 45, .12); }
+html[data-skin="field-journal"] .insp-btn .word { font-family: var(--fj-hand); font-size: 1.3rem; color: var(--muted); }
+html[data-skin="field-journal"] .fact.insp.on { background: none; }
+html[data-skin="field-journal"] .fact.insp.on::before { background: rgba(196, 160, 72, .3); }
+html[data-skin="field-journal"] .fact.insp.on .insp-btn .word { color: var(--accent-2); }
+
+/* ---- portrait: a pencil-ringed locket ---- */
+html[data-skin="field-journal"] .portrait { filter: drop-shadow(0 2px 3px rgba(40, 48, 36, .25)); }
+html[data-skin="field-journal"] .ring-band { stroke: var(--paper-2); opacity: .75; }
+html[data-skin="field-journal"] .ring-edge {
+  stroke: var(--accent); stroke-width: 1.6; opacity: 1;
+  filter: url(#field-journal-pencil);
+}
+html[data-skin="field-journal"] .ring-hair { stroke: var(--accent); stroke-width: .8; opacity: .45; stroke-dasharray: 1.5 3.5; }
+html[data-skin="field-journal"] .xp-track { stroke: rgba(38, 52, 40, .18); }
+html[data-skin="field-journal"] .xp-fill { stroke: var(--accent-2); }
+html[data-skin="field-journal"] .ring-name {
+  font-family: var(--fj-letter); font-weight: 700; font-size: 17px !important;
+  letter-spacing: .12em; fill: var(--accent);
+}
+html[data-skin="field-journal"] .ring-xp {
+  font-family: var(--fj-hand); font-weight: 700; font-size: 12px; letter-spacing: .06em;
+  fill: var(--accent-2);
+}
+html[data-skin="field-journal"] .ring-gem { fill: var(--accent); }
+html[data-skin="field-journal"] .ring-gem-core { fill: var(--paper); }
+html[data-skin="field-journal"] .portrait-well { background: #39402f; }
+
+/* the experience box */
+html[data-skin="field-journal"] .xp-pop {
+  background: var(--paper) var(--fj-grain);
+  border: 1.5px solid var(--fj-pencil); border-radius: var(--fj-wobble);
+  box-shadow: 0 8px 24px rgba(30, 36, 26, .35);
+}
+html[data-skin="field-journal"] .xp-pop-head {
+  font-family: var(--fj-letter); font-weight: 700; font-size: 1.1rem; color: var(--accent);
+}
+html[data-skin="field-journal"] .xp-pop-head .now { font-family: var(--fj-hand); font-size: 1.2rem; }
+
+/* ================================================================
+   boxes: ruled in pencil, corners overshooting
+   ================================================================ */
+html[data-skin="field-journal"] .columns { gap: 22px; }
+html[data-skin="field-journal"] .col { gap: 20px; }
+html[data-skin="field-journal"] .box {
+  position: relative; z-index: 0;
+  background: none;
+  border: 0; border-radius: 0; box-shadow: none;
+  padding: 14px 16px 16px;
+}
+html[data-skin="field-journal"] .box::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(var(--fj-pencil), var(--fj-pencil)) left 0 top 4px / calc(100% - 5px) 1.6px no-repeat,
+    linear-gradient(var(--fj-pencil), var(--fj-pencil)) right 4px top 0 / 1.6px calc(100% - 3px) no-repeat,
+    linear-gradient(var(--fj-pencil), var(--fj-pencil)) right 0 bottom 3px / calc(100% - 7px) 1.6px no-repeat,
+    linear-gradient(var(--fj-pencil), var(--fj-pencil)) left 5px bottom 0 / 1.6px calc(100% - 6px) no-repeat,
+    linear-gradient(var(--fj-faint), var(--fj-faint)) left 10px top 7px / calc(100% - 30px) 1px no-repeat,
+    linear-gradient(var(--fj-faint), var(--fj-faint)) left 2px top 14px / 1px calc(100% - 40px) no-repeat,
+    linear-gradient(var(--fj-wash), var(--fj-wash)) 5px 4px / calc(100% - 9px) calc(100% - 7px) no-repeat;
+  filter: url(#field-journal-pencil);
+}
+/* a box over the backdrop picture keeps it, washed in this paper */
+html[data-skin="field-journal"] .has-backdrop .box {
+  background-color: transparent;
+  background-image:
+    linear-gradient(rgba(222, 220, 200, var(--glass-a, .9)), rgba(222, 220, 200, var(--glass-a, .9))),
+    var(--backdrop-img, none);
+  background-size: cover; background-position: center center; background-attachment: fixed;
+  background-clip: padding-box;
+  clip-path: inset(4px 4px 3px 5px);
+}
+html[data-skin="field-journal"] .has-backdrop .box::before { clip-path: none; }
+
+html[data-skin="field-journal"] .box > h2,
+html[data-skin="field-journal"] .box.tabbed > .tabpane > h2 {
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: 1.5rem; letter-spacing: .07em; line-height: 1;
+  text-transform: uppercase;
+  color: var(--accent);
+  border-bottom: 0;
+  padding-bottom: 8px; margin: 0 0 8px;
+  background: var(--fj-squiggle) left bottom / min(100%, 15em) 6px no-repeat;
+}
+html[data-skin="field-journal"] h3.subhead,
+html[data-skin="field-journal"] .spell-level h3 {
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: 1.3rem; letter-spacing: .06em; line-height: 1.1;
+  color: var(--accent);
+  border-bottom: 1px solid var(--fj-faint);
+}
+
+/* ---- tabs: the open one is circled ---- */
+html[data-skin="field-journal"] .tabbar { border-bottom: 0; gap: 2px 6px; margin-bottom: 8px; }
+html[data-skin="field-journal"] .tabbtn {
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: 1.3rem; letter-spacing: .06em; line-height: 1;
+  color: var(--muted);
+  border: 1.6px solid transparent; border-radius: var(--fj-wobble);
+  padding: 4px 10px 3px; margin: 0;
+  background: none;
+}
+html[data-skin="field-journal"] .tabbtn:hover { color: var(--accent); background: var(--fj-hover); }
+html[data-skin="field-journal"] .tabbtn.on {
+  color: var(--accent); background: var(--fj-wash);
+  border-color: var(--fj-pencil);
+}
+
+/* ================================================================
+   ability scores: pencilled kites with the score in a ring at the tip
+   ================================================================ */
+html[data-skin="field-journal"] .abilities { gap: 6px 6px; }
+html[data-skin="field-journal"] .ability {
+  isolation: isolate;
+  background: none; border: 0; border-radius: 0;
+  box-shadow: none !important;
+  min-height: 118px;
+  padding: 0 2px 30px;
+}
+html[data-skin="field-journal"] .ability::before,
+html[data-skin="field-journal"] .ability::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  inset: 18px max(3px, calc(50% - 46px)) 12px;
+  -webkit-mask: var(--fj-kite-fill) center / 100% 100% no-repeat;
+          mask: var(--fj-kite-fill) center / 100% 100% no-repeat;
+  background: var(--fj-wash);
+  transition: background-color .15s ease;
+}
+html[data-skin="field-journal"] .ability::after {
+  -webkit-mask-image: var(--fj-kite-ink);
+          mask-image: var(--fj-kite-ink);
+  background: var(--fj-pencil);
+}
+html[data-skin="field-journal"] .ability:nth-child(3n+1)::before,
+html[data-skin="field-journal"] .ability:nth-child(3n+1)::after { transform: rotate(-4deg); }
+html[data-skin="field-journal"] .ability:nth-child(3n+2)::before,
+html[data-skin="field-journal"] .ability:nth-child(3n+2)::after { transform: rotate(2deg) scaleX(-1); }
+html[data-skin="field-journal"] .ability:nth-child(3n)::before,
+html[data-skin="field-journal"] .ability:nth-child(3n)::after { transform: rotate(5deg); }
+html[data-skin="field-journal"] .ability.rollable:hover::before,
+html[data-skin="field-journal"] .ability.rollable:focus-visible::before { background: rgba(196, 160, 72, .38); }
+html[data-skin="field-journal"] .ability.rollable:hover,
+html[data-skin="field-journal"] .ability.rollable:focus-visible { background: none; }
+html[data-skin="field-journal"] .ability .tile-label {
+  display: block;
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: 1.05rem; letter-spacing: .1em; line-height: 18px;
+  color: var(--muted);
+}
+html[data-skin="field-journal"] .ability .mod {
+  font-family: var(--fj-hand); font-weight: 700;
+  font-size: 2.15rem; line-height: 1;
+  margin-top: 16px;
+  color: var(--ink);
+}
+html[data-skin="field-journal"] .ability .score {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: 32px; height: 30px; min-width: 0;
+  display: grid; place-items: center;
+  padding: 0; margin: 0;
+  font-family: var(--fj-hand); font-weight: 700; font-size: 1.05rem; line-height: 1;
+  color: var(--accent);
+  background: var(--paper);
+  border: 1.6px solid var(--fj-pencil);
+  border-radius: 54% 46% 52% 48% / 46% 54% 48% 52%;
+}
+html[data-skin="field-journal"] .ability .check-note {
+  position: absolute; left: 0; right: 0; bottom: 32px;
+  font-family: var(--fj-hand); font-size: .8rem; color: var(--accent-2);
+}
+
+/* ================================================================
+   lists: ruled lines, hand-drawn bubbles
+   ================================================================ */
+html[data-skin="field-journal"] .row {
+  border-bottom: 1px solid rgba(38, 52, 40, .17);
+  font-size: .93rem;
+  padding: 2px 2px 1px;
+}
+html[data-skin="field-journal"] .row .val {
+  font-family: var(--fj-hand); font-weight: 700; font-size: 1.15rem; line-height: 1.1;
+  color: var(--accent);
+}
+html[data-skin="field-journal"] .rows.facts .row .val { font-size: 1.05rem; }
+html[data-skin="field-journal"] .row .abbr {
+  font-family: var(--fj-letter); font-weight: 700; font-size: .95rem; letter-spacing: .06em;
+}
+html[data-skin="field-journal"] .row strong { font-weight: 700; color: var(--accent); }
+html[data-skin="field-journal"] .pip {
+  width: 12px; height: 12px;
+  border: 1.5px solid var(--fj-pencil);
+  border-radius: 55% 45% 50% 50% / 45% 55% 45% 55%;
+  background: transparent;
+  align-self: center;
+}
+html[data-skin="field-journal"] .pip.on {
+  background: radial-gradient(circle at 40% 40%, #3a4637 0 55%, #223024 100%);
+}
+html[data-skin="field-journal"] .pip.exp {
+  background: radial-gradient(circle, var(--accent-2) 0 40%, transparent 45%);
+  box-shadow: none;
+}
+
+/* ================================================================
+   combat: a shield, a ring and a hex
+   ================================================================ */
+html[data-skin="field-journal"] .combat { gap: 8px; }
+html[data-skin="field-journal"] .tile {
+  position: relative; isolation: isolate;
+  background: none; border: 0; border-radius: 0; box-shadow: none !important;
+  padding: 12px 8px 12px;
+}
+html[data-skin="field-journal"] .tile::before,
+html[data-skin="field-journal"] .tile::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  -webkit-mask: var(--fj-ring-fill) center / 100% 100% no-repeat;
+          mask: var(--fj-ring-fill) center / 100% 100% no-repeat;
+  background: var(--fj-wash);
+  transition: background-color .15s ease;
+}
+html[data-skin="field-journal"] .tile::after {
+  -webkit-mask-image: var(--fj-ring-ink);
+          mask-image: var(--fj-ring-ink);
+  background: var(--fj-pencil);
+}
+html[data-skin="field-journal"] .combat .tile:nth-child(3)::before { -webkit-mask-image: var(--fj-hex-fill); mask-image: var(--fj-hex-fill); }
+html[data-skin="field-journal"] .combat .tile:nth-child(3)::after { -webkit-mask-image: var(--fj-hex-ink); mask-image: var(--fj-hex-ink); }
+html[data-skin="field-journal"] .tile.shield { border: 0; padding: 8px 12px 20px; }
+html[data-skin="field-journal"] .tile.shield::before { -webkit-mask-image: var(--fj-shield-fill); mask-image: var(--fj-shield-fill); }
+html[data-skin="field-journal"] .tile.shield::after { -webkit-mask-image: var(--fj-shield-ink); mask-image: var(--fj-shield-ink); }
+html[data-skin="field-journal"] .tile.rollable:hover,
+html[data-skin="field-journal"] .tile.rollable:focus-visible { background: none; }
+html[data-skin="field-journal"] .tile.rollable:hover::before,
+html[data-skin="field-journal"] .tile.rollable:focus-visible::before { background: rgba(196, 160, 72, .38); }
+html[data-skin="field-journal"] .tile .tile-label {
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: 1rem; letter-spacing: .08em; line-height: 1;
+  color: var(--muted);
+}
+html[data-skin="field-journal"] .tile .big {
+  font-family: var(--fj-hand); font-weight: 700;
+  font-size: 2.1rem; line-height: 1.05; color: var(--ink);
+}
+html[data-skin="field-journal"] .tile .sub { font-size: .74rem; line-height: 1.2; color: var(--muted); }
+html[data-skin="field-journal"] .spell-head { gap: 8px; }
+html[data-skin="field-journal"] .spell-head .tile { min-width: 78px; padding: 12px 12px 10px; }
+html[data-skin="field-journal"] .spell-head .tile:nth-child(2)::before { -webkit-mask-image: var(--fj-hex-fill); mask-image: var(--fj-hex-fill); }
+html[data-skin="field-journal"] .spell-head .tile:nth-child(2)::after { -webkit-mask-image: var(--fj-hex-ink); mask-image: var(--fj-hex-ink); }
+html[data-skin="field-journal"] .spell-head .tile .big { font-size: 1.8rem; }
+
+/* ---- hit points: a stoppered flask ---- */
+html[data-skin="field-journal"] #hp-line strong {
+  font-family: var(--fj-letter); font-size: 1.45rem; letter-spacing: .06em; color: var(--accent);
+}
+html[data-skin="field-journal"] .hp-gauge { gap: 10px; margin-top: 4px; }
+html[data-skin="field-journal"] .hp-gauge .hp-now {
+  --fj-liq: 70, 122, 52; --fj-lvl: 50%;
+  position: relative; isolation: isolate;
+  width: 78px; height: 94px; min-width: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding-top: 30px;
+  font-family: var(--fj-hand); font-weight: 700; font-size: 1.85rem;
+  color: var(--ink) !important;
+  text-shadow: 0 0 3px var(--paper), 0 0 2px var(--paper), 0 0 1px var(--paper);
+}
+html[data-skin="field-journal"] .hp-gauge .hp-now::before,
+html[data-skin="field-journal"] .hp-gauge .hp-now::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  -webkit-mask: var(--fj-flask-fill) center / 100% 100% no-repeat;
+          mask: var(--fj-flask-fill) center / 100% 100% no-repeat;
+  background:
+    linear-gradient(to top,
+      rgba(var(--fj-liq), .75) 0, rgba(var(--fj-liq), .55) var(--fj-lvl),
+      rgba(var(--fj-liq), .95) var(--fj-lvl), rgba(var(--fj-liq), .95) calc(var(--fj-lvl) + 2px),
+      var(--fj-wash) calc(var(--fj-lvl) + 2px));
+  transition: background .6s ease;
+}
+html[data-skin="field-journal"] .hp-gauge .hp-now::after {
+  -webkit-mask-image: var(--fj-flask-ink);
+          mask-image: var(--fj-flask-ink);
+  background: var(--fj-pencil);
+}
+html[data-skin="field-journal"] .hp-gauge .hp-now.hurt { --fj-liq: 160, 140, 40; --fj-lvl: 38%; }
+html[data-skin="field-journal"] .hp-gauge .hp-now.bloodied { --fj-liq: 196, 120, 30; --fj-lvl: 26%; }
+html[data-skin="field-journal"] .hp-gauge .hp-now.dying { --fj-liq: 160, 40, 34; --fj-lvl: 13%; }
+html[data-skin="field-journal"] .hp-gauge .hp-max {
+  font-family: var(--fj-hand); font-size: 1.3rem; color: var(--muted);
+}
+html[data-skin="field-journal"] .hp-gauge .hp-max::before { content: "/ "; opacity: .7; }
+html[data-skin="field-journal"] .hp-bar {
+  height: 14px; border-radius: 9px 7px 8px 10px / 8px 10px 7px 9px;
+  background: var(--fj-wash);
+  border: 1.6px solid var(--fj-pencil);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 250, .45);
+}
+html[data-skin="field-journal"] .hp-fill { opacity: .82; }
+html[data-skin="field-journal"] .hp-temp { font-size: .86rem; }
+html[data-skin="field-journal"] .hp-temp .val { font-family: var(--fj-hand); font-size: 1.25rem; }
+html[data-skin="field-journal"] .hp-temp .val:hover { background: var(--fj-hover); }
+html[data-skin="field-journal"] .hp-temp .val.none { color: var(--muted); opacity: .6; }
+
+html[data-skin="field-journal"] .hitdie {
+  background: var(--fj-wash);
+  border: 1.5px solid var(--fj-pencil); border-radius: var(--fj-wobble);
+  padding: 2px 10px 3px;
+}
+html[data-skin="field-journal"] .hitdie:hover { background: rgba(196, 160, 72, .3); }
+html[data-skin="field-journal"] .hitdie .hd-label {
+  font-family: var(--fj-letter); font-weight: 700; font-size: 1rem; color: var(--muted);
+}
+html[data-skin="field-journal"] .hitdie .hd-val { font-family: var(--fj-hand); font-size: 1.3rem; color: var(--accent); }
+
+/* ================================================================
+   controls: pencil-outlined, never quite rectangular
+   ================================================================ */
+html[data-skin="field-journal"] .hpb,
+html[data-skin="field-journal"] .cast-btn,
+html[data-skin="field-journal"] .spell-manage,
+html[data-skin="field-journal"] .inv-add,
+html[data-skin="field-journal"] .ib,
+html[data-skin="field-journal"] .death .death-do,
+html[data-skin="field-journal"] .conc .conc-b,
+html[data-skin="field-journal"] .sb-b,
+html[data-skin="field-journal"] .cond-step {
+  font-family: var(--fj-letter); font-weight: 700;
+  letter-spacing: .07em;
+  background: var(--fj-wash);
+  border: 1.5px solid var(--fj-pencil);
+  border-radius: var(--fj-wobble);
+}
+html[data-skin="field-journal"] .hpb { font-size: 1.15rem; padding: 2px 13px 1px; line-height: 1.2; }
+html[data-skin="field-journal"] .cast-btn,
+html[data-skin="field-journal"] .sb-b { font-size: .88rem; padding: 0 6px; line-height: 1.2; }
+html[data-skin="field-journal"] .spell-manage,
+html[data-skin="field-journal"] .inv-add { font-size: 1.05rem; padding: 2px 12px 1px; border-style: dashed; color: var(--accent); }
+html[data-skin="field-journal"] .ib { font-size: .95rem; padding: 0 7px; color: var(--muted); }
+html[data-skin="field-journal"] .death .death-do,
+html[data-skin="field-journal"] .conc .conc-b { font-size: .95rem; }
+html[data-skin="field-journal"] .hpb:hover,
+html[data-skin="field-journal"] .cast-btn:hover,
+html[data-skin="field-journal"] .spell-manage:hover,
+html[data-skin="field-journal"] .inv-add:hover,
+html[data-skin="field-journal"] .ib:hover,
+html[data-skin="field-journal"] .sb-b:hover,
+html[data-skin="field-journal"] .cond-step:hover,
+html[data-skin="field-journal"] .death .death-do:hover,
+html[data-skin="field-journal"] .conc .conc-b:hover {
+  background: rgba(196, 160, 72, .32); border-color: var(--accent);
+}
+html[data-skin="field-journal"] .hpb.hurt { color: #8a2a1e; }
+html[data-skin="field-journal"] .hpb.heal { color: #2f5e22; }
+html[data-skin="field-journal"] .hpb.temp { color: var(--accent-2); }
+html[data-skin="field-journal"] .cast-btn { color: var(--accent); }
+html[data-skin="field-journal"] .cast2-btn {
+  font-family: var(--fj-letter); font-size: .95rem; color: var(--accent-2);
+  border-color: rgba(125, 93, 30, .6); border-radius: var(--fj-wobble);
+}
+html[data-skin="field-journal"] .cast2-btn:hover { background: rgba(196, 160, 72, .3); color: var(--ink); }
+html[data-skin="field-journal"] .cast-at {
+  font-family: var(--fj-hand); font-size: .85rem; font-weight: 700;
+  background: var(--fj-wash); border: 1.2px solid var(--fj-faint); border-radius: 6px 4px 7px 5px;
+  color: var(--muted); line-height: 1.2;
+}
+html[data-skin="field-journal"] .cast-at.up { color: var(--accent-2); border-color: var(--accent-2); }
+
+/* fields: a pencil line to write on */
+html[data-skin="field-journal"] .inv-field,
+html[data-skin="field-journal"] .sb-field,
+html[data-skin="field-journal"] .rest-note {
+  font-family: var(--fj-hand); font-size: 1.15rem; font-weight: 500;
+  background: rgba(250, 249, 236, .5);
+  color: var(--ink);
+  border: 0; border-bottom: 1.6px solid var(--fj-pencil);
+  border-radius: 3px 3px 0 0;
+}
+html[data-skin="field-journal"] .inv-field:focus,
+html[data-skin="field-journal"] .sb-field:focus { border-bottom-color: var(--accent-2); background: rgba(250, 249, 236, .8); }
+html[data-skin="field-journal"] .hp-ctl .hp-amt { font-family: var(--fj-hand); font-size: 1.3rem; padding: 0 4px; }
+html[data-skin="field-journal"] .hp-ctl .hp-type { font-size: 1rem; color: var(--muted); }
+
+/* death saves and concentration */
+html[data-skin="field-journal"] .conc[hidden] { display: none; }
+html[data-skin="field-journal"] .death { font-size: .85rem; }
+html[data-skin="field-journal"] .death-roll,
+html[data-skin="field-journal"] .death-word { font-family: var(--fj-letter); font-weight: 700; font-size: 1.05rem; }
+html[data-skin="field-journal"] .dp {
+  width: 13px; height: 13px; border: 1.5px solid var(--fj-pencil);
+  border-radius: 55% 45% 50% 50% / 45% 55% 45% 55%;
+}
+html[data-skin="field-journal"] .dp-sep { font-family: var(--fj-hand); font-size: .9rem; color: var(--muted); text-transform: none; }
+html[data-skin="field-journal"] .conc {
+  border: 1.5px solid rgba(90, 70, 140, .55); border-radius: var(--fj-wobble);
+  background: rgba(120, 100, 180, .1);
+}
+html[data-skin="field-journal"] .conc .conc-name { font-family: var(--fj-hand); font-size: 1.1rem; }
+
+/* defenses and conditions */
+html[data-skin="field-journal"] .def-kind { font-family: var(--fj-letter); font-weight: 700; font-size: 1rem; }
+html[data-skin="field-journal"] .def-chip { border-radius: var(--fj-wobble); border-width: 1.5px; }
+html[data-skin="field-journal"] .cond-on {
+  background: var(--fj-wash); border: 1.5px solid var(--fj-faint);
+  border-left: 3px solid var(--accent); border-radius: 3px 10px 6px 3px;
+}
+html[data-skin="field-journal"] .cond-on b { font-family: var(--fj-hand); font-size: 1.1rem; }
+html[data-skin="field-journal"] .cond-pick {
+  background: var(--fj-wash); border: 1.5px solid var(--fj-faint); border-radius: var(--fj-wobble);
+  font-size: .8rem;
+}
+html[data-skin="field-journal"] .cond-pick:hover { background: rgba(196, 160, 72, .3); }
+
+/* ================================================================
+   tables, inventory, coin
+   ================================================================ */
+html[data-skin="field-journal"] table { font-size: .9rem; }
+html[data-skin="field-journal"] th {
+  font-family: var(--fj-letter); font-weight: 700;
+  font-size: 1.05rem; letter-spacing: .07em; line-height: 1.1;
+  color: var(--accent);
+  border-bottom: 1.5px solid var(--fj-pencil);
+}
+html[data-skin="field-journal"] td { border-bottom: 1px solid rgba(38, 52, 40, .17); }
+html[data-skin="field-journal"] td.num { font-family: var(--fj-hand); font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+html[data-skin="field-journal"] .tagline { font-size: .74rem; color: var(--muted); }
+html[data-skin="field-journal"] .enc-line .wt,
+html[data-skin="field-journal"] .coin-total { font-family: var(--fj-hand); font-size: 1.35rem; color: var(--accent); }
+html[data-skin="field-journal"] .enc-badge,
+html[data-skin="field-journal"] .sb-budget {
+  font-family: var(--fj-hand); font-size: .95rem; font-weight: 700; letter-spacing: .02em; text-transform: none;
+  background: var(--fj-wash); border: 1.3px solid var(--fj-faint); border-radius: var(--fj-wobble);
+}
+html[data-skin="field-journal"] .enc-badge.encumbered,
+html[data-skin="field-journal"] .sb-budget.full { background: rgba(196, 160, 72, .28); border-color: var(--accent-2); }
+html[data-skin="field-journal"] .enc-badge.heavy { background: rgba(160, 50, 40, .14); }
+html[data-skin="field-journal"] .enc-bar {
+  height: 10px; background: var(--fj-wash); border: 1.5px solid var(--fj-pencil);
+  border-radius: 7px 5px 6px 8px;
+}
+html[data-skin="field-journal"] .inv-tabs { border-bottom: 1.5px solid var(--fj-faint); }
+html[data-skin="field-journal"] .inv-tab {
+  font-family: var(--fj-letter); font-weight: 700; font-size: 1rem; letter-spacing: .06em;
+  background: none; border-color: transparent; border-radius: 8px 12px 0 0;
+}
+html[data-skin="field-journal"] .inv-tab.on { background: var(--fj-wash); border-color: var(--fj-pencil); color: var(--accent); }
+html[data-skin="field-journal"] .wearbtn:hover,
+html[data-skin="field-journal"] .attunebtn:hover { background: var(--fj-hover); }
+html[data-skin="field-journal"] .wearbtn,
+html[data-skin="field-journal"] .attunebtn { color: var(--muted); }
+html[data-skin="field-journal"] .wearbtn.on,
+html[data-skin="field-journal"] .attunebtn.on { color: var(--accent-2); }
+
+/* ================================================================
+   spells and features
+   ================================================================ */
+html[data-skin="field-journal"] .slot-row .lvl { font-family: var(--fj-hand); font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+html[data-skin="field-journal"] .slot {
+  width: 14px; height: 14px; border: 1.5px solid var(--fj-pencil);
+  border-radius: 3px 5px 2px 4px; background: var(--fj-wash);
+  transform: rotate(45deg) scale(.86);
+}
+html[data-skin="field-journal"] .slot.used { background: var(--edge); }
+html[data-skin="field-journal"] details.spell summary {
+  font-size: .95rem;
+  border-bottom: 1px solid rgba(38, 52, 40, .17);
+  padding: 2px 0;
+}
+html[data-skin="field-journal"] details.spell summary::marker { color: var(--accent); }
+html[data-skin="field-journal"] details.spell p { font-size: .88rem; }
+html[data-skin="field-journal"] .prep { color: var(--accent-2); }
+html[data-skin="field-journal"] .feature h3 {
+  font-family: var(--fj-hand); font-weight: 700; font-size: 1.25rem; line-height: 1.1;
+  color: var(--accent);
+}
+html[data-skin="field-journal"] .feature .src { font-family: var(--fj-letter); font-weight: 700; font-size: .85rem; letter-spacing: .06em; }
+html[data-skin="field-journal"] .use-pip {
+  width: 13px; height: 13px; border: 1.5px solid var(--fj-pencil);
+  border-radius: 55% 45% 50% 50% / 45% 55% 45% 55%; background: var(--fj-wash);
+}
+html[data-skin="field-journal"] .use-pip.used { background: var(--accent); }
+html[data-skin="field-journal"] .quote .label { font-family: var(--fj-letter); font-weight: 700; font-size: .95rem; letter-spacing: .07em; }
+html[data-skin="field-journal"] .quote { font-family: var(--fj-hand); font-size: 1.15rem; font-style: normal; line-height: 1.3; }
+
+/* rollable things: a pale ochre wash, like a highlighter in the margin */
+html[data-skin="field-journal"] .rollable:hover,
+html[data-skin="field-journal"] .rollable:focus-visible {
+  background: rgba(196, 160, 72, .24);
+  box-shadow: 0 0 0 2px rgba(125, 93, 30, .35);
+}
+html[data-skin="field-journal"] .row.rollable,
+html[data-skin="field-journal"] td.rollable,
+html[data-skin="field-journal"] .inline-roll {
+  text-decoration-color: rgba(125, 93, 30, .7);
+}
+
+/* the modal cards over the sheet */
+html[data-skin="field-journal"] .inv-card,
+html[data-skin="field-journal"] .sb-card,
+html[data-skin="field-journal"] .rest-card {
+  background: var(--paper) var(--fj-grain);
+  border: 1.5px solid var(--fj-pencil); border-radius: 4px 12px 6px 10px;
+}
+html[data-skin="field-journal"] .inv-card h3,
+html[data-skin="field-journal"] .sb-card h3,
+html[data-skin="field-journal"] .rest-card h3 {
+  font-family: var(--fj-letter); font-weight: 700; font-size: 1.4rem; letter-spacing: .06em;
+}
+html[data-skin="field-journal"] .inv-go,
+html[data-skin="field-journal"] .sb-go,
+html[data-skin="field-journal"] .rest-roll {
+  font-family: var(--fj-letter); font-weight: 700; font-size: 1.1rem; letter-spacing: .07em;
+  border-radius: var(--fj-wobble);
+}
+html[data-skin="field-journal"] .inv-go:hover,
+html[data-skin="field-journal"] .sb-go:hover,
+html[data-skin="field-journal"] .rest-roll:hover { background: #2f5a3b; }
+html[data-skin="field-journal"] .inv-go.plain { background: var(--paper); }
+html[data-skin="field-journal"] .inv-hit:hover,
+html[data-skin="field-journal"] .inv-hit.on { background: var(--fj-hover); }
+html[data-skin="field-journal"] .inv-filter.on { color: var(--paper-2); }
+
+/* the foot of the page */
+html[data-skin="field-journal"] footer.sheet-foot {
+  border-top: 0; position: relative;
+  font-family: var(--fj-hand); font-size: 1rem; color: var(--muted);
+  padding-top: 12px;
+}
+html[data-skin="field-journal"] footer.sheet-foot::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 7px;
+  background: var(--fj-squiggle) center / 100% 100% no-repeat; opacity: .6;
+}
+html[data-skin="field-journal"] footer.sheet-foot span:last-child::after {
+  content: ""; display: inline-block; width: 30px; height: 20px; margin-left: 8px;
+  vertical-align: -5px; background: var(--fj-leaf) center / contain no-repeat; opacity: .7;
+}
+
+/* ================================================================
+   phone
+   ================================================================ */
+@media screen {
+  html[data-skin="field-journal"].m .page { padding: 10px 12px 92px; }
+  html[data-skin="field-journal"].m .page::before { width: 110px; height: 110px; top: 4px; right: 4px; }
+  html[data-skin="field-journal"].m .char-name { font-size: 2.9rem; }
+  html[data-skin="field-journal"].m .char-title,
+  html[data-skin="field-journal"].m .has-portrait .char-title { font-size: 1.25rem; }
+  html[data-skin="field-journal"].m .char-sub { font-size: 1.15rem; }
+  html[data-skin="field-journal"].m .char-sub::before,
+  html[data-skin="field-journal"].m .char-sub::after { content: none; }
+  html[data-skin="field-journal"].m .portrait { width: 84px; height: 84px; }
+  html[data-skin="field-journal"].m .fact { padding: 5px 20px 6px; min-width: 0; }
+  html[data-skin="field-journal"].m .fact.insp,
+  html[data-skin="field-journal"].m .fact.xp-fact { padding: 0; }
+  html[data-skin="field-journal"].m .insp-btn { padding: 5px 20px 6px; }
+  html[data-skin="field-journal"].m .fact .value { font-size: 1.15rem; }
+  html[data-skin="field-journal"].m .fact .label { font-size: .85rem; }
+  html[data-skin="field-journal"].m .m-bar {
+    background: var(--paper) var(--fj-grain);
+    border-bottom: 0;
+    box-shadow: 0 6px 10px -8px rgba(30, 36, 26, .6);
+  }
+  html[data-skin="field-journal"].m .m-bar::after {
+    content: ""; display: block; height: 6px; margin: 0 -10px;
+    background: var(--fj-squiggle) center / 100% 100% no-repeat; opacity: .8;
+  }
+  html[data-skin="field-journal"] .m-stat {
+    background: var(--fj-wash);
+    border: 1.5px solid var(--fj-pencil); border-radius: var(--fj-wobble);
+  }
+  html[data-skin="field-journal"] .m-stat .m-lbl {
+    font-family: var(--fj-letter); font-size: .85rem; letter-spacing: .07em; color: var(--muted);
+  }
+  html[data-skin="field-journal"] .m-stat b { font-family: var(--fj-hand); font-size: 1.4rem; line-height: 1; }
+  html[data-skin="field-journal"] .m-hp .m-hpn b { font-size: 1.4rem; }
+  html[data-skin="field-journal"] .m-hpbar { background: rgba(38, 52, 40, .15); height: 5px; }
+  html[data-skin="field-journal"] .m-tool {
+    background: var(--accent); color: #eae5c8;
+    border: 1.5px solid #13291b; border-radius: var(--fj-wobble);
+  }
+  html[data-skin="field-journal"] .m-tab {
+    font-family: var(--fj-letter); font-size: 1.2rem; letter-spacing: .06em; padding: 7px 9px 5px;
+  }
+  html[data-skin="field-journal"] .m-tab.on { border-bottom-color: var(--accent); }
+  html[data-skin="field-journal"] .m-spf button {
+    font-family: var(--fj-hand); font-size: 1.05rem; font-weight: 700;
+    background: var(--fj-wash); border: 1.5px solid var(--fj-faint); border-radius: var(--fj-wobble);
+  }
+  html[data-skin="field-journal"] .m-spf button.on { background: var(--accent); color: #eae5c8; border-color: var(--accent); }
+  html[data-skin="field-journal"].m .ability { min-height: 112px; }
+}
+@media (max-width: 1000px) {
+  html[data-skin="field-journal"] .abilities { gap: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="field-journal"] .ability::before,
+  html[data-skin="field-journal"] .tile::before,
+  html[data-skin="field-journal"] .hp-gauge .hp-now::before { transition: none; }
+}
+
+/* the experience box's buttons stay on one line */
+html[data-skin="field-journal"] .xp-pop .hpb { padding: 1px 9px 0; font-size: 1.05rem; }
+html[data-skin="field-journal"] .xp-pop .hp-amt { width: 56px; }

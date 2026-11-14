@@ -607,6 +607,7 @@ func (self *SheetExporter) renderHtml(sheet *dnd.Sheet, props map[string]string)
 	if sheet.Character != nil {
 		ctx["sheetFile"] = sheet.Character.Filename
 	}
+	self.skinContext(ctx, sheet, props)
 	template := self.TemplatePath
 	if template == "" {
 		template = "dnd_character_html.tpl"
@@ -690,4 +691,38 @@ func init() {
 		return &SheetExporter{Format: "pdf", TemplatePath: "dnd_character.tpl",
 			Props: map[string]interface{}{}}
 	})
+}
+
+// skinContext hands the html sheet every skin there is (for its gallery) and
+// the one it is wearing: the export's own skin= if it names one (a preview),
+// else the character's DND_SHEET_SKIN. A skin that is not there, or none, is
+// the classic sheet, and the page is then exactly the classic one.
+func (self *SheetExporter) skinContext(ctx map[string]interface{}, sheet *dnd.Sheet, props map[string]string) {
+	tpath := ""
+	if self.pm != nil && self.pm.Tempo != nil {
+		tpath = self.pm.Tempo.TemplatePath
+	}
+	skins := LoadSkins(tpath)
+	want := ""
+	if sheet.Character != nil {
+		want = sheet.Character.SheetSkin
+	}
+	if v, ok := props["skin"]; ok {
+		want = strings.TrimSpace(v)
+	}
+	ctx["skin"] = ""
+	ctx["skinFontsUrl"] = ""
+	list := make([]map[string]interface{}, 0, len(skins))
+	for _, s := range skins {
+		if s.Id == want {
+			ctx["skin"] = s.Id
+			ctx["skinFontsUrl"] = s.FontsUrl
+		}
+		list = append(list, map[string]interface{}{"id": s.Id, "css": s.Css, "svg": s.Svg})
+	}
+	ctx["skins"] = list
+	ctx["skinsJson"] = "[]"
+	if data, err := json.Marshal(skins); err == nil {
+		ctx["skinsJson"] = string(data)
+	}
 }

@@ -95,6 +95,7 @@ const (
 	PropBackdrop   = "DND_BACKDROP"
 	PropBackCycle  = "DND_BACKDROP_CYCLE"
 	PropBackWash   = "DND_BACKDROP_OPACITY"
+	PropSheetSkin  = "DND_SHEET_SKIN"
 )
 
 // RenderOrg writes a complete org mode character sheet.
@@ -183,6 +184,11 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 		[2]string{PropBackCycle, c.BackdropCycle},
 		[2]string{PropBackWash, FormatOpacity(c.BackdropOpacity)},
 	)
+	// Only written once a skin is chosen, so every sheet that never had one
+	// is written exactly as before.
+	if c.SheetSkin != "" {
+		props = append(props, [2]string{PropSheetSkin, c.SheetSkin})
+	}
 	width := 0
 	for _, p := range props {
 		if len(p[0]) > width {
@@ -1098,6 +1104,8 @@ func applyProperty(c *Character, key, val string) {
 		c.BackdropCycle = val
 	case PropBackWash:
 		c.BackdropOpacity = ParseOpacity(val)
+	case PropSheetSkin:
+		c.SheetSkin = val
 	}
 }
 

@@ -1,0 +1,416 @@
+/* skin: Wildwood
+   about: A druid's grove: bark-framed panels, leaves and a green watercolour wash.
+   swatch: #9fbf8a #f6efdb #7a5b2e #2f5a2a #b8452a
+   fonts: Fondamento | Kalam:wght@400;700 | Alegreya:ital,wght@0,400;0,700;1,400
+*/
+
+/* ================= the grove's palette and faces ================= */
+$P {
+  --font-head: Kalam, "Comic Neue", cursive;
+  --font-body: Alegreya, "Palatino Linotype", Georgia, serif;
+  --ww-display: Fondamento, Alegreya, Georgia, serif;
+  --ink: #33240f;
+  --paper: #dfe7c8;
+  --paper-2: #f7f0db;
+  --line: #cdb88c;
+  --edge: #7a5b2e;
+  --accent: #a3401f;
+  --accent-2: #a8791c;
+  --muted: #6c5a3e;
+  --ww-green: #2f5627;
+  --ww-moss: #5f8a47;
+  --ww-hover: #eef0d4;
+  --shadow: 0 2px 6px rgba(40,46,18,.22);
+  --stat-radius: 14px;
+  --mood-rgb: 86, 120, 60;
+  --ww-grain: @@GRAIN@@;
+  --ww-frame: @@FRAME@@;
+  --ww-vine: @@VINE@@;
+  --ww-tendril: @@TENDRIL@@;
+}
+
+$P body {
+  background-color: #1e2a1b;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120,150,90,.25), transparent 70%),
+    var(--ww-grain);
+}
+
+/* ================= the page: a watercolour wash ================= */
+$P .page {
+  background-color: #e3e9cd;
+  background-image: var(--ww-grain);
+  box-shadow: 0 0 50px rgba(0,0,0,.6);
+  padding: 30px 24px 24px;
+}
+/* The blots of pigment, laid on wet paper: soft gradients whose edges a
+   turbulence filter tears into the ragged bleed a real wash has. */
+$P .page::before {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 16% at 12% 5%, rgba(96,160,150,.86) 0 52%, transparent 66%),
+    radial-gradient(ellipse 38% 14% at 82% 9%, rgba(196,160,72,.74) 0 50%, transparent 64%),
+    radial-gradient(ellipse 52% 18% at 46% 24%, rgba(130,172,96,.66) 0 48%, transparent 64%),
+    radial-gradient(ellipse 40% 16% at 8% 40%, rgba(170,150,70,.60) 0 46%, transparent 62%),
+    radial-gradient(ellipse 48% 18% at 90% 44%, rgba(98,156,140,.74) 0 50%, transparent 64%),
+    radial-gradient(ellipse 50% 17% at 40% 62%, rgba(118,164,86,.66) 0 48%, transparent 64%),
+    radial-gradient(ellipse 44% 16% at 88% 78%, rgba(190,152,70,.66) 0 48%, transparent 64%),
+    radial-gradient(ellipse 52% 17% at 14% 86%, rgba(92,150,128,.72) 0 50%, transparent 64%),
+    radial-gradient(ellipse 60% 14% at 60% 99%, rgba(120,160,80,.72) 0 50%, transparent 66%),
+    linear-gradient(170deg, rgba(150,186,130,.66), rgba(160,190,150,.42) 40%, rgba(176,170,100,.48) 75%, rgba(120,160,110,.66));
+  filter: url(#wildwood-bleed);
+}
+/* and the granulated speckle pigment leaves when it dries */
+$P .page::after {
+  content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+  background-image: @@BLOOMS@@;
+  background-size: 700px 700px;
+  opacity: .3; mix-blend-mode: multiply;
+}
+
+/* ================= the header: a framed clearing ================= */
+$P header.sheet-head {
+  position: relative;
+  border: 11px solid transparent;
+  border-image: var(--ww-frame) 32 / 22px / 11px round;
+  background: var(--paper-2) var(--ww-grain);
+  box-shadow: 0 3px 12px rgba(40,46,18,.25);
+  padding: 4px 12px;
+  margin: 6px 0 26px;
+  gap: 14px;
+}
+$P .char-name {
+  font-family: var(--ww-display);
+  font-weight: 400;
+  color: var(--ww-green);
+  font-size: 2.7rem;
+  text-shadow: 0 1px 0 rgba(255,255,255,.7);
+}
+$P .char-title, $P .has-portrait .char-title {
+  font-family: var(--ww-display);
+  color: var(--ww-green);
+  font-size: 1.15rem;
+}
+$P .has-portrait .char-title { font-size: 1.7rem; line-height: 1.12; }
+$P .char-sub { color: var(--muted); font-style: italic; font-size: 1.02rem; }
+
+$P .fact {
+  background: #fbf6e6;
+  border: 1.5px solid #8a6a3a;
+  border-radius: 14px 3px 14px 3px;
+  box-shadow: 1px 2px 0 rgba(122,91,46,.25);
+}
+$P .portrait { margin: 14px 10px 14px 12px; }
+$P .fact { min-width: 76px; padding: 4px 11px; }
+$P .fact .label {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .68rem; letter-spacing: .05em; color: var(--ww-moss);
+}
+$P .fact .value { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+$P .insp-btn { border-radius: 14px 3px 14px 3px; }
+$P .insp-btn:hover { background: var(--ww-hover); }
+$P .fact.insp.on { background: #f8ecc4; border-color: var(--accent-2); }
+
+/* ---- the portrait in a wreath ---- */
+$P .portrait::before {
+  content: ""; position: absolute; inset: -11.5%; pointer-events: none;
+  background: @@WREATH@@ center / 100% 100% no-repeat;
+}
+$P .portrait-well { background: #2a3a22; }
+$P .ring-band { stroke: url(#wildwood-ring); }
+$P .ring-edge { stroke: #4a3218; stroke-width: 1.3; }
+$P .ring-hair { stroke: #8a6a3a; opacity: .7; stroke-dasharray: 3 2; }
+$P .ring-name { fill: var(--ww-green); font-family: var(--ww-display); font-weight: 400; letter-spacing: .06em; }
+$P .ring-xp { fill: #5a4218; font-family: var(--font-head); font-weight: 700; }
+$P .xp-track { stroke: rgba(74,50,24,.2); }
+$P .xp-fill { stroke: #5f8a47; }
+$P .ring-gem { fill: #5f8a47; }
+$P .ring-gem-core { fill: #b8452a; }
+
+/* ================= the columns and their bark-framed panels ================= */
+$P .columns { gap: 28px; }
+$P .col { gap: 26px; }
+
+$P .box {
+  position: relative;
+  border: 11px solid transparent;
+  border-image: var(--ww-frame) 32 / 22px / 11px round;
+  border-radius: 0;
+  background-color: var(--paper-2);
+  background-image: var(--ww-grain);
+  box-shadow: 0 4px 14px rgba(40,46,18,.28);
+  padding: 4px 8px 8px;
+}
+$P .has-backdrop .box {
+  background-color: transparent;
+  background-image:
+    linear-gradient(rgba(247,240,219,var(--glass-a,.94)), rgba(247,240,219,var(--glass-a,.94))),
+    var(--backdrop-img, none);
+  background-attachment: scroll, fixed;
+}
+/* a sprig of leaves over the top right corner, and on every other panel a
+   tendril with rowan berries curling off the bottom left */
+$P .box::before {
+  content: ""; position: absolute; z-index: 2; pointer-events: none;
+  width: 66px; height: 50px; right: -30px; top: -34px;
+  background: @@SPRIG@@ center / contain no-repeat;
+  transform-origin: 10% 90%;
+  animation: wildwood-sway 7s ease-in-out infinite;
+}
+$P .col > .box:nth-child(even)::before {
+  right: auto; left: -34px; top: -40px; transform: scaleX(-1);
+  transform-origin: 90% 90%; animation-name: wildwood-sway-l; animation-duration: 8.5s;
+}
+$P .col > .box:nth-child(3n+1)::after {
+  content: ""; position: absolute; z-index: 2; pointer-events: none;
+  width: 70px; height: 42px; left: -26px; bottom: -30px;
+  background: var(--ww-tendril) center / contain no-repeat;
+}
+$P .col > .box:nth-child(3n+2)::after {
+  content: ""; position: absolute; z-index: 2; pointer-events: none;
+  width: 70px; height: 42px; right: -26px; bottom: -30px; transform: scaleX(-1);
+  background: var(--ww-tendril) center / contain no-repeat;
+}
+@keyframes wildwood-sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-4deg); } }
+@keyframes wildwood-sway-l { 0%, 100% { transform: scaleX(-1) rotate(0deg); } 50% { transform: scaleX(-1) rotate(-4deg); } }
+@media (prefers-reduced-motion: reduce) {
+  $P .box::before, $P .col > .box:nth-child(even)::before { animation: none; }
+}
+
+/* headings: woodland lettering over a little vine */
+$P .box > h2, $P .box.tabbed > .tabpane > h2, $P h3.subhead {
+  font-family: var(--ww-display);
+  font-weight: 400;
+  font-size: 1.12rem;
+  text-transform: none;
+  letter-spacing: .01em;
+  color: var(--ww-green);
+  border-bottom: 0;
+  padding: 0 0 9px 22px;
+  margin-bottom: 8px;
+  background:
+    @@LEAF@@ left 2px top 4px / 18px 14px no-repeat,
+    var(--ww-vine) left bottom / 64px 14px repeat-x;
+}
+$P h3.subhead { font-size: 1rem; margin-top: 14px; }
+
+$P .tabbar {
+  border-bottom: 0;
+  padding-bottom: 7px;
+  margin: -2px 0 10px;
+  background: var(--ww-vine) left bottom / 64px 14px repeat-x;
+  gap: 4px;
+}
+$P .tabbtn {
+  font-family: var(--ww-display);
+  font-size: .98rem; text-transform: none; letter-spacing: .01em; font-weight: 400;
+  color: var(--muted);
+  border: 1.5px solid transparent;
+  border-radius: 14px 4px 14px 4px;
+  padding: 2px 11px 3px; margin-bottom: 3px;
+}
+$P .tabbtn:hover { color: var(--ww-green); background: var(--ww-hover); }
+$P .tabbtn.on {
+  background: #e5ecc8;
+  border-color: #6c8a44;
+  color: var(--ww-green);
+  font-weight: 400;
+  box-shadow: inset 0 -2px 0 rgba(95,138,71,.25);
+}
+
+/* ================= ability scores in seed shields ================= */
+$P .abilities { gap: 10px 6px; }
+$P .ability {
+  background: @@SEED@@ center / contain no-repeat;
+  border: 0;
+  border-radius: 0;
+  padding: 21px 2px 17px;
+  min-height: 94px;
+}
+@media (min-width: 1001px) {
+  $P .abilities { grid-template-columns: repeat(2, 1fr); gap: 8px 12px; padding: 0 8px; }
+  $P .ability { min-height: 112px; padding-top: 26px; }
+  $P .ability .tile-label { display: block; margin-bottom: 4px; font-size: .78rem; }
+  $P .ability .mod { font-size: 1.95rem; }
+}
+$P .ability.rollable { box-shadow: none; border-radius: 0; transition: filter .15s ease; }
+$P .ability.rollable:hover, $P .ability.rollable:focus-visible {
+  background-color: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 0 5px rgba(168,121,28,.85));
+}
+$P .ability .tile-label {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .72rem; letter-spacing: .08em; color: var(--ww-moss);
+}
+$P .ability .mod {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1.75rem; line-height: 1; color: var(--ink);
+}
+$P .ability .score {
+  background: #efe3c2;
+  border: 1px solid #a08455;
+  border-radius: 10px 3px 10px 3px;
+  font-weight: 700; font-size: .8rem;
+  color: #4a3218;
+}
+$P .ability .check-note { color: var(--accent-2); }
+
+/* ================= saves and skills ================= */
+$P .row { border-bottom: 1px dashed rgba(122,91,46,.35); }
+$P .row .abbr { font-family: var(--font-head); color: var(--ww-moss); font-size: .74rem; }
+$P .row .val { font-family: var(--font-head); font-weight: 700; }
+/* proficiency marks are little leaves: hollow, filled, gold for expertise */
+$P .pip {
+  width: 12px; height: 12px;
+  border: 1.3px solid #6c5a3e;
+  border-radius: 1px 9px 1px 9px;
+  background: #fbf6e6;
+}
+$P .pip.on { background: #4f7a38; border-color: #2f5627; }
+$P .pip.exp { background: #c99a2e; border-color: #7a5b2e; box-shadow: inset 0 0 0 2px #fbf6e6; }
+$P .row.rollable, $P td.rollable, $P .inline-roll { text-decoration-color: rgba(122,91,46,.7); }
+$P .rollable:hover, $P .rollable:focus-visible {
+  background: rgba(150,170,80,.2);
+  box-shadow: 0 0 0 2px rgba(120,150,60,.45);
+}
+
+/* ================= combat: sawn log ends and a leaf shield ================= */
+$P .combat { gap: 8px; }
+$P .tile {
+  background: @@LOG@@ center / 100% 100% no-repeat;
+  border: 0;
+  border-radius: 50%;
+  padding: 15px 8px 13px;
+}
+$P .tile .tile-label {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .64rem; letter-spacing: .06em; color: #6a4e24;
+}
+$P .tile .big { font-family: var(--font-head); font-weight: 700; font-size: 1.6rem; line-height: 1.1; }
+$P .tile .sub { color: #6a4e24; }
+$P .tile.shield, $P .tile.shield.rollable {
+  background: @@SHIELD@@ center / 100% 100% no-repeat;
+  border-radius: 0;
+  padding: 9px 8px 16px;
+}
+$P .tile.rollable { box-shadow: none; border-radius: 50%; }
+$P .tile.rollable:hover, $P .tile.rollable:focus-visible {
+  background-color: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 0 5px rgba(168,121,28,.85));
+}
+$P .spell-head .tile { min-width: 70px; padding: 13px 9px 11px; }
+
+$P .hp-gauge .hp-now, $P .hp-gauge .hp-max { font-family: var(--font-head); }
+$P .hp-gauge .hp-now { font-size: 1.35rem; }
+$P .hp-bar {
+  height: 11px; border-radius: 6px;
+  background: #e2d6b4;
+  border: 1.3px solid #7a5b2e;
+  box-shadow: inset 0 1px 2px rgba(74,50,24,.3);
+}
+$P #hp-line strong { font-family: var(--ww-display); font-weight: 400; color: var(--ww-green); font-size: 1.08rem; }
+
+$P .hpb, $P .hitdie, $P .death .death-do, $P .spell-manage, $P .inv-add {
+  font-family: var(--font-head); font-weight: 700;
+  background: #fbf6e6;
+  border: 1.3px solid #9a7c4c;
+  border-radius: 12px 3px 12px 3px;
+  box-shadow: 1px 1px 0 rgba(122,91,46,.3);
+}
+$P .hpb { font-size: .74rem; letter-spacing: .04em; }
+$P .hpb:hover, $P .hitdie:hover, $P .death .death-do:hover, $P .spell-manage:hover, $P .inv-add:hover {
+  background: var(--ww-hover);
+}
+$P .hpb.heal { color: #3b6e2a; }
+$P .hitdie .hd-label { font-family: var(--font-head); font-weight: 700; color: var(--ww-moss); }
+$P .hitdie .hd-val { font-family: var(--font-head); }
+$P .death-roll, $P .death-word { font-family: var(--font-head); font-weight: 700; }
+$P .dp { border-color: #9a7c4c; }
+
+/* ================= spells, attacks, inventory ================= */
+$P .spell-level h3 {
+  font-family: var(--ww-display); font-weight: 400;
+  font-size: 1rem; text-transform: none; color: var(--ww-green);
+  border-bottom: 1px dashed rgba(122,91,46,.5);
+}
+$P details.spell summary { border-bottom: 1px dashed rgba(122,91,46,.3); }
+$P details.spell summary::marker { color: var(--ww-moss); }
+$P .prep { color: #8a6418; }
+$P .slot { border: 1.3px solid #6c5a3e; border-radius: 2px 7px 2px 7px; background: #fbf6e6; width: 13px; height: 13px; }
+$P .slot.used { background: #6c8a44; border-color: #3b5a2a; }
+$P .slot-row .lvl { font-family: var(--font-head); font-weight: 700; color: var(--ww-moss); }
+$P .cast-btn, $P .cast-at {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: .66rem; letter-spacing: .04em;
+  background: #fbf6e6; border: 1px solid #9a7c4c; border-radius: 9px 2px 9px 2px;
+  line-height: 1.5;
+}
+$P .cast-btn:hover, $P .cast2-btn:hover, $P .wearbtn:hover, $P .ib:hover,
+$P .attunebtn:hover, $P .hp-temp .val:hover, $P .cond-pick:hover, $P .sb-b:hover {
+  background: var(--ww-hover);
+}
+$P .feature h3 { font-family: var(--ww-display); font-weight: 400; color: var(--ww-green); font-size: .95rem; }
+$P .feature .src, $P .quote .label { font-family: var(--font-head); color: var(--ww-moss); }
+$P .use-pip { border-radius: 2px 8px 2px 8px; border-color: #6c5a3e; background: #fbf6e6; }
+$P th { font-family: var(--font-head); font-weight: 700; color: var(--ww-moss); }
+$P td { border-bottom: 1px dashed rgba(122,91,46,.3); }
+$P .inv-tab {
+  font-family: var(--ww-display); font-weight: 400; text-transform: none;
+  font-size: .9rem; letter-spacing: 0;
+  border-radius: 12px 3px 12px 3px;
+}
+$P .inv-tab.on { background: #e5ecc8; color: var(--ww-green); border-color: #6c8a44; }
+$P .enc-bar { border-color: #9a7c4c; }
+
+$P .xp-pop { background: #f7f0db; border: 1.5px solid #7a5b2e; border-radius: 14px 4px 14px 4px; }
+
+/* ================= the foot ================= */
+$P footer.sheet-foot {
+  border-top: 0;
+  padding-top: 14px;
+  background: var(--ww-vine) left top / 64px 14px repeat-x;
+  color: #3e3018;
+  font-size: .74rem;
+}
+
+/* ================= phone ================= */
+$P.m .page { padding: 10px 12px 92px; }
+$P.m header.sheet-head { padding: 4px 6px; margin: 4px 0 10px; gap: 6px 14px; }
+$P.m .portrait { margin: 6px; }
+$P.m .char-name { font-size: 1.6rem; }
+$P.m .has-portrait .char-title, $P.m .char-title { font-size: 1.05rem; }
+$P.m .head-facts { margin: 0 -6px; padding: 2px 6px 4px; }
+$P.m .m-bar {
+  margin: 0 -12px 18px; padding: 6px 12px 0;
+  background: #f3edd5 var(--ww-grain);
+  border-bottom: 0;
+  box-shadow: 0 5px 10px -5px rgba(40,46,18,.45);
+}
+$P.m .m-bar::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -12px; height: 14px; pointer-events: none;
+  background: var(--ww-vine) left top / 64px 14px repeat-x;
+}
+$P .m-stat {
+  background: #fbf6e6; border: 1.3px solid #9a7c4c; border-radius: 12px 3px 12px 3px;
+}
+$P .m-stat .m-lbl { font-family: var(--font-head); color: var(--ww-moss); font-size: .6rem; }
+$P .m-stat b { font-family: var(--font-head); }
+$P .m-tool {
+  background: linear-gradient(180deg, #8a6a3a, #5a4020);
+  color: #f6e7b8; border: 1.3px solid #3e2c12; border-radius: 12px 3px 12px 3px;
+}
+$P .m-tab {
+  font-family: var(--ww-display); font-weight: 400; text-transform: none;
+  font-size: .92rem; letter-spacing: 0; color: var(--muted);
+}
+$P .m-tab.on { color: var(--ww-green); border-bottom-color: #5f8a47; }
+$P .m-spf button { font-family: var(--font-head); border-radius: 12px 3px 12px 3px; }
+$P .m-spf button.on { background: #4f7a38; border-color: #2f5627; }
+$P.m .columns { gap: 30px; }
+$P.m .box::before { right: -14px; }
+$P.m .col > .box:nth-child(even)::before {
+  left: auto; right: -14px; transform: none; transform-origin: 10% 90%; animation-name: wildwood-sway;
+}
+$P.m .col > .box::after { display: none; }

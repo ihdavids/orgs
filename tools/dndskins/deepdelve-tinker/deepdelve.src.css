@@ -1,0 +1,488 @@
+/* skin: Deepdelve
+   about: A dwarven crystal mine: torn notes pinned to timber boards, iron brackets, glowing gems and lantern light.
+   swatch: #2a221d #f1e6cc #5a3e27 #3fbfd6 #9a62d6
+   fonts: Grenze Gotisch:wght@500;700 | Grenze:ital,wght@0,400;0,600;0,700;1,400 | Alegreya:ital,wght@0,400;0,600;0,700;1,400
+*/
+
+/* ================= tokens ================= */
+html[data-skin="deepdelve"] {
+  --font-head: Grenze, "Alegreya SC", Georgia, serif;
+  --font-body: Alegreya, Georgia, serif;
+  --font-show: "Grenze Gotisch", Grenze, Georgia, serif;
+  --ink: #241a14;
+  --paper: #f6eedb;
+  --paper-2: #efe4ca;
+  --line: #c4ad86;
+  --edge: #7c6447;
+  --accent: #7d2a1a;
+  --accent-2: #a8650f;
+  --muted: #6c5a45;
+  --shadow: 0 2px 5px rgba(10,6,4,.45);
+  --stat-radius: 6px;
+  --mood-rgb: 255, 168, 72;
+  --dd-wood: #5d4129;
+  --dd-wood-2: #4a321f;
+  --dd-wood-3: #6e4e32;
+  --dd-rock: #2a221d;
+  --dd-cyan: #3fbfd6;
+  --dd-lamp: 255, 176, 84;
+/*@@IMAGES@@*/}
+
+/* ================= the mine ================= */
+html[data-skin="deepdelve"] body {
+  background-color: #141010;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,160,70,.10), transparent 70%),
+    linear-gradient(rgba(20,14,12,.72), rgba(20,14,12,.72)),
+    @@ROCK@@;
+  background-size: auto, auto, 320px 320px;
+}
+html[data-skin="deepdelve"] .page {
+  padding: 54px 38px 26px;
+  background-color: var(--dd-rock);
+  background-image:
+    /* lantern pools of light */
+    radial-gradient(ellipse 520px 380px at 12% 4%, rgba(var(--dd-lamp), .22), transparent 70%),
+    radial-gradient(ellipse 560px 460px at 92% 46%, rgba(var(--dd-lamp), .13), transparent 70%),
+    radial-gradient(ellipse 480px 420px at 30% 88%, rgba(70,200,225,.07), transparent 70%),
+    /* the timber posts holding up the drift, left and right */
+    linear-gradient(90deg, transparent 0 4px, #1a120c 4px 5px, #5a3d26 5px 9px, #74532f 9px 13px, #4c3320 13px 19px, #1a120c 19px 20px, transparent 20px),
+    linear-gradient(270deg, transparent 0 4px, #1a120c 4px 5px, #5a3d26 5px 9px, #74532f 9px 13px, #4c3320 13px 19px, #1a120c 19px 20px, transparent 20px),
+    linear-gradient(rgba(42,34,29,.55), rgba(42,34,29,.55)),
+    @@ROCK@@;
+  background-size: auto, auto, auto, auto, auto, auto, 320px 320px;
+  box-shadow: 0 0 60px rgba(0,0,0,.8), inset 0 0 90px rgba(0,0,0,.55);
+  color: var(--ink);
+}
+/* crystals growing out of the rock behind the boards */
+html[data-skin="deepdelve"] .page::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    @@CR_AMBER@@ no-repeat left -18px bottom -6px / 150px auto,
+    @@CR_GREEN@@ no-repeat right -20px bottom 20% / 140px auto,
+    @@CR_HANG@@ no-repeat left -14px top 38% / 120px auto,
+    @@CR_CYAN@@ no-repeat right -10px top 12% / 110px auto;
+}
+
+/* ================= header: a timber beam with notes nailed on ================= */
+html[data-skin="deepdelve"] header.sheet-head {
+  position: relative; isolation: isolate;
+  border-bottom: 0;
+  margin-bottom: 26px;
+  padding: 16px 26px 18px 22px;
+  border-radius: 3px;
+  background-color: var(--dd-wood);
+  background-image:
+    radial-gradient(ellipse 50% 90% at 22% 50%, rgba(var(--dd-lamp), .22), transparent 70%),
+    linear-gradient(180deg, rgba(255,220,170,.10), transparent 18%, transparent 82%, rgba(0,0,0,.28)),
+    repeating-linear-gradient(180deg, transparent 0 46px, rgba(15,9,5,.75) 46px 48px, rgba(255,215,160,.08) 48px 49px),
+    @@GRAIN@@;
+  background-size: auto, auto, auto, 400px 120px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.6), inset 0 0 0 1px rgba(15,9,5,.9), inset 0 2px 0 rgba(255,220,170,.12);
+}
+html[data-skin="deepdelve"] header.sheet-head::after {
+  content: ""; position: absolute; inset: -4px; pointer-events: none; z-index: 3;
+  background:
+    @@BR_TL@@ no-repeat left top / 40px,
+    @@BR_TR@@ no-repeat right top / 40px,
+    @@BR_BL@@ no-repeat left bottom / 40px,
+    @@BR_BR@@ no-repeat right bottom / 40px;
+}
+/* the great cluster sat on the beam */
+html[data-skin="deepdelve"] header.sheet-head::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  width: 230px; height: 160px; right: 31%; top: -58px;
+  background: @@CR_BIG@@ no-repeat center bottom / contain;
+  filter: drop-shadow(0 0 14px rgba(110,225,245,.35));
+  animation: deepdelve-glow 5s ease-in-out infinite;
+}
+@keyframes deepdelve-glow {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(110,225,245,.25)); }
+  50% { filter: drop-shadow(0 0 20px rgba(110,225,245,.55)); }
+}
+html[data-skin="deepdelve"] header.sheet-head > * { position: relative; z-index: 1; }
+html[data-skin="deepdelve"] .char-name {
+  font-family: var(--font-show); font-weight: 700;
+  font-size: 3rem; letter-spacing: .01em;
+  color: #f8e6bb;
+  text-shadow: 0 2px 0 #1a0f08, 0 0 22px rgba(var(--dd-lamp), .55);
+}
+html[data-skin="deepdelve"] .char-title,
+html[data-skin="deepdelve"] .has-portrait .char-title {
+  font-family: var(--font-show); font-weight: 700;
+  color: #f8e6bb; font-size: 1.35rem; line-height: 1.15;
+  text-shadow: 0 2px 0 #1a0f08, 0 0 16px rgba(var(--dd-lamp), .45);
+}
+html[data-skin="deepdelve"] .has-portrait .char-title { font-size: 1.95rem; }
+html[data-skin="deepdelve"] .char-sub {
+  color: #e0c99c; font-family: var(--font-head); font-size: 1.02rem; letter-spacing: .03em;
+  text-shadow: 0 1px 0 #1a0f08;
+}
+
+/* facts: little torn notes nailed to the beam */
+html[data-skin="deepdelve"] .head-facts { gap: 12px 10px; }
+html[data-skin="deepdelve"] .fact {
+  position: relative; isolation: isolate;
+  background: none; border: 0; box-shadow: none; border-radius: 0;
+  padding: 9px 13px 6px;
+  transform: rotate(-1.2deg);
+}
+html[data-skin="deepdelve"] .fact:nth-child(even) { transform: rotate(1.4deg); }
+html[data-skin="deepdelve"] .fact:nth-child(3n) { transform: rotate(-.4deg); }
+html[data-skin="deepdelve"] .fact::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--paper) @@PAPER@@;
+  filter: url(#deepdelve-torn-sm);
+}
+html[data-skin="deepdelve"] .fact::after {
+  content: ""; position: absolute; top: 2px; left: 50%; width: 9px; height: 9px; margin-left: -4px;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 35%, #b9a58c 0 1.3px, #4a3d33 2.4px, #1b1410 4.4px);
+  box-shadow: 0 1px 1px rgba(0,0,0,.5);
+}
+html[data-skin="deepdelve"] .fact .label {
+  font-family: var(--font-head); font-size: .66rem; font-weight: 600;
+  letter-spacing: .1em; color: var(--muted);
+}
+html[data-skin="deepdelve"] .fact .value { font-family: var(--font-head); font-size: 1.12rem; font-weight: 700; color: var(--ink); }
+html[data-skin="deepdelve"] .fact.insp,
+html[data-skin="deepdelve"] .fact.xp-fact { padding: 0; }
+html[data-skin="deepdelve"] .insp-btn { padding: 9px 13px 6px; border-radius: 0; }
+html[data-skin="deepdelve"] .insp-btn:hover { background: rgba(var(--dd-lamp), .18); }
+html[data-skin="deepdelve"] .fact.insp.on { background: none; }
+html[data-skin="deepdelve"] .fact.insp.on::before {
+  background: radial-gradient(circle at 50% 60%, #fff3c9, #f6d888) , @@PAPER@@;
+  background-blend-mode: multiply;
+}
+html[data-skin="deepdelve"] .fact.insp.on { filter: drop-shadow(0 0 8px rgba(255,190,80,.75)); }
+html[data-skin="deepdelve"] .insp-btn .word { font-family: var(--font-head); }
+
+/* ================= the portrait: an iron ring set with gems ================= */
+html[data-skin="deepdelve"] .ring-band { stroke: url(#deepdelve-ring); }
+html[data-skin="deepdelve"] .ring-edge { stroke: #c08a3a; opacity: .8; }
+html[data-skin="deepdelve"] .ring-hair { stroke: #120c08; opacity: .8; }
+html[data-skin="deepdelve"] .ring-name { fill: #f6dfae; font-family: var(--font-head); letter-spacing: .14em; }
+html[data-skin="deepdelve"] .ring-xp { fill: #e8c98a; font-family: var(--font-head); }
+html[data-skin="deepdelve"] .xp-track { stroke: rgba(0,0,0,.45); }
+html[data-skin="deepdelve"] .xp-fill { stroke: var(--dd-cyan); filter: drop-shadow(0 0 2px rgba(110,225,245,.9)); }
+html[data-skin="deepdelve"] .ring-gem { fill: #5fd3e6; stroke: #0e0a08; stroke-width: 1; }
+html[data-skin="deepdelve"] .ring-gem-core { fill: #e4fdff; }
+html[data-skin="deepdelve"] .portrait { filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
+html[data-skin="deepdelve"] .portrait.inspired { filter: drop-shadow(0 0 12px rgba(255,190,80,.85)) drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
+html[data-skin="deepdelve"] .portrait:has(.ring-xp-btn:hover) .ring-xp { fill: #8fe6f2; }
+
+/* ================= boxes: torn notes pinned to boards ================= */
+html[data-skin="deepdelve"] .columns { gap: 22px; }
+html[data-skin="deepdelve"] .col { gap: 20px; }
+html[data-skin="deepdelve"] .box,
+html[data-skin="deepdelve"].has-backdrop .box,
+html[data-skin="deepdelve"] .has-backdrop .box {
+  position: relative; isolation: isolate;
+  border: 0; border-radius: 3px;
+  padding: 22px 18px 20px;
+  background-color: var(--dd-wood-2);
+  background-image:
+    linear-gradient(180deg, rgba(255,220,170,.08), transparent 30%, rgba(0,0,0,.22)),
+    repeating-linear-gradient(90deg, transparent 0 62px, rgba(12,7,4,.7) 62px 64px, rgba(255,215,160,.07) 64px 65px),
+    @@GRAINV@@;
+  background-size: auto, auto, 120px 400px;
+  background-attachment: scroll;
+  box-shadow: 0 8px 18px rgba(0,0,0,.6), 0 2px 3px rgba(0,0,0,.6), inset 0 0 0 1px rgba(12,7,4,.85), inset 0 1px 0 rgba(255,220,170,.12);
+}
+/* the paper itself */
+html[data-skin="deepdelve"] .box::before {
+  content: ""; position: absolute; inset: 9px 8px 9px 9px; z-index: -1; pointer-events: none;
+  background-color: var(--paper-2);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 30% 0%, rgba(255,250,235,.7), transparent 70%),
+    radial-gradient(ellipse 120% 80% at 50% 50%, transparent 60%, rgba(150,110,60,.22)),
+    @@PAPER@@;
+  filter: url(#deepdelve-torn);
+}
+/* iron brackets on the board corners */
+html[data-skin="deepdelve"] .box::after {
+  content: ""; position: absolute; inset: -3px; z-index: 2; pointer-events: none;
+  background:
+    @@BR_TL@@ no-repeat left top / 34px,
+    @@BR_TR@@ no-repeat right top / 34px,
+    @@BR_BL@@ no-repeat left bottom / 34px,
+    @@BR_BR@@ no-repeat right bottom / 34px;
+}
+html[data-skin="deepdelve"] .box > h2,
+html[data-skin="deepdelve"] .box.tabbed > .tabpane > h2,
+html[data-skin="deepdelve"] h3.subhead,
+html[data-skin="deepdelve"] .spell-level h3 {
+  font-family: var(--font-show); font-weight: 700;
+  text-transform: none; letter-spacing: .01em;
+  color: var(--accent);
+  border-bottom: 0;
+  background: @@RULE@@ no-repeat left bottom / 100% 7px;
+  padding-bottom: 6px;
+}
+html[data-skin="deepdelve"] .box > h2,
+html[data-skin="deepdelve"] .box.tabbed > .tabpane > h2 {
+  font-size: 1.3rem; line-height: 1.1; margin-bottom: 9px;
+  padding-left: 21px;
+  background:
+    @@GEM@@ no-repeat left 1px top 3px / 15px,
+    @@RULE@@ no-repeat left bottom / 100% 7px;
+}
+html[data-skin="deepdelve"] h3.subhead,
+html[data-skin="deepdelve"] .spell-level h3 { font-size: 1.05rem; }
+
+/* tabs: little paper flags */
+html[data-skin="deepdelve"] .tabbar {
+  border-bottom: 0; gap: 4px; margin: -4px 0 12px;
+  background: @@RULE@@ no-repeat left bottom / 100% 7px;
+  padding-bottom: 4px;
+}
+html[data-skin="deepdelve"] .tabbtn {
+  font-family: var(--font-head); font-size: .86rem; font-weight: 600;
+  letter-spacing: .05em; color: var(--muted);
+  border: 1px solid transparent; border-radius: 3px;
+  padding: 3px 10px 3px; margin-bottom: 0;
+}
+html[data-skin="deepdelve"] .tabbtn:hover { color: var(--accent); background: rgba(var(--dd-lamp), .16); }
+html[data-skin="deepdelve"] .tabbtn.on {
+  color: #fdf3da; font-weight: 700;
+  background: linear-gradient(180deg, #8b3a22, #6a2414);
+  border-color: #3a1209;
+  box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,210,170,.25);
+}
+
+/* ================= ability scores: cut gems ================= */
+html[data-skin="deepdelve"] .abilities { gap: 10px 8px; }
+html[data-skin="deepdelve"] .ability,
+html[data-skin="deepdelve"] .ability.rollable {
+  --g-hi: #e4fdff; --g-lt: #8fe6f2; --g-md: #3fbfd6; --g-dk: #1d6f8c;
+  isolation: isolate;
+  background: none; border: 0; border-radius: 0;
+  box-shadow: none;
+  padding: 13px 2px 12px;
+  min-height: 92px;
+  filter: drop-shadow(0 3px 3px rgba(20,12,6,.45));
+  transition: filter .15s ease, transform .15s ease;
+}
+html[data-skin="deepdelve"] .ability::before,
+html[data-skin="deepdelve"] .ability::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  clip-path: polygon(22% 0, 78% 0, 100% 24%, 100% 76%, 78% 100%, 22% 100%, 0 76%, 0 24%);
+}
+/* the faceted rim */
+html[data-skin="deepdelve"] .ability::before {
+  background:
+    conic-gradient(from -22deg at 50% 50%,
+      var(--g-hi) 0 45deg, var(--g-lt) 45deg 90deg, var(--g-md) 90deg 135deg, var(--g-dk) 135deg 180deg,
+      var(--g-md) 180deg 225deg, var(--g-dk) 225deg 270deg, var(--g-lt) 270deg 315deg, var(--g-hi) 315deg 360deg);
+  box-shadow: inset 0 0 0 2px #1b1418;
+  outline: 2px solid #1b1418;
+}
+/* the polished table, where the numbers are read */
+html[data-skin="deepdelve"] .ability::after {
+  inset: 7px 6px;
+  clip-path: polygon(20% 0, 80% 0, 100% 22%, 100% 78%, 80% 100%, 20% 100%, 0 78%, 0 22%);
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.95), rgba(255,255,255,.75) 45%, rgba(255,255,255,.55)),
+    var(--g-lt);
+}
+html[data-skin="deepdelve"] .ability:nth-child(1) { --g-hi: #ffe0e4; --g-lt: #f58ba0; --g-md: #d5395f; --g-dk: #7c1734; }
+html[data-skin="deepdelve"] .ability:nth-child(2) { --g-hi: #e2fbd9; --g-lt: #86e08a; --g-md: #36ad5c; --g-dk: #165c34; }
+html[data-skin="deepdelve"] .ability:nth-child(3) { --g-hi: #fff3c4; --g-lt: #ffc95c; --g-md: #e8901f; --g-dk: #93470f; }
+html[data-skin="deepdelve"] .ability:nth-child(4) { --g-hi: #e4fdff; --g-lt: #8fe6f2; --g-md: #3fbfd6; --g-dk: #1d6f8c; }
+html[data-skin="deepdelve"] .ability:nth-child(5) { --g-hi: #f6e6ff; --g-lt: #cfa2f0; --g-md: #9a62d6; --g-dk: #4f2b86; }
+html[data-skin="deepdelve"] .ability:nth-child(6) { --g-hi: #fff0f5; --g-lt: #f6b8d0; --g-md: #df7aa6; --g-dk: #8a3460; }
+html[data-skin="deepdelve"] .ability.rollable:hover,
+html[data-skin="deepdelve"] .ability.rollable:focus-visible {
+  background: none; box-shadow: none;
+  filter: drop-shadow(0 0 7px var(--g-md)) drop-shadow(0 3px 3px rgba(20,12,6,.45)) brightness(1.06);
+  transform: translateY(-1px);
+}
+html[data-skin="deepdelve"] .ability .tile-label {
+  font-family: var(--font-head); font-weight: 700; font-size: .72rem; letter-spacing: .12em; color: #3b2a1e;
+}
+html[data-skin="deepdelve"] .ability .mod {
+  font-family: var(--font-head); font-weight: 700; font-size: 1.75rem; line-height: 1; color: #1c130d;
+}
+html[data-skin="deepdelve"] .ability .score {
+  font-family: var(--font-head); font-weight: 600; font-size: .86rem;
+  background: rgba(255,255,255,.7); border: 1px solid var(--g-dk); border-radius: 3px;
+  color: #2a1d14; margin-top: 3px;
+}
+html[data-skin="deepdelve"] .ability .check-note { color: #7a4810; font-weight: 600; }
+
+/* ================= lists ================= */
+html[data-skin="deepdelve"] .row { border-bottom: 1px dashed rgba(124,100,71,.45); font-size: .97rem; }
+html[data-skin="deepdelve"] .row .val { font-family: var(--font-head); font-weight: 700; font-size: 1.02rem; }
+html[data-skin="deepdelve"] .row .abbr { font-family: var(--font-head); font-size: .74rem; letter-spacing: .05em; }
+/* proficiency marks are little cut stones */
+html[data-skin="deepdelve"] .pip {
+  width: 10px; height: 10px; border-radius: 1px; transform: rotate(45deg) translateY(-1px);
+  border: 1.4px solid #4a3a2c; background: var(--paper);
+}
+html[data-skin="deepdelve"] .pip.on {
+  background: linear-gradient(135deg, #b8f2fa, #2e9db6 60%, #1d6f8c); border-color: #10313b;
+}
+html[data-skin="deepdelve"] .pip.exp {
+  background: linear-gradient(135deg, #fff1b8, #e8901f 60%, #93470f); border-color: #4a2408;
+  box-shadow: 0 0 0 1.5px rgba(232,144,31,.45);
+}
+html[data-skin="deepdelve"] .rollable:hover,
+html[data-skin="deepdelve"] .rollable:focus-visible {
+  background: rgba(var(--dd-lamp), .24);
+  box-shadow: 0 0 0 2px rgba(168,101,15,.45);
+}
+html[data-skin="deepdelve"] .row.rollable,
+html[data-skin="deepdelve"] td.rollable,
+html[data-skin="deepdelve"] .inline-roll { text-decoration-color: rgba(168,101,15,.85); }
+html[data-skin="deepdelve"] th { font-family: var(--font-head); font-size: .72rem; letter-spacing: .06em; color: var(--muted); border-bottom-color: var(--edge); }
+html[data-skin="deepdelve"] td { border-bottom-color: rgba(124,100,71,.4); }
+
+/* ================= combat: iron-bound plates ================= */
+html[data-skin="deepdelve"] .tile,
+html[data-skin="deepdelve"] .tile.rollable {
+  background:
+    radial-gradient(circle at 7px 7px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at 7px calc(100% - 7px), #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    linear-gradient(180deg, #fbf5e6, #efe2c4);
+  border: 3px solid #3a2f27;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px #a88f6a, 0 2px 3px rgba(20,12,6,.35);
+}
+html[data-skin="deepdelve"] .tile.shield,
+html[data-skin="deepdelve"] .tile.shield.rollable {
+  border-color: #5a1d12;
+  border-radius: 6px 6px 30px 30px / 6px 6px 38px 38px;
+  background:
+    radial-gradient(circle at 8px 8px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) 8px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    linear-gradient(180deg, #fbf5e6, #f0dcc0);
+  box-shadow: inset 0 0 0 1px #c08060, 0 2px 3px rgba(20,12,6,.35);
+}
+html[data-skin="deepdelve"] .tile.rollable:hover,
+html[data-skin="deepdelve"] .tile.rollable:focus-visible {
+  box-shadow: inset 0 0 0 1px #a88f6a, 0 0 0 3px rgba(var(--dd-lamp), .7), 0 0 14px rgba(var(--dd-lamp), .55);
+}
+html[data-skin="deepdelve"] .tile .tile-label { font-family: var(--font-head); font-weight: 600; font-size: .72rem; letter-spacing: .1em; color: var(--muted); }
+html[data-skin="deepdelve"] .tile .big { font-family: var(--font-head); font-size: 1.85rem; line-height: 1.05; color: #1c130d; }
+html[data-skin="deepdelve"] .tile .sub { font-size: .78rem; }
+
+/* hit points: a trough cut in stone, the bar keeps its colours */
+html[data-skin="deepdelve"] .hp-bar {
+  height: 12px; border-radius: 3px;
+  background: linear-gradient(180deg, #2a221d, #47392e);
+  border: 1px solid #120c08;
+  box-shadow: inset 0 2px 3px rgba(0,0,0,.6);
+}
+html[data-skin="deepdelve"] .hp-fill { box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+html[data-skin="deepdelve"] .hp-gauge .hp-now { font-size: 1.6rem; }
+html[data-skin="deepdelve"] .hp-gauge .hp-max { font-size: 1.15rem; }
+
+/* buttons: stamped tin tags */
+html[data-skin="deepdelve"] .hpb,
+html[data-skin="deepdelve"] .cast-btn,
+html[data-skin="deepdelve"] .hitdie,
+html[data-skin="deepdelve"] .cast-at {
+  font-family: var(--font-head); font-weight: 600;
+  background: linear-gradient(180deg, #fffaf0, #efe2c6);
+  border: 1px solid #8d7454; border-radius: 3px;
+  box-shadow: 0 1px 0 #6e5a41, inset 0 1px 0 #fff;
+}
+html[data-skin="deepdelve"] .hpb { font-size: .78rem; letter-spacing: .08em; }
+html[data-skin="deepdelve"] .cast-btn { font-size: .7rem; padding: 0 7px; }
+html[data-skin="deepdelve"] .cast-at { font-size: .7rem; }
+html[data-skin="deepdelve"] .hpb:hover,
+html[data-skin="deepdelve"] .cast-btn:hover,
+html[data-skin="deepdelve"] .hitdie:hover {
+  background: linear-gradient(180deg, #fff6dc, #f6dfaa);
+  border-color: var(--accent-2);
+  box-shadow: 0 1px 0 #6e5a41, 0 0 8px rgba(var(--dd-lamp), .55);
+}
+html[data-skin="deepdelve"] .hitdie .hd-label { font-size: .7rem; }
+html[data-skin="deepdelve"] .hitdie .hd-val { font-size: 1.1rem; }
+html[data-skin="deepdelve"] .hp-ctl .hp-amt { font-family: var(--font-head); font-size: 1rem; }
+html[data-skin="deepdelve"] details.spell summary { font-size: .95rem; border-bottom-color: rgba(124,100,71,.4); }
+html[data-skin="deepdelve"] details.spell summary::marker { color: var(--accent-2); }
+html[data-skin="deepdelve"] .tagline { font-size: .74rem; }
+html[data-skin="deepdelve"] .feature h3 { font-family: var(--font-head); font-weight: 700; color: var(--accent); font-size: 1rem; }
+
+/* the spell buttons float beside each line: kept no taller than the line so
+   the floats of one spell never push into the next */
+html[data-skin="deepdelve"] .cast-btn,
+html[data-skin="deepdelve"] .cast-at { height: 18px; line-height: 14px; padding-top: 0; padding-bottom: 0; margin-top: 1px; margin-bottom: 1px; }
+html[data-skin="deepdelve"] .cast-at { height: 18px; }
+html[data-skin="deepdelve"] details.spell summary { line-height: 21px; }
+html[data-skin="deepdelve"] details.spell summary::after { content: ""; display: block; clear: both; }
+
+/* the inventory's row of buttons, a little tighter than the classic
+   sheet's so the whole row fits inside the frame */
+html[data-skin="deepdelve"] .ib { padding: 0 4px; margin-left: 2px; }
+html[data-skin="deepdelve"] .inv-table td, html[data-skin="deepdelve"] .inv-table th { padding-left: 3px; padding-right: 3px; }
+
+/* ================= footer ================= */
+html[data-skin="deepdelve"] footer.sheet-foot {
+  border-top: 0; color: #cdb48a; font-family: var(--font-head); font-size: .8rem; letter-spacing: .04em;
+  text-shadow: 0 1px 0 #000;
+  background: linear-gradient(90deg, transparent, rgba(var(--dd-lamp), .25), transparent) no-repeat center top / 100% 1px;
+  padding: 10px 120px 0;
+}
+html[data-skin="deepdelve"] .spell-head .tile { min-width: 66px; padding: 6px 8px; }
+html[data-skin="deepdelve"] .spell-head .tile .tile-label { letter-spacing: .03em; font-size: .68rem; }
+
+/* the experience box */
+html[data-skin="deepdelve"] .xp-pop {
+  background: var(--paper) @@PAPER@@; border: 2px solid #3a2f27; border-radius: 3px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.6), inset 0 0 0 1px #c4ad86;
+}
+html[data-skin="deepdelve"] .xp-pop-head { font-size: .82rem; }
+
+/* ================= the phone ================= */
+html[data-skin="deepdelve"].m .page { padding: 8px 12px 92px; }
+html[data-skin="deepdelve"].m .page::after { opacity: .7; }
+html[data-skin="deepdelve"].m header.sheet-head { padding: 12px 14px 10px; margin: 34px 0 4px; }
+html[data-skin="deepdelve"].m header.sheet-head::before { width: 130px; height: 90px; right: 18px; top: -40px; }
+html[data-skin="deepdelve"].m .char-name { font-size: 1.9rem; }
+html[data-skin="deepdelve"].m .has-portrait .char-title,
+html[data-skin="deepdelve"].m .char-title { font-size: 1.15rem; }
+html[data-skin="deepdelve"].m .head-facts { margin: 0 -14px; padding: 8px 14px 6px; }
+html[data-skin="deepdelve"].m .fact { padding: 8px 11px 5px; }
+html[data-skin="deepdelve"].m .fact.insp,
+html[data-skin="deepdelve"].m .fact.xp-fact { padding: 0; }
+html[data-skin="deepdelve"].m .insp-btn { padding: 8px 11px 5px; }
+html[data-skin="deepdelve"].m .m-bar {
+  background-color: var(--dd-wood-2);
+  background-image:
+    linear-gradient(180deg, rgba(255,220,170,.1), transparent 40%, rgba(0,0,0,.3)),
+    @@GRAIN@@;
+  background-size: auto, 400px 120px;
+  border-bottom: 2px solid #120c08;
+  box-shadow: 0 6px 14px -4px rgba(0,0,0,.7);
+  margin: 0 -12px 14px; padding: 7px 12px 0;
+}
+html[data-skin="deepdelve"].m .m-stat {
+  background: var(--paper) @@PAPER@@; border: 1px solid #3a2f27; border-radius: 3px;
+  box-shadow: 0 2px 3px rgba(0,0,0,.45);
+}
+html[data-skin="deepdelve"].m .m-stat .m-lbl { font-family: var(--font-head); font-size: .62rem; letter-spacing: .08em; }
+html[data-skin="deepdelve"].m .m-stat b { font-family: var(--font-head); font-size: 1.25rem; }
+html[data-skin="deepdelve"].m .m-hpbar { height: 5px; background: #3a2f27; }
+html[data-skin="deepdelve"].m .m-tool {
+  background: linear-gradient(180deg, #3a2f27, #1b1410); color: #8fe6f2;
+  border: 1px solid #0e0a08; border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 8px rgba(63,191,214,.25);
+}
+html[data-skin="deepdelve"].m .m-tab {
+  font-family: var(--font-head); font-size: .9rem; font-weight: 600; letter-spacing: .05em;
+  color: #e0c99c; text-shadow: 0 1px 0 #000;
+}
+html[data-skin="deepdelve"].m .m-tab.on { color: #ffd88a; border-bottom-color: #ffb54a; }
+html[data-skin="deepdelve"].m .columns { gap: 18px; }
+html[data-skin="deepdelve"].m .box { padding: 20px 18px 18px; }
+html[data-skin="deepdelve"].m .m-spf button { font-family: var(--font-head); font-size: .85rem; }
+html[data-skin="deepdelve"].m .m-spf button.on { background: var(--accent); border-color: #3a1209; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="deepdelve"] header.sheet-head::before { animation: none; }
+  html[data-skin="deepdelve"] .ability { transition: none; }
+}

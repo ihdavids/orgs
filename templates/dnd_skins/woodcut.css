@@ -1,0 +1,677 @@
+/* skin: Woodcut Chronicle
+   about: A carved-block chronicle: chipped black frames, unfurling scrolls, blackletter and one red-ochre rubric on cream rag paper.
+   swatch: #efe3c6 #17120d #9b2d1b #6b5a3e
+   fonts: UnifrakturCook:wght@700 | Pirata One | IM Fell English SC | IM Fell English:ital@0;1 | EB Garamond:wght@400;500;600
+*/
+
+/* ---------- tokens ---------- */
+html[data-skin="woodcut"] {
+  --font-head: "IM Fell English SC", "IM Fell English", Georgia, serif;
+  --font-body: "IM Fell English", "EB Garamond", Georgia, serif;
+  /* IM Fell's figures are old style (10 reads as "IO"); numbers are set in Garamond's lining figures */
+  --wc-num: "EB Garamond", Georgia, serif;
+  --wc-gothic: "Pirata One", "UnifrakturCook", Georgia, serif;
+  --wc-fraktur: "UnifrakturCook", "Pirata One", Georgia, serif;
+  --ink: #17120d;
+  --paper: #efe3c6;
+  --paper-2: #f5ecd4;
+  --line: #17120d;
+  --edge: #17120d;
+  --accent: #9b2d1b;
+  --accent-2: #6b4a1a;
+  --muted: #54473a;
+  --shadow: none;
+  --stat-radius: 0;
+  --mood-rgb: 70, 50, 30;
+  --wc-fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .32 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --wc-scroll: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='44' viewBox='0 0 160 44' preserveAspectRatio='none'%3E%3Cpath d='M1.5 13 L25 13 L25 42.5 L1.5 42.5 L9.5 27.5 Z' fill='%2317120d'/%3E%3Cpath d='M158.5 13 L135 13 L135 42.5 L158.5 42.5 L150.5 27.5 Z' fill='%2317120d'/%3E%3Cpath d='M6 17.5 L22 17.5 M9 21.5 L22 21.5 M10 33.5 L22 33.5 M7 37.5 L22 37.5 M154 17.5 L138 17.5 M151 21.5 L138 21.5 M150 33.5 L138 33.5 M153 37.5 L138 37.5' stroke='%23efe3c6' stroke-width='1.1'/%3E%3Crect x='13' y='3' width='134' height='30' fill='%23f5ecd4' stroke='%2317120d' stroke-width='2.6'/%3E%3Cpath d='M18 3.5 C14 9 14 27 18 32.5 M142 3.5 C146 9 146 27 142 32.5' fill='none' stroke='%2317120d' stroke-width='1.6'/%3E%3C/svg%3E");
+  --wc-corner: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M7 0 L14 7 L7 14 L0 7Z' fill='%2317120d'/%3E%3Cpath d='M7 4 L10 7 L7 10 L4 7Z' fill='%23f5ecd4'/%3E%3C/svg%3E");
+}
+
+/* ---------- the block and the rag paper ---------- */
+html[data-skin="woodcut"] body {
+  background-color: #0f0b08;
+  background-image:
+    repeating-linear-gradient(118deg, rgba(120,90,55,.09) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(98deg, rgba(0,0,0,.35) 0 2px, transparent 2px 11px);
+  color: var(--ink);
+  font-size: 16px;
+}
+html[data-skin="woodcut"] .page {
+  background-color: var(--paper);
+  background-image:
+    var(--wc-fibre),
+    radial-gradient(ellipse 30% 22% at 8% 4%, rgba(140,96,40,.18), transparent 70%),
+    radial-gradient(ellipse 26% 18% at 94% 38%, rgba(140,96,40,.13), transparent 70%),
+    radial-gradient(ellipse 34% 20% at 18% 92%, rgba(120,80,30,.15), transparent 70%),
+    radial-gradient(ellipse 120% 90% at 50% 50%, transparent 60%, rgba(110,75,30,.22) 100%);
+  box-shadow: 0 0 50px rgba(0,0,0,.7);
+  padding: 40px 38px 34px;
+}
+/* the carved frame round the whole page */
+html[data-skin="woodcut"] .page::before,
+html[data-skin="woodcut"] .page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+}
+html[data-skin="woodcut"] .page::before {
+  inset: 8px;
+  border: 11px solid var(--ink);
+  box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 4px var(--ink);
+  filter: url(#woodcut-chip-big);
+}
+html[data-skin="woodcut"] .page::after {
+  /* the gouged white line cut along the frame */
+  inset: 13px;
+  border: 1.4px dashed rgba(239,227,198,.85);
+  border-image: repeating-linear-gradient(90deg, rgba(239,227,198,.9) 0 14px, transparent 14px 17px, rgba(239,227,198,.9) 17px 22px, transparent 22px 24px) 1;
+}
+html[data-skin="woodcut"] .backdrop { filter: sepia(.7) grayscale(.35) contrast(1.15); }
+html[data-skin="woodcut"] .has-backdrop .box {
+  background-image: linear-gradient(rgba(245,236,212,.95), rgba(245,236,212,.95)), var(--backdrop-img, none);
+}
+
+/* ---------- header ---------- */
+html[data-skin="woodcut"] header.sheet-head {
+  position: relative;
+  border-bottom: 0;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) left bottom 5px / 100% 5px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left bottom / 100% 1.5px no-repeat;
+}
+/* a rubricated fleuron on a black lozenge, set into the rule */
+html[data-skin="woodcut"] header.sheet-head::before {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -13px;
+  width: 26px; height: 26px;
+  margin-left: -13px;
+  background: var(--ink);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 4.5px var(--ink);
+}
+html[data-skin="woodcut"] header.sheet-head::after {
+  content: "\2766";
+  position: absolute;
+  left: 50%; bottom: -10px;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #e08e6e;
+}
+html[data-skin="woodcut"] .char-name {
+  font-family: var(--wc-fraktur);
+  font-weight: 700;
+  font-size: 3rem;
+  color: var(--ink);
+  text-shadow: none;
+}
+html[data-skin="woodcut"] .char-name::first-letter { color: var(--accent); }
+html[data-skin="woodcut"] .char-title,
+html[data-skin="woodcut"] .has-portrait .char-title {
+  font-family: var(--wc-gothic);
+  color: var(--ink);
+  text-shadow: none;
+}
+html[data-skin="woodcut"] .has-portrait .char-title { font-size: 2.05rem; line-height: 1.05; }
+html[data-skin="woodcut"] .has-portrait .char-title::first-letter { color: var(--accent); }
+html[data-skin="woodcut"] .char-sub { font-style: italic; color: var(--muted); font-size: 1.1rem; margin-top: 4px; }
+
+html[data-skin="woodcut"] .fact {
+  background: var(--paper-2);
+  border: 2.4px solid var(--ink);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--paper-2), inset 0 0 0 3px var(--ink);
+  padding: 6px 13px 5px;
+}
+html[data-skin="woodcut"] .fact .label {
+  font-family: var(--font-head);
+  font-size: .78rem;
+  text-transform: none;
+  letter-spacing: .06em;
+  color: var(--accent);
+}
+html[data-skin="woodcut"] .fact .value { font-size: 1.2rem; font-weight: 400; }
+html[data-skin="woodcut"] .insp-btn { border-radius: 0; }
+html[data-skin="woodcut"] .insp-btn:hover { background: #ebdcb8; }
+html[data-skin="woodcut"] .insp-btn .word { font-size: 1.05rem; }
+html[data-skin="woodcut"] .fact.insp.on { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 3px var(--paper); }
+html[data-skin="woodcut"] .fact.insp.on .label,
+html[data-skin="woodcut"] .fact.insp.on .insp-btn .word { color: var(--paper); }
+html[data-skin="woodcut"] .fact.insp.on .insp-btn:hover { background: #2a2118; }
+
+/* ---------- the portrait: a carved medallion ---------- */
+html[data-skin="woodcut"] .portrait-ring { filter: url(#woodcut-ring); }
+html[data-skin="woodcut"] .ring-band { stroke: var(--ink); }
+html[data-skin="woodcut"] .ring-edge { stroke: var(--ink); stroke-width: 2.6; opacity: 1; }
+html[data-skin="woodcut"] .ring-hair { stroke: var(--paper); stroke-width: .9; opacity: .8; stroke-dasharray: 6 2 3 2; }
+html[data-skin="woodcut"] .ring-name { font-family: var(--wc-gothic); font-weight: 400; fill: var(--paper); letter-spacing: .06em; }
+html[data-skin="woodcut"] .ring-xp { font-family: var(--font-head); fill: var(--paper); font-size: 10.5px; letter-spacing: .1em; }
+html[data-skin="woodcut"] .ring-gem { fill: var(--paper); }
+html[data-skin="woodcut"] .ring-gem-core { fill: var(--accent); }
+html[data-skin="woodcut"] .xp-track { stroke: rgba(23,18,13,.18); stroke-width: 3; }
+html[data-skin="woodcut"] .xp-fill { stroke: var(--accent); stroke-width: 3.2; stroke-linecap: butt; }
+html[data-skin="woodcut"] .portrait:has(.ring-xp-btn:hover) .ring-xp { fill: #f1c9a8; }
+html[data-skin="woodcut"] .portrait-well { background: var(--ink); }
+html[data-skin="woodcut"] .portrait,
+html[data-skin="woodcut"] .portrait.hp-hurt { filter: drop-shadow(0 0 0 transparent) sepia(.25); }
+html[data-skin="woodcut"] .portrait.hp-bloodied { filter: sepia(.35) saturate(.62) brightness(.95); }
+html[data-skin="woodcut"] .portrait.hp-dying { filter: sepia(.4) saturate(.36) brightness(.88) contrast(1.06); }
+html[data-skin="woodcut"] .portrait.hp-down { filter: grayscale(1) brightness(.8); }
+html[data-skin="woodcut"] .portrait.hp-dead { filter: grayscale(1) brightness(.52) contrast(.9); }
+
+/* ---------- boxes: carved double frames with diamond corners ---------- */
+html[data-skin="woodcut"] .box {
+  position: relative;
+  background: var(--paper-2);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 16px 16px 16px;
+}
+html[data-skin="woodcut"] .box::before,
+html[data-skin="woodcut"] .box::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+html[data-skin="woodcut"] .box::before {
+  inset: 0;
+  border: 3.2px solid var(--ink);
+  box-shadow: inset 0 0 0 2.5px var(--paper-2), inset 0 0 0 3.8px var(--ink);
+  filter: url(#woodcut-chip);
+}
+html[data-skin="woodcut"] .box::after {
+  inset: -4px;
+  background:
+    var(--wc-corner) left top / 14px 14px no-repeat,
+    var(--wc-corner) right top / 14px 14px no-repeat,
+    var(--wc-corner) left bottom / 14px 14px no-repeat,
+    var(--wc-corner) right bottom / 14px 14px no-repeat;
+}
+html[data-skin="woodcut"] .box.grow:not(.has-tabs)::after { inset: 0; }
+
+/* headings: unfurled scrolls, the first letter rubricated */
+html[data-skin="woodcut"] .box > h2,
+html[data-skin="woodcut"] .box.tabbed > .tabpane > h2 {
+  display: flow-root;
+  width: fit-content;
+  max-width: 100%;
+  margin: -2px auto 10px;
+  padding: 3px 6px 13px;
+  font-family: var(--wc-gothic);
+  font-weight: 400;
+  font-size: 1.32rem;
+  line-height: 1.12;
+  letter-spacing: .03em;
+  text-transform: none;
+  text-align: center;
+  color: var(--ink);
+  border-style: solid;
+  border-color: transparent;
+  border-width: 0 26px;
+  border-image: var(--wc-scroll) 0 26 fill / 0 26px stretch;
+}
+html[data-skin="woodcut"] .box > h2::first-letter,
+html[data-skin="woodcut"] .box.tabbed > .tabpane > h2::first-letter { color: var(--accent); }
+html[data-skin="woodcut"] .box.has-tabs > .tabpane > h2 { display: none; }
+html[data-skin="woodcut"].m .box.has-tabs > .tabpane > h2 { display: flow-root; }
+
+html[data-skin="woodcut"] h3.subhead,
+html[data-skin="woodcut"] .spell-level h3,
+html[data-skin="woodcut"] .inv-pane-name {
+  font-family: var(--wc-gothic);
+  font-weight: 400;
+  font-size: 1.2rem;
+  text-transform: none;
+  letter-spacing: .02em;
+  color: var(--ink);
+  border-bottom: 0;
+  padding-bottom: 5px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) left bottom 3px / 100% 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left bottom / 100% 1px no-repeat;
+}
+html[data-skin="woodcut"] h3.subhead::first-letter,
+html[data-skin="woodcut"] .spell-level h3::first-letter { color: var(--accent); }
+
+/* tabs: carved blocks, the open one inked solid */
+html[data-skin="woodcut"] .tabbar {
+  border-bottom: 3px solid var(--ink);
+  gap: 4px;
+  margin: 0 0 12px;
+}
+html[data-skin="woodcut"] .tabbtn {
+  font-family: var(--font-head);
+  font-size: .95rem;
+  text-transform: none;
+  letter-spacing: .04em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 0;
+  padding: 4px 11px 3px;
+  margin-bottom: 0;
+}
+html[data-skin="woodcut"] .tabbtn:hover { color: var(--accent); background: #ebdcb8; }
+html[data-skin="woodcut"] .tabbtn.on {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  font-weight: 400;
+}
+html[data-skin="woodcut"] .tabbtn.on::first-letter { color: #e9a184; }
+
+/* ---------- abilities: relief plaques cut in black ---------- */
+html[data-skin="woodcut"] .abilities { gap: 9px; }
+html[data-skin="woodcut"] .ability {
+  color: var(--paper);
+  background:
+    repeating-linear-gradient(-45deg, rgba(239,227,198,.07) 0 1px, transparent 1px 4px),
+    var(--ink);
+  border: 0;
+  border-radius: 0;
+  padding: 8px 2px 7px;
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+}
+html[data-skin="woodcut"] .ability::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(239,227,198,.7);
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  pointer-events: none;
+}
+html[data-skin="woodcut"] .ability .tile-label {
+  font-family: var(--font-head);
+  font-size: .82rem;
+  text-transform: none;
+  letter-spacing: .1em;
+  color: #e7c9a0;
+}
+html[data-skin="woodcut"] .ability .mod {
+  font-family: var(--wc-gothic);
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  color: var(--paper);
+}
+html[data-skin="woodcut"] .ability .score {
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .95rem;
+  min-width: 36px;
+  line-height: 1.35;
+}
+html[data-skin="woodcut"] .ability .check-note { color: #f1b49a; font-size: .66rem; }
+
+/* ---------- tiles ---------- */
+html[data-skin="woodcut"] .tile {
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3.2px var(--ink);
+}
+html[data-skin="woodcut"] .tile.shield { border-color: var(--ink); border-radius: 0 0 50% 50% / 0 0 34% 34%; }
+html[data-skin="woodcut"] .tile .tile-label {
+  font-family: var(--font-head);
+  font-size: .82rem;
+  text-transform: none;
+  letter-spacing: .05em;
+  color: var(--accent);
+}
+html[data-skin="woodcut"] .tile .big {
+  font-family: var(--wc-gothic);
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 1.1;
+}
+html[data-skin="woodcut"] .tile .sub { font-size: .85rem; font-style: italic; color: var(--muted); }
+html[data-skin="woodcut"] .spell-head .tile { min-width: 74px; padding: 6px 8px; }
+
+/* ---------- rows ---------- */
+html[data-skin="woodcut"] .row {
+  border-bottom: 1px solid rgba(23,18,13,.32);
+  font-size: .97rem;
+  padding: 2px 3px;
+}
+html[data-skin="woodcut"] .row:last-child { border-bottom: 0; }
+html[data-skin="woodcut"] .row .val { font-weight: 600; font-size: 1.02rem; }
+html[data-skin="woodcut"] .row .abbr { font-family: var(--font-head); font-size: .8rem; color: var(--muted); text-transform: lowercase; }
+html[data-skin="woodcut"] .pip {
+  width: 10px; height: 10px;
+  border: 1.6px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper-2);
+  transform: rotate(45deg);
+  align-self: center;
+  margin: 0 1px;
+}
+html[data-skin="woodcut"] .row .abbr { width: 2.2em; }
+html[data-skin="woodcut"] .row { gap: 5px; }
+html[data-skin="woodcut"] .row .val { width: 2.1em; }
+/* Pirata One's nought is barred and reads as an eight: big numbers are cut in Garamond */
+html[data-skin="woodcut"] .ability .mod,
+html[data-skin="woodcut"] .tile .big,
+html[data-skin="woodcut"] .hp-gauge .hp-now,
+html[data-skin="woodcut"] .hp-gauge .hp-max,
+html[data-skin="woodcut"] .hp-temp .val,
+html[data-skin="woodcut"] .hp-ctl .hp-amt,
+html[data-skin="woodcut"] .m-stat b,
+html[data-skin="woodcut"] .enc-line .wt,
+html[data-skin="woodcut"] .coin-total { font-family: var(--wc-num); font-weight: 600; font-variant-numeric: lining-nums; }
+html[data-skin="woodcut"] .ability .mod { font-size: 1.75rem; }
+html[data-skin="woodcut"] .tile .big { font-size: 1.75rem; }
+/* numbers in lining figures */
+html[data-skin="woodcut"] .row .val,
+html[data-skin="woodcut"] .fact .value,
+html[data-skin="woodcut"] .ability .score,
+html[data-skin="woodcut"] td.num,
+html[data-skin="woodcut"] .hitdie .hd-val,
+html[data-skin="woodcut"] .slot-row .tagline,
+html[data-skin="woodcut"] .coin-table .num,
+html[data-skin="woodcut"] .enc-line,
+html[data-skin="woodcut"] .xp-pop-head .now,
+html[data-skin="woodcut"] .m-hp .m-hpn span { font-family: var(--wc-num); font-variant-numeric: lining-nums; }
+html[data-skin="woodcut"] .fact .value { font-weight: 500; }
+html[data-skin="woodcut"] .spell-head .tile:first-child .big { font-family: var(--font-head); font-size: 1.45rem; line-height: 1.45; }
+html[data-skin="woodcut"] .col:first-child .box > h2 { font-size: 1.16rem; }
+html[data-skin="woodcut"] .pip.on { background: var(--ink); }
+html[data-skin="woodcut"] .pip.exp { background: var(--accent); border-color: var(--ink); box-shadow: none; }
+
+/* ---------- rolling ---------- */
+html[data-skin="woodcut"] .rollable:hover,
+html[data-skin="woodcut"] .rollable:focus-visible {
+  background: rgba(155,45,27,.12);
+  box-shadow: 0 0 0 2px rgba(155,45,27,.6);
+}
+html[data-skin="woodcut"] .rollable:active { background: rgba(155,45,27,.24); }
+html[data-skin="woodcut"] .row.rollable,
+html[data-skin="woodcut"] td.rollable,
+html[data-skin="woodcut"] .inline-roll { text-decoration: underline dotted rgba(155,45,27,.7); text-underline-offset: 3px; }
+html[data-skin="woodcut"] .row.rollable { text-decoration: none; }
+html[data-skin="woodcut"] .ability.rollable,
+html[data-skin="woodcut"] .tile.rollable { box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3.2px var(--ink); border-radius: 0; }
+html[data-skin="woodcut"] .ability.rollable { box-shadow: none; }
+html[data-skin="woodcut"] .ability.rollable:hover,
+html[data-skin="woodcut"] .ability.rollable:focus-visible {
+  background:
+    repeating-linear-gradient(-45deg, rgba(239,227,198,.1) 0 1px, transparent 1px 4px),
+    var(--accent);
+  box-shadow: none;
+}
+html[data-skin="woodcut"] .tile.rollable:hover,
+html[data-skin="woodcut"] .tile.rollable:focus-visible {
+  background: #f1dcc9;
+  box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3.2px var(--accent);
+}
+
+/* ---------- hit points ---------- */
+html[data-skin="woodcut"] .hp-gauge .hp-now { font-size: 1.6rem; }
+html[data-skin="woodcut"] .hp-gauge .hp-max { font-size: 1.2rem; color: var(--ink); }
+html[data-skin="woodcut"] .hp-bar,
+html[data-skin="woodcut"] .enc-bar {
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: repeating-linear-gradient(-45deg, rgba(23,18,13,.22) 0 1px, transparent 1px 4px), var(--paper);
+}
+html[data-skin="woodcut"] .enc-bar { height: 10px; }
+html[data-skin="woodcut"] .hp-bar::after,
+html[data-skin="woodcut"] .enc-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 3px, rgba(23,18,13,.28) 3px 4px);
+  pointer-events: none;
+}
+html[data-skin="woodcut"] .hp-temp-fill { background: repeating-linear-gradient(135deg, var(--accent-2) 0 2px, var(--paper) 2px 5px); }
+html[data-skin="woodcut"] .hp-temp .val { font-size: 1.1rem; color: var(--accent-2); }
+html[data-skin="woodcut"] .hp-temp .val.none { color: #a8977a; }
+html[data-skin="woodcut"] .hp-temp .val:hover { background: #ebdcb8; }
+html[data-skin="woodcut"] .hp-temp,
+html[data-skin="woodcut"] .death { font-size: .95rem; }
+html[data-skin="woodcut"] .death-roll,
+html[data-skin="woodcut"] .death-word,
+html[data-skin="woodcut"] .hitdie .hd-label { font-size: .82rem; text-transform: none; letter-spacing: .05em; }
+html[data-skin="woodcut"] .hitdie .hd-val { font-weight: 600; font-size: 1.05rem; }
+html[data-skin="woodcut"] .dp { border: 1.6px solid var(--ink); border-radius: 0; transform: rotate(45deg); width: 10px; height: 10px; margin: 0 2px; }
+html[data-skin="woodcut"] .dp.win.on { background: #3f6b2a; border-color: var(--ink); }
+html[data-skin="woodcut"] .dp.lose.on { background: var(--accent); border-color: var(--ink); }
+html[data-skin="woodcut"] .dp-sep { color: var(--muted); font-size: .72rem; }
+
+/* ---------- buttons: little carved blocks that print when pressed ---------- */
+html[data-skin="woodcut"] .hpb,
+html[data-skin="woodcut"] .ib,
+html[data-skin="woodcut"] .inv-add,
+html[data-skin="woodcut"] .cast-btn,
+html[data-skin="woodcut"] .cast-at,
+html[data-skin="woodcut"] .cast2-btn,
+html[data-skin="woodcut"] .spell-manage,
+html[data-skin="woodcut"] .death .death-do,
+html[data-skin="woodcut"] .hitdie {
+  font-family: var(--font-head);
+  text-transform: none;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.8px solid var(--ink);
+  border-radius: 0;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease, background .12s ease, color .12s ease;
+}
+html[data-skin="woodcut"] .hpb { font-size: .95rem; letter-spacing: .04em; padding: 2px 13px 3px; }
+html[data-skin="woodcut"] .ib { font-size: .8rem; margin-left: 2px; padding: 0 4px; line-height: 1.4; box-shadow: 1.5px 1.5px 0 var(--ink); }
+html[data-skin="woodcut"] .inv-add,
+html[data-skin="woodcut"] .spell-manage { font-size: .92rem; letter-spacing: .04em; padding: 3px 12px; }
+html[data-skin="woodcut"] .cast-btn { font-size: .76rem; letter-spacing: .04em; line-height: 1.3; padding: 0 6px; margin-top: 2px; border-width: 1.4px; box-shadow: 1.5px 1.5px 0 var(--ink); color: var(--accent); }
+html[data-skin="woodcut"] .cast-at { font-size: .72rem; line-height: 1.3; margin-top: 2px; border-width: 1.4px; box-shadow: 1.5px 1.5px 0 var(--ink); }
+html[data-skin="woodcut"] .cast-at.up { color: var(--accent); border-color: var(--accent); font-weight: 400; }
+html[data-skin="woodcut"] .cast2-btn { font-size: .78rem; border-style: dashed; box-shadow: none; }
+html[data-skin="woodcut"] .hitdie { padding: 2px 10px 2px; }
+html[data-skin="woodcut"] .hpb:hover,
+html[data-skin="woodcut"] .ib:hover,
+html[data-skin="woodcut"] .inv-add:hover,
+html[data-skin="woodcut"] .cast-btn:hover,
+html[data-skin="woodcut"] .cast-at:hover,
+html[data-skin="woodcut"] .spell-manage:hover,
+html[data-skin="woodcut"] .death .death-do:hover,
+html[data-skin="woodcut"] .hitdie:hover {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+  border-style: solid;
+}
+html[data-skin="woodcut"] .hitdie:hover .hd-label { color: #d9c7a4; }
+html[data-skin="woodcut"] .hpb:active,
+html[data-skin="woodcut"] .ib:active,
+html[data-skin="woodcut"] .inv-add:active,
+html[data-skin="woodcut"] .cast-btn:active,
+html[data-skin="woodcut"] .spell-manage:active,
+html[data-skin="woodcut"] .hitdie:active { transform: translate(2px, 2px); box-shadow: none; }
+html[data-skin="woodcut"] .hpb.hurt { color: var(--accent); }
+html[data-skin="woodcut"] .hpb.heal { color: #3a5f22; }
+html[data-skin="woodcut"] .hpb.temp { color: var(--accent-2); }
+html[data-skin="woodcut"] .hpb.hurt:hover { background: var(--accent); color: var(--paper); }
+html[data-skin="woodcut"] .hpb.heal:hover { background: #3a5f22; color: var(--paper); }
+
+html[data-skin="woodcut"] .inv-field,
+html[data-skin="woodcut"] .sb-field {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  background: #faf4e3;
+  border: 1.8px solid var(--ink);
+  border-radius: 0;
+}
+html[data-skin="woodcut"] .inv-field:focus,
+html[data-skin="woodcut"] .sb-field:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(155,45,27,.2); }
+html[data-skin="woodcut"] .hp-ctl .hp-amt { font-size: 1rem; }
+html[data-skin="woodcut"] .hp-ctl .hp-type { font-size: .88rem; color: var(--ink); }
+
+/* ---------- tables, inventory, coins ---------- */
+html[data-skin="woodcut"] table { font-size: .98rem; }
+html[data-skin="woodcut"] th {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: .85rem;
+  text-transform: none;
+  letter-spacing: .04em;
+  color: var(--accent);
+  border-bottom: 2px solid var(--ink);
+}
+html[data-skin="woodcut"] td { border-bottom: 1px solid rgba(23,18,13,.25); }
+html[data-skin="woodcut"] .tagline { font-size: .84rem; font-style: italic; color: var(--muted); }
+html[data-skin="woodcut"] .inv-tabs { border-bottom: 2px solid var(--ink); }
+html[data-skin="woodcut"] .inv-tab {
+  font-size: .85rem;
+  text-transform: none;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.6px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 0;
+}
+html[data-skin="woodcut"] .inv-tab.on { background: var(--ink); color: var(--paper); }
+html[data-skin="woodcut"] .inv-tab.on .n { color: #d9c7a4; }
+html[data-skin="woodcut"] .inv-tab.over .n { color: var(--accent); }
+html[data-skin="woodcut"] .enc-line .wt,
+html[data-skin="woodcut"] .coin-total { font-size: 1.2rem; }
+html[data-skin="woodcut"] .enc-badge,
+html[data-skin="woodcut"] .sb-budget {
+  font-family: var(--font-head);
+  font-size: .8rem;
+  text-transform: none;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.4px solid var(--ink);
+  border-radius: 0;
+}
+html[data-skin="woodcut"] .sb-budget.full,
+html[data-skin="woodcut"] .enc-badge.encumbered { background: #ebdcb8; border-color: var(--ink); color: var(--ink); }
+html[data-skin="woodcut"] .sb-budget.full b { color: var(--accent); }
+html[data-skin="woodcut"] .enc-badge.heavy { color: var(--accent); border-color: var(--accent); background: var(--paper); }
+html[data-skin="woodcut"] .enc-badge.over { background: var(--accent); color: var(--paper); }
+html[data-skin="woodcut"] .enc-note,
+html[data-skin="woodcut"] .coin-hint,
+html[data-skin="woodcut"] .coin-sub,
+html[data-skin="woodcut"] .uses-note { font-size: .82rem; }
+
+/* ---------- spells and features ---------- */
+html[data-skin="woodcut"] details.spell summary { font-size: 1rem; border-bottom: 1px solid rgba(23,18,13,.22); padding: 2px 0; }
+html[data-skin="woodcut"] details.spell summary::marker { color: var(--accent); }
+html[data-skin="woodcut"] details.spell p { font-size: .96rem; }
+html[data-skin="woodcut"] .slot-row .lvl { font-size: .88rem; color: var(--accent); }
+html[data-skin="woodcut"] .slot,
+html[data-skin="woodcut"] .use-pip {
+  width: 13px; height: 13px;
+  border: 1.6px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+}
+html[data-skin="woodcut"] .slot.used { background: repeating-linear-gradient(-45deg, var(--ink) 0 2px, transparent 2px 3.5px), var(--paper); }
+html[data-skin="woodcut"] .use-pip { transform: rotate(45deg); width: 11px; height: 11px; }
+html[data-skin="woodcut"] .use-pip.used { background: var(--accent); border-color: var(--ink); }
+html[data-skin="woodcut"] .spell-mark { color: var(--accent); }
+html[data-skin="woodcut"] .spell-foot { border-top: 2px solid var(--ink); }
+html[data-skin="woodcut"] .feature h3 { font-family: var(--wc-gothic); font-weight: 400; font-size: 1.18rem; color: var(--ink); }
+html[data-skin="woodcut"] .feature h3::first-letter { color: var(--accent); }
+html[data-skin="woodcut"] .feature .src { font-family: var(--font-head); text-transform: none; font-size: .8rem; color: var(--accent); }
+html[data-skin="woodcut"] .feature p { font-size: .96rem; }
+html[data-skin="woodcut"] .quote .label { font-family: var(--font-head); text-transform: none; font-size: .82rem; color: var(--accent); }
+
+/* the cast buttons float right; keep each spell's floats inside its own line */
+html[data-skin="woodcut"] details.spell summary::after { content: ""; display: block; clear: both; }
+
+/* ---------- footer, popover ---------- */
+html[data-skin="woodcut"] footer.sheet-foot {
+  border-top: 0;
+  padding-top: 10px;
+  font-size: .85rem;
+  font-style: italic;
+  background:
+    linear-gradient(var(--ink), var(--ink)) left top / 100% 3px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) left top 5px / 100% 1px no-repeat;
+}
+html[data-skin="woodcut"] .xp-pop {
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3px var(--ink), 5px 5px 0 rgba(23,18,13,.85);
+}
+html[data-skin="woodcut"] .xp-pop-head { font-size: .92rem; text-transform: none; color: var(--accent); }
+
+/* ---------- phone ---------- */
+html[data-skin="woodcut"].m .page { padding: 18px 16px 92px; }
+html[data-skin="woodcut"].m .page::before { inset: 3px; border-width: 6px; box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 3px var(--ink); }
+html[data-skin="woodcut"].m .page::after { inset: 6px; border-width: 1px; }
+html[data-skin="woodcut"].m .char-name { font-size: 1.9rem; }
+html[data-skin="woodcut"].m .has-portrait .char-title,
+html[data-skin="woodcut"].m .char-title { font-size: 1.25rem; }
+html[data-skin="woodcut"].m header.sheet-head { padding-bottom: 14px; margin-bottom: 4px; }
+html[data-skin="woodcut"].m header.sheet-head::before { transform: rotate(45deg) scale(.8); }
+html[data-skin="woodcut"].m .head-facts { margin: 0 -16px; padding: 4px 16px 6px; }
+html[data-skin="woodcut"].m .fact { padding: 3px 9px; }
+html[data-skin="woodcut"].m .fact .label { font-size: .68rem; }
+html[data-skin="woodcut"].m .fact .value { font-size: 1rem; }
+html[data-skin="woodcut"].m .m-bar {
+  margin: 0 -16px 12px;
+  padding: 8px 16px 0;
+  background-color: var(--paper);
+  background-image: var(--wc-fibre);
+  border-bottom: 3px solid var(--ink);
+  box-shadow: 0 2px 0 var(--paper), 0 3px 0 var(--ink), 0 8px 12px -6px rgba(0,0,0,.35);
+}
+html[data-skin="woodcut"].m .m-tabs { margin: 6px -16px 0; padding: 0 16px; }
+html[data-skin="woodcut"] .m-stat {
+  background: var(--paper-2);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+}
+html[data-skin="woodcut"] .m-stat .m-lbl { font-family: var(--font-head); font-weight: 400; font-size: .66rem; text-transform: none; color: var(--accent); }
+html[data-skin="woodcut"] .m-stat b { font-size: 1.2rem; }
+html[data-skin="woodcut"] .m-hp .m-hpn span { color: var(--ink); }
+html[data-skin="woodcut"] .m-hpbar { border: 1px solid var(--ink); border-radius: 0; background: var(--paper); height: 6px; }
+html[data-skin="woodcut"] .m-tool {
+  background: repeating-linear-gradient(-45deg, rgba(239,227,198,.08) 0 1px, transparent 1px 4px), var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+}
+html[data-skin="woodcut"] .m-tool.ready { color: #f1b49a; box-shadow: 0 0 0 2px var(--accent); }
+html[data-skin="woodcut"] .m-tab {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: .95rem;
+  text-transform: none;
+  letter-spacing: .03em;
+  color: var(--muted);
+}
+html[data-skin="woodcut"] .m-tab.on { color: var(--accent); border-bottom-color: var(--ink); }
+html[data-skin="woodcut"] .m-spf button {
+  font-family: var(--font-head);
+  font-weight: 400;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.6px solid var(--ink);
+  border-radius: 0;
+}
+html[data-skin="woodcut"] .m-spf button.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="woodcut"] .hpb,
+  html[data-skin="woodcut"] .ib,
+  html[data-skin="woodcut"] .inv-add,
+  html[data-skin="woodcut"] .cast-btn,
+  html[data-skin="woodcut"] .cast-at,
+  html[data-skin="woodcut"] .cast2-btn,
+  html[data-skin="woodcut"] .spell-manage,
+  html[data-skin="woodcut"] .death .death-do,
+  html[data-skin="woodcut"] .hitdie { transition: none; }
+}

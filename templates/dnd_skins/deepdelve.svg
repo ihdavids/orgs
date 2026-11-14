@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- the torn, roughly cut edge of a paper note -->
+    <filter id="deepdelve-torn" x="-4%" y="-4%" width="108%" height="108%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="4" seed="7" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="10" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="1.6" flood-color="#0b0705" flood-opacity=".55"/>
+    </filter>
+    <!-- a smaller tear for the little notes on the beam -->
+    <filter id="deepdelve-torn-sm" x="-8%" y="-12%" width="116%" height="124%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="3" seed="3" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="1.2" flood-color="#0b0705" flood-opacity=".6"/>
+    </filter>
+    <!-- the portrait ring: blackened iron with a warm lamp catch -->
+    <linearGradient id="deepdelve-ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6b5a4a"/>
+      <stop offset=".35" stop-color="#3a2f27"/>
+      <stop offset=".7" stop-color="#2a221c"/>
+      <stop offset="1" stop-color="#4c3d31"/>
+    </linearGradient>
+  </defs>
+</svg>

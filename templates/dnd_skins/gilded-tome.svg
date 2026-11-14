@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gilded-tome-band" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1b8"/>
+      <stop offset=".25" stop-color="#e2b852"/>
+      <stop offset=".5" stop-color="#b8862b"/>
+      <stop offset=".7" stop-color="#f3d47c"/>
+      <stop offset="1" stop-color="#9a6b18"/>
+    </linearGradient>
+    <linearGradient id="gilded-tome-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff1b8"/>
+      <stop offset=".5" stop-color="#c9982f"/>
+      <stop offset="1" stop-color="#7e5512"/>
+    </linearGradient>
+  </defs>
+</svg>

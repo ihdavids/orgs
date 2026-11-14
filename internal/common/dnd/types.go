@@ -851,6 +851,10 @@ type Character struct {
 	BackdropCycle   string  `yaml:"backdropCycle" json:"backdropCycle"`
 	BackdropOpacity float64 `yaml:"backdropOpacity" json:"backdropOpacity"`
 
+	// SheetSkin is the html sheet's look: a skin's id (a file in the
+	// template folders' dnd_skins/), or empty for the classic sheet.
+	SheetSkin string `yaml:"sheetSkin" json:"sheetSkin"`
+
 	Appearance string `yaml:"appearance" json:"appearance"`
 	Backstory  string `yaml:"backstory" json:"backstory"`
 	Allies     string `yaml:"allies" json:"allies"`

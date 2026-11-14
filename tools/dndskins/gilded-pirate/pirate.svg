@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="pirates-ledger-wobble" x="-2%" y="-2%" width="104%" height="104%">
+      <feTurbulence type="fractalNoise" baseFrequency=".022" numOctaves="2" seed="5" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <pattern id="pirates-ledger-rope" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(55)">
+      <rect width="5" height="5" fill="#b08a52"/>
+      <rect width="1.6" height="5" fill="#e0c28c"/>
+      <rect x="3.6" width="1" height="5" fill="#4a3418"/>
+    </pattern>
+  </defs>
+</svg>

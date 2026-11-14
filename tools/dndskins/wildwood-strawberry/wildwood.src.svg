@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true">
+  <defs>
+    <!-- the portrait's frame, turned wood -->
+    <linearGradient id="wildwood-ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#efdfb4"/>
+      <stop offset=".5" stop-color="#d7bb82"/>
+      <stop offset="1" stop-color="#b48c55"/>
+    </linearGradient>
+    <!-- pigment bleeding into wet paper: the wash's blots get ragged edges -->
+    <filter id="wildwood-bleed" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".011 .009" numOctaves="4" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="90" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="9" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 .35" result="ga"/>
+      <feComposite in="d" in2="ga" operator="in"/>
+    </filter>
+  </defs>
+</svg>

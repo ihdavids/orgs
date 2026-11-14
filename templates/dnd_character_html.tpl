@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"{% if skin %} data-skin="{{ skin }}"{% endif %}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,8 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
-<style>
+{% if skinFontsUrl %}<link rel="stylesheet" href="{{ skinFontsUrl }}" id="skin-fonts">
+{% endif %}<style>
 :root {
+  /* the two faces of the sheet; a skin swaps them here */
+  --font-head: Cinzel, "Trajan Pro", Georgia, serif;
+  --font-body: "EB Garamond", Palatino, "Palatino Linotype", Georgia, serif;
   --ink: #1c1a17;
   --paper: #f4efe4;
   --paper-2: #ece4d5;
@@ -39,7 +43,7 @@ body {
   margin: 0;
   background: #2b2723;
   color: var(--ink);
-  font-family: "EB Garamond", Palatino, "Palatino Linotype", Georgia, serif;
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.45;
 }
@@ -239,6 +243,37 @@ header.sheet-head {
 .fact.insp.on .insp-btn .word { color: var(--accent-2); font-weight: 700; }
 .fact.insp.busy { opacity: .6; }
 
+/* Experience is changed from the ring round the portrait (or the Experience
+   fact where there is no ring): a small box to add, remove or set it. */
+.fact.xp-fact { padding: 0; }
+.ring-xp-btn {
+  position: absolute; left: 24%; width: 52%; top: 82%; height: 15%;
+  border: 0; border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background: none; padding: 0; cursor: pointer;
+}
+.ring-xp-btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+.portrait:has(.ring-xp-btn:hover) .ring-xp,
+.portrait:has(.ring-xp-btn:focus-visible) .ring-xp { fill: var(--accent); }
+.xp-pop {
+  position: fixed; z-index: 60; width: 272px; max-width: calc(100vw - 16px);
+  background: var(--paper); border: 1px solid var(--accent-2); border-radius: 6px;
+  box-shadow: 0 6px 22px rgba(28,26,23,.28); padding: 10px 12px 9px;
+}
+.xp-pop[hidden] { display: none; }
+.xp-pop-head {
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 7px;
+  font-family: var(--font-head); font-size: .72rem;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+}
+.xp-pop-head .now { margin-left: auto; color: var(--ink); font-size: .85rem; }
+.xp-pop .hp-ctl { margin-top: 0; }
+.xp-pop .xp-msg { display: block; min-height: 1em; margin-top: 6px; }
+.xp-pop .xp-msg.err { color: var(--accent); }
+.xp-pop .xp-lvl { margin-top: 6px; }
+.xp-pop.busy { opacity: .7; }
+.xp-pop.busy button { cursor: progress; }
+@media print { .ring-xp-btn, .xp-pop { display: none !important; } }
+
 /* ---------------- portrait medallion ----------------
    The portrait is an ordinary <img> in a round window with the frame drawn
    over it in svg, rather than an svg <image>: that way an animated gif or
@@ -365,12 +400,12 @@ header.sheet-head {
   fill: none; stroke: var(--accent-2); stroke-width: 2.4; stroke-linecap: round;
 }
 .ring-name {
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-weight: 700; font-size: 13px; letter-spacing: .1em;
   fill: var(--accent);
 }
 .ring-xp {
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-weight: 500; font-size: 9.5px; letter-spacing: .14em;
   fill: #7a5c12;
 }
@@ -379,7 +414,7 @@ header.sheet-head {
 
 .sheet-head.has-portrait { align-items: center; }
 .has-portrait .char-title {
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: 1.55rem; line-height: 1.15; margin-top: 0;
   color: var(--accent);
   text-shadow: 0 1px 0 rgba(255,255,255,.6);
@@ -476,7 +511,7 @@ header.sheet-head {
   border-bottom: 1px solid var(--line);
 }
 .tabbtn {
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid transparent; border-bottom: 0;
   border-radius: 4px 4px 0 0;
@@ -582,7 +617,7 @@ h3.subhead {
    pair reads as the fraction it is. */
 .hp-gauge { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .hp-gauge .hp-now, .hp-gauge .hp-max {
-  font-family: Cinzel, Georgia, serif; font-weight: 700;
+  font-family: var(--font-head); font-weight: 700;
   font-variant-numeric: tabular-nums; line-height: 1;
   flex: 0 0 auto; min-width: 2.2em;
 }
@@ -645,7 +680,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .enc-line .cap { color: var(--muted); }
 .enc-badge {
   margin-left: auto;
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-head);
   font-size: .58rem; text-transform: uppercase; letter-spacing: .08em;
   border: 1px solid var(--line); border-radius: 10px;
   padding: 1px 8px; background: var(--paper); color: var(--muted);
@@ -671,7 +706,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   border-bottom: 1px solid var(--line); margin-bottom: 6px;
 }
 .inv-tab {
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-head);
   font-size: .6rem; text-transform: uppercase; letter-spacing: .05em;
   border: 1px solid var(--line); border-bottom: 0;
   border-radius: 4px 4px 0 0;
@@ -727,7 +762,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
    button, so the roll is visible before it is made. */
 .ib.use.does { color: #5a6b2a; border-color: rgba(90,107,42,.4); }
 .ib .ib-does {
-  font-family: Cinzel, Georgia, serif; font-size: .62rem;
+  font-family: var(--font-head); font-size: .62rem;
   margin-left: 4px; opacity: .85;
 }
 
@@ -757,7 +792,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   font-size: .72rem; color: var(--muted);
 }
 .att-label {
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .07em;
 }
 .att-pips { display: inline-flex; gap: 3px; }
@@ -766,7 +801,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   border: 1px solid var(--line); background: transparent;
 }
 .att-pip.on { background: var(--accent-2); border-color: var(--accent-2); }
-.att-count { font-family: Cinzel, Georgia, serif; font-weight: 700; color: var(--ink); }
+.att-count { font-family: var(--font-head); font-weight: 700; color: var(--ink); }
 .att-items { font-style: italic; }
 .att.over { color: var(--accent); }
 .att.over .att-pip.on { background: var(--accent); border-color: var(--accent); }
@@ -775,7 +810,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;
 }
 .inv-add {
-  font-family: Cinzel, Georgia, serif; font-size: .62rem;
+  font-family: var(--font-head); font-size: .62rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--edge); border-radius: 4px;
   background: var(--paper); color: var(--accent);
@@ -819,7 +854,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .coin-hint { font-size: .68rem; color: var(--muted); margin-top: 4px; }
 .coin-log { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
 .coin-log h4 {
-  font-family: Cinzel, Georgia, serif; font-size: .6rem; text-transform: uppercase;
+  font-family: var(--font-head); font-size: .6rem; text-transform: uppercase;
   letter-spacing: .06em; color: var(--muted); margin: 0 0 4px;
 }
 .coin-log ul { list-style: none; margin: 0; padding: 0; }
@@ -852,7 +887,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 }
 .hp-temp .nm { color: var(--muted); }
 .hp-temp .val {
-  font-family: Cinzel, Georgia, serif; font-weight: 700;
+  font-family: var(--font-head); font-weight: 700;
   color: var(--accent-2); font-size: .95rem;
   /* A button that looks like the number it is: temporary hit points are the
      one thing on the sheet you want gone in one click, since they are used
@@ -869,10 +904,10 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .hp-ctl { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
 .hp-ctl .hp-amt {
   width: 62px; flex: 0 0 auto; text-align: center;
-  font-family: Cinzel, Georgia, serif; font-size: .9rem; padding: 3px 4px;
+  font-family: var(--font-head); font-size: .9rem; padding: 3px 4px;
 }
 .hpb {
-  font-family: Cinzel, Georgia, serif; font-size: .64rem;
+  font-family: var(--font-head); font-size: .64rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--line); border-radius: 4px;
   background: var(--paper); padding: 4px 11px; cursor: pointer;
@@ -897,11 +932,11 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 }
 .hitdie:hover { border-color: var(--accent); }
 .hitdie .hd-label {
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
 }
 .hitdie .hd-val {
-  font-family: Cinzel, Georgia, serif; font-weight: 700; font-size: .95rem;
+  font-family: var(--font-head); font-weight: 700; font-size: .95rem;
 }
 .hitdie .hd-spent { font-size: .62rem; color: var(--accent); }
 
@@ -916,7 +951,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   margin-top: 6px; font-size: .78rem; color: var(--muted);
 }
 .death-roll {
-  font-family: Cinzel, Georgia, serif; font-size: .6rem;
+  font-family: var(--font-head); font-size: .6rem;
   text-transform: uppercase; letter-spacing: .06em;
 }
 .death-pips { display: inline-flex; align-items: center; gap: 4px; }
@@ -932,7 +967,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   color: var(--line); margin: 0 2px;
 }
 .death-word {
-  font-family: Cinzel, Georgia, serif; font-size: .62rem;
+  font-family: var(--font-head); font-size: .62rem;
   text-transform: uppercase; letter-spacing: .08em;
 }
 /* Down and unsettled: the marks become buttons and the line stops whispering. */
@@ -951,7 +986,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .death.stable .death-word { color: #3f6b2a; }
 .death.dead .death-word { color: var(--accent); letter-spacing: .14em; }
 .death .death-do {
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--line); border-radius: 4px;
   background: var(--paper); padding: 2px 7px; cursor: pointer; color: inherit;
@@ -980,11 +1015,11 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   50% { opacity: 1; transform: scale(1.08); }
 }
 .conc .conc-name {
-  font-family: Cinzel, Georgia, serif; font-weight: 700; font-size: .84rem;
+  font-family: var(--font-head); font-weight: 700; font-size: .84rem;
 }
 .conc .conc-sub { color: var(--muted); font-size: .68rem; }
 .conc .conc-b {
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--line); border-radius: 4px;
   background: var(--paper); padding: 3px 8px; cursor: pointer; color: inherit;
@@ -1003,7 +1038,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   50% { box-shadow: 0 0 0 3px rgba(150, 40, 30, .18); }
 }
 .conc .conc-dc {
-  font-family: Cinzel, Georgia, serif; font-weight: 700; color: var(--accent);
+  font-family: var(--font-head); font-weight: 700; color: var(--accent);
 }
 
 /* ---------------- defenses and conditions ----------------
@@ -1014,7 +1049,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .def-rows { display: flex; flex-direction: column; gap: 5px; }
 .def-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
 .def-kind {
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .06em;
   width: 76px; flex: 0 0 auto; color: var(--muted);
 }
@@ -1043,7 +1078,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   border: 1px solid var(--line); border-left: 3px solid var(--accent);
   border-radius: 4px; background: #fbf7ee; padding: 5px 9px;
 }
-.cond-on b { font-family: Cinzel, Georgia, serif; font-size: .78rem; white-space: nowrap; }
+.cond-on b { font-family: var(--font-head); font-size: .78rem; white-space: nowrap; }
 .cond-on .tagline { margin-left: 7px; }
 .cond-on p { font-size: .74rem; color: var(--muted); margin: 3px 0 0; }
 .cond-on .ico { width: 15px; height: 15px; vertical-align: -2px; margin-right: 5px; }
@@ -1102,7 +1137,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   padding: 12px 14px 14px;
 }
 .inv-card h3, .sb-card h3 {
-  font-family: Cinzel, Georgia, serif; font-size: .78rem; text-transform: uppercase;
+  font-family: var(--font-head); font-size: .78rem; text-transform: uppercase;
   color: var(--accent); margin: 0 0 8px; padding-bottom: 5px;
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; gap: 8px;
@@ -1134,7 +1169,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 }
 .inv-filters { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 .inv-filter {
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--line); border-radius: 10px;
   background: var(--paper); color: var(--muted);
@@ -1188,7 +1223,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .inv-row .inv-field { width: auto; flex: 1; min-width: 120px; }
 .inv-row .qty-field { width: 68px; flex: 0 0 auto; }
 .inv-go, .sb-go {
-  font-family: Cinzel, Georgia, serif; font-size: .66rem;
+  font-family: var(--font-head); font-size: .66rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--accent); border-radius: 4px;
   background: var(--accent); color: var(--paper);
@@ -1218,7 +1253,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
   box-shadow: 0 18px 50px rgba(0,0,0,.5); padding: 12px 14px 14px;
 }
 .rest-card h3 {
-  font-family: Cinzel, Georgia, serif; font-size: .78rem; text-transform: uppercase;
+  font-family: var(--font-head); font-size: .78rem; text-transform: uppercase;
   color: var(--accent); margin: 0 0 8px; padding-bottom: 5px;
   border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px;
 }
@@ -1234,13 +1269,13 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 .rest-dots i.on { background: var(--accent); }
 .rest-body { overflow-y: auto; flex: 1; min-height: 60px; }
 .rest-body h4 {
-  font-family: Cinzel, Georgia, serif; font-size: .72rem; text-transform: uppercase;
+  font-family: var(--font-head); font-size: .72rem; text-transform: uppercase;
   letter-spacing: .06em; color: var(--accent); margin: 0 0 5px;
 }
 .rest-body p { margin: 0 0 8px; font-size: .88rem; }
 .rest-hp {
   display: flex; align-items: baseline; gap: 8px; margin: 8px 0;
-  font-family: Cinzel, Georgia, serif; font-size: .74rem; color: var(--muted);
+  font-family: var(--font-head); font-size: .74rem; color: var(--muted);
 }
 .rest-hp b { font-family: inherit; font-size: 1.3rem; color: var(--ink); }
 /* the hit dice spender: one pip per die, spent ones filled */
@@ -1251,7 +1286,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 }
 .rest-die.spent { background: var(--accent); border-color: var(--accent); }
 .rest-roll {
-  font-family: Cinzel, Georgia, serif; font-size: .66rem; text-transform: uppercase;
+  font-family: var(--font-head); font-size: .66rem; text-transform: uppercase;
   letter-spacing: .06em; border: 1px solid var(--accent); border-radius: 4px;
   background: var(--accent); color: var(--paper); padding: 4px 12px; cursor: pointer;
 }
@@ -1299,7 +1334,7 @@ td.num, th.num { text-align: right; white-space: nowrap; }
 /* ---------------- spells ---------------- */
 .spell-head { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
 .slot-row { display: flex; align-items: center; gap: 6px; margin: 4px 0 6px; }
-.slot-row .lvl { font-family: Cinzel, serif; font-size: .68rem; color: var(--muted); width: 3.2em; }
+.slot-row .lvl { font-family: var(--font-head); font-size: .68rem; color: var(--muted); width: 3.2em; }
 .slot { width: 12px; height: 12px; border: 1px solid var(--muted); border-radius: 3px; background: var(--paper); flex: 0 0 auto; }
 .slot.used { background: var(--muted); }
 /* With a server behind the sheet a slot is a control: click an empty one to
@@ -1318,7 +1353,7 @@ details.spell summary {
 }
 .cast-btn {
   float: right;
-  font-family: Cinzel, Georgia, serif; font-size: .56rem;
+  font-family: var(--font-head); font-size: .56rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--line); border-radius: 3px;
   background: var(--paper); color: var(--accent);
@@ -1331,7 +1366,7 @@ details.spell summary {
    adding the two together would lose which half a resistant target shrugs
    off. Quieter than Cast - it is the follow up, not the spell. */
 .cast2-btn {
-  font: 600 .58rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 600 .58rem/1 var(--font-head);
   letter-spacing: .1em; text-transform: uppercase;
   color: #7a6a4a; background: transparent;
   border: 1px dashed rgba(184,134,11,.5); border-radius: 4px;
@@ -1345,7 +1380,7 @@ details.spell summary {
    and the one picked is what is rolled and what is struck off the file. */
 .cast-at {
   float: right;
-  font-family: Cinzel, Georgia, serif; font-size: .56rem;
+  font-family: var(--font-head); font-size: .56rem;
   text-transform: uppercase; letter-spacing: .04em;
   border: 1px solid var(--line); border-radius: 3px;
   background: var(--paper); color: var(--muted);
@@ -1369,7 +1404,7 @@ details.spell p { font-size: .82rem; margin: 4px 0 8px 12px; white-space: pre-wr
   margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--line);
 }
 .spell-manage {
-  font-family: Cinzel, Georgia, serif; font-size: .62rem;
+  font-family: var(--font-head); font-size: .62rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px dashed var(--line); border-radius: 4px;
   background: var(--paper); color: var(--accent);
@@ -1405,7 +1440,7 @@ details.spell p { font-size: .82rem; margin: 4px 0 8px 12px; white-space: pre-wr
 .sb-chip.on { background: var(--paper-2); color: var(--accent); border-color: var(--edge); }
 .sb-list { overflow-y: auto; margin: 8px 0 0; flex: 1; min-height: 120px; }
 .sb-group {
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-head);
   font-size: .66rem; text-transform: uppercase; letter-spacing: .06em;
   color: var(--accent); border-bottom: 1px solid var(--line);
   margin: 10px 0 3px; padding-bottom: 2px;
@@ -1432,7 +1467,7 @@ details.spell p { font-size: .82rem; margin: 4px 0 8px 12px; white-space: pre-wr
 .sb-tag.held { border-color: var(--accent-2); color: #7a5a08; }
 .sb-acts { white-space: nowrap; flex: 0 0 auto; }
 .sb-b {
-  font-family: Cinzel, Georgia, serif; font-size: .56rem;
+  font-family: var(--font-head); font-size: .56rem;
   text-transform: uppercase; letter-spacing: .06em;
   border: 1px solid var(--line); border-radius: 3px;
   background: var(--paper); color: var(--accent);
@@ -1579,7 +1614,7 @@ footer.sheet-foot {
   padding: 10px 12px; border-bottom: 1px solid var(--line);
 }
 .cmdk-slash {
-  font-family: Cinzel, Georgia, serif; font-size: 1rem;
+  font-family: var(--font-head); font-size: 1rem;
   color: var(--accent-2); opacity: .7;
   width: 1.1em; text-align: center; flex: 0 0 auto;
 }
@@ -1608,7 +1643,7 @@ footer.sheet-foot {
 .cmdk-row.dead { opacity: .45; cursor: default; }
 .cmdk-kind {
   flex: 0 0 4.6em;
-  font-family: Cinzel, Georgia, serif; font-size: .58rem;
+  font-family: var(--font-head); font-size: .58rem;
   text-transform: uppercase; letter-spacing: .09em;
   color: var(--muted);
 }
@@ -1655,7 +1690,7 @@ footer.sheet-foot {
   border: 1px solid var(--line); border-radius: 11px;
   background: rgba(252,248,238,.97);
   box-shadow: 0 2px 7px rgba(60,48,28,.22);
-  font-family: Cinzel, Georgia, serif;
+  font-family: var(--font-head);
   font-size: .62rem; letter-spacing: .05em; text-transform: uppercase;
   white-space: nowrap; pointer-events: none;
   z-index: 120;
@@ -1739,7 +1774,7 @@ footer.sheet-foot {
   cursor: pointer;
   transform: translateY(-50%);
   transition: transform .28s cubic-bezier(.2,.8,.3,1), background .2s;
-  font: 700 .58rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .58rem/1 var(--font-head);
   letter-spacing: .16em; text-transform: uppercase;
 }
 #lvl-tab span { writing-mode: vertical-rl; }
@@ -1759,7 +1794,7 @@ footer.sheet-foot {
   border-left: 3px double var(--accent-2);
   box-shadow: -16px 0 44px rgba(0,0,0,.55);
   color: #ece2cd;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   transform: translateX(103%);
   transition: transform .28s cubic-bezier(.2,.8,.3,1);
 }
@@ -1770,7 +1805,7 @@ footer.sheet-foot {
   border-bottom: 1px solid rgba(184,134,11,.35);
 }
 .lvl-head h2 {
-  margin: 0; font: 700 .78rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  margin: 0; font: 700 .78rem/1 var(--font-head);
   letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2);
 }
 .lvl-head .lvl-who { font-size: .72rem; color: #9d9078; flex: 1; }
@@ -1784,7 +1819,7 @@ footer.sheet-foot {
 /* The climb itself: which class, how far, and then one question at a time. */
 .lvl-arc {
   display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
 }
 .lvl-arc b { font-size: 1.5rem; color: #f4e6c2; }
 .lvl-arc .to { font-size: 1.5rem; color: var(--accent-2); }
@@ -1808,7 +1843,7 @@ footer.sheet-foot {
   padding: 2px 4px 12px;
 }
 .tl-title b {
-  font: 700 1.05rem/1.2 Cinzel, "Trajan Pro", Georgia, serif; color: #f4e6c2;
+  font: 700 1.05rem/1.2 var(--font-head); color: #f4e6c2;
 }
 .tl-title span { font-size: .76rem; color: #9d9078; font-style: italic; }
 .tl { position: relative; padding: 4px 4px 4px 0; }
@@ -1870,7 +1905,7 @@ button.tl-dot:focus-visible {
   margin-bottom: 6px;
 }
 .tl-head b {
-  font: 700 .74rem/1.3 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .74rem/1.3 var(--font-head);
   letter-spacing: .1em; text-transform: uppercase; color: #f4e6c2;
 }
 .tl-span { font-size: .68rem; color: #8d8368; }
@@ -1910,7 +1945,7 @@ button.tl-dot:focus-visible {
 .tl-one .nm { font-size: .82rem; color: #f4e6c2; }
 .tl-one .fm { flex: 1; font-size: .68rem; color: #8d8368; }
 .tl-one b {
-  font: 700 .9rem/1 Cinzel, "Trajan Pro", Georgia, serif; color: #d8caa8;
+  font: 700 .9rem/1 var(--font-head); color: #d8caa8;
 }
 .tl-blow { margin-top: 8px; }
 .tl-line {
@@ -2105,7 +2140,7 @@ button.tl-dot:focus-visible {
   text-transform: uppercase; color: #8d8368;
 }
 .cbt-round b {
-  font: 700 1.5rem/1.1 Cinzel, "Trajan Pro", Georgia, serif; color: #f4e6c2;
+  font: 700 1.5rem/1.1 var(--font-head); color: #f4e6c2;
 }
 .cbt-bar.on .cbt-round b { color: #e07a4e; }
 .cbt-now { flex: 1; min-width: 140px; display: flex; flex-direction: column; }
@@ -2114,7 +2149,7 @@ button.tl-dot:focus-visible {
   text-transform: uppercase; color: #8d8368;
 }
 .cbt-now b {
-  font: 700 1rem/1.3 Cinzel, "Trajan Pro", Georgia, serif; color: #f4e6c2;
+  font: 700 1rem/1.3 var(--font-head); color: #f4e6c2;
 }
 .cbt-now span { font-size: .68rem; color: #8d8368; }
 .cbt-gone {
@@ -2144,7 +2179,7 @@ button.tl-dot:focus-visible {
 .cbt-main { display: flex; align-items: center; gap: 6px; }
 .cbt-init-edit {
   width: 38px; flex: 0 0 38px; text-align: center; font: inherit;
-  font: 700 .95rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .95rem/1 var(--font-head);
   background: rgba(0,0,0,.3); color: #f4e6c2; padding: 4px 2px;
   border: 1px solid rgba(184,134,11,.3); border-radius: 4px;
   -moz-appearance: textfield;
@@ -2193,7 +2228,7 @@ button.tl-dot:focus-visible {
   margin-top: 14px; padding-top: 10px; border-top: 1px dashed rgba(184,134,11,.22);
 }
 .cbt-sub {
-  font: 700 .62rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .62rem/1.6 var(--font-head);
   letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2);
   margin-bottom: 6px;
 }
@@ -2205,7 +2240,7 @@ button.tl-dot:focus-visible {
   border: 1px solid rgba(184,134,11,.2);
 }
 .cbt-clocks li b {
-  font: 700 .9rem/1 Cinzel, "Trajan Pro", Georgia, serif; color: #f0d47a;
+  font: 700 .9rem/1 var(--font-head); color: #f0d47a;
   min-width: 20px; text-align: center;
 }
 .cbt-clocks li span { flex: 1; font-size: .78rem; color: #d8caa8; }
@@ -2239,7 +2274,7 @@ button.tl-dot:focus-visible {
 }
 .lvl-q { font-size: 1rem; line-height: 1.45; margin: 0 0 4px; color: #f4e6c2; }
 .lvl-title {
-  font: 700 .62rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .62rem/1.6 var(--font-head);
   letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2);
   margin-bottom: 3px;
 }
@@ -2302,10 +2337,234 @@ button.tl-dot:focus-visible {
   font-size: .78rem; color: #e5837a;
 }
 .lvl-done-head {
-  font: 700 1.1rem/1.2 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 1.1rem/1.2 var(--font-head);
   color: var(--accent-2); letter-spacing: .06em; margin-bottom: 4px;
 }
 @media print { #lvl-tab, #lvl-tray { display: none !important; } }
+
+/* ---------------- sound board ----------------
+   The DM screen's sound board, as a third drawer on the same edge: the
+   sheet's own sounds, the sound folder's, and the web's, each played at a
+   click or Enter. */
+:root { --snd-w: 400px; }
+@media (max-width: 470px) { :root { --snd-w: 92vw; } }
+
+#snd-tab {
+  position: fixed;
+  right: 0; top: 30%;
+  z-index: 95;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 13px 7px;
+  background: linear-gradient(180deg, #2c2620, #1a1713);
+  color: var(--accent-2);
+  border: 1px solid rgba(184,134,11,.55); border-right: 0;
+  border-radius: 10px 0 0 10px;
+  cursor: pointer;
+  box-shadow: -5px 0 16px rgba(0,0,0,.4);
+  transform: translateY(-50%);
+  transition: transform .28s cubic-bezier(.2,.8,.3,1), background .2s;
+  font: 700 .58rem/1 var(--font-head);
+  letter-spacing: .16em; text-transform: uppercase;
+}
+#snd-tab span { writing-mode: vertical-rl; }
+#snd-tab svg, #snd-tray h2 svg, .m-tool.m-snd svg {
+  width: 16px; height: 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round;
+}
+#snd-tab:hover { background: linear-gradient(180deg, #3a3227, #211c17); }
+#snd-tab.shifted { transform: translateY(-50%) translateX(calc(-1 * var(--snd-w))); }
+/* Something is playing: worth seeing without opening the drawer. */
+#snd-tab.live { color: #f6e3a4; box-shadow: -3px 0 16px rgba(212,168,60,.4); }
+
+#snd-tray {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: var(--snd-w);
+  z-index: 92;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #241f1a, #17140f);
+  border-left: 3px double var(--accent-2);
+  box-shadow: -16px 0 44px rgba(0,0,0,.55);
+  color: #ece2cd;
+  font-family: var(--font-body);
+  transform: translateX(103%);
+  transition: transform .28s cubic-bezier(.2,.8,.3,1);
+}
+#snd-tray.open { transform: none; }
+.snd-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid rgba(184,134,11,.35);
+}
+.snd-head h2 {
+  flex: 1; margin: 0; display: flex; align-items: center; gap: 7px;
+  font-size: .78rem; text-transform: uppercase; letter-spacing: .16em; color: var(--accent-2);
+}
+.snd-top { padding: 10px 12px 8px; border-bottom: 1px solid rgba(184,134,11,.22); }
+.snd-q {
+  width: 100%; box-sizing: border-box;
+  font: 1rem var(--font-body);
+  background: rgba(0,0,0,.3); color: #f4e9d4;
+  border: 1px solid rgba(184,134,11,.4); border-radius: 6px; padding: 6px 9px;
+}
+.snd-q::placeholder { color: #8f7f62; }
+.snd-q:focus { outline: none; border-color: var(--accent-2); }
+.snd-vol { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: .75rem; color: #a8977a; }
+.snd-vol input[type=range] { flex: 1; max-width: 200px; accent-color: #b8860b; }
+.snd-vol .pct { width: 34px; font-variant-numeric: tabular-nums; }
+.snd-vol .spacer { flex: 1; }
+.snd-vol svg { width: 17px; height: 17px; flex: 0 0 auto; fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+/* While the board is open the other drawers' handles and the dice button
+   move out to its edge, as they do for the roll tray, rather than sitting
+   over its rows. */
+body.snd-open #dice-tab:not(.shifted), body.snd-open #lvl-tab:not(.shifted) {
+  transform: translateY(-50%) translateX(calc(-1 * var(--snd-w)));
+}
+body.snd-open #dice-dock:not(.shifted) { transform: translateX(calc(-1 * var(--snd-w))); }
+.snd-stopall {
+  font: .78rem var(--font-body);
+  background: none; color: #ffb4a6; cursor: pointer;
+  border: 1px solid rgba(220,90,70,.6); border-radius: 99px; padding: 1px 10px;
+  white-space: nowrap;
+}
+.snd-stopall[hidden] { display: none; }
+.snd-now { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.snd-now:empty { display: none; }
+.snd-chip {
+  display: flex; align-items: center; gap: 2px; max-width: 100%;
+  padding: 1px 2px 1px 8px; border-radius: 99px;
+  border: 1px solid rgba(184,134,11,.4); background: rgba(184,134,11,.12);
+  font-size: .8rem; color: #ffe7b8;
+}
+.snd-chip .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 210px; }
+.snd-chip button {
+  width: 22px; height: 22px; display: grid; place-items: center;
+  background: none; border: 0; border-radius: 50%; padding: 0; cursor: pointer; color: #cdbd9c;
+}
+.snd-chip button:hover { background: rgba(255,255,255,.08); }
+.snd-chip button.on { color: var(--accent-2); }
+.snd-chip svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.snd-list { flex: 1; overflow-y: auto; padding: 4px 6px 8px; }
+.snd-sec {
+  display: flex; align-items: baseline; gap: 8px; padding: 9px 7px 3px;
+  font: 700 .6rem/1 var(--font-head);
+  letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2);
+}
+.snd-sec i {
+  font: italic .72rem var(--font-body);
+  letter-spacing: 0; text-transform: none; color: #a8977a;
+}
+.snd-none { padding: 2px 8px; font-style: italic; font-size: .82rem; color: #8f7f62; }
+.snd-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 7px; border-radius: 6px; cursor: pointer;
+}
+.snd-row.at { background: rgba(184,134,11,.18); box-shadow: inset 2px 0 0 var(--accent-2); }
+.snd-row .play { width: 12px; height: 12px; flex: 0 0 auto; fill: #8f7f62; }
+.snd-row.at .play { fill: var(--accent-2); }
+.snd-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; color: #f4e9d4; }
+.snd-row .dur { font-size: .72rem; color: #a8977a; font-variant-numeric: tabular-nums; }
+.snd-row .src {
+  font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent-2); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+}
+.snd-row .kept { color: #9fd49a; font-size: .8rem; }
+.snd-row .fail { color: #ff9b8a; font-size: .8rem; }
+.snd-row .saving { color: var(--accent-2); font-size: .8rem; animation: snd-spin 1s linear infinite; }
+@keyframes snd-spin { to { transform: rotate(360deg); } }
+.snd-row a { color: #8f7f62; text-decoration: none; font-size: .8rem; padding: 0 2px; }
+.snd-row a:hover { color: var(--accent-2); }
+.snd-tip {
+  padding: 7px 12px 9px; border-top: 1px solid rgba(184,134,11,.22);
+  font-size: .74rem; color: #8f7f62;
+}
+@media (prefers-reduced-motion: reduce) {
+  #snd-tab, #snd-tray { transition: none; }
+  .snd-row .saving { animation: none; }
+}
+@media print { #snd-tab, #snd-tray { display: none !important; } }
+
+/* ---------------- skin gallery ----------------
+   Choosing the sheet's skin: a drawer on the left, so the sheet stays in
+   view beside it and each skin is put on the sheet as it is clicked. Its own
+   look never changes with the skin - it is the one thing that has to be
+   findable whatever the sheet looks like. */
+:root { --skin-w: 320px; }
+#skin-tray {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--skin-w);
+  z-index: 96;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #241f1a, #17140f);
+  border-right: 3px double #b8860b;
+  box-shadow: 16px 0 44px rgba(0,0,0,.55);
+  color: #ece2cd;
+  font: 15px/1.4 "EB Garamond", Palatino, Georgia, serif;
+  transform: translateX(-103%);
+  /* Hidden outright when shut: its shadow would otherwise lie along the
+     edge of the classic sheet. */
+  visibility: hidden;
+  transition: transform .28s cubic-bezier(.2,.8,.3,1), visibility 0s linear .28s;
+}
+#skin-tray.open { transform: none; visibility: visible; transition: transform .28s cubic-bezier(.2,.8,.3,1); }
+#skin-tray .sk-head {
+  display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px;
+  border-bottom: 1px solid rgba(184,134,11,.35);
+}
+#skin-tray h2 {
+  flex: 1; margin: 0; font: 700 .78rem/1 Cinzel, Georgia, serif;
+  text-transform: uppercase; letter-spacing: .16em; color: #b8860b;
+}
+#skin-tray .sk-x {
+  border: 0; background: none; color: #9d9078; font-size: 1.3rem; line-height: 1;
+  cursor: pointer; padding: 0 4px;
+}
+#skin-tray .sk-x:hover { color: #ece2cd; }
+.sk-list { flex: 1; overflow-y: auto; padding: 8px 10px; display: grid; gap: 8px; align-content: start; }
+.sk-card {
+  display: grid; grid-template-columns: 54px 1fr; gap: 3px 10px; align-items: center;
+  width: 100%; text-align: left; cursor: pointer;
+  font: inherit; color: inherit;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(184,134,11,.22); border-radius: 8px; padding: 8px 10px;
+}
+.sk-card:hover { border-color: rgba(184,134,11,.6); background: rgba(184,134,11,.07); }
+.sk-card:focus-visible { outline: 2px solid #b8860b; outline-offset: 1px; }
+.sk-card.shown { border-color: #b8860b; background: rgba(184,134,11,.16); box-shadow: inset 3px 0 0 #b8860b; }
+.sk-sw {
+  grid-row: span 2; width: 54px; height: 54px; border-radius: 6px; overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.sk-sw i { flex: 1; display: block; }
+.sk-sw i:first-child { flex: 2.2; }
+.sk-name { font-size: 1.12rem; line-height: 1.15; color: #f4e9d4; display: flex; align-items: baseline; gap: 6px; }
+.sk-name em {
+  font: 700 .52rem/1 Cinzel, Georgia, serif; font-style: normal;
+  letter-spacing: .14em; text-transform: uppercase; color: #9fd49a;
+}
+.sk-about { font-size: .8rem; line-height: 1.3; color: #a8977a; }
+.sk-foot {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px 12px;
+  border-top: 1px solid rgba(184,134,11,.3);
+}
+.sk-msg { flex: 1; font-size: .78rem; color: #a8977a; min-height: 1em; }
+.sk-msg.err { color: #ff9b8a; }
+.sk-btn {
+  font: 700 .66rem/1 Cinzel, Georgia, serif; letter-spacing: .1em; text-transform: uppercase;
+  border-radius: 5px; padding: 8px 12px; cursor: pointer;
+  border: 1px solid rgba(184,134,11,.55); background: none; color: #d8caa8;
+}
+.sk-btn.keep { background: #b8860b; border-color: #b8860b; color: #1a1713; }
+.sk-btn:disabled { opacity: .45; cursor: default; }
+.sk-tip { padding: 0 12px 10px; font-size: .72rem; color: #8f7f62; }
+@media (max-width: 600px) {
+  #skin-tray {
+    top: auto; right: 0; width: auto; height: 52vh;
+    border-right: 0; border-top: 3px double #b8860b;
+    transform: translateY(103%);
+  }
+}
+@media (prefers-reduced-motion: reduce) { #skin-tray { transition: none; } }
+@media print { #skin-tray { display: none !important; } }
 
 /* ---------------- roll tray ---------------- */
 :root { --tray-w: 330px; }
@@ -2326,7 +2585,7 @@ button.tl-dot:focus-visible {
   border-right: 0;
   border-radius: 10px 0 0 10px;
   cursor: pointer;
-  font: 700 .62rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .62rem/1 var(--font-head);
   letter-spacing: .16em;
   text-transform: uppercase;
   box-shadow: -5px 0 16px rgba(0,0,0,.4);
@@ -2358,7 +2617,7 @@ button.tl-dot:focus-visible {
   border-left: 3px double var(--accent-2);
   box-shadow: -16px 0 44px rgba(0,0,0,.55);
   color: #ece2cd;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   font-size: .9rem;
   transform: translateX(103%);
   transition: transform .28s cubic-bezier(.2,.8,.3,1);
@@ -2398,7 +2657,7 @@ button.tl-dot:focus-visible {
 
 #dice-latest { padding: 12px 12px 4px; min-height: 34px; }
 .rc-label {
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .95rem; color: #f4e6c2; line-height: 1.2;
 }
 .rc-formula {
@@ -2422,7 +2681,7 @@ button.tl-dot:focus-visible {
 }
 .rc-cell b {
   display: block; margin-top: 2px;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: 1.45rem; color: #f0e2c0;
 }
 .rc-cell.main {
@@ -2437,7 +2696,7 @@ button.tl-dot:focus-visible {
    arrives with the swell of the halo and the sound rather than on its own. */
 .rc-flourish {
   margin-top: 7px; text-align: center;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .78rem; text-transform: uppercase; letter-spacing: .22em;
   padding: 3px 0 4px; border-radius: 5px;
   animation: rc-flourish-in .5s ease-out 1;
@@ -2479,7 +2738,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
    card grows a heading per roll and a line for the save */
 .rc-sub {
   margin-top: 9px;
-  font: 700 .55rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .55rem/1 var(--font-head);
   letter-spacing: .16em; text-transform: uppercase; color: #8d8168;
 }
 .rc-line {
@@ -2499,7 +2758,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .rc-label .spell-mark { width: 14px; height: 14px; vertical-align: -2px; }
 
 .dt-hist-head {
-  font: 700 .6rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .6rem/1 var(--font-head);
   letter-spacing: .18em; text-transform: uppercase; color: #8d8168;
   padding: 10px 12px 6px;
   border-top: 1px solid rgba(184,134,11,.18);
@@ -2519,7 +2778,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .hx { flex: 0 0 auto; font-size: .62rem; color: #7e735d; }
 .hv {
   flex: 0 0 auto; width: 2.5em; text-align: right;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif; font-weight: 700; color: #f0e2c0;
+  font-family: var(--font-head); font-weight: 700; color: #f0e2c0;
 }
 .hv.crit { color: #93e2a2; }
 .hv.fumble { color: #e5837a; }
@@ -2576,7 +2835,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   background: linear-gradient(180deg, #241f1a, #17140f);
   box-shadow: 0 16px 44px rgba(0,0,0,.55);
   color: #ece2cd;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   opacity: 0;
   transform: translateY(14px) scale(.97);
   transform-origin: 100% 100%;
@@ -2596,14 +2855,14 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 }
 #dice-custom h3 {
   flex: 1; margin: 0;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .74rem; text-transform: uppercase;
   letter-spacing: .16em; color: var(--accent-2);
 }
 #dice-expr {
   width: 100%;
   padding: 7px 9px;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   font-size: 1.05rem;
   letter-spacing: .02em;
   color: #f4e6c2;
@@ -2622,7 +2881,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 }
 .dc-dice button {
   padding: 7px 0;
-  font: 700 .74rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .74rem/1 var(--font-head);
   color: #e2d3ae;
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(184,134,11,.32);
@@ -2650,7 +2909,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .dc-mod button:hover { background: rgba(184,134,11,.24); }
 .dc-mod b {
   min-width: 2.4em; text-align: center;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .95rem; color: #f0e2c0;
 }
 
@@ -2676,7 +2935,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .dc-roll {
   flex: 1; min-width: 5.4em;
   padding: 8px 0;
-  font: 700 .74rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .74rem/1 var(--font-head);
   letter-spacing: .16em; text-transform: uppercase;
   color: #1d1809;
   background: linear-gradient(180deg, #f2d489, #c9942a);
@@ -2708,7 +2967,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   background: linear-gradient(180deg, #241f1a, #17140f);
   box-shadow: 0 16px 44px rgba(0,0,0,.55);
   color: #ece2cd;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   opacity: 0;
   transform: translateY(14px) scale(.97);
   transform-origin: 100% 100%;
@@ -2718,7 +2977,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 #dnd-sess.open { opacity: 1; transform: none; pointer-events: auto; }
 #dnd-sess h3 {
   flex: 1; margin: 0;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .74rem; text-transform: uppercase;
   letter-spacing: .16em; color: var(--accent-2);
 }
@@ -2729,7 +2988,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .nd-input {
   width: 100%;
   padding: 6px 8px;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   font-size: .92rem;
   color: #f4e6c2;
   background: rgba(0,0,0,.3);
@@ -2741,7 +3000,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 #dnd-sess .dc-actions { margin-top: 10px; }
 .sess-live {
   display: flex; align-items: center; gap: 7px;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   font-size: .95rem; color: #f0e2c0;
 }
 .sess-file {
@@ -2793,7 +3052,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   border-bottom: 0;
   border-radius: 10px 10px 0 0;
   cursor: pointer;
-  font: 700 .62rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .62rem/1 var(--font-head);
   letter-spacing: .16em; text-transform: uppercase;
   box-shadow: 0 -5px 16px rgba(0,0,0,.4);
   transition: bottom .28s cubic-bezier(.2,.8,.3,1), background .15s ease;
@@ -2807,7 +3066,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 }
 #notes-tab em {
   font-style: normal; letter-spacing: .04em; text-transform: none;
-  font-family: "EB Garamond", Palatino, Georgia, serif; color: #cdbe98;
+  font-family: var(--font-body); color: #cdbe98;
   max-width: 15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 #notes-tab.rec { border-color: rgba(210,84,74,.6); }
@@ -2827,7 +3086,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   border-top: 3px double var(--accent-2);
   box-shadow: 0 -16px 44px rgba(0,0,0,.55);
   color: #ece2cd;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   transform: translateY(101%);
   transition: transform .28s cubic-bezier(.2,.8,.3,1), right .28s cubic-bezier(.2,.8,.3,1);
 }
@@ -2902,10 +3161,10 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   display: flex; align-items: center; gap: 9px; margin-bottom: 10px;
 }
 .nd-toolbar .nd-input { flex: 1; }
-.nd-title { font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0; }
+.nd-title { font-family: var(--font-head); color: #f0e2c0; }
 .nd-meta { flex: 1; font-size: .68rem; color: #7e735d; }
 .nd-sub {
-  font: 700 .6rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .6rem/1 var(--font-head);
   letter-spacing: .18em; text-transform: uppercase; color: #8d8168;
   padding-bottom: 7px; margin-bottom: 9px;
   border-bottom: 1px solid rgba(184,134,11,.2);
@@ -2916,7 +3175,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 #note-text {
   flex: 1; min-height: 78px; resize: none;
   padding: 9px 11px;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   font-size: .95rem; line-height: 1.5;
   color: #f4e6c2;
   background: rgba(0,0,0,.3);
@@ -2941,7 +3200,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   margin-bottom: 13px;
 }
 .note-time {
-  font: 700 .58rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .58rem/1 var(--font-head);
   letter-spacing: .14em; color: #8d8168; margin-bottom: 4px;
 }
 /* A note that is already in the file can be said better: the card turns into
@@ -2949,7 +3208,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
    the session file. */
 .note-edit {
   float: right; margin: -2px 0 0 8px;
-  font: 700 .55rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .55rem/1.6 var(--font-head);
   letter-spacing: .1em; text-transform: uppercase;
   color: #8d8168; background: none; cursor: pointer;
   border: 1px solid rgba(184,134,11,.35); border-radius: 4px; padding: 1px 6px;
@@ -2959,7 +3218,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
    only turns the colour of a mistake once it is the one being confirmed. */
 .note-del {
   float: right; margin: -2px 0 0 6px;
-  font: 700 .55rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .55rem/1.6 var(--font-head);
   letter-spacing: .1em; text-transform: uppercase;
   color: #8d8168; background: none; cursor: pointer;
   border: 1px solid rgba(184,134,11,.35); border-radius: 4px; padding: 1px 6px;
@@ -2973,7 +3232,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .note-del.yes:disabled { opacity: .5; cursor: default; }
 .note-del-no {
   float: right; margin: -2px 0 0 6px;
-  font: 700 .55rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .55rem/1.6 var(--font-head);
   letter-spacing: .1em; text-transform: uppercase;
   color: #8d8168; background: none; cursor: pointer;
   border: 1px solid rgba(184,134,11,.35); border-radius: 4px; padding: 1px 6px;
@@ -2981,7 +3240,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .note-del-no:hover { color: #f0e2c0; border-color: rgba(184,134,11,.8); }
 .note-ask {
   float: right; margin: 0 8px 0 0;
-  font: 400 .58rem/1.9 "EB Garamond", Palatino, Georgia, serif;
+  font: 400 .58rem/1.9 var(--font-body);
   letter-spacing: .04em; text-transform: none; color: #e5837a;
 }
 .note-ask.bad { color: #e5837a; }
@@ -2993,7 +3252,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
    asking about stays readable while it asks. */
 .log-table .log-act { width: 1%; white-space: nowrap; text-align: right; }
 .roll-del, .roll-del-no {
-  font: 700 .52rem/1.5 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .52rem/1.5 var(--font-head);
   letter-spacing: .1em; text-transform: uppercase;
   color: #8d8168; background: none; cursor: pointer;
   border: 1px solid rgba(184,134,11,.3); border-radius: 4px;
@@ -3012,7 +3271,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .note-editor textarea {
   width: 100%; min-height: 110px; resize: vertical;
   padding: 8px 10px;
-  font-family: "EB Garamond", Palatino, Georgia, serif;
+  font-family: var(--font-body);
   font-size: .95rem; line-height: 1.5; color: #f4e6c2;
   background: rgba(0,0,0,.3);
   border: 1px solid rgba(184,134,11,.4); border-radius: 7px;
@@ -3027,7 +3286,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .org-rich p { margin: 0 0 7px; }
 .org-rich h3, .org-rich h4 {
   margin: 9px 0 5px;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif;
+  font-family: var(--font-head);
   color: #f0e2c0; font-size: .92rem; letter-spacing: .04em;
 }
 .org-rich h4 { font-size: .82rem; color: #dcc890; }
@@ -3071,7 +3330,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .sess-date { flex: 0 0 auto; width: 6.6em; font-size: .68rem; color: #7e735d; }
 .sess-name {
   flex: 0 0 auto; max-width: 16em;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0;
+  font-family: var(--font-head); color: #f0e2c0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .sess-sum {
@@ -3086,14 +3345,14 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
 .hit { flex-direction: column; gap: 3px; }
 .hit-head {
   display: flex; gap: 9px; align-items: baseline; width: 100%;
-  font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0; font-size: .8rem;
+  font-family: var(--font-head); color: #f0e2c0; font-size: .8rem;
 }
 .hit-where { font-family: inherit; font-size: .64rem; color: #7e735d; }
 .hit-text { color: #bfb298; font-size: .82rem; }
 .log-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
 .log-table th {
   text-align: left; padding: 3px 6px;
-  font: 700 .58rem/1.6 Cinzel, "Trajan Pro", Georgia, serif;
+  font: 700 .58rem/1.6 var(--font-head);
   letter-spacing: .12em; text-transform: uppercase; color: #8d8168;
   border-bottom: 1px solid rgba(184,134,11,.3);
 }
@@ -3101,7 +3360,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   padding: 3px 6px; border-bottom: 1px dotted rgba(184,134,11,.16); color: #cfc3a8;
 }
 .log-table td.num {
-  font-family: Cinzel, "Trajan Pro", Georgia, serif; color: #f0e2c0;
+  font-family: var(--font-head); color: #f0e2c0;
 }
 .log-table td.dim { color: #7e735d; font-size: .72rem; }
 
@@ -3163,7 +3422,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   html.m .fact { flex: 0 0 auto; min-width: 0; padding: 3px 9px; }
   html.m .fact .label { font-size: .56rem; }
   html.m .fact .value { font-size: .9rem; white-space: nowrap; }
-  html.m .fact.insp { padding: 0; }
+  html.m .fact.insp, html.m .fact.xp-fact { padding: 0; }
   html.m .insp-btn { padding: 3px 9px; }
 
   /* the strip that stays put */
@@ -3184,7 +3443,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   }
   button.m-stat { cursor: pointer; }
   .m-stat .m-lbl {
-    font: 700 .52rem/1.1 Cinzel, "Trajan Pro", Georgia, serif;
+    font: 700 .52rem/1.1 var(--font-head);
     letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
   }
   .m-stat b { font-size: 1.12rem; line-height: 1.15; font-weight: 700; }
@@ -3211,7 +3470,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   .m-tabs::-webkit-scrollbar { display: none; }
   .m-tab {
     flex: 0 0 auto; scroll-snap-align: start;
-    font: 700 .66rem/1 Cinzel, "Trajan Pro", Georgia, serif;
+    font: 700 .66rem/1 var(--font-head);
     letter-spacing: .06em; text-transform: uppercase;
     background: none; border: 0; border-bottom: 3px solid transparent;
     color: var(--muted); padding: 9px 9px 8px; cursor: pointer;
@@ -3238,7 +3497,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   }
   html.m .m-spf::-webkit-scrollbar { display: none; }
   .m-spf button {
-    flex: 0 0 auto; font: 600 .78rem/1 "EB Garamond", Palatino, Georgia, serif;
+    flex: 0 0 auto; font: 600 .78rem/1 var(--font-body);
     background: var(--paper); color: var(--muted);
     border: 1px solid var(--line); border-radius: 999px; padding: 6px 11px; cursor: pointer;
   }
@@ -3254,9 +3513,11 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   /* The rolls and level tabs live in the strip; the ones on the edge of the
      screen come back only as the handle of a drawer that is open, which is
      how a drawer is shut again. */
-  html.m #dice-tab:not(.shifted), html.m #lvl-tab:not(.shifted) { display: none; }
-  html.m #dice-tab span, html.m #lvl-tab span { display: none; }
-  html.m #dice-tab, html.m #lvl-tab { padding: 12px 6px; }
+  html.m #dice-tab:not(.shifted), html.m #lvl-tab:not(.shifted),
+  html.m #snd-tab:not(.shifted) { display: none; }
+  html.m #dice-tab span, html.m #lvl-tab span, html.m #snd-tab span { display: none; }
+  html.m #dice-tab, html.m #lvl-tab, html.m #snd-tab { padding: 12px 6px; }
+  .m-tool.m-snd.live { color: #f6e3a4; box-shadow: 0 0 10px rgba(212,168,60,.55); }
   html.m #notes-tab { left: 10px; }
   html.m #dice-dock { right: 12px; bottom: 12px; }
   html.m #dice-fab { width: 48px; height: 48px; }
@@ -3376,7 +3637,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   .wearbtn { border: 0 !important; padding: 0 !important; }
   .wearbtn:not(.on) { visibility: hidden; }
   .inv-pane-name {
-    display: block; font-family: Cinzel, Georgia, serif;
+    display: block; font-family: var(--font-head);
     font-size: .68rem; text-transform: uppercase; color: var(--accent);
     margin: 8px 0 2px;
   }
@@ -3393,9 +3654,17 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
   p, .quote { orphans: 2; widows: 2; }
 }
 </style>
+<!-- The skins (dnd_skins/*.css). Every rule in one starts with
+     html[data-skin="its id"], so with no skin chosen none of this applies and
+     the sheet is the classic one. -->
+{% for sk in skins %}<style data-skin-css="{{ sk.id }}">
+{{ sk.css|safe }}
+</style>
+{% endfor %}
 </head>
 <body>
-<!-- The halo round the edge of the page, coloured by how the character is
+{% for sk in skins %}{% if sk.svg %}<div class="skin-defs" data-skin-svg="{{ sk.id }}" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">{{ sk.svg|safe }}</div>
+{% endif %}{% endfor %}<!-- The halo round the edge of the page, coloured by how the character is
      doing. It is outside the page because it is pinned to the window rather
      than to the sheet, and it carries the band the hit points fall in from the
      moment the page loads so an exported sheet with no server still shows the
@@ -3424,9 +3693,9 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
           <path id="ringBot" d="M 105,105 m -90,0 a 90,90 0 1,0 180,0"/>
         </defs>
         <circle class="xp-track" cx="105" cy="105" r="100"/>
-        {% if sheet.xpPercent %}<circle class="xp-fill" cx="105" cy="105" r="100"
+        <circle class="xp-fill" id="xp-fill" cx="105" cy="105" r="100"
                 pathLength="100" stroke-dasharray="{{ sheet.xpPercent }} 100"
-                transform="rotate(-90 105 105)"/>{% endif %}
+                transform="rotate(-90 105 105)"/>
         <!-- What the character looks like as the night wears on. The cracks
              are in the glass over the portrait rather than in the picture -
              a broken medallion, not a broken face - and they come one at a
@@ -3450,7 +3719,7 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
           <textPath href="#ringTop" startOffset="50%" text-anchor="middle">{{ sheet.name }}</textPath>
         </text>
         <text class="ring-xp">
-          <textPath href="#ringBot" startOffset="50%" text-anchor="middle">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %} XP</textPath>
+          <textPath href="#ringBot" startOffset="50%" text-anchor="middle" id="ring-xp-text">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %} XP</textPath>
         </text>
         <g class="ring-gem">
           <path d="M 21.5,98.2 26.8,105 21.5,111.8 16.2,105 Z"/>
@@ -3461,6 +3730,12 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
           <circle cx="188.5" cy="105" r="1.3"/>
         </g>
       </svg>
+      <!-- The experience on the ring is a button: the ring itself is drawing
+           and takes no clicks, so this sits over its lower arc. -->
+      <button type="button" class="ring-xp-btn" id="ring-xp-btn"
+              title="Add, remove or set experience">
+        <span class="sr-only">Experience: {{ sheet.xp }}. Change it</span>
+      </button>
     </figure>
     {% endif %}
     <div class="name-block">
@@ -3472,7 +3747,12 @@ button.rc-cell:focus-visible { outline: 2px solid rgba(184,134,11,.75); outline-
       <div class="fact"><span class="label">Level</span><span class="value">{{ sheet.level }}</span></div>
       <div class="fact"><span class="label">Proficiency</span><span class="value">{{ sheet.proficiencyStr }}</span></div>
       {% if sheet.alignment %}<div class="fact"><span class="label">Alignment</span><span class="value">{{ sheet.alignment }}</span></div>{% endif %}
-      <div class="fact{% if sheet.imageSrc %} m-only{% endif %}"><span class="label">Experience</span><span class="value">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span></div>
+      <div class="fact xp-fact{% if sheet.imageSrc %} m-only{% endif %}">
+        <button type="button" class="insp-btn" id="xp-fact-btn"
+                title="Add, remove or set experience">
+          <span class="label">Experience</span><span class="value" id="xp-fact-val">{{ sheet.xp }}{% if sheet.nextLevelXp %} / {{ sheet.nextLevelXp }}{% endif %}</span>
+        </button>
+      </div>
       {% if sheet.player %}<div class="fact"><span class="label">Player</span><span class="value">{{ sheet.player }}</span></div>{% endif %}
       <!-- Inspiration is a button, not a reading: pressing it posts to the
            server, which rewrites DND_INSPIRATION in the character's own org
@@ -4080,6 +4360,7 @@ them up.">Temp</button>
 <script type="application/json" id="dnd-health-data">{{ healthJson|safe }}</script>
 <script type="application/json" id="dnd-concentration-data">{{ concentrationJson|safe }}</script>
 <script type="application/json" id="dnd-attunement-data">{{ attunementJson|safe }}</script>
+<script type="application/json" id="dnd-skins-data">{{ skinsJson|safe }}</script>
 {% if sheet.backdropSrcs %}
 <script type="application/json" id="dnd-backdrop-data">{{ backdropJson|safe }}</script>
 <script>
@@ -12141,6 +12422,7 @@ them up.">Temp</button>
       // Whatever is on top closes first.
       if (PAL.open) { setPalette(false); return; }
       if (LVL.open) { setLevelTray(false); return; }
+      if (SND.open) { setSoundTray(false); return; }
       if (sessPanel && sessPanel.classList.contains('open')) { setSessPanel(false); return; }
       if (panel && panel.classList.contains('open')) { setPanel(false); return; }
       if (drawer && drawer.classList.contains('open') &&
@@ -12153,6 +12435,7 @@ them up.">Temp</button>
   function setTray(open) {
     // Two drawers on the same edge: opening one closes the other.
     if (open && typeof LVL !== 'undefined' && LVL.open) { setLevelTray(false); }
+    if (open && SND.open) { setSoundTray(false); }
     tray.classList.toggle('open', open);
     tab.classList.toggle('shifted', open);
     tab.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -12586,6 +12869,8 @@ them up.">Temp</button>
         '<button type="button" class="dt-btn" id="sheet-print" ' +
           'title="Print this sheet: everything folded away is opened, the ' +
           'screen furniture goes, and the paper keeps its ink">Print sheet</button>' +
+        '<button type="button" class="dt-btn" id="sheet-skin" ' +
+          'title="Change how this sheet looks">Skin</button>' +
       '</div>' +
       '<div class="dc-actions">' +
         '<button type="button" class="dt-btn" id="dice-custom-clear">Clear</button>' +
@@ -12635,6 +12920,10 @@ them up.">Temp</button>
     panel.querySelector('#sheet-print').addEventListener('click', function () {
       setPanel(false);
       window.print();
+    });
+    panel.querySelector('#sheet-skin').addEventListener('click', function () {
+      setPanel(false);
+      setSkinTray(true);
     });
     panel.querySelector('#sheet-undo').addEventListener('click', function () {
       undoLast();
@@ -19251,6 +19540,715 @@ them up.">Temp</button>
     inspirationLoad();
   }
 
+  // ------------------------------------------------------------ experience
+  // Clicking the experience on the ring (or the Experience fact where there
+  // is no ring) opens a small box to add, remove or set it. The server
+  // rewrites DND_XP in the character's org file and answers with the numbers
+  // the ring and the level-up tray's bar are drawn from. It never levels the
+  // character: crossing a threshold only offers the level-up tray.
+  var XPUI = { busy: false, ready: false };
+  var xpPop, xpAmt, xpNow, xpMsg, xpLvl, xpAnchor;
+
+  function xpWords() {
+    return XP.now + (XP.next ? ' / ' + XP.next : '');
+  }
+
+  function paintXp(pct) {
+    var ring = document.getElementById('ring-xp-text');
+    if (ring) { ring.textContent = xpWords() + ' XP'; }
+    var fact = document.getElementById('xp-fact-val');
+    if (fact) { fact.textContent = xpWords(); }
+    var fill = document.getElementById('xp-fill');
+    if (fill && typeof pct === 'number') {
+      fill.setAttribute('stroke-dasharray', pct + ' 100');
+    }
+    var sr = document.querySelector('#ring-xp-btn .sr-only');
+    if (sr) { sr.textContent = 'Experience: ' + xpWords() + '. Change it'; }
+    if (xpNow) { xpNow.textContent = xpWords() + ' XP'; }
+    if (xpLvl) { xpLvl.hidden = !XPUI.ready; }
+    if (LVL.open && !LVL.busy) { lvlRender(); }
+  }
+
+  function xpPlace() {
+    if (!xpPop || !xpAnchor) { return; }
+    var r = xpAnchor.getBoundingClientRect();
+    var w = xpPop.offsetWidth, h = xpPop.offsetHeight;
+    var left = Math.max(8, Math.min(window.innerWidth - w - 8,
+                                    r.left + r.width / 2 - w / 2));
+    var top = r.bottom + 6;
+    if (top + h > window.innerHeight - 8) { top = Math.max(8, r.top - h - 6); }
+    xpPop.style.left = left + 'px';
+    xpPop.style.top = top + 'px';
+  }
+
+  function xpOpen(anchor) {
+    if (!xpPop.hidden && xpAnchor === anchor) { xpClose(); return; }
+    xpAnchor = anchor;
+    xpPop.hidden = false;
+    xpMsg.textContent = healthConfigured() ? ''
+      : 'this sheet does not know which org file it came from';
+    xpMsg.classList.toggle('err', !healthConfigured());
+    XPUI.ready = !!(XP.next && XP.now >= XP.next);
+    paintXp();
+    xpPlace();
+    xpAmt.focus();
+    xpAmt.select();
+  }
+
+  function xpClose() {
+    if (!xpPop || xpPop.hidden) { return; }
+    xpPop.hidden = true;
+    if (xpAnchor && document.activeElement && xpPop.contains(document.activeElement)) {
+      xpAnchor.focus();
+    }
+  }
+
+  function xpChange(action) {
+    if (XPUI.busy || !healthConfigured()) { return; }
+    var raw = String(xpAmt.value || '').trim();
+    var amount = parseInt(raw, 10);
+    if (!/^\d+$/.test(raw) || isNaN(amount)) {
+      xpMsg.textContent = 'type a whole number first';
+      xpMsg.classList.add('err');
+      xpAmt.focus();
+      return;
+    }
+    XPUI.busy = true;
+    xpPop.classList.add('busy');
+    var before = XP.now;
+    api('POST', '/dnd/xp', { filename: LOG.file || '', id: CHARACTER_ID || '',
+                             action: action, amount: amount })
+      .then(function (st) {
+        XPUI.busy = false;
+        xpPop.classList.remove('busy');
+        XP.now = st.xp || 0;
+        XP.next = st.nextLevelXp || 0;
+        XP.level = st.level || XP.level;
+        XPUI.ready = !!st.ready;
+        xpMsg.textContent = st.msg || '';
+        xpMsg.classList.remove('err');
+        xpAmt.value = '';
+        paintXp(st.xpPercent || 0);
+        if (XP.now !== before) {
+          logNote('*Experience.* ' + (XP.now > before ? '+' : '') +
+                  (XP.now - before) + ' XP, now ' + XP.now + '.');
+        }
+      }, function (err) {
+        XPUI.busy = false;
+        xpPop.classList.remove('busy');
+        xpMsg.textContent = (err && err.message) || String(err);
+        xpMsg.classList.add('err');
+      });
+  }
+
+  function buildXpUi() {
+    var ringBtn = document.getElementById('ring-xp-btn');
+    var factBtn = document.getElementById('xp-fact-btn');
+    if (!ringBtn && !factBtn) { return; }
+    xpPop = document.createElement('div');
+    xpPop.className = 'xp-pop';
+    xpPop.hidden = true;
+    xpPop.setAttribute('role', 'dialog');
+    xpPop.setAttribute('aria-label', 'Experience');
+    xpPop.innerHTML =
+      '<div class="xp-pop-head">Experience<span class="now" id="xp-pop-now"></span></div>' +
+      '<div class="hp-ctl">' +
+        '<input type="number" class="inv-field hp-amt" id="xp-amount" min="0" ' +
+          'inputmode="numeric" placeholder="0" autocomplete="off" ' +
+          'aria-label="How much experience">' +
+        '<button type="button" class="hpb heal" data-xp="add" ' +
+          'title="Add this much experience (Enter)">Add</button>' +
+        '<button type="button" class="hpb hurt" data-xp="remove" ' +
+          'title="Take this much experience away">Remove</button>' +
+        '<button type="button" class="hpb temp" data-xp="set" ' +
+          'title="Set experience to exactly this">Set</button>' +
+      '</div>' +
+      '<span class="inv-msg xp-msg" id="xp-msg" aria-live="polite"></span>' +
+      '<button type="button" class="hpb temp xp-lvl" id="xp-lvl" hidden>Level up</button>';
+    document.body.appendChild(xpPop);
+    xpAmt = xpPop.querySelector('#xp-amount');
+    xpNow = xpPop.querySelector('#xp-pop-now');
+    xpMsg = xpPop.querySelector('#xp-msg');
+    xpLvl = xpPop.querySelector('#xp-lvl');
+
+    xpPop.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-xp]');
+      if (b) { xpChange(b.getAttribute('data-xp')); return; }
+      if (e.target.closest('#xp-lvl')) { xpClose(); setLevelTray(true); }
+    });
+    xpAmt.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); xpChange('add'); }
+    });
+    xpPop.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); xpClose(); }
+    });
+    // A click anywhere else puts it away, as any small popup does.
+    document.addEventListener('mousedown', function (e) {
+      if (xpPop.hidden || xpPop.contains(e.target)) { return; }
+      if (xpAnchor && xpAnchor.contains(e.target)) { return; }
+      xpClose();
+    });
+    window.addEventListener('resize', xpPlace);
+    window.addEventListener('scroll', xpPlace, true);
+    [ringBtn, factBtn].forEach(function (b) {
+      if (b) { b.addEventListener('click', function () { xpOpen(b); }); }
+    });
+  }
+
+  // ------------------------------------------------------------ sound board
+  // The DM screen's sound board as a drawer: the sheet's own sounds (VOICES),
+  // the sound folder's (/dnd/sounds: dndSoundPath, its subfolders and
+  // archives), and the web's (/dnd/sounds/search, every service the server
+  // can search without an account), each played at a click or Enter. A web
+  // sound played here is kept in the sound folder, as the DM screen does.
+  // Closing the drawer does not stop anything; the tab glows while a sound
+  // is playing.
+  var SND = { open: false, q: '', mine: [], mineMsg: '', mineRead: false,
+              web: [], webBusy: false, failed: {}, keeping: {}, at: 0,
+              rows: [], playing: [], seq: 0, timer: 0, ask: 0 };
+  var sndTab, sndTray, sndQ, sndList, sndNow, sndStop, sndVol, sndPct, sndMTool;
+
+  var SND_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/>' +
+    '<path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11"/></svg>';
+  var SND_PLAY = '<svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg>';
+  var SND_LOOP = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 7V6a2 2 0 0 1 2-2h7.5M10.5 2l2 2-2 2M13 9v1a2 2 0 0 1-2 2H3.5M5.5 14l-2-2 2-2"/></svg>';
+  var SND_STOP = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5h7v7h-7z"/></svg>';
+
+  function sndClock(sec) {
+    if (!sec || !isFinite(sec)) { return ''; }
+    if (sec >= 60) {
+      var r = Math.round(sec % 60);
+      return Math.floor(sec / 60) + ':' + (r < 10 ? '0' : '') + r;
+    }
+    return (sec < 10 ? sec.toFixed(1) : Math.round(sec)) + 's';
+  }
+
+  // A file in the sound folder is behind the server's sign-in. An <audio>
+  // cannot send a header, so with a token the sound is fetched with it and
+  // played from memory; without one (no auth, or worg's cookie) the address
+  // is played as it is, which starts sooner.
+  function sndFileSrc(path) {
+    var url = apiUrl('/dnd/sounds/file?path=' + encodeURIComponent(path));
+    if (!LOG.token) { return Promise.resolve(url); }
+    return fetch(url, { headers: { Authorization: 'Bearer ' + LOG.token }, mode: 'cors' })
+      .then(function (res) {
+        if (!res.ok) { throw new Error('the server said ' + res.status); }
+        return res.blob();
+      })
+      .then(function (b) { return URL.createObjectURL(b); });
+  }
+
+  // ---- what is playing ---------------------------------------------------
+  function sndPlayAudio(name, source, src) {
+    var p = { id: ++SND.seq, name: name, source: source || '', loop: false, audio: null, blob: '' };
+    SND.playing.push(p);
+    sndPaint();
+    Promise.resolve(src).then(function (url) {
+      if (SND.playing.indexOf(p) < 0) { return; }        // stopped while fetching
+      if (url.indexOf('blob:') === 0) { p.blob = url; }
+      var a = new Audio(url);
+      a.volume = SOUND.vol;
+      a.loop = p.loop;
+      a.onended = function () { if (!a.loop) { sndStopOne(p.id); } };
+      a.onerror = function () { sndStopOne(p.id); };
+      p.audio = a;
+      a.play().catch(function () { sndStopOne(p.id); });
+      sndPaint();
+    }, function () { sndStopOne(p.id); });
+  }
+
+  function sndPlayVoice(name) {
+    audio();
+    soundVoice(name);
+    var p = { id: ++SND.seq, name: name, source: 'Built in', loop: false, audio: null };
+    SND.playing.push(p);
+    setTimeout(function () { sndStopOne(p.id); }, 3500);
+    sndPaint();
+  }
+
+  function sndRelease(p) {
+    if (p.audio) { p.audio.pause(); p.audio.removeAttribute('src'); p.audio.load(); }
+    if (p.blob) { URL.revokeObjectURL(p.blob); }
+  }
+
+  function sndStopOne(id) {
+    SND.playing = SND.playing.filter(function (p) {
+      if (p.id !== id) { return true; }
+      sndRelease(p);
+      return false;
+    });
+    sndPaint();
+  }
+
+  function sndStopAll() {
+    SND.playing.forEach(sndRelease);
+    SND.playing = [];
+    sndPaint();
+  }
+
+  function sndSetVolume(v) {
+    soundVolume(v);
+    try { localStorage.setItem(SOUND_VOL_KEY, String(SOUND.vol)); } catch (e) { /* a convenience */ }
+    SND.playing.forEach(function (p) { if (p.audio) { p.audio.volume = SOUND.vol; } });
+    sndPct.textContent = Math.round(SOUND.vol * 100) + '%';
+  }
+
+  // ---- the three lists ---------------------------------------------------
+  function sndReadMine() {
+    if (!LOG.url) {
+      SND.mineMsg = 'needs the orgs server this sheet came from';
+      sndRender();
+      return;
+    }
+    api('GET', '/dnd/sounds').then(function (r) {
+      SND.mine = (r && r.Sounds) || [];
+      SND.mineMsg = r && r.Ok ? '' : ((r && r.Msg) || '');
+      SND.mineRead = true;
+      sndRender();
+    }, function (err) {
+      SND.mine = [];
+      SND.mineMsg = err.message || String(err);
+      sndRender();
+    });
+  }
+
+  // The web, a moment after the typing stops; an answer to an older query
+  // is dropped.
+  function sndSearchSoon() {
+    clearTimeout(SND.timer);
+    var text = SND.q.trim();
+    if (text.length < 2 || !LOG.url) {
+      SND.web = []; SND.failed = {}; SND.webBusy = false;
+      return;
+    }
+    SND.timer = setTimeout(function () {
+      var ask = ++SND.ask;
+      SND.webBusy = true;
+      sndRender();
+      api('GET', '/dnd/sounds/search?q=' + encodeURIComponent(text)).then(function (r) {
+        if (ask !== SND.ask) { return; }
+        SND.web = (r && r.Sounds) || [];
+        SND.failed = (r && r.Failed) || {};
+        SND.webBusy = false;
+        sndRender();
+      }, function () {
+        if (ask !== SND.ask) { return; }
+        SND.web = []; SND.webBusy = false;
+        sndRender();
+      });
+    }, 450);
+  }
+
+  // A web sound plays at once from the web, and is kept in the sound folder
+  // meanwhile. A long one goes on downloading on the server, so it is asked
+  // after again until it is kept.
+  function sndPlayWeb(s) {
+    if (s.cached) { sndPlayAudio(s.name, s.source, sndFileSrc(s.cached)); return; }
+    sndPlayAudio(s.name, s.source, s.url);
+    var k = SND.keeping[s.url];
+    if (k === 'kept' || k === 'saving') { return; }
+    SND.keeping[s.url] = 'saving';
+    sndRender();
+    (function keep() {
+      api('POST', '/dnd/sounds/cache', s).then(function (r) {
+        if (r && r.Ok && r.Pending) { setTimeout(keep, 8000); return; }
+        SND.keeping[s.url] = r && r.Ok ? 'kept' : ((r && r.Msg) || 'not kept');
+        if (r && r.Ok) {
+          s.cached = r.Path;
+          sndReadMine();
+        }
+        sndRender();
+      }, function (err) {
+        SND.keeping[s.url] = err.message || String(err);
+        sndRender();
+      });
+    })();
+  }
+
+  function sndRank(list, name, more) {
+    var terms = SND.q.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) { return list.slice(); }
+    return list.map(function (t) {
+      return { t: t, s: fuzzyAll(terms, name(t), name(t) + ' ' + more(t)) };
+    }).filter(function (x) { return x.s >= 0; })
+      .sort(function (a, b) { return b.s - a.s; })
+      .map(function (x) { return x.t; });
+  }
+
+  function sndRows() {
+    var built = sndRank(VOICES.map(function (v) { return v[0]; }),
+                        function (n) { return n; }, function () { return 'built in effect'; })
+      .map(function (n) {
+        return { kind: 'built', sound: { name: n, source: 'Built in' },
+                 play: function () { sndPlayVoice(n); } };
+      });
+    var mine = sndRank(SND.mine, function (s) { return s.name || ''; }, function (s) {
+      return (s.category || '') + ' ' + (s.source || '') + ' ' + (s.path || '');
+    }).slice(0, 120).map(function (s) {
+      return { kind: 'mine', sound: s,
+               play: function () { sndPlayAudio(s.name, s.source || s.category, sndFileSrc(s.path)); } };
+    });
+    var web = SND.web.map(function (s) {
+      return { kind: 'web', sound: s, play: function () { sndPlayWeb(s); } };
+    });
+    return built.concat(mine, web);
+  }
+
+  // ---- drawing -----------------------------------------------------------
+  function sndRowHtml(r, i) {
+    var s = r.sound;
+    var tag = s.source || s.category || '';
+    var keep = s.url ? SND.keeping[s.url] : '';
+    var mark = '';
+    if (r.kind === 'web') {
+      if (s.cached || keep === 'kept') { mark = '<span class="kept" title="Kept in your sound folder">&#10003;</span>'; }
+      else if (keep === 'saving') { mark = '<span class="saving" title="Keeping it in your sound folder">&#8635;</span>'; }
+      else if (keep) { mark = '<span class="fail" title="' + esc(keep) + '">!</span>'; }
+    }
+    return '<div class="snd-row' + (i === SND.at ? ' at' : '') + '" data-i="' + i + '"' +
+      ' title="' + esc(s.name) + (s.license ? ' · ' + esc(s.license) : '') +
+      (s.author ? ' · ' + esc(s.author) : '') + '">' +
+      SND_PLAY +
+      '<span class="nm">' + esc(s.name) + '</span>' +
+      (s.duration ? '<span class="dur">' + sndClock(s.duration) + '</span>' : '') +
+      (tag ? '<span class="src">' + esc(tag) + '</span>' : '') +
+      mark +
+      (s.page ? '<a href="' + esc(s.page) + '" target="_blank" rel="noreferrer" ' +
+        'title="Where it comes from">&#8599;</a>' : '') +
+      '</div>';
+  }
+
+  function sndRender() {
+    if (!sndList) { return; }
+    SND.rows = sndRows();
+    if (SND.at >= SND.rows.length) { SND.at = Math.max(0, SND.rows.length - 1); }
+    var html = '', i = 0;
+    function section(kind, title, extra, none) {
+      var rows = SND.rows.filter(function (r) { return r.kind === kind; });
+      html += '<div class="snd-sec">' + title + (extra ? ' <i>' + extra + '</i>' : '') + '</div>';
+      if (!rows.length && none) { html += '<div class="snd-none">' + none + '</div>'; }
+      rows.forEach(function (r) { html += sndRowHtml(r, i++); });
+    }
+    if (SND.rows.some(function (r) { return r.kind === 'built'; })) { section('built', 'Built in'); }
+    section('mine', 'Your sounds', esc(SND.mineMsg),
+            SND.mineMsg ? '' : !SND.mineRead ? 'Reading the sound folder…'
+              : SND.q ? 'None by that name' : 'None yet: play one from the web and it is kept here');
+    if (SND.q.trim().length >= 2 && LOG.url) {
+      var failed = Object.keys(SND.failed || {});
+      section('web', 'On the web',
+              SND.webBusy ? 'searching…' : failed.length ? '(' + esc(failed.join(', ')) + ' did not answer)' : '',
+              SND.webBusy ? '' : 'Nothing found');
+    }
+    sndList.innerHTML = html;
+    sndMark();
+  }
+
+  function sndMark() {
+    Array.prototype.forEach.call(sndList.querySelectorAll('.snd-row'), function (el) {
+      el.classList.toggle('at', +el.getAttribute('data-i') === SND.at);
+    });
+    var cur = sndList.querySelector('.snd-row.at');
+    if (cur && cur.scrollIntoView) { cur.scrollIntoView({ block: 'nearest' }); }
+  }
+
+  // sndPaint redraws only what is playing: it changes far more often than
+  // the lists do.
+  function sndPaint() {
+    if (!sndNow) { return; }
+    sndNow.innerHTML = SND.playing.map(function (p) {
+      return '<span class="snd-chip" data-id="' + p.id + '">' +
+        '<span class="nm" title="' + esc(p.name) + (p.source ? ' · ' + esc(p.source) : '') + '">♪ ' + esc(p.name) + '</span>' +
+        (p.audio ? '<button type="button" class="' + (p.loop ? 'on' : '') + '" data-loop ' +
+          'title="' + (p.loop ? 'Looping (click to play once)' : 'Loop it') + '">' + SND_LOOP + '</button>' : '') +
+        '<button type="button" data-stop title="Stop it">' + SND_STOP + '</button></span>';
+    }).join('');
+    sndStop.hidden = !SND.playing.length;
+    sndStop.textContent = 'Stop all ' + SND.playing.length;
+    var live = SND.playing.length > 0;
+    sndTab.classList.toggle('live', live);
+    if (sndMTool) { sndMTool.classList.toggle('live', live); }
+  }
+
+  // ---- the drawer --------------------------------------------------------
+  function setSoundTray(open) {
+    if (open) {
+      if (tray && tray.classList.contains('open')) { setTray(false); }
+      if (LVL.open) { setLevelTray(false); }
+    }
+    SND.open = open;
+    sndTray.classList.toggle('open', open);
+    sndTab.classList.toggle('shifted', open);
+    sndTab.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.classList.toggle('snd-open', open);
+    if (!open) { return; }
+    if (!SND.mineRead) { sndReadMine(); }
+    sndRender();
+    setTimeout(function () { sndQ.focus(); }, 60);
+  }
+
+  function sndKey(e) {
+    var n = SND.rows.length;
+    var down = e.key === 'ArrowDown' || (e.ctrlKey && (e.key === 'n' || e.key === 'j'));
+    var up = e.key === 'ArrowUp' || (e.ctrlKey && (e.key === 'p' || e.key === 'k'));
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setSoundTray(false); }
+    else if (down) { e.preventDefault(); SND.at = Math.min(n - 1, SND.at + 1); sndMark(); }
+    else if (up) { e.preventDefault(); SND.at = Math.max(0, SND.at - 1); sndMark(); }
+    else if (e.key === 'Enter' && SND.rows[SND.at]) { e.preventDefault(); SND.rows[SND.at].play(); }
+    else if (e.key === '.' && e.ctrlKey) { e.preventDefault(); sndStopAll(); }
+  }
+
+  function buildSoundUi() {
+    sndTab = document.createElement('button');
+    sndTab.id = 'snd-tab';
+    sndTab.type = 'button';
+    sndTab.title = 'Sound effects';
+    sndTab.setAttribute('aria-expanded', 'false');
+    sndTab.innerHTML = SND_ICON + '<span>Sounds</span>';
+    document.body.appendChild(sndTab);
+
+    sndTray = document.createElement('aside');
+    sndTray.id = 'snd-tray';
+    sndTray.setAttribute('aria-label', 'Sound effects');
+    sndTray.innerHTML =
+      '<div class="snd-head"><h2>' + SND_ICON + 'Sounds</h2>' +
+        '<button type="button" class="dt-btn dt-x" id="snd-close" ' +
+          'aria-label="Hide the sound board">&times;</button></div>' +
+      '<div class="snd-top">' +
+        '<input type="search" class="snd-q" id="snd-q" autocomplete="off" spellcheck="false" ' +
+          'placeholder="A sound: thunder, sword, tavern, dragon…" aria-label="Find a sound">' +
+        '<div class="snd-vol">' + SND_ICON +
+          '<input type="range" id="snd-vol" min="0" max="1" step="0.01" aria-label="Volume">' +
+          '<span class="pct" id="snd-pct"></span><span class="spacer"></span>' +
+          '<button type="button" class="snd-stopall" id="snd-stopall" hidden></button>' +
+        '</div>' +
+        '<div class="snd-now" id="snd-now"></div>' +
+      '</div>' +
+      '<div class="snd-list" id="snd-list"></div>' +
+      '<div class="snd-tip">↑↓ to choose · Enter to play · Ctrl+. stops them all · ' +
+        'Esc to close (they keep playing) · a sound from the web is kept in your sound folder when you play it</div>';
+    document.body.appendChild(sndTray);
+    sndQ = sndTray.querySelector('#snd-q');
+    sndList = sndTray.querySelector('#snd-list');
+    sndNow = sndTray.querySelector('#snd-now');
+    sndStop = sndTray.querySelector('#snd-stopall');
+    sndVol = sndTray.querySelector('#snd-vol');
+    sndPct = sndTray.querySelector('#snd-pct');
+    sndVol.value = String(SOUND.vol);
+    sndPct.textContent = Math.round(SOUND.vol * 100) + '%';
+
+    sndTab.addEventListener('click', function () { setSoundTray(!SND.open); });
+    sndTray.querySelector('#snd-close').addEventListener('click', function () { setSoundTray(false); });
+    sndQ.addEventListener('input', function () {
+      SND.q = sndQ.value;
+      SND.at = 0;
+      sndSearchSoon();
+      sndRender();
+    });
+    sndTray.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' || (e.target === sndQ)) { sndKey(e); }
+    });
+    sndVol.addEventListener('input', function () { sndSetVolume(parseFloat(sndVol.value)); });
+    sndStop.addEventListener('click', sndStopAll);
+    sndNow.addEventListener('click', function (e) {
+      var chip = e.target.closest('.snd-chip');
+      if (!chip) { return; }
+      var id = +chip.getAttribute('data-id');
+      if (e.target.closest('[data-stop]')) { sndStopOne(id); return; }
+      if (e.target.closest('[data-loop]')) {
+        SND.playing.forEach(function (p) {
+          if (p.id === id) { p.loop = !p.loop; if (p.audio) { p.audio.loop = p.loop; } }
+        });
+        sndPaint();
+      }
+    });
+    sndList.addEventListener('mousemove', function (e) {
+      var row = e.target.closest('.snd-row');
+      if (row && +row.getAttribute('data-i') !== SND.at) { SND.at = +row.getAttribute('data-i'); sndMark(); }
+    });
+    sndList.addEventListener('click', function (e) {
+      if (e.target.closest('a')) { return; }
+      var row = e.target.closest('.snd-row');
+      var r = row && SND.rows[+row.getAttribute('data-i')];
+      if (r) { r.play(); }
+    });
+    sndPaint();
+  }
+
+  // ------------------------------------------------------------ sheet skins
+  // The sheet's look. A skin is a stylesheet scoped to html[data-skin="id"]
+  // (dnd_skins/*.css, read by the exporter and all in the page already), so
+  // wearing one is setting that attribute and loading its fonts. The gallery
+  // puts each skin on the sheet as it is chosen; Keep writes it into the
+  // character's DND_SHEET_SKIN (or, for a sheet with no server, remembers it
+  // in this browser), Cancel puts back what was worn.
+  var SKIN = { list: [], worn: '', shown: '', open: false, busy: false };
+  var skinTray, skinList, skinMsg, skinKeep;
+  var SKIN_CLASSIC = { id: '', name: 'Classic', face: 'Cinzel',
+    about: 'The sheet as it has always been: cream paper, oxblood and gold.',
+    swatch: ['#f4efe4', '#7b1b1b', '#b8860b', '#1c1a17'] };
+
+  function skinKey() { return 'dnd-sheet-skin:' + (CHARACTER_ID || LOG.file || location.pathname); }
+  function skinCanSave() { return !!(LOG.url && (LOG.file || CHARACTER_ID)); }
+  function skinById(id) {
+    for (var i = 0; i < SKIN.list.length; i++) { if (SKIN.list[i].id === id) { return SKIN.list[i]; } }
+    return null;
+  }
+
+  function skinFonts(s) {
+    if (!s || !s.fontsUrl || document.querySelector('link[data-skin-font="' + s.id + '"]')) { return; }
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = s.fontsUrl;
+    l.setAttribute('data-skin-font', s.id);
+    document.head.appendChild(l);
+  }
+
+  // skinWear puts a skin on the page (or the classic sheet for '').
+  function skinWear(id) {
+    var s = skinById(id);
+    if (!s) { id = ''; }
+    SKIN.shown = id;
+    if (id) {
+      skinFonts(s);
+      document.documentElement.setAttribute('data-skin', id);
+    } else {
+      document.documentElement.removeAttribute('data-skin');
+    }
+    // The name round the portrait was fitted to the arc in the old face.
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fitRingText); }
+    else { fitRingText(); }
+    skinPaint();
+  }
+
+  function skinPaint() {
+    if (!skinList) { return; }
+    Array.prototype.forEach.call(skinList.querySelectorAll('.sk-card'), function (c) {
+      var id = c.getAttribute('data-skin-id');
+      c.classList.toggle('shown', id === SKIN.shown);
+      c.setAttribute('aria-pressed', id === SKIN.shown ? 'true' : 'false');
+      var em = c.querySelector('.sk-name em');
+      if (em) { em.hidden = id !== SKIN.worn; }
+    });
+    skinKeep.disabled = SKIN.busy || SKIN.shown === SKIN.worn;
+  }
+
+  function skinCard(s) {
+    var sw = (s.swatch && s.swatch.length ? s.swatch : ['#777']).map(function (c) {
+      return '<i style="background:' + esc(c) + '"></i>';
+    }).join('');
+    return '<button type="button" class="sk-card" data-skin-id="' + esc(s.id) + '">' +
+      '<span class="sk-sw">' + sw + '</span>' +
+      '<span class="sk-name"' + (s.face ? ' style="font-family:\'' + esc(s.face) + '\', Georgia, serif"' : '') + '>' +
+        esc(s.name) + '<em hidden>worn</em></span>' +
+      '<span class="sk-about">' + esc(s.about || '') + '</span></button>';
+  }
+
+  function setSkinTray(open) {
+    if (!skinTray || open === SKIN.open) { return; }
+    SKIN.open = open;
+    skinTray.classList.toggle('open', open);
+    if (open) {
+      // Every skin's lettering, so each card's name is written in its own.
+      SKIN.list.forEach(skinFonts);
+      skinMsg.textContent = skinCanSave() ? '' : 'This sheet has no server to save to, so the choice is kept in this browser.';
+      skinMsg.classList.remove('err');
+      skinPaint();
+      var cur = skinList.querySelector('.sk-card.shown') || skinList.querySelector('.sk-card');
+      if (cur) { cur.focus(); }
+    } else if (SKIN.shown !== SKIN.worn) {
+      skinWear(SKIN.worn);                  // closed without keeping: put it back
+    }
+  }
+
+  function skinKeepIt() {
+    var id = SKIN.shown;
+    var done = function (msg) {
+      SKIN.busy = false;
+      SKIN.worn = id;
+      skinMsg.textContent = msg;
+      skinMsg.classList.remove('err');
+      skinPaint();
+    };
+    if (!skinCanSave()) {
+      try { localStorage.setItem(skinKey(), id || 'classic'); } catch (e) { /* private window */ }
+      done('Kept in this browser.');
+      return;
+    }
+    SKIN.busy = true;
+    skinPaint();
+    api('POST', '/dnd/skin', { filename: LOG.file || '', id: CHARACTER_ID || '', skin: id })
+      .then(function () {
+        try { localStorage.removeItem(skinKey()); } catch (e) { /* nothing to forget */ }
+        done(id ? 'Kept: the sheet opens in it from now on.' : 'Back to the classic sheet.');
+      }, function (err) {
+        SKIN.busy = false;
+        skinMsg.textContent = err.message || String(err);
+        skinMsg.classList.add('err');
+        skinPaint();
+      });
+  }
+
+  function buildSkinUi() {
+    var data = document.getElementById('dnd-skins-data');
+    try { SKIN.list = JSON.parse((data && data.textContent) || '[]') || []; }
+    catch (e) { SKIN.list = []; }
+    SKIN.worn = document.documentElement.getAttribute('data-skin') || '';
+    // A sheet with nowhere to save to remembers its skin in this browser.
+    if (!skinCanSave()) {
+      try {
+        var kept = localStorage.getItem(skinKey());
+        if (kept) { SKIN.worn = kept === 'classic' ? '' : kept; }
+      } catch (e) { /* the exported one stands */ }
+    }
+    if (SKIN.worn && !skinById(SKIN.worn)) { SKIN.worn = ''; }
+    if ((document.documentElement.getAttribute('data-skin') || '') !== SKIN.worn) { skinWear(SKIN.worn); }
+    SKIN.shown = SKIN.worn;
+    if (!SKIN.list.length) { return; }
+
+    skinTray = document.createElement('aside');
+    skinTray.id = 'skin-tray';
+    skinTray.setAttribute('aria-label', 'Sheet skin');
+    skinTray.innerHTML =
+      '<div class="sk-head"><h2>Sheet Skin</h2>' +
+        '<button type="button" class="sk-x" aria-label="Close without changing">&times;</button></div>' +
+      '<div class="sk-list" role="list">' +
+        [SKIN_CLASSIC].concat(SKIN.list).map(skinCard).join('') + '</div>' +
+      '<div class="sk-foot"><span class="sk-msg" aria-live="polite"></span>' +
+        '<button type="button" class="sk-btn" data-sk="cancel">Cancel</button>' +
+        '<button type="button" class="sk-btn keep" data-sk="keep">Keep</button></div>' +
+      '<div class="sk-tip">Click a skin to try it on the sheet · ↑↓ to step through · ' +
+        'Enter keeps it · Esc puts back what you had</div>';
+    document.body.appendChild(skinTray);
+    skinList = skinTray.querySelector('.sk-list');
+    skinMsg = skinTray.querySelector('.sk-msg');
+    skinKeep = skinTray.querySelector('[data-sk="keep"]');
+
+    skinList.addEventListener('click', function (e) {
+      var c = e.target.closest('.sk-card');
+      if (c) { skinWear(c.getAttribute('data-skin-id')); }
+    });
+    skinTray.querySelector('.sk-x').addEventListener('click', function () { setSkinTray(false); });
+    skinTray.querySelector('[data-sk="cancel"]').addEventListener('click', function () { setSkinTray(false); });
+    skinKeep.addEventListener('click', skinKeepIt);
+    skinTray.addEventListener('keydown', function (e) {
+      var cards = Array.prototype.slice.call(skinList.querySelectorAll('.sk-card'));
+      var at = cards.indexOf(document.activeElement);
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setSkinTray(false); }
+      else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && cards.length) {
+        e.preventDefault();
+        var next = cards[Math.max(0, Math.min(cards.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)))];
+        next.focus();
+        skinWear(next.getAttribute('data-skin-id'));
+      } else if (e.key === 'Enter' && at >= 0) {
+        e.preventDefault();
+        if (SKIN.shown !== cards[at].getAttribute('data-skin-id')) { skinWear(cards[at].getAttribute('data-skin-id')); }
+        else if (SKIN.shown !== SKIN.worn) { skinKeepIt(); }
+      }
+    });
+    skinPaint();
+  }
+
   // ------------------------------------------------------------- spells
   //
   // The spell page is the character's book: what they know, what of it is
@@ -20435,13 +21433,18 @@ them up.">Temp</button>
   // Nothing is created until the first roll: a page that opens an audio
   // context before anyone has clicked is one the browser warns about, and a
   // sheet that has only been read should make no noise at all.
-  var SOUND = { on: true, ctx: null, gain: null, last: 0 };
+  // vol is the sound board's volume slider (0..1), over everything the sheet
+  // plays; the dice at 1 are where they always were.
+  var SOUND = { on: true, ctx: null, gain: null, last: 0, vol: 1 };
   var SOUND_KEY = 'dnd-sheet-sound';
+  var SOUND_VOL_KEY = 'dnd-sheet-sound-volume';
 
   function soundLoad() {
     try {
       var saved = window.localStorage.getItem(SOUND_KEY);
       if (saved !== null) { SOUND.on = saved === '1'; }
+      var vol = parseFloat(window.localStorage.getItem(SOUND_VOL_KEY));
+      if (isFinite(vol)) { SOUND.vol = Math.max(0, Math.min(1, vol)); }
     } catch (e) { /* no storage, so the default stands */ }
   }
 
@@ -20462,7 +21465,7 @@ them up.">Temp</button>
       SOUND.gain = SOUND.ctx.createGain();
       // Well under half, and the whole point: this is a sound effect on a
       // character sheet, not a game.
-      SOUND.gain.gain.value = 0.34;
+      SOUND.gain.gain.value = 0.34 * SOUND.vol;
       SOUND.gain.connect(SOUND.ctx.destination);
     }
     if (SOUND.ctx.state === 'suspended' && SOUND.ctx.resume) { SOUND.ctx.resume(); }
@@ -21564,6 +22567,39 @@ them up.">Temp</button>
     tone(88, 0.04, 0.16, 0.16, 'sine');
   }
 
+  // The sheet's sounds by name, each playable on its own: the sheet's sound
+  // board plays them, and so does worg's DM screen (tools/dicefx/extract.py
+  // lifts this section into dicefx.js), so the two lists are this one.
+  var VOICES = [
+    ['Fire crackling', function () { crackle(); }], ['Wave', function () { wash(); }], ['Choir', function () { choir(); }],
+    ['Rumble', function () { rumble(); }], ['Thunder', function () { thunder(1); }], ['Howling wind', function () { howl(); }],
+    ['Murmuring voices', function () { murmur(); }], ['Whoosh', function () { whoosh(); }], ['Rope creaking', function () { creak('twist'); }],
+    ['Chains rattling', function () { creak('links'); }], ['Branches creaking', function () { creak('leaves'); }], ['Cheering crowd', function () { cheer(); }],
+    ['Dirge', function () { dirge(); }], ['Coins', function () { clink(0.9); }], ['Pop', function () { pop(0.9); }],
+    ['Steel and blood', function () { stab(); }], ['Knock', function () { knock(0.9, 520); }], ['Tick', function () { tick(0.8); }]
+  ];
+
+  // soundVoice plays one of them even with the dice sounds turned off: asking
+  // for a sound by name is asking to hear it.
+  function soundVoice(name) {
+    for (var i = 0; i < VOICES.length; i++) {
+      if (VOICES[i][0] === name) {
+        var was = SOUND.on;
+        SOUND.on = true;
+        try { VOICES[i][1](); } catch (e) { /* audio is a nicety */ }
+        SOUND.on = was;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // soundVolume sets the volume of everything the sheet plays, 0..1.
+  function soundVolume(v) {
+    SOUND.vol = Math.max(0, Math.min(1, v));
+    if (SOUND.gain) { SOUND.gain.gain.value = 0.34 * SOUND.vol; }
+  }
+
   // ------------------------------------------------------------------- mood
   //
   // How the page feels, which is the halo bled in round its edge and how hard
@@ -21770,6 +22806,7 @@ them up.">Temp</button>
 
   function setLevelTray(open) {
     if (open && tray && tray.classList.contains('open')) { setTray(false); }
+    if (open && SND.open) { setSoundTray(false); }
     LVL.open = open;
     lvlTray.classList.toggle('open', open);
     lvlTab.classList.toggle('shifted', open);
@@ -22171,6 +23208,10 @@ them up.">Temp</button>
     add('do', 'Roll tray', 'what has been rolled', function () { setTray(true); });
     add('do', 'Level up', 'gain a level, one question at a time',
         function () { setLevelTray(true); });
+    if (SKIN.list.length) {
+      add('do', 'Skin', 'change how this sheet looks', function () { setSkinTray(true); });
+    }
+    add('do', 'Sounds', 'the sound board', function () { setSoundTray(true); });
     add('do', 'Print sheet', 'on paper', function () { window.print(); });
 
     // Every rollable on the page. One pass covers the skills, the ability
@@ -22445,6 +23486,9 @@ them up.">Temp</button>
     buildHealthUi();
     buildConcentrationUi();
     buildInspirationUi();
+    buildXpUi();
+    buildSoundUi();
+    buildSkinUi();
     buildSectionTabs();
     buildPhoneLayout();
     // The mood reads the hit points and the conditions, so it goes last: both
@@ -22710,6 +23754,8 @@ them up.">Temp</button>
         '<button type="button" class="m-stat" id="m-init" title="Roll initiative"><span class="m-lbl">Init</span><b id="m-init-val"></b></button>' +
         '<div class="m-stat"><span class="m-lbl">Speed</span><b id="m-speed"></b></div>' +
         '<button type="button" class="m-tool" id="m-dice" aria-label="Rolls">' + DICE_SVG + '</button>' +
+        (document.getElementById('snd-tab')
+          ? '<button type="button" class="m-tool m-snd" id="m-snd" aria-label="Sounds">' + SND_ICON + '</button>' : '') +
         (document.getElementById('lvl-tab')
           ? '<button type="button" class="m-tool" id="m-lvl" aria-label="Level up">' + LVL_SVG + '</button>' : '') +
       '</div>' +
@@ -22780,6 +23826,11 @@ them up.">Temp</button>
     document.getElementById('m-dice').addEventListener('click', function () {
       var t = document.getElementById('dice-tab'); if (t) { t.click(); }
     });
+    sndMTool = document.getElementById('m-snd');
+    if (sndMTool) {
+      sndMTool.addEventListener('click', function () { setSoundTray(!SND.open); });
+      sndPaint();
+    }
     var ml = document.getElementById('m-lvl');
     if (ml) {
       ml.addEventListener('click', function () {
@@ -22888,6 +23939,9 @@ them up.">Temp</button>
     var path = text && text.querySelector('textPath');
     if (!path || !path.getComputedTextLength) { return; }
     var room = Math.PI * 78 - 58;          // the top arc, less the gem ends
+    // Fitted again when a skin changes the face: start from the exported size.
+    if (text.getAttribute('data-fs') === null) { text.setAttribute('data-fs', text.style.fontSize || ''); }
+    text.style.fontSize = text.getAttribute('data-fs');
     var size = parseFloat(window.getComputedStyle(text).fontSize) || 13;
     for (var i = 0; i < 24 && size > 5.5; i++) {
       if (path.getComputedTextLength() <= room) { break; }

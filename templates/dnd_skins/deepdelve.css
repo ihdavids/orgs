@@ -1,0 +1,496 @@
+/* skin: Deepdelve
+   about: A dwarven crystal mine: torn notes pinned to timber boards, iron brackets, glowing gems and lantern light.
+   swatch: #2a221d #f1e6cc #5a3e27 #3fbfd6 #9a62d6
+   fonts: Grenze Gotisch:wght@500;700 | Grenze:ital,wght@0,400;0,600;0,700;1,400 | Alegreya:ital,wght@0,400;0,600;0,700;1,400
+*/
+
+/* ================= tokens ================= */
+html[data-skin="deepdelve"] {
+  --font-head: Grenze, "Alegreya SC", Georgia, serif;
+  --font-body: Alegreya, Georgia, serif;
+  --font-show: "Grenze Gotisch", Grenze, Georgia, serif;
+  --ink: #241a14;
+  --paper: #f6eedb;
+  --paper-2: #efe4ca;
+  --line: #c4ad86;
+  --edge: #7c6447;
+  --accent: #7d2a1a;
+  --accent-2: #a8650f;
+  --muted: #6c5a45;
+  --shadow: 0 2px 5px rgba(10,6,4,.45);
+  --stat-radius: 6px;
+  --mood-rgb: 255, 168, 72;
+  --dd-wood: #5d4129;
+  --dd-wood-2: #4a321f;
+  --dd-wood-3: #6e4e32;
+  --dd-rock: #2a221d;
+  --dd-cyan: #3fbfd6;
+  --dd-lamp: 255, 176, 84;
+  --dd-i-rock: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='r' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.018' numOctaves='5' seed='11' stitchTiles='stitch'/%3E%3CfeDiffuseLighting lighting-color='%238a7461' surfaceScale='4.5' diffuseConstant='1.1'%3E%3CfeDistantLight azimuth='235' elevation='38'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23r)'/%3E%3C/svg%3E");
+  --dd-i-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120'%3E%3Cfilter id='w' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .16' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .07 0 0 0 0 .03 0 0 0 -1.6 1.1'/%3E%3C/filter%3E%3Crect width='400' height='120' filter='url(%23w)'/%3E%3C/svg%3E");
+  --dd-i-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .22 0 0 0 -.9 .55'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23p)'/%3E%3C/svg%3E");
+  --dd-i-br-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg %3E%3Cpath d='M2 3 Q2 2 3 2 L37 2 Q38 4 37 6 L36 11 L12 11 Q11 11 11 12 L11 36 Q9 38 6 37 L3 37 Q2 37 2 36 Z' fill='%232d2622' stroke='%230e0a08' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M4 4 L35 4 M4 4 L4 34' stroke='%236e5f52' stroke-width='1.2' stroke-linecap='round' opacity='.8'/%3E%3Cg fill='%2357493f' stroke='%230e0a08' stroke-width='.9'%3E%3Ccircle cx='6.5' cy='6.5' r='2.4'/%3E%3Ccircle cx='28' cy='6.5' r='2.1'/%3E%3Ccircle cx='6.5' cy='28' r='2.1'/%3E%3C/g%3E%3Cg fill='%23c9b49a' opacity='.7'%3E%3Ccircle cx='5.8' cy='5.8' r='.8'/%3E%3Ccircle cx='27.4' cy='5.8' r='.7'/%3E%3Ccircle cx='5.8' cy='27.4' r='.7'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --dd-i-br-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg transform='translate(40 0) scale(-1 1)'%3E%3Cpath d='M2 3 Q2 2 3 2 L37 2 Q38 4 37 6 L36 11 L12 11 Q11 11 11 12 L11 36 Q9 38 6 37 L3 37 Q2 37 2 36 Z' fill='%232d2622' stroke='%230e0a08' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M4 4 L35 4 M4 4 L4 34' stroke='%236e5f52' stroke-width='1.2' stroke-linecap='round' opacity='.8'/%3E%3Cg fill='%2357493f' stroke='%230e0a08' stroke-width='.9'%3E%3Ccircle cx='6.5' cy='6.5' r='2.4'/%3E%3Ccircle cx='28' cy='6.5' r='2.1'/%3E%3Ccircle cx='6.5' cy='28' r='2.1'/%3E%3C/g%3E%3Cg fill='%23c9b49a' opacity='.7'%3E%3Ccircle cx='5.8' cy='5.8' r='.8'/%3E%3Ccircle cx='27.4' cy='5.8' r='.7'/%3E%3Ccircle cx='5.8' cy='27.4' r='.7'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --dd-i-br-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg transform='translate(0 40) scale(1 -1)'%3E%3Cpath d='M2 3 Q2 2 3 2 L37 2 Q38 4 37 6 L36 11 L12 11 Q11 11 11 12 L11 36 Q9 38 6 37 L3 37 Q2 37 2 36 Z' fill='%232d2622' stroke='%230e0a08' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M4 4 L35 4 M4 4 L4 34' stroke='%236e5f52' stroke-width='1.2' stroke-linecap='round' opacity='.8'/%3E%3Cg fill='%2357493f' stroke='%230e0a08' stroke-width='.9'%3E%3Ccircle cx='6.5' cy='6.5' r='2.4'/%3E%3Ccircle cx='28' cy='6.5' r='2.1'/%3E%3Ccircle cx='6.5' cy='28' r='2.1'/%3E%3C/g%3E%3Cg fill='%23c9b49a' opacity='.7'%3E%3Ccircle cx='5.8' cy='5.8' r='.8'/%3E%3Ccircle cx='27.4' cy='5.8' r='.7'/%3E%3Ccircle cx='5.8' cy='27.4' r='.7'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --dd-i-br-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg transform='translate(40 40) scale(-1 -1)'%3E%3Cpath d='M2 3 Q2 2 3 2 L37 2 Q38 4 37 6 L36 11 L12 11 Q11 11 11 12 L11 36 Q9 38 6 37 L3 37 Q2 37 2 36 Z' fill='%232d2622' stroke='%230e0a08' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M4 4 L35 4 M4 4 L4 34' stroke='%236e5f52' stroke-width='1.2' stroke-linecap='round' opacity='.8'/%3E%3Cg fill='%2357493f' stroke='%230e0a08' stroke-width='.9'%3E%3Ccircle cx='6.5' cy='6.5' r='2.4'/%3E%3Ccircle cx='28' cy='6.5' r='2.1'/%3E%3Ccircle cx='6.5' cy='28' r='2.1'/%3E%3C/g%3E%3Cg fill='%23c9b49a' opacity='.7'%3E%3Ccircle cx='5.8' cy='5.8' r='.8'/%3E%3Ccircle cx='27.4' cy='5.8' r='.7'/%3E%3Ccircle cx='5.8' cy='27.4' r='.7'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --dd-i-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='8' viewBox='0 0 240 8'%3E%3Cpath d='M1 5 C40 2 80 6 120 4 S200 2 239 5' fill='none' stroke='%237d2a1a' stroke-width='1.6' stroke-linecap='round' opacity='.75'/%3E%3C/svg%3E");
+}
+
+/* ================= the mine ================= */
+html[data-skin="deepdelve"] body {
+  background-color: #141010;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,160,70,.10), transparent 70%),
+    linear-gradient(rgba(20,14,12,.72), rgba(20,14,12,.72)),
+    var(--dd-i-rock);
+  background-size: auto, auto, 320px 320px;
+}
+html[data-skin="deepdelve"] .page {
+  padding: 54px 38px 26px;
+  background-color: var(--dd-rock);
+  background-image:
+    /* lantern pools of light */
+    radial-gradient(ellipse 520px 380px at 12% 4%, rgba(var(--dd-lamp), .22), transparent 70%),
+    radial-gradient(ellipse 560px 460px at 92% 46%, rgba(var(--dd-lamp), .13), transparent 70%),
+    radial-gradient(ellipse 480px 420px at 30% 88%, rgba(70,200,225,.07), transparent 70%),
+    /* the timber posts holding up the drift, left and right */
+    linear-gradient(90deg, transparent 0 4px, #1a120c 4px 5px, #5a3d26 5px 9px, #74532f 9px 13px, #4c3320 13px 19px, #1a120c 19px 20px, transparent 20px),
+    linear-gradient(270deg, transparent 0 4px, #1a120c 4px 5px, #5a3d26 5px 9px, #74532f 9px 13px, #4c3320 13px 19px, #1a120c 19px 20px, transparent 20px),
+    linear-gradient(rgba(42,34,29,.55), rgba(42,34,29,.55)),
+    var(--dd-i-rock);
+  background-size: auto, auto, auto, auto, auto, auto, 320px 320px;
+  box-shadow: 0 0 60px rgba(0,0,0,.8), inset 0 0 90px rgba(0,0,0,.55);
+  color: var(--ink);
+}
+/* crystals growing out of the rock behind the boards */
+html[data-skin="deepdelve"] .page::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100' width='120' height='100'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23ffb347' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%23ffb347' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='60' cy='60' rx='58' ry='44' fill='url(%23g)'/%3E%3Cpolygon points='33,92 15,65 22,59 41,87' fill='%23ffc95c'/%3E%3Cpolygon points='41,87 22,59 27,55 47,84' fill='%23e8901f'/%3E%3Cpolygon points='15,65 14,50 22,59' fill='%23fff3c4'/%3E%3Cpolygon points='22,59 14,50 27,55' fill='%23ffc95c'/%3E%3Cpath d='M34,87L21,68' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='33,92 15,65 14,50 27,55 47,84' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M41,87L22,59M15,65L22,59L27,55' fill='none' stroke='%2393470f' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='73,84 91,53 100,57 81,89' fill='%23ffc95c'/%3E%3Cpolygon points='81,89 100,57 106,59 87,92' fill='%23e8901f'/%3E%3Cpolygon points='91,53 105,45 100,57' fill='%23fff3c4'/%3E%3Cpolygon points='100,57 105,45 106,59' fill='%23ffc95c'/%3E%3Cpath d='M78,82L91,60' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='73,84 91,53 105,45 106,59 87,92' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M81,89L100,57M91,53L100,57L106,59' fill='none' stroke='%2393470f' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='49,91 45,39 58,37 62,90' fill='%23ffc95c'/%3E%3Cpolygon points='62,90 58,37 67,35 71,89' fill='%23e8901f'/%3E%3Cpolygon points='45,39 55,18 58,37' fill='%23fff3c4'/%3E%3Cpolygon points='58,37 55,18 67,35' fill='%23ffc95c'/%3E%3Cpath d='M53,85L51,47' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='49,91 45,39 55,18 67,35 71,89' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M62,90L58,37M45,39L58,37L67,35' fill='none' stroke='%2393470f' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='27,97 8,87 11,81 31,91' fill='%23f58ba0'/%3E%3Cpolygon points='31,91 11,81 13,76 33,87' fill='%23d5395f'/%3E%3Cpolygon points='8,87 4,78 11,81' fill='%23ffe0e4'/%3E%3Cpolygon points='11,81 4,78 13,76' fill='%23f58ba0'/%3E%3Cpath d='M26,94L13,87' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='27,97 8,87 4,78 13,76 33,87' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M31,91L11,81M8,87L11,81L13,76' fill='none' stroke='%237c1734' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='89,87 108,75 113,80 93,93' fill='%23ffc95c'/%3E%3Cpolygon points='93,93 113,80 116,84 95,97' fill='%23e8901f'/%3E%3Cpolygon points='108,75 119,75 113,80' fill='%23fff3c4'/%3E%3Cpolygon points='113,80 119,75 116,84' fill='%23ffc95c'/%3E%3Cpath d='M92,88L107,79' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='89,87 108,75 119,75 116,84 95,97' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M93,93L113,80M108,75L113,80L116,84' fill='none' stroke='%2393470f' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='41,96 33,70 42,67 49,94' fill='%23f58ba0'/%3E%3Cpolygon points='49,94 42,67 47,64 55,92' fill='%23d5395f'/%3E%3Cpolygon points='33,70 38,57 42,67' fill='%23ffe0e4'/%3E%3Cpolygon points='42,67 38,57 47,64' fill='%23f58ba0'/%3E%3Cpath d='M43,92L38,73' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='41,96 33,70 38,57 47,64 55,92' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M49,94L42,67M33,70L42,67L47,64' fill='none' stroke='%237c1734' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='21,98 22,94 27,92 32,90 37,93 42,95 45,98 44,100 21,100' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='41,98 41,95 45,94 49,94 52,94 56,95 56,98 57,100 40,100' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='64,98 63,94 69,93 73,91 78,93 81,95 86,98 85,100 61,100' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='82,98 83,95 86,92 92,92 99,91 103,94 102,98 105,100 79,100' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat left -18px bottom -6px / 150px auto,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 100' width='120' height='100'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%236be38a' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%236be38a' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='60' cy='60' rx='58' ry='44' fill='url(%23g)'/%3E%3Cpolygon points='31,92 13,61 21,55 39,87' fill='%2386e08a'/%3E%3Cpolygon points='39,87 21,55 26,51 45,84' fill='%2336ad5c'/%3E%3Cpolygon points='13,61 13,45 21,55' fill='%23e2fbd9'/%3E%3Cpolygon points='21,55 13,45 26,51' fill='%2386e08a'/%3E%3Cpath d='M32,87L19,64' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='31,92 13,61 13,45 26,51 45,84' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M39,87L21,55M13,61L21,55L26,51' fill='none' stroke='%23165c34' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='75,84 93,57 102,62 83,89' fill='%2386e08a'/%3E%3Cpolygon points='83,89 102,62 107,65 89,92' fill='%2336ad5c'/%3E%3Cpolygon points='93,57 107,52 102,62' fill='%23e2fbd9'/%3E%3Cpolygon points='102,62 107,52 107,65' fill='%2386e08a'/%3E%3Cpath d='M80,83L93,64' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='75,84 93,57 107,52 107,65 89,92' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M83,89L102,62M93,57L102,62L107,65' fill='none' stroke='%23165c34' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='47,89 51,39 64,38 60,90' fill='%2386e08a'/%3E%3Cpolygon points='60,90 64,38 73,38 69,91' fill='%2336ad5c'/%3E%3Cpolygon points='51,39 63,20 64,38' fill='%23e2fbd9'/%3E%3Cpolygon points='64,38 63,20 73,38' fill='%2386e08a'/%3E%3Cpath d='M52,84L55,48' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='47,89 51,39 63,20 73,38 69,91' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M60,90L64,38M51,39L64,38L73,38' fill='none' stroke='%23165c34' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='25,97 6,86 9,80 29,91' fill='%238fe6f2'/%3E%3Cpolygon points='29,91 9,80 11,75 31,87' fill='%233fbfd6'/%3E%3Cpolygon points='6,86 2,77 9,80' fill='%23e4fdff'/%3E%3Cpolygon points='9,80 2,77 11,75' fill='%238fe6f2'/%3E%3Cpath d='M24,94L11,86' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='25,97 6,86 2,77 11,75 31,87' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M29,91L9,80M6,86L9,80L11,75' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='91,87 111,77 114,83 95,93' fill='%2386e08a'/%3E%3Cpolygon points='95,93 114,83 117,87 97,97' fill='%2336ad5c'/%3E%3Cpolygon points='111,77 121,79 114,83' fill='%23e2fbd9'/%3E%3Cpolygon points='114,83 121,79 117,87' fill='%2386e08a'/%3E%3Cpath d='M95,88L109,81' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='91,87 111,77 121,79 117,87 97,97' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M95,93L114,83M111,77L114,83L117,87' fill='none' stroke='%23165c34' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='63,92 71,67 80,69 71,94' fill='%238fe6f2'/%3E%3Cpolygon points='71,94 80,69 85,70 77,96' fill='%233fbfd6'/%3E%3Cpolygon points='71,67 81,60 80,69' fill='%23e4fdff'/%3E%3Cpolygon points='80,69 81,60 85,70' fill='%238fe6f2'/%3E%3Cpath d='M67,90L73,72' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='63,92 71,67 81,60 85,70 77,96' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M71,94L80,69M71,67L80,69L85,70' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='19,98 21,96 23,94 27,93 30,94 34,96 34,98 36,100 19,100' fill='%2356473b' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='36,98 38,96 40,93 44,92 49,93 52,95 51,98 53,100 35,100' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='51,98 49,94 55,92 60,92 65,93 70,95 74,98 73,100 48,100' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='66,98 68,95 70,92 75,92 80,92 84,95 85,98 86,100 64,100' fill='%2356473b' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='83,98 84,95 88,93 94,90 98,93 103,95 105,98 106,100 81,100' fill='%2356473b' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right -20px bottom 20% / 140px auto,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 96' width='110' height='96'%3E%3Cg transform='translate(0 96) scale(1 -1)'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%23c58cff' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%23c58cff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='56' cy='58' rx='54' ry='42' fill='url(%23g)'/%3E%3Cpolygon points='29,88 14,60 22,55 37,83' fill='%23cfa2f0'/%3E%3Cpolygon points='37,83 22,55 27,51 43,80' fill='%239a62d6'/%3E%3Cpolygon points='14,60 15,45 22,55' fill='%23f6e6ff'/%3E%3Cpolygon points='22,55 15,45 27,51' fill='%23cfa2f0'/%3E%3Cpath d='M30,83L20,63' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='29,88 14,60 15,45 27,51 43,80' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M37,83L22,55M14,60L22,55L27,51' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='69,80 86,50 95,54 77,85' fill='%23cfa2f0'/%3E%3Cpolygon points='77,85 95,54 101,56 83,88' fill='%239a62d6'/%3E%3Cpolygon points='86,50 100,42 95,54' fill='%23f6e6ff'/%3E%3Cpolygon points='95,54 100,42 101,56' fill='%23cfa2f0'/%3E%3Cpath d='M74,78L87,57' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='69,80 86,50 100,42 101,56 83,88' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M77,85L95,54M86,50L95,54L101,56' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='46,86 44,39 56,37 58,86' fill='%23cfa2f0'/%3E%3Cpolygon points='58,86 56,37 65,36 66,86' fill='%239a62d6'/%3E%3Cpolygon points='44,39 54,20 56,37' fill='%23f6e6ff'/%3E%3Cpolygon points='56,37 54,20 65,36' fill='%23cfa2f0'/%3E%3Cpath d='M50,81L49,47' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='46,86 44,39 54,20 65,36 66,86' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M58,86L56,37M44,39L56,37L65,36' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='23,95 6,84 9,78 27,89' fill='%23f6b8d0'/%3E%3Cpolygon points='27,89 9,78 11,74 29,85' fill='%23df7aa6'/%3E%3Cpolygon points='6,84 2,75 9,78' fill='%23fff0f5'/%3E%3Cpolygon points='9,78 2,75 11,74' fill='%23f6b8d0'/%3E%3Cpath d='M22,91L10,84' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='23,95 6,84 2,75 11,74 29,85' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M27,89L9,78M6,84L9,78L11,74' fill='none' stroke='%238a3460' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='85,85 103,75 106,81 89,91' fill='%23cfa2f0'/%3E%3Cpolygon points='89,91 106,81 109,84 91,95' fill='%239a62d6'/%3E%3Cpolygon points='103,75 112,76 106,81' fill='%23f6e6ff'/%3E%3Cpolygon points='106,81 112,76 109,84' fill='%23cfa2f0'/%3E%3Cpath d='M88,86L101,79' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='85,85 103,75 112,76 109,84 91,95' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M89,91L106,81M103,75L106,81L109,84' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='58,90 64,67 71,68 65,92' fill='%23f6b8d0'/%3E%3Cpolygon points='65,92 71,68 77,69 70,94' fill='%23df7aa6'/%3E%3Cpolygon points='64,67 72,59 71,68' fill='%23fff0f5'/%3E%3Cpolygon points='71,68 72,59 77,69' fill='%23f6b8d0'/%3E%3Cpath d='M61,88L65,71' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='58,90 64,67 72,59 77,69 70,94' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M65,92L71,68M64,67L71,68L77,69' fill='none' stroke='%238a3460' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='20,96 19,93 24,92 28,90 33,90 34,94 37,96 37,98 18,98' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='39,96 38,92 42,89 48,90 53,91 56,93 58,96 60,98 37,98' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='52,96 54,92 58,90 64,90 69,91 74,92 76,96 76,98 53,98' fill='%2356473b' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='80,96 82,94 84,91 89,91 93,91 98,93 99,96 99,98 79,98' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E") no-repeat left -14px top 38% / 120px auto,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 86' width='100' height='86'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%236fe3f5' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%236fe3f5' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='50' cy='52' rx='48' ry='38' fill='url(%23g)'/%3E%3Cpolygon points='27,79 15,53 22,49 35,75' fill='%238fe6f2'/%3E%3Cpolygon points='35,75 22,49 27,45 41,73' fill='%233fbfd6'/%3E%3Cpolygon points='15,53 16,40 22,49' fill='%23e4fdff'/%3E%3Cpolygon points='22,49 16,40 27,45' fill='%238fe6f2'/%3E%3Cpath d='M29,75L20,56' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='27,79 15,53 16,40 27,45 41,73' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M35,75L22,49M15,53L22,49L27,45' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='64,72 79,46 87,50 71,77' fill='%238fe6f2'/%3E%3Cpolygon points='71,77 87,50 92,52 76,80' fill='%233fbfd6'/%3E%3Cpolygon points='79,46 91,40 87,50' fill='%23e4fdff'/%3E%3Cpolygon points='87,50 91,40 92,52' fill='%238fe6f2'/%3E%3Cpath d='M68,71L79,52' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='64,72 79,46 91,40 92,52 76,80' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M71,77L87,50M79,46L87,50L92,52' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='42,78 42,35 54,34 54,78' fill='%238fe6f2'/%3E%3Cpolygon points='54,78 54,34 62,32 62,78' fill='%233fbfd6'/%3E%3Cpolygon points='42,35 52,18 54,34' fill='%23e4fdff'/%3E%3Cpolygon points='54,34 52,18 62,32' fill='%238fe6f2'/%3E%3Cpath d='M46,73L46,42' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='42,78 42,35 52,18 62,32 62,78' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M54,78L54,34M42,35L54,34L62,32' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='21,87 5,77 8,71 25,81' fill='%23cfa2f0'/%3E%3Cpolygon points='25,81 8,71 10,67 27,77' fill='%239a62d6'/%3E%3Cpolygon points='5,77 2,68 8,71' fill='%23f6e6ff'/%3E%3Cpolygon points='8,71 2,68 10,67' fill='%23cfa2f0'/%3E%3Cpath d='M21,84L9,76' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='21,87 5,77 2,68 10,67 27,77' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M25,81L8,71M5,77L8,71L10,67' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='77,77 93,67 97,73 81,83' fill='%238fe6f2'/%3E%3Cpolygon points='81,83 97,73 100,76 83,87' fill='%233fbfd6'/%3E%3Cpolygon points='93,67 102,68 97,73' fill='%23e4fdff'/%3E%3Cpolygon points='97,73 102,68 100,76' fill='%238fe6f2'/%3E%3Cpath d='M80,78L92,71' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='77,77 93,67 102,68 100,76 83,87' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M81,83L97,73M93,67L97,73L100,76' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='13,86 16,83 20,81 25,80 29,81 33,83 35,86 35,88 14,88' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='33,86 32,83 36,81 41,82 46,81 49,83 50,86 50,88 31,88' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='50,86 55,83 58,82 62,79 67,80 72,83 71,86 73,88 51,88' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='71,86 73,83 76,81 81,80 86,81 91,82 93,86 92,88 71,88' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right -10px top 12% / 110px auto;
+}
+
+/* ================= header: a timber beam with notes nailed on ================= */
+html[data-skin="deepdelve"] header.sheet-head {
+  position: relative; isolation: isolate;
+  border-bottom: 0;
+  margin-bottom: 26px;
+  padding: 16px 26px 18px 22px;
+  border-radius: 3px;
+  background-color: var(--dd-wood);
+  background-image:
+    radial-gradient(ellipse 50% 90% at 22% 50%, rgba(var(--dd-lamp), .22), transparent 70%),
+    linear-gradient(180deg, rgba(255,220,170,.10), transparent 18%, transparent 82%, rgba(0,0,0,.28)),
+    repeating-linear-gradient(180deg, transparent 0 46px, rgba(15,9,5,.75) 46px 48px, rgba(255,215,160,.08) 48px 49px),
+    var(--dd-i-grain);
+  background-size: auto, auto, auto, 400px 120px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.6), inset 0 0 0 1px rgba(15,9,5,.9), inset 0 2px 0 rgba(255,220,170,.12);
+}
+html[data-skin="deepdelve"] header.sheet-head::after {
+  content: ""; position: absolute; inset: -4px; pointer-events: none; z-index: 3;
+  background:
+    var(--dd-i-br-tl) no-repeat left top / 40px,
+    var(--dd-i-br-tr) no-repeat right top / 40px,
+    var(--dd-i-br-bl) no-repeat left bottom / 40px,
+    var(--dd-i-br-br) no-repeat right bottom / 40px;
+}
+/* the great cluster sat on the beam */
+html[data-skin="deepdelve"] header.sheet-head::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  width: 230px; height: 160px; right: 31%; top: -58px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 230 160' width='230' height='160'%3E%3Cdefs%3E%3CradialGradient id='g'%3E%3Cstop offset='0' stop-color='%236fe3f5' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%236fe3f5' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cellipse cx='118' cy='95' rx='110' ry='70' fill='url(%23g)'/%3E%3Cpolygon points='61,147 30,107 40,98 72,139' fill='%23cfa2f0'/%3E%3Cpolygon points='72,139 40,98 46,91 79,133' fill='%239a62d6'/%3E%3Cpolygon points='30,107 29,83 40,98' fill='%23f6e6ff'/%3E%3Cpolygon points='40,98 29,83 46,91' fill='%23cfa2f0'/%3E%3Cpath d='M62,139L39,111' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='61,147 30,107 29,83 46,91 79,133' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M72,139L40,98M30,107L40,98L46,91' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='152,133 185,93 196,100 162,141' fill='%23cfa2f0'/%3E%3Cpolygon points='162,141 196,100 204,105 168,147' fill='%239a62d6'/%3E%3Cpolygon points='185,93 205,83 196,100' fill='%23f6e6ff'/%3E%3Cpolygon points='196,100 205,83 204,105' fill='%23cfa2f0'/%3E%3Cpath d='M159,132L183,103' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='152,133 185,93 205,83 204,105 168,147' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M162,141L196,100M185,93L196,100L204,105' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='81,147 56,71 73,64 98,141' fill='%238fe6f2'/%3E%3Cpolygon points='98,141 73,64 83,58 109,137' fill='%233fbfd6'/%3E%3Cpolygon points='56,71 61,37 73,64' fill='%23e4fdff'/%3E%3Cpolygon points='73,64 61,37 83,58' fill='%238fe6f2'/%3E%3Cpath d='M84,136L67,82' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='81,147 56,71 61,37 83,58 109,137' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M98,141L73,64M56,71L73,64L83,58' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='127,138 146,69 163,72 143,143' fill='%238fe6f2'/%3E%3Cpolygon points='143,143 163,72 174,73 153,146' fill='%233fbfd6'/%3E%3Cpolygon points='146,69 169,46 163,72' fill='%23e4fdff'/%3E%3Cpolygon points='163,72 169,46 174,73' fill='%238fe6f2'/%3E%3Cpath d='M135,132L149,82' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='127,138 146,69 169,46 174,73 153,146' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M143,143L163,72M146,69L163,72L174,73' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='101,143 104,51 125,49 121,144' fill='%238fe6f2'/%3E%3Cpolygon points='121,144 125,49 138,47 135,145' fill='%233fbfd6'/%3E%3Cpolygon points='104,51 122,16 125,49' fill='%23e4fdff'/%3E%3Cpolygon points='125,49 122,16 138,47' fill='%238fe6f2'/%3E%3Cpath d='M109,133L111,67' stroke='%23fff' stroke-opacity='.8' stroke-width='2' stroke-linecap='round'/%3E%3Cpolygon points='101,143 104,51 122,16 138,47 135,145' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M121,144L125,49M104,51L125,49L138,47' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='50,154 21,137 25,127 56,144' fill='%238fe6f2'/%3E%3Cpolygon points='56,144 25,127 28,120 60,138' fill='%233fbfd6'/%3E%3Cpolygon points='21,137 13,122 25,127' fill='%23e4fdff'/%3E%3Cpolygon points='25,127 13,122 28,120' fill='%238fe6f2'/%3E%3Cpath d='M49,148L28,136' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='50,154 21,137 13,122 28,120 60,138' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M56,144L25,127M21,137L25,127L28,120' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='176,138 205,123 211,132 181,148' fill='%238fe6f2'/%3E%3Cpolygon points='181,148 211,132 215,137 184,154' fill='%233fbfd6'/%3E%3Cpolygon points='205,123 221,124 211,132' fill='%23e4fdff'/%3E%3Cpolygon points='211,132 221,124 215,137' fill='%238fe6f2'/%3E%3Cpath d='M181,140L202,129' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='176,138 205,123 221,124 215,137 184,154' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M181,148L211,132M205,123L211,132L215,137' fill='none' stroke='%231d6f8c' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='73,153 52,117 62,110 84,147' fill='%23cfa2f0'/%3E%3Cpolygon points='84,147 62,110 69,105 91,143' fill='%239a62d6'/%3E%3Cpolygon points='52,117 53,98 62,110' fill='%23f6e6ff'/%3E%3Cpolygon points='62,110 53,98 69,105' fill='%23cfa2f0'/%3E%3Cpath d='M75,147L60,121' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='73,153 52,117 53,98 69,105 91,143' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M84,147L62,110M52,117L62,110L69,105' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='141,143 162,104 173,108 152,149' fill='%23cfa2f0'/%3E%3Cpolygon points='152,149 173,108 181,111 159,153' fill='%239a62d6'/%3E%3Cpolygon points='162,104 179,93 173,108' fill='%23f6e6ff'/%3E%3Cpolygon points='173,108 179,93 181,111' fill='%23cfa2f0'/%3E%3Cpath d='M147,141L163,113' stroke='%23fff' stroke-opacity='.8' stroke-width='1' stroke-linecap='round'/%3E%3Cpolygon points='141,143 162,104 179,93 181,111 159,153' fill='none' stroke='%231b1418' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M152,149L173,108M162,104L173,108L181,111' fill='none' stroke='%234f2b86' stroke-width='.8' stroke-opacity='.75'/%3E%3Cpolygon points='45,152 45,149 49,147 54,147 58,148 64,149 63,152 65,154 44,154' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='61,152 62,149 66,147 72,145 76,147 80,149 84,152 83,154 60,154' fill='%2356473b' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='84,152 83,148 87,146 93,146 97,147 103,148 103,152 104,154 81,154' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='101,152 104,149 106,147 111,146 117,146 118,150 120,152 121,154 101,154' fill='%234a3d34' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='114,152 117,150 120,147 124,147 128,148 131,150 132,152 133,154 115,154' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='136,152 135,149 140,148 143,147 148,147 151,149 152,152 152,154 134,154' fill='%2356473b' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='152,152 154,148 159,147 164,144 170,146 174,149 174,152 177,154 152,154' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpolygon points='174,152 176,150 179,148 182,148 186,148 190,149 188,152 190,154 174,154' fill='%233e332c' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center bottom / contain;
+  filter: drop-shadow(0 0 14px rgba(110,225,245,.35));
+  animation: deepdelve-glow 5s ease-in-out infinite;
+}
+@keyframes deepdelve-glow {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(110,225,245,.25)); }
+  50% { filter: drop-shadow(0 0 20px rgba(110,225,245,.55)); }
+}
+html[data-skin="deepdelve"] header.sheet-head > * { position: relative; z-index: 1; }
+html[data-skin="deepdelve"] .char-name {
+  font-family: var(--font-show); font-weight: 700;
+  font-size: 3rem; letter-spacing: .01em;
+  color: #f8e6bb;
+  text-shadow: 0 2px 0 #1a0f08, 0 0 22px rgba(var(--dd-lamp), .55);
+}
+html[data-skin="deepdelve"] .char-title,
+html[data-skin="deepdelve"] .has-portrait .char-title {
+  font-family: var(--font-show); font-weight: 700;
+  color: #f8e6bb; font-size: 1.35rem; line-height: 1.15;
+  text-shadow: 0 2px 0 #1a0f08, 0 0 16px rgba(var(--dd-lamp), .45);
+}
+html[data-skin="deepdelve"] .has-portrait .char-title { font-size: 1.95rem; }
+html[data-skin="deepdelve"] .char-sub {
+  color: #e0c99c; font-family: var(--font-head); font-size: 1.02rem; letter-spacing: .03em;
+  text-shadow: 0 1px 0 #1a0f08;
+}
+
+/* facts: little torn notes nailed to the beam */
+html[data-skin="deepdelve"] .head-facts { gap: 12px 10px; }
+html[data-skin="deepdelve"] .fact {
+  position: relative; isolation: isolate;
+  background: none; border: 0; box-shadow: none; border-radius: 0;
+  padding: 9px 13px 6px;
+  transform: rotate(-1.2deg);
+}
+html[data-skin="deepdelve"] .fact:nth-child(even) { transform: rotate(1.4deg); }
+html[data-skin="deepdelve"] .fact:nth-child(3n) { transform: rotate(-.4deg); }
+html[data-skin="deepdelve"] .fact::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: var(--paper) var(--dd-i-paper);
+  filter: url(#deepdelve-torn-sm);
+}
+html[data-skin="deepdelve"] .fact::after {
+  content: ""; position: absolute; top: 2px; left: 50%; width: 9px; height: 9px; margin-left: -4px;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 35%, #b9a58c 0 1.3px, #4a3d33 2.4px, #1b1410 4.4px);
+  box-shadow: 0 1px 1px rgba(0,0,0,.5);
+}
+html[data-skin="deepdelve"] .fact .label {
+  font-family: var(--font-head); font-size: .66rem; font-weight: 600;
+  letter-spacing: .1em; color: var(--muted);
+}
+html[data-skin="deepdelve"] .fact .value { font-family: var(--font-head); font-size: 1.12rem; font-weight: 700; color: var(--ink); }
+html[data-skin="deepdelve"] .fact.insp,
+html[data-skin="deepdelve"] .fact.xp-fact { padding: 0; }
+html[data-skin="deepdelve"] .insp-btn { padding: 9px 13px 6px; border-radius: 0; }
+html[data-skin="deepdelve"] .insp-btn:hover { background: rgba(var(--dd-lamp), .18); }
+html[data-skin="deepdelve"] .fact.insp.on { background: none; }
+html[data-skin="deepdelve"] .fact.insp.on::before {
+  background: radial-gradient(circle at 50% 60%, #fff3c9, #f6d888) , var(--dd-i-paper);
+  background-blend-mode: multiply;
+}
+html[data-skin="deepdelve"] .fact.insp.on { filter: drop-shadow(0 0 8px rgba(255,190,80,.75)); }
+html[data-skin="deepdelve"] .insp-btn .word { font-family: var(--font-head); }
+
+/* ================= the portrait: an iron ring set with gems ================= */
+html[data-skin="deepdelve"] .ring-band { stroke: url(#deepdelve-ring); }
+html[data-skin="deepdelve"] .ring-edge { stroke: #c08a3a; opacity: .8; }
+html[data-skin="deepdelve"] .ring-hair { stroke: #120c08; opacity: .8; }
+html[data-skin="deepdelve"] .ring-name { fill: #f6dfae; font-family: var(--font-head); letter-spacing: .14em; }
+html[data-skin="deepdelve"] .ring-xp { fill: #e8c98a; font-family: var(--font-head); }
+html[data-skin="deepdelve"] .xp-track { stroke: rgba(0,0,0,.45); }
+html[data-skin="deepdelve"] .xp-fill { stroke: var(--dd-cyan); filter: drop-shadow(0 0 2px rgba(110,225,245,.9)); }
+html[data-skin="deepdelve"] .ring-gem { fill: #5fd3e6; stroke: #0e0a08; stroke-width: 1; }
+html[data-skin="deepdelve"] .ring-gem-core { fill: #e4fdff; }
+html[data-skin="deepdelve"] .portrait { filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
+html[data-skin="deepdelve"] .portrait.inspired { filter: drop-shadow(0 0 12px rgba(255,190,80,.85)) drop-shadow(0 4px 10px rgba(0,0,0,.7)); }
+html[data-skin="deepdelve"] .portrait:has(.ring-xp-btn:hover) .ring-xp { fill: #8fe6f2; }
+
+/* ================= boxes: torn notes pinned to boards ================= */
+html[data-skin="deepdelve"] .columns { gap: 22px; }
+html[data-skin="deepdelve"] .col { gap: 20px; }
+html[data-skin="deepdelve"] .box,
+html[data-skin="deepdelve"].has-backdrop .box,
+html[data-skin="deepdelve"] .has-backdrop .box {
+  position: relative; isolation: isolate;
+  border: 0; border-radius: 3px;
+  padding: 22px 18px 20px;
+  background-color: var(--dd-wood-2);
+  background-image:
+    linear-gradient(180deg, rgba(255,220,170,.08), transparent 30%, rgba(0,0,0,.22)),
+    repeating-linear-gradient(90deg, transparent 0 62px, rgba(12,7,4,.7) 62px 64px, rgba(255,215,160,.07) 64px 65px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='400'%3E%3Cfilter id='w' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.16 .004' numOctaves='3' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .12 0 0 0 0 .07 0 0 0 0 .03 0 0 0 -1.6 1.1'/%3E%3C/filter%3E%3Crect width='120' height='400' filter='url(%23w)'/%3E%3C/svg%3E");
+  background-size: auto, auto, 120px 400px;
+  background-attachment: scroll;
+  box-shadow: 0 8px 18px rgba(0,0,0,.6), 0 2px 3px rgba(0,0,0,.6), inset 0 0 0 1px rgba(12,7,4,.85), inset 0 1px 0 rgba(255,220,170,.12);
+}
+/* the paper itself */
+html[data-skin="deepdelve"] .box::before {
+  content: ""; position: absolute; inset: 9px 8px 9px 9px; z-index: -1; pointer-events: none;
+  background-color: var(--paper-2);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 30% 0%, rgba(255,250,235,.7), transparent 70%),
+    radial-gradient(ellipse 120% 80% at 50% 50%, transparent 60%, rgba(150,110,60,.22)),
+    var(--dd-i-paper);
+  filter: url(#deepdelve-torn);
+}
+/* iron brackets on the board corners */
+html[data-skin="deepdelve"] .box::after {
+  content: ""; position: absolute; inset: -3px; z-index: 2; pointer-events: none;
+  background:
+    var(--dd-i-br-tl) no-repeat left top / 34px,
+    var(--dd-i-br-tr) no-repeat right top / 34px,
+    var(--dd-i-br-bl) no-repeat left bottom / 34px,
+    var(--dd-i-br-br) no-repeat right bottom / 34px;
+}
+html[data-skin="deepdelve"] .box > h2,
+html[data-skin="deepdelve"] .box.tabbed > .tabpane > h2,
+html[data-skin="deepdelve"] h3.subhead,
+html[data-skin="deepdelve"] .spell-level h3 {
+  font-family: var(--font-show); font-weight: 700;
+  text-transform: none; letter-spacing: .01em;
+  color: var(--accent);
+  border-bottom: 0;
+  background: var(--dd-i-rule) no-repeat left bottom / 100% 7px;
+  padding-bottom: 6px;
+}
+html[data-skin="deepdelve"] .box > h2,
+html[data-skin="deepdelve"] .box.tabbed > .tabpane > h2 {
+  font-size: 1.3rem; line-height: 1.1; margin-bottom: 9px;
+  padding-left: 21px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 2 H12 L15 6 L8 15 L1 6 Z' fill='%235fd3e6' stroke='%231b1418' stroke-width='1.1' stroke-linejoin='round'/%3E%3Cpath d='M1 6 H15 M4 2 L6 6 L8 15 L10 6 L12 2' fill='none' stroke='%231d6f8c' stroke-width='.8'/%3E%3Cpath d='M5 4 L6 6 L4 6 Z' fill='%23e4fdff'/%3E%3C/svg%3E") no-repeat left 1px top 3px / 15px,
+    var(--dd-i-rule) no-repeat left bottom / 100% 7px;
+}
+html[data-skin="deepdelve"] h3.subhead,
+html[data-skin="deepdelve"] .spell-level h3 { font-size: 1.05rem; }
+
+/* tabs: little paper flags */
+html[data-skin="deepdelve"] .tabbar {
+  border-bottom: 0; gap: 4px; margin: -4px 0 12px;
+  background: var(--dd-i-rule) no-repeat left bottom / 100% 7px;
+  padding-bottom: 4px;
+}
+html[data-skin="deepdelve"] .tabbtn {
+  font-family: var(--font-head); font-size: .86rem; font-weight: 600;
+  letter-spacing: .05em; color: var(--muted);
+  border: 1px solid transparent; border-radius: 3px;
+  padding: 3px 10px 3px; margin-bottom: 0;
+}
+html[data-skin="deepdelve"] .tabbtn:hover { color: var(--accent); background: rgba(var(--dd-lamp), .16); }
+html[data-skin="deepdelve"] .tabbtn.on {
+  color: #fdf3da; font-weight: 700;
+  background: linear-gradient(180deg, #8b3a22, #6a2414);
+  border-color: #3a1209;
+  box-shadow: 0 1px 2px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,210,170,.25);
+}
+
+/* ================= ability scores: cut gems ================= */
+html[data-skin="deepdelve"] .abilities { gap: 10px 8px; }
+html[data-skin="deepdelve"] .ability,
+html[data-skin="deepdelve"] .ability.rollable {
+  --g-hi: #e4fdff; --g-lt: #8fe6f2; --g-md: #3fbfd6; --g-dk: #1d6f8c;
+  isolation: isolate;
+  background: none; border: 0; border-radius: 0;
+  box-shadow: none;
+  padding: 13px 2px 12px;
+  min-height: 92px;
+  filter: drop-shadow(0 3px 3px rgba(20,12,6,.45));
+  transition: filter .15s ease, transform .15s ease;
+}
+html[data-skin="deepdelve"] .ability::before,
+html[data-skin="deepdelve"] .ability::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  clip-path: polygon(22% 0, 78% 0, 100% 24%, 100% 76%, 78% 100%, 22% 100%, 0 76%, 0 24%);
+}
+/* the faceted rim */
+html[data-skin="deepdelve"] .ability::before {
+  background:
+    conic-gradient(from -22deg at 50% 50%,
+      var(--g-hi) 0 45deg, var(--g-lt) 45deg 90deg, var(--g-md) 90deg 135deg, var(--g-dk) 135deg 180deg,
+      var(--g-md) 180deg 225deg, var(--g-dk) 225deg 270deg, var(--g-lt) 270deg 315deg, var(--g-hi) 315deg 360deg);
+  box-shadow: inset 0 0 0 2px #1b1418;
+  outline: 2px solid #1b1418;
+}
+/* the polished table, where the numbers are read */
+html[data-skin="deepdelve"] .ability::after {
+  inset: 7px 6px;
+  clip-path: polygon(20% 0, 80% 0, 100% 22%, 100% 78%, 80% 100%, 20% 100%, 0 78%, 0 22%);
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.95), rgba(255,255,255,.75) 45%, rgba(255,255,255,.55)),
+    var(--g-lt);
+}
+html[data-skin="deepdelve"] .ability:nth-child(1) { --g-hi: #ffe0e4; --g-lt: #f58ba0; --g-md: #d5395f; --g-dk: #7c1734; }
+html[data-skin="deepdelve"] .ability:nth-child(2) { --g-hi: #e2fbd9; --g-lt: #86e08a; --g-md: #36ad5c; --g-dk: #165c34; }
+html[data-skin="deepdelve"] .ability:nth-child(3) { --g-hi: #fff3c4; --g-lt: #ffc95c; --g-md: #e8901f; --g-dk: #93470f; }
+html[data-skin="deepdelve"] .ability:nth-child(4) { --g-hi: #e4fdff; --g-lt: #8fe6f2; --g-md: #3fbfd6; --g-dk: #1d6f8c; }
+html[data-skin="deepdelve"] .ability:nth-child(5) { --g-hi: #f6e6ff; --g-lt: #cfa2f0; --g-md: #9a62d6; --g-dk: #4f2b86; }
+html[data-skin="deepdelve"] .ability:nth-child(6) { --g-hi: #fff0f5; --g-lt: #f6b8d0; --g-md: #df7aa6; --g-dk: #8a3460; }
+html[data-skin="deepdelve"] .ability.rollable:hover,
+html[data-skin="deepdelve"] .ability.rollable:focus-visible {
+  background: none; box-shadow: none;
+  filter: drop-shadow(0 0 7px var(--g-md)) drop-shadow(0 3px 3px rgba(20,12,6,.45)) brightness(1.06);
+  transform: translateY(-1px);
+}
+html[data-skin="deepdelve"] .ability .tile-label {
+  font-family: var(--font-head); font-weight: 700; font-size: .72rem; letter-spacing: .12em; color: #3b2a1e;
+}
+html[data-skin="deepdelve"] .ability .mod {
+  font-family: var(--font-head); font-weight: 700; font-size: 1.75rem; line-height: 1; color: #1c130d;
+}
+html[data-skin="deepdelve"] .ability .score {
+  font-family: var(--font-head); font-weight: 600; font-size: .86rem;
+  background: rgba(255,255,255,.7); border: 1px solid var(--g-dk); border-radius: 3px;
+  color: #2a1d14; margin-top: 3px;
+}
+html[data-skin="deepdelve"] .ability .check-note { color: #7a4810; font-weight: 600; }
+
+/* ================= lists ================= */
+html[data-skin="deepdelve"] .row { border-bottom: 1px dashed rgba(124,100,71,.45); font-size: .97rem; }
+html[data-skin="deepdelve"] .row .val { font-family: var(--font-head); font-weight: 700; font-size: 1.02rem; }
+html[data-skin="deepdelve"] .row .abbr { font-family: var(--font-head); font-size: .74rem; letter-spacing: .05em; }
+/* proficiency marks are little cut stones */
+html[data-skin="deepdelve"] .pip {
+  width: 10px; height: 10px; border-radius: 1px; transform: rotate(45deg) translateY(-1px);
+  border: 1.4px solid #4a3a2c; background: var(--paper);
+}
+html[data-skin="deepdelve"] .pip.on {
+  background: linear-gradient(135deg, #b8f2fa, #2e9db6 60%, #1d6f8c); border-color: #10313b;
+}
+html[data-skin="deepdelve"] .pip.exp {
+  background: linear-gradient(135deg, #fff1b8, #e8901f 60%, #93470f); border-color: #4a2408;
+  box-shadow: 0 0 0 1.5px rgba(232,144,31,.45);
+}
+html[data-skin="deepdelve"] .rollable:hover,
+html[data-skin="deepdelve"] .rollable:focus-visible {
+  background: rgba(var(--dd-lamp), .24);
+  box-shadow: 0 0 0 2px rgba(168,101,15,.45);
+}
+html[data-skin="deepdelve"] .row.rollable,
+html[data-skin="deepdelve"] td.rollable,
+html[data-skin="deepdelve"] .inline-roll { text-decoration-color: rgba(168,101,15,.85); }
+html[data-skin="deepdelve"] th { font-family: var(--font-head); font-size: .72rem; letter-spacing: .06em; color: var(--muted); border-bottom-color: var(--edge); }
+html[data-skin="deepdelve"] td { border-bottom-color: rgba(124,100,71,.4); }
+
+/* ================= combat: iron-bound plates ================= */
+html[data-skin="deepdelve"] .tile,
+html[data-skin="deepdelve"] .tile.rollable {
+  background:
+    radial-gradient(circle at 7px 7px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at 7px calc(100% - 7px), #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    linear-gradient(180deg, #fbf5e6, #efe2c4);
+  border: 3px solid #3a2f27;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px #a88f6a, 0 2px 3px rgba(20,12,6,.35);
+}
+html[data-skin="deepdelve"] .tile.shield,
+html[data-skin="deepdelve"] .tile.shield.rollable {
+  border-color: #5a1d12;
+  border-radius: 6px 6px 30px 30px / 6px 6px 38px 38px;
+  background:
+    radial-gradient(circle at 8px 8px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) 8px, #6b5a4a 0 1.6px, #1b1410 2.4px, transparent 3px),
+    linear-gradient(180deg, #fbf5e6, #f0dcc0);
+  box-shadow: inset 0 0 0 1px #c08060, 0 2px 3px rgba(20,12,6,.35);
+}
+html[data-skin="deepdelve"] .tile.rollable:hover,
+html[data-skin="deepdelve"] .tile.rollable:focus-visible {
+  box-shadow: inset 0 0 0 1px #a88f6a, 0 0 0 3px rgba(var(--dd-lamp), .7), 0 0 14px rgba(var(--dd-lamp), .55);
+}
+html[data-skin="deepdelve"] .tile .tile-label { font-family: var(--font-head); font-weight: 600; font-size: .72rem; letter-spacing: .1em; color: var(--muted); }
+html[data-skin="deepdelve"] .tile .big { font-family: var(--font-head); font-size: 1.85rem; line-height: 1.05; color: #1c130d; }
+html[data-skin="deepdelve"] .tile .sub { font-size: .78rem; }
+
+/* hit points: a trough cut in stone, the bar keeps its colours */
+html[data-skin="deepdelve"] .hp-bar {
+  height: 12px; border-radius: 3px;
+  background: linear-gradient(180deg, #2a221d, #47392e);
+  border: 1px solid #120c08;
+  box-shadow: inset 0 2px 3px rgba(0,0,0,.6);
+}
+html[data-skin="deepdelve"] .hp-fill { box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+html[data-skin="deepdelve"] .hp-gauge .hp-now { font-size: 1.6rem; }
+html[data-skin="deepdelve"] .hp-gauge .hp-max { font-size: 1.15rem; }
+
+/* buttons: stamped tin tags */
+html[data-skin="deepdelve"] .hpb,
+html[data-skin="deepdelve"] .cast-btn,
+html[data-skin="deepdelve"] .hitdie,
+html[data-skin="deepdelve"] .cast-at {
+  font-family: var(--font-head); font-weight: 600;
+  background: linear-gradient(180deg, #fffaf0, #efe2c6);
+  border: 1px solid #8d7454; border-radius: 3px;
+  box-shadow: 0 1px 0 #6e5a41, inset 0 1px 0 #fff;
+}
+html[data-skin="deepdelve"] .hpb { font-size: .78rem; letter-spacing: .08em; }
+html[data-skin="deepdelve"] .cast-btn { font-size: .7rem; padding: 0 7px; }
+html[data-skin="deepdelve"] .cast-at { font-size: .7rem; }
+html[data-skin="deepdelve"] .hpb:hover,
+html[data-skin="deepdelve"] .cast-btn:hover,
+html[data-skin="deepdelve"] .hitdie:hover {
+  background: linear-gradient(180deg, #fff6dc, #f6dfaa);
+  border-color: var(--accent-2);
+  box-shadow: 0 1px 0 #6e5a41, 0 0 8px rgba(var(--dd-lamp), .55);
+}
+html[data-skin="deepdelve"] .hitdie .hd-label { font-size: .7rem; }
+html[data-skin="deepdelve"] .hitdie .hd-val { font-size: 1.1rem; }
+html[data-skin="deepdelve"] .hp-ctl .hp-amt { font-family: var(--font-head); font-size: 1rem; }
+html[data-skin="deepdelve"] details.spell summary { font-size: .95rem; border-bottom-color: rgba(124,100,71,.4); }
+html[data-skin="deepdelve"] details.spell summary::marker { color: var(--accent-2); }
+html[data-skin="deepdelve"] .tagline { font-size: .74rem; }
+html[data-skin="deepdelve"] .feature h3 { font-family: var(--font-head); font-weight: 700; color: var(--accent); font-size: 1rem; }
+
+/* the spell buttons float beside each line: kept no taller than the line so
+   the floats of one spell never push into the next */
+html[data-skin="deepdelve"] .cast-btn,
+html[data-skin="deepdelve"] .cast-at { height: 18px; line-height: 14px; padding-top: 0; padding-bottom: 0; margin-top: 1px; margin-bottom: 1px; }
+html[data-skin="deepdelve"] .cast-at { height: 18px; }
+html[data-skin="deepdelve"] details.spell summary { line-height: 21px; }
+html[data-skin="deepdelve"] details.spell summary::after { content: ""; display: block; clear: both; }
+
+/* the inventory's row of buttons, a little tighter than the classic
+   sheet's so the whole row fits inside the frame */
+html[data-skin="deepdelve"] .ib { padding: 0 4px; margin-left: 2px; }
+html[data-skin="deepdelve"] .inv-table td, html[data-skin="deepdelve"] .inv-table th { padding-left: 3px; padding-right: 3px; }
+
+/* ================= footer ================= */
+html[data-skin="deepdelve"] footer.sheet-foot {
+  border-top: 0; color: #cdb48a; font-family: var(--font-head); font-size: .8rem; letter-spacing: .04em;
+  text-shadow: 0 1px 0 #000;
+  background: linear-gradient(90deg, transparent, rgba(var(--dd-lamp), .25), transparent) no-repeat center top / 100% 1px;
+  padding: 10px 120px 0;
+}
+html[data-skin="deepdelve"] .spell-head .tile { min-width: 66px; padding: 6px 8px; }
+html[data-skin="deepdelve"] .spell-head .tile .tile-label { letter-spacing: .03em; font-size: .68rem; }
+
+/* the experience box */
+html[data-skin="deepdelve"] .xp-pop {
+  background: var(--paper) var(--dd-i-paper); border: 2px solid #3a2f27; border-radius: 3px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.6), inset 0 0 0 1px #c4ad86;
+}
+html[data-skin="deepdelve"] .xp-pop-head { font-size: .82rem; }
+
+/* ================= the phone ================= */
+html[data-skin="deepdelve"].m .page { padding: 8px 12px 92px; }
+html[data-skin="deepdelve"].m .page::after { opacity: .7; }
+html[data-skin="deepdelve"].m header.sheet-head { padding: 12px 14px 10px; margin: 34px 0 4px; }
+html[data-skin="deepdelve"].m header.sheet-head::before { width: 130px; height: 90px; right: 18px; top: -40px; }
+html[data-skin="deepdelve"].m .char-name { font-size: 1.9rem; }
+html[data-skin="deepdelve"].m .has-portrait .char-title,
+html[data-skin="deepdelve"].m .char-title { font-size: 1.15rem; }
+html[data-skin="deepdelve"].m .head-facts { margin: 0 -14px; padding: 8px 14px 6px; }
+html[data-skin="deepdelve"].m .fact { padding: 8px 11px 5px; }
+html[data-skin="deepdelve"].m .fact.insp,
+html[data-skin="deepdelve"].m .fact.xp-fact { padding: 0; }
+html[data-skin="deepdelve"].m .insp-btn { padding: 8px 11px 5px; }
+html[data-skin="deepdelve"].m .m-bar {
+  background-color: var(--dd-wood-2);
+  background-image:
+    linear-gradient(180deg, rgba(255,220,170,.1), transparent 40%, rgba(0,0,0,.3)),
+    var(--dd-i-grain);
+  background-size: auto, 400px 120px;
+  border-bottom: 2px solid #120c08;
+  box-shadow: 0 6px 14px -4px rgba(0,0,0,.7);
+  margin: 0 -12px 14px; padding: 7px 12px 0;
+}
+html[data-skin="deepdelve"].m .m-stat {
+  background: var(--paper) var(--dd-i-paper); border: 1px solid #3a2f27; border-radius: 3px;
+  box-shadow: 0 2px 3px rgba(0,0,0,.45);
+}
+html[data-skin="deepdelve"].m .m-stat .m-lbl { font-family: var(--font-head); font-size: .62rem; letter-spacing: .08em; }
+html[data-skin="deepdelve"].m .m-stat b { font-family: var(--font-head); font-size: 1.25rem; }
+html[data-skin="deepdelve"].m .m-hpbar { height: 5px; background: #3a2f27; }
+html[data-skin="deepdelve"].m .m-tool {
+  background: linear-gradient(180deg, #3a2f27, #1b1410); color: #8fe6f2;
+  border: 1px solid #0e0a08; border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 8px rgba(63,191,214,.25);
+}
+html[data-skin="deepdelve"].m .m-tab {
+  font-family: var(--font-head); font-size: .9rem; font-weight: 600; letter-spacing: .05em;
+  color: #e0c99c; text-shadow: 0 1px 0 #000;
+}
+html[data-skin="deepdelve"].m .m-tab.on { color: #ffd88a; border-bottom-color: #ffb54a; }
+html[data-skin="deepdelve"].m .columns { gap: 18px; }
+html[data-skin="deepdelve"].m .box { padding: 20px 18px 18px; }
+html[data-skin="deepdelve"].m .m-spf button { font-family: var(--font-head); font-size: .85rem; }
+html[data-skin="deepdelve"].m .m-spf button.on { background: var(--accent); border-color: #3a1209; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="deepdelve"] header.sheet-head::before { animation: none; }
+  html[data-skin="deepdelve"] .ability { transition: none; }
+}

@@ -1,0 +1,634 @@
+/* skin: Ink & Marker
+   about: A lovingly hand-drawn printable: thick felt-tip on white paper, ribbon banners, bunting and taped-on labels.
+   swatch: #ffffff #141414 #d1322a #cfcfca
+   fonts: Permanent Marker | Patrick Hand SC | Patrick Hand
+*/
+
+/* ---------- tokens ---------- */
+html[data-skin="ink-marker"] {
+  --font-head: "Patrick Hand SC", "Patrick Hand", "Comic Sans MS", cursive;
+  --font-body: "Patrick Hand", "Comic Sans MS", cursive;
+  --im-marker: "Permanent Marker", "Patrick Hand SC", cursive;
+  --ink: #141414;
+  --paper: #ffffff;
+  --paper-2: #ffffff;
+  --line: #141414;
+  --edge: #141414;
+  --accent: #141414;
+  --accent-2: #141414;
+  --im-red: #d1322a;
+  --muted: #4d4d4d;
+  --shadow: none;
+  --stat-radius: 12px;
+  --mood-rgb: 110, 110, 110;
+  /* a pen-drawn line, for rules under rows and headings */
+  --im-rule: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='6' preserveAspectRatio='none'%3E%3Cpath d='M0 3 Q15 1.6 30 3.1 T60 3 T90 3.2 T120 3' fill='none' stroke='%23141414' stroke-opacity='.38' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E");
+  --im-rule-bold: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='10' preserveAspectRatio='none'%3E%3Cpath d='M1 5 C40 2.5 80 7.5 120 5 S200 3 239 5.5' fill='none' stroke='%23141414' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M4 8 C60 6.5 110 9 170 7.6 S220 7 236 8.2' fill='none' stroke='%23141414' stroke-opacity='.55' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+  --im-ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40' viewBox='0 0 120 40' preserveAspectRatio='none'%3E%3Cpath d='M2.5 4.6 L117.5 4.4 L106.5 20.3 L118 35.6 L2 35.4 L13.4 19.8 Z' fill='white' stroke='%23141414' stroke-width='2.6' stroke-linejoin='round'/%3E%3Cpath d='M21 5.4 L20.4 34.8 M99.4 5 L100 34.9' stroke='%23141414' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* ---------- the desk and the paper ---------- */
+html[data-skin="ink-marker"] body {
+  background-color: #d6d6d1;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(20,20,20,.045) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(-45deg, rgba(20,20,20,.03) 0 1px, transparent 1px 13px);
+  color: var(--ink);
+  font-size: 16px;
+}
+html[data-skin="ink-marker"] .page {
+  background: #fff;
+  background-image: none;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 14px 40px rgba(0,0,0,.28);
+  padding-top: 18px;
+}
+/* a drawing over a picture still reads as a drawing: the backdrop turns to pencil */
+html[data-skin="ink-marker"] .backdrop { filter: grayscale(1) contrast(1.25) brightness(1.08); }
+html[data-skin="ink-marker"] .has-backdrop .box {
+  background-image: linear-gradient(rgba(255,255,255,.95), rgba(255,255,255,.95)), var(--backdrop-img, none);
+}
+
+/* ---------- header: bunting, name, taped labels ---------- */
+html[data-skin="ink-marker"] header.sheet-head {
+  position: relative;
+  border-bottom: 0;
+  padding: 44px 6px 18px;
+  background: var(--im-rule-bold) left bottom / 100% 10px no-repeat;
+}
+html[data-skin="ink-marker"] header.sheet-head::before {
+  content: "";
+  position: absolute;
+  left: -6px; right: -6px; top: -6px;
+  height: 46px;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='46'%3E%3Cpath d='M0 6 Q33 10.5 66 6.5 T132 6' fill='none' stroke='%23141414' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M7 8.4 L57 8.6 L32.5 40 Z' fill='white' stroke='%23141414' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M20 14 L44 14.4 M24 20 L41 20.2 M28 26 L37 26' stroke='%23141414' stroke-opacity='.45' stroke-width='1.3' stroke-linecap='round'/%3E%3Cpath d='M74 8.6 L125 8.2 L99 41 Z' fill='%23141414' stroke='%23141414' stroke-width='2.4' stroke-linejoin='round'/%3E%3C/svg%3E") left top / 132px 46px repeat-x;
+}
+html[data-skin="ink-marker"] .char-name {
+  font-family: var(--im-marker);
+  font-weight: 400;
+  color: var(--ink);
+  text-shadow: none;
+  letter-spacing: .02em;
+}
+html[data-skin="ink-marker"] .char-title,
+html[data-skin="ink-marker"] .has-portrait .char-title {
+  font-family: var(--font-head);
+  color: var(--ink);
+  text-shadow: none;
+}
+html[data-skin="ink-marker"] .has-portrait .char-title { font-size: 1.85rem; line-height: 1.05; }
+html[data-skin="ink-marker"] .char-sub { color: var(--muted); font-size: 1.1rem; }
+
+html[data-skin="ink-marker"] .head-facts { gap: 14px; padding-top: 10px; }
+html[data-skin="ink-marker"] .fact {
+  position: relative;
+  background: #fff;
+  border: 2.4px solid var(--ink);
+  border-radius: 3px 7px 4px 8px / 7px 3px 8px 4px;
+  box-shadow: none;
+  transform: rotate(-1.4deg);
+  padding: 6px 12px 4px;
+}
+html[data-skin="ink-marker"] .fact:nth-child(2n) { transform: rotate(1.2deg); }
+html[data-skin="ink-marker"] .fact:nth-child(3n) { transform: rotate(-.5deg); }
+/* the strip of tape holding each label on */
+html[data-skin="ink-marker"] .fact::before {
+  content: "";
+  position: absolute;
+  top: -11px; left: 50%;
+  width: 46px; height: 17px;
+  transform: translateX(-50%) rotate(-4deg);
+  background: rgba(196,196,186,.62);
+  border-left: 1px solid rgba(0,0,0,.06);
+  clip-path: polygon(0 8%, 9% 0, 18% 10%, 30% 2%, 44% 9%, 58% 0, 72% 8%, 86% 1%, 100% 9%, 97% 92%, 84% 100%, 70% 91%, 55% 100%, 40% 92%, 26% 100%, 12% 92%, 2% 100%);
+  pointer-events: none;
+}
+html[data-skin="ink-marker"] .fact:nth-child(2n)::before { transform: translateX(-50%) rotate(5deg); left: 40%; }
+html[data-skin="ink-marker"] .fact .label {
+  font-family: var(--font-head);
+  font-size: .8rem;
+  letter-spacing: .06em;
+  color: var(--ink);
+}
+html[data-skin="ink-marker"] .fact .value { font-size: 1.25rem; font-weight: 400; line-height: 1.15; }
+html[data-skin="ink-marker"] .insp-btn:hover { background: rgba(20,20,20,.06); }
+html[data-skin="ink-marker"] .insp-btn .word { font-size: 1.1rem; color: var(--muted); }
+html[data-skin="ink-marker"] .fact.insp.on { background: #fff; border-color: var(--im-red); }
+html[data-skin="ink-marker"] .fact.insp.on .insp-btn .word { color: var(--im-red); }
+html[data-skin="ink-marker"] .insp-btn .spark { fill: var(--ink); }
+
+/* ---------- the portrait, inked ---------- */
+html[data-skin="ink-marker"] .portrait,
+html[data-skin="ink-marker"] .portrait.hp-hurt { filter: none; }
+html[data-skin="ink-marker"] .portrait.hp-bloodied { filter: saturate(.62) brightness(.96); }
+html[data-skin="ink-marker"] .portrait.hp-dying { filter: saturate(.36) brightness(.9) contrast(1.06); }
+html[data-skin="ink-marker"] .portrait.hp-down { filter: grayscale(1) brightness(.82); }
+html[data-skin="ink-marker"] .portrait.hp-dead { filter: grayscale(1) brightness(.55) contrast(.9); }
+html[data-skin="ink-marker"] .portrait-well { background: #fff; }
+html[data-skin="ink-marker"] .portrait-well::after { background: none; box-shadow: inset 0 0 0 1px rgba(20,20,20,.3); }
+html[data-skin="ink-marker"] .portrait-ring { filter: url(#ink-marker-tremor); }
+html[data-skin="ink-marker"] #ringBand stop { stop-color: #fff; }
+html[data-skin="ink-marker"] .ring-band { stroke: #fff; }
+html[data-skin="ink-marker"] .ring-edge { stroke: var(--ink); stroke-width: 2.8; opacity: 1; }
+html[data-skin="ink-marker"] .ring-hair { stroke: var(--ink); stroke-width: 1.1; opacity: .7; stroke-dasharray: 3 3.5; }
+html[data-skin="ink-marker"] .ring-name { font-family: var(--im-marker); font-weight: 400; fill: var(--ink); letter-spacing: .08em; }
+html[data-skin="ink-marker"] .ring-xp { font-family: var(--font-head); fill: var(--ink); font-size: 11px; letter-spacing: .1em; }
+html[data-skin="ink-marker"] .ring-gem { fill: #fff; stroke: var(--ink); stroke-width: 2; }
+html[data-skin="ink-marker"] .ring-gem-core { fill: var(--ink); }
+html[data-skin="ink-marker"] .xp-track { stroke: rgba(20,20,20,.12); stroke-width: 3; }
+html[data-skin="ink-marker"] .xp-fill { stroke: var(--im-red); stroke-width: 3.4; }
+html[data-skin="ink-marker"] .portrait:has(.ring-xp-btn:hover) .ring-xp { fill: var(--im-red); }
+
+/* ---------- boxes: two passes of the pen ---------- */
+html[data-skin="ink-marker"] .box {
+  position: relative;
+  background: #fff;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 14px 15px 15px;
+}
+html[data-skin="ink-marker"] .box::before,
+html[data-skin="ink-marker"] .box::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+html[data-skin="ink-marker"] .box::before {
+  inset: 0;
+  border: 2.6px solid var(--ink);
+  border-radius: 4px 9px 5px 10px / 10px 4px 9px 5px;
+  filter: url(#ink-marker-wobble);
+}
+html[data-skin="ink-marker"] .box::after {
+  inset: 3px 1px 1px 3px;
+  border: 1.2px solid rgba(20,20,20,.5);
+  border-radius: 9px 4px 10px 5px / 4px 10px 5px 9px;
+  filter: url(#ink-marker-wobble2);
+}
+
+/* headings: ribbon banners with forked tails */
+html[data-skin="ink-marker"] .box > h2,
+html[data-skin="ink-marker"] .box.tabbed > .tabpane > h2 {
+  display: table;
+  margin: 0 0 12px -6px;
+  padding: 4px 6px 3px;
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: 1.12rem;
+  letter-spacing: .1em;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-style: solid;
+  border-color: transparent;
+  border-width: 0 24px;
+  border-image: var(--im-ribbon) 0 26 fill / 0 24px stretch;
+  transform: rotate(-.8deg);
+}
+html[data-skin="ink-marker"] .col > .box:nth-child(2n) > h2 { transform: rotate(.7deg); }
+html[data-skin="ink-marker"] .box.has-tabs > .tabpane > h2 { display: none; }
+html[data-skin="ink-marker"].m .box.has-tabs > .tabpane > h2 { display: table; }
+html[data-skin="ink-marker"] .col:first-child .box > h2 { letter-spacing: .05em; padding-top: 5px; padding-bottom: 6px; }
+html[data-skin="ink-marker"] h3.subhead,
+html[data-skin="ink-marker"] .spell-level h3,
+html[data-skin="ink-marker"] .inv-pane-name {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: 1.05rem;
+  letter-spacing: .08em;
+  color: var(--ink);
+  border-bottom: 0;
+  padding-bottom: 4px;
+  background: var(--im-rule-bold) left bottom / 100% 7px no-repeat;
+}
+html[data-skin="ink-marker"] .spell-level h3 { color: var(--ink); }
+
+/* tabs: index tabs drawn on the box */
+html[data-skin="ink-marker"] .tabbar {
+  border-bottom: 2.4px solid var(--ink);
+  gap: 4px;
+  margin: 0 0 12px;
+  padding-left: 2px;
+}
+html[data-skin="ink-marker"] .tabbtn {
+  font-family: var(--font-head);
+  font-size: .95rem;
+  letter-spacing: .05em;
+  color: var(--ink);
+  background: #fff;
+  border: 2.2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 9px 12px 0 0 / 12px 9px 0 0;
+  padding: 4px 9px 3px;
+  margin-bottom: -2px;
+  transform: translateY(2px);
+}
+html[data-skin="ink-marker"] .tabbtn:hover { color: var(--im-red); }
+html[data-skin="ink-marker"] .tabbtn.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  font-weight: 400;
+  transform: none;
+}
+
+/* ---------- abilities: mugs ---------- */
+html[data-skin="ink-marker"] .abilities { column-gap: 17px; row-gap: 12px; padding-right: 8px; }
+html[data-skin="ink-marker"] .ability {
+  background: #fff;
+  border: 2.6px solid var(--ink);
+  border-radius: 3px 5px 16px 14px / 3px 4px 20px 18px;
+  padding: 6px 2px 5px;
+}
+html[data-skin="ink-marker"] .ability::after {
+  content: "";
+  position: absolute;
+  right: -12px; top: 24%;
+  width: 10px; height: 38%;
+  border: 2.6px solid var(--ink);
+  border-left: 0;
+  border-radius: 0 12px 14px 0 / 0 14px 12px 0;
+  pointer-events: none;
+}
+html[data-skin="ink-marker"] .ability .tile-label {
+  font-family: var(--font-head);
+  font-size: .85rem;
+  letter-spacing: .08em;
+  color: var(--ink);
+}
+html[data-skin="ink-marker"] .ability .mod {
+  font-family: var(--im-marker);
+  font-weight: 400;
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+html[data-skin="ink-marker"] .ability .score {
+  border: 2px solid var(--ink);
+  border-radius: 50% 45% 50% 48% / 55% 50% 48% 52%;
+  background: #fff;
+  font-size: .95rem;
+  min-width: 36px;
+  line-height: 1.2;
+}
+
+/* ---------- tiles: AC, initiative, speed ---------- */
+html[data-skin="ink-marker"] .tile {
+  background: #fff;
+  border: 2.6px solid var(--ink);
+  border-radius: 5px 10px 6px 12px / 12px 5px 10px 6px;
+  position: relative;
+}
+html[data-skin="ink-marker"] .combat .tile::before {
+  /* a pin holding the card up */
+  content: "";
+  position: absolute;
+  top: -7px; left: 50%;
+  width: 10px; height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px #fff;
+}
+html[data-skin="ink-marker"] .tile.shield {
+  border-color: var(--im-red);
+  border-radius: 6px 8px 30px 30px / 6px 8px 40px 40px;
+}
+html[data-skin="ink-marker"] .combat .tile.shield::before { background: var(--im-red); }
+html[data-skin="ink-marker"] .tile .tile-label {
+  font-family: var(--font-head);
+  font-size: .82rem;
+  letter-spacing: .06em;
+  color: var(--ink);
+}
+html[data-skin="ink-marker"] .tile .big {
+  font-family: var(--im-marker);
+  font-weight: 400;
+  font-size: 1.65rem;
+  line-height: 1.2;
+}
+html[data-skin="ink-marker"] .tile .sub { font-size: .85rem; color: var(--muted); }
+html[data-skin="ink-marker"] .spell-head .tile { min-width: 70px; border-radius: 50% 46% 50% 48% / 46% 50% 48% 50%; padding: 8px 8px 6px; }
+
+/* ---------- rows: saves, skills, facts ---------- */
+html[data-skin="ink-marker"] .row {
+  border-bottom: 0;
+  background: var(--im-rule) left bottom / 120px 6px repeat-x;
+  padding: 2px 3px 3px;
+  font-size: 1.02rem;
+}
+html[data-skin="ink-marker"] .row:last-child { background: none; }
+html[data-skin="ink-marker"] .row .val { font-weight: 400; font-size: 1.08rem; }
+html[data-skin="ink-marker"] .row .abbr { font-family: var(--font-head); color: var(--muted); font-size: .82rem; }
+html[data-skin="ink-marker"] .pip {
+  width: 14px; height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 50% 44% 52% 47% / 47% 52% 44% 50%;
+  background: #fff;
+  align-self: center;
+}
+html[data-skin="ink-marker"] .pip.on { background: var(--ink); }
+html[data-skin="ink-marker"] .pip.exp { background: var(--ink); box-shadow: 0 0 0 2px #fff, 0 0 0 3.6px var(--ink); }
+
+/* ---------- rolling: a highlighter pass ---------- */
+html[data-skin="ink-marker"] .rollable:hover,
+html[data-skin="ink-marker"] .rollable:focus-visible {
+  background: rgba(20,20,20,.07);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+html[data-skin="ink-marker"] .rollable:active { background: rgba(20,20,20,.14); }
+html[data-skin="ink-marker"] .row.rollable,
+html[data-skin="ink-marker"] td.rollable,
+html[data-skin="ink-marker"] .inline-roll { text-decoration: underline dashed rgba(20,20,20,.45); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+html[data-skin="ink-marker"] .row.rollable { text-decoration: none; }
+html[data-skin="ink-marker"] .ability.rollable,
+html[data-skin="ink-marker"] .tile.rollable { box-shadow: none; border-radius: 3px 5px 16px 14px / 3px 4px 20px 18px; }
+html[data-skin="ink-marker"] .tile.rollable { border-radius: 5px 10px 6px 12px / 12px 5px 10px 6px; }
+html[data-skin="ink-marker"] .spell-head .tile.rollable { border-radius: 50% 46% 50% 48% / 46% 50% 48% 50%; }
+html[data-skin="ink-marker"] .ability.rollable:hover,
+html[data-skin="ink-marker"] .tile.rollable:hover,
+html[data-skin="ink-marker"] .ability.rollable:focus-visible,
+html[data-skin="ink-marker"] .tile.rollable:focus-visible {
+  box-shadow: 3px 3px 0 var(--ink);
+  background: #fff;
+  transform: translate(-1px, -1px);
+}
+html[data-skin="ink-marker"] .ability .check-note { color: var(--im-red); font-size: .7rem; }
+
+/* ---------- hit points ---------- */
+html[data-skin="ink-marker"] .hp-gauge .hp-now,
+html[data-skin="ink-marker"] .hp-gauge .hp-max { font-family: var(--im-marker); font-weight: 400; }
+html[data-skin="ink-marker"] .hp-gauge .hp-now { font-size: 1.5rem; }
+html[data-skin="ink-marker"] .hp-gauge .hp-max { font-size: 1.15rem; color: var(--ink); }
+html[data-skin="ink-marker"] .hp-bar,
+html[data-skin="ink-marker"] .enc-bar {
+  height: 15px;
+  background: #fff;
+  border: 2.4px solid var(--ink);
+  border-radius: 4px 9px 5px 8px / 8px 4px 9px 5px;
+}
+html[data-skin="ink-marker"] .enc-bar { height: 11px; }
+/* the fill is coloured in with a marker: hatching over the colour */
+html[data-skin="ink-marker"] .hp-bar::after,
+html[data-skin="ink-marker"] .enc-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-55deg, rgba(255,255,255,.4) 0 2px, transparent 2px 6px);
+  pointer-events: none;
+}
+html[data-skin="ink-marker"] .hp-temp-fill { background: repeating-linear-gradient(135deg, var(--ink) 0 2px, #fff 2px 5px); opacity: .7; }
+html[data-skin="ink-marker"] .hp-temp .val { font-family: var(--im-marker); font-weight: 400; color: var(--ink); }
+html[data-skin="ink-marker"] .hp-temp .val.none { color: #aaa; }
+html[data-skin="ink-marker"] .hp-temp .val:hover { background: #fff; border-color: var(--ink); }
+html[data-skin="ink-marker"] .hp-temp,
+html[data-skin="ink-marker"] .death { font-size: .95rem; }
+html[data-skin="ink-marker"] .hitdie .hd-label,
+html[data-skin="ink-marker"] .death-roll,
+html[data-skin="ink-marker"] .death-word { font-size: .85rem; letter-spacing: .05em; }
+html[data-skin="ink-marker"] .hitdie .hd-val { font-family: var(--im-marker); font-weight: 400; font-size: 1.05rem; }
+html[data-skin="ink-marker"] .dp {
+  width: 14px; height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 50% 44% 52% 47% / 47% 52% 44% 50%;
+}
+html[data-skin="ink-marker"] .dp.win.on { background: #3f6b2a; border-color: var(--ink); }
+html[data-skin="ink-marker"] .dp.lose.on { background: var(--im-red); border-color: var(--ink); }
+html[data-skin="ink-marker"] .dp-sep { color: var(--muted); font-size: .72rem; }
+html[data-skin="ink-marker"] .death[data-dying="1"] .death-word,
+html[data-skin="ink-marker"] .death.dead .death-word { color: var(--im-red); }
+html[data-skin="ink-marker"] .hp-now.dying { color: var(--im-red); }
+
+/* ---------- buttons: drawn, with a pen shadow so they read as pressable ---------- */
+html[data-skin="ink-marker"] .hpb,
+html[data-skin="ink-marker"] .ib,
+html[data-skin="ink-marker"] .inv-add,
+html[data-skin="ink-marker"] .cast-btn,
+html[data-skin="ink-marker"] .cast-at,
+html[data-skin="ink-marker"] .cast2-btn,
+html[data-skin="ink-marker"] .spell-manage,
+html[data-skin="ink-marker"] .death .death-do,
+html[data-skin="ink-marker"] .hitdie {
+  font-family: var(--font-head);
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 14px 4px 12px 5px / 5px 12px 4px 14px;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+html[data-skin="ink-marker"] .hpb { font-size: .95rem; letter-spacing: .06em; padding: 3px 13px 2px; }
+html[data-skin="ink-marker"] .ib { font-size: .86rem; margin-left: 2px; padding: 0 4px; line-height: 1.35; box-shadow: 1.5px 1.5px 0 var(--ink); }
+html[data-skin="ink-marker"] .inv-add,
+html[data-skin="ink-marker"] .spell-manage { font-size: .92rem; letter-spacing: .06em; padding: 3px 12px 2px; }
+html[data-skin="ink-marker"] .spell-manage { border-style: dashed; }
+html[data-skin="ink-marker"] .cast-btn { font-size: .78rem; padding: 0 7px; line-height: 1.45; box-shadow: 1.5px 1.5px 0 var(--ink); }
+html[data-skin="ink-marker"] .cast-at { font-size: .74rem; box-shadow: 1.5px 1.5px 0 var(--ink); padding: 0 2px; }
+html[data-skin="ink-marker"] .cast-at.up { color: var(--im-red); border-color: var(--im-red); font-weight: 400; }
+html[data-skin="ink-marker"] .cast2-btn { font-size: .74rem; border-style: dashed; box-shadow: none; }
+html[data-skin="ink-marker"] .death .death-do { font-size: .8rem; }
+html[data-skin="ink-marker"] .hitdie { padding: 2px 10px 1px; }
+html[data-skin="ink-marker"] .hpb:hover,
+html[data-skin="ink-marker"] .ib:hover,
+html[data-skin="ink-marker"] .inv-add:hover,
+html[data-skin="ink-marker"] .cast-btn:hover,
+html[data-skin="ink-marker"] .cast-at:hover,
+html[data-skin="ink-marker"] .spell-manage:hover,
+html[data-skin="ink-marker"] .death .death-do:hover,
+html[data-skin="ink-marker"] .hitdie:hover {
+  background: #fff;
+  border-color: var(--ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+html[data-skin="ink-marker"] .hpb:active,
+html[data-skin="ink-marker"] .ib:active,
+html[data-skin="ink-marker"] .inv-add:active,
+html[data-skin="ink-marker"] .cast-btn:active,
+html[data-skin="ink-marker"] .spell-manage:active,
+html[data-skin="ink-marker"] .hitdie:active { transform: translate(2px, 2px); box-shadow: none; }
+html[data-skin="ink-marker"] .hpb.hurt { color: var(--im-red); }
+html[data-skin="ink-marker"] .hpb.heal { color: #2f6a24; }
+html[data-skin="ink-marker"] .hpb.temp { color: var(--ink); }
+html[data-skin="ink-marker"] .ib.drop:hover,
+html[data-skin="ink-marker"] .ib.gone:hover { color: var(--im-red); }
+
+html[data-skin="ink-marker"] .inv-field,
+html[data-skin="ink-marker"] .sb-field {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 3px 8px 4px 9px / 9px 3px 8px 4px;
+}
+html[data-skin="ink-marker"] .inv-field:focus,
+html[data-skin="ink-marker"] .sb-field:focus { border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+html[data-skin="ink-marker"] .hp-ctl .hp-amt { font-family: var(--im-marker); font-size: 1rem; }
+html[data-skin="ink-marker"] .hp-ctl .hp-type { font-size: .9rem; color: var(--ink); }
+html[data-skin="ink-marker"] .hp-ctl.asking .hp-amt { border-color: var(--im-red); box-shadow: 0 0 0 3px rgba(209,50,42,.2); }
+
+/* ---------- tables, inventory, coins ---------- */
+html[data-skin="ink-marker"] table { font-size: 1rem; }
+html[data-skin="ink-marker"] th {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: .85rem;
+  letter-spacing: .06em;
+  color: var(--ink);
+  border-bottom: 2.2px solid var(--ink);
+}
+html[data-skin="ink-marker"] td { border-bottom: 0; background: var(--im-rule) left bottom / 120px 6px repeat-x; padding: 3px 4px 4px; }
+html[data-skin="ink-marker"] tr:last-child td { background: none; }
+html[data-skin="ink-marker"] .tagline { font-size: .85rem; color: var(--muted); }
+html[data-skin="ink-marker"] .inv-tabs { border-bottom: 2px solid var(--ink); gap: 5px; }
+html[data-skin="ink-marker"] .inv-tab {
+  font-size: .85rem;
+  letter-spacing: .05em;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 8px 10px 0 0 / 10px 8px 0 0;
+  margin-bottom: -2px;
+}
+html[data-skin="ink-marker"] .inv-tab.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+html[data-skin="ink-marker"] .inv-tab.on .n { color: #ddd; }
+html[data-skin="ink-marker"] .inv-tab.over .n { color: var(--im-red); }
+html[data-skin="ink-marker"] .enc-line .wt,
+html[data-skin="ink-marker"] .coin-total { font-family: var(--im-marker); font-weight: 400; }
+html[data-skin="ink-marker"] .enc-badge,
+html[data-skin="ink-marker"] .sb-budget {
+  font-family: var(--font-head);
+  font-size: .8rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1.8px solid var(--ink);
+  border-radius: 12px 9px 13px 8px / 9px 13px 8px 12px;
+}
+html[data-skin="ink-marker"] .enc-badge.encumbered,
+html[data-skin="ink-marker"] .sb-budget.full { background: #fff; border-color: var(--ink); color: var(--ink); }
+html[data-skin="ink-marker"] .sb-budget.full b { color: var(--ink); }
+html[data-skin="ink-marker"] .enc-badge.heavy { background: #fff; color: var(--im-red); border-color: var(--im-red); }
+html[data-skin="ink-marker"] .enc-badge.over { background: var(--im-red); color: #fff; border-color: var(--ink); }
+html[data-skin="ink-marker"] .enc-mark { background: var(--ink); width: 2px; }
+html[data-skin="ink-marker"] .coin-pip { border: 1.6px solid var(--ink); }
+html[data-skin="ink-marker"] .enc-note,
+html[data-skin="ink-marker"] .coin-hint,
+html[data-skin="ink-marker"] .coin-sub,
+html[data-skin="ink-marker"] .uses-note { font-size: .82rem; }
+
+/* ---------- spells ---------- */
+html[data-skin="ink-marker"] details.spell summary {
+  font-size: 1.02rem;
+  border-bottom: 0;
+  background: var(--im-rule) left bottom / 120px 6px repeat-x;
+  padding: 2px 0 4px;
+}
+html[data-skin="ink-marker"] details.spell summary::marker { color: var(--ink); }
+html[data-skin="ink-marker"] details.spell p { font-size: .98rem; }
+html[data-skin="ink-marker"] .slot-row .lvl { font-size: .9rem; color: var(--ink); }
+html[data-skin="ink-marker"] .slot,
+html[data-skin="ink-marker"] .use-pip {
+  width: 15px; height: 15px;
+  border: 2px solid var(--ink);
+  border-radius: 2px 4px 3px 5px / 5px 2px 4px 3px;
+  background: #fff;
+}
+html[data-skin="ink-marker"] .use-pip { border-radius: 50% 44% 52% 47% / 47% 52% 44% 50%; }
+/* a used slot is crossed out */
+html[data-skin="ink-marker"] .slot.used,
+html[data-skin="ink-marker"] .use-pip.used {
+  background:
+    linear-gradient(45deg, transparent 42%, var(--ink) 42% 58%, transparent 58%),
+    linear-gradient(-45deg, transparent 42%, var(--ink) 42% 58%, transparent 58%), #fff;
+  border-color: var(--ink);
+}
+html[data-skin="ink-marker"] .spell-mark { color: var(--im-red); }
+html[data-skin="ink-marker"] .spell-foot { border-top: 0; background: var(--im-rule-bold) left top / 100% 7px no-repeat; padding-top: 10px; }
+html[data-skin="ink-marker"] .feature h3 { font-family: var(--font-head); font-weight: 400; font-size: 1.08rem; letter-spacing: .04em; color: var(--ink); }
+html[data-skin="ink-marker"] .feature .src { font-family: var(--font-head); font-size: .78rem; text-transform: none; }
+html[data-skin="ink-marker"] .feature p { font-size: .98rem; }
+html[data-skin="ink-marker"] .quote .label { font-family: var(--font-head); font-size: .82rem; color: var(--ink); }
+
+/* the cast buttons float right; keep each spell's floats inside its own line */
+html[data-skin="ink-marker"] details.spell summary::after { content: ""; display: block; clear: both; }
+
+/* ---------- footer and popover ---------- */
+html[data-skin="ink-marker"] footer.sheet-foot {
+  border-top: 0;
+  background: var(--im-rule-bold) left top / 100% 8px no-repeat;
+  padding-top: 12px;
+  font-size: .85rem;
+}
+html[data-skin="ink-marker"] .xp-pop {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 5px 10px 6px 12px / 12px 5px 10px 6px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+html[data-skin="ink-marker"] .xp-pop-head { font-size: .95rem; color: var(--ink); }
+
+/* ---------- phone ---------- */
+html[data-skin="ink-marker"].m header.sheet-head { padding-top: 34px; padding-bottom: 14px; }
+html[data-skin="ink-marker"].m header.sheet-head::before { height: 36px; background-size: 104px 36px; }
+html[data-skin="ink-marker"].m .char-name { font-size: 1.6rem; }
+html[data-skin="ink-marker"].m .has-portrait .char-title,
+html[data-skin="ink-marker"].m .char-title { font-size: 1.2rem; }
+html[data-skin="ink-marker"].m .head-facts { padding-top: 14px; padding-bottom: 6px; gap: 10px; }
+html[data-skin="ink-marker"].m .fact { padding: 4px 9px 3px; }
+html[data-skin="ink-marker"].m .fact::before { top: -9px; width: 34px; height: 13px; }
+html[data-skin="ink-marker"].m .fact .label { font-size: .7rem; }
+html[data-skin="ink-marker"].m .fact .value { font-size: 1.05rem; }
+html[data-skin="ink-marker"].m .m-bar {
+  background: #fff;
+  border-bottom: 0;
+  box-shadow: none;
+  padding-bottom: 6px;
+  background: #fff var(--im-rule-bold) left bottom / 100% 8px no-repeat;
+}
+html[data-skin="ink-marker"] .m-stat {
+  background: #fff;
+  border: 2.2px solid var(--ink);
+  border-radius: 4px 9px 5px 10px / 10px 4px 9px 5px;
+}
+html[data-skin="ink-marker"] .m-stat .m-lbl { font-family: var(--font-head); font-weight: 400; font-size: .68rem; color: var(--ink); }
+html[data-skin="ink-marker"] .m-stat b { font-family: var(--im-marker); font-weight: 400; font-size: 1.2rem; }
+html[data-skin="ink-marker"] .m-hp .m-hpn span { color: var(--ink); }
+html[data-skin="ink-marker"] .m-hpbar { background: #fff; border: 1.5px solid var(--ink); height: 6px; }
+html[data-skin="ink-marker"] .m-tool {
+  background: var(--ink);
+  color: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 5px 10px 6px 11px / 11px 5px 10px 6px;
+}
+html[data-skin="ink-marker"] .m-tool.ready { color: #fff; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--im-red); }
+html[data-skin="ink-marker"] .m-tab {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: .95rem;
+  letter-spacing: .05em;
+  color: var(--muted);
+  padding: 8px 9px 6px;
+}
+html[data-skin="ink-marker"] .m-tab.on { color: var(--ink); border-bottom: 3px solid var(--ink); }
+html[data-skin="ink-marker"] .m-spf button {
+  font-family: var(--font-head);
+  font-weight: 400;
+  font-size: .9rem;
+  background: #fff;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+html[data-skin="ink-marker"] .m-spf button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+html[data-skin="ink-marker"].m .abilities { column-gap: 22px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="ink-marker"] .hpb,
+  html[data-skin="ink-marker"] .ib,
+  html[data-skin="ink-marker"] .cast-btn,
+  html[data-skin="ink-marker"] .inv-add,
+  html[data-skin="ink-marker"] .spell-manage,
+  html[data-skin="ink-marker"] .hitdie { transition: none; }
+}

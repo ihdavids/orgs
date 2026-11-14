@@ -1,0 +1,441 @@
+/* skin: Tinker's Workshop
+   about: An artificer's bench: tan parchment, riveted copper pipes, hanging signboards, gears and blueprint doodles.
+   swatch: #dcc79c #7e2c2e #4d3f44 #a8761e #f4ead2
+   fonts: Rye | Kalam:wght@400;700 | Zilla Slab:ital,wght@0,400;0,600;0,700;1,400
+*/
+
+/* ================= tokens ================= */
+html[data-skin="tinkers-workshop"] {
+  --font-head: Kalam, "Comic Neue", "Trebuchet MS", sans-serif;
+  --font-body: "Zilla Slab", Rockwell, Georgia, serif;
+  --font-show: Rye, "Zilla Slab", Georgia, serif;
+  --ink: #2b1d18;
+  --paper: #f8f0dc;
+  --paper-2: #f1e5c9;
+  --line: #bfa47c;
+  --edge: #7a5a3a;
+  --accent: #7a2629;
+  --accent-2: #9a6a14;
+  --muted: #6b5643;
+  --shadow: 0 2px 0 rgba(43,29,24,.25);
+  --stat-radius: 8px;
+  --mood-rgb: 176, 120, 50;
+  --tw-pipe-h: linear-gradient(180deg, #2c0e10 0, #6e2427 14%, #a9484a 34%, #d48a7e 46%, #9a4442 58%, #6a2326 82%, #2c0e10 100%);
+  --tw-pipe-v: linear-gradient(90deg, #2c0e10 0, #6e2427 14%, #a9484a 34%, #d48a7e 46%, #9a4442 58%, #6a2326 82%, #2c0e10 100%);
+  --tw-brass: linear-gradient(180deg, #f3dc9c, #d6ab55 45%, #b5852e 55%, #e6c47a);
+  --tw-wood: linear-gradient(180deg, #c3ada2, #a48d82 55%, #927a70);
+/*@@IMAGES@@*/}
+
+/* ================= the bench ================= */
+html[data-skin="tinkers-workshop"] body {
+  background-color: #3a2618;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, transparent 2px 118px),
+    linear-gradient(90deg, #3a2618, #4a3220 50%, #3a2618);
+}
+html[data-skin="tinkers-workshop"] .page {
+  padding: 26px 30px 24px;
+  background-color: #e0caa0;
+  background-image:
+    radial-gradient(ellipse 620px 420px at 0% 0%, rgba(214,150,60,.45), transparent 70%),
+    radial-gradient(ellipse 520px 520px at 100% 100%, rgba(150,90,40,.25), transparent 70%),
+    radial-gradient(ellipse 140% 110% at 50% 45%, transparent 55%, rgba(120,70,30,.28)),
+    @@DOODLES@@,
+    @@MOTTLE@@;
+  background-size: auto, auto, auto, 360px 360px, 300px 300px;
+  box-shadow: 0 0 0 2px #2b1d18, 0 0 50px rgba(0,0,0,.6);
+  overflow: hidden;
+}
+/* gears turning slowly behind the work */
+html[data-skin="tinkers-workshop"] .page::before,
+html[data-skin="tinkers-workshop"] .page::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  background: no-repeat center / contain;
+}
+html[data-skin="tinkers-workshop"] .page::before {
+  width: 300px; height: 300px; top: -120px; right: -110px;
+  background-image: @@GEAR_BIG@@;
+  animation: tinkers-workshop-turn 90s linear infinite;
+}
+html[data-skin="tinkers-workshop"] .page::after {
+  width: 150px; height: 150px; top: 112px; right: 152px;
+  background-image: @@GEAR_SM@@;
+  animation: tinkers-workshop-turn 54s linear infinite reverse;
+}
+@keyframes tinkers-workshop-turn { to { transform: rotate(360deg); } }
+
+/* ================= header ================= */
+html[data-skin="tinkers-workshop"] header.sheet-head {
+  position: relative;
+  border-bottom: 0;
+  padding: 4px 6px 26px;
+  margin-bottom: 22px;
+  background: var(--tw-pipe-h) no-repeat left bottom / 100% 11px;
+}
+html[data-skin="tinkers-workshop"] header.sheet-head::after {
+  content: ""; position: absolute; left: -12px; right: -12px; bottom: -9px; height: 30px; pointer-events: none;
+  background:
+    @@NUT@@ no-repeat left center / 30px,
+    @@NUT@@ no-repeat right center / 30px,
+    @@NUT@@ no-repeat center center / 26px;
+}
+html[data-skin="tinkers-workshop"] .char-name {
+  font-family: var(--font-show); font-weight: 400;
+  font-size: 2.7rem; color: var(--accent);
+  text-shadow: 2px 2px 0 rgba(43,29,24,.18);
+}
+html[data-skin="tinkers-workshop"] .char-title {
+  font-family: var(--font-head); font-weight: 700; color: #5a3e2c; font-size: 1.15rem;
+}
+html[data-skin="tinkers-workshop"] .has-portrait .char-title {
+  font-family: var(--font-show); font-weight: 400;
+  font-size: 1.75rem; line-height: 1.15; color: var(--accent);
+  text-shadow: 2px 2px 0 rgba(43,29,24,.16);
+}
+html[data-skin="tinkers-workshop"] .char-sub { font-family: var(--font-head); color: #5a4433; font-size: 1.05rem; }
+
+/* facts: brass-screwed tags */
+html[data-skin="tinkers-workshop"] .fact {
+  background:
+    radial-gradient(circle at 6px 6px, #8a7468 0 1.4px, #2b1d18 2.2px, transparent 2.8px),
+    radial-gradient(circle at calc(100% - 6px) 6px, #8a7468 0 1.4px, #2b1d18 2.2px, transparent 2.8px),
+    var(--paper);
+  border: 2px solid var(--ink); border-radius: 7px;
+  box-shadow: 0 3px 0 rgba(43,29,24,.85);
+  padding: 5px 14px 4px;
+}
+html[data-skin="tinkers-workshop"] .fact .label { font-family: var(--font-head); font-weight: 700; font-size: .72rem; letter-spacing: .08em; color: var(--muted); }
+html[data-skin="tinkers-workshop"] .fact .value { font-family: var(--font-body); font-weight: 700; font-size: 1.1rem; }
+html[data-skin="tinkers-workshop"] .fact.insp,
+html[data-skin="tinkers-workshop"] .fact.xp-fact { padding: 0; }
+html[data-skin="tinkers-workshop"] .insp-btn { padding: 5px 14px 4px; border-radius: 5px; }
+html[data-skin="tinkers-workshop"] .insp-btn:hover { background: rgba(214,171,85,.22); }
+html[data-skin="tinkers-workshop"] .fact.insp.on {
+  background: var(--tw-brass); border-color: var(--ink);
+  box-shadow: 0 3px 0 rgba(43,29,24,.85), 0 0 14px rgba(240,190,80,.8);
+}
+html[data-skin="tinkers-workshop"] .fact.insp.on .insp-btn .word { color: #5a2a06; }
+html[data-skin="tinkers-workshop"] .insp-btn .word { font-family: var(--font-head); font-weight: 700; }
+
+/* portrait: a copper band inside a turning cog */
+html[data-skin="tinkers-workshop"] .portrait { filter: drop-shadow(0 3px 0 rgba(43,29,24,.5)); }
+html[data-skin="tinkers-workshop"] .portrait::before {
+  content: ""; position: absolute; inset: -3%; z-index: -1; pointer-events: none;
+  background: @@GEAR_RING@@ no-repeat center / contain;
+  animation: tinkers-workshop-turn 120s linear infinite;
+}
+html[data-skin="tinkers-workshop"] .ring-band { stroke: url(#tinkers-workshop-ring); }
+html[data-skin="tinkers-workshop"] .ring-edge { stroke: #2b1d18; stroke-width: 1.8; opacity: 1; }
+html[data-skin="tinkers-workshop"] .ring-hair { stroke: #f2c79a; opacity: .5; }
+html[data-skin="tinkers-workshop"] .ring-name { fill: #fff3dc; font-family: var(--font-head); font-weight: 700; letter-spacing: .12em; }
+html[data-skin="tinkers-workshop"] .ring-xp { fill: #fbe6c2; font-family: var(--font-head); font-weight: 700; }
+html[data-skin="tinkers-workshop"] .xp-track { stroke: rgba(43,29,24,.4); }
+html[data-skin="tinkers-workshop"] .xp-fill { stroke: #f3d27a; }
+html[data-skin="tinkers-workshop"] .ring-gem { fill: #4d3f44; stroke: #21151a; stroke-width: 1; }
+html[data-skin="tinkers-workshop"] .ring-gem-core { fill: #c9b8bc; }
+html[data-skin="tinkers-workshop"] .portrait:has(.ring-xp-btn:hover) .ring-xp { fill: #ffe08a; }
+
+/* ================= boxes: framed in copper pipe ================= */
+html[data-skin="tinkers-workshop"] .columns { gap: 26px; }
+html[data-skin="tinkers-workshop"] .col { gap: 24px; }
+html[data-skin="tinkers-workshop"] .box,
+html[data-skin="tinkers-workshop"] .has-backdrop .box,
+html[data-skin="tinkers-workshop"].has-backdrop .box {
+  position: relative;
+  border: 10px solid transparent; border-radius: 0;
+  padding: 10px 11px 14px;
+  background:
+    radial-gradient(ellipse 90% 60% at 20% 0%, rgba(255,250,236,.75), transparent 70%),
+    @@DOODLES@@,
+    @@FIBRE@@,
+    var(--paper-2);
+  background-clip: padding-box;
+  background-attachment: scroll;
+  box-shadow: 0 6px 10px -2px rgba(70,40,15,.35);
+}
+html[data-skin="tinkers-workshop"] .box::before {
+  content: ""; position: absolute; inset: -10px; pointer-events: none; z-index: 1;
+  background:
+    var(--tw-pipe-h) no-repeat left top / 100% 10px,
+    var(--tw-pipe-h) no-repeat left bottom / 100% 10px,
+    var(--tw-pipe-v) no-repeat left top / 10px 100%,
+    var(--tw-pipe-v) no-repeat right top / 10px 100%;
+}
+html[data-skin="tinkers-workshop"] .box::after {
+  content: ""; position: absolute; inset: -19px; pointer-events: none; z-index: 2;
+  background:
+    @@NUT@@ no-repeat left top / 28px,
+    @@NUT@@ no-repeat right top / 28px,
+    @@NUT@@ no-repeat left bottom / 28px,
+    @@NUT@@ no-repeat right bottom / 28px;
+}
+
+/* box titles: wooden signboards hung on little chains from the pipe */
+html[data-skin="tinkers-workshop"] .box > h2,
+html[data-skin="tinkers-workshop"] .box.tabbed > .tabpane > h2 {
+  position: relative;
+  width: fit-content; max-width: 100%;
+  margin: 18px 0 12px 4px;
+  padding: 5px 16px 3px;
+  font-family: var(--font-show); font-weight: 400;
+  font-size: .98rem; line-height: 1.2; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--ink);
+  background: @@SIGNGRAIN@@ no-repeat center / 100% 100%, var(--tw-wood);
+  border: 2px solid var(--ink); border-radius: 5px 7px 4px 6px;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.28), inset 0 -3px 0 rgba(0,0,0,.14), 0 3px 0 rgba(43,29,24,.4);
+  transform: rotate(-.8deg);
+}
+html[data-skin="tinkers-workshop"] .box > h2::before,
+html[data-skin="tinkers-workshop"] .box.tabbed > .tabpane:first-child > h2::before,
+html[data-skin="tinkers-workshop"] .tabbtn.on::before {
+  content: ""; position: absolute; bottom: calc(100% + 1px); left: 12px; right: 12px; height: 34px;
+  pointer-events: none;
+  background:
+    @@CHAIN@@ repeat-y left bottom / 8px 14px,
+    @@CHAIN@@ repeat-y right bottom / 8px 14px;
+}
+html[data-skin="tinkers-workshop"] h3.subhead,
+html[data-skin="tinkers-workshop"] .spell-level h3 {
+  font-family: var(--font-head); font-weight: 700;
+  font-size: 1.02rem; text-transform: none; letter-spacing: .02em;
+  color: var(--accent);
+  border-bottom: 2px dashed rgba(122,38,41,.45);
+}
+
+/* tabs: plain chalked labels, the open one is a hanging sign */
+html[data-skin="tinkers-workshop"] .tabbar {
+  border-bottom: 2px dashed rgba(122,38,41,.4);
+  margin: 16px 0 12px; gap: 6px; padding-bottom: 6px; align-items: flex-end;
+}
+html[data-skin="tinkers-workshop"] .tabbtn {
+  position: relative;
+  font-family: var(--font-head); font-weight: 700; font-size: .86rem; letter-spacing: .02em;
+  text-transform: none;
+  color: var(--muted); border: 2px solid transparent; border-radius: 5px; margin: 0;
+  padding: 3px 7px 1px;
+}
+html[data-skin="tinkers-workshop"] .tabbtn:hover { color: var(--accent); background: rgba(214,171,85,.25); }
+html[data-skin="tinkers-workshop"] .tabbtn.on {
+  font-family: var(--font-show); font-weight: 400; font-size: .76rem; text-transform: uppercase;
+  color: var(--ink);
+  background: @@SIGNGRAIN@@ no-repeat center / 100% 100%, var(--tw-wood);
+  border-color: var(--ink);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.28), 0 3px 0 rgba(43,29,24,.4);
+  padding: 4px 10px 2px;
+}
+html[data-skin="tinkers-workshop"] .tabbtn.on::before { height: 40px; left: 8px; right: 8px; }
+
+/* ================= ability scores: copper hex cells ================= */
+html[data-skin="tinkers-workshop"] .abilities { gap: 6px 6px; }
+html[data-skin="tinkers-workshop"] .ability,
+html[data-skin="tinkers-workshop"] .ability.rollable {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  aspect-ratio: 82 / 100; min-height: 0;
+  padding: 9px 2px 8px; gap: 1px;
+  border: 0; border-radius: 0; box-shadow: none;
+  background: @@HEX@@ no-repeat center / 100% 100%;
+  filter: drop-shadow(0 3px 0 rgba(43,29,24,.35));
+  transition: filter .15s ease, transform .15s ease;
+}
+html[data-skin="tinkers-workshop"] .ability.rollable:hover,
+html[data-skin="tinkers-workshop"] .ability.rollable:focus-visible {
+  background: @@HEXON@@ no-repeat center / 100% 100%;
+  box-shadow: none;
+  filter: drop-shadow(0 0 6px rgba(230,170,70,.9)) drop-shadow(0 3px 0 rgba(43,29,24,.35));
+  transform: translateY(-2px);
+}
+html[data-skin="tinkers-workshop"] .ability .tile-label { font-family: var(--font-head); font-weight: 700; font-size: .7rem; letter-spacing: .1em; color: #5a3e2c; line-height: 1; }
+html[data-skin="tinkers-workshop"] .ability .mod { font-family: var(--font-body); font-weight: 700; font-size: 1.5rem; line-height: 1; color: var(--ink); }
+html[data-skin="tinkers-workshop"] .ability .score {
+  font-family: var(--font-body); font-weight: 700; font-size: .82rem;
+  background: var(--tw-brass); border: 1.5px solid var(--ink); border-radius: 10px; color: var(--ink);
+  min-width: 30px; padding: 0 5px;
+}
+
+/* ================= lists ================= */
+html[data-skin="tinkers-workshop"] .row { border-bottom: 1px dashed rgba(122,90,58,.45); font-size: .95rem; }
+html[data-skin="tinkers-workshop"] .row .val { font-weight: 700; }
+html[data-skin="tinkers-workshop"] .row .abbr { font-family: var(--font-head); font-weight: 700; font-size: .74rem; }
+/* proficiency: bolt heads; expertise: a brass one with a ring */
+html[data-skin="tinkers-workshop"] .pip {
+  width: 13px; height: 13px; border: 0; border-radius: 0; padding: 2px; box-shadow: none;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: linear-gradient(#fbf5e6, #fbf5e6) content-box, var(--ink);
+}
+html[data-skin="tinkers-workshop"] .pip.on {
+  background: radial-gradient(circle at 40% 35%, #d98a7f, #8a3034 60%, #4a1416) content-box, var(--ink);
+}
+html[data-skin="tinkers-workshop"] .pip.exp {
+  background: radial-gradient(circle at 40% 35%, #fff0b8, #d6ab55 55%, #8a5a14) content-box, var(--ink);
+  box-shadow: none;
+}
+html[data-skin="tinkers-workshop"] .rollable:hover,
+html[data-skin="tinkers-workshop"] .rollable:focus-visible {
+  background-color: rgba(214,171,85,.28);
+  box-shadow: 0 0 0 2px rgba(154,106,20,.5);
+}
+html[data-skin="tinkers-workshop"] .row.rollable,
+html[data-skin="tinkers-workshop"] td.rollable,
+html[data-skin="tinkers-workshop"] .inline-roll { text-decoration-color: rgba(122,38,41,.6); }
+html[data-skin="tinkers-workshop"] th { font-family: var(--font-head); font-weight: 700; font-size: .74rem; letter-spacing: .05em; color: var(--muted); border-bottom: 2px solid var(--ink); }
+html[data-skin="tinkers-workshop"] td { border-bottom-color: rgba(122,90,58,.4); }
+
+/* ================= combat: brass-framed plates ================= */
+html[data-skin="tinkers-workshop"] .tile,
+html[data-skin="tinkers-workshop"] .tile.rollable {
+  background:
+    radial-gradient(circle at 7px 7px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) 7px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at 7px calc(100% - 7px), #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 7px) calc(100% - 7px), #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    var(--paper);
+  border: 3px solid #b5852e;
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px var(--ink), 0 4px 0 1px rgba(43,29,24,.5);
+}
+html[data-skin="tinkers-workshop"] .tile.shield,
+html[data-skin="tinkers-workshop"] .tile.shield.rollable {
+  border-color: #9a3d3b;
+  border-radius: 8px 8px 30px 30px / 8px 8px 38px 38px;
+  background:
+    radial-gradient(circle at 8px 8px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) 8px, #f6e4b0 0 1.2px, #6b4a14 2.4px, transparent 3px),
+    var(--paper);
+}
+html[data-skin="tinkers-workshop"] .tile.rollable:hover,
+html[data-skin="tinkers-workshop"] .tile.rollable:focus-visible {
+  box-shadow: 0 0 0 2px var(--ink), 0 4px 0 1px rgba(43,29,24,.5), 0 0 14px 3px rgba(230,170,70,.75);
+}
+html[data-skin="tinkers-workshop"] .tile .tile-label { font-family: var(--font-head); font-weight: 700; font-size: .74rem; letter-spacing: .06em; color: var(--muted); }
+html[data-skin="tinkers-workshop"] .tile .big { font-family: var(--font-body); font-weight: 700; font-size: 1.75rem; line-height: 1.1; }
+html[data-skin="tinkers-workshop"] .tile .sub { font-size: .76rem; }
+html[data-skin="tinkers-workshop"] .spell-head .tile { min-width: 66px; padding: 6px 9px; }
+html[data-skin="tinkers-workshop"] .combat { gap: 14px; }
+
+/* hit points: a glass gauge tube in copper fittings */
+html[data-skin="tinkers-workshop"] .hp-bar {
+  height: 14px; border-radius: 8px;
+  background: linear-gradient(180deg, #fffaf0, #e2d4ba);
+  border: 2px solid var(--ink);
+  box-shadow: 0 0 0 2px #b0544f, inset 0 2px 3px rgba(43,29,24,.35);
+}
+html[data-skin="tinkers-workshop"] .hp-fill { box-shadow: inset 0 3px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.18); }
+html[data-skin="tinkers-workshop"] .hp-gauge { gap: 12px; }
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-now,
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-max { font-family: var(--font-body); }
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-now { font-size: 1.55rem; }
+html[data-skin="tinkers-workshop"] .hp-gauge .hp-max { font-size: 1.1rem; }
+
+/* buttons: chunky cartoon pushbuttons */
+html[data-skin="tinkers-workshop"] .hpb,
+html[data-skin="tinkers-workshop"] .cast-btn,
+html[data-skin="tinkers-workshop"] .hitdie {
+  font-family: var(--font-head); font-weight: 700; letter-spacing: .04em;
+  background: linear-gradient(180deg, #fffaf0, #eedcb4);
+  border: 1.5px solid var(--ink); border-radius: 6px;
+  box-shadow: 0 2px 0 var(--ink);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+html[data-skin="tinkers-workshop"] .hpb { font-size: .84rem; padding: 3px 11px 1px; }
+html[data-skin="tinkers-workshop"] .cast-btn { font-size: .74rem; padding: 0 7px; line-height: 1.45; margin-bottom: 2px; }
+html[data-skin="tinkers-workshop"] .cast-at { font-family: var(--font-head); font-weight: 700; font-size: .72rem; border: 1.5px solid var(--ink); border-radius: 6px; }
+html[data-skin="tinkers-workshop"] .hpb:hover,
+html[data-skin="tinkers-workshop"] .cast-btn:hover,
+html[data-skin="tinkers-workshop"] .hitdie:hover {
+  background: var(--tw-brass); border-color: var(--ink);
+  transform: translateY(1px); box-shadow: 0 1px 0 var(--ink);
+}
+html[data-skin="tinkers-workshop"] .hitdie .hd-label { font-size: .74rem; }
+html[data-skin="tinkers-workshop"] .hitdie .hd-val { font-family: var(--font-body); font-size: 1.05rem; }
+html[data-skin="tinkers-workshop"] .hp-ctl .hp-amt { font-family: var(--font-body); font-size: 1rem; border: 1.5px solid var(--ink); border-radius: 6px; }
+html[data-skin="tinkers-workshop"] details.spell summary { font-size: .93rem; border-bottom-color: rgba(122,90,58,.4); }
+html[data-skin="tinkers-workshop"] details.spell summary::marker { color: var(--accent); }
+html[data-skin="tinkers-workshop"] .feature h3 { font-family: var(--font-head); font-weight: 700; color: var(--accent); font-size: 1.02rem; }
+
+/* the spell buttons float beside each line: kept no taller than the line so
+   the floats of one spell never push into the next */
+html[data-skin="tinkers-workshop"] .cast-btn,
+html[data-skin="tinkers-workshop"] .cast-at { height: 18px; line-height: 14px; padding-top: 0; padding-bottom: 0; margin-top: 1px; margin-bottom: 1px; }
+html[data-skin="tinkers-workshop"] .cast-at { height: 18px; }
+html[data-skin="tinkers-workshop"] details.spell summary { line-height: 21px; }
+html[data-skin="tinkers-workshop"] details.spell summary::after { content: ""; display: block; clear: both; }
+
+/* the inventory's row of buttons, a little tighter than the classic
+   sheet's so the whole row fits inside the frame */
+html[data-skin="tinkers-workshop"] .ib { padding: 0 4px; margin-left: 2px; }
+html[data-skin="tinkers-workshop"] .inv-table td, html[data-skin="tinkers-workshop"] .inv-table th { padding-left: 3px; padding-right: 3px; }
+
+/* ================= footer ================= */
+html[data-skin="tinkers-workshop"] footer.sheet-foot {
+  font-family: var(--font-head); font-size: .82rem; color: #5a4433;
+  border-top: 2px dashed rgba(122,38,41,.45);
+}
+
+html[data-skin="tinkers-workshop"] .xp-pop {
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 8px;
+  box-shadow: 0 0 0 4px #b0544f, 0 0 0 6px var(--ink), 0 12px 26px rgba(43,29,24,.45);
+}
+html[data-skin="tinkers-workshop"] .xp-pop-head { font-family: var(--font-head); font-weight: 700; font-size: .86rem; }
+
+/* ================= the phone ================= */
+html[data-skin="tinkers-workshop"].m .page { padding: 8px 14px 92px; }
+html[data-skin="tinkers-workshop"].m .page::before { width: 200px; height: 200px; top: -90px; right: -80px; }
+html[data-skin="tinkers-workshop"].m .page::after { display: none; }
+html[data-skin="tinkers-workshop"].m header.sheet-head { padding: 6px 2px 20px; margin-bottom: 12px; }
+html[data-skin="tinkers-workshop"].m header.sheet-head::after { left: -6px; right: -6px; bottom: -8px; }
+html[data-skin="tinkers-workshop"].m .char-name { font-size: 1.7rem; }
+html[data-skin="tinkers-workshop"].m .has-portrait .char-title { font-size: 1.15rem; }
+html[data-skin="tinkers-workshop"].m .char-title { font-size: 1rem; }
+html[data-skin="tinkers-workshop"].m .head-facts { padding: 4px 14px 8px; margin: 0 -14px; }
+html[data-skin="tinkers-workshop"].m .fact { padding: 4px 11px 3px; }
+html[data-skin="tinkers-workshop"].m .fact.insp,
+html[data-skin="tinkers-workshop"].m .fact.xp-fact { padding: 0; }
+html[data-skin="tinkers-workshop"].m .insp-btn { padding: 4px 11px 3px; }
+html[data-skin="tinkers-workshop"].m .m-bar {
+  margin: 0 -14px 18px; padding: 8px 14px 0;
+  background:
+    var(--tw-pipe-h) no-repeat left bottom / 100% 8px,
+    linear-gradient(180deg, #ead8b2, #dcc595);
+  border-bottom: 0;
+  box-shadow: 0 6px 10px -4px rgba(43,29,24,.5);
+  padding-bottom: 8px;
+}
+html[data-skin="tinkers-workshop"].m .m-stat {
+  background: var(--paper); border: 2px solid var(--ink); border-radius: 7px;
+  box-shadow: 0 2px 0 var(--ink);
+}
+html[data-skin="tinkers-workshop"].m .m-stat .m-lbl { font-family: var(--font-head); font-size: .66rem; letter-spacing: .06em; }
+html[data-skin="tinkers-workshop"].m .m-stat b { font-family: var(--font-body); font-size: 1.22rem; }
+html[data-skin="tinkers-workshop"].m .m-tool {
+  background: linear-gradient(180deg, #c76a5f, #8a3034 55%, #5a1c1e);
+  color: #ffe6c8; border: 2px solid var(--ink); border-radius: 7px;
+  box-shadow: 0 2px 0 var(--ink), inset 0 2px 0 rgba(255,255,255,.25);
+}
+html[data-skin="tinkers-workshop"].m .m-tab {
+  font-family: var(--font-head); font-weight: 700; font-size: .92rem; letter-spacing: .02em; text-transform: none;
+  color: var(--muted); padding: 8px 9px 6px;
+}
+html[data-skin="tinkers-workshop"].m .m-tab.on { color: var(--accent); border-bottom-color: #9a3d3b; }
+html[data-skin="tinkers-workshop"].m .columns { gap: 26px; }
+html[data-skin="tinkers-workshop"].m .ability { aspect-ratio: 100 / 88; gap: 2px; }
+html[data-skin="tinkers-workshop"].m .ability .mod { font-size: 1.9rem; }
+html[data-skin="tinkers-workshop"].m .ability .tile-label { font-size: .8rem; }
+html[data-skin="tinkers-workshop"].m .box { padding: 8px 12px 12px; }
+html[data-skin="tinkers-workshop"].m .box.has-tabs > .tabpane.m-on ~ .tabpane.m-on > h2 { margin-top: 22px; }
+html[data-skin="tinkers-workshop"].m .box.has-tabs > .tabpane.m-on > h2::before {
+  content: ""; position: absolute; bottom: calc(100% + 1px); left: 12px; right: 12px; height: 34px; pointer-events: none;
+  background: @@CHAIN@@ repeat-y left bottom / 8px 14px, @@CHAIN@@ repeat-y right bottom / 8px 14px;
+}
+html[data-skin="tinkers-workshop"].m .box.has-tabs > .tabpane.m-on ~ .tabpane.m-on > h2::before { content: none; }
+html[data-skin="tinkers-workshop"].m .m-spf button { font-family: var(--font-head); font-weight: 700; font-size: .86rem; border: 1.5px solid var(--ink); }
+html[data-skin="tinkers-workshop"].m .m-spf button.on { background: var(--accent); color: #fff3e0; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="tinkers-workshop"] .page::before,
+  html[data-skin="tinkers-workshop"] .page::after,
+  html[data-skin="tinkers-workshop"] .portrait::before { animation: none; }
+  html[data-skin="tinkers-workshop"] .ability,
+  html[data-skin="tinkers-workshop"] .hpb,
+  html[data-skin="tinkers-workshop"] .cast-btn,
+  html[data-skin="tinkers-workshop"] .hitdie { transition: none; }
+}

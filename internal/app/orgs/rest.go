@@ -417,6 +417,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/dnd/hp", PostDndHealth).Methods("POST")
 	api.HandleFunc("/dnd/inspiration", RequestDndInspiration).Methods("GET")
 	api.HandleFunc("/dnd/inspiration", PostDndInspiration).Methods("POST")
+	api.HandleFunc("/dnd/xp", PostDndXP).Methods("POST")
+	api.HandleFunc("/dnd/skin", PostDndSkin).Methods("POST")
 	api.HandleFunc("/dnd/concentration", RequestDndConcentration).Methods("GET")
 	api.HandleFunc("/dnd/concentration", PostDndConcentration).Methods("POST")
 
@@ -875,6 +877,10 @@ func RequestFile(w http.ResponseWriter, r *http.Request) {
 	props["backdrop"] = r.URL.Query().Get("backdrop")
 	props["backdropCycle"] = r.URL.Query().Get("backdropCycle")
 	props["backdropOpacity"] = r.URL.Query().Get("backdropOpacity")
+	// skin= previews a dnd sheet in a skin without writing it to the character.
+	if r.URL.Query().Has("skin") {
+		props["skin"] = r.URL.Query().Get("skin")
+	}
 	// The presentation exporters: a theme, an impress.js layout and a deck.js
 	// transition can be overridden per request. The org file says what it
 	// wants (`#+REVEAL_THEME:` and friends) and these are how somebody looking
