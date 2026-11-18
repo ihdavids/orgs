@@ -23,16 +23,12 @@ func conf(t *testing.T, src string) (Conf, *org.Document) {
 	return Conf{Doc: d, Prefix: "REVEAL"}, d
 }
 
-// The whole reason this package exists.
-//
-// go-org ends a headline's body at a drawer written in column zero and hoists
-// the rest of the heading to the top level of the document, so for a file with
-// `:PROPERTIES:` under its headings - which Emacs writes by default, and which
-// is every file that configures a slide - `Headline.Children` is empty and
-// `Headline.Properties` is nil. A builder that walked the tree would come back
-// with a deck of empty slides, which is exactly what the reveal.js and
-// impress.js exporters used to do.
-const hoisted = `#+TITLE: A Talk
+// Property drawers in column zero, as Emacs writes them and as every file that
+// configures a slide has. go-org once ended a headline's body at such a drawer
+// and hoisted the rest of the heading to the top level, and the reveal.js and
+// impress.js exporters came back with decks of empty slides; this pins that
+// the body and the properties stay on their slide.
+const columnZero = `#+TITLE: A Talk
 #+AUTHOR: Someone
 
 An abstract above the first heading.
@@ -55,8 +51,8 @@ The body of the first slide.
 The body of the second slide.
 `
 
-func TestBuildReadsAHoistedDocument(t *testing.T) {
-	c, d := conf(t, hoisted)
+func TestBuildReadsColumnZeroDrawers(t *testing.T) {
+	c, d := conf(t, columnZero)
 	deck := BuildDeck(c, d)
 
 	if deck.Title != "A Talk" || deck.Author != "Someone" {
@@ -73,13 +69,11 @@ func TestBuildReadsAHoistedDocument(t *testing.T) {
 	if got := org.String(first.Title...); got != "First" {
 		t.Errorf("first slide is %q", got)
 	}
-	// The body: hoisted to the top level by the parser, attributed back here.
 	if len(first.Body) == 0 {
 		t.Errorf("the first slide has no body")
 	}
-	// The properties: hoisted out of the headline, read back off the slide.
 	if v, ok := first.Props()("BACKGROUND"); !ok || v != "blue" {
-		t.Errorf("BACKGROUND came back %q (%v) - a hoisted drawer was not picked up", v, ok)
+		t.Errorf("BACKGROUND came back %q (%v) - the drawer was not read", v, ok)
 	}
 	if got := SlideID(c, first.Props(), "fallback"); got != "first" {
 		t.Errorf("the slide's own id is %q", got)
@@ -93,8 +87,7 @@ func TestBuildReadsAHoistedDocument(t *testing.T) {
 	}
 }
 
-// Nesting still works - plenty of headlines parse as a tree - and the two
-// shapes have to come out the same.
+// Indented drawers come out the same as column-zero ones.
 func TestBuildReadsANestedDocument(t *testing.T) {
 	c, d := conf(t, `* First
   Body one.
@@ -126,8 +119,7 @@ func TestBuildReadsANestedDocument(t *testing.T) {
 }
 
 // The slide level: deeper than it, a headline is a heading *on* the slide
-// rather than a slide of its own - and anything the parser hoisted after it
-// stays on that slide too.
+// rather than a slide of its own, its body with it.
 func TestSlideLevel(t *testing.T) {
 	c, d := conf(t, `#+SLIDE_LEVEL: 1
 
@@ -143,7 +135,7 @@ Body of one.
 :CLASS: small
 :END:
 
-More body, hoisted after a drawer.
+More body, after a column-zero drawer.
 
 * Two
 
@@ -157,20 +149,18 @@ Body of two.
 	if len(one.Subs) != 0 {
 		t.Errorf("a headline below the slide level should not be a slide: %d subs", len(one.Subs))
 	}
-	// The heading, and the prose hoisted after it, are both on slide one.
-	body := ""
+	// The heading is on slide one, and the prose after its drawer is inside it.
+	var inner *org.Headline
 	for _, n := range one.Body {
-		if h := asHeadline(n); h != nil {
-			body += "[heading:" + org.String(h.Title...) + "]"
-			continue
+		if h := asHeadline(n); h != nil && org.String(h.Title...) == "A heading on the slide" {
+			inner = h
 		}
-		body += "[node]"
 	}
-	if !strings.Contains(body, "[heading:A heading on the slide]") {
-		t.Errorf("the deeper heading is not on the slide: %s", body)
+	if inner == nil {
+		t.Fatalf("the deeper heading is not on the slide")
 	}
-	if strings.Count(body, "[node]") < 2 {
-		t.Errorf("the body hoisted after the deeper heading went missing: %s", body)
+	if !strings.Contains(org.String(inner.Children...), "More body") {
+		t.Errorf("the deeper heading's body went missing: %q", org.String(inner.Children...))
 	}
 }
 
@@ -230,9 +220,8 @@ Body.
 	}
 }
 
-// An excluded heading takes its body with it, including the part the parser
-// hoisted out of it - the test that matters, because the body is no longer
-// inside the headline that said `:noexport:`.
+// An excluded heading takes its body and children with it, past a column-zero
+// drawer.
 func TestNoExportTakesItsBody(t *testing.T) {
 	c, d := conf(t, `* Kept
 Body kept.
@@ -261,14 +250,14 @@ Body kept again.
 	for _, s := range deck.Flat() {
 		for _, n := range s.Body {
 			if strings.Contains(org.String(n), "must not be exported") {
-				t.Errorf("an excluded heading's hoisted body landed on %q", org.String(s.Title...))
+				t.Errorf("an excluded heading's body landed on %q", org.String(s.Title...))
 			}
 		}
 	}
 }
 
 func TestTitleSlide(t *testing.T) {
-	c, d := conf(t, hoisted)
+	c, d := conf(t, columnZero)
 	if deck := BuildDeck(c, d); !deck.TitleSlide {
 		t.Errorf("a file with a title and an abstract should get a title slide")
 	}

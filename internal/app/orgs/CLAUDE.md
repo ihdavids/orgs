@@ -53,7 +53,7 @@ Twins (for the root list):
 
 Shared files touched (small): `rest.go` (one route line), `refresh.go` (`tl` flag + pass in `exportLinesFor`).
 
-Tests run: `go test -vet=off ./internal/common/ -run Timeline` and `./internal/app/orgs/ -run TestTimeline` (events, org dates incl. datetree/planned/range/closed, range filter, spec errors, list, html/latex export copy, svg, dynamic block) - pass. Throwaway server on 8122 with three files: svg checked as PNG light and dark; CLI `timeline`, `-file -clocks`, a query, `ls`, `svg -out`, `date`, `-json`, `dblock` on the block - all as expected.
+Tests run: `go test ./internal/common/ -run Timeline` and `./internal/app/orgs/ -run TestTimeline` (events, org dates incl. datetree/planned/range/closed, range filter, spec errors, list, html/latex export copy, svg, dynamic block) - pass. Throwaway server on 8122 with three files: svg checked as PNG light and dark; CLI `timeline`, `-file -clocks`, a query, `ls`, `svg -out`, `date`, `-json`, `dblock` on the block - all as expected.
 
 Not done: TikZ for LaTeX (a list instead), a `:DATE_END:`-style second property (ranges go in `:DATE:`), millennia as a `:DATE:` word, decades BC (`1950s` only AD), `IsDated()`-style query function, writing anything (dragging an event to move its date).
 
@@ -144,7 +144,7 @@ Twins (for the root list):
 - **Latex Suite engine, table format and maths scanner** (`LatexDecodeCell`, `ParseLatexSnippets`, `MergeLatexSnippets`, `LatexExpand` incl. the `@`/backquote and command-name rules, `LatexVisual`, `LatexAutoFraction`, `LatexPlace`, `LatexMask`, `LatexFragments`, `LatexModeAt`): `internal/common/latexsuite.go` ↔ `worg/src/latexsuite.ts` ↔ `vscode-org-everywhere/src/latex-suite-model.ts` (a **verbatim copy** of worg's file: `cp` it, don't edit it). Same cases in `latexsuite_test.go`, `latexsuite.test.ts` and `test/latex-suite-model.test.ts` (whose body is worg's test file pasted under an `expect` shim). Offsets: bytes in Go, UTF-16 in TS; the cases are ASCII. `latexTabout`, `latexTexOf`, `latexOptionWords`, `latexFilter` are TS only.
 - **The built-in snippet set**: `internal/common/latexsnippets.org` ↔ `worg/src/latexsnippets.json` ↔ `vscode-org-everywhere/media/latex-snippets.json` (the clients' offline copies). `TestLatexBuiltinCopies` fails when they differ; `LATEX_SNIPPETS_WRITE=1 go test -run TestLatexBuiltinCopies ./internal/common/` rewrites both (they carry line numbers, so any edit to the org file needs it).
 
-Tests: `go test -vet=off ./internal/common/ -run Latex`, `./internal/app/orgs/ -run Latex`, `./internal/app/orgs/plugs/html/ -run LatexMath`.
+Tests: `go test ./internal/common/ -run Latex`, `./internal/app/orgs/ -run Latex`, `./internal/app/orgs/plugs/html/ -run LatexMath`.
 
 ### Local images: `localimages.go` (features.localImages, org-download)
 

@@ -125,9 +125,9 @@ func RenderOrg(c *Character, rs *Ruleset) string {
 
 	// ---- identity ---------------------------------------------------------
 	w("* %s\n", title)
-	// The drawer has to be indented: go-org only attaches a property drawer to
-	// its headline when it is, and an unattached drawer is invisible to every
-	// org query, which is the whole point of storing DND_ID here.
+	// The drawer is indented, as these files have always been written; a
+	// change here would show as a diff in every character file on its next
+	// save. DND_ID in it is what org queries find the character by.
 	w("   :PROPERTIES:\n")
 	props := [][2]string{
 		{PropId, CharacterId(c)},

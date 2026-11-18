@@ -130,8 +130,8 @@ func (self *OrgConfluenceExporter) Export(db common.ODb, query string, to string
 	_, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: html failed to query expression, %v [%s]\n", err, query)
-		log.Printf(msg)
-		return fmt.Errorf(msg)
+		log.Print(msg)
+		return fmt.Errorf("%s", msg)
 	}
 	return nil
 }

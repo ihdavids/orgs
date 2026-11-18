@@ -951,7 +951,6 @@ func dynQuery(c *dynCtx) ([]string, error) {
 			hits, _ = EvalForNodes(exp, v, f, hits)
 		}
 		sort.SliceStable(hits, func(a, b int) bool { return headlineRow(hits[a]) < headlineRow(hits[b]) })
-		lines := fileLines(f.Doc.Path)
 		for _, s := range hits {
 			if s.Headline == nil {
 				continue
@@ -960,7 +959,7 @@ func dynQuery(c *dynCtx) ([]string, error) {
 				break
 			}
 			count++
-			props := propsOfSection(lines, s)
+			props := propsOfSection(s)
 			row := ownRow(f, s, props, spec, len(s.Children) > 0)
 			cells := []string{}
 			for i, cell := range row.Cells {

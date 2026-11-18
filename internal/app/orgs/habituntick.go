@@ -63,7 +63,7 @@ var anyHeadRe = regexp.MustCompile(`^\*+\s`)
 //
 // The order is forced, as in applyStatusChange: every edit that adds or removes a
 // line moves the ones below it, so the heading's extent is measured again after
-// each one. Measuring once at the top and using it throughout writes the second
+// each one (headingLines.Set). Measuring once at the top and using it throughout writes the second
 // edit into the wrong heading and reports success.
 func UntickHabit(hash string, now time.Time) (common.HabitUntickResult, error) {
 	var res common.HabitUntickResult
@@ -72,7 +72,7 @@ func UntickHabit(hash string, now time.Time) (common.HabitUntickResult, error) {
 		res.Msg = "no heading with that hash"
 		return res, nil
 	}
-	f := GetDb().ByHashToFile[hash]
+	f := GetDb().FileFromSection(sec)
 	if f == nil {
 		res.Msg = "no file for that heading"
 		return res, nil
@@ -84,57 +84,57 @@ func UntickHabit(hash string, now time.Time) (common.HabitUntickResult, error) {
 		return res, nil
 	}
 
-	lines, from, end, ok := recordLines(f.Filename, sec)
-	if !ok {
+	h, err := readHeadingLines(f.Filename, sec)
+	if err != nil {
 		res.Msg = "could not read " + f.Filename
 		return res, nil
 	}
+	from := h.From
 	lvl := sec.Headline.Lvl
 	ind := indentOf(lvl)
-	set := applyHeadingLogProps(fileLogSettings(f), propsFromLines(lines, from, end))
+	set := applyHeadingLogProps(fileLogSettings(f), propsFromLines(h.Lines, from, h.End))
 	today := dayOf(now).Format("2006-01-02")
 
 	// 1. The completion lines. Removed back to front, so that each index is still
 	//    the index it was found at.
-	at := habitDoneLinesOn(lines, from, end, set.drawer, today)
+	at := habitDoneLinesOn(h.Lines, from, h.End, set.drawer, today)
 	if len(at) == 0 {
 		res.Msg = "nothing recorded for today"
 		return res, nil
 	}
 	wasKeyword := ""
+	lines := h.Lines
 	for i := len(at) - 1; i >= 0; i-- {
 		if m := stateFromRe.FindStringSubmatch(lines[at[i]]); m != nil && wasKeyword == "" {
 			wasKeyword = m[1]
 		}
 		lines = append(lines[:at[i]], lines[at[i]+1:]...)
 	}
+	h.Set(lines)
 	res.Removed = len(at)
-	lines, from, end = reread(lines, from, lvl)
 
 	// 2. An empty drawer goes with them. A bare :LOGBOOK:/:END: pair left behind
 	//    is not wrong, exactly, but org does not write one and a habit that has
 	//    never been kept should read like one that has never been kept.
 	if set.drawer != "" {
-		if s, e, found := drawerAt(lines, from, end, set.drawer); found && e == s+1 {
-			lines = append(lines[:s], lines[e+1:]...)
-			lines, from, end = reread(lines, from, lvl)
+		if s, e, found := drawerAt(h.Lines, from, h.End, set.drawer); found && e == s+1 {
+			h.Set(append(h.Lines[:s], h.Lines[e+1:]...))
 		}
 	}
 
 	// 3. The date, and only on the evidence that it moved today.
-	props := propsFromLines(lines, from, end)
+	props := propsFromLines(h.Lines, from, h.End)
 	if stampDay(props["LAST_REPEAT"]) == today {
-		prev := previousCompletion(lines, from, end, set.drawer, today)
-		if moved, when := retreatPlanning(lines, from, end, prev); moved {
+		prev := previousCompletion(h.Lines, from, h.End, set.drawer, today)
+		if moved, when := retreatPlanning(h.Lines, from, h.End, prev); moved {
 			res.Moved = true
 			res.Scheduled = when
 		}
 		// 4. And :LAST_REPEAT: itself, which now records a repeat that is no
 		//    longer in the file.
-		if ps, pe, found := drawerAt(lines, from, end, "PROPERTIES"); found {
-			if out, dropped := dropPropIn(lines, ps, pe, "LAST_REPEAT"); dropped {
-				lines = out
-				lines, from, end = reread(lines, from, lvl)
+		if ps, pe, found := drawerAt(h.Lines, from, h.End, "PROPERTIES"); found {
+			if out, dropped := dropPropIn(h.Lines, ps, pe, "LAST_REPEAT"); dropped {
+				h.Set(out)
 			}
 		}
 	}
@@ -150,17 +150,16 @@ func UntickHabit(hash string, now time.Time) (common.HabitUntickResult, error) {
 				back = active[0]
 			}
 		}
-		if head, done := replaceHeadlineStatus(lines[from], sec.Headline.Status, back); done {
-			lines[from] = head
+		if head, done := replaceHeadlineStatus(h.Lines[from], sec.Headline.Status, back); done {
+			h.Lines[from] = head
 			res.Status = back
 		}
 		// It is not finished any more, so it is not closed either.
-		lines = unstampClosed(lines, from, end)
-		lines, from, end = reread(lines, from, lvl)
+		h.Set(unstampClosed(h.Lines, from, h.End))
 	}
 	_ = ind
 
-	if err := writeLines(f.Filename, lines); err != nil {
+	if err := h.Write(); err != nil {
 		return res, err
 	}
 	GetDb().ReloadFile(f.Filename)

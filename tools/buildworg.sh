@@ -61,4 +61,16 @@ while read -r f; do
     fi
 done
 
+# What this build was made from, for /server/status and orgs doctor: a
+# binary serving a worg older than the worg checkout beside it is the usual
+# reason a fix "did not work". Written after compressing (it is under 1 KB, so
+# it stays plain) and matched by name in embed.go.
+WORG_COMMIT=$(cd "$WORG" && git rev-parse --short HEAD 2>/dev/null || echo "")
+WORG_DIRTY=false
+if [ -n "$(cd "$WORG" && git status --porcelain 2>/dev/null)" ]; then WORG_DIRTY=true; fi
+ORGS_COMMIT=$(cd "$HERE" && git rev-parse --short HEAD 2>/dev/null || echo "")
+cat > "$HERE/worg/build.json" <<JSON
+{"worgCommit": "$WORG_COMMIT", "worgDirty": $WORG_DIRTY, "orgsCommit": "$ORGS_COMMIT", "builtAt": "$(date -u +%FT%TZ)"}
+JSON
+
 echo "done - rebuild orgs to pick it up:  go build -o orgs ./cmd/orgs"

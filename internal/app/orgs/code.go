@@ -240,10 +240,8 @@ func codeFileLines(f *common.OrgFile) []string {
 // heading it sits under.
 //
 // The heading is found by position - the last one starting above the block -
-// rather than by walking the outline. That is the same rule the link index
-// follows and for the same reason: go-org ends a headline's body at a drawer
-// written in column zero and hoists the rest of that heading to the top of the
-// document, where the outline no longer says where anything is.
+// which is the heading whose body or subtree the block is in, however deeply
+// the block itself is nested (in a list, a drawer, another block).
 func collectFileBlocks(f *common.OrgFile) []*blockRef {
 	out := []*blockRef{}
 	if f == nil || f.Doc == nil {

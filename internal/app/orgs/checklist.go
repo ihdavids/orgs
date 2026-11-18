@@ -282,8 +282,10 @@ func RequestTodoBody(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	filename := ""
-	if f, ok := GetDb().ByHashToFile[string(h)]; ok && f != nil && f.Doc != nil {
-		filename = f.Doc.Path
+	if sec := GetDb().FindByHash(string(h)); sec != nil {
+		if f := GetDb().FileFromSection(sec); f != nil && f.Doc != nil {
+			filename = f.Doc.Path
+		}
 	}
 	res.Audio, res.Images = mediaIn(props, res.Text, filename)
 	// Image is what a card reads, and is the first of them.

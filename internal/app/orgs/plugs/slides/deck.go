@@ -10,28 +10,11 @@ package slides
 // already existed did, and a deck somebody wrote last year has to keep looking
 // the way it looked.
 //
-// The hard part is not the levels. It is that **a parsed org document is not a
-// tree**, or not reliably one.
-//
-// go-org ends a headline's body at the first drawer or block written in column
-// zero, and hoists everything after it to the top level of the document. Emacs
-// writes property drawers in column zero by default, so for a file with
-// `:PROPERTIES:` under its headings - which is every file that configures a
-// slide - the parse comes back as a flat list: headline, property drawer,
-// paragraph, list, headline, ... with `Headline.Children` empty and
-// `Headline.Properties` nil. Some headlines nest and some do not, in the same
-// file, depending on what they happen to contain.
-//
-// Walking `Headline.Children` is therefore not enough, and it is why the
-// reveal.js and impress.js exporters lost the body of any slide that carried a
-// property and never read a per-slide property at all: `:REVEAL_TRANSITION:`
-// has been silently doing nothing on exactly the slides that asked for it.
-//
-// So this walks the nodes **in order** and attributes each one to the last
-// headline that started above it - the same rule `links.go` and `code.go`
-// arrived at, for the same reason - and picks up a hoisted property drawer as
-// the properties of the headline it follows. The result is the tree the file
-// described, however it happened to parse.
+// Each headline's own drawer is its properties and its children are what
+// nested under it: go-org keeps a drawer written in column zero (what Emacs
+// writes) inside the headline, so the parse is the tree the file describes.
+// The walk is still in document order, so the body, the speaker notes and the
+// headings inside a slide come out as written.
 
 import (
 	"strings"
@@ -39,16 +22,15 @@ import (
 	"github.com/ihdavids/go-org/org"
 )
 
-// PropGet is anything that can be asked for a property: a slide (whose
-// properties may have been hoisted out of its headline), or a bare headline.
+// PropGet is anything that can be asked for a property: a slide, or a bare
+// headline.
 //
 // It is a function rather than an interface because the two things that
 // implement it are a struct in this package and go-org's headline, and wrapping
 // the second in a type of our own would mean every caller converting.
 type PropGet func(key string) (string, bool)
 
-// HeadlineProps reads a headline's own drawer - which is right for a heading
-// *inside* a slide, where nothing was hoisted.
+// HeadlineProps reads a headline's own drawer, for a heading *inside* a slide.
 func HeadlineProps(h *org.Headline) PropGet {
 	if h == nil {
 		return nil
@@ -63,9 +45,6 @@ type Slide struct {
 	Title []org.Node
 	Body  []org.Node
 	Notes []org.Node
-	// props is the headline's property drawer wherever it ended up: nested
-	// inside the headline, or hoisted to the top level by the parser.
-	props *org.PropertyDrawer
 	// Subs are the slides underneath this one: a vertical stack in reveal, a
 	// run of further steps in the flat frameworks.
 	Subs []*Slide
@@ -80,11 +59,6 @@ func (s *Slide) Props() PropGet {
 		return nil
 	}
 	return func(key string) (string, bool) {
-		if s.props != nil {
-			if v, ok := s.props.Get(key); ok {
-				return v, ok
-			}
-		}
 		if s.H != nil {
 			return s.H.Properties.Get(key)
 		}
@@ -128,17 +102,6 @@ type builder struct {
 	level int
 	// stack is the open slides, innermost last.
 	stack []*Slide
-	// divert sends nodes somewhere other than the current slide's body: the
-	// speaker notes, when a `** Notes` headline is open.
-	divert *[]org.Node
-	// skipTo is the level at or above which a new headline ends a skipped
-	// subtree - everything excluded from the export, body and all.
-	skipping bool
-	skipLvl  int
-	// last is the headline a hoisted property drawer belongs to.
-	last *Slide
-	// divertAt is the level of the notes heading currently open.
-	divertAt int
 }
 
 // BuildDeck reads a parsed document into a deck.
@@ -179,14 +142,9 @@ func (b *builder) cur() *Slide {
 	return b.stack[len(b.stack)-1]
 }
 
-// add puts one body node where it belongs: into the speaker notes while a notes
-// heading is open, into the current slide, or into the preamble when nothing is
-// open yet.
+// add puts one body node where it belongs: into the current slide, or into the
+// preamble when nothing is open yet.
 func (b *builder) add(n org.Node) {
-	if b.divert != nil {
-		*b.divert = append(*b.divert, n)
-		return
-	}
 	if s := b.cur(); s != nil {
 		s.Body = append(s.Body, n)
 		return
@@ -200,15 +158,9 @@ func (b *builder) walk(nodes []org.Node) {
 			b.headline(h)
 			continue
 		}
-		if b.skipping {
-			continue
-		}
-		// A property drawer is the properties of the heading above it, wherever
-		// the parser decided to put it.
-		if pd := asPropertyDrawer(n); pd != nil {
-			if b.last != nil && b.last.props == nil {
-				b.last.props = pd
-			}
+		// The only property drawer left among the nodes is the file's own,
+		// above the first heading: settings, not something to show.
+		if asPropertyDrawer(n) != nil {
 			continue
 		}
 		if notes, ok := notesOf(n); ok {
@@ -226,20 +178,8 @@ func (b *builder) notes(notes []org.Node) {
 }
 
 func (b *builder) headline(h *org.Headline) {
-	// Any headline at or above the skipped subtree's level ends the skip.
-	if b.skipping {
-		if h.Lvl > b.skipLvl {
-			return
-		}
-		b.skipping = false
-	}
-	// A notes heading ends where the next heading at its level or above begins.
-	if b.divert != nil && h.Lvl <= b.divertLvl() {
-		b.divert = nil
-	}
-
+	// An excluded heading goes with everything under it.
 	if h.IsExcluded(b.doc) || isNoExport(h) {
-		b.skipping, b.skipLvl = true, h.Lvl
 		return
 	}
 
@@ -249,43 +189,30 @@ func (b *builder) headline(h *org.Headline) {
 	}
 
 	if isNotesHeadline(h) {
-		// The speaker's notes: this heading's own children, plus everything
-		// hoisted after it, until the next heading at its level or above.
+		// The speaker's notes: everything under this heading.
 		if s := b.cur(); s != nil {
 			s.Notes = append(s.Notes, h.Children...)
-			b.divert = &s.Notes
-			b.divertAt = h.Lvl
 		}
-		b.last = nil
 		return
 	}
 
 	if h.Lvl > b.level {
-		// Deeper than the slide level: a heading *inside* the current slide.
-		// The node is added whole - the writer renders it as a heading and its
-		// nested children - and the slide stays open, so anything the parser
-		// hoisted after it lands on the same slide, in order.
+		// Deeper than the slide level: a heading *inside* the current slide,
+		// added whole - the writer renders it as a heading and its nested
+		// children, so they are not walked again here.
 		b.add(h)
-		b.last = nil
-		// Its own nested children are rendered with it, so they are not walked
-		// again here.
 		return
 	}
 
-	s := &Slide{H: h, Level: h.Lvl, Title: h.Title, props: h.Properties}
+	s := &Slide{H: h, Level: h.Lvl, Title: h.Title}
 	if parent := b.cur(); parent != nil {
 		parent.Subs = append(parent.Subs, s)
 	} else {
 		b.deck.Slides = append(b.deck.Slides, s)
 	}
 	b.stack = append(b.stack, s)
-	b.last = s
-	// Whatever did nest under this headline is walked in place, so a file that
-	// parsed as a tree and a file that parsed flat come out the same.
 	b.walk(h.Children)
 }
-
-func (b *builder) divertLvl() int { return b.divertAt }
 
 func number(d *Deck) {
 	n := 0

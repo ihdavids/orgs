@@ -34,6 +34,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -109,14 +110,16 @@ const (
 
 type eventHub struct {
 	mu   sync.Mutex
-	subs map[chan Event]bool
+	subs map[chan Event]*common.StreamInfo
+	// Events not delivered because a subscriber's buffer was full, since start.
+	dropped uint64
 	// The last reload announced, so a burst of filesystem events for one save
 	// becomes one message.
 	pending map[string]bool
 	timer   *time.Timer
 }
 
-var hub = &eventHub{subs: map[chan Event]bool{}, pending: map[string]bool{}}
+var hub = &eventHub{subs: map[chan Event]*common.StreamInfo{}, pending: map[string]bool{}}
 
 // Publish hands an event to everybody listening. It never blocks: a subscriber
 // whose buffer is full is behind, and the choice is between dropping its event
@@ -130,10 +133,12 @@ func Publish(e Event) {
 	}
 	hub.mu.Lock()
 	defer hub.mu.Unlock()
-	for ch := range hub.subs {
+	for ch, info := range hub.subs {
 		select {
 		case ch <- e:
 		default:
+			hub.dropped++
+			info.Dropped++
 		}
 	}
 }
@@ -170,14 +175,32 @@ func flushReloads() {
 	}
 }
 
-func subscribe() chan Event {
+func subscribe(info ...common.StreamInfo) chan Event {
 	// Buffered, so a subscriber that is briefly busy does not miss anything and
 	// a subscriber that has gone away is noticed rather than waited for.
 	ch := make(chan Event, 32)
+	in := common.StreamInfo{}
+	if len(info) > 0 {
+		in = info[0]
+	}
+	in.Since = time.Now()
 	hub.mu.Lock()
-	hub.subs[ch] = true
+	hub.subs[ch] = &in
 	hub.mu.Unlock()
 	return ch
+}
+
+// Streams is every open subscription, oldest first, and how many events have
+// been dropped in all.
+func Streams() ([]common.StreamInfo, uint64) {
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+	out := make([]common.StreamInfo, 0, len(hub.subs))
+	for _, info := range hub.subs {
+		out = append(out, *info)
+	}
+	sort.Slice(out, func(a, b int) bool { return out[a].Since.Before(out[b].Since) })
+	return out, hub.dropped
 }
 
 func unsubscribe(ch chan Event) {
@@ -253,9 +276,9 @@ func RequestEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Accel-Buffering", "no")
 	w.WriteHeader(http.StatusOK)
 
-	ch := subscribe()
-	defer unsubscribe(ch)
 	user := GetUsername(r)
+	ch := subscribe(common.StreamInfo{Addr: r.RemoteAddr, User: user, Kinds: r.URL.Query().Get("kinds")})
+	defer unsubscribe(ch)
 
 	send := func(e Event) bool {
 		if len(want) > 0 && !want[e.Kind] {

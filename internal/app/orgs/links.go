@@ -230,14 +230,9 @@ func headlineRow(s *org.Section) int {
 	return s.Headline.Pos.Row
 }
 
-// Links that sit at the top level of the document. Those written before the
-// first heading belong to the file itself, but the parser also ends a headlines
-// body at a drawer written in column zero, which leaves the rest of that
-// heading sitting at the top of the document rather than under its headline.
-// Giving every top level node to the last heading that starts above it keeps
-// those links attributed to the heading they were written under instead of
-// losing them.
-func collectTopLevelLinks(f *common.OrgFile, secs []*org.Section, out *[]foundLink) {
+// Links that sit at the top level of the document: those written before the
+// first heading, which belong to the file itself.
+func collectTopLevelLinks(f *common.OrgFile, out *[]foundLink) {
 	for _, n := range f.Doc.Nodes {
 		if n == nil {
 			continue
@@ -246,15 +241,7 @@ func collectTopLevelLinks(f *common.OrgFile, secs []*org.Section, out *[]foundLi
 		case *org.Headline, org.Headline:
 			continue
 		}
-		row := n.GetPos().Row
-		var owner *org.Section
-		for _, s := range secs {
-			if headlineRow(s) > row {
-				break
-			}
-			owner = s
-		}
-		collectLinks([]org.Node{n}, out, owner)
+		collectLinks([]org.Node{n}, out, nil)
 	}
 }
 
@@ -263,7 +250,7 @@ func collectFileLinks(f *common.OrgFile) []foundLink {
 	if f == nil || f.Doc == nil {
 		return out
 	}
-	collectTopLevelLinks(f, flattenSections(f), &out)
+	collectTopLevelLinks(f, &out)
 	for _, sec := range f.Doc.Outline.Children {
 		collectSectionLinks(sec, &out)
 	}
@@ -487,11 +474,9 @@ type secRef struct {
 	file *common.OrgFile
 }
 
-// The id lookups the link resolver uses. The database has its own, but it only
-// holds sections a query has already touched, and it only sees a property
-// drawer the parser managed to attach to its headline. A drawer written in
-// column zero is not attached, so the ids in it are indexed here by the heading
-// it was written under.
+// The id lookups the link resolver uses, built for every file before anything
+// is resolved (the database's own registries fill in lazily as queries walk
+// them).
 type idIndex struct {
 	byId       map[string]secRef            // ID, global across files the way org treats it
 	byCustomId map[string]map[string]secRef // filename -> lowercased CUSTOM_ID
@@ -529,33 +514,11 @@ func (self *idIndex) add(f *common.OrgFile, sec *org.Section, props [][]string) 
 	}
 }
 
-// Index every id in a file, from the drawers the parser attached and from the
-// ones it left at the top of the document.
+// Index every id in a file.
 func (self *idIndex) addFile(f *common.OrgFile, secs []*org.Section) {
 	for _, sec := range secs {
 		if sec.Headline != nil && sec.Headline.Properties != nil {
 			self.add(f, sec, sec.Headline.Properties.Properties)
-		}
-	}
-	for _, n := range f.Doc.Nodes {
-		pd, ok := n.(*org.PropertyDrawer)
-		if !ok {
-			if v, vok := n.(org.PropertyDrawer); vok {
-				pd = &v
-			} else {
-				continue
-			}
-		}
-		row := pd.Pos.Row
-		var owner *org.Section
-		for _, sec := range secs {
-			if headlineRow(sec) > row {
-				break
-			}
-			owner = sec
-		}
-		if owner != nil {
-			self.add(f, owner, pd.Properties)
 		}
 	}
 }

@@ -361,7 +361,7 @@ func (self *PluginDef) Start(db ODb) {
 				return
 			case <-t.C:
 				fmt.Fprintf(os.Stderr, "UPDATE [%s:%d]: <%v>\n", name, frequency, time.Now())
-				p.Plugin.Update(db)
+				UpdatePlugin(name, func() { p.Plugin.Update(db) })
 			}
 		}
 	}(*self, self.Name, ticker, self.Frequency)

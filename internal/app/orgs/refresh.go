@@ -792,7 +792,7 @@ func exportLinesFor(filename string, refresh bool, backend string) (out []string
 	}
 	trackChanged := false
 	if tk {
-		out, trackChanged = trackerExportLines(f.Filename, out, backend)
+		out, trackChanged = trackerExportLines(f.Filename, out, backend, time.Now())
 	}
 	tlChanged := false
 	if tl {

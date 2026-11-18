@@ -514,3 +514,24 @@ func TestAgeSummaries(t *testing.T) {
 		t.Errorf("format: %s", got)
 	}
 }
+
+// Drawers written in column zero, as Emacs writes them, are the headings' own:
+// the column view reads them from the parse, and a parent rolls its children
+// up past its own column-zero drawer.
+func TestColumnZeroDrawersAreRead(t *testing.T) {
+	src := "* Project\n:PROPERTIES:\n:Effort: 1:00\n:END:\nNotes.\n** a\n:PROPERTIES:\n:EFFORT: 2:00\n:END:\n** b\nSCHEDULED: <2026-11-02 Mon>\n:PROPERTIES:\n:EFFORT: 0:30\n:END:\n"
+	doc := org.New().Parse(strings.NewReader(src), "plan.org")
+	f := &common.OrgFile{Filename: "plan.org", Doc: doc}
+	spec := ParseColumnSpec("%ITEM %EFFORT{:}")
+	roots := buildColumnNodes(f, spec)
+	if len(roots) != 1 || len(roots[0].children) != 2 {
+		t.Fatalf("outline: %d roots", len(roots))
+	}
+	summarise(roots[0], spec)
+	if got := roots[0].children[1].row.Cells[1].Value; got != "0:30" {
+		t.Errorf("b under a planning line: got %q want 0:30", got)
+	}
+	if got := roots[0].row.Cells[1].Value; got != "3:30" {
+		t.Errorf("project: got %q want 3:30", got)
+	}
+}

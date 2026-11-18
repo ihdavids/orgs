@@ -389,23 +389,25 @@ type reviewProp struct{ key, val string }
 
 // reviewWrite sets (or takes off) properties of one heading and adds an
 // optional log entry, as one write. The range is measured again after each
-// change, because each can add or remove lines (Traps: re-measure).
+// change (headingLines.Set), because each can add or remove lines.
 func reviewWrite(f *common.OrgFile, sec *org.Section, props []reviewProp, logNote []string) error {
-	lines, from, to, ok := recordLines(f.Filename, sec)
-	if !ok {
+	h, err := readHeadingLines(f.Filename, sec)
+	if err != nil {
 		return fmt.Errorf("could not read %s", f.Filename)
 	}
+	from := h.From
 	lvl := sec.Headline.Lvl
 	ind := indentOf(lvl)
 	// A file whose drawers sit in column zero (Emacs since org 9.5) gets
 	// new ones there too, not indented by heading depth.
-	for _, l := range lines {
+	for _, l := range h.Lines {
 		if l == ":PROPERTIES:" || l == ":LOGBOOK:" {
 			ind = ""
 			break
 		}
 	}
 	for _, p := range props {
+		lines, to := h.Lines, h.End
 		if strings.TrimSpace(p.val) == "" {
 			ps, pe, found := drawerAt(lines, from, to, "PROPERTIES")
 			if !found {
@@ -440,17 +442,17 @@ func reviewWrite(f *common.OrgFile, sec *org.Section, props []reviewProp, logNot
 				alignDrawer(lines, ps, pe)
 			}
 		}
-		lines, from, to = reread(lines, from, lvl)
+		h.Set(lines)
 	}
 	if len(logNote) > 0 {
-		set := applyHeadingLogProps(fileLogSettings(f), propsFromLines(lines, from, to))
+		set := applyHeadingLogProps(fileLogSettings(f), propsFromLines(h.Lines, from, h.End))
 		entry := []string{}
 		for _, l := range logNote {
 			entry = append(entry, ind+l)
 		}
-		lines = logInto(lines, from, to, ind, set.drawer, entry)
+		h.Set(logInto(h.Lines, from, h.End, ind, set.drawer, entry))
 	}
-	return writeLines(f.Filename, lines)
+	return h.Write()
 }
 
 // reviewMark is org-review-insert-last-review: LAST_REVIEW is day, and

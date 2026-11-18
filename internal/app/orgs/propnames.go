@@ -5,10 +5,7 @@ package orgs
 // HasProperty("…") and MatchProperty("…", "…") are only as useful as the
 // name typed into them, and nothing else on the server could say which names
 // exist. This reads them off `Headline.Properties` - the same place the query
-// functions look - so a name offered is a name a query can actually find. (A
-// drawer written in column zero is invisible to both, for the reason in
-// **Traps: column-zero drawers**; offering it would suggest a query that
-// matches nothing.)
+// functions look - so a name offered is a name a query can actually find.
 
 import (
 	"encoding/json"

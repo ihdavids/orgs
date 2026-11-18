@@ -480,6 +480,7 @@
   ],
   "help": [
    "orgs help              every command, grouped",
+   "orgs help -full        with the org packages and your filters described too",
    "orgs help todo         what `orgs todo` takes",
    "orgs help -all         every command with every flag",
    "orgs help -man search  search's man page (roff); with no command, orgs(1)",

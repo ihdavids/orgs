@@ -279,6 +279,10 @@ type Config struct {
 	// them, so a reload compares the file with the file: -port on the command
 	// line is not a change somebody made to the yaml.
 	loadedServer common.ServerSettings
+	// Whether orgJWS and orgJWE came from the yaml rather than Defaults(),
+	// which makes random ones. LocalToken (localtoken.go) needs the server's
+	// own keys; a token made with random ones is refused by the server.
+	serverKeysFromFile bool
 }
 
 // setTemplateIdentity hands the template manager what {{author}}, {{email}}
@@ -416,6 +420,10 @@ func (self *Config) ParseConfig() {
 		self.Out.Infof("Loading: %s\n", filename)
 		yamlFile, err = ioutil.ReadFile(filename)
 	}
+	defaultJWS, defaultJWE := "", ""
+	if self.Server != nil {
+		defaultJWS, defaultJWE = self.Server.OrgJWS, self.Server.OrgJWE
+	}
 	if err == nil {
 		self.loadedFrom = filename
 		err = yaml.Unmarshal(yamlFile, self)
@@ -425,6 +433,7 @@ func (self *Config) ParseConfig() {
 		}
 		if self.Server != nil {
 			self.loadedServer = *self.Server
+			self.serverKeysFromFile = self.Server.OrgJWS != defaultJWS && self.Server.OrgJWE != defaultJWE
 		}
 	}
 	manager.HomeDir = filepath.Dir(self.HomeDir)
@@ -446,17 +455,19 @@ func (self *Config) ParseConfig() {
 	config.PlugManager = manager
 	installPluginHooks(manager) // plughooks.go: status changes and line writes for pollers
 	if self.Server != nil {
+		// common.StartPlugin recovers a panic in Startup and notes it for
+		// /server/status, so one broken plugin does not stop the server.
 		for _, pd := range self.Server.Plugins {
 			plugOpts := common.PluginOpts{}
-			pd.Plugin.Startup(pd.Frequency, manager, &plugOpts)
+			common.StartPlugin("poller", pd.Name, pd.Plugin, func() { pd.Plugin.Startup(pd.Frequency, manager, &plugOpts) })
 		}
 		for _, pd := range self.Server.Exporters {
 			plugOpts := common.PluginOpts{}
-			pd.Plugin.Startup(manager, &plugOpts)
+			common.StartPlugin("exporter", pd.Name, pd.Plugin, func() { pd.Plugin.Startup(manager, &plugOpts) })
 		}
 		for _, pd := range self.Server.Updaters {
 			plugOpts := common.PluginOpts{}
-			pd.Plugin.Startup(1, manager, &plugOpts)
+			common.StartPlugin("updater", pd.Name, pd.Plugin, func() { pd.Plugin.Startup(1, manager, &plugOpts) })
 		}
 	}
 	// Internal filters are built in querries we would like

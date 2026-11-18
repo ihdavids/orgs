@@ -36,6 +36,11 @@ func RestApi(router *mux.Router) {
 
 	// Public routes (no auth required)
 	router.HandleFunc("/login", login).Methods("POST")
+	// In front of the token check, because what it renews may have run out:
+	// it checks the token itself, and takes one up to its refresh window
+	// (server.refreshExpiry, jwt.go). Behind the check, a CLI left unused
+	// longer than tokenExpiry could never renew and had to log in again.
+	router.HandleFunc("/refresh", refresh).Methods("POST")
 	// The salt a client hashes a password with before sending it. Public
 	// because it is asked for by somebody who is not logged in yet.
 	router.HandleFunc("/salt", salt).Methods("GET")
@@ -65,8 +70,8 @@ func RestApi(router *mux.Router) {
 	// again before the answer goes back, so the next request sees it.
 	api.Use(freshAfterWrite)
 
-	api.HandleFunc("/refresh", refresh).Methods("POST")
 	api.HandleFunc("/login/ticket", PostLoginTicket).Methods("POST") // a one-use login link for a browser (ticket.go)
+	registerServerStatusRoutes(api) // /server/status and /debug/vars (serverstatus.go)
 	// org-protocol's store-link and open-source (orgprotocol.go); the links
 	// themselves arrive at /org-protocol/..., answered in front of the router.
 	api.HandleFunc("/protocol/links", PostProtocolLink).Methods("POST")
@@ -653,7 +658,7 @@ func RequestOrgFile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(msg)
 	} else {
 		res := fmt.Sprintf("[RequestOrgFile] error opening file: %v", err)
-		log.Printf(res)
+		log.Print(res)
 		msg := common.ResultMsg{Ok: false, Msg: res}
 		json.NewEncoder(w).Encode(msg)
 	}
@@ -2838,7 +2843,7 @@ func PostExecAllT(w http.ResponseWriter, r *http.Request) {
 				for _, e := range errs {
 					msg += e.Error() + "\n"
 				}
-				err = fmt.Errorf(msg)
+				err = fmt.Errorf("%s", msg)
 				fmt.Fprintln(os.Stderr, "All Table Execution failed: ", err.Error())
 				rep := common.ResultMsg{Ok: false, Msg: err.Error()}
 				json.NewEncoder(w).Encode(rep)

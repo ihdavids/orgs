@@ -85,14 +85,13 @@ func dynOrgQl(c *dynCtx) ([]string, error) {
 			found, _ = EvalForNodes(exp, v, f, found)
 		}
 		sort.SliceStable(found, func(a, b int) bool { return headlineRow(found[a]) < headlineRow(found[b]) })
-		lines := fileLines(f.Doc.Path)
 		active, done := keys.of(f)
 		seq := append(append([]string{}, active...), done...)
 		for _, s := range found {
 			if s.Headline == nil || orgQlInBlock(c, f, s) {
 				continue
 			}
-			h := orgQlHit{file: f, sec: s, props: propsOfSection(lines, s), todo: -1}
+			h := orgQlHit{file: f, sec: s, props: propsOfSection(s), todo: -1}
 			for i, k := range seq {
 				if k == s.Headline.Status {
 					h.todo = i

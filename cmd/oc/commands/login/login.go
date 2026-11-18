@@ -132,17 +132,8 @@ func saveTokenToConfig(configFile string, token string, expiresAt time.Time) err
 		return fmt.Errorf("reading config %s: %w", configFile, err)
 	}
 	lines := strings.Split(string(data), "\n")
-	setLine := func(key, value string) {
-		for i, line := range lines {
-			if strings.HasPrefix(strings.TrimSpace(line), key+":") {
-				lines[i] = fmt.Sprintf("%s: %s", key, value)
-				return
-			}
-		}
-		lines = append(lines, fmt.Sprintf("%s: %s", key, value))
-	}
-	setLine("token", fmt.Sprintf("%q", token))
-	setLine("tokenExpiry", fmt.Sprintf("%q", expiresAt.Format(time.RFC3339)))
+	lines = commands.SetTopLevelYaml(lines, "token", fmt.Sprintf("%q", token))
+	lines = commands.SetTopLevelYaml(lines, "tokenExpiry", fmt.Sprintf("%q", expiresAt.Format(time.RFC3339)))
 	return os.WriteFile(configFile, []byte(strings.Join(lines, "\n")), 0600)
 }
 

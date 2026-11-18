@@ -101,18 +101,12 @@ func QueryColumnView(query, asked string) (common.ColumnsResult, error) {
 	if len(res.Spec) == 0 {
 		return res, fmt.Errorf("%q names no columns", line)
 	}
-	lines := map[string][]string{}
 	q := &common.StringQuery{Query: query}
 	err := queryEachSection(q, func(sec *org.Section, f *common.OrgFile) {
 		if sec == nil || sec.Headline == nil || f == nil {
 			return
 		}
-		ls, ok := lines[f.Filename]
-		if !ok {
-			ls = fileLines(f.Filename)
-			lines[f.Filename] = ls
-		}
-		res.Rows = append(res.Rows, ownRow(f, sec, propsOfSection(ls, sec), res.Spec, len(sec.Children) > 0))
+		res.Rows = append(res.Rows, ownRow(f, sec, propsOfSection(sec), res.Spec, len(sec.Children) > 0))
 	})
 	if err != nil {
 		return res, err

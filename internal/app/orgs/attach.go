@@ -421,35 +421,33 @@ func ensureAttachDir(hash string) (dir string, newId string, tagged string, file
 		return dir, "", "", filename, nil
 	}
 
-	lines, lfrom, lto, lok := recordLines(filename, sec)
-	if !lok {
+	h, herr := readHeadingLines(filename, sec)
+	if herr != nil {
 		return "", "", "", filename, fmt.Errorf("could not read %s", filename)
 	}
 	ind := indentOf(sec.Headline.Lvl)
 
 	if !haveDir {
 		newId = uuid.New().String()
-		var ps, pe int
-		lines, ps, pe, lto = ensurePropertyDrawer(lines, lfrom, lto, ind)
+		lines, ps, pe, _ := ensurePropertyDrawer(h.Lines, h.From, h.End, ind)
 		lines, _ = setPropIn(lines, ps, pe, ind, "ID", newId)
+		h.Set(lines)
 		root, rerr := attachRoot()
 		if rerr != nil {
 			return "", "", "", filename, rerr
 		}
 		dir = filepath.Join(root, common.AttachIdPath(newId))
-		lines, lfrom, lto = reread(lines, lfrom, sec.Headline.Lvl)
-		_ = pe
 	}
 
 	if wantTag != "" {
-		if line, added := addHeadlineTag(lines[lfrom], wantTag); added {
-			lines[lfrom] = line
+		if line, added := addHeadlineTag(h.Lines[h.From], wantTag); added {
+			h.Lines[h.From] = line
 			tagged = wantTag
 		}
 	}
 
 	if newId != "" || tagged != "" {
-		if err := writeLines(filename, lines); err != nil {
+		if err := h.Write(); err != nil {
 			return "", "", "", filename, err
 		}
 		GetDb().ReloadFile(filename)

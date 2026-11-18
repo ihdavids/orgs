@@ -537,9 +537,9 @@ func mentionTerms(title string, aliases []string, force bool) ([]string, []strin
 	return terms, skipped
 }
 
-// The properties in the drawer under a heading, keys upper cased, read off the
-// file's lines rather than the parsed drawer (see the column-zero note in
-// links.go).
+// The properties in the drawer under a heading, keys upper cased, read off
+// lines: the callers work on lines that need not be the parsed file's (a saved
+// copy, a buffer, an edit half made).
 func headingPropsIn(lines []string, from, to int) map[string]string {
 	props := map[string]string{}
 	ps, pe, ok := drawerAt(lines, from, to, "PROPERTIES")

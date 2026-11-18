@@ -1281,7 +1281,7 @@ func trackerBackendKind(backend string) string {
 
 // trackerExportLines replaces each #+TRACKER: line with the chart it
 // describes, as the backend can take it.
-func trackerExportLines(path string, lines []string, backend string) ([]string, bool) {
+func trackerExportLines(path string, lines []string, backend string, now time.Time) ([]string, bool) {
 	kind := trackerBackendKind(backend)
 	out := make([]string, 0, len(lines))
 	changed, tikz := false, false
@@ -1292,7 +1292,6 @@ func trackerExportLines(path string, lines []string, backend string) ([]string, 
 			at[t.Line] = t
 		}
 	}
-	now := time.Now()
 	for i, l := range lines {
 		t, ok := at[i]
 		if !ok {

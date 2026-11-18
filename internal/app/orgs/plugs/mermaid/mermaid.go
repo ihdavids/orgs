@@ -413,8 +413,8 @@ func (self *Mermaid) Export(db common.ODb, query string, to string, opts string,
 	tds, err := db.QueryTodosExpr(query)
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)
-		log.Printf(msg)
-		return fmt.Errorf(msg)
+		log.Print(msg)
+		return fmt.Errorf("%s", msg)
 	}
 	have := map[string]*common.Todo{}
 	for _, td := range tds {
@@ -443,17 +443,17 @@ func (self *Mermaid) Export(db common.ODb, query string, to string, opts string,
 		_, err2 := w.WriteString(o.String())
 		if err2 != nil {
 			msg := fmt.Sprintf("Failed to write file[%v]: %v\n", err2, to)
-			log.Printf(msg)
-			res = fmt.Errorf(msg)
+			log.Print(msg)
+			res = fmt.Errorf("%s", msg)
 		}
 		w.Flush()
 		fo.Close()
 	} else {
 		msg := fmt.Sprintf("Failed to open file[%v]: %v\n", err, to)
-		log.Printf(msg)
+		log.Print(msg)
 		log.Printf("DOC:\n\n")
 		log.Printf("%v\n", o.String())
-		res = fmt.Errorf(msg)
+		res = fmt.Errorf("%s", msg)
 	}
 	return res
 }
@@ -465,7 +465,7 @@ func (self *Mermaid) ExportToString(db common.ODb, query string, opts string, pr
 	if err != nil {
 		msg := fmt.Sprintf("ERROR: gantt failed to query expression, %v [%s]\n", err, query)
 		log.Println(msg)
-		return fmt.Errorf(msg), ""
+		return fmt.Errorf("%s", msg), ""
 	}
 	have := map[string]*common.Todo{}
 	for _, td := range tds {

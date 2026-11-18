@@ -92,6 +92,14 @@ func (self *Doctor) Exec(core *commands.Core) {
 
 	// --- the server ---------------------------------------------------------
 	states, err := commands.SendReceiveGetErr[common.TodoStatesResult](core, "status", nil)
+	// An expired token is renewed before the first command that needs it, but
+	// this one is NeedsNoServer and skips that - so try the renewal the other
+	// commands would have before calling it a login problem.
+	renewed := false
+	if err != nil && strings.Contains(err.Error(), "Unauthorized") && core.Refresh != nil && core.Refresh() {
+		renewed = true
+		states, err = commands.SendReceiveGetErr[common.TodoStatesResult](core, "status", nil)
+	}
 	reachable := err == nil && len(states.Active)+len(states.Done) > 0
 	switch {
 	case reachable:
@@ -115,6 +123,8 @@ func (self *Doctor) Exec(core *commands.Core) {
 		} else {
 			add(Check{"token", note, "no token saved", "orgs login"})
 		}
+	case renewed:
+		add(Check{"token", ok, "had run out, and was renewed", ""})
 	default:
 		add(Check{"token", ok, "a token is being sent", ""})
 	}
@@ -231,11 +241,170 @@ func (self *Doctor) serverChecks(core *commands.Core, add func(Check)) {
 		add(Check{"voice", warn, voice.State + " " + voice.Msg, ""})
 	}
 
+	self.statusChecks(core, add)
+
 	if qs := commands.SendReceiveGetOr[[]struct {
 		Name string `json:"name"`
 	}](core, "ext/queries", nil); len(qs) > 0 {
 		add(Check{"saved queries", ok, fmt.Sprintf("%d saved", len(qs)), ""})
 	}
+}
+
+// statusChecks read GET /server/status: what the server itself found while
+// running, which nothing on this side can see - a file it could not read, a
+// plugin that panicked, the certificate running out, a worg build older than
+// the checkout beside it, a browser holding too many streams.
+func (self *Doctor) statusChecks(core *commands.Core, add func(Check)) {
+	st, err := commands.SendReceiveGetErr[common.ServerStatus](core, "server/status", nil)
+	switch {
+	case err != nil && strings.Contains(err.Error(), "404"):
+		add(Check{"server status", note, "this server has no /server/status",
+			"the server is older than the client - rebuild it"})
+		return
+	case err != nil || st.Started.IsZero():
+		add(Check{"server status", warn, "could not ask the server how it is: " + describe(err), ""})
+		return
+	}
+	add(Check{"server", ok, fmt.Sprintf("%s, up %s", versionWords(st.Version), st.Uptime), ""})
+	mine := common.BuildVersion()
+	if mine.Commit != "" && st.Version.Commit != "" && mine.Commit != st.Version.Commit {
+		add(Check{"versions", note, fmt.Sprintf("this client is %s, the server %s",
+			versionWords(mine), versionWords(st.Version)), "restart the server to run this build"})
+	}
+
+	// --- files
+	for _, d := range st.Files.MissingDirs {
+		add(Check{"org dir", fail, d + " cannot be read", "check orgDirs: in the server's config"})
+	}
+	for _, e := range st.Files.Unreadable {
+		// The error from open already names the file: say it once.
+		why := strings.TrimPrefix(strings.ReplaceAll(e.Error, e.File+": ", ""), "open ")
+		add(Check{"org file", warn, e.File + ": " + why, "it is left out of every query until it loads"})
+	}
+	for _, e := range st.Files.WatchErrors {
+		add(Check{"watcher", warn, e.File + ": " + e.Error,
+			"changes there are not seen until the server restarts - fix the permissions"})
+	}
+	watching := "watching for changes"
+	if !st.Files.Watching {
+		watching = "not watching for changes"
+	}
+	add(Check{"files", ok, fmt.Sprintf("%d loaded, %d reads since start, %s",
+		st.Files.Loaded, st.Files.ReloadIndex, watching), ""})
+
+	// --- plugins
+	for _, p := range st.Plugins {
+		name := p.Kind + " " + p.Name
+		switch {
+		case !p.Started:
+			add(Check{name, fail, "did not start: " + p.StartErr, "see the server's log for the stack"})
+		case p.LastErr != "" && p.LastErrAt.After(p.LastUpdate):
+			add(Check{name, warn, fmt.Sprintf("its last update failed (%s): %s",
+				p.LastErrAt.Local().Format("Jan 2 15:04"), p.LastErr), ""})
+		case p.Health != "":
+			add(Check{name, warn, p.Health, ""})
+		case p.Kind == "poller" && p.Updates > 0:
+			add(Check{name, ok, fmt.Sprintf("%d updates, last %s", p.Updates,
+				p.LastUpdate.Local().Format("Jan 2 15:04")), ""})
+		default:
+			add(Check{name, ok, "started", ""})
+		}
+	}
+
+	// --- event streams. A browser has six connections to a host across all
+	// its tabs; a page that holds too many of them as streams hangs its own
+	// requests with no error anywhere.
+	byAddr := map[string]int{}
+	for _, s := range st.Streams {
+		if s.Addr == "" {
+			continue
+		}
+		host := s.Addr
+		if i := strings.LastIndex(host, ":"); i > 0 {
+			host = host[:i]
+		}
+		byAddr[host]++
+	}
+	clients := 0
+	for host, n := range byAddr {
+		clients += n
+		if n >= 4 {
+			add(Check{"streams", warn, fmt.Sprintf("%s holds %d event streams - a browser has 6 connections to a server in all", host, n),
+				"close tabs, or a page is opening a stream of its own instead of sharing one"})
+		}
+	}
+	detail := fmt.Sprintf("%d open", clients)
+	if st.DroppedEvents > 0 {
+		detail += fmt.Sprintf(", %d events dropped by a slow reader", st.DroppedEvents)
+	}
+	add(Check{"streams", ok, detail, ""})
+
+	// --- the certificate
+	if c := st.Cert; c != nil {
+		switch {
+		case c.Error != "":
+			add(Check{"certificate", fail, c.File + ": " + c.Error, "orgs cert"})
+		case c.NotAfter.Before(time.Now()):
+			add(Check{"certificate", fail, fmt.Sprintf("%s ran out on %s", c.File, c.NotAfter.Local().Format("Jan 2 2006")), "orgs cert"})
+		case c.DaysLeft < 14:
+			add(Check{"certificate", warn, fmt.Sprintf("%s runs out in %d days", c.File, c.DaysLeft), "orgs cert"})
+		default:
+			add(Check{"certificate", ok, fmt.Sprintf("%s, %d days left", c.File, c.DaysLeft), ""})
+		}
+	}
+
+	// --- the embedded worg
+	add(worgCheck(st.Worg, os.Getenv("WORG")))
+
+	add(Check{"tokens", ok, fmt.Sprintf("good for %s, renewable for %s after", st.Auth.TokenExpiry, st.Auth.Refresh), ""})
+	if st.Auth.NoAuth {
+		add(Check{"auth", note, "noAuth is on: anybody who can reach the server is admin", ""})
+	}
+}
+
+func versionWords(v common.VersionInfo) string {
+	if v.Commit != "" {
+		return v.Version + " (" + v.Commit + ")"
+	}
+	return v.Version
+}
+
+// worgCheck says whether the worg in the binary is what the checkout beside it
+// would build. The checkout is $WORG, else ../worg when this is run from the
+// orgs repo (where tools/buildworg.sh looks for it); with neither, only the
+// stamp itself is reported.
+func worgCheck(b common.WorgBuild, worgDir string) Check {
+	if !b.Present {
+		return Check{"worg", fail, "the server has no worg built into it", "tools/buildworg.sh, then rebuild orgs"}
+	}
+	if b.WorgCommit == "" {
+		return Check{"worg", note, "built before builds were stamped - its source is unknown", "tools/buildworg.sh"}
+	}
+	desc := "built from worg " + b.WorgCommit
+	if b.WorgDirty {
+		desc += " with uncommitted changes"
+	}
+	if b.BuiltAt != "" {
+		desc += " at " + b.BuiltAt
+	}
+	if worgDir == "" {
+		if _, err := os.Stat("worg/embed.go"); err == nil {
+			worgDir = "../worg"
+		}
+	}
+	if worgDir != "" {
+		if out, err := exec.Command("git", "-C", worgDir, "rev-parse", "--short", "HEAD").Output(); err == nil {
+			head := strings.TrimSpace(string(out))
+			if !strings.HasPrefix(head, b.WorgCommit) && !strings.HasPrefix(b.WorgCommit, head) {
+				return Check{"worg", warn, fmt.Sprintf("%s, but %s is at %s", desc, worgDir, head),
+					"tools/buildworg.sh, then rebuild and restart orgs"}
+			}
+		}
+	}
+	if b.WorgDirty {
+		return Check{"worg", note, desc, ""}
+	}
+	return Check{"worg", ok, desc, ""}
 }
 
 func (self *Doctor) report(core *commands.Core, checks []Check) {

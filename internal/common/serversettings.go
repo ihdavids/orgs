@@ -309,6 +309,23 @@ type ServerSettings struct {
 	TokenExpiry string `yaml:"tokenExpiry"`
 
 	/* SDOC: Settings
+	* Refresh Window
+		How long after a login a token can still be renewed, even once it has
+		run out. Each renewal starts the window again, so this is how long a
+		client may go unused before it has to log in again. A duration as for
+		tokenExpiry; 30 days when not set, "0" for no window (a token can only
+		be renewed while it is still good).
+		#+BEGIN_SRC yaml
+	  refreshExpiry: "30d"
+		#+END_SRC
+		The command line renews before every command that talks to the server,
+		so a laptop that was shut for a week still works without a login. A
+		token that is stolen can be renewed for as long, too: keep this short
+		on a server reachable from outside.
+	EDOC */
+	RefreshExpiry string `yaml:"refreshExpiry"`
+
+	/* SDOC: Settings
 	* Orgs Keystore
 		Orgs has various ways of storing credentials. You need something to protect your
 		data. By default the yaml keystore is just a file with usernames and creds.
@@ -1492,6 +1509,23 @@ func (self *ServerSettings) GetTokenExpiry() time.Duration {
 	}
 	log.Default().Printf("WARNING: Invalid tokenExpiry %q, using default 1h\n", self.TokenExpiry)
 	return 1 * time.Hour
+}
+
+// GetRefreshExpiry is how long after its last renewal a token may still be
+// renewed (refreshExpiry), 0 for not at all once it has run out.
+func (self *ServerSettings) GetRefreshExpiry() time.Duration {
+	v := strings.TrimSpace(self.RefreshExpiry)
+	switch v {
+	case "":
+		return 30 * 24 * time.Hour
+	case "0", "off", "no", "false":
+		return 0
+	}
+	if d, err := ParseLongDuration(v); err == nil && d >= 0 {
+		return d
+	}
+	log.Default().Printf("WARNING: Invalid refreshExpiry %q, using default 30d\n", self.RefreshExpiry)
+	return 30 * 24 * time.Hour
 }
 
 var longDurationRe = regexp.MustCompile(`(\d+(?:\.\d+)?)([dw])`)

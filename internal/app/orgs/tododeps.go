@@ -5,8 +5,7 @@ package orgs
 // enforceCheckboxDependencies) is on, and IsBlocked() in queries, which is the
 // same rule whether or not it is enforced.
 //
-// Read off the parsed outline, which go-org now builds whole (see Traps:
-// column-zero drawers): direct children, ancestors and their siblings.
+// Read off the parsed outline: direct children, ancestors and their siblings.
 
 import (
 	"fmt"

@@ -122,7 +122,7 @@ func refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := &Claims{}
-	if _, err := ValidateEncryptedToken(tokenStr, claims); err != nil {
+	if _, err := ValidateRefreshToken(tokenStr, claims); err != nil {
 		fmt.Fprintf(os.Stderr, "Refresh: failed to validate existing token: %v\n", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return

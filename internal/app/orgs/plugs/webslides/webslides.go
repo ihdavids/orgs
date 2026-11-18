@@ -380,10 +380,6 @@ func (w *WebSlidesWriter) WriteRegularLink(l org.RegularLink) {
 
 func (self *WebSlidesExporter) renderSlide(w *WebSlidesWriter, s *slides.Slide, d *slides.Deck) string {
 	c := w.conf
-	// Properties come off the *slide* rather than off its headline: the parser
-	// hoists a column-zero drawer out of the headline, and asking the headline
-	// for it is how the other two exporters came to ignore every per-slide
-	// setting in a file written by Emacs.
 	h := s.Props()
 	w.frag = slides.ReadFragment(c, h)
 

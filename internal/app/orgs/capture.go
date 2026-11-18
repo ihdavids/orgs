@@ -538,8 +538,8 @@ func InsertEntryUsingTemplate(args *common.Capture, filename string, sec *org.Se
 // which is right for the one line somebody types into the terminal client and
 // wrong for everything a template produces. A template's content is several
 // lines, and only the first of them came out indented: the rest landed at
-// column zero, where org reads a property drawer as belonging to the document
-// rather than to the heading above it.
+// column zero, so a template's property drawer came out half at one indent and
+// half at another.
 func indentEachLine(content, indent string) string {
 	out := ""
 	for _, line := range strings.Split(strings.TrimRight(content, "\n"), "\n") {

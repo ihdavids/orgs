@@ -30,7 +30,11 @@ import (
 func LocalToken() (token string, expiresAt time.Time, ok bool) {
 	c := Conf()
 	s := c.Server
-	if s == nil || s.NoAuth || s.OrgJWS == "" || s.OrgJWE == "" || s.OrgSalt == "" || !isLoopback(c.Url) {
+	// serverKeysFromFile: a client-only yaml (just url:) still has a Server
+	// with random keys from Defaults(), and a token made from those was sent to
+	// a localhost server, refused as undecryptable, and stopped the stored
+	// token being renewed.
+	if s == nil || s.NoAuth || !c.serverKeysFromFile || s.OrgJWS == "" || s.OrgJWE == "" || s.OrgSalt == "" || !isLoopback(c.Url) {
 		return "", time.Time{}, false
 	}
 	token, expiresAt, err := GenerateEncryptedToken(localUser())

@@ -113,17 +113,8 @@ func refreshToken(core *commands.Core) bool {
 	// Persist refreshed token and expiry to config file
 	if data, err := os.ReadFile(core.ConfigFile); err == nil {
 		lines := strings.Split(string(data), "\n")
-		setLine := func(key, value string) {
-			for i, line := range lines {
-				if strings.HasPrefix(strings.TrimSpace(line), key+":") {
-					lines[i] = fmt.Sprintf("%s: %s", key, value)
-					return
-				}
-			}
-			lines = append(lines, fmt.Sprintf("%s: %s", key, value))
-		}
-		setLine("token", fmt.Sprintf("%q", resp.Token))
-		setLine("tokenExpiry", fmt.Sprintf("%q", resp.ExpiresAt.Format(time.RFC3339)))
+		lines = commands.SetTopLevelYaml(lines, "token", fmt.Sprintf("%q", resp.Token))
+		lines = commands.SetTopLevelYaml(lines, "tokenExpiry", fmt.Sprintf("%q", resp.ExpiresAt.Format(time.RFC3339)))
 		os.WriteFile(core.ConfigFile, []byte(strings.Join(lines, "\n")), 0600)
 	}
 	return true

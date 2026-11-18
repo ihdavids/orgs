@@ -1787,7 +1787,7 @@ func ChangeStatus(query *common.TodoItemChange) (common.Result, error) {
 	if sec == nil || sec.Headline == nil {
 		return common.Result{Ok: false}, fmt.Errorf("no heading with that hash")
 	}
-	f := GetDb().ByHashToFile[(string)(query.Hash)]
+	f := GetDb().FileFromSection(sec)
 	if f == nil {
 		return common.Result{Ok: false}, fmt.Errorf("no file for that heading")
 	}
@@ -1891,7 +1891,7 @@ func RenameHeadline(query *common.TodoItemChange) (common.Result, error) {
 func ChangeBody(query *common.TodoItemChange) (common.Result, error) {
 	didWrite := true
 	if s := GetDb().FindByHash((string)(query.Hash)); s != nil {
-		f := GetDb().ByHashToFile[(string)(query.Hash)]
+		f := GetDb().FileFromSection(s)
 		// Parse the new body content as org-mode text
 		bodyDoc := org.New().Parse(strings.NewReader(query.Value), "./")
 		if set := SetThing(f, s, func(n *org.Headline) org.Headline {
@@ -2095,7 +2095,7 @@ func ChangeProperty(query *common.TodoPropertyChange) (common.Result, error) {
 	if sec == nil || sec.Headline == nil {
 		return common.Result{Ok: false}, fmt.Errorf("no heading with that hash")
 	}
-	f := GetDb().ByHashToFile[(string)(query.Hash)]
+	f := GetDb().FileFromSection(sec)
 	if f == nil {
 		return common.Result{Ok: false}, fmt.Errorf("no file for that heading")
 	}

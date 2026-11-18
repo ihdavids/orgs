@@ -16,13 +16,8 @@ package orgs
 //
 // Three decisions shape the file.
 //
-// **Properties are read off the file's own lines, not from `Headline.Properties`.**
-// go-org ends a headline's body at a drawer written in column zero, which leaves
-// that field nil and hoists the rest of the heading to the top of the document -
-// the trap that runs through this whole codebase. A column view whose EFFORT
-// column was blank for every heading whose drawer happens to start at column
-// zero would look like the properties not being set. The file is read once and
-// every heading's drawer is found in those lines.
+// **Properties are looked up without caring how they were capitalised**
+// (`propOf`): org treats `:Effort:` and `:EFFORT:` as one property.
 //
 // **A cell carries both what is shown and what is written.** They are the same
 // thing on a leaf and different on a parent, and conflating them is a data-loss
@@ -313,14 +308,7 @@ func BuildColumnView(filename, asked string) (common.ColumnsResult, error) {
 		}
 	}
 
-	// The file's lines once, for the property drawers. Asking go-org for them
-	// would leave every heading whose drawer starts in column zero with none.
-	// Read from the path the database found, not the name asked for: a name
-	// relative to the org directory (plan.org) is found by FindByFile but not
-	// by the filesystem, and every property came back empty.
-	lines := fileLines(f.Filename)
-
-	roots := buildColumnNodes(f, lines, res.Spec)
+	roots := buildColumnNodes(f, res.Spec)
 	for _, n := range roots {
 		summarise(n, res.Spec)
 	}
@@ -338,7 +326,7 @@ func BuildColumnView(filename, asked string) (common.ColumnsResult, error) {
 
 // Every heading of the file as a tree of nodes, each with its own cell values
 // filled in but nothing summed yet.
-func buildColumnNodes(f *common.OrgFile, lines []string, spec []common.ColumnSpec) []*columnNode {
+func buildColumnNodes(f *common.OrgFile, spec []common.ColumnSpec) []*columnNode {
 	var build func(secs []*org.Section) []*columnNode
 	build = func(secs []*org.Section) []*columnNode {
 		var out []*columnNode
@@ -346,7 +334,7 @@ func buildColumnNodes(f *common.OrgFile, lines []string, spec []common.ColumnSpe
 			if s == nil || s.Headline == nil {
 				continue
 			}
-			n := &columnNode{sec: s, props: propsOfSection(lines, s)}
+			n := &columnNode{sec: s, props: propsOfSection(s)}
 			n.children = build(s.Children)
 			n.row = ownRow(f, s, n.props, spec, len(n.children) > 0)
 			out = append(out, n)
@@ -733,25 +721,10 @@ func fileLines(filename string) []string {
 	return strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
 }
 
-// One heading's own properties, found in lines already read.
-//
-// This is propsFromLines given a heading's extent rather than a whole file, and
-// it is the reason the file is read here at all: `Headline.Properties` is nil for
-// a drawer written in column zero, so asking go-org would leave those headings
-// with no EFFORT in a view whose entire purpose is to show it.
-func propsOfSection(lines []string, sec *org.Section) map[string]string {
-	if sec == nil || sec.Headline == nil || len(lines) == 0 {
-		return map[string]string{}
-	}
-	from := sec.Headline.Pos.Row
-	if from < 0 || from >= len(lines) {
-		return map[string]string{}
-	}
-	to := subtreeEndRow(lines, from, sec.Headline.Lvl, from)
-	if to >= len(lines) {
-		to = len(lines) - 1
-	}
-	return propsFromLines(lines, from, to)
+// One heading's own properties, as its drawer has them.
+func propsOfSection(sec *org.Section) map[string]string {
+	_, props := sectionProps(sec)
+	return props
 }
 
 /* SDOC: API

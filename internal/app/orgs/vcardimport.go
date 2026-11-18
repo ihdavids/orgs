@@ -595,21 +595,19 @@ func applyUpdate(p *contactPlan) error {
 		return err
 	}
 	sec := GetDb().FindByHash(hash)
-	lines, from, to, ok := recordLines(p.rec.Filename, sec)
-	if !ok {
+	h, err := readHeadingLines(p.rec.Filename, sec)
+	if err != nil {
 		return fmt.Errorf("could not read %s", p.rec.Filename)
 	}
 	for _, t := range p.tags {
-		lines[from], _ = addHeadlineTag(lines[from], t)
+		h.Lines[h.From], _ = addHeadlineTag(h.Lines[h.From], t)
 	}
 	if p.notes != "" {
-		lvl := sec.Headline.Lvl
-		ind := indentOf(lvl)
-		lines = appendNote(lines, from, to, ind, p.notes)
-		lines, from, to = reread(lines, from, lvl)
-		lines = prependLogbook(lines, from, to, ind, "Noted", time.Now(), vcardVia)
+		ind := indentOf(sec.Headline.Lvl)
+		h.Set(appendNote(h.Lines, h.From, h.End, ind, p.notes))
+		h.Set(prependLogbook(h.Lines, h.From, h.End, ind, "Noted", time.Now(), vcardVia))
 	}
-	return writeLines(p.rec.Filename, lines)
+	return h.Write()
 }
 
 // appendNote puts a note at the end of a record's own text - after what is

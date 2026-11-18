@@ -13,7 +13,7 @@ func TestColumnValuesCountsEveryProperty(t *testing.T) {
 		"** NEXT Sketch  :work:ui:\n   :PROPERTIES:\n   :OWNER: alice\n   :END:\n" +
 		"* DONE Build\n:PROPERTIES:\n:OWNER: bob\n:Effort: 3d\n:END:\n"
 	doc := org.New().Silent().Parse(strings.NewReader(src), "plan.org")
-	props := collectColumnValues(doc.Outline.Children, strings.Split(src, "\n"))
+	props := collectColumnValues(doc.Outline.Children)
 	got := map[string]map[string]int{}
 	heads := map[string]int{}
 	for _, p := range props {

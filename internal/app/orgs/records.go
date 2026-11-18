@@ -417,10 +417,8 @@ func sectionTitle(sec *org.Section) string {
 }
 
 // readRecord turns one section into a record. The body and the logbook are
-// read off the file's own lines rather than out of the parsed document: a
-// drawer written in column zero ends the headline's body as far as go-org is
-// concerned, and the rest of the heading is hoisted to the top of the
-// document, where looking for it is guesswork.
+// read off the file's own lines rather than out of the parsed document, so the
+// notes come back exactly as written - the text a form edits and writes back.
 func readRecord(sec *org.Section, f *common.OrgFile, withBody bool) *common.Record {
 	rtype := RecordTypeOf(sec)
 	if rtype == "" || sec.Headline == nil {
@@ -1117,10 +1115,11 @@ func UpdateRecord(req *common.RecordUpdate) (common.Result, error) {
 		return common.Result{Ok: false}, fmt.Errorf("that heading is not a record")
 	}
 	filename := f.Doc.Path
-	lines, from, to, lok := recordLines(filename, sec)
-	if !lok {
+	h, err := readHeadingLines(filename, sec)
+	if err != nil {
 		return common.Result{Ok: false}, fmt.Errorf("could not read %s", filename)
 	}
+	from := h.From
 	lvl := sec.Headline.Lvl
 	ind := indentOf(lvl)
 	now := time.Now()
@@ -1128,14 +1127,13 @@ func UpdateRecord(req *common.RecordUpdate) (common.Result, error) {
 
 	// --- the name -----------------------------------------------------------
 	if req.SetName && strings.TrimSpace(req.Name) != "" && strings.TrimSpace(req.Name) != sectionTitle(sec) {
-		lines[from] = replaceHeadlineTitle(lines[from], strings.TrimSpace(req.Name))
-		lines = prependLogbook(lines, from, to, ind, "Renamed", now, sectionTitle(sec))
-		// Every edit below works on rows that may have just moved.
-		lines, from, to = reread(lines, from, lvl)
+		h.Lines[from] = replaceHeadlineTitle(h.Lines[from], strings.TrimSpace(req.Name))
+		h.Set(prependLogbook(h.Lines, from, h.End, ind, "Renamed", now, sectionTitle(sec)))
 	}
 
 	// --- the fields ---------------------------------------------------------
 	if len(req.Set) > 0 {
+		lines, to := h.Lines, h.End
 		ps, pe, has := drawerAt(lines, from, to, "PROPERTIES")
 		if !has {
 			// A record whose drawer was deleted by hand still has to be
@@ -1193,12 +1191,13 @@ func UpdateRecord(req *common.RecordUpdate) (common.Result, error) {
 		if len(changed) > 0 {
 			alignDrawer(lines, ps, pe)
 			lines = prependLogbook(lines, from, to, ind, "Updated", now, strings.TrimSpace(strings.Join(changed, ", ")+" "+req.Via))
-			lines, from, to = reread(lines, from, lvl)
 		}
+		h.Set(lines)
 	}
 
 	// --- the notes ----------------------------------------------------------
 	if req.SetNotes {
+		lines, to := h.Lines, h.End
 		start := headEnd(lines, from, to)
 		body := []string{}
 		if text := strings.TrimRight(req.Notes, " \t\n"); text != "" {
@@ -1217,24 +1216,13 @@ func UpdateRecord(req *common.RecordUpdate) (common.Result, error) {
 		tail := append([]string{}, lines[to+1:]...)
 		lines = append(append(append([]string{}, lines[:start]...), body...), tail...)
 		to = start + len(body) - 1
-		lines = prependLogbook(lines, from, to, ind, "Noted", now, "")
-		lines, from, to = reread(lines, from, lvl)
+		h.Set(prependLogbook(lines, from, to, ind, "Noted", now, ""))
 	}
 
-	if err := writeLines(filename, lines); err != nil {
+	if err := h.Write(); err != nil {
 		return common.Result{Ok: false}, err
 	}
 	return common.Result{Ok: true}, nil
-}
-
-// reread finds the record's range again after an edit changed how many lines
-// it has. Cheaper and far safer than trying to keep every index in step.
-func reread(lines []string, from, lvl int) ([]string, int, int) {
-	to := subtreeEndRow(lines, from, lvl, from)
-	if to >= len(lines) {
-		to = len(lines) - 1
-	}
-	return lines, from, to
 }
 
 func splice(lines []string, at int, add []string) []string {
@@ -1454,8 +1442,8 @@ func retypeRecords(oldType, newType string) (int, error) {
 	byFile := map[string][]*org.Section{}
 	db := GetDb()
 	for _, rec := range allRecords(oldType, false) {
-		sec, ok := db.ByHash[rec.Hash]
-		if !ok || sec == nil || sec.Headline == nil || rec.Filename == "" {
+		sec := db.FindByHash(rec.Hash)
+		if sec == nil || sec.Headline == nil || rec.Filename == "" {
 			continue
 		}
 		byFile[rec.Filename] = append(byFile[rec.Filename], sec)

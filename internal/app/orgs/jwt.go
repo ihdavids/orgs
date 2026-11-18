@@ -15,13 +15,18 @@ type Claims struct {
 	jwt.Claims
 	Username string `json:"username"`
 	CanWrite bool   `json:"write"`
+	// Until when /refresh will renew this token even after it has expired
+	// (server.refreshExpiry). Absent on a token issued before the window
+	// existed, which can only be renewed while it is still good.
+	RefreshUntil *jwt.NumericDate `json:"rfx,omitempty"`
 }
 
 const kORGS_ISSUER = "ORGS"
 
 // Generates a JWS for a user. Returns the token string and expiration time.
 func generateToken(username string) (string, time.Time, error) {
-	expirationTime := time.Now().Add(Conf().Server.GetTokenExpiry())
+	now := time.Now()
+	expirationTime := now.Add(Conf().Server.GetTokenExpiry())
 
 	claims := &Claims{
 		Username: username,
@@ -29,6 +34,13 @@ func generateToken(username string) (string, time.Time, error) {
 			Expiry: jwt.NewNumericDate(expirationTime),
 			Issuer: kORGS_ISSUER,
 		},
+	}
+	if w := Conf().Server.GetRefreshExpiry(); w > 0 {
+		until := now.Add(w)
+		if until.Before(expirationTime) {
+			until = expirationTime
+		}
+		claims.RefreshUntil = jwt.NewNumericDate(until)
 	}
 
 	jwsKey := []byte(Conf().Server.OrgJWS)
@@ -98,6 +110,16 @@ func GenerateEncryptedToken(username string) (string, time.Time, error) {
 // Used in pre-login, we pull a cookie or auth header and validate that the users token
 // is valid using our keys et al.
 func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken, error) {
+	return validateEncrypted(encToken, claims, false)
+}
+
+// ValidateRefreshToken is ValidateEncryptedToken for /refresh: a token that
+// has run out is still good for a renewal until its refresh window closes.
+func ValidateRefreshToken(encToken string, claims *Claims) (*jwt.JSONWebToken, error) {
+	return validateEncrypted(encToken, claims, true)
+}
+
+func validateEncrypted(encToken string, claims *Claims, forRefresh bool) (*jwt.JSONWebToken, error) {
 	// First decrypt the encrypted token
 	if tokenBytes, err := decryptJWT(encToken); err != nil {
 		fmt.Fprintf(os.Stderr, "Decrypt failed: %v\n", err)
@@ -113,7 +135,7 @@ func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken,
 				fmt.Fprintf(os.Stderr, "Claims! %v\n", err)
 				return nil, err
 			} else {
-				if err := validateToken(rawJwt, claims); err != nil {
+				if err := validateToken(claims, time.Now(), forRefresh); err != nil {
 					fmt.Fprintf(os.Stderr, "Failed validate token: %v\n", err)
 					return nil, err
 				} else {
@@ -124,7 +146,7 @@ func ValidateEncryptedToken(encToken string, claims *Claims) (*jwt.JSONWebToken,
 	}
 }
 
-func validateToken(tkn *jwt.JSONWebToken, claims *Claims) error {
+func validateToken(claims *Claims, now time.Time, forRefresh bool) error {
 	if claims.Claims.Issuer != kORGS_ISSUER {
 		return fmt.Errorf("issuer does not match! Cannot validate claims")
 	}
@@ -132,8 +154,10 @@ func validateToken(tkn *jwt.JSONWebToken, claims *Claims) error {
 	if len(claims.Username) < 3 {
 		return fmt.Errorf("username does not match expected username")
 	}
-	if claims.Claims.Expiry.Time().Before(time.Now()) {
-		return fmt.Errorf("claim is expired")
+	if claims.Claims.Expiry.Time().Before(now) {
+		if !forRefresh || claims.RefreshUntil == nil || claims.RefreshUntil.Time().Before(now) {
+			return fmt.Errorf("claim is expired")
+		}
 	}
 	//if claims.RegisteredClaims
 	return nil

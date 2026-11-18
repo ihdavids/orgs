@@ -6,9 +6,10 @@ package orgs
 // heading's own body is the question (with any [cloze] hidden), and its direct
 // child headings are the answer - or, for a two- or many-sided card, one child
 // is the question and the rest the answer. The cards are read off the file's
-// lines rather than the parse tree, because a card with drill data has a
-// property drawer, and a drawer in column zero makes go-org hoist the heading's
-// body out of it (see **Traps: column-zero drawers**).
+// lines rather than the parse tree: org-drill's clozes (`[text||hint]`) are not
+// org syntax and would not survive the parse, so the text, the child sides and
+// the DRILL_* properties all come from one reading of the lines, which is also
+// what a rating then edits.
 //
 // Each card comes back rendered once, with every cloze wrapped in a span that
 // carries its number and hint. Which clozes to hide and which side to ask is
@@ -649,7 +650,10 @@ func drillReview(username string, req DrillReview, now time.Time) (DrillReviewRe
 	}
 	deck = deck.WithDefaults()
 	sec := GetDb().FindByHash(req.Hash)
-	f := GetDb().ByHashToFile[req.Hash]
+	var f *common.OrgFile
+	if sec != nil {
+		f = GetDb().FileFromSection(sec)
+	}
 	if sec == nil || f == nil || sec.Headline == nil {
 		return DrillReviewReply{}, fmt.Errorf("no heading with that hash: has the file changed since the session began?")
 	}

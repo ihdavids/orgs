@@ -51,6 +51,9 @@ type OrgDb struct {
 	// reload. See FindByHash.
 	hashIndexBuilt bool
 	hashIndexAt    uint64
+	// Hashes a re-read of a file changed, old to new (hashforward.go), so a
+	// hash a client read before an edit still finds its heading.
+	movedHash map[string]string
 
 	dblock      sync.RWMutex
 	watcher     *rfsnotify.RWatcher
@@ -153,7 +156,7 @@ func (self *OrgDb) findAnyId(hash string) *org.Section {
 	if v, ok := self.ByCustomId[hash]; ok {
 		return v
 	}
-	return nil
+	return self.movedTo(hash)
 }
 
 // FindByHash is the section a hash names, building the index first if nothing
@@ -184,7 +187,8 @@ func (self *OrgDb) FindByHash(hash string) *org.Section {
 	if v, ok := self.ByHash[hash]; ok {
 		return v
 	}
-	return nil
+	// A hash from before the file was last edited (hashforward.go).
+	return self.movedTo(hash)
 }
 
 // buildHashIndex walks every file into the hash, id and custom-id registries.
@@ -507,6 +511,7 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("PANIC PARSING ORG FILE:", filename, err)
+			noteLoadError(filename, fmt.Sprintf("the parser panicked: %v", err))
 		}
 	}()
 	doChecks := true
@@ -531,6 +536,7 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		ofile.Filename = filename
 		ofile.Doc = d
 		self.dblock.Lock()
+		self.noteMovedHashes(self.ByFile[filename], ofile)
 		// Anything the previous parse of this file left in the registries is
 		// about to be wrong - a section carrying the row it used to be on.
 		self.forgetSectionsForFile(filename)
@@ -560,6 +566,7 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		}
 		self.loadedMod[filename] = mod
 		self.dblock.Unlock()
+		noteLoadError(filename, "")
 		// Anybody watching /events hears about it here, which is the one place
 		// every re-read of a file goes through - a watcher event, a write from
 		// a handler, or a file appearing in a watched directory.
@@ -579,8 +586,10 @@ func (self *OrgDb) LoadFile(filename string, allowOutsideFiles ...bool) {
 		// the name that is gone. Forget it - it used to stay in /files, and
 		// in every query, until the server restarted.
 		self.UnloadFile(filename)
+		noteLoadError(filename, "")
 	} else {
-		fmt.Fprintln(os.Stderr, "****** Failed to parse file {}", filename)
+		fmt.Fprintln(os.Stderr, "could not read", filename+":", err)
+		noteLoadError(filename, err.Error())
 	}
 }
 
@@ -665,6 +674,7 @@ func (self *OrgDb) Watch() {
 		if err != nil {
 			if Conf().Server.CanFailWatch {
 				log.Println("Watcher add failed:", err)
+				noteWatchError(dir, err)
 			} else {
 				log.Fatal("Watcher add failed:", err)
 			}

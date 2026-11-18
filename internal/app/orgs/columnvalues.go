@@ -11,8 +11,8 @@ import (
 )
 
 // ColumnValues gathers every property a file's headings use and the values
-// each takes. Properties are read off the file's lines (propsOfSection), as
-// the column view reads them, so a drawer in column zero counts; the keyword,
+// each takes. Properties are read as the column view reads them
+// (propsOfSection); the keyword,
 // tags and priority come in under the names the column view gives them (TODO,
 // TAGS, PRIORITY) so they can be listed and offered like any property.
 func ColumnValues(filename string) (common.ColumnValuesResult, error) {
@@ -21,14 +21,14 @@ func ColumnValues(filename string) (common.ColumnValuesResult, error) {
 	if f == nil || f.Doc == nil {
 		return res, errNoFile(filename)
 	}
-	res.Props = collectColumnValues(f.Doc.Outline.Children, fileLines(filename))
+	res.Props = collectColumnValues(f.Doc.Outline.Children)
 	res.Ok = true
 	return res, nil
 }
 
 // The counting, apart from the database so it can be tested on a parsed
 // document.
-func collectColumnValues(top []*org.Section, lines []string) []common.ColumnPropValues {
+func collectColumnValues(top []*org.Section) []common.ColumnPropValues {
 	// name -> value -> count, and name -> headings that have it.
 	counts := map[string]map[string]int{}
 	headings := map[string]int{}
@@ -55,7 +55,7 @@ func collectColumnValues(top []*org.Section, lines []string) []common.ColumnProp
 					headings[name]++
 				}
 			}
-			for k, v := range propsOfSection(lines, s) {
+			for k, v := range propsOfSection(s) {
 				name := strings.ToUpper(k)
 				if strings.TrimSpace(v) == "" {
 					continue

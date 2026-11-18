@@ -714,10 +714,9 @@ func replaceHeadlineStatus(line, from, to string) (string, bool) {
 
 // The properties written in this heading's own drawer.
 //
-// Read off the lines rather than from `Headline.Properties`, which go-org leaves
-// nil for a drawer written in column zero - the trap that runs through this
-// whole codebase. The settings this is for are exactly the ones somebody would
-// write by hand, so meeting them written by hand is the common case.
+// Read off the lines rather than from `Headline.Properties`: the callers are in
+// the middle of editing those lines, and the drawer they read has to be the
+// one they are about to write into.
 func propsFromLines(lines []string, from, to int) map[string]string {
 	out := map[string]string{}
 	ps, pe, ok := drawerAt(lines, from, to, "PROPERTIES")
@@ -807,19 +806,21 @@ type StatusChangeResult struct {
 //
 // The order the edits are done in is the only subtle thing here, and it is
 // forced: every one of them that adds or removes a line moves everything below
-// it, so the heading's extent is worked out again after each. Doing the log
-// entry before the CLOSED stamp - or measuring once at the top and using that
-// measurement throughout - writes the second edit into the wrong heading, which
-// is a corruption that reports success.
+// it, so the heading's extent is worked out again after each, which
+// headingLines.Set does. Doing the log entry before the CLOSED stamp - or
+// measuring once at the top and using that measurement throughout - writes the
+// second edit into the wrong heading, which is a corruption that reports
+// success.
 func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now time.Time) (StatusChangeResult, error) {
 	var res StatusChangeResult
 	if f == nil || sec == nil || sec.Headline == nil {
 		return res, fmt.Errorf("no heading to change")
 	}
-	lines, from, end, ok := recordLines(f.Filename, sec)
-	if !ok {
+	h, err := readHeadingLines(f.Filename, sec)
+	if err != nil {
 		return res, fmt.Errorf("could not read %s", f.Filename)
 	}
+	from := h.From
 	lvl := sec.Headline.Lvl
 	ind := indentOf(lvl)
 	was := sec.Headline.Status
@@ -831,7 +832,7 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 		return res, nil
 	}
 
-	set := applyHeadingLogProps(fileLogSettings(f), propsFromLines(lines, from, end))
+	set := applyHeadingLogProps(fileLogSettings(f), propsFromLines(h.Lines, from, h.End))
 	_, toIsDone, _ := keywordInfo(f, to)
 	_, wasDone, _ := keywordInfo(f, was)
 	kwTo, _, _ := keywordInfo(f, to)
@@ -839,11 +840,11 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 
 	// A heading with a repeater that reaches a done state does not become done -
 	// it comes round again. Org's rule, and the one that makes a habit a habit.
-	repeating := toIsDone && planningHasRepeater(lines, from, end)
+	repeating := toIsDone && planningHasRepeater(h.Lines, from, h.End)
 	// org-recur: a |rule| in the title repeats it too, by the rule (recur.go).
 	recurRule, recurring := common.RecurRule{}, false
 	if toIsDone {
-		recurRule, recurring = recurRuleFor(lines[from])
+		recurRule, recurring = recurRuleFor(h.Lines[from])
 		repeating = repeating || recurring
 	}
 
@@ -865,15 +866,15 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 	// 1. The keyword. A repeating heading goes back to a live state instead.
 	written := to
 	if repeating {
-		if back := repeatTarget(f, set, propsFromLines(lines, from, end), was); back != "" {
+		if back := repeatTarget(f, set, propsFromLines(h.Lines, from, h.End), was); back != "" {
 			written = back
 		}
 	}
-	head, ok := replaceHeadlineStatus(lines[from], was, written)
+	head, ok := replaceHeadlineStatus(h.Lines[from], was, written)
 	if !ok {
 		return res, fmt.Errorf("%s:%d is not a heading", f.Filename, from+1)
 	}
-	lines[from] = head
+	h.Lines[from] = head
 	res.Status = written
 
 	// 2. The dates. No line count changes here, so no re-measuring yet.
@@ -881,20 +882,18 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 	case recurring:
 		// The one date edit that may add a line (a SCHEDULED for a heading
 		// with none), so it is measured again straight after.
-		var added bool
-		lines, res.Recur, added = recurPlanning(lines, from, end, ind, recurRule, now)
+		var out []string
+		out, res.Recur, _ = recurPlanning(h.Lines, from, h.End, ind, recurRule, now)
+		h.Set(out)
 		res.Repeated = true
-		if added {
-			lines, from, end = reread(lines, from, lvl)
-		}
 	case repeating:
-		res.Repeated = advancePlanning(lines, from, end, now)
+		res.Repeated = advancePlanning(h.Lines, from, h.End, now)
 	}
 
 	// 2b. org-checklist: a repeating checklist starts again unticked. No line
 	//     count changes, so the extent still holds.
-	if res.Repeated && wantsCheckboxReset(f, propsFromLines(lines, from, end)) {
-		res.ResetBoxes = resetCheckboxes(lines, from, end)
+	if res.Repeated && wantsCheckboxReset(f, propsFromLines(h.Lines, from, h.End)) {
+		res.ResetBoxes = resetCheckboxes(h.Lines, from, h.End)
 	}
 
 	// 3. The CLOSED stamp. A repeat is explicitly not a closure, so any stamp
@@ -902,26 +901,20 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 	//    date it was last completed as though it were finished for good.
 	switch {
 	case repeating, wasDone && !toIsDone:
-		before := len(lines)
-		lines = unstampClosed(lines, from, end)
-		res.Unclosed = len(lines) != before
+		before := len(h.Lines)
+		h.Set(unstampClosed(h.Lines, from, h.End))
+		res.Unclosed = len(h.Lines) != before
 	case toIsDone && set.done != LogNone:
-		before := len(lines)
-		lines = stampClosed(lines, from, end, ind, now)
+		h.Set(stampClosed(h.Lines, from, h.End, ind, now))
 		res.Closed = true
-		if len(lines) != before {
-			lines, from, end = reread(lines, from, lvl)
-		}
 	}
-	lines, from, end = reread(lines, from, lvl)
 
 	// 4. LAST_REPEAT, which is how org records that a repeat happened at all -
 	//    the dates afterwards say where it is going, never where it has been.
 	if res.Repeated {
-		var ps, pe int
-		lines, ps, pe, end = ensurePropertyDrawer(lines, from, end, ind)
+		lines, ps, pe, _ := ensurePropertyDrawer(h.Lines, from, h.End, ind)
 		lines, _ = setPropIn(lines, ps, pe, ind, "LAST_REPEAT", orgStamp(now))
-		lines, from, end = reread(lines, from, lvl)
+		h.Set(lines)
 	}
 
 	// 5. The log entry, last, because it is the only edit that does not have to
@@ -936,7 +929,7 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 				entry = append(entry, ind+"  "+strings.TrimSpace(l))
 			}
 		}
-		lines = logInto(lines, from, end, ind, set.drawer, entry)
+		h.Set(logInto(h.Lines, from, h.End, ind, set.drawer, entry))
 		res.Logged = entry
 	}
 
@@ -945,16 +938,15 @@ func applyStatusChange(f *common.OrgFile, sec *org.Section, to, note string, now
 	//    box ticked, so those are refreshed as well (no line count changes).
 	done, active := keywordSets(f)
 	if res.ResetBoxes > 0 {
-		lines, from, end = reread(lines, from, lvl) // the log entry added lines
-		for i := end; i > from; i-- {
-			if i < len(lines) && isHeadingLine(lines[i]) {
-				lines = refreshCookiesAround(lines, i, done, active)
+		for i := h.End; i > from; i-- {
+			if i < len(h.Lines) && isHeadingLine(h.Lines[i]) {
+				h.Set(refreshCookiesAround(h.Lines, i, done, active))
 			}
 		}
 	}
-	lines = refreshCookiesAround(lines, from, done, active)
+	h.Set(refreshCookiesAround(h.Lines, from, done, active))
 
-	if err := writeLines(f.Filename, lines); err != nil {
+	if err := h.Write(); err != nil {
 		return res, err
 	}
 	return res, nil

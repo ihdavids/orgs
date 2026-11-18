@@ -178,16 +178,16 @@ func TestTrackerExportCopy(t *testing.T) {
 	paths := trackerSetup(t)
 	lines := strings.Split(readOrg(t, paths["journal.org"]), "\n")
 	lines = append(lines, "#+TRACKER: source:property:MOOD from:-1w")
-	out, changed := trackerExportLines(paths["journal.org"], lines, "html")
+	out, changed := trackerExportLines(paths["journal.org"], lines, "html", trackerNow)
 	text := strings.Join(out, "\n")
 	if !changed || !strings.Contains(text, "#+BEGIN_EXPORT html") || !strings.Contains(text, `data-date="2026-11-04"`) || strings.Contains(text, "#+TRACKER:") {
 		t.Errorf("html copy:\n%s", text)
 	}
-	out, _ = trackerExportLines(paths["journal.org"], lines, "txt")
+	out, _ = trackerExportLines(paths["journal.org"], lines, "txt", trackerNow)
 	if !strings.Contains(strings.Join(out, "\n"), "MOOD: =") {
 		t.Errorf("text copy: %v", out)
 	}
-	out, _ = trackerExportLines(paths["journal.org"], lines, "latex")
+	out, _ = trackerExportLines(paths["journal.org"], lines, "latex", trackerNow)
 	if out[0] != `#+LATEX_HEADER: \usepackage{tikz}` || !strings.Contains(strings.Join(out, "\n"), `\begin{tikzpicture}`) {
 		t.Errorf("latex copy: %v", out[:3])
 	}
@@ -257,7 +257,7 @@ func TestTrackerLog(t *testing.T) {
 func TestTrackerTypstAndInsert(t *testing.T) {
 	paths := trackerSetup(t)
 	lines := []string{"* A", "#+TRACKER: source:tag:gym from:-1w"}
-	out, _ := trackerExportLines(paths["tasks.org"], lines, "typst")
+	out, _ := trackerExportLines(paths["tasks.org"], lines, "typst", trackerNow)
 	if !strings.Contains(strings.Join(out, "\n"), `#figure(image(bytes("<svg`) {
 		t.Errorf("typst copy: %v", out)
 	}
