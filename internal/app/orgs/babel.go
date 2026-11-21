@@ -623,6 +623,11 @@ func runProgram(r runner, program string, dir string, timeout time.Duration, out
 		}
 		defer os.RemoveAll(d)
 		in = filepath.Join(d, "block"+r.ext)
+		// An ext with a folder in it (java's "/Main.java", named after the
+		// class) needs that folder made first.
+		if err := os.MkdirAll(filepath.Dir(in), 0700); err != nil {
+			return res, err
+		}
 		if err := os.WriteFile(in, []byte(program), 0600); err != nil {
 			return res, err
 		}
