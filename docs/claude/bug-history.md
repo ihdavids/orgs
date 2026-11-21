@@ -229,7 +229,7 @@ Porting OrgExtended's missing features (dynamic blocks, babel results and calls,
 
 ## 2026-10-15: markers after 1 Nov drawn and edited a day early
 
-A Monday-to-Friday marker (`<2026-11-02 Mon>--<2026-11-06 Fri>`) showed as Sunday to Thursday in the chart and in its editor, and saving snapped back to Sunday, while the file was right. The ones before 1 Nov were fine. The machine is in America/Vancouver; its tzdata (2026b) keeps BC on UTC-7 after 1 Nov 2026, so Go wrote `2026-11-02T00:00:00-07:00`. Chrome's and Node's ICU (2025b) still fall back to -8 that day and read the instant as `Sun Nov 01 23:00`. Found by asking `/search` for the marker and comparing with `new Date(...)` in the page. Fixed by reading every server org date through `orgMoment` (wall-clock fields, offset ignored) in gantt, agenda, search, kanban and the org editor; regression test in `gantt.test.ts`.
+A Monday-to-Friday marker (`<2026-11-02 Mon>--<2026-11-06 Fri>`) showed as Sunday to Thursday in the chart and in its editor, and saving snapped back to Sunday, while the file was right. The ones before 1 Nov were fine. It shows in America/Vancouver: tzdata 2026b keeps BC on UTC-7 after 1 Nov 2026, so Go wrote `2026-11-02T00:00:00-07:00`. Chrome's and Node's ICU (2025b) still fall back to -8 that day and read the instant as `Sun Nov 01 23:00`. Found by asking `/search` for the marker and comparing with `new Date(...)` in the page. Fixed by reading every server org date through `orgMoment` (wall-clock fields, offset ignored) in gantt, agenda, search, kanban and the org editor; regression test in `gantt.test.ts`.
 
 ## 2026-10-17: lasting map effects that would not go away
 

@@ -1,5 +1,5 @@
 #+TITLE:  {{day_page_title}} 
-#+AUTHOR: Ian Davids
+#+AUTHOR: {{author}}
 
 * Inbox
 

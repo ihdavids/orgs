@@ -1,5 +1,5 @@
 #+TITLE: Org Mode Server
-#+AUTHOR: Ian Davids
+#+AUTHOR: Ian
 
 * Introduction
     Org is a difficult subject.

@@ -13,10 +13,10 @@ import (
 )
 
 const novel = `#+TITLE: The Harbour Light
-#+AUTHOR: Ian Davids
-#+PEN_NAME: I. H. Davids
-#+ADDRESS: 12 Harbour St
-#+ADDRESS: Halifax NS
+#+AUTHOR: Jane Example
+#+PEN_NAME: J. R. Marlow
+#+ADDRESS: 400 Main St
+#+ADDRESS: Anytown ON
 #+CHAPTER_NUMBERS: words
 
 * Part One  :part:
@@ -59,7 +59,7 @@ func parse(t *testing.T, s string) *Book {
 
 func TestStructure(t *testing.T) {
 	b := parse(t, novel)
-	if b.Meta.Name() != "I. H. Davids" || b.Meta.Surname() != "Davids" || len(b.Meta.Address) != 2 || b.Meta.Email != "me@example.com" {
+	if b.Meta.Name() != "J. R. Marlow" || b.Meta.Surname() != "Marlow" || len(b.Meta.Address) != 2 || b.Meta.Email != "me@example.com" {
 		t.Errorf("meta: %+v", b.Meta)
 	}
 	kinds := []string{}
@@ -226,7 +226,7 @@ func TestEpub(t *testing.T) {
 		}
 	}
 	opf := string(ps["OEBPS/content.opf"])
-	for _, want := range []string{`<dc:title id="title">The Harbour Light</dc:title>`, `>I. H. Davids</dc:creator>`,
+	for _, want := range []string{`<dc:title id="title">The Harbour Light</dc:title>`, `>J. R. Marlow</dc:creator>`,
 		`<meta property="dcterms:modified">2026-10-14T00:00:00Z</meta>`, `properties="nav"`, `<itemref idref="ch002"/>`} {
 		if !strings.Contains(opf, want) {
 			t.Errorf("opf lacks %s", want)

@@ -1460,8 +1460,8 @@ EDOC */
 		#+BEGIN_SRC yaml
 		invoice:
 		  from:
-		    name: "Ian Davids Consulting"
-		    address: ["12 Harbour St", "Halifax NS B3H 1A1"]
+		    name: "Lantern Bay Consulting"
+		    address: ["400 Main St", "Anytown ON A1A 1A1"]
 		    email: billing@example.com
 		    taxId: "GST 123456789"
 		  currency: CAD
