@@ -1409,6 +1409,44 @@ EDOC */
 	EDOC */
 	Refresh RefreshSettings `yaml:"refresh"`
 	/* SDOC: Settings
+	* Publishing to GitHub Pages
+		Places an exported page (a file through the html exporter, a gantt
+		chart, a slide deck) can be published to: a folder on a branch of a
+		GitHub repository that GitHub Pages serves. Publish with
+		=orgs export -f html notes.org -publish site=, =orgs publish page.html -to site=,
+		or the Publish buttons in worg's file view and gantt chart.
+
+		#+BEGIN_SRC yaml
+		publish:
+		  - name: site
+		    repo: ihdavids/notes        # owner/repo
+		    branch: gh-pages            # the branch Pages serves (default: the repo's default branch)
+		    dir: plans                  # a folder within it (default: its root)
+		    url: https://notes.example.com   # where the branch is served, for a custom domain
+		#+END_SRC
+
+		| key      | default                    | meaning |
+		|----------+----------------------------+---------|
+		| repo     | (required)                 | owner/repo |
+		| branch   | the repo's default branch  | the branch the file is committed to |
+		| dir      | the branch's root          | the folder the file goes into |
+		| url      | https://owner.github.io/repo/ | where Pages serves the branch's root (or its /docs, if that is what Pages is pointed at) |
+		| api      | https://api.github.com     | an Enterprise server's api, https://ghe.example.com/api/v3 |
+		| keyring  | orgs-github                | the keyring entry holding the token |
+		| tokenEnv | GITHUB_TOKEN, then GH_TOKEN | the environment variable tried when the keyring has nothing |
+		| message  | orgs: publish {path}       | the commit message |
+
+		The token is the one the GitHub poller uses: =orgs forge token github=
+		puts it in the keyring. It needs Contents read and write on the
+		repository (a fine-grained token), or the =repo= scope (a classic one).
+		Each publish is one commit of one file through the contents api, so no
+		git checkout is needed; publishing a page that has not changed makes no
+		commit. Pictures the page shows from the org folders (=/images/=,
+		=/orgimages/=, =/orgfonts/=) are put into the page as data, so it works
+		on its own away from this server.
+	EDOC */
+	Publish []PublishTarget `yaml:"publish"`
+	/* SDOC: Settings
 	* The Agenda
 
 		=GET /agenda= works out what lands on each day (repeaters, ranges,

@@ -101,6 +101,8 @@ func RestApi(router *mux.Router) {
 	api.HandleFunc("/newtemplate", DeleteFileTemplate).Methods("DELETE")
 	api.HandleFunc("/file/{type}", RequestFile)                   // html etc
 	api.HandleFunc("/pandoc", RequestPandoc).Methods("GET")
+	api.HandleFunc("/publish/targets", RequestPublishTargets).Methods("GET") // publish.go: GitHub Pages targets
+	api.HandleFunc("/publish", PostPublish).Methods("POST")
 	api.HandleFunc("/book", RequestBook).Methods("GET") // export.go: a manuscript (docx) or an ebook (epub), written natively
 	api.HandleFunc("/compile", PostCompile).Methods("POST")                 // writing.go: text the editor put together, exported
 	api.HandleFunc("/writing/snapshots", RequestSnapshots).Methods("GET")  // writing.go: a file's snapshots

@@ -66,6 +66,7 @@ import (
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/standup"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/serve"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/show"
+	_ "github.com/ihdavids/orgs/cmd/oc/commands/publish"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/site"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/tables"
 	_ "github.com/ihdavids/orgs/cmd/oc/commands/taggroups"

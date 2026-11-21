@@ -11,6 +11,8 @@ package export
 //	orgs export -list-themes             what the html exporter can wear
 //	orgs export -f manuscript story.org  a docx in manuscript format (-style novel)
 //	orgs export -f epub novel.org        an ebook (-theme literary)
+//	orgs export -f html notes.org -publish site            on GitHub Pages
+//	orgs export -f gantt 'IsProject()' -publish site -as launch.html
 //
 // Two things to know before changing anything here.
 //
@@ -35,6 +37,7 @@ import (
 	"strings"
 
 	"github.com/ihdavids/orgs/cmd/oc/commands"
+	publishcmd "github.com/ihdavids/orgs/cmd/oc/commands/publish"
 	sitecmd "github.com/ihdavids/orgs/cmd/oc/commands/site"
 	"github.com/ihdavids/orgs/internal/app/orgs/plugs/pandoc"
 	"github.com/ihdavids/orgs/internal/common"
@@ -61,6 +64,8 @@ type Export struct {
 	To         string
 	Style      string
 	Paper      string
+	Publish    string
+	As         string
 }
 
 func (self *Export) Unmarshal(unmarshal func(interface{}) error) error { return unmarshal(self) }
@@ -86,6 +91,8 @@ func (self *Export) SetupParameters(fset *flag.FlagSet) {
 	fset.StringVar(&self.To, "to", "", "with -f pandoc: the format pandoc writes (docx, odt, epub, rst, ...)")
 	fset.StringVar(&self.Style, "style", "", "with -f manuscript: modern, shunn, novel or reader")
 	fset.StringVar(&self.Paper, "paper", "", "with -f manuscript: letter or a4; with -f typst-pdf: a4 or us-letter")
+	fset.StringVar(&self.Publish, "publish", "", "publish the page to this GitHub Pages target (server.publish) instead of writing it")
+	fset.StringVar(&self.As, "as", "", "with -publish: the file's path in the target (default: the file's name with .html)")
 }
 
 func (self *Export) Exec(core *commands.Core) {
@@ -118,6 +125,10 @@ func (self *Export) Exec(core *commands.Core) {
 	}
 	if strings.TrimSpace(self.Query) == "" {
 		commands.Fail("orgs export: nothing to export.\n\n%s", usage)
+	}
+	if self.Publish != "" {
+		self.publish(core)
+		return
 	}
 	if strings.EqualFold(self.Format, "pdf") {
 		self.pdf(core)
@@ -244,6 +255,22 @@ func (self *Export) run(core *commands.Core) {
 		commands.Fail("orgs export: %s", strings.TrimSpace(res.Msg))
 	}
 	self.deliver([]byte(res.Msg))
+}
+
+// -publish: the server exports and commits the page itself, so the bytes never
+// come here. Only the exporters that answer with a page can be published; the
+// formats with endpoints of their own answer with files that are not one.
+func (self *Export) publish(core *commands.Core) {
+	f := strings.ToLower(self.Format)
+	if f == "pdf" || self.bookFormat() != "" || self.pandocFormat() != "" || strings.HasSuffix(f, "pdf") {
+		commands.Fail("orgs export -publish: -f %s is not a web page; publish html, gantt, revealjs, impressjs ...", self.Format)
+	}
+	if self.Local || self.Filename != "" {
+		commands.Fail("orgs export -publish: the page goes to the target, not to -out or -local; -as names it there")
+	}
+	publishcmd.Send(core, &common.PublishRequest{
+		Target: self.Publish, Path: self.As, Format: self.Format, Query: self.Query, Theme: self.Theme,
+	})
 }
 
 // The directory -rel makes links relative to: the one -out writes into. With
@@ -501,6 +528,7 @@ const usage = `  orgs export -f html notes.org -out notes.html
   orgs export -f todotxt inbox.org -out todo.txt   (tasks as todo.txt; a query works too)
   orgs export -f ics 'HasDeadline()' -out due.ics  (events and to-dos for a calendar)
   orgs export -f site notes/blog -out public -theme paper   (a static web site; see orgs site)
+  orgs export -f html notes.org -publish site       (on GitHub Pages: see orgs publish)
   orgs export -list          what this server can export to
   orgs export -list-themes   what the html exporter can wear
 

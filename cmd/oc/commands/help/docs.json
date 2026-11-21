@@ -417,7 +417,9 @@
    "orgs export -list                    what this server can export to",
    "orgs export -list-themes             what the html exporter can wear",
    "orgs export -f manuscript story.org  a docx in manuscript format (-style novel)",
-   "orgs export -f epub novel.org        an ebook (-theme literary)"
+   "orgs export -f epub novel.org        an ebook (-theme literary)",
+   "orgs export -f html notes.org -publish site            on GitHub Pages",
+   "orgs export -f gantt 'IsProject()' -publish site -as launch.html"
   ],
   "features": [
    "orgs features                       which are on",
@@ -746,6 +748,13 @@
    "orgs protocol status           which program handles them now",
    "orgs protocol bookmarklets     bookmarklets for this server (-temp NAME)",
    "orgs protocol links            the links store-link has kept, newest first"
+  ],
+  "publish": [
+   "orgs publish -list                          the targets server.publish names",
+   "orgs publish plan.html -to site             a page saved here (worg's gantt \"Save as HTML\")",
+   "orgs publish notes.org -to site             a file through the html exporter, then published",
+   "orgs publish notes.org -to site -as plans/notes.html -theme docs",
+   "orgs publish -f gantt 'IsProject()' -to site -as launch.html"
   ],
   "q": [
    "orgs q                      pick one and run it",
